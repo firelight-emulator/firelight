@@ -81,9 +81,7 @@ Slider {
 
                     x: (control.widthDiff / 2) + (index) * (control.availableWidth / control.numIntervals) - (width / 2)
                 }
-
             }
         }
-
     }
 }

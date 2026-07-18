@@ -17,19 +17,16 @@ class RAClient;
 
 namespace firelight::netplay {
 
-// TODO
 // App-side orchestrator for online play: owns the NetplaySession over the
 // injected lobby backend + transport, resolves library entries into session
 // game descriptors, auto-seats members into player slots, and (in later
 // phases) runs the in-game stream pipelines
 class NetplayService {
 public:
-  NetplayService(
-      ILobbyBackend &lobbyBackend, IPeerTransport &transport,
-      library::UserLibraryService &library, std::string appVersion,
-      achievements::RAClient *achievementClient = nullptr,
-      libretro::IRetropadProvider *localPads = nullptr,
-      std::function<std::shared_ptr<IAudioOutput>()> guestAudioFactory = {});
+  NetplayService(ILobbyBackend &lobbyBackend, IPeerTransport &transport, library::UserLibraryService &library,
+                 std::string appVersion, achievements::RAClient *achievementClient = nullptr,
+                 libretro::IRetropadProvider *localPads = nullptr,
+                 std::function<std::shared_ptr<IAudioOutput>()> guestAudioFactory = {});
 
   // Consumer-facing session events; forwarded after this service applies its
   // own policies (slot auto-assignment). Set before hosting/joining
@@ -42,8 +39,7 @@ public:
   void setPlayerName(const std::string &name);
 
   void hostLobby(ILobbyBackend::ResultCallback done);
-  void joinLobby(const std::string &joinCode,
-                 ILobbyBackend::ResultCallback done);
+  void joinLobby(const std::string &joinCode, ILobbyBackend::ResultCallback done);
   void leaveLobby();
 
   void assignSlot(int slot, PlayerId memberId, int localPadIndex);
@@ -52,7 +48,6 @@ public:
   void selectGameByEntryId(int entryId);
   void sendChat(const std::string &text);
 
-  // TODO
   // Ready check: host announces the selected game (phase Starting); everyone
   // sees the check and readies up. confirmLaunch moves to InGame (the host
   // actually launches); endGame returns the lobby to Idle
@@ -64,14 +59,15 @@ public:
   [[nodiscard]] int selectedEntryId() const;
 
   [[nodiscard]] NetplaySession &session() { return m_session; }
+
   // Permanently installable frame/audio sink; streams only while a game is
   // live (see EmulationContext.netplayStreamSink)
   [[nodiscard]] HostStreamSender &streamSender() { return m_sender; }
+
   // Permanently installable port mapper (EmulationContext.retropadProvider);
   // pass-through until a hosted online game is live
-  [[nodiscard]] SlotMappedRetropadProvider &retropadProvider() {
-    return m_retropadProvider;
-  }
+  [[nodiscard]] SlotMappedRetropadProvider &retropadProvider() { return m_retropadProvider; }
+
   [[nodiscard]] GuestStreamReceiver &streamReceiver() { return m_receiver; }
 
 private:

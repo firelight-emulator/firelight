@@ -2,7 +2,6 @@ pragma Singleton
 
 import QtQuick
 
-// TODO
 // Semantic color tokens for the app (a clean layer alongside the legacy
 // ColorPalette). One theme color drives two derivations, Discord-style:
 //   - SOLID tokens (surface/border/text): the Radix Slate (dark) neutral scale
@@ -15,7 +14,6 @@ import QtQuick
 QtObject {
     id: theme
 
-    // TODO
     // Radix Slate — dark scale. Step roles (Radix convention):
     //   1-2 backgrounds · 3-5 component surfaces (normal/hover/active) ·
     //   6-8 borders (subtle/normal/focus) · 11 muted text · 12 primary text
@@ -34,20 +32,14 @@ QtObject {
     readonly property real intensity: AppearanceSettings.themeIntensity
     readonly property real glassAlpha: AppearanceSettings.glassOpacity
 
-    // TODO
     // Tint source. In "image" mode the app tints itself from the chosen image
     // (its top/bottom bands, sampled into AppearanceSettings); otherwise from
     // the solid/gradient colors. The translucent glass surfaces render the real
     // top->bottom gradient (they show the image through them); themeColor is the
     // blend of the two, used by the flat solid tokens
-    readonly property bool _imageTint: AppearanceSettings.backgroundMode === "image"
-                                       && AppearanceSettings.imageColorTop !== ""
-    readonly property color tintTop: _imageTint ? AppearanceSettings.imageColorTop
-                                                : AppearanceSettings.backgroundColor
-    readonly property color tintBottom: _imageTint ? AppearanceSettings.imageColorBottom
-                                       : (AppearanceSettings.backgroundMode === "gradient"
-                                          ? AppearanceSettings.backgroundColor2
-                                          : AppearanceSettings.backgroundColor)
+    readonly property bool _imageTint: AppearanceSettings.backgroundMode === "image" && AppearanceSettings.imageColorTop !== ""
+    readonly property color tintTop: _imageTint ? AppearanceSettings.imageColorTop : AppearanceSettings.backgroundColor
+    readonly property color tintBottom: _imageTint ? AppearanceSettings.imageColorBottom : (AppearanceSettings.backgroundMode === "gradient" ? AppearanceSettings.backgroundColor2 : AppearanceSettings.backgroundColor)
     readonly property color themeColor: mix(tintTop, tintBottom, 0.5)
 
     // Composite `tint` over `base` at `amount` (0..1), returning a solid color
@@ -57,9 +49,7 @@ QtObject {
 
     // Linear blend between two colors (t in 0..1)
     function mix(a, b, t) {
-        return Qt.rgba(a.r + (b.r - a.r) * t,
-                       a.g + (b.g - a.g) * t,
-                       a.b + (b.b - a.b) * t, 1);
+        return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, 1);
     }
 
     // A readable text/icon color to sit on top of `fill`
@@ -87,7 +77,6 @@ QtObject {
     readonly property color warning: "#ffc53d"
     readonly property color danger: "#e5484d"
 
-    // TODO
     // --- chrome: button / title-bar state colors ---
     // Relocated from AppStyle (which is now metrics-only). Values unchanged;
     // still on the legacy ColorPalette scale rather than the semantic tokens
@@ -116,7 +105,6 @@ QtObject {
     readonly property color titleBarClosePressed: "#941320"
     readonly property real titleBarClosePressedOpacity: 1
 
-    // TODO
     // --- glass tokens (translucent over the blurred background) ---
     // Kept a clean dark neutral (Discord-style): the color comes from the
     // background bleeding through the translucency, NOT from tinting the panel,

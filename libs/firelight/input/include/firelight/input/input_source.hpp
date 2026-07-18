@@ -16,14 +16,13 @@ enum class SourceType {
   Key,          // keyboard key (Qt::Key)
 };
 
-NLOHMANN_JSON_SERIALIZE_ENUM(SourceType,
-                             {
-                                 {SourceType::None, "none"},
-                                 {SourceType::Button, "button"},
-                                 {SourceType::AxisPositive, "axisPos"},
-                                 {SourceType::AxisNegative, "axisNeg"},
-                                 {SourceType::Key, "key"},
-                             })
+NLOHMANN_JSON_SERIALIZE_ENUM(SourceType, {
+                                             {SourceType::None, "none"},
+                                             {SourceType::Button, "button"},
+                                             {SourceType::AxisPositive, "axisPos"},
+                                             {SourceType::AxisNegative, "axisNeg"},
+                                             {SourceType::Key, "key"},
+                                         })
 
 struct InputSource {
   SourceType type = SourceType::None;
@@ -31,8 +30,7 @@ struct InputSource {
   std::vector<int> modifiers; // inputs that must be held simultaneously (combo)
 
   bool operator==(const InputSource &other) const {
-    return type == other.type && code == other.code &&
-           modifiers == other.modifiers;
+    return type == other.type && code == other.code && modifiers == other.modifiers;
   }
 };
 

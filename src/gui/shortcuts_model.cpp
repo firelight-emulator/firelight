@@ -1,33 +1,26 @@
 #include "shortcuts_model.hpp"
 
-#include <firelight/input/keyboard_input_handler.hpp>
 #include <firelight/input/controller_repository.hpp>
-#include <firelight/input/shortcut_registry.hpp>
 #include <firelight/input/gamepad_input.hpp>
+#include <firelight/input/keyboard_input_handler.hpp>
+#include <firelight/input/shortcut_registry.hpp>
 
 #include <algorithm>
 #include <utility>
 
 namespace firelight::gui {
 
-ShortcutsModel::ShortcutsModel(
-    const int profileId, const bool isKeyboard,
-    std::shared_ptr<input::ShortcutMapping> shortcutMapping,
-    std::string presetId)
-    : QAbstractListModel(nullptr), m_profileId(profileId),
-      m_shortcutMapping(std::move(shortcutMapping)), m_isKeyboard(isKeyboard),
-      m_presetId(std::move(presetId)) {
+ShortcutsModel::ShortcutsModel(const int profileId, const bool isKeyboard,
+                               std::shared_ptr<input::ShortcutMapping> shortcutMapping, std::string presetId)
+    : QAbstractListModel(nullptr), m_profileId(profileId), m_shortcutMapping(std::move(shortcutMapping)),
+      m_isKeyboard(isKeyboard), m_presetId(std::move(presetId)) {
   rebuild();
 }
 
-DeviceType ShortcutsModel::deviceType() const {
-  return m_isKeyboard ? DeviceType::Keyboard : DeviceType::Gamepad;
-}
+DeviceType ShortcutsModel::deviceType() const { return m_isKeyboard ? DeviceType::Keyboard : DeviceType::Gamepad; }
 
-std::vector<input::InputSource>
-ShortcutsModel::presetSourcesFor(const input::ShortcutId &id) const {
-  const auto *preset =
-      input::ShortcutRegistry::instance().findPreset(m_presetId);
+std::vector<input::InputSource> ShortcutsModel::presetSourcesFor(const input::ShortcutId &id) const {
+  const auto *preset = input::ShortcutRegistry::instance().findPreset(m_presetId);
   if (!preset) {
     return {};
   }
@@ -41,14 +34,10 @@ bool ShortcutsModel::differsFromPreset(const input::ShortcutId &id) const {
   return m_shortcutMapping->getBindings(id) != presetSourcesFor(id);
 }
 
-QString ShortcutsModel::labelForBindings(
-    const std::vector<input::InputSource> &sources) const {
+QString ShortcutsModel::labelForBindings(const std::vector<input::InputSource> &sources) const {
   const auto label = [this](const int code) {
-    return m_isKeyboard
-               ? input::KeyboardInputHandler::getKeyLabel(
-                     static_cast<Qt::Key>(code))
-               : QString::fromStdString(firelight::input::displayName(
-                     static_cast<input::GamepadInput>(code)));
+    return m_isKeyboard ? input::KeyboardInputHandler::getKeyLabel(static_cast<Qt::Key>(code))
+                        : QString::fromStdString(firelight::input::displayName(static_cast<input::GamepadInput>(code)));
   };
 
   QStringList combos;
@@ -68,13 +57,12 @@ void ShortcutsModel::rebuild() {
   m_items.clear();
 
   auto actions = input::ShortcutRegistry::instance().listActions();
-  std::sort(actions.begin(), actions.end(),
-            [](const input::ShortcutAction &a, const input::ShortcutAction &b) {
-              if (a.category != b.category) {
-                return a.category < b.category;
-              }
-              return a.displayName < b.displayName;
-            });
+  std::sort(actions.begin(), actions.end(), [](const input::ShortcutAction &a, const input::ShortcutAction &b) {
+    if (a.category != b.category) {
+      return a.category < b.category;
+    }
+    return a.displayName < b.displayName;
+  });
 
   for (const auto &action : actions) {
     Item item;
@@ -85,8 +73,7 @@ void ShortcutsModel::rebuild() {
     if (m_shortcutMapping) {
       const auto &bindings = m_shortcutMapping->getBindings(action.id);
       item.hasBinding = !bindings.empty();
-      item.bindingsLabel =
-          item.hasBinding ? labelForBindings(bindings) : QStringLiteral("Not bound");
+      item.bindingsLabel = item.hasBinding ? labelForBindings(bindings) : QStringLiteral("Not bound");
       item.isModified = differsFromPreset(action.id);
     } else {
       item.bindingsLabel = QStringLiteral("Not bound");
@@ -104,8 +91,7 @@ void ShortcutsModel::refreshRow(const QString &id) {
   auto &item = m_items[row];
   const auto &bindings = m_shortcutMapping->getBindings(id.toStdString());
   item.hasBinding = !bindings.empty();
-  item.bindingsLabel =
-      item.hasBinding ? labelForBindings(bindings) : QStringLiteral("Not bound");
+  item.bindingsLabel = item.hasBinding ? labelForBindings(bindings) : QStringLiteral("Not bound");
   item.isModified = differsFromPreset(id.toStdString());
   emit dataChanged(index(row), index(row));
 }
@@ -160,14 +146,12 @@ QHash<int, QByteArray> ShortcutsModel::roleNames() const {
   };
 }
 
-void ShortcutsModel::addBinding(const QString &shortcutId, QList<int> modifiers,
-                                const int input) {
+void ShortcutsModel::addBinding(const QString &shortcutId, QList<int> modifiers, const int input) {
   if (!m_shortcutMapping) {
     return;
   }
   input::InputSource source;
-  source.type =
-      m_isKeyboard ? input::SourceType::Key : input::SourceType::Button;
+  source.type = m_isKeyboard ? input::SourceType::Key : input::SourceType::Button;
   source.code = input;
   for (const auto mod : modifiers) {
     source.modifiers.push_back(mod);
@@ -210,13 +194,11 @@ void ShortcutsModel::applyPreset(const QString &presetId) {
     }
   }
 
-  // TODO
   // Every action, not just the ones the preset names: one it leaves out is one
   // it wants unbound, so a leftover binding from the previous preset would
   // survive as a phantom
   for (const auto &action : input::ShortcutRegistry::instance().listActions()) {
-    m_shortcutMapping->setBindings(action.id,
-                                   preset->sourcesFor(deviceType(), action.id));
+    m_shortcutMapping->setBindings(action.id, preset->sourcesFor(deviceType(), action.id));
   }
   m_shortcutMapping->sync();
 
@@ -224,9 +206,7 @@ void ShortcutsModel::applyPreset(const QString &presetId) {
   emit presetIdChanged();
 }
 
-QString ShortcutsModel::presetId() const {
-  return QString::fromStdString(m_presetId);
-}
+QString ShortcutsModel::presetId() const { return QString::fromStdString(m_presetId); }
 
 QList<int> ShortcutsModel::modifierCandidates() const {
   if (m_isKeyboard) {

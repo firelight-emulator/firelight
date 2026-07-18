@@ -1,6 +1,7 @@
 #pragma once
 
 #include "libretro/libretro.h"
+
 #include <cstdint>
 
 namespace firelight::libretro {
@@ -43,31 +44,24 @@ public:
 
   virtual ~IRetroPad() = default;
 
-  virtual bool isButtonPressed(int platformId, int controllerTypeId,
-                               Input t_button) = 0;
+  virtual bool isButtonPressed(int platformId, int controllerTypeId, Input t_button) = 0;
 
-  // TODO
   // Evaluates a mapped mouse/light-gun input (a raw input::GamepadInput value)
   // for the given device class, so a physical gamepad can drive a light-gun
   // trigger / mouse button. Returns false when unmapped — the physical mouse is
   // supplied separately by the pointer provider. Non-joypad devices only;
   // joypad buttons continue to use isButtonPressed. Default: unmapped
-  virtual bool isVirtualInputActive(int /*platformId*/, int /*controllerTypeId*/,
-                                    int /*virtualInput*/) {
+  virtual bool isVirtualInputActive(int /*platformId*/, int /*controllerTypeId*/, int /*virtualInput*/) {
     return false;
   }
 
-  virtual int16_t getLeftStickXPosition(int platformId,
-                                        int controllerTypeId) = 0;
+  virtual int16_t getLeftStickXPosition(int platformId, int controllerTypeId) = 0;
 
-  virtual int16_t getLeftStickYPosition(int platformId,
-                                        int controllerTypeId) = 0;
+  virtual int16_t getLeftStickYPosition(int platformId, int controllerTypeId) = 0;
 
-  virtual int16_t getRightStickXPosition(int platformId,
-                                         int controllerTypeId) = 0;
+  virtual int16_t getRightStickXPosition(int platformId, int controllerTypeId) = 0;
 
-  virtual int16_t getRightStickYPosition(int platformId,
-                                         int controllerTypeId) = 0;
+  virtual int16_t getRightStickYPosition(int platformId, int controllerTypeId) = 0;
 
   virtual void setStrongRumble(int platformId, uint16_t t_strength) = 0;
 

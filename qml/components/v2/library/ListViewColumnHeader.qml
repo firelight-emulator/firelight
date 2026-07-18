@@ -18,7 +18,7 @@ Item {
 
     property bool selected: false
 
-    signal tapped()
+    signal tapped
 
     Text {
         id: headerText

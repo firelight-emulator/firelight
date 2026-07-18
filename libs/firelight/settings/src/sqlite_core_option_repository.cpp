@@ -9,8 +9,7 @@ namespace firelight::settings {
 
 SqliteCoreOptionRepository::SqliteCoreOptionRepository(std::string databaseFile)
     : m_databaseFile(std::move(databaseFile)) {
-  m_database = std::make_unique<SQLite::Database>(
-      m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  m_database = std::make_unique<SQLite::Database>(m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
   m_database->exec(R"(
     CREATE TABLE IF NOT EXISTS core_options (
@@ -27,7 +26,6 @@ SqliteCoreOptionRepository::SqliteCoreOptionRepository(std::string databaseFile)
     );
   )");
 
-  // TODO
   // Migrate DBs created before category columns existed. CREATE TABLE IF NOT
   // EXISTS won't add columns to an existing table, so add them here; otherwise
   // reads/writes referencing them fail on older databases
@@ -52,25 +50,22 @@ SqliteCoreOptionRepository::SqliteCoreOptionRepository(std::string databaseFile)
 
 SqliteCoreOptionRepository::~SqliteCoreOptionRepository() = default;
 
-void SqliteCoreOptionRepository::upsertCoreOptions(
-    const std::string &coreName, const std::vector<CoreOption> &options) {
+void SqliteCoreOptionRepository::upsertCoreOptions(const std::string &coreName,
+                                                   const std::vector<CoreOption> &options) {
   try {
     // Replace-all: a core's declared option set is authoritative, so options it
     // no longer declares should disappear from the cache
     SQLite::Transaction transaction(*m_database);
     {
-      SQLite::Statement del(*m_database,
-                            "DELETE FROM core_options WHERE core_name = :core");
+      SQLite::Statement del(*m_database, "DELETE FROM core_options WHERE core_name = :core");
       del.bind(":core", coreName);
       del.exec();
     }
 
-    SQLite::Statement insert(
-        *m_database,
-        "INSERT INTO core_options (core_name, key, label, description, "
-        "default_value, values_json, category_key, category_label, position) "
-        "VALUES (:core, :key, :label, :desc, :def, :values, :catKey, "
-        ":catLabel, :pos)");
+    SQLite::Statement insert(*m_database, "INSERT INTO core_options (core_name, key, label, description, "
+                                          "default_value, values_json, category_key, category_label, position) "
+                                          "VALUES (:core, :key, :label, :desc, :def, :values, :catKey, "
+                                          ":catLabel, :pos)");
     int position = 0;
     for (const auto &option : options) {
       nlohmann::json values = nlohmann::json::array();
@@ -92,20 +87,16 @@ void SqliteCoreOptionRepository::upsertCoreOptions(
 
     transaction.commit();
   } catch (const std::exception &e) {
-    spdlog::error("Failed to upsert core options for {}: {}", coreName,
-                  e.what());
+    spdlog::error("Failed to upsert core options for {}: {}", coreName, e.what());
   }
 }
 
-std::vector<CoreOption>
-SqliteCoreOptionRepository::getCoreOptions(const std::string &coreName) {
+std::vector<CoreOption> SqliteCoreOptionRepository::getCoreOptions(const std::string &coreName) {
   std::vector<CoreOption> options;
   try {
-    SQLite::Statement query(
-        *m_database,
-        "SELECT key, label, description, default_value, values_json, "
-        "category_key, category_label FROM core_options WHERE core_name = :core "
-        "ORDER BY position");
+    SQLite::Statement query(*m_database, "SELECT key, label, description, default_value, values_json, "
+                                         "category_key, category_label FROM core_options WHERE core_name = :core "
+                                         "ORDER BY position");
     query.bind(":core", coreName);
     while (query.executeStep()) {
       CoreOption option;
@@ -116,12 +107,11 @@ SqliteCoreOptionRepository::getCoreOptions(const std::string &coreName) {
       option.category = query.getColumn(5).getString();
       option.categoryLabel = query.getColumn(6).getString();
 
-      const auto valuesJson = nlohmann::json::parse(
-          query.getColumn(4).getString(), nullptr, /*allow_exceptions=*/false);
+      const auto valuesJson =
+          nlohmann::json::parse(query.getColumn(4).getString(), nullptr, /*allow_exceptions=*/false);
       if (valuesJson.is_array()) {
         for (const auto &v : valuesJson) {
-          option.values.push_back({v.value("value", std::string{}),
-                                   v.value("label", std::string{})});
+          option.values.push_back({v.value("value", std::string{}), v.value("label", std::string{})});
         }
       }
       options.push_back(std::move(option));

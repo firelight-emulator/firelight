@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // Standalone editor for a profile's analog stick/trigger tuning. Bind
 // `profileId` to the profile being edited. Every change is persisted
 // immediately via AnalogSettingsModel

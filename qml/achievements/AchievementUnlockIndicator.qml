@@ -12,12 +12,12 @@ Popup {
 
     function openWith(imageUrl, title, description) {
         if (!achievement_manager.unlockNotificationsEnabled) {
-            return
+            return;
         }
-        popup.url = imageUrl
-        popup.title = title
-        popup.description = description
-        popup.open()
+        popup.url = imageUrl;
+        popup.title = title;
+        popup.description = description;
+        popup.open();
     }
 
     parent: Overlay.overlay
@@ -56,7 +56,7 @@ Popup {
 
         ScriptAction {
             script: {
-                popupAnimation.running = true
+                popupAnimation.running = true;
             }
         }
     }

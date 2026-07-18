@@ -18,24 +18,27 @@ FocusScope {
     onShortcutsInGameChanged: InputService.setShortcutsInGame(shortcutsInGame)
     Component.onCompleted: InputService.setShortcutsInGame(shortcutsInGame)
 
-    signal gameReady()
+    signal gameReady
 
-    signal gameAboutToStop()
+    signal gameAboutToStop
 
-    signal gameStopped()
+    signal gameStopped
 
     Action {
         id: resetGameAction
         onTriggered: {
             if (emulatorStack.depth > 1) {
-                emulatorStack.get(0).resetGame()
-                emulatorStack.popCurrentItem()
+                emulatorStack.get(0).resetGame();
+                emulatorStack.popCurrentItem();
             }
         }
     }
 
     function loadGame(id, hash) {
-        emulatorStack.pushItem(emulatorComponent, {entryId: id, contentHash: hash}, StackView.Immediate)
+        emulatorStack.pushItem(emulatorComponent, {
+            entryId: id,
+            contentHash: hash
+        }, StackView.Immediate);
         // emulator.loadGame(id)
     }
 
@@ -48,7 +51,7 @@ FocusScope {
             saveSlotNumber: saveSlotNumber,
             platformId: platformId,
             contentPath: contentPath
-        }, StackView.Immediate)
+        }, StackView.Immediate);
     }
 
     Rectangle {
@@ -139,10 +142,8 @@ FocusScope {
                 }
             }
         }
-        replaceEnter: Transition {
-        }
-        replaceExit: Transition {
-        }
+        replaceEnter: Transition {}
+        replaceExit: Transition {}
     }
 
     Component {
@@ -158,9 +159,9 @@ FocusScope {
                     entryId: 0,
                     undoEnabled: false,
                     contentHash: emuPage.contentHash
-                }, StackView.PushTransition)
+                }, StackView.PushTransition);
 
-                event.accepted = true
+                event.accepted = true;
             }
 
             Keys.onPressed: function (event) {
@@ -169,8 +170,8 @@ FocusScope {
                         entryId: 0,
                         undoEnabled: false,
                         contentHash: emuPage.contentHash
-                    }, StackView.PushTransition)
-                    event.accepted = true
+                    }, StackView.PushTransition);
+                    event.accepted = true;
                 }
             }
 
@@ -187,27 +188,26 @@ FocusScope {
                 if (emuPage.StackView.status === StackView.Active) {
                     emulatorStack.pushItem(rewindPage, {
                         model: points
-                    }, StackView.Immediate)
+                    }, StackView.Immediate);
                 } else {
                     emulatorStack.replaceCurrentItem(rewindPage, {
                         model: points
-                    }, StackView.Immediate)
+                    }, StackView.Immediate);
                 }
             }
-
 
             Connections {
                 target: window_resize_handler
 
                 function onWindowResizeStarted() {
                     if (emuPage.StackView.status === StackView.Active) {
-                        emuPage.paused = true
+                        emuPage.paused = true;
                     }
                 }
 
                 function onWindowResizeFinished() {
                     if (emuPage.StackView.status === StackView.Active) {
-                        emuPage.paused = false
+                        emuPage.paused = false;
                     }
                 }
             }
@@ -219,7 +219,7 @@ FocusScope {
 
         ScriptAction {
             script: {
-                root.gameAboutToStop()
+                root.gameAboutToStop();
             }
         }
 
@@ -229,17 +229,15 @@ FocusScope {
 
         ScriptAction {
             script: {
-                emulatorStack.clear()
+                emulatorStack.clear();
             }
         }
 
         ScriptAction {
             script: {
-                root.gameStopped()
+                root.gameStopped();
             }
         }
-
-
     }
 
     Component {
@@ -247,14 +245,13 @@ FocusScope {
         RewindMenu {
             id: theActualMenu
             onRewindPointSelected: function (index) {
-                const emu = emulatorStack.get(0)
-                emu.loadRewindPoint(index)
-                // emulator.resetGame()
+                const emu = emulatorStack.get(0);
+                emu.loadRewindPoint(index);
+            // emulator.resetGame()
 
             }
         }
     }
-
 
     Component {
         id: nowPlayingPage
@@ -264,78 +261,77 @@ FocusScope {
             property string topLevelName: "nowPlaying"
 
             StackView.onActivating: function () {
-                // sfx_player.play()
+            // sfx_player.play()
             }
 
             Keys.onEscapePressed: function (event) {
                 if (event.isAutoRepeat) {
-                    return
+                    return;
                 }
 
                 if (me.StackView.status === StackView.Active) {
                     // emulatorStack.pop()
-                    me.StackView.view.popCurrentItem()
-                    event.accepted = true
+                    me.StackView.view.popCurrentItem();
+                    event.accepted = true;
                 }
             }
 
             Keys.onBackPressed: function (event) {
                 if (event.isAutoRepeat) {
-                    return
+                    return;
                 }
 
                 if (me.StackView.status === StackView.Active) {
                     // emulatorStack.pop()
-                    me.StackView.view.popCurrentItem()
-                    event.accepted = true
+                    me.StackView.view.popCurrentItem();
+                    event.accepted = true;
                 }
             }
 
             onBackToMainMenuPressed: function () {
-                // root.StackView.view.popCurrentItem()
-                // stackView.push(homeScreen)
+            // root.StackView.view.popCurrentItem()
+            // stackView.push(homeScreen)
             }
 
             onResumeGamePressed: function () {
-                emulatorStack.pop()
+                emulatorStack.pop();
             }
 
             onRestartGamePressed: function () {
-                resetGameAction.trigger()
-                // TODO
-                // const emu = emulatorStack.get(0)
-                // emu.resetGame()
-                // // emulator.resetGame()
-                // emulatorStack.pop()
+                resetGameAction.trigger();
+            // const emu = emulatorStack.get(0)
+            // emu.resetGame()
+            // // emulator.resetGame()
+            // emulatorStack.pop()
             }
 
             onRewindPressed: function () {
-                const emu = emulatorStack.get(0)
+                const emu = emulatorStack.get(0);
                 // emulator.resetGame()
                 // emu.paused = true
-                emu.createRewindPoints()
-                // emulatorStack.replaceCurrentItem(rewindPage, {})
+                emu.createRewindPoints();
+            // emulatorStack.replaceCurrentItem(rewindPage, {})
             }
 
             onCloseGamePressed: function () {
-                closeGameAnimation.running = true
-                // emulatorStack.popCurrentItem()
-                // closeGameAnimation.start()
+                closeGameAnimation.running = true;
+            // emulatorStack.popCurrentItem()
+            // closeGameAnimation.start()
             }
 
             onWriteSuspendPoint: function (index) {
-                const emu = emulatorStack.get(0)
-                emu.writeSuspendPoint(index)
+                const emu = emulatorStack.get(0);
+                emu.writeSuspendPoint(index);
             }
 
             onLoadSuspendPoint: function (index) {
-                const emu = emulatorStack.get(0)
-                emu.loadSuspendPoint(index)
+                const emu = emulatorStack.get(0);
+                emu.loadSuspendPoint(index);
             }
 
             onLoadLastSuspendPoint: function () {
-                const emu = emulatorStack.get(0)
-                emu.loadLastSuspendPoint()
+                const emu = emulatorStack.get(0);
+                emu.loadLastSuspendPoint();
             }
         }
     }
@@ -348,7 +344,7 @@ FocusScope {
 
             function onAchievementProgressUpdated(imageUrl, id, name, description, current, desired) {
                 if (achievement_manager.progressNotificationsEnabled) {
-                    achievementProgressIndicator.openWith(imageUrl, name, description, current, desired)
+                    achievementProgressIndicator.openWith(imageUrl, name, description, current, desired);
                 }
             }
         }
@@ -362,21 +358,21 @@ FocusScope {
 
             function onAchievementUnlocked(imageUrl, name, description) {
                 if (achievement_manager.unlockNotificationsEnabled) {
-                    achievementUnlockIndicator.openWith(imageUrl, name, description)
+                    achievementUnlockIndicator.openWith(imageUrl, name, description);
                 }
             }
         }
     }
 
     GameLaunchPopup {
-        objectName: "Game Launch Popup"
         id: gameLaunchPopup
+        objectName: "Game Launch Popup"
 
         Connections {
             target: achievement_manager
 
             function onGameLoadSucceeded(imageUrl, title, numEarned, numTotal) {
-                gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore)
+                gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore);
             }
         }
     }

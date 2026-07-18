@@ -1,23 +1,21 @@
 #include "emulator_vulkan_renderer.hpp"
 
 #ifdef _WIN32
-#  include <windows.h>
-#  include <vulkan/vulkan_win32.h>
+// clang-format off
+#include <windows.h>
+#include <vulkan/vulkan_win32.h>
+// clang-format on
 #endif
 #include <cstring>
 #include <spdlog/spdlog.h>
 #include <vector>
 
-// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Construction / destruction
 // ─────────────────────────────────────────────────────────────────────────────
 
-EmulatorVulkanRenderer::~EmulatorVulkanRenderer() {
-  destroy();
-}
+EmulatorVulkanRenderer::~EmulatorVulkanRenderer() { destroy(); }
 
-// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Public interface
 // ─────────────────────────────────────────────────────────────────────────────
@@ -32,28 +30,27 @@ void EmulatorVulkanRenderer::setRenderDimensions(uint32_t w, uint32_t h) {
   m_vkFrameReady = true;
 }
 
-void EmulatorVulkanRenderer::renderFrame(
-  firelight::emulation::EmulatorInstance *emulator, float playbackMultiplier,
-  QSize targetSize, QRhi *rhi) {
+void EmulatorVulkanRenderer::renderFrame(firelight::emulation::EmulatorInstance *emulator, float playbackMultiplier,
+                                         QSize targetSize, QRhi *rhi) {
   m_coreSignalSem = VK_NULL_HANDLE;
   m_vkFrameReady = false;
 
   if (playbackMultiplier > 1) {
-    for (int i = 0; i < static_cast<int>(playbackMultiplier); i++)
+    for (int i = 0; i < static_cast<int>(playbackMultiplier); i++) {
       emulator->runFrame();
+    }
   } else {
     emulator->runFrame();
   }
 
   if (!m_vkFrameReady || m_coreImage == VK_NULL_HANDLE) {
-    spdlog::debug("renderFrame: early exit – frameReady={} coreImage={}",
-                  m_vkFrameReady, m_coreImage != VK_NULL_HANDLE);
+    spdlog::debug("renderFrame: early exit – frameReady={} coreImage={}", m_vkFrameReady,
+                  m_coreImage != VK_NULL_HANDLE);
     return;
   }
 
   if (m_vkRenderWidth < 2 || m_vkRenderHeight < 2) {
-    spdlog::debug("renderFrame: degenerate dims {}x{}, skipping blit",
-                  m_vkRenderWidth, m_vkRenderHeight);
+    spdlog::debug("renderFrame: degenerate dims {}x{}, skipping blit", m_vkRenderWidth, m_vkRenderHeight);
     return;
   }
 
@@ -64,9 +61,8 @@ void EmulatorVulkanRenderer::renderFrame(
 
   m_firstFrameReady = true;
 
-  spdlog::debug("renderFrame: blitting {}x{} -> {}x{} fmt={}",
-                m_vkRenderWidth, m_vkRenderHeight, m_sharedImageW, m_sharedImageH,
-                static_cast<int>(m_coreImageFormat));
+  spdlog::debug("renderFrame: blitting {}x{} -> {}x{} fmt={}", m_vkRenderWidth, m_vkRenderHeight, m_sharedImageW,
+                m_sharedImageH, static_cast<int>(m_coreImageFormat));
 
   // Wait for the previous frame's copy command buffer to finish before we
   // record into it again, then reset for re-use. (Fence is pre-signaled on first call.)
@@ -101,9 +97,8 @@ void EmulatorVulkanRenderer::renderFrame(
   preCopy[1].image = m_sharedImage;
   preCopy[1].subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
 
-  m_vkfCmdPipelineBarrier(cmd,
-                          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                          0, 0, nullptr, 0, nullptr, 2, preCopy);
+  m_vkfCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0,
+                          nullptr, 2, preCopy);
 
   // GPU blit: core image (render res) → shared image (display res), with linear scaling
   VkImageBlit blitRgn{};
@@ -113,10 +108,8 @@ void EmulatorVulkanRenderer::renderFrame(
   blitRgn.dstSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
   blitRgn.dstOffsets[0] = {0, 0, 0};
   blitRgn.dstOffsets[1] = {static_cast<int32_t>(m_sharedImageW), static_cast<int32_t>(m_sharedImageH), 1};
-  m_vkfCmdBlitImage(cmd,
-                    m_coreImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                    m_sharedImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                    1, &blitRgn, VK_FILTER_LINEAR);
+  m_vkfCmdBlitImage(cmd, m_coreImage, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_sharedImage,
+                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blitRgn, VK_FILTER_LINEAR);
 
   // Transition core image back to SHADER_READ_ONLY
   // Transition shared image TRANSFER_DST → SHADER_READ_ONLY so Qt can sample it
@@ -141,9 +134,8 @@ void EmulatorVulkanRenderer::renderFrame(
   postCopy[1].image = m_sharedImage;
   postCopy[1].subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
 
-  m_vkfCmdPipelineBarrier(cmd,
-                          VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                          0, 0, nullptr, 0, nullptr, 2, postCopy);
+  m_vkfCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0,
+                          nullptr, 2, postCopy);
 
   m_vkfEndCommandBuffer(cmd);
 
@@ -170,7 +162,8 @@ void EmulatorVulkanRenderer::renderFrame(
     si.pWaitDstStageMask = &waitStage;
     tsInfo.waitSemaphoreValueCount = 1;
     tsInfo.pWaitSemaphoreValues = &waitVal;
-  } {
+  }
+  {
     std::lock_guard lock(m_vkQueueMutex);
     m_vkfQueueSubmit(m_vkQueue, 1, &si, m_vkFrameFences[0]);
   }
@@ -179,20 +172,15 @@ void EmulatorVulkanRenderer::renderFrame(
   m_vkfWaitForFences(m_vkDevice, 1, &m_vkFrameFences[0], VK_TRUE, UINT64_MAX);
 }
 
-// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Initialization
 // ─────────────────────────────────────────────────────────────────────────────
 
-bool EmulatorVulkanRenderer::initialize(
-  QRhi *rhi,
-  const retro_hw_render_context_negotiation_interface_vulkan *negotiation,
-  VkSurfaceKHR surface,
-  std::function<void()> resetCallback) {
-  const auto *vk =
-      static_cast<const QRhiVulkanNativeHandles *>(rhi->nativeHandles());
+bool EmulatorVulkanRenderer::initialize(QRhi *rhi,
+                                        const retro_hw_render_context_negotiation_interface_vulkan *negotiation,
+                                        VkSurfaceKHR surface, std::function<void()> resetCallback) {
+  const auto *vk = static_cast<const QRhiVulkanNativeHandles *>(rhi->nativeHandles());
 
-  // TODO
   // Get the raw vkGetInstanceProcAddr directly from the Vulkan loader DLL
   //
   // Qt's QVulkanInstance::getInstanceProcAddr("vkGetInstanceProcAddr") returns
@@ -209,20 +197,18 @@ bool EmulatorVulkanRenderer::initialize(
   PFN_vkGetInstanceProcAddr globalProcAddr = nullptr;
 #ifdef _WIN32
   if (HMODULE vulkanLib = GetModuleHandleA("vulkan-1.dll")) {
-    globalProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(
-      GetProcAddress(vulkanLib, "vkGetInstanceProcAddr"));
+    globalProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(GetProcAddress(vulkanLib, "vkGetInstanceProcAddr"));
   }
 #endif
   if (!globalProcAddr) {
-    globalProcAddr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(
-      vk->inst->getInstanceProcAddr("vkGetInstanceProcAddr"));
+    globalProcAddr =
+        reinterpret_cast<PFN_vkGetInstanceProcAddr>(vk->inst->getInstanceProcAddr("vkGetInstanceProcAddr"));
   }
   if (!globalProcAddr) {
     spdlog::error("EmulatorVulkanRenderer: could not obtain vkGetInstanceProcAddr");
     return false;
   }
 
-  // TODO
   // ── Create the VkDevice ───────────────────────────────────────────────────
   //
   // Pass Qt's VkInstance so Granite uses it directly rather than creating its
@@ -235,19 +221,20 @@ bool EmulatorVulkanRenderer::initialize(
   retro_vulkan_context ctx{};
   VkPhysicalDeviceFeatures features{};
 
-  // TODO
   // Disable implicit Vulkan layers before Granite calls vkCreateInstance
   // Steam/OBS/Overwolf overlay layers crash or return null function pointers
   // when invoked for a second VkInstance in the same process (they already
   // initialised for Qt's instance and don't handle the second one)
   // VK_LOADER_LAYERS_DISABLE=~implicit~ is honoured by the Vulkan Loader
-  std::string savedLayerDisable; {
+  std::string savedLayerDisable;
+  {
     const char *v = getenv("VK_LOADER_LAYERS_DISABLE");
-    if (v) savedLayerDisable = v;
+    if (v) {
+      savedLayerDisable = v;
+    }
   }
   qputenv("VK_LOADER_LAYERS_DISABLE", "~implicit~");
 
-  // TODO
   // Device extensions the core must enable so the shared-image path works. The
   // core creates the VkDevice, and cores that only enable what they need (PPSSPP)
   // leave vkGetMemoryWin32HandleKHR / vkGetSemaphoreWin32HandleKHR null, crashing
@@ -258,22 +245,19 @@ bool EmulatorVulkanRenderer::initialize(
 #ifdef _WIN32
   {
     static const char *const CANDIDATES[] = {
-        VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,
-        VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME,
-        VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME,
-        VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME,
-        VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
-        VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
+        VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME,      VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME,
+        VK_KHR_EXTERNAL_SEMAPHORE_EXTENSION_NAME,   VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME,
+        VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
     };
-    auto enumDevExt =
-        reinterpret_cast<PFN_vkEnumerateDeviceExtensionProperties>(globalProcAddr(
-            vk->inst->vkInstance(), "vkEnumerateDeviceExtensionProperties"));
+    auto enumDevExt = reinterpret_cast<PFN_vkEnumerateDeviceExtensionProperties>(
+        globalProcAddr(vk->inst->vkInstance(), "vkEnumerateDeviceExtensionProperties"));
     if (enumDevExt) {
       uint32_t count = 0;
       enumDevExt(vk->physDev, nullptr, &count, nullptr);
       std::vector<VkExtensionProperties> props(count);
-      if (count)
+      if (count) {
         enumDevExt(vk->physDev, nullptr, &count, props.data());
+      }
       for (const char *cand : CANDIDATES) {
         for (const auto &p : props) {
           if (std::strcmp(p.extensionName, cand) == 0) {
@@ -286,29 +270,28 @@ bool EmulatorVulkanRenderer::initialize(
   }
 #endif
 
-  // TODO
   // Hand the core Qt's physical device (not VK_NULL_HANDLE): per the libretro
   // Vulkan spec the core must then use exactly this VkPhysicalDevice, which is
   // required for the shared-image path (core + Qt must be on the same GPU). The
   // surface must also be a real VkSurfaceKHR — PPSSPP asserts it and queries
   // swapchain capabilities from it; VK_NULL_HANDLE crashes it (parallel-RDP
   // ignores it)
-  const bool deviceOk = negotiation->create_device(
-    &ctx, vk->inst->vkInstance(), vk->physDev, surface, globalProcAddr,
-    requiredDeviceExts.empty() ? nullptr : requiredDeviceExts.data(),
-    static_cast<unsigned>(requiredDeviceExts.size()), nullptr, 0, &features);
+  const bool deviceOk =
+      negotiation->create_device(&ctx, vk->inst->vkInstance(), vk->physDev, surface, globalProcAddr,
+                                 requiredDeviceExts.empty() ? nullptr : requiredDeviceExts.data(),
+                                 static_cast<unsigned>(requiredDeviceExts.size()), nullptr, 0, &features);
 
-  if (savedLayerDisable.empty())
+  if (savedLayerDisable.empty()) {
     qunsetenv("VK_LOADER_LAYERS_DISABLE");
-  else
+  } else {
     qputenv("VK_LOADER_LAYERS_DISABLE", savedLayerDisable.c_str());
+  }
 
   if (!deviceOk) {
     spdlog::error("EmulatorVulkanRenderer: create_device failed");
     return false;
   }
 
-  // TODO
   // Store destroy_device as a bare function pointer now, before the core DLL could
   // be unloaded. negotiation itself becomes a dangling pointer after coreLib->unload(),
   // so destroy() must call m_fnDestroyDevice directly
@@ -318,12 +301,10 @@ bool EmulatorVulkanRenderer::initialize(
   m_vkQueue = ctx.queue;
   m_vkQueueFamilyIndex = ctx.queue_family_index;
 
-  m_vkGetDeviceProcAddr = reinterpret_cast<PFN_vkGetDeviceProcAddr>(
-    globalProcAddr(vk->inst->vkInstance(), "vkGetDeviceProcAddr"));
+  m_vkGetDeviceProcAddr =
+      reinterpret_cast<PFN_vkGetDeviceProcAddr>(globalProcAddr(vk->inst->vkInstance(), "vkGetDeviceProcAddr"));
 
-  auto d = [&](const char *name) {
-    return m_vkGetDeviceProcAddr(m_vkDevice, name);
-  };
+  auto d = [&](const char *name) { return m_vkGetDeviceProcAddr(m_vkDevice, name); };
   m_vkfQueueSubmit = reinterpret_cast<PFN_vkQueueSubmit>(d("vkQueueSubmit"));
   m_vkfCreateCommandPool = reinterpret_cast<PFN_vkCreateCommandPool>(d("vkCreateCommandPool"));
   m_vkfAllocCommandBuffers = reinterpret_cast<PFN_vkAllocateCommandBuffers>(d("vkAllocateCommandBuffers"));
@@ -360,9 +341,8 @@ bool EmulatorVulkanRenderer::initialize(
 #endif
 
   // Physical device memory properties — needed by ensureStagingBuffer()
-  auto vkGetPhysDevMemProps =
-      reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties>(
-        globalProcAddr(vk->inst->vkInstance(), "vkGetPhysicalDeviceMemoryProperties"));
+  auto vkGetPhysDevMemProps = reinterpret_cast<PFN_vkGetPhysicalDeviceMemoryProperties>(
+      globalProcAddr(vk->inst->vkInstance(), "vkGetPhysicalDeviceMemoryProperties"));
   vkGetPhysDevMemProps(ctx.gpu, &m_vkPhysDevMemProps);
 
 #ifdef _WIN32
@@ -416,16 +396,14 @@ bool EmulatorVulkanRenderer::initialize(
         break;
       }
 
-      m_qtGetDeviceProcAddr = reinterpret_cast<PFN_vkGetDeviceProcAddr>(
-        GetProcAddress(vulkanLib, "vkGetDeviceProcAddr"));
+      m_qtGetDeviceProcAddr =
+          reinterpret_cast<PFN_vkGetDeviceProcAddr>(GetProcAddress(vulkanLib, "vkGetDeviceProcAddr"));
       if (!m_qtGetDeviceProcAddr) {
         spdlog::warn("  vkGetDeviceProcAddr missing — CPU readback");
         break;
       }
 
-      auto qd = [&](const char *name) -> PFN_vkVoidFunction {
-        return m_qtGetDeviceProcAddr(m_qtDevice, name);
-      };
+      auto qd = [&](const char *name) -> PFN_vkVoidFunction { return m_qtGetDeviceProcAddr(m_qtDevice, name); };
       m_qtfCreateImage = reinterpret_cast<PFN_vkCreateImage>(qd("vkCreateImage"));
       m_qtfDestroyImage = reinterpret_cast<PFN_vkDestroyImage>(qd("vkDestroyImage"));
       m_qtfAllocateMemory = reinterpret_cast<PFN_vkAllocateMemory>(qd("vkAllocateMemory"));
@@ -435,17 +413,14 @@ bool EmulatorVulkanRenderer::initialize(
       m_qtfCreateSemaphore = reinterpret_cast<PFN_vkCreateSemaphore>(qd("vkCreateSemaphore"));
       m_qtfDestroySemaphore = reinterpret_cast<PFN_vkDestroySemaphore>(qd("vkDestroySemaphore"));
       m_qtfQueueSubmit = reinterpret_cast<PFN_vkQueueSubmit>(qd("vkQueueSubmit"));
-      m_qtfImportSemWin32Handle = reinterpret_cast<PFN_vkImportSemaphoreWin32HandleKHR>(qd(
-        "vkImportSemaphoreWin32HandleKHR"));
+      m_qtfImportSemWin32Handle =
+          reinterpret_cast<PFN_vkImportSemaphoreWin32HandleKHR>(qd("vkImportSemaphoreWin32HandleKHR"));
 
-      spdlog::info("  Qt fn ptrs: createSem={} importSem={} queueSubmit={}",
-                   m_qtfCreateSemaphore ? "ok" : "null",
-                   m_qtfImportSemWin32Handle ? "ok" : "null",
-                   m_qtfQueueSubmit ? "ok" : "null");
+      spdlog::info("  Qt fn ptrs: createSem={} importSem={} queueSubmit={}", m_qtfCreateSemaphore ? "ok" : "null",
+                   m_qtfImportSemWin32Handle ? "ok" : "null", m_qtfQueueSubmit ? "ok" : "null");
 
-      if (!m_qtfCreateSemaphore || !m_qtfImportSemWin32Handle || !m_qtfQueueSubmit ||
-          !m_qtfCreateImage || !m_qtfAllocateMemory || !m_qtfBindImageMemory ||
-          !m_qtfGetImageMemReqs) {
+      if (!m_qtfCreateSemaphore || !m_qtfImportSemWin32Handle || !m_qtfQueueSubmit || !m_qtfCreateImage ||
+          !m_qtfAllocateMemory || !m_qtfBindImageMemory || !m_qtfGetImageMemReqs) {
         spdlog::warn("  Qt device missing required functions — CPU readback");
         break;
       }
@@ -509,7 +484,6 @@ bool EmulatorVulkanRenderer::initialize(
   return true;
 }
 
-// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Per-frame resource setup
 // ─────────────────────────────────────────────────────────────────────────────
@@ -534,9 +508,8 @@ void EmulatorVulkanRenderer::createVulkanPerFrameResources() {
   m_vkfAllocCommandBuffers(m_vkDevice, &ai, m_vkCmdBuffers.data());
 }
 
-void EmulatorVulkanRenderer::buildVulkanHwInterface(
-  VkInstance instance, VkPhysicalDevice physDev,
-  PFN_vkGetInstanceProcAddr procAddr) {
+void EmulatorVulkanRenderer::buildVulkanHwInterface(VkInstance instance, VkPhysicalDevice physDev,
+                                                    PFN_vkGetInstanceProcAddr procAddr) {
   m_vkInterface = {};
   m_vkInterface.interface_type = RETRO_HW_RENDER_INTERFACE_VULKAN;
   m_vkInterface.interface_version = RETRO_HW_RENDER_INTERFACE_VULKAN_VERSION;
@@ -553,11 +526,7 @@ void EmulatorVulkanRenderer::buildVulkanHwInterface(
   m_vkInterface.get_sync_index_mask = [](void *) -> unsigned { return 1; };
   m_vkInterface.wait_sync_index = [](void *) {};
 
-  m_vkInterface.set_image = [](void *handle,
-                               const retro_vulkan_image *image,
-                               uint32_t,
-                               const VkSemaphore *,
-                               uint32_t) {
+  m_vkInterface.set_image = [](void *handle, const retro_vulkan_image *image, uint32_t, const VkSemaphore *, uint32_t) {
     auto *r = static_cast<EmulatorVulkanRenderer *>(handle);
     r->m_coreImage = image->create_info.image;
     r->m_coreImageFormat = image->create_info.format;
@@ -570,9 +539,7 @@ void EmulatorVulkanRenderer::buildVulkanHwInterface(
     static_cast<EmulatorVulkanRenderer *>(handle)->m_coreSignalSem = sem;
   };
 
-  m_vkInterface.lock_queue = [](void *handle) {
-    static_cast<EmulatorVulkanRenderer *>(handle)->m_vkQueueMutex.lock();
-  };
+  m_vkInterface.lock_queue = [](void *handle) { static_cast<EmulatorVulkanRenderer *>(handle)->m_vkQueueMutex.lock(); };
 
   m_vkInterface.unlock_queue = [](void *handle) {
     static_cast<EmulatorVulkanRenderer *>(handle)->m_vkQueueMutex.unlock();
@@ -583,16 +550,15 @@ void EmulatorVulkanRenderer::buildVulkanHwInterface(
   m_vkInterfaceReady = true;
 }
 
-// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Staging buffer (CPU readback fallback)
 // ─────────────────────────────────────────────────────────────────────────────
 
 bool EmulatorVulkanRenderer::ensureStagingBuffer() {
-  VkDeviceSize required =
-      static_cast<VkDeviceSize>(m_vkRenderWidth) * m_vkRenderHeight * 4;
-  if (m_vkStagingBuffer != VK_NULL_HANDLE && m_vkStagingSize >= required)
+  VkDeviceSize required = static_cast<VkDeviceSize>(m_vkRenderWidth) * m_vkRenderHeight * 4;
+  if (m_vkStagingBuffer != VK_NULL_HANDLE && m_vkStagingSize >= required) {
     return true;
+  }
 
   if (m_vkStagingBuffer != VK_NULL_HANDLE) {
     m_vkfDestroyBuffer(m_vkDevice, m_vkStagingBuffer, nullptr);
@@ -616,10 +582,11 @@ bool EmulatorVulkanRenderer::ensureStagingBuffer() {
 
   uint32_t memType = UINT32_MAX;
   for (uint32_t i = 0; i < m_vkPhysDevMemProps.memoryTypeCount; i++) {
-    if (!(memReqs.memoryTypeBits & (1u << i))) continue;
+    if (!(memReqs.memoryTypeBits & (1u << i))) {
+      continue;
+    }
     auto flags = m_vkPhysDevMemProps.memoryTypes[i].propertyFlags;
-    if ((flags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) &&
-        (flags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+    if ((flags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) && (flags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
       memType = i;
       break;
     }
@@ -642,7 +609,6 @@ bool EmulatorVulkanRenderer::ensureStagingBuffer() {
   return true;
 }
 
-// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared image management
 // ─────────────────────────────────────────────────────────────────────────────
@@ -652,11 +618,10 @@ bool EmulatorVulkanRenderer::ensureSharedImage(QSize targetSize, QRhi *rhi) {
   const uint32_t wantW = static_cast<uint32_t>(targetSize.width());
   const uint32_t wantH = static_cast<uint32_t>(targetSize.height());
 
-  if (m_sharedImage != VK_NULL_HANDLE &&
-      m_sharedImageW == wantW &&
-      m_sharedImageH == wantH &&
-      m_sharedImageFmt == m_coreImageFormat)
+  if (m_sharedImage != VK_NULL_HANDLE && m_sharedImageW == wantW && m_sharedImageH == wantH &&
+      m_sharedImageFmt == m_coreImageFormat) {
     return true;
+  }
 
   destroySharedImage();
 
@@ -691,7 +656,9 @@ bool EmulatorVulkanRenderer::ensureSharedImage(QSize targetSize, QRhi *rhi) {
 
   uint32_t memType = UINT32_MAX;
   for (uint32_t i = 0; i < m_vkPhysDevMemProps.memoryTypeCount; i++) {
-    if (!(memReqs.memoryTypeBits & (1u << i))) continue;
+    if (!(memReqs.memoryTypeBits & (1u << i))) {
+      continue;
+    }
     if (m_vkPhysDevMemProps.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
       memType = i;
       break;
@@ -764,24 +731,21 @@ bool EmulatorVulkanRenderer::ensureSharedImage(QSize targetSize, QRhi *rhi) {
     m_sharedTex = nullptr;
   }
   const QRhiTexture::Format rhiFormat =
-  (m_coreImageFormat == VK_FORMAT_R8G8B8A8_UNORM ||
-   m_coreImageFormat == VK_FORMAT_R8G8B8A8_SRGB)
-    ? QRhiTexture::RGBA8
-    : QRhiTexture::BGRA8;
+      (m_coreImageFormat == VK_FORMAT_R8G8B8A8_UNORM || m_coreImageFormat == VK_FORMAT_R8G8B8A8_SRGB)
+          ? QRhiTexture::RGBA8
+          : QRhiTexture::BGRA8;
 
   m_sharedTex = rhi->newTexture(rhiFormat, QSize(int(wantW), int(wantH)), 1);
-  if (!m_sharedTex->createFrom({
-    reinterpret_cast<quint64>(m_qtSharedImage),
-    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-  })) {
+  if (!m_sharedTex->createFrom(
+          {reinterpret_cast<quint64>(m_qtSharedImage), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL})) {
     spdlog::error("ensureSharedImage: QRhiTexture::createFrom failed");
     delete m_sharedTex;
     m_sharedTex = nullptr;
     return false;
   }
 
-  spdlog::info("ensureSharedImage: shared={}x{} core={}x{} fmt={} — GPU copy path active",
-               wantW, wantH, m_vkRenderWidth, m_vkRenderHeight, int(m_coreImageFormat));
+  spdlog::info("ensureSharedImage: shared={}x{} core={}x{} fmt={} — GPU copy path active", wantW, wantH,
+               m_vkRenderWidth, m_vkRenderHeight, int(m_coreImageFormat));
   return true;
 #else
   return false;
@@ -820,14 +784,14 @@ void EmulatorVulkanRenderer::destroySharedImage() {
   m_sharedImageFmt = VK_FORMAT_UNDEFINED;
 }
 
-// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Teardown
 // ─────────────────────────────────────────────────────────────────────────────
 
 void EmulatorVulkanRenderer::destroy() {
-  if (m_vkDevice == VK_NULL_HANDLE)
+  if (m_vkDevice == VK_NULL_HANDLE) {
     return;
+  }
 
   m_vkfDeviceWaitIdle(m_vkDevice);
 
@@ -852,12 +816,14 @@ void EmulatorVulkanRenderer::destroy() {
     m_fnDestroyDevice = nullptr;
   }
 
-  if (!m_vkFrameFences.empty() && m_vkFrameFences[0])
+  if (!m_vkFrameFences.empty() && m_vkFrameFences[0]) {
     m_vkfDestroyFence(m_vkDevice, m_vkFrameFences[0], nullptr);
+  }
   m_vkFrameFences.clear();
 
-  if (m_vkCmdPool)
+  if (m_vkCmdPool) {
     m_vkfDestroyCommandPool(m_vkDevice, m_vkCmdPool, nullptr);
+  }
   m_vkCmdPool = VK_NULL_HANDLE;
 
   if (m_vkStagingBuffer) {

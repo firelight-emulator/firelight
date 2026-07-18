@@ -1,9 +1,8 @@
 #include <firelight/library/archive_reader.hpp>
 
+#include <algorithm>
 #include <archive.h>
 #include <archive_entry.h>
-
-#include <algorithm>
 #include <cctype>
 #include <fstream>
 #include <utility>
@@ -23,14 +22,11 @@ archive *openArchive(const std::string &path) {
 }
 
 std::string toLower(std::string s) {
-  std::transform(s.begin(), s.end(), s.begin(),
-                 [](unsigned char c) { return std::tolower(c); });
+  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
   return s;
 }
 
-std::string baseNameOf(const char *entryPath) {
-  return std::filesystem::path(entryPath).filename().string();
-}
+std::string baseNameOf(const char *entryPath) { return std::filesystem::path(entryPath).filename().string(); }
 
 // Reads all data blocks of the archive's current entry into a buffer
 std::vector<uint8_t> readCurrentEntry(archive *a) {
@@ -46,8 +42,7 @@ std::vector<uint8_t> readCurrentEntry(archive *a) {
 }
 } // namespace
 
-ArchiveReader::ArchiveReader(std::string archivePath)
-    : m_archivePath(std::move(archivePath)) {}
+ArchiveReader::ArchiveReader(std::string archivePath) : m_archivePath(std::move(archivePath)) {}
 
 std::vector<ArchiveReader::Entry> ArchiveReader::listEntries() const {
   std::vector<Entry> entries;
@@ -67,8 +62,7 @@ std::vector<ArchiveReader::Entry> ArchiveReader::listEntries() const {
   return entries;
 }
 
-std::vector<uint8_t>
-ArchiveReader::readEntryByPath(const std::string &entryPath) const {
+std::vector<uint8_t> ArchiveReader::readEntryByPath(const std::string &entryPath) const {
   archive *a = openArchive(m_archivePath);
   if (!a) {
     return {};
@@ -88,8 +82,7 @@ ArchiveReader::readEntryByPath(const std::string &entryPath) const {
   return bytes;
 }
 
-std::vector<uint8_t>
-ArchiveReader::readEntryByBaseName(const std::string &baseNameLower) const {
+std::vector<uint8_t> ArchiveReader::readEntryByBaseName(const std::string &baseNameLower) const {
   archive *a = openArchive(m_archivePath);
   if (!a) {
     return {};
@@ -109,9 +102,8 @@ ArchiveReader::readEntryByBaseName(const std::string &baseNameLower) const {
   return bytes;
 }
 
-bool ArchiveReader::extractEntries(
-    const std::set<std::string> &wantedBaseNamesLower,
-    const std::filesystem::path &destDir) const {
+bool ArchiveReader::extractEntries(const std::set<std::string> &wantedBaseNamesLower,
+                                   const std::filesystem::path &destDir) const {
   archive *a = openArchive(m_archivePath);
   if (!a) {
     return false;
@@ -134,8 +126,7 @@ bool ArchiveReader::extractEntries(
     size_t length;
     la_int64_t offset;
     while (archive_read_data_block(a, &buffer, &length, &offset) == ARCHIVE_OK) {
-      out.write(static_cast<const char *>(buffer),
-                static_cast<std::streamsize>(length));
+      out.write(static_cast<const char *>(buffer), static_cast<std::streamsize>(length));
     }
   }
 
@@ -144,9 +135,7 @@ bool ArchiveReader::extractEntries(
 }
 
 void ArchiveReader::forEachEntry(
-    const std::function<void(const Entry &,
-                             const std::function<std::vector<uint8_t>()> &)> &fn)
-    const {
+    const std::function<void(const Entry &, const std::function<std::vector<uint8_t>()> &)> &fn) const {
   archive *a = openArchive(m_archivePath);
   if (!a) {
     return;

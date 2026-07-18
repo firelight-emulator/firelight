@@ -41,93 +41,100 @@ Pane {
 
             contentItem: ColumnLayout {
                 FirelightMenuItem {
-                     labelText: "Shortcuts"
-                     property bool showGlobalCursor: true
-                     // labelIcon: "\ue40a"
-                     Layout.preferredHeight: 50
-                     Layout.fillWidth: true
-                     focus: true
-                     checked: true
+                    labelText: "Shortcuts"
+                    property bool showGlobalCursor: true
+                    // labelIcon: "\ue40a"
+                    Layout.preferredHeight: 50
+                    Layout.fillWidth: true
+                    focus: true
+                    checked: true
 
-                     ButtonGroup.group: menuButtonGroup
+                    ButtonGroup.group: menuButtonGroup
 
-                     onToggled: {
-                         if (checked) {
-                             theStack.replaceCurrentItem(shortcutsList, {}, StackView.Immediate)
-                         }
-                     }
-                 }
+                    onToggled: {
+                        if (checked) {
+                            theStack.replaceCurrentItem(shortcutsList, {}, StackView.Immediate);
+                        }
+                    }
+                }
                 FirelightMenuItem {
-                     labelText: "Analog Sticks"
-                     property bool showGlobalCursor: true
-                     Layout.preferredHeight: 50
-                     Layout.fillWidth: true
-                     visible: !profile.isKeyboardProfile
+                    labelText: "Analog Sticks"
+                    property bool showGlobalCursor: true
+                    Layout.preferredHeight: 50
+                    Layout.fillWidth: true
+                    visible: !profile.isKeyboardProfile
 
-                     ButtonGroup.group: menuButtonGroup
+                    ButtonGroup.group: menuButtonGroup
 
-                     onToggled: {
-                         if (checked) {
-                             theStack.replaceCurrentItem(analogPage, {profileId: root.profileId}, StackView.Immediate)
-                         }
-                     }
-                 }
+                    onToggled: {
+                        if (checked) {
+                            theStack.replaceCurrentItem(analogPage, {
+                                profileId: root.profileId
+                            }, StackView.Immediate);
+                        }
+                    }
+                }
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 1
                     color: Theme.border
                 }
                 ListView {
-                     id: platformList
-                     spacing: 0
-                     Layout.fillHeight: true
-                     Layout.fillWidth: true
-                     focus: true
-                     clip: true
+                    id: platformList
+                    spacing: 0
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+                    focus: true
+                    clip: true
 
-                     KeyNavigation.right: theStack
+                    KeyNavigation.right: theStack
 
-                     Keys.onBackPressed: {
-                         Router.back()
-                     }
+                    Keys.onBackPressed: {
+                        Router.back();
+                    }
 
-                     Keys.onEscapePressed: {
-                         Router.back()
-                     }
+                    Keys.onEscapePressed: {
+                        Router.back();
+                    }
 
-                     currentIndex: 0
+                    currentIndex: 0
 
-                     // TODO
-                     // onCurrentItemChanged: {
-                     //     gamepadProfile.currentPlatformId = platformList.currentItem.model.platform_id
-                     // }
+                    // onCurrentItemChanged: {
+                    //     gamepadProfile.currentPlatformId = platformList.currentItem.model.platform_id
+                    // }
 
-                     model: PlatformModel
-                     delegate: FirelightMenuItem {
-                         required property var model
-                         required property var index
-                         // focus: true
+                    model: PlatformModel
+                    delegate: FirelightMenuItem {
+                        required property var model
+                        required property var index
+                        // focus: true
 
                         ButtonGroup.group: menuButtonGroup
 
-                         labelText: model.displayName
-                         labelIcon: model.iconName
-                         property bool showGlobalCursor: true
-                         // labelIcon: "\ue40a"
-                         height: 54
-                         width: ListView.view.width
+                        labelText: model.displayName
+                        labelIcon: model.iconName
+                        property bool showGlobalCursor: true
+                        // labelIcon: "\ue40a"
+                        height: 54
+                        width: ListView.view.width
 
-                         // checked: ListView.isCurrentItem
+                        // checked: ListView.isCurrentItem
 
-                         onToggled: {
-                             if (checked) {
-                                 ListView.view.currentIndex = index
-                                 theStack.replaceCurrentItem(mappingView, {platformId: model.platformId, profileId: gamepadStatus.profileId, platformMetadataModel: model, gamepad: gamepadStatus, isKeyboard: profile.isKeyboardProfile}, StackView.Immediate)
-                             }
-                         }
-                     }
-                 }
-             }
+                        onToggled: {
+                            if (checked) {
+                                ListView.view.currentIndex = index;
+                                theStack.replaceCurrentItem(mappingView, {
+                                    platformId: model.platformId,
+                                    profileId: gamepadStatus.profileId,
+                                    platformMetadataModel: model,
+                                    gamepad: gamepadStatus,
+                                    isKeyboard: profile.isKeyboardProfile
+                                }, StackView.Immediate);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         Rectangle {
@@ -155,15 +162,13 @@ Pane {
         Component {
             id: mappingView
 
-            ControllerInputMappingView {
-            }
+            ControllerInputMappingView {}
         }
 
         Component {
             id: analogPage
 
-            AnalogTuningPage {
-            }
+            AnalogTuningPage {}
         }
 
         Component {
@@ -178,7 +183,7 @@ Pane {
                     isKeyboard: profile.isKeyboardProfile
                     modifierCandidates: shortcutsListView.model.modifierCandidates()
 
-                    onMappingAdded: function(shortcut, modifiers, input) {
+                    onMappingAdded: function (shortcut, modifiers, input) {
                         shortcutsListView.model.addBinding(shortcut, modifiers, input);
                     }
                 }
@@ -193,94 +198,92 @@ Pane {
                 }
                 model: profile.shortcutsModel
                 delegate: Button {
-                  id: myDelegate
-                  required property var model
-                  required property var index
-                  property bool showGlobalCursor: true
-                  height: 60
-                  width: ListView.view.width
-                  hoverEnabled: true
-                  background: Rectangle {
-                      color: ColorPalette.neutral300
-                      radius: 8
-                      border.color: ColorPalette.neutral500
-                      opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.14 : 0
+                    id: myDelegate
+                    required property var model
+                    required property var index
+                    property bool showGlobalCursor: true
+                    height: 60
+                    width: ListView.view.width
+                    hoverEnabled: true
+                    background: Rectangle {
+                        color: ColorPalette.neutral300
+                        radius: 8
+                        border.color: ColorPalette.neutral500
+                        opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.14 : 0
 
-                      Behavior on opacity {
-                          NumberAnimation {
-                              duration: 64
-                              easing.type: Easing.InOutQuad
-                          }
-                      }
-                  }
-                  ContextMenu.menu: RightClickMenu {
-                      RightClickMenuItem {
-                          text: "Assign"
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 64
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+                    }
+                    ContextMenu.menu: RightClickMenu {
+                        RightClickMenuItem {
+                            text: "Assign"
 
-                          onTriggered: {
-                              shortcutDialog.shortcut = model.shortcutId
-                              shortcutDialog.shortcutName = model.name
-                              shortcutDialog.open()
-                            // TODO
-                            // dialog.buttons = []
-                            // dialog.buttons = [{
-                            //     display_name: model.originalInputName,
-                            //     retropad_button: model.originalInput
-                            // }]
-                            // dialog.open()
-                          }
-                      }
+                            onTriggered: {
+                                shortcutDialog.shortcut = model.shortcutId;
+                                shortcutDialog.shortcutName = model.name;
+                                shortcutDialog.open();
+                                // dialog.buttons = []
+                                // dialog.buttons = [{
+                                //     display_name: model.originalInputName,
+                                //     retropad_button: model.originalInput
+                                // }]
+                                // dialog.open()
+                            }
+                        }
 
-                      RightClickMenuItem {
-                          text: "Clear mapping"
-                          onTriggered: {
-                                shortcutsListView.model.clearBindings(model.shortcutId)
-                          }
-                      }
-                  }
-                  onClicked: function() {
-                      ListView.view.currentIndex = index;
-                  }
-                  onDoubleClicked: function() {
-                      shortcutDialog.shortcut = model.shortcutId
-                      shortcutDialog.shortcutName = model.name
-                      shortcutDialog.open()
-                  }
-                  contentItem: RowLayout {
-                      spacing: 12
-                      Item {
-                          Layout.fillHeight: true
-                          Layout.preferredWidth: 16
-                      }
-                      Text {
-                          Layout.preferredWidth: 240
-                          Layout.maximumWidth: 240
-                          Layout.alignment: Qt.AlignLeft
-                          Layout.fillHeight: true
-                          text: model.name
-                          color: Theme.textPrimary
-                          font.pixelSize: AppStyle.fontSizeMedium
-                          font.family: Constants.regularFontFamily
-                          font.weight: Font.DemiBold
-                          verticalAlignment: Text.AlignVCenter
-                      }
+                        RightClickMenuItem {
+                            text: "Clear mapping"
+                            onTriggered: {
+                                shortcutsListView.model.clearBindings(model.shortcutId);
+                            }
+                        }
+                    }
+                    onClicked: function () {
+                        ListView.view.currentIndex = index;
+                    }
+                    onDoubleClicked: function () {
+                        shortcutDialog.shortcut = model.shortcutId;
+                        shortcutDialog.shortcutName = model.name;
+                        shortcutDialog.open();
+                    }
+                    contentItem: RowLayout {
+                        spacing: 12
+                        Item {
+                            Layout.fillHeight: true
+                            Layout.preferredWidth: 16
+                        }
+                        Text {
+                            Layout.preferredWidth: 240
+                            Layout.maximumWidth: 240
+                            Layout.alignment: Qt.AlignLeft
+                            Layout.fillHeight: true
+                            text: model.name
+                            color: Theme.textPrimary
+                            font.pixelSize: AppStyle.fontSizeMedium
+                            font.family: Constants.regularFontFamily
+                            font.weight: Font.DemiBold
+                            verticalAlignment: Text.AlignVCenter
+                        }
 
-                      Text {
-                          Layout.fillWidth: true
-                          Layout.alignment: Qt.AlignLeft
-                          Layout.fillHeight: true
-                          font.pixelSize: AppStyle.fontSizeMedium
-                          color: model.hasBinding ? "white" : ColorPalette.neutral400
-                          text: model.bindingsLabel
-                          font.family: Constants.regularFontFamily
-                          font.weight: model.hasBinding ? Font.DemiBold : Font.Medium
-                          verticalAlignment: Text.AlignVCenter
-                          elide: Text.ElideRight
-                      }
-                  }
-              }
+                        Text {
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignLeft
+                            Layout.fillHeight: true
+                            font.pixelSize: AppStyle.fontSizeMedium
+                            color: model.hasBinding ? "white" : ColorPalette.neutral400
+                            text: model.bindingsLabel
+                            font.family: Constants.regularFontFamily
+                            font.weight: model.hasBinding ? Font.DemiBold : Font.Medium
+                            verticalAlignment: Text.AlignVCenter
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
             }
         }
-
     }
 }

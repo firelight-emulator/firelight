@@ -17,8 +17,8 @@ Option {
         visible: currentIndex !== -1
         currentIndex: root.currentIndex
         onCurrentIndexChanged: function () {
-            root.currentIndex = control.currentIndex
-            root.currentValue = control.model[control.currentIndex][root.valueRole]
+            root.currentIndex = control.currentIndex;
+            root.currentValue = control.model[control.currentIndex][root.valueRole];
         }
         // onCurrentValueChanged: root.currentValue = control.currentValue
         textRole: root.textRole
@@ -26,9 +26,8 @@ Option {
 
         Component.onCompleted: {
             if (root.currentValue) {
-                control.currentIndex = find(root.currentValue)
+                control.currentIndex = find(root.currentValue);
             }
         }
     }
 }
-

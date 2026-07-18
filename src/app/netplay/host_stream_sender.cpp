@@ -8,23 +8,17 @@
 
 namespace firelight::netplay {
 
-HostStreamSender::HostStreamSender(NetplaySession &session)
-    : m_session(session) {
-  m_encoder.setVideoPacketCallback(
-      [this](std::vector<uint8_t> data, const int64_t ptsMs,
-             const bool keyframe) {
-        onVideoPacket(std::move(data), ptsMs, keyframe);
-      });
+HostStreamSender::HostStreamSender(NetplaySession &session) : m_session(session) {
+  m_encoder.setVideoPacketCallback([this](std::vector<uint8_t> data, const int64_t ptsMs, const bool keyframe) {
+    onVideoPacket(std::move(data), ptsMs, keyframe);
+  });
   m_encoder.setAudioPacketCallback(
-      [this](std::vector<uint8_t> data, const int64_t ptsMs) {
-        onAudioPacket(std::move(data), ptsMs);
-      });
+      [this](std::vector<uint8_t> data, const int64_t ptsMs) { onAudioPacket(std::move(data), ptsMs); });
 }
 
 HostStreamSender::~HostStreamSender() { m_encoder.stop(); }
 
-void HostStreamSender::setConfigReadyCallback(
-    std::function<void(StreamConfig)> callback) {
+void HostStreamSender::setConfigReadyCallback(std::function<void(StreamConfig)> callback) {
   m_configReady = std::move(callback);
 }
 
@@ -67,8 +61,7 @@ void HostStreamSender::onPeerLost(const PlayerId memberId) {
   m_peers.erase(memberId);
 }
 
-void HostStreamSender::pushVideoFrame(const QImage &frame,
-                                      const int64_t ptsMs) {
+void HostStreamSender::pushVideoFrame(const QImage &frame, const int64_t ptsMs) {
   if (!m_armed.load()) {
     return;
   }
@@ -78,8 +71,7 @@ void HostStreamSender::pushVideoFrame(const QImage &frame,
     return;
   }
 
-  if (!m_encoder.isRunning() || width != m_frameWidth ||
-      height != m_frameHeight) {
+  if (!m_encoder.isRunning() || width != m_frameWidth || height != m_frameHeight) {
     if (!m_encoder.start({.width = width,
                           .height = height,
                           .fps = 60,
@@ -111,16 +103,14 @@ void HostStreamSender::pushVideoFrame(const QImage &frame,
   m_encoder.pushVideoFrame(frame, ptsMs);
 }
 
-void HostStreamSender::pushAudio(const int16_t *data,
-                                 const std::size_t numFrames) {
+void HostStreamSender::pushAudio(const int16_t *data, const std::size_t numFrames) {
   if (!m_armed.load() || !m_encoder.isRunning()) {
     return;
   }
   m_encoder.pushAudio(data, numFrames);
 }
 
-void HostStreamSender::onVideoPacket(std::vector<uint8_t> data,
-                                     const int64_t ptsMs, const bool keyframe) {
+void HostStreamSender::onVideoPacket(std::vector<uint8_t> data, const int64_t ptsMs, const bool keyframe) {
   const auto bytes = encodePacket(VideoPacket{
       .seq = m_videoSeq++,
       .ptsMs = static_cast<uint32_t>(ptsMs),
@@ -153,8 +143,7 @@ void HostStreamSender::onVideoPacket(std::vector<uint8_t> data,
   }
 }
 
-void HostStreamSender::onAudioPacket(std::vector<uint8_t> data,
-                                     const int64_t ptsMs) {
+void HostStreamSender::onAudioPacket(std::vector<uint8_t> data, const int64_t ptsMs) {
   // Audio is never dropped: it's the receivers' clock
   const auto bytes = encodePacket(AudioPacket{
       .seq = m_audioSeq++,

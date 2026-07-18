@@ -1,6 +1,6 @@
 #include "library_entry_item.hpp"
-#include <firelight/library/user_library_service.hpp>
 
+#include <firelight/library/user_library_service.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
 namespace firelight {
@@ -22,8 +22,7 @@ void LibraryEntryItem::setEntryId(const int entryId) {
     m_icon1x1SourceUrl = QString::fromStdString(entry->icon1x1SourceUrl);
     m_platformId = entry->platformId;
 
-    auto platform =
-        getPlatformService()->getPlatform(m_platformId);
+    auto platform = getPlatformService()->getPlatform(m_platformId);
     if (platform.has_value()) {
       m_platformIconName = QString::fromStdString(platform.value().slug);
       emit platformIconNameChanged();
@@ -49,10 +48,7 @@ QString LibraryEntryItem::getName() const { return m_name; }
 
 int LibraryEntryItem::getAchievementSetId() const { return m_achievementSetId; }
 
-QString LibraryEntryItem::getIcon1x1SourceUrl() const {
-  return m_icon1x1SourceUrl;
-}
-QString LibraryEntryItem::getPlatformIconName() const {
-  return m_platformIconName;
-}
+QString LibraryEntryItem::getIcon1x1SourceUrl() const { return m_icon1x1SourceUrl; }
+
+QString LibraryEntryItem::getPlatformIconName() const { return m_platformIconName; }
 } // namespace firelight

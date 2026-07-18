@@ -7,14 +7,14 @@ import QtQuick.Effects
 import Firelight 1.0
 
 StackView {
-    objectName: "Home Content Stack View"
     id: stackview
+    objectName: "Home Content Stack View"
     anchors.fill: parent
 
     property alias currentPageName: stackview.topLevelName
 
     function goTo(page) {
-        stackview.replace(null, page)
+        stackview.replace(null, page);
     }
 
     property string topLevelName: ""
@@ -22,25 +22,19 @@ StackView {
     onCurrentItemChanged: {
         if (currentItem) {
             let top = stackview.find(function (item, index) {
-                return item.topLevel === true
-            })
+                return item.topLevel === true;
+            });
 
-            stackview.topLevelName = top ? top.topLevelName : ""
+            stackview.topLevelName = top ? top.topLevelName : "";
         }
     }
 
     // initialItem: libraryPage
 
-    pushEnter: Transition {
-    }
-    pushExit: Transition {
-    }
-    popEnter: Transition {
-    }
-    popExit: Transition {
-    }
-    replaceEnter: Transition {
-    }
-    replaceExit: Transition {
-    }
+    pushEnter: Transition {}
+    pushExit: Transition {}
+    popEnter: Transition {}
+    popExit: Transition {}
+    replaceEnter: Transition {}
+    replaceExit: Transition {}
 }

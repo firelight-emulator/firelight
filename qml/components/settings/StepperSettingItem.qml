@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // A precise number nudged up or down. `value` is the current number; emits
 // `changed` with the new value, clamped to [from, to]. `suffix` is an optional
 // unit (e.g. "s")
@@ -43,7 +42,9 @@ BaseSettingItem {
                 enabled: root.enabled && root.value > root.from
                 focusPolicy: Qt.NoFocus
                 onClicked: root.step(-root.stepSize)
-                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
                 background: Item {}
                 contentItem: Icon {
                     name: "remove"
@@ -69,7 +70,9 @@ BaseSettingItem {
                 enabled: root.enabled && root.value < root.to
                 focusPolicy: Qt.NoFocus
                 onClicked: root.step(root.stepSize)
-                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
                 background: Item {}
                 contentItem: Icon {
                     name: "add"

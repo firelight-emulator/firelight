@@ -56,7 +56,7 @@ Item {
                 implicitWidth: 140
                 onEditingFinished: {
                     if (text.trim().length > 0) {
-                        NetworkService.setPlayerName(text)
+                        NetworkService.setPlayerName(text);
                     }
                 }
             }
@@ -99,9 +99,7 @@ Item {
                             spacing: 4
                             Layout.fillWidth: true
                             Text {
-                                text: NetworkService.hasGame
-                                      ? NetworkService.gameName
-                                      : "No game selected"
+                                text: NetworkService.hasGame ? NetworkService.gameName : "No game selected"
                                 color: Theme.textPrimary
                                 font.pixelSize: AppStyle.fontSizeMedium
                                 elide: Text.ElideRight
@@ -142,8 +140,8 @@ Item {
                             implicitHeight: 72
                             onClicked: {
                                 if (NetworkService.isHost) {
-                                    root.pickingSlot = model.slotNumber - 1
-                                    memberPicker.open()
+                                    root.pickingSlot = model.slotNumber - 1;
+                                    memberPicker.open();
                                 }
                             }
                         }
@@ -211,9 +209,8 @@ Item {
                     text: modelData.displayName
                     Layout.fillWidth: true
                     onClicked: {
-                        NetworkService.assignSlot(root.pickingSlot,
-                                                  modelData.memberId, 0)
-                        memberPicker.close()
+                        NetworkService.assignSlot(root.pickingSlot, modelData.memberId, 0);
+                        memberPicker.close();
                     }
                 }
             }
@@ -222,8 +219,8 @@ Item {
                 text: "Clear slot"
                 Layout.fillWidth: true
                 onClicked: {
-                    NetworkService.clearSlot(root.pickingSlot)
-                    memberPicker.close()
+                    NetworkService.clearSlot(root.pickingSlot);
+                    memberPicker.close();
                 }
             }
         }
@@ -237,12 +234,12 @@ Item {
         target: NetworkService
         function onLobbyStateChanged() {
             if (!NetworkService.inLobby) {
-                readyButton.checked = false
+                readyButton.checked = false;
             }
         }
         function onPhaseChanged() {
             if (NetworkService.sessionPhase === "idle") {
-                readyButton.checked = false
+                readyButton.checked = false;
             }
         }
     }

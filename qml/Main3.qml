@@ -19,22 +19,21 @@ ApplicationWindow {
     y: WindowGeometry.mainWindowY
 
     onWidthChanged: {
-        WindowGeometry.mainWindowWidth = width
+        WindowGeometry.mainWindowWidth = width;
     }
 
     onHeightChanged: {
-        WindowGeometry.mainWindowHeight = height
+        WindowGeometry.mainWindowHeight = height;
     }
 
     onXChanged: {
-        WindowGeometry.mainWindowX = x
+        WindowGeometry.mainWindowX = x;
     }
 
     onYChanged: {
-        WindowGeometry.mainWindowY = y
+        WindowGeometry.mainWindowY = y;
     }
 
-    // TODO
     // onActiveFocusItemChanged: {
     //     console.log("Active focus item changed to: " + window.activeFocusItem)
     //     let item = window.activeFocusItem
@@ -51,9 +50,7 @@ ApplicationWindow {
     visible: true
     // A CLI --fullscreen/--windowed override (session-only) wins over the saved
     // preference; -1 means no override was given
-    visibility: StartupOptions.fullscreenOverride === 1 ? Window.FullScreen
-              : StartupOptions.fullscreenOverride === 0 ? Window.Windowed
-              : (GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed)
+    visibility: StartupOptions.fullscreenOverride === 1 ? Window.FullScreen : StartupOptions.fullscreenOverride === 0 ? Window.Windowed : (GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed)
 
     title: qsTr("Firelight")
 
@@ -72,56 +69,55 @@ ApplicationWindow {
         target: EmulationService
 
         function onGameLoaded() {
-            overlay.opacity = 0
-            content.goToContent("Quick Menu", quickMenuPage, {}, StackView.Immediate)
-            emulatorLoader.startGame()
+            overlay.opacity = 0;
+            content.goToContent("Quick Menu", quickMenuPage, {}, StackView.Immediate);
+            emulatorLoader.startGame();
         }
 
         function onEmulationStopped() {
             // External-launcher mode: the app exists only to run this one game
             if (StartupOptions.exitOnClose) {
-                Qt.quit()
-                return
+                Qt.quit();
+                return;
             }
-            content.goToContent("Library", allGamesPage, {}, StackView.Immediate)
-            mainContentStack.pushItems([emulatorLoader, content], StackView.Immediate)
-            emulatorLoader.source = ""
-            content.forceActiveFocus()
+            content.goToContent("Library", allGamesPage, {}, StackView.Immediate);
+            mainContentStack.pushItems([emulatorLoader, content], StackView.Immediate);
+            emulatorLoader.source = "";
+            content.forceActiveFocus();
         }
     }
 
     function startGame(entryId) {
-        // TODO
         // In a lobby, launching becomes a ready check: the host announces the
         // game (from anywhere in the app) and launches from the toast; guests
         // can't start games
         if (NetworkService.inLobby) {
             if (!NetworkService.isHost) {
-                netplayMessageToast.show("Only the host can start games")
-                return
+                netplayMessageToast.show("Only the host can start games");
+                return;
             }
             if (NetworkService.sessionPhase !== "idle") {
-                netplayMessageToast.show("End the current game first")
-                return
+                netplayMessageToast.show("End the current game first");
+                return;
             }
-            NetworkService.selectGame(entryId)
-            NetworkService.startSession()
-            return
+            NetworkService.selectGame(entryId);
+            NetworkService.startSession();
+            return;
         }
-        reallyStartGame(entryId)
+        reallyStartGame(entryId);
     }
 
     function reallyStartGame(entryId) {
         if (EmulationService.isGameRunning) {
             closeGameDialog.openAndDoOnAccepted(function () {
-                EmulationService.stopEmulation()
-                emulatorLoader.setSource("")
-                startGameAnimation.entryId = entryId
-                startGameAnimation.start()
-            })
+                EmulationService.stopEmulation();
+                emulatorLoader.setSource("");
+                startGameAnimation.entryId = entryId;
+                startGameAnimation.start();
+            });
         } else {
-            startGameAnimation.entryId = entryId
-            startGameAnimation.start()
+            startGameAnimation.entryId = entryId;
+            startGameAnimation.start();
         }
     }
 
@@ -132,35 +128,34 @@ ApplicationWindow {
     function maybeAutoLaunch() {
         if (StartupOptions.launchEntryId >= 0) {
             Qt.callLater(function () {
-                window.startGame(StartupOptions.launchEntryId)
-            })
+                window.startGame(StartupOptions.launchEntryId);
+            });
         }
     }
 
     function beginRaLogin() {
-        window.raLoginInProgress = true
+        window.raLoginInProgress = true;
         if (StartupOptions.raToken.length > 0) {
-            achievement_manager.logInUserWithToken(StartupOptions.raUsername, StartupOptions.raToken)
+            achievement_manager.logInUserWithToken(StartupOptions.raUsername, StartupOptions.raToken);
         } else {
-            achievement_manager.logInUserWithPassword(StartupOptions.raUsername, StartupOptions.raPassword)
+            achievement_manager.logInUserWithPassword(StartupOptions.raUsername, StartupOptions.raPassword);
         }
     }
 
     function onRaLoginFailed(message) {
-        window.raLoginInProgress = false
-        raLoginDialog.message = message
-        raLoginDialog.open()
+        window.raLoginInProgress = false;
+        raLoginDialog.message = message;
+        raLoginDialog.open();
     }
 
-    // TODO
     // Auto-launch a game passed on the command line (`firelight <rom>`), once
     // the window and its content stack have been set up. If a CLI login was
     // requested, do that first and gate the launch on its result
     Component.onCompleted: {
         if (StartupOptions.raPendingLogin) {
-            window.beginRaLogin()
+            window.beginRaLogin();
         } else {
-            window.maybeAutoLaunch()
+            window.maybeAutoLaunch();
         }
     }
 
@@ -172,7 +167,7 @@ ApplicationWindow {
 
         function onLaunchRequested(entryId) {
             if (entryId >= 0) {
-                window.startGame(entryId)
+                window.startGame(entryId);
             }
         }
     }
@@ -182,92 +177,89 @@ ApplicationWindow {
         enabled: window.raLoginInProgress
 
         function onLoginSucceeded() {
-            window.raLoginInProgress = false
-            window.maybeAutoLaunch()
+            window.raLoginInProgress = false;
+            window.maybeAutoLaunch();
         }
         function onLoginFailedWithInvalidCredentials() {
-            window.onRaLoginFailed("Invalid username or password.")
+            window.onRaLoginFailed("Invalid username or password.");
         }
         function onLoginFailedWithExpiredToken() {
-            window.onRaLoginFailed("Your saved login token has expired.")
+            window.onRaLoginFailed("Your saved login token has expired.");
         }
         function onLoginFailedWithAccessDenied() {
-            window.onRaLoginFailed("Access was denied.")
+            window.onRaLoginFailed("Access was denied.");
         }
         function onLoginFailedWithInternalError() {
-            window.onRaLoginFailed("A RetroAchievements server error occurred.")
+            window.onRaLoginFailed("A RetroAchievements server error occurred.");
         }
     }
 
     StackView {
-         id: mainContentStack
-         focus: true
-         anchors.fill: parent
+        id: mainContentStack
+        focus: true
+        anchors.fill: parent
 
-         Component.onCompleted: {
-             pushItems([emulatorLoader, content], StackView.Immediate)
-         }
+        Component.onCompleted: {
+            pushItems([emulatorLoader, content], StackView.Immediate);
+        }
 
-        Keys.onPressed: function(event) {
+        Keys.onPressed: function (event) {
             if (event.key === Qt.Key_Home || event.key === Qt.Key_Escape || event.key === Qt.Key_Back) {
                 if (EmulationService.isGameRunning && depth > 1) {
-                    popCurrentItem()
-                    event.accepted = true
-                    return
+                    popCurrentItem();
+                    event.accepted = true;
+                    return;
                 }
             }
 
-            event.accepted = false
+            event.accepted = false;
         }
 
-         // TODO
-         // onCurrentItemChanged: {
-         //     currentItem.focus = true
-         // }
+        // onCurrentItemChanged: {
+        //     currentItem.focus = true
+        // }
 
-         pushEnter: Transition {
-             ParallelAnimation {
-                 PropertyAnimation {
-                     property: "opacity"
-                     from: 0
-                     to: 1
-                     duration: 250
-                     easing.type: Easing.InOutQuad
-                 }
-                 PropertyAnimation {
-                     property: "scale"
-                     from: 1.02
-                     to: 1
-                     duration: 250
-                     easing.type: Easing.InOutQuad
-                 }
-             }
-         }
-         pushExit: Transition {}
-         popEnter: Transition {}
-         popExit: Transition {
-             ParallelAnimation {
-                 PropertyAnimation {
-                     property: "opacity"
-                     from: 1
-                     to: 0
-                     duration: 250
-                     easing.type: Easing.InOutQuad
-                 }
-                 PropertyAnimation {
-                     property: "scale"
-                     from: 1
-                     to: 1.02
-                     duration: 250
-                     easing.type: Easing.InOutQuad
-                 }
-             }
-         }
-         replaceEnter: Transition {
-         }
-         replaceExit: Transition {
-         }
-     }
+        pushEnter: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "scale"
+                    from: 1.02
+                    to: 1
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        pushExit: Transition {}
+        popEnter: Transition {}
+        popExit: Transition {
+            ParallelAnimation {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+                PropertyAnimation {
+                    property: "scale"
+                    from: 1
+                    to: 1.02
+                    duration: 250
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+        replaceEnter: Transition {}
+        replaceExit: Transition {}
+    }
 
     Item {
         focus: false
@@ -276,8 +268,8 @@ ApplicationWindow {
 
             onSuspended: {
                 // content.goToContent("Quick Menu", quickMenuPage, {saveSlotNumber: emulatorLoader.item.saveSlotNumber}, StackView.Immediate)
-                Router.navigateTo("/quick-menu")
-                mainContentStack.pushItems([emulatorLoader, content], StackView.PushTransition)
+                Router.navigateTo("/quick-menu");
+                mainContentStack.pushItems([emulatorLoader, content], StackView.PushTransition);
             }
         }
 
@@ -290,14 +282,13 @@ ApplicationWindow {
             id: allGamesPage
             currentEntryId: EmulationService.currentEntryId
             onStartGame: function (entryId) {
-                window.startGame(entryId)
+                window.startGame(entryId);
             }
         }
 
         FirelightDialog {
             id: closeGameDialog
-            text: "You're currently playing:\n\n" + EmulationService.currentGameName  + "\n\nDo you want to close it?"
-
+            text: "You're currently playing:\n\n" + EmulationService.currentGameName + "\n\nDo you want to close it?"
         }
     }
 
@@ -368,8 +359,8 @@ ApplicationWindow {
                 FirelightButton {
                     label: "Abort"
                     onClicked: {
-                        raLoginDialog.close()
-                        Qt.quit()
+                        raLoginDialog.close();
+                        Qt.quit();
                     }
                 }
 
@@ -380,17 +371,17 @@ ApplicationWindow {
                 FirelightButton {
                     label: "Continue without login"
                     onClicked: {
-                        raLoginDialog.close()
-                        window.maybeAutoLaunch()
+                        raLoginDialog.close();
+                        window.maybeAutoLaunch();
                     }
                 }
 
                 FirelightButton {
                     label: "Retry"
                     onClicked: {
-                        raLoginDialog.close()
-                        window.raLoginInProgress = true
-                        achievement_manager.logInUserWithPassword(raUsernameField.text, raPasswordField.text)
+                        raLoginDialog.close();
+                        window.raLoginInProgress = true;
+                        achievement_manager.logInUserWithPassword(raUsernameField.text, raPasswordField.text);
                     }
                 }
             }
@@ -412,10 +403,12 @@ ApplicationWindow {
 
         ScriptAction {
             script: {
-                mainContentStack.popCurrentItem(StackView.Immediate)
-                emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: mainContentStack})
-                emulatorLoader.blurAmount = 0
-                EmulationService.loadEntry(startGameAnimation.entryId)
+                mainContentStack.popCurrentItem(StackView.Immediate);
+                emulatorLoader.setSource("NewEmulatorPage.qml", {
+                    stackView: mainContentStack
+                });
+                emulatorLoader.blurAmount = 0;
+                EmulationService.loadEntry(startGameAnimation.entryId);
             }
         }
     }
@@ -439,10 +432,10 @@ ApplicationWindow {
         anchors.bottomMargin: 24
         z: 950
         onHostLaunchRequested: {
-            const entryId = NetworkService.selectedGameEntryId()
+            const entryId = NetworkService.selectedGameEntryId();
             if (entryId >= 0) {
-                NetworkService.confirmLaunch()
-                window.reallyStartGame(entryId)
+                NetworkService.confirmLaunch();
+                window.reallyStartGame(entryId);
             }
         }
     }
@@ -451,9 +444,8 @@ ApplicationWindow {
     Connections {
         target: NetworkService
         function onPhaseChanged() {
-            if (NetworkService.inLobby && !NetworkService.isHost
-                    && NetworkService.sessionPhase === "in-game") {
-                Router.navigateTo("/netplay")
+            if (NetworkService.inLobby && !NetworkService.isHost && NetworkService.sessionPhase === "in-game") {
+                Router.navigateTo("/netplay");
             }
         }
     }
@@ -462,9 +454,9 @@ ApplicationWindow {
         id: netplayMessageToast
 
         function show(message) {
-            messageText.text = message
-            opacity = 1
-            hideTimer.restart()
+            messageText.text = message;
+            opacity = 1;
+            hideTimer.restart();
         }
 
         anchors.horizontalCenter: parent.horizontalCenter
@@ -503,32 +495,29 @@ ApplicationWindow {
         id: quickMenuPage
         QuickMenu {
             onResumeGame: {
-                mainContentStack.popCurrentItem()
+                mainContentStack.popCurrentItem();
             }
 
             onResetGame: {
-                EmulationService.resetGame()
-                mainContentStack.popCurrentItem()
-                emulatorLoader.forceActiveFocus()
+                EmulationService.resetGame();
+                mainContentStack.popCurrentItem();
+                emulatorLoader.forceActiveFocus();
                 // mainContentStack.pop(emulatorLoader)
             }
 
             onCloseGame: {
-                EmulationService.stopEmulation()
+                EmulationService.stopEmulation();
             }
 
             onRewindPressed: {
-                 emulatorLoader.item.createRewindPoints()
+                emulatorLoader.item.createRewindPoints();
             }
-
         }
     }
 
     Component {
         id: gameDetailsPage
-        FLGameDetailsPanel {
-
-        }
+        FLGameDetailsPanel {}
     }
 
     Component {
@@ -540,8 +529,7 @@ ApplicationWindow {
 
     Component {
         id: shopItemPage
-        ShopItemPage {
-        }
+        ShopItemPage {}
     }
 
     Component {
@@ -576,31 +564,26 @@ ApplicationWindow {
         ControllersPage {
             onEditProfileButtonClicked: function (name, playerNumber) {
                 if (name === "Keyboard") {
-                    Router.navigateTo("/controllers/keyboard/" + playerNumber)
+                    Router.navigateTo("/controllers/keyboard/" + playerNumber);
                     // screenStack.pushItem(keyboardProfileEditor, {playerNumber: playerNumber}, StackView.PushTransition)
                 } else {
-                    Router.navigateTo("/controllers/profiles/" + playerNumber)
+                    Router.navigateTo("/controllers/profiles/" + playerNumber);
                     // screenStack.pushItem(profileEditor, {playerNumber: playerNumber}, StackView.PushTransition)
                 }
             }
-
         }
     }
 
     Component {
         id: controllerInputMappingPage
 
-        ControllerProfilePage {
-
-        }
+        ControllerProfilePage {}
     }
 
     Component {
         id: keyboardInputMappingPage
 
-        KeyboardProfilePage {
-
-        }
+        KeyboardProfilePage {}
     }
 
     Component {
@@ -619,62 +602,71 @@ ApplicationWindow {
     }
 
     Connections {
-            target: Router
+        target: Router
 
-            function onRouteChanged(route) {
-
-                if (route === "/shop") {
-                    content.goToContent("Mod Shop", shopPage, {}, StackView.ReplaceTransition)
-                } else if (route === "/library") {
-                    content.goToContent("Library", allGamesPage, {}, StackView.ReplaceTransition)
-                } else if (route.startsWith("/library/entries/")) {
-                    let things = route.split("/")
-                    if (things.length === 4) {
-                        content.goToContent("Game Details", gameDetailsPage, {entryId: things[3]}, StackView.PushTransition)
-                    } else {
-                        content.goToContent("Not found", lol, {}, StackView.PushTransition)
-                    }
-                } else if (route.startsWith("/shop/mods/")) {
-                    let things = route.split("/")
-                    content.goToContent("Mod Details", shopItemPage, {modId: things[3]}, StackView.PushTransition)
-                } else if (route === "/settings") {
-                    content.goToContent("Settings", settingsScreen, {}, StackView.ReplaceTransition)
-                } else if (route === "/help") {
-                    content.goToContent("Help", helpScreen, {}, StackView.ReplaceTransition)
-                } else if (route === "/netplay") {
-                    content.goToContent("Online", netplayPage, {}, StackView.ReplaceTransition)
-                } else if (route === "/gallery") {
-                    content.goToContent("Media", galleryPage, {}, StackView.ReplaceTransition)
-                } else if (route.startsWith("/gallery/games/")) {
-                    let things = route.split("/")
-                    if (things.length === 4) {
-                        content.goToContent("Media", galleryPage, {gameContentHash: things[3]}, StackView.PushTransition)
-                    } else {
-                        content.goToContent("Not found", lol, {}, StackView.PushTransition)
-                    }
-                } else if (route === "/controllers") {
-                    content.goToContent("Controllers", controllersPage, {}, StackView.ReplaceTransition)
-                } else if (route.startsWith("/controllers/keyboard/")) {
-                    let things = route.split("/")
-                    if (things.length === 4) {
-                        content.goToContent("Edit keyboard profile", keyboardInputMappingPage, {playerNumber: things[3]}, StackView.PushTransition)
-                    } else {
-                        content.goToContent("Not found", lol, {}, StackView.PushTransition)
-                    }
-                } else if (route.startsWith("/controllers/profiles/")) {
-                    let things = route.split("/")
-                    if (things.length === 4) {
-                        content.goToContent("Edit controller profile", controllerInputMappingPage, {playerNumber: things[3]}, StackView.PushTransition)
-                    } else {
-                        content.goToContent("Not found", lol, {}, StackView.PushTransition)
-                    }
-                } else if (route === "/quick-menu") {
-                    content.goToContent("Quick Menu", quickMenuPage, {}, StackView.ReplaceTransition)
-                } else if (route === "/activity") {
-                    content.goToContent("Activity", activityPage, {}, StackView.ReplaceTransition)
+        function onRouteChanged(route) {
+            if (route === "/shop") {
+                content.goToContent("Mod Shop", shopPage, {}, StackView.ReplaceTransition);
+            } else if (route === "/library") {
+                content.goToContent("Library", allGamesPage, {}, StackView.ReplaceTransition);
+            } else if (route.startsWith("/library/entries/")) {
+                let things = route.split("/");
+                if (things.length === 4) {
+                    content.goToContent("Game Details", gameDetailsPage, {
+                        entryId: things[3]
+                    }, StackView.PushTransition);
                 } else {
-                        content.goToContent("Not found", lol, {}, StackView.ReplaceTransition)
+                    content.goToContent("Not found", lol, {}, StackView.PushTransition);
                 }
+            } else if (route.startsWith("/shop/mods/")) {
+                let things = route.split("/");
+                content.goToContent("Mod Details", shopItemPage, {
+                    modId: things[3]
+                }, StackView.PushTransition);
+            } else if (route === "/settings") {
+                content.goToContent("Settings", settingsScreen, {}, StackView.ReplaceTransition);
+            } else if (route === "/help") {
+                content.goToContent("Help", helpScreen, {}, StackView.ReplaceTransition);
+            } else if (route === "/netplay") {
+                content.goToContent("Online", netplayPage, {}, StackView.ReplaceTransition);
+            } else if (route === "/gallery") {
+                content.goToContent("Media", galleryPage, {}, StackView.ReplaceTransition);
+            } else if (route.startsWith("/gallery/games/")) {
+                let things = route.split("/");
+                if (things.length === 4) {
+                    content.goToContent("Media", galleryPage, {
+                        gameContentHash: things[3]
+                    }, StackView.PushTransition);
+                } else {
+                    content.goToContent("Not found", lol, {}, StackView.PushTransition);
+                }
+            } else if (route === "/controllers") {
+                content.goToContent("Controllers", controllersPage, {}, StackView.ReplaceTransition);
+            } else if (route.startsWith("/controllers/keyboard/")) {
+                let things = route.split("/");
+                if (things.length === 4) {
+                    content.goToContent("Edit keyboard profile", keyboardInputMappingPage, {
+                        playerNumber: things[3]
+                    }, StackView.PushTransition);
+                } else {
+                    content.goToContent("Not found", lol, {}, StackView.PushTransition);
+                }
+            } else if (route.startsWith("/controllers/profiles/")) {
+                let things = route.split("/");
+                if (things.length === 4) {
+                    content.goToContent("Edit controller profile", controllerInputMappingPage, {
+                        playerNumber: things[3]
+                    }, StackView.PushTransition);
+                } else {
+                    content.goToContent("Not found", lol, {}, StackView.PushTransition);
+                }
+            } else if (route === "/quick-menu") {
+                content.goToContent("Quick Menu", quickMenuPage, {}, StackView.ReplaceTransition);
+            } else if (route === "/activity") {
+                content.goToContent("Activity", activityPage, {}, StackView.ReplaceTransition);
+            } else {
+                content.goToContent("Not found", lol, {}, StackView.ReplaceTransition);
             }
         }
+    }
 }

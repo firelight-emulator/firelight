@@ -11,7 +11,6 @@ RoundButton {
 
     property string tooltipText: ""
 
-
     property real xOffset: 0
 
     hoverEnabled: false

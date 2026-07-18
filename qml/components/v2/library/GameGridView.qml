@@ -19,13 +19,23 @@ Item {
     // mirroring every row's full data just to show one)
     function focusSnapshot(m) {
         return {
-            entryId: m.entryId, displayName: m.displayName, platformId: m.platformId,
-            platformIconName: m.platformIconName, contentHash: m.contentHash,
-            boxartFrontSourceUrl: m.boxartFrontSourceUrl, icon1x1SourceUrl: m.icon1x1SourceUrl,
-            description: m.description, developer: m.developer, releaseYear: m.releaseYear,
-            favorite: m.favorite, lastPlayedAt: m.lastPlayedAt, numSecondsPlayed: m.numSecondsPlayed,
-            achievementsEarned: m.achievementsEarned, achievementsTotal: m.achievementsTotal,
-            folderIds: m.folderIds, genres: m.genres
+            entryId: m.entryId,
+            displayName: m.displayName,
+            platformId: m.platformId,
+            platformIconName: m.platformIconName,
+            contentHash: m.contentHash,
+            boxartFrontSourceUrl: m.boxartFrontSourceUrl,
+            icon1x1SourceUrl: m.icon1x1SourceUrl,
+            description: m.description,
+            developer: m.developer,
+            releaseYear: m.releaseYear,
+            favorite: m.favorite,
+            lastPlayedAt: m.lastPlayedAt,
+            numSecondsPlayed: m.numSecondsPlayed,
+            achievementsEarned: m.achievementsEarned,
+            achievementsTotal: m.achievementsTotal,
+            folderIds: m.folderIds,
+            genres: m.genres
         };
     }
 
@@ -35,8 +45,10 @@ Item {
         if (gridRoot.selectedIds[entryId] === true) {
             var out = [];
             for (var k in gridRoot.selectedIds)
-                if (gridRoot.selectedIds[k]) out.push(parseInt(k));
-            if (out.length > 0) return out;
+                if (gridRoot.selectedIds[k])
+                    out.push(parseInt(k));
+            if (out.length > 0)
+                return out;
         }
         return [entryId];
     }
@@ -45,10 +57,10 @@ Item {
     // a file:// URL so Image can load it
     function iconSource(u) {
         if (!u)
-            return ""
+            return "";
         if (u.indexOf("://") >= 0)
-            return u
-        return "file:///" + u.replace(/\\/g, "/")
+            return u;
+        return "file:///" + u.replace(/\\/g, "/");
     }
 
     GridView {
@@ -68,7 +80,7 @@ Item {
         cellHeight: AppearanceSettings.libraryTileSize
 
         Component.onCompleted: {
-            initialContentY = contentY
+            initialContentY = contentY;
         }
 
         ScrollBar.vertical: ScrollBar {
@@ -76,9 +88,8 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: 8
-
         }
-         boundsBehavior: Flickable.StopAtBounds
+        boundsBehavior: Flickable.StopAtBounds
 
         delegate: Item {
             id: gameDelegate
@@ -90,7 +101,7 @@ Item {
             readonly property bool selected: gridRoot.selectedIds[gameDelegate.model.entryId] === true
 
             Button {
-            id: control
+                id: control
                 anchors.fill: parent
                 anchors.margins: 4
                 padding: 0
@@ -100,16 +111,16 @@ Item {
                     id: selectTap
                     acceptedButtons: Qt.LeftButton
                     onSingleTapped: {
-                        gridRoot.gameClicked(gameDelegate.model.entryId, gameDelegate.index, selectTap.point.modifiers)
-                        gridRoot.gameFocused(gridRoot.focusSnapshot(gameDelegate.model))
+                        gridRoot.gameClicked(gameDelegate.model.entryId, gameDelegate.index, selectTap.point.modifiers);
+                        gridRoot.gameFocused(gridRoot.focusSnapshot(gameDelegate.model));
                     }
                     onDoubleTapped: EmulationService.loadEntry(gameDelegate.model.entryId)
                 }
 
                 Keys.onPressed: function (event) {
                     if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Select) {
-                        EmulationService.loadEntry(gameDelegate.model.entryId)
-                        event.accepted = true
+                        EmulationService.loadEntry(gameDelegate.model.entryId);
+                        event.accepted = true;
                     }
                 }
 
@@ -120,7 +131,7 @@ Item {
                     displayName: gameDelegate.model.displayName
                     platformId: gameDelegate.model.platformId
                     targetIds: gridRoot.targetsFor(gameDelegate.model.entryId)
-                    onRequestAddToFolder: (entryIds) => gridRoot.requestAddToFolder(entryIds)
+                    onRequestAddToFolder: entryIds => gridRoot.requestAddToFolder(entryIds)
                     onRequestChangeArt: (h, n, p) => gridRoot.requestChangeArt(h, n, p)
                 }
 
@@ -186,8 +197,7 @@ Item {
                     // Achievement progress pill (top-right)
                     Rectangle {
                         id: achPill
-                        readonly property bool done: gameDelegate.model.achievementsTotal > 0
-                                                     && gameDelegate.model.achievementsEarned >= gameDelegate.model.achievementsTotal
+                        readonly property bool done: gameDelegate.model.achievementsTotal > 0 && gameDelegate.model.achievementsEarned >= gameDelegate.model.achievementsTotal
                         visible: gameDelegate.model.achievementsTotal > 0
                         anchors.right: parent.right
                         anchors.top: parent.top
@@ -214,17 +224,27 @@ Item {
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     height: Math.round(parent.height * 0.55)
-                    // TODO
                     // Uniform radius, not per-corner: a Rectangle ignores its
                     // gradient when per-corner radii are set. The top corners are
                     // transparent in the gradient, so rounding them is invisible
                     radius: AppStyle.radiusMd
                     opacity: control.hovered || control.activeFocus ? 1 : 0
                     gradient: Gradient {
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 1.0; color: "#dd000000" }
+                        GradientStop {
+                            position: 0.0
+                            color: "transparent"
+                        }
+                        GradientStop {
+                            position: 1.0
+                            color: "#dd000000"
+                        }
                     }
-                    Behavior on opacity { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 120
+                            easing.type: Easing.OutQuad
+                        }
+                    }
 
                     Text {
                         anchors.left: parent.left
@@ -254,6 +274,5 @@ Item {
                 }
             }
         }
-
-     }
- }
+    }
+}

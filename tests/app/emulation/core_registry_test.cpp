@@ -1,18 +1,15 @@
-#include <libretro/core_registry.hpp>
 #include <firelight/platforms/platform_service.hpp>
-
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
-#include <gtest/gtest.h>
-
 #include <algorithm>
+#include <gtest/gtest.h>
+#include <libretro/core_registry.hpp>
 
 namespace firelight {
 namespace {
 bool contains(const std::vector<PlatformCore> &cores, const std::string &id) {
-  return std::any_of(cores.begin(), cores.end(),
-                     [&](const auto &c) { return c.id == id; });
+  return std::any_of(cores.begin(), cores.end(), [&](const auto &c) { return c.id == id; });
 }
 } // namespace
 
@@ -20,30 +17,26 @@ TEST(CoreRegistryTest, DefaultCoreMatchesLegacyMapping) {
   const auto &registry = CoreRegistry::instance();
   EXPECT_EQ(registry.defaultCoreForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY),
             "gambatte_libretro");
-  EXPECT_EQ(registry.defaultCoreForPlatform(
-                firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE),
+  EXPECT_EQ(registry.defaultCoreForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE),
             "mgba_libretro");
   EXPECT_EQ(registry.defaultCoreForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_N64),
             "mupen64plus_next_libretro");
-  EXPECT_EQ(
-      registry.defaultCoreForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS),
-      "genesis_plus_gx_libretro");
+  EXPECT_EQ(registry.defaultCoreForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS),
+            "genesis_plus_gx_libretro");
   EXPECT_TRUE(registry.defaultCoreForPlatform(999999).empty());
 }
 
 TEST(CoreRegistryTest, CoresForPlatformListsDefaultFirstPlusAlternates) {
   const auto &registry = CoreRegistry::instance();
 
-  const auto gb =
-      registry.coresForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY);
+  const auto gb = registry.coresForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY);
   ASSERT_FALSE(gb.empty());
   EXPECT_EQ(gb.front().id, "gambatte_libretro");
   EXPECT_TRUE(gb.front().isDefault);
   // mGBA is offered as an alternate for the Game Boy
   EXPECT_TRUE(contains(gb, "mgba_libretro"));
 
-  const auto gba =
-      registry.coresForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE);
+  const auto gba = registry.coresForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE);
   ASSERT_EQ(gba.size(), 1u);
   EXPECT_EQ(gba.front().id, "mgba_libretro");
   EXPECT_TRUE(gba.front().isDefault);
@@ -51,10 +44,9 @@ TEST(CoreRegistryTest, CoresForPlatformListsDefaultFirstPlusAlternates) {
 
 TEST(CoreRegistryTest, SupportsPlatformAndDllPath) {
   const auto &registry = CoreRegistry::instance();
-  EXPECT_TRUE(registry.supportsPlatform(
-      "mgba_libretro", firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY));
-  EXPECT_FALSE(registry.supportsPlatform(
-      "gambatte_libretro", firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE));
+  EXPECT_TRUE(registry.supportsPlatform("mgba_libretro", firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY));
+  EXPECT_FALSE(registry.supportsPlatform("gambatte_libretro",
+                                         firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE));
 
   const auto path = registry.dllPathFor("mgba_libretro");
   EXPECT_NE(path.find("mgba_libretro"), std::string::npos);
@@ -74,8 +66,7 @@ TEST(CoreRegistryTest, DeviceCatalogClassifiesVariants) {
       EXPECT_EQ(v.deviceClass, input::GamepadInputClass::Joypad);
       EXPECT_TRUE(v.isDefault);
     }
-    hasLightgun =
-        hasLightgun || v.deviceClass == input::GamepadInputClass::Lightgun;
+    hasLightgun = hasLightgun || v.deviceClass == input::GamepadInputClass::Lightgun;
   }
   EXPECT_TRUE(has6Button);
   EXPECT_TRUE(hasLightgun);
@@ -97,12 +88,10 @@ TEST(CoreRegistryTest, DeviceCatalogClassifiesVariants) {
 TEST(CoreRegistryTest, AvailableVariantsCrossReferencesAdvertisement) {
   const auto &registry = CoreRegistry::instance();
 
-  // TODO
   // snes9x catalog = Mouse(2), Super Scope(260), Justifier(516). The core here
   // advertises only the pad, mouse, and Super Scope -> Justifier is filtered
   // out, and a standard joypad is synthesized as the default (first)
-  const auto variants = registry.availableControllerVariants(
-      "snes9x_libretro", {1u, 2u, 260u});
+  const auto variants = registry.availableControllerVariants("snes9x_libretro", {1u, 2u, 260u});
   ASSERT_EQ(variants.size(), 3u);
   EXPECT_TRUE(variants.front().isDefault);
   EXPECT_EQ(variants.front().deviceClass, input::GamepadInputClass::Joypad);
@@ -117,8 +106,7 @@ TEST(CoreRegistryTest, AvailableVariantsCrossReferencesAdvertisement) {
   EXPECT_FALSE(hasJustifier);
 
   // An uncatalogued core still yields the synthesized standard controller
-  const auto gb =
-      registry.availableControllerVariants("gambatte_libretro", {1u});
+  const auto gb = registry.availableControllerVariants("gambatte_libretro", {1u});
   ASSERT_EQ(gb.size(), 1u);
   EXPECT_TRUE(gb.front().isDefault);
   EXPECT_EQ(gb.front().deviceClass, input::GamepadInputClass::Joypad);

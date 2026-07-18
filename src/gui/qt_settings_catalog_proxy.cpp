@@ -4,11 +4,9 @@
 
 namespace firelight::gui {
 
-QtSettingsCatalogProxy::QtSettingsCatalogProxy(QObject *parent)
-    : QObject(parent) {}
+QtSettingsCatalogProxy::QtSettingsCatalogProxy(QObject *parent) : QObject(parent) {}
 
-QStringList
-QtSettingsCatalogProxy::groupsForPage(const QString &pageId) const {
+QStringList QtSettingsCatalogProxy::groupsForPage(const QString &pageId) const {
   QStringList ids;
   // groups() is already sorted by `order`, so declaration order is the render
   // order and nothing here re-sorts

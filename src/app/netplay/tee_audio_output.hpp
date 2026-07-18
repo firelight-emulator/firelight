@@ -8,14 +8,12 @@
 
 namespace firelight::netplay {
 
-// TODO
 // Wraps the real audio output and mirrors the core's PCM into the host stream
 // sender (which no-ops unless a stream is armed). Also reports the core's
 // sample rate so the encoder can resample to Opus's 48 kHz
 class TeeAudioOutput final : public IAudioOutput {
 public:
-  TeeAudioOutput(std::shared_ptr<IAudioOutput> inner, HostStreamSender *tap)
-      : m_inner(std::move(inner)), m_tap(tap) {}
+  TeeAudioOutput(std::shared_ptr<IAudioOutput> inner, HostStreamSender *tap) : m_inner(std::move(inner)), m_tap(tap) {}
 
   size_t receive(const int16_t *data, const size_t numFrames) override {
     if (m_tap) {
@@ -38,22 +36,23 @@ public:
       m_inner->setMuted(muted);
     }
   }
-  [[nodiscard]] bool isMuted() const override {
-    return m_inner && m_inner->isMuted();
-  }
+
+  [[nodiscard]] bool isMuted() const override { return m_inner && m_inner->isMuted(); }
+
   void setPaused(const bool paused) override {
     if (m_inner) {
       m_inner->setPaused(paused);
     }
   }
-  [[nodiscard]] float getBufferLevel() const override {
-    return m_inner ? m_inner->getBufferLevel() : -1.0f;
-  }
+
+  [[nodiscard]] float getBufferLevel() const override { return m_inner ? m_inner->getBufferLevel() : -1.0f; }
+
   void setPlaybackRateRatio(const double ratio) override {
     if (m_inner) {
       m_inner->setPlaybackRateRatio(ratio);
     }
   }
+
   void setDynamicRateControlEnabled(const bool enabled) override {
     if (m_inner) {
       m_inner->setDynamicRateControlEnabled(enabled);

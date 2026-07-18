@@ -70,18 +70,12 @@ FocusScope {
 
             initialItem: root.pages[root.currentIndex]
 
-            popEnter: Transition {
-            }
-            popExit: Transition {
-            }
-            pushEnter: Transition {
-            }
-            pushExit: Transition {
-            }
-            replaceEnter: Transition {
-            }
-            replaceExit: Transition {
-            }
+            popEnter: Transition {}
+            popExit: Transition {}
+            pushEnter: Transition {}
+            pushExit: Transition {}
+            replaceEnter: Transition {}
+            replaceExit: Transition {}
             //
 
             Keys.onEscapePressed: {
@@ -151,14 +145,10 @@ FocusScope {
             initialItem: root.pages[root.currentIndex]
             visible: root.landscape
 
-            popEnter: Transition {
-            }
-            popExit: Transition {
-            }
-            pushEnter: Transition {
-            }
-            pushExit: Transition {
-            }
+            popEnter: Transition {}
+            popExit: Transition {}
+            pushEnter: Transition {}
+            pushExit: Transition {}
             replaceEnter: Transition {
                 NumberAnimation {
                     duration: 200
@@ -199,4 +189,3 @@ FocusScope {
         }
     }
 }
-

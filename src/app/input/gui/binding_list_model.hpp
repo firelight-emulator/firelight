@@ -12,7 +12,6 @@
 
 namespace firelight::input {
 
-// TODO
 // QML-facing list of the Bindings attached to a single emulated input (the
 // "target") within a profile's (platform, controller-type) mapping. Supports
 // multiple alternate bindings per target plus per-binding turbo/toggle options
@@ -21,8 +20,7 @@ class BindingListModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int profileId READ profileId WRITE setProfileId NOTIFY contextChanged)
   Q_PROPERTY(int platformId READ platformId WRITE setPlatformId NOTIFY contextChanged)
-  Q_PROPERTY(int controllerTypeId READ controllerTypeId WRITE setControllerTypeId
-                 NOTIFY contextChanged)
+  Q_PROPERTY(int controllerTypeId READ controllerTypeId WRITE setControllerTypeId NOTIFY contextChanged)
   Q_PROPERTY(int targetInput READ targetInput WRITE setTargetInput NOTIFY contextChanged)
 
 public:

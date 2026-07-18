@@ -2,9 +2,8 @@
 #include <firelight/media/stream_encoder.hpp>
 
 #include <QImage>
-#include <gtest/gtest.h>
-
 #include <cmath>
+#include <gtest/gtest.h>
 #include <mutex>
 
 namespace firelight::media {
@@ -23,16 +22,14 @@ TEST(StreamCodecTest, EncodeDecodeRoundTrip) {
   std::mutex mutex;
   std::vector<CollectedPacket> videoPackets;
   std::vector<CollectedPacket> audioPackets;
-  encoder.setVideoPacketCallback(
-      [&](std::vector<uint8_t> data, const int64_t ptsMs, const bool keyframe) {
-        std::lock_guard lock(mutex);
-        videoPackets.push_back({std::move(data), ptsMs, keyframe});
-      });
-  encoder.setAudioPacketCallback(
-      [&](std::vector<uint8_t> data, const int64_t ptsMs) {
-        std::lock_guard lock(mutex);
-        audioPackets.push_back({std::move(data), ptsMs, false});
-      });
+  encoder.setVideoPacketCallback([&](std::vector<uint8_t> data, const int64_t ptsMs, const bool keyframe) {
+    std::lock_guard lock(mutex);
+    videoPackets.push_back({std::move(data), ptsMs, keyframe});
+  });
+  encoder.setAudioPacketCallback([&](std::vector<uint8_t> data, const int64_t ptsMs) {
+    std::lock_guard lock(mutex);
+    audioPackets.push_back({std::move(data), ptsMs, false});
+  });
 
   ASSERT_TRUE(encoder.start({.width = 64,
                              .height = 64,
@@ -48,8 +45,7 @@ TEST(StreamCodecTest, EncodeDecodeRoundTrip) {
   frame.fill(Qt::red);
   std::vector<int16_t> tone(32768 * 2);
   for (size_t i = 0; i < tone.size() / 2; ++i) {
-    const auto value =
-        static_cast<int16_t>(std::sin(i * 0.05) * 12000);
+    const auto value = static_cast<int16_t>(std::sin(i * 0.05) * 12000);
     tone[i * 2] = value;
     tone[i * 2 + 1] = value;
   }
@@ -97,15 +93,12 @@ TEST(StreamCodecTest, EncodeDecodeRoundTrip) {
   int decodedFrames = 0;
   StreamVideoFrame lastFrame;
   size_t decodedAudioFrames = 0;
-  decoder.setVideoFrameCallback(
-      [&](StreamVideoFrame decoded, int64_t) {
-        decodedFrames++;
-        lastFrame = std::move(decoded);
-      });
-  decoder.setAudioCallback([&](const std::vector<int16_t> &interleaved,
-                               int64_t) {
-    decodedAudioFrames += interleaved.size() / 2;
+  decoder.setVideoFrameCallback([&](StreamVideoFrame decoded, int64_t) {
+    decodedFrames++;
+    lastFrame = std::move(decoded);
   });
+  decoder.setAudioCallback(
+      [&](const std::vector<int16_t> &interleaved, int64_t) { decodedAudioFrames += interleaved.size() / 2; });
   ASSERT_TRUE(decoder.start(extradata));
 
   for (const auto &packet : videoPackets) {
@@ -121,17 +114,16 @@ TEST(StreamCodecTest, EncodeDecodeRoundTrip) {
   ASSERT_EQ(lastFrame.rgba.size(), 64u * 64u * 4u);
   // Solid red survives the trip (YUV conversion is slightly lossy)
   const auto centerOffset = (32 * 64 + 32) * 4;
-  EXPECT_GT(lastFrame.rgba[centerOffset], 200);     // R
-  EXPECT_LT(lastFrame.rgba[centerOffset + 1], 60);  // G
-  EXPECT_LT(lastFrame.rgba[centerOffset + 2], 60);  // B
+  EXPECT_GT(lastFrame.rgba[centerOffset], 200);    // R
+  EXPECT_LT(lastFrame.rgba[centerOffset + 1], 60); // G
+  EXPECT_LT(lastFrame.rgba[centerOffset + 2], 60); // B
 
   EXPECT_GT(decodedAudioFrames, 35000u); // ~1 s at 48 kHz, minus warmup
 
   // A mid-stream reset re-arms on the next keyframe
   ASSERT_TRUE(decoder.reset(extradata));
   decodedFrames = 0;
-  decoder.pushVideoPacket(videoPackets.front().data,
-                          videoPackets.front().ptsMs);
+  decoder.pushVideoPacket(videoPackets.front().data, videoPackets.front().ptsMs);
   EXPECT_GE(decodedFrames, 0);
   decoder.stop();
 }

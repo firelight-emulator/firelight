@@ -1,7 +1,7 @@
-#include <firelight/input/keyboard_input_handler.hpp>
-
 #include "firelight/event_dispatcher.hpp"
+
 #include <firelight/input/input_service.hpp>
+#include <firelight/input/keyboard_input_handler.hpp>
 
 #include <QKeyEvent>
 #include <spdlog/spdlog.h>
@@ -42,17 +42,16 @@ const QMap<GamepadInput, Qt::Key> &KeyboardInputHandler::defaultKeyMap() {
 Qt::Key KeyboardInputHandler::getDefaultKey(const GamepadInput input) {
   return defaultKeyMap().value(input, Qt::Key_unknown);
 }
+
 QString KeyboardInputHandler::getKeyLabel(const Qt::Key key) {
   return QKeySequence(key).toString(QKeySequence::NativeText);
 }
 
-bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
-                                           Input t_button) {
+bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId, Input t_button) {
   std::lock_guard lock(m_keyStatesMutex);
   const auto input = static_cast<GamepadInput>(t_button);
   if (m_profile) {
-    auto mapping = m_profile->getMappingForPlatformAndController(
-        platformId, controllerTypeId);
+    auto mapping = m_profile->getMappingForPlatformAndController(platformId, controllerTypeId);
     if (mapping) {
       const auto &bindings = mapping->getBindings(input);
       if (!bindings.empty()) {
@@ -65,8 +64,7 @@ bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
               break;
             }
           }
-          if (modifiersHeld &&
-              m_keyStates[static_cast<Qt::Key>(binding.source.code)]) {
+          if (modifiersHeld && m_keyStates[static_cast<Qt::Key>(binding.source.code)]) {
             return true;
           }
         }
@@ -87,8 +85,7 @@ bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
   return m_keyStates[defaultKey];
 }
 
-int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,
-                                                    int controllerTypeId) {
+int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId, int controllerTypeId) {
   std::lock_guard lock(m_keyStatesMutex);
   if (!m_profile) {
     if (m_keyStates[Qt::Key_Left]) {
@@ -99,8 +96,7 @@ int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,
     }
   }
 
-  auto mapping = m_profile->getMappingForPlatformAndController(
-      platformId, controllerTypeId);
+  auto mapping = m_profile->getMappingForPlatformAndController(platformId, controllerTypeId);
   if (!mapping) {
     if (m_keyStates[Qt::Key_Left]) {
       return -32767;
@@ -111,13 +107,11 @@ int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,
   }
 
   const auto mappedLeft = mapping->getMappedInput(GamepadInput::LeftStickLeft);
-  const auto mappedRight =
-      mapping->getMappedInput(GamepadInput::LeftStickRight);
+  const auto mappedRight = mapping->getMappedInput(GamepadInput::LeftStickRight);
 
   if (mappedLeft.has_value() && mappedRight.has_value()) {
     const auto valLeft = m_keyStates[static_cast<Qt::Key>(mappedLeft.value())];
-    const auto valRight =
-        m_keyStates[static_cast<Qt::Key>(mappedRight.value())];
+    const auto valRight = m_keyStates[static_cast<Qt::Key>(mappedRight.value())];
 
     if (valLeft && valRight) {
       return 0;
@@ -134,13 +128,11 @@ int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,
     return 0;
   }
 
-  if (mappedLeft.has_value() &&
-      m_keyStates[static_cast<Qt::Key>(mappedLeft.value())]) {
+  if (mappedLeft.has_value() && m_keyStates[static_cast<Qt::Key>(mappedLeft.value())]) {
     return -32767;
   }
 
-  if (mappedRight.has_value() &&
-      m_keyStates[static_cast<Qt::Key>(mappedRight.value())]) {
+  if (mappedRight.has_value() && m_keyStates[static_cast<Qt::Key>(mappedRight.value())]) {
     return 32767;
   }
 
@@ -154,8 +146,7 @@ int16_t KeyboardInputHandler::getLeftStickXPosition(int platformId,
   return 0;
 }
 
-int16_t KeyboardInputHandler::getLeftStickYPosition(int platformId,
-                                                    int controllerTypeId) {
+int16_t KeyboardInputHandler::getLeftStickYPosition(int platformId, int controllerTypeId) {
   std::lock_guard lock(m_keyStatesMutex);
   if (!m_profile) {
     if (m_keyStates[Qt::Key_Left]) {
@@ -166,8 +157,7 @@ int16_t KeyboardInputHandler::getLeftStickYPosition(int platformId,
     }
   }
 
-  auto mapping = m_profile->getMappingForPlatformAndController(
-      platformId, controllerTypeId);
+  auto mapping = m_profile->getMappingForPlatformAndController(platformId, controllerTypeId);
   if (!mapping) {
     if (m_keyStates[Qt::Key_Left]) {
       return -32767;
@@ -199,13 +189,11 @@ int16_t KeyboardInputHandler::getLeftStickYPosition(int platformId,
     return 0;
   }
 
-  if (mappedUp.has_value() &&
-      m_keyStates[static_cast<Qt::Key>(mappedUp.value())]) {
+  if (mappedUp.has_value() && m_keyStates[static_cast<Qt::Key>(mappedUp.value())]) {
     return -32767;
   }
 
-  if (mappedDown.has_value() &&
-      m_keyStates[static_cast<Qt::Key>(mappedDown.value())]) {
+  if (mappedDown.has_value() && m_keyStates[static_cast<Qt::Key>(mappedDown.value())]) {
     return 32767;
   }
 
@@ -219,18 +207,11 @@ int16_t KeyboardInputHandler::getLeftStickYPosition(int platformId,
   return 0;
 }
 
-int16_t KeyboardInputHandler::getRightStickXPosition(int platformId,
-                                                     int controllerTypeId) {
-  return 0;
-}
+int16_t KeyboardInputHandler::getRightStickXPosition(int platformId, int controllerTypeId) { return 0; }
 
-int16_t KeyboardInputHandler::getRightStickYPosition(int platformId,
-                                                     int controllerTypeId) {
-  return 0;
-}
+int16_t KeyboardInputHandler::getRightStickYPosition(int platformId, int controllerTypeId) { return 0; }
 
-void KeyboardInputHandler::setStrongRumble(int platformId,
-                                           uint16_t t_strength) {}
+void KeyboardInputHandler::setStrongRumble(int platformId, uint16_t t_strength) {}
 
 void KeyboardInputHandler::setWeakRumble(int platformId, uint16_t t_strength) {}
 
@@ -238,23 +219,17 @@ std::string KeyboardInputHandler::getName() const { return "Keyboard"; }
 
 int KeyboardInputHandler::getPlayerIndex() const { return m_playerIndex; }
 
-void KeyboardInputHandler::setPlayerIndex(const int playerIndex) {
-  m_playerIndex = playerIndex;
-}
+void KeyboardInputHandler::setPlayerIndex(const int playerIndex) { m_playerIndex = playerIndex; }
 
 bool KeyboardInputHandler::isWired() const { return true; }
 
 GamepadType KeyboardInputHandler::getType() const { return KEYBOARD; }
 
-DeviceType KeyboardInputHandler::getDeviceType() const {
-  return DeviceType::Keyboard;
-}
+DeviceType KeyboardInputHandler::getDeviceType() const { return DeviceType::Keyboard; }
 
 int KeyboardInputHandler::getInstanceId() const { return -2; }
 
-bool KeyboardInputHandler::disconnect() {
-  return true;
-}
+bool KeyboardInputHandler::disconnect() { return true; }
 
 DeviceIdentifier KeyboardInputHandler::getDeviceIdentifier() const {
   return DeviceIdentifier{
@@ -283,8 +258,8 @@ bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
       }
     }
     if (rising) {
-      EventDispatcher::instance().publish(KeyboardKeyEvent{
-          .playerIndex = m_playerIndex, .key = keyEvent->key(), .pressed = true});
+      EventDispatcher::instance().publish(
+          KeyboardKeyEvent{.playerIndex = m_playerIndex, .key = keyEvent->key(), .pressed = true});
     }
   } else if (event->type() == QEvent::KeyRelease) {
     const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
@@ -296,21 +271,16 @@ bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
       std::lock_guard lock(m_keyStatesMutex);
       m_keyStates[key] = false;
     }
-    EventDispatcher::instance().publish(KeyboardKeyEvent{
-        .playerIndex = m_playerIndex, .key = keyEvent->key(), .pressed = false});
+    EventDispatcher::instance().publish(
+        KeyboardKeyEvent{.playerIndex = m_playerIndex, .key = keyEvent->key(), .pressed = false});
   }
 
   return QObject::eventFilter(obj, event);
 }
-std::shared_ptr<GamepadProfile> KeyboardInputHandler::getProfile() const {
-  return m_profile;
-}
-void KeyboardInputHandler::setProfile(
-    const std::shared_ptr<GamepadProfile> &profile) {
-  m_profile = profile;
-}
 
-int16_t KeyboardInputHandler::evaluateRawInput(const GamepadInput input) const {
-  return 0;
-}
+std::shared_ptr<GamepadProfile> KeyboardInputHandler::getProfile() const { return m_profile; }
+
+void KeyboardInputHandler::setProfile(const std::shared_ptr<GamepadProfile> &profile) { m_profile = profile; }
+
+int16_t KeyboardInputHandler::evaluateRawInput(const GamepadInput input) const { return 0; }
 } // namespace firelight::input

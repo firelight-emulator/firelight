@@ -11,7 +11,6 @@
 
 namespace firelight::saves {
 
-// TODO
 // In-memory ISaveDatabase for tests. SaveManager persists metadata from a
 // background thread, so this fake is thread-safe and lets tests assert
 // create/update counts
@@ -20,14 +19,12 @@ public:
   bool createSavefileMetadata(SavefileMetadata &metadata) override {
     std::lock_guard lock(m_mutex);
     metadata.id = m_nextId++;
-    m_savefiles[{metadata.contentId, static_cast<int>(metadata.slotNumber)}] =
-        metadata;
+    m_savefiles[{metadata.contentId, static_cast<int>(metadata.slotNumber)}] = metadata;
     ++createCount;
     return true;
   }
 
-  std::optional<SavefileMetadata>
-  getSavefileMetadata(std::string contentId, int slotNumber) override {
+  std::optional<SavefileMetadata> getSavefileMetadata(std::string contentId, int slotNumber) override {
     std::lock_guard lock(m_mutex);
     const auto it = m_savefiles.find({std::move(contentId), slotNumber});
     if (it == m_savefiles.end()) {
@@ -38,16 +35,12 @@ public:
 
   bool updateSavefileMetadata(SavefileMetadata metadata) override {
     std::lock_guard lock(m_mutex);
-    m_savefiles[{metadata.contentId, static_cast<int>(metadata.slotNumber)}] =
-        metadata;
+    m_savefiles[{metadata.contentId, static_cast<int>(metadata.slotNumber)}] = metadata;
     ++updateCount;
     return true;
   }
 
-  std::vector<SavefileMetadata>
-  getSavefileMetadataForContent(std::string) override {
-    return {};
-  }
+  std::vector<SavefileMetadata> getSavefileMetadataForContent(std::string) override { return {}; }
 
   // --- suspend points: minimal in-memory behavior ---
   bool createSuspendPointMetadata(SuspendPointMetadata &metadata) override {
@@ -56,9 +49,9 @@ public:
     m_suspends[metadata.id] = metadata;
     return true;
   }
-  std::optional<SuspendPointMetadata>
-  getSuspendPointMetadata(std::string contentId, int saveSlotNumber,
-                          int slotNumber) override {
+
+  std::optional<SuspendPointMetadata> getSuspendPointMetadata(std::string contentId, int saveSlotNumber,
+                                                              int slotNumber) override {
     std::lock_guard lock(m_mutex);
     for (const auto &[id, m] : m_suspends) {
       if (m.contentId == contentId && m.saveSlotNumber == saveSlotNumber &&
@@ -68,14 +61,15 @@ public:
     }
     return std::nullopt;
   }
+
   bool updateSuspendPointMetadata(const SuspendPointMetadata &metadata) override {
     std::lock_guard lock(m_mutex);
     m_suspends[metadata.id] = metadata;
     return true;
   }
-  std::vector<SuspendPointMetadata>
-  getSuspendPointMetadataForContent(std::string contentId,
-                                    int saveSlotNumber) override {
+
+  std::vector<SuspendPointMetadata> getSuspendPointMetadataForContent(std::string contentId,
+                                                                      int saveSlotNumber) override {
     std::lock_guard lock(m_mutex);
     std::vector<SuspendPointMetadata> out;
     for (const auto &[id, m] : m_suspends) {
@@ -85,6 +79,7 @@ public:
     }
     return out;
   }
+
   bool deleteSuspendPointMetadata(int id) override {
     std::lock_guard lock(m_mutex);
     return m_suspends.erase(id) > 0;

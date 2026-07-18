@@ -17,7 +17,6 @@
 
 namespace firelight::netplay {
 
-// TODO
 // Everything the session reports outward. Callbacks fire on backend/transport
 // threads with no session lock held; the app layer marshals to the GUI thread
 // packetReceived is the hot path (video/audio/input bytes for the stream
@@ -35,19 +34,16 @@ struct SessionEvents {
   std::function<void(PlayerId, IPeerLink &)> peerReady;
   std::function<void(PlayerId)> peerLost;
   std::function<void(const std::string &reason)> lobbyEnded;
-  std::function<void(PlayerId, ChannelKind, std::span<const uint8_t>)>
-      packetReceived;
+  std::function<void(PlayerId, ChannelKind, std::span<const uint8_t>)> packetReceived;
 };
 
-// TODO
 // The persistent lobby: membership, slots, chat, and peer links live here from
 // lobby creation until the host closes it. Games start and end inside it
 // (GamePhase); ending a game returns the lobby to Idle with everything intact
 // Thread-safe: backend and transport callbacks arrive on their own threads
 class NetplaySession {
 public:
-  NetplaySession(ILobbyBackend &lobbyBackend, IPeerTransport &transport,
-                 std::string appVersion);
+  NetplaySession(ILobbyBackend &lobbyBackend, IPeerTransport &transport, std::string appVersion);
   // Detaches from the backend/transport and closes peers so their threads
   // can't call into a destroyed session
   ~NetplaySession();
@@ -61,7 +57,6 @@ public:
   void selectGame(SessionDescriptor game);
   // Starting -> broadcast SessionStarting (+ StreamConfig when provided)
   void startGame(std::optional<StreamConfig> streamConfig);
-  // TODO
   // The encoder's parameters are only known once frames flow; the host
   // announces them as soon as the stream is live (late joiners get them via
   // Welcome)
@@ -73,8 +68,7 @@ public:
   void endGame(const std::string &reason);
 
   // --- guest ---
-  void joinLobby(const std::string &joinCode,
-                 ILobbyBackend::ResultCallback done);
+  void joinLobby(const std::string &joinCode, ILobbyBackend::ResultCallback done);
   void setReady(bool ready);
   // Re-establish the peer link after a drop; still a lobby member, so the
   // Hello/Welcome exchange replays the full state snapshot
@@ -85,8 +79,7 @@ public:
   void sendChat(const std::string &text);
 
   // Send helpers for the stream runtimes
-  void sendToMember(PlayerId memberId, ChannelKind channel,
-                    std::span<const uint8_t> data);
+  void sendToMember(PlayerId memberId, ChannelKind channel, std::span<const uint8_t> data);
   void broadcastPacket(ChannelKind channel, std::span<const uint8_t> data);
   void sendToHost(ChannelKind channel, std::span<const uint8_t> data);
 
@@ -138,6 +131,7 @@ private:
     IPeerLink *link = nullptr;
     bool admitted = false; // Hello/Welcome exchange completed
   };
+
   std::map<PlayerId, Peer> m_peers;
 };
 

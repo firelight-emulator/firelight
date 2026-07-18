@@ -1,5 +1,6 @@
 #pragma once
 #include "firelight/event_dispatcher.hpp"
+
 #include <firelight/input/input_service.hpp>
 
 #include <QObject>
@@ -11,19 +12,14 @@ namespace firelight::gui {
 
 class QtInputServiceProxy final : public QObject {
   Q_OBJECT
-  Q_PROPERTY(bool prioritizeControllerOverKeyboard READ
-                 prioritizeControllerOverKeyboard WRITE
-                     setPrioritizeControllerOverKeyboard NOTIFY
-                         prioritizeControllerOverKeyboardChanged)
-  Q_PROPERTY(
-      bool onlyPlayerOneCanNavigateMenus READ getOnlyPlayerOneCanNavigateMenus
-          WRITE setOnlyPlayerOneCanNavigateMenus NOTIFY
-              onlyPlayerOneCanNavigateMenusChanged)
+  Q_PROPERTY(bool prioritizeControllerOverKeyboard READ prioritizeControllerOverKeyboard WRITE
+                 setPrioritizeControllerOverKeyboard NOTIFY prioritizeControllerOverKeyboardChanged)
+  Q_PROPERTY(bool onlyPlayerOneCanNavigateMenus READ getOnlyPlayerOneCanNavigateMenus WRITE
+                 setOnlyPlayerOneCanNavigateMenus NOTIFY onlyPlayerOneCanNavigateMenusChanged)
 public:
   explicit QtInputServiceProxy(input::InputService &inputService);
 
-  void
-  setPrioritizeControllerOverKeyboard(bool prioritizeControllerOverKeyboard);
+  void setPrioritizeControllerOverKeyboard(bool prioritizeControllerOverKeyboard);
 
   [[nodiscard]] bool prioritizeControllerOverKeyboard() const;
 
@@ -34,7 +30,6 @@ public:
   // Switches shortcut scope between in-game and menu contexts (driven by the UI)
   Q_INVOKABLE void setShortcutsInGame(bool inGame);
 
-  // TODO
   // Whether the Steam client is running. Steam reads gamepads globally through
   // its own filter driver, and its "Guide button focuses Steam" option fires
   // even for games it didn't launch — nothing in this process can pre-empt it,
@@ -62,8 +57,8 @@ private:
     int playerIndex;
     input::GamepadInput input;
   };
-  std::map<std::pair<int, input::GamepadInput>, AutoRepeatState>
-      m_autoRepeatStates;
+
+  std::map<std::pair<int, input::GamepadInput>, AutoRepeatState> m_autoRepeatStates;
 
   QTimer *m_autoRepeatTimer;
 

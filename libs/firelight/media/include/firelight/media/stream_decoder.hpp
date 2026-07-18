@@ -16,7 +16,6 @@ struct StreamVideoFrame {
   std::vector<uint8_t> rgba;
 };
 
-// TODO
 // Decodes a live game stream (H.264 + Opus 48 kHz stereo). Synchronous:
 // push* decodes on the calling thread and fires the callback before
 // returning. Set callbacks before start
@@ -25,10 +24,8 @@ public:
   StreamDecoder();
   ~StreamDecoder();
 
-  using VideoFrameCallback =
-      std::function<void(StreamVideoFrame frame, int64_t ptsMs)>;
-  using AudioCallback =
-      std::function<void(std::vector<int16_t> interleaved, int64_t ptsMs)>;
+  using VideoFrameCallback = std::function<void(StreamVideoFrame frame, int64_t ptsMs)>;
+  using AudioCallback = std::function<void(std::vector<int16_t> interleaved, int64_t ptsMs)>;
 
   void setVideoFrameCallback(VideoFrameCallback callback);
   void setAudioCallback(AudioCallback callback);

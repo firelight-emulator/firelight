@@ -1,7 +1,6 @@
 #include "cli/cli_app.hpp"
 
 #include <gtest/gtest.h>
-
 #include <string>
 #include <vector>
 
@@ -66,8 +65,7 @@ TEST(CliAppTest, VersionExitsZero) {
 }
 
 TEST(CliAppTest, SetOptionsSplitIntoPairs) {
-  const auto opts = parseArgs(
-      {"firelight", "--set", "rewind-enabled=false", "--set", "sync-method=fixed"});
+  const auto opts = parseArgs({"firelight", "--set", "rewind-enabled=false", "--set", "sync-method=fixed"});
   EXPECT_EQ(opts.action, CliAction::RunGui);
   ASSERT_EQ(opts.sets.size(), 2u);
   EXPECT_EQ(opts.sets[0].first, "rewind-enabled");
@@ -90,8 +88,7 @@ TEST(CliAppTest, MalformedSetExitsNonZero) {
 }
 
 TEST(CliAppTest, MutedWindowedPausedFlags) {
-  const auto opts =
-      parseArgs({"firelight", "--muted", "--windowed", "--paused"});
+  const auto opts = parseArgs({"firelight", "--muted", "--windowed", "--paused"});
   EXPECT_TRUE(opts.muted);
   EXPECT_TRUE(opts.windowed);
   EXPECT_TRUE(opts.paused);
@@ -99,8 +96,7 @@ TEST(CliAppTest, MutedWindowedPausedFlags) {
 }
 
 TEST(CliAppTest, ExitOnCloseAndSingleInstanceFlags) {
-  const auto opts =
-      parseArgs({"firelight", "--exit-on-close", "--single-instance", "game.gba"});
+  const auto opts = parseArgs({"firelight", "--exit-on-close", "--single-instance", "game.gba"});
   EXPECT_TRUE(opts.exitOnClose);
   EXPECT_TRUE(opts.singleInstance);
   EXPECT_EQ(opts.romPath, "game.gba");
@@ -114,8 +110,7 @@ TEST(CliAppTest, FullscreenAndWindowedConflict) {
 }
 
 TEST(CliAppTest, SaveSlotControllerCoreOptions) {
-  const auto opts = parseArgs({"firelight", "--save-slot", "3", "--controller",
-                               "xbox360", "--core", "mgba_libretro"});
+  const auto opts = parseArgs({"firelight", "--save-slot", "3", "--controller", "xbox360", "--core", "mgba_libretro"});
   EXPECT_EQ(opts.saveSlot, 3);
   EXPECT_EQ(opts.controller, "xbox360");
   EXPECT_EQ(opts.core, "mgba_libretro");
@@ -127,16 +122,14 @@ TEST(CliAppTest, SettingsFileOption) {
 }
 
 TEST(CliAppTest, LoginSubcommand) {
-  const auto opts = parseArgs(
-      {"firelight", "login", "--username", "player", "--token", "abc123"});
+  const auto opts = parseArgs({"firelight", "login", "--username", "player", "--token", "abc123"});
   EXPECT_EQ(opts.action, CliAction::Login);
   EXPECT_EQ(opts.raUsername, "player");
   EXPECT_EQ(opts.raToken, "abc123");
 }
 
 TEST(CliAppTest, RaStartupFlags) {
-  const auto opts = parseArgs(
-      {"firelight", "--ra-username", "player", "--ra-password", "pw", "game.gba"});
+  const auto opts = parseArgs({"firelight", "--ra-username", "player", "--ra-password", "pw", "game.gba"});
   EXPECT_EQ(opts.action, CliAction::RunGui);
   EXPECT_EQ(opts.raUsername, "player");
   EXPECT_EQ(opts.raPassword, "pw");
@@ -144,10 +137,8 @@ TEST(CliAppTest, RaStartupFlags) {
 }
 
 TEST(CliAppTest, ListSettingsAndCoresActions) {
-  EXPECT_EQ(parseArgs({"firelight", "--list-settings"}).action,
-            CliAction::ListSettings);
-  EXPECT_EQ(parseArgs({"firelight", "--list-cores"}).action,
-            CliAction::ListCores);
+  EXPECT_EQ(parseArgs({"firelight", "--list-settings"}).action, CliAction::ListSettings);
+  EXPECT_EQ(parseArgs({"firelight", "--list-cores"}).action, CliAction::ListCores);
 }
 
 } // namespace firelight::cli

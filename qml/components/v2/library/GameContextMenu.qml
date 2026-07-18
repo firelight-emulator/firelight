@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
 
-// TODO
 // Right-click menu for a game tile / list row. Acts on `targetIds` (the whole
 // multi-selection when the clicked game is part of it, otherwise just that one)
 // Global actions (play, favorite, view media) are handled here; the two that
@@ -35,9 +34,7 @@ RightClickMenu {
         onTriggered: menu._applyFavorite(!menu.primaryFavorite)
     }
     RightClickMenuItem {
-        text: menu.targetIds.length > 1
-              ? "Add " + menu.targetIds.length + " to folder…"
-              : "Add to folder…"
+        text: menu.targetIds.length > 1 ? "Add " + menu.targetIds.length + " to folder…" : "Add to folder…"
         onTriggered: menu.requestAddToFolder(menu.targetIds)
     }
     RightClickMenuItem {

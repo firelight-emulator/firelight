@@ -1,16 +1,16 @@
-#include <firelight/event_dispatcher.hpp>
-#include <firelight/input/gamepad_input.hpp>
-#include <firelight/library/sqlite_user_library.hpp>
-#include <firelight/settings/sqlite_settings_repository.hpp>
-
 #include "fake_core.hpp"
 
-#include <emulation/emulation_service.hpp>
+#include <firelight/event_dispatcher.hpp>
+#include <firelight/input/gamepad_input.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/library_ingest_service.hpp>
+#include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_service.hpp>
-#include <gtest/gtest.h>
 #include <firelight/settings/settings_service.hpp>
+#include <firelight/settings/sqlite_settings_repository.hpp>
+
+#include <emulation/emulation_service.hpp>
+#include <gtest/gtest.h>
 
 namespace firelight::emulation {
 
@@ -37,12 +37,11 @@ protected:
     m_ingest = std::make_unique<library::LibraryIngestService>(*m_library);
     m_service = std::make_unique<library::UserLibraryService>(*m_library, ".");
     m_resolver = std::make_unique<library::EntryResolver>(*m_library);
-    m_settingsService = std::make_unique<settings::SettingsService>(
-        *new settings::SqliteSettingsRepository(":memory:"));
+    m_settingsService =
+        std::make_unique<settings::SettingsService>(*new settings::SqliteSettingsRepository(":memory:"));
     m_emulationService = std::make_unique<EmulationService>(
         *m_service, *m_resolver, *m_settingsService, EmulationContext{},
-        [](const firelight::libretro::CoreRunConfig &)
-            -> std::unique_ptr<::libretro::ICore> {
+        [](const firelight::libretro::CoreRunConfig &) -> std::unique_ptr<::libretro::ICore> {
           return std::make_unique<FakeCore>();
         });
 
@@ -77,8 +76,7 @@ TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry = m_library->getEntryWithContentHash(
-      m_testContentHash);
+  auto entry = m_library->getEntryWithContentHash(m_testContentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -89,8 +87,7 @@ TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
   EXPECT_EQ("aspect-ratio-fill", instance->getPictureMode());
 
   // Change game setting — a game override applies immediately
-  m_settingsService->setGameValue(m_testContentHash, "picture-mode",
-                                  "integer-scale");
+  m_settingsService->setGameValue(m_testContentHash, "picture-mode", "integer-scale");
 
   // Verify the instance received the update
   EXPECT_EQ("integer-scale", instance->getPictureMode());
@@ -114,8 +111,7 @@ TEST_F(EmulatorInstanceTest, SyncSettingsUpdateInstance) {
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry = m_library->getEntryWithContentHash(
-      m_testContentHash);
+  auto entry = m_library->getEntryWithContentHash(m_testContentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -148,14 +144,12 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash =
-                                "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry = m_library->getEntryWithContentHash(
-      m_testContentHash);
+  auto entry = m_library->getEntryWithContentHash(m_testContentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -173,7 +167,6 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
   EXPECT_EQ("pixel-perfect", instance->getAspectRatioMode());
 }
 
-// TODO
 // TEST_F(EmulatorInstanceTest, RewindSettingChangeUpdatesInstance) {
 //   library::ContentFile info{.m_contentHash =
 //   "e26ee0d44e809351c8ce2d73c7400cdd",
@@ -228,14 +221,12 @@ TEST_F(EmulatorInstanceTest, GameValueOverridesPlatformValue) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash =
-                                "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry =
-      m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
+  auto entry = m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -247,8 +238,7 @@ TEST_F(EmulatorInstanceTest, GameValueOverridesPlatformValue) {
   EXPECT_EQ("stretch", instance->getPictureMode());
 
   // A game override shadows the platform value
-  m_settingsService->setGameValue(m_testContentHash, "picture-mode",
-                                  "integer-scale");
+  m_settingsService->setGameValue(m_testContentHash, "picture-mode", "integer-scale");
   EXPECT_EQ("integer-scale", instance->getPictureMode());
 }
 
@@ -266,14 +256,12 @@ TEST_F(EmulatorInstanceTest, MultipleSettingsChangeSimultaneously) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash =
-                                "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry =
-      m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
+  auto entry = m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -282,12 +270,9 @@ TEST_F(EmulatorInstanceTest, MultipleSettingsChangeSimultaneously) {
   ASSERT_FALSE(instance->isInitialized());
 
   // Change multiple settings at once
-  m_settingsService->setGameValue("e26ee0d44e809351c8ce2d73c7400cdd",
-                                  "picture-mode", "stretch");
-  m_settingsService->setGameValue("e26ee0d44e809351c8ce2d73c7400cdd",
-                                  "aspect-ratio", "pixel-perfect");
-  m_settingsService->setGameValue("e26ee0d44e809351c8ce2d73c7400cdd",
-                                  "rewind-enabled", "false");
+  m_settingsService->setGameValue("e26ee0d44e809351c8ce2d73c7400cdd", "picture-mode", "stretch");
+  m_settingsService->setGameValue("e26ee0d44e809351c8ce2d73c7400cdd", "aspect-ratio", "pixel-perfect");
+  m_settingsService->setGameValue("e26ee0d44e809351c8ce2d73c7400cdd", "rewind-enabled", "false");
 
   // Verify all settings were updated
   EXPECT_EQ("stretch", instance->getPictureMode());
@@ -308,14 +293,12 @@ TEST_F(EmulatorInstanceTest, WrongContentHashIgnoresGameSettings) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash =
-                                "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry =
-      m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
+  auto entry = m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -327,8 +310,7 @@ TEST_F(EmulatorInstanceTest, WrongContentHashIgnoresGameSettings) {
   EXPECT_EQ("aspect-ratio-fill", instance->getPictureMode());
 
   // Try to change setting for different content hash
-  m_settingsService->setGameValue("different_hash_456", "picture-mode",
-                                  "integer-scale");
+  m_settingsService->setGameValue("different_hash_456", "picture-mode", "integer-scale");
 
   // Instance should not be affected
   EXPECT_EQ("aspect-ratio-fill", instance->getPictureMode());
@@ -347,14 +329,12 @@ TEST_F(EmulatorInstanceTest, WrongPlatformIdIgnoresPlatformSettings) {
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash =
-                                "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry =
-      m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
+  auto entry = m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -383,8 +363,7 @@ TEST_F(EmulatorInstanceTest, DiscControlPassthroughAndEvent) {
   // Rebuild the service with a factory that hands out a multi-disc FakeCore
   m_emulationService = std::make_unique<EmulationService>(
       *m_service, *m_resolver, *m_settingsService, EmulationContext{},
-      [](const firelight::libretro::CoreRunConfig &)
-          -> std::unique_ptr<::libretro::ICore> {
+      [](const firelight::libretro::CoreRunConfig &) -> std::unique_ptr<::libretro::ICore> {
         auto core = std::make_unique<FakeCore>();
         core->setDiscCount(3);
         return core;
@@ -400,8 +379,7 @@ TEST_F(EmulatorInstanceTest, DiscControlPassthroughAndEvent) {
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry = m_library->getEntryWithContentHash(
-      m_testContentHash);
+  auto entry = m_library->getEntryWithContentHash(m_testContentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -412,8 +390,8 @@ TEST_F(EmulatorInstanceTest, DiscControlPassthroughAndEvent) {
   EXPECT_EQ(0u, instance->getCurrentDiscIndex());
 
   std::vector<DiscChangedEvent> events;
-  auto conn = EventDispatcher::instance().subscribe<DiscChangedEvent>(
-      [&](const DiscChangedEvent &e) { events.push_back(e); });
+  auto conn =
+      EventDispatcher::instance().subscribe<DiscChangedEvent>([&](const DiscChangedEvent &e) { events.push_back(e); });
 
   EXPECT_TRUE(instance->swapDisc(2));
   EXPECT_EQ(2u, instance->getCurrentDiscIndex());
@@ -440,8 +418,7 @@ TEST_F(EmulatorInstanceTest, SaveSlotOverrideAppliesOnceThenConsumed) {
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry = m_library->getEntryWithContentHash(
-      m_testContentHash);
+  auto entry = m_library->getEntryWithContentHash(m_testContentHash);
   ASSERT_TRUE(entry.has_value());
 
   // Override the save slot for the next launch
@@ -466,13 +443,11 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   FakeCore *fake = nullptr;
   m_emulationService = std::make_unique<EmulationService>(
       *m_service, *m_resolver, *m_settingsService, EmulationContext{},
-      [&fake](const firelight::libretro::CoreRunConfig &)
-          -> std::unique_ptr<::libretro::ICore> {
+      [&fake](const firelight::libretro::CoreRunConfig &) -> std::unique_ptr<::libretro::ICore> {
         auto core = std::make_unique<FakeCore>();
         // Advertise the ids the snes9x catalog knows (SNES == platform 6):
         // standard pad, SNES Mouse, Super Scope
-        core->setControllerDevices(
-            {{{1, "SNES Pad"}, {2, "Mouse"}, {260, "Super Scope"}}});
+        core->setControllerDevices({{{1, "SNES Pad"}, {2, "Mouse"}, {260, "Super Scope"}}});
         fake = core.get();
         return core;
       });
@@ -489,8 +464,7 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry = m_library->getEntryWithContentHash(
-      m_testContentHash);
+  auto entry = m_library->getEntryWithContentHash(m_testContentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
 
@@ -503,15 +477,13 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   ASSERT_EQ(devices.size(), 1u);
   ASSERT_EQ(devices[0].size(), 3u);
 
-  // TODO
   // The curated variants are surfaced console-natively (the standard pad plus
   // the SNES Mouse / Super Scope the snes9x catalog knows, cross-referenced with
   // the core's advertisement), default first
   const auto variants = instance->getAvailableControllerVariants(0);
   ASSERT_EQ(variants.size(), 3u);
   EXPECT_TRUE(variants.front().isDefault);
-  EXPECT_EQ(variants.front().deviceClass,
-            firelight::input::GamepadInputClass::Joypad);
+  EXPECT_EQ(variants.front().deviceClass, firelight::input::GamepadInputClass::Joypad);
   bool hasSuperScope = false;
   for (const auto &v : variants) {
     if (v.coreDeviceId == 260u) {
@@ -527,12 +499,9 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   ASSERT_FALSE(fake->portDeviceCalls().empty());
   EXPECT_EQ(fake->portDeviceCalls().back().first, 0u);
   EXPECT_EQ(fake->portDeviceCalls().back().second, 260u);
-  EXPECT_EQ(m_settingsService->getGameValue(m_testContentHash,
-                                            "port0-controllervariant"),
-            "260");
+  EXPECT_EQ(m_settingsService->getGameValue(m_testContentHash, "port0-controllervariant"), "260");
 }
 
-// TODO
 // --- ICore state contract (exercised via FakeCore): getSerializeSize matches
 // the serialized length, a valid state round-trips, and a size mismatch is
 // refused without touching the core. Guards the deserializeState hardening that

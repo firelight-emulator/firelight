@@ -1,20 +1,20 @@
 #pragma once
 
 #include "audio/audio_manager.hpp"
-#include <rcheevos/ra_client.hpp>
-#include <QThreadPool>
 #include "emulation/emulator_controller.hpp"
 #include "emulator_item_renderer.hpp"
 #include "libretro/core_configuration.hpp"
 #include "service_accessor.hpp"
+
 #include <firelight/event_dispatcher.hpp>
 
+#include <QThreadPool>
 #include <atomic>
 #include <cstdint>
 #include <qchronotimer.h>
+#include <rcheevos/ra_client.hpp>
 #include <string>
 
-// TODO
 // Threading: a QML item — constructed and driven (properties/slots) on the GUI
 // thread. Owns the frame-pacing thread (m_emulationThread), whose timer fires
 // there and enqueues RunFrame onto the renderer (drained on the render thread)
@@ -31,25 +31,19 @@ private:
   Q_PROPERTY(int platformId MEMBER m_platformId NOTIFY platformIdChanged)
   Q_PROPERTY(QString contentHash MEMBER m_contentHash NOTIFY contentHashChanged)
   Q_PROPERTY(QString gameName MEMBER m_gameName NOTIFY gameNameChanged)
-  Q_PROPERTY(
-      int saveSlotNumber MEMBER m_saveSlotNumber NOTIFY saveSlotNumberChanged)
+  Q_PROPERTY(int saveSlotNumber MEMBER m_saveSlotNumber NOTIFY saveSlotNumberChanged)
   Q_PROPERTY(bool started MEMBER m_started NOTIFY startedChanged)
   Q_PROPERTY(int videoWidth MEMBER m_coreBaseWidth NOTIFY videoWidthChanged)
   Q_PROPERTY(int videoHeight MEMBER m_coreBaseHeight NOTIFY videoHeightChanged)
-  Q_PROPERTY(float videoAspectRatio MEMBER m_coreAspectRatio NOTIFY
-                 videoAspectRatioChanged)
-  Q_PROPERTY(float trueAspectRatio MEMBER m_calculatedAspectRatio NOTIFY
-                 videoAspectRatioChanged)
-  Q_PROPERTY(float canUndoLoadSuspendPoint MEMBER m_canUndoLoadSuspendPoint
-                 NOTIFY canUndoLoadSuspendPointChanged)
+  Q_PROPERTY(float videoAspectRatio MEMBER m_coreAspectRatio NOTIFY videoAspectRatioChanged)
+  Q_PROPERTY(float trueAspectRatio MEMBER m_calculatedAspectRatio NOTIFY videoAspectRatioChanged)
+  Q_PROPERTY(float canUndoLoadSuspendPoint MEMBER m_canUndoLoadSuspendPoint NOTIFY canUndoLoadSuspendPointChanged)
   Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
-  Q_PROPERTY(float audioBufferLevel READ audioBufferLevel NOTIFY
-                 audioBufferLevelChanged)
-  Q_PROPERTY(float playbackMultiplier READ playbackMultiplier WRITE
-                 setPlaybackMultiplier NOTIFY playbackMultiplierChanged)
+  Q_PROPERTY(float audioBufferLevel READ audioBufferLevel NOTIFY audioBufferLevelChanged)
+  Q_PROPERTY(
+      float playbackMultiplier READ playbackMultiplier WRITE setPlaybackMultiplier NOTIFY playbackMultiplierChanged)
   Q_PROPERTY(bool muted READ isMuted WRITE setMuted NOTIFY mutedChanged)
-  Q_PROPERTY(bool rewindEnabled READ isRewindEnabled WRITE setRewindEnabled
-                 NOTIFY rewindEnabledChanged)
+  Q_PROPERTY(bool rewindEnabled READ isRewindEnabled WRITE setRewindEnabled NOTIFY rewindEnabledChanged)
 
 public:
   explicit EmulatorItem(QQuickItem *parent = nullptr);
@@ -123,9 +117,8 @@ public:
 
   Q_INVOKABLE void loadRewindPoint(int index);
 
-  [[nodiscard]] float playbackMultiplier() const override {
-    return m_playbackMultiplier;
-  }
+  [[nodiscard]] float playbackMultiplier() const override { return m_playbackMultiplier; }
+
   void setPlaybackMultiplier(float playbackMultiplier) override;
 
   Q_INVOKABLE void incrementPlaybackMultiplier() {
@@ -156,7 +149,6 @@ protected:
 public slots:
   void startGame();
 
-  // TODO
   // Recomputes the frame-pacing target/mode from the current sync-method /
   // target-framerate settings, the core fps, and the display refresh rate
   // Must run on the GUI thread (reads window()/screen())
@@ -233,24 +225,20 @@ private:
   // input service, and clears the light-gun off-screen flag
   void feedPointer(const QPointF &pos);
 
-  void updateGeometry(unsigned int width, unsigned int height,
-                      float aspectRatio);
+  void updateGeometry(unsigned int width, unsigned int height, float aspectRatio);
 
   // Frame-pacing strategy (maps to the "sync-method" emulation setting)
   enum class SyncMethod { Native, Monitor, Fixed, Audio };
   static SyncMethod syncMethodFromString(const std::string &method);
 
-  // TODO
   // Wall-clock frame interval (ns) for native/fixed pacing:
   //   Native -> 1e9 / coreFps
   //   Fixed  -> 1e9 / targetFramerate
   // Returns 0 for Audio (audio-driven) and Monitor (resolved via
   // monitorPacingRate, which needs the refresh/content-rate relationship), or
   // when the input is non-positive
-  static int64_t computeTargetIntervalNs(SyncMethod method, double coreFps,
-                                          int targetFramerate, double refreshHz);
+  static int64_t computeTargetIntervalNs(SyncMethod method, double coreFps, int targetFramerate, double refreshHz);
 
-  // TODO
   // The rate to pace at for "sync to monitor", or 0 if the display doesn't line
   // up with the content rate (caller falls back to native). Divides the refresh
   // rate down to the nearest integer fraction and only matches when that lands

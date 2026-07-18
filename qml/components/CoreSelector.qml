@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // Advanced control to choose which libretro core runs a platform, at a given
 // tier (Game or Platform). Writes the reserved "core" override via
 // CoreRegistry; the settings/options below re-resolve automatically
@@ -47,9 +46,9 @@ RowLayout {
         model: root.cores
 
         function syncSelection() {
-            const override = CoreRegistry.coreOverride(root.level, root.platformId, root.contentHash)
-            const target = override !== "" ? override : CoreRegistry.resolvedCore(root.platformId, root.contentHash)
-            currentIndex = Math.max(0, indexOfValue(target))
+            const override = CoreRegistry.coreOverride(root.level, root.platformId, root.contentHash);
+            const target = override !== "" ? override : CoreRegistry.resolvedCore(root.platformId, root.contentHash);
+            currentIndex = Math.max(0, indexOfValue(target));
         }
 
         Component.onCompleted: syncSelection()

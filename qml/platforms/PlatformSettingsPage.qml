@@ -9,29 +9,68 @@ FocusScope {
     // target platform's id + name
     Component {
         id: platformPage
-        PlatformEmulationSettingsPage {
-        }
+        PlatformEmulationSettingsPage {}
     }
 
     readonly property var platforms: [
-        { platformId: 1,  name: "Game Boy",           icon: "gb" },
-        { platformId: 2,  name: "Game Boy Color",     icon: "gbc" },
-        { platformId: 3,  name: "Game Boy Advance",   icon: "gba" },
-        { platformId: 5,  name: "NES",                icon: "nes" },
-        { platformId: 6,  name: "SNES",               icon: "snes" },
-        { platformId: 7,  name: "Nintendo 64",        icon: "n64" },
-        { platformId: 10, name: "Nintendo DS",        icon: "ds" },
-        { platformId: 12, name: "Master System",      icon: "master-system" },
-        { platformId: 13, name: "Genesis/Mega Drive", icon: "genesis" },
-        { platformId: 14, name: "Game Gear",          icon: "gamegear" }
+        {
+            platformId: 1,
+            name: "Game Boy",
+            icon: "gb"
+        },
+        {
+            platformId: 2,
+            name: "Game Boy Color",
+            icon: "gbc"
+        },
+        {
+            platformId: 3,
+            name: "Game Boy Advance",
+            icon: "gba"
+        },
+        {
+            platformId: 5,
+            name: "NES",
+            icon: "nes"
+        },
+        {
+            platformId: 6,
+            name: "SNES",
+            icon: "snes"
+        },
+        {
+            platformId: 7,
+            name: "Nintendo 64",
+            icon: "n64"
+        },
+        {
+            platformId: 10,
+            name: "Nintendo DS",
+            icon: "ds"
+        },
+        {
+            platformId: 12,
+            name: "Master System",
+            icon: "master-system"
+        },
+        {
+            platformId: 13,
+            name: "Genesis/Mega Drive",
+            icon: "genesis"
+        },
+        {
+            platformId: 14,
+            name: "Game Gear",
+            icon: "gamegear"
+        }
     ]
 
     Flickable {
         anchors.fill: parent
         contentHeight: col.height
         ColumnLayout {
-            spacing: 0
             id: col
+            spacing: 0
             width: parent.width
 
             Text {

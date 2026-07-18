@@ -11,11 +11,10 @@ namespace firelight::netplay {
 namespace {
 // One simulated machine: identity + backend + transport + session
 struct Client {
-  Client(const std::shared_ptr<FakeLobbyHub> &lobbyHub,
-         const std::shared_ptr<FakeTransportHub> &transportHub,
+  Client(const std::shared_ptr<FakeLobbyHub> &lobbyHub, const std::shared_ptr<FakeTransportHub> &transportHub,
          const PlayerId id, const std::string &name)
-      : backend(lobbyHub, PlayerIdentity{id, name}),
-        transport(transportHub, id), session(backend, transport, "0.1.0") {}
+      : backend(lobbyHub, PlayerIdentity{id, name}), transport(transportHub, id), session(backend, transport, "0.1.0") {
+  }
 
   FakeLobbyBackend backend;
   FakeTransport transport;
@@ -24,8 +23,7 @@ struct Client {
 
 struct Fixture : testing::Test {
   std::shared_ptr<FakeLobbyHub> lobbyHub = std::make_shared<FakeLobbyHub>();
-  std::shared_ptr<FakeTransportHub> transportHub =
-      std::make_shared<FakeTransportHub>();
+  std::shared_ptr<FakeTransportHub> transportHub = std::make_shared<FakeTransportHub>();
 
   Client host{lobbyHub, transportHub, 1, "Host"};
   Client guest{lobbyHub, transportHub, 2, "GuestOne"};
@@ -33,18 +31,13 @@ struct Fixture : testing::Test {
 
   void hostUp() {
     bool ok = false;
-    host.session.hostLobby([&](const bool result, const std::string &) {
-      ok = result;
-    });
+    host.session.hostLobby([&](const bool result, const std::string &) { ok = result; });
     ASSERT_TRUE(ok);
   }
 
   void join(Client &client) {
     bool ok = false;
-    client.session.joinLobby(host.session.joinCode(),
-                             [&](const bool result, const std::string &) {
-                               ok = result;
-                             });
+    client.session.joinLobby(host.session.joinCode(), [&](const bool result, const std::string &) { ok = result; });
     ASSERT_TRUE(ok);
   }
 };
@@ -93,17 +86,11 @@ TEST_F(SessionTest, GameLifecycleReachesGuests) {
   std::vector<GamePhase> guestPhases;
   std::optional<StreamConfig> guestConfig;
   SessionEvents events;
-  events.phaseChanged = [&](const GamePhase phase) {
-    guestPhases.push_back(phase);
-  };
-  events.streamConfigReceived = [&](const StreamConfig &config) {
-    guestConfig = config;
-  };
+  events.phaseChanged = [&](const GamePhase phase) { guestPhases.push_back(phase); };
+  events.streamConfigReceived = [&](const StreamConfig &config) { guestConfig = config; };
   guest.session.setEvents(std::move(events));
 
-  host.session.selectGame({.gameName = "Mario Kart",
-                           .contentHash = "abc",
-                           .platformId = 4});
+  host.session.selectGame({.gameName = "Mario Kart", .contentHash = "abc", .platformId = 4});
   ASSERT_TRUE(guest.session.game().has_value());
   EXPECT_EQ(guest.session.game()->gameName, "Mario Kart");
 
@@ -114,8 +101,7 @@ TEST_F(SessionTest, GameLifecycleReachesGuests) {
   EXPECT_EQ(guest.session.phase(), GamePhase::InGame);
   ASSERT_TRUE(guestConfig.has_value());
   EXPECT_EQ(guestConfig->width, 240);
-  EXPECT_EQ(guestPhases,
-            (std::vector{GamePhase::Starting, GamePhase::InGame}));
+  EXPECT_EQ(guestPhases, (std::vector{GamePhase::Starting, GamePhase::InGame}));
 
   host.session.setPaused(true);
   EXPECT_TRUE(guest.session.isPaused());
@@ -187,13 +173,9 @@ TEST_F(SessionTest, ProtocolMismatchIsRejected) {
   std::string rejectCode;
   IPeerLink *rawLink = nullptr;
   TransportEvents rawEvents;
-  rawEvents.peerConnected = [&](PlayerId, IPeerLink &link) {
-    rawLink = &link;
-  };
-  rawEvents.messageReceived = [&](PlayerId, ChannelKind,
-                                  std::span<const uint8_t> data) {
-    const auto decoded =
-        decodeMessage(std::string(data.begin(), data.end()));
+  rawEvents.peerConnected = [&](PlayerId, IPeerLink &link) { rawLink = &link; };
+  rawEvents.messageReceived = [&](PlayerId, ChannelKind, std::span<const uint8_t> data) {
+    const auto decoded = decodeMessage(std::string(data.begin(), data.end()));
     if (decoded) {
       if (const auto *reject = std::get_if<Reject>(&*decoded)) {
         rejectCode = reject->code;
@@ -214,11 +196,8 @@ TEST_F(SessionTest, ProtocolMismatchIsRejected) {
   rawTransport.handleSignal(1, "answer");
   ASSERT_NE(rawLink, nullptr);
 
-  const auto hello =
-      encodeMessage(Hello{.proto = 999, .appVersion = "9", .memberId = 99});
-  rawLink->send(ChannelKind::Control,
-                std::span(reinterpret_cast<const uint8_t *>(hello.data()),
-                          hello.size()));
+  const auto hello = encodeMessage(Hello{.proto = 999, .appVersion = "9", .memberId = 99});
+  rawLink->send(ChannelKind::Control, std::span(reinterpret_cast<const uint8_t *>(hello.data()), hello.size()));
 
   EXPECT_EQ(rejectCode, REJECT_PROTOCOL_MISMATCH);
   const auto peers = host.session.connectedPeers();
@@ -306,8 +285,7 @@ TEST_F(SessionTest, PacketsBypassControlAndReachSink) {
   std::vector<uint8_t> received;
   ChannelKind receivedChannel{};
   SessionEvents events;
-  events.packetReceived = [&](PlayerId, const ChannelKind channel,
-                              std::span<const uint8_t> data) {
+  events.packetReceived = [&](PlayerId, const ChannelKind channel, std::span<const uint8_t> data) {
     receivedChannel = channel;
     received.assign(data.begin(), data.end());
   };
@@ -322,8 +300,7 @@ TEST_F(SessionTest, PacketsBypassControlAndReachSink) {
   // And host -> guests on the stream channels
   std::vector<uint8_t> guestReceived;
   SessionEvents guestEvents;
-  guestEvents.packetReceived = [&](PlayerId, ChannelKind,
-                                   std::span<const uint8_t> data) {
+  guestEvents.packetReceived = [&](PlayerId, ChannelKind, std::span<const uint8_t> data) {
     guestReceived.assign(data.begin(), data.end());
   };
   guest.session.setEvents(std::move(guestEvents));

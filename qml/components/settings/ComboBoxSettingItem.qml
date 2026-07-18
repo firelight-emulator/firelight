@@ -12,7 +12,7 @@ BaseSettingItem {
     property alias valueRole: comboBox.valueRole
 
     control: MyComboBox {
-          id: comboBox
-          focusPolicy: Qt.NoFocus
-      }
+        id: comboBox
+        focusPolicy: Qt.NoFocus
+    }
 }

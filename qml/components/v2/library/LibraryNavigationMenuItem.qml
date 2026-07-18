@@ -28,7 +28,6 @@ Button {
     property bool showGlobalCursor: true
     property real globalCursorSpacing: 2
 
-    // TODO
     // Tree rendering (folders only): indent by depth and show a disclosure
     // chevron for rows that have children. Off by default so flat sections
     // (platforms, settings nav) are untouched
@@ -37,13 +36,12 @@ Button {
     property bool hasChildren: false
     property bool expanded: false
     property color iconColor: Theme.textPrimary
-    signal toggleExpanded()
+    signal toggleExpanded
 
     // Scales with the UI (36 at 100%) so the label isn't cramped when enlarged
     implicitHeight: AppStyle.controlHeight
     width: ListView.view.width
 
-    // TODO
     // onClicked: {
     //     ListView.view.currentIndex = index
     // }
@@ -85,12 +83,10 @@ Button {
         }
     }
     contentItem: RowLayout {
-        // TODO
         // iconSource may be a Material icon (qrc:/icons/<name>), a console logo, or folder
         // art. Render known Material names as crisp font glyphs; everything else as a crisp
         // (GPU curve-rendered) vector image
-        readonly property string resolvedIconName: control.iconSource.indexOf("qrc:/icons/") === 0
-            ? control.iconSource.substring(11) : ""
+        readonly property string resolvedIconName: control.iconSource.indexOf("qrc:/icons/") === 0 ? control.iconSource.substring(11) : ""
         readonly property bool iconIsGlyph: resolvedIconName !== "" && MaterialSymbols.glyph(resolvedIconName) !== ""
 
         // Nesting indent
@@ -113,10 +109,20 @@ Button {
                 size: AppStyle.iconSizeSm
                 color: Theme.textMuted
                 rotation: control.expanded ? 90 : 0
-                Behavior on rotation { NumberAnimation { duration: 120 } }
+                Behavior on rotation {
+                    NumberAnimation {
+                        duration: 120
+                    }
+                }
             }
-            TapHandler { enabled: control.hasChildren; onTapped: control.toggleExpanded() }
-            HoverHandler { enabled: control.hasChildren; cursorShape: Qt.PointingHandCursor }
+            TapHandler {
+                enabled: control.hasChildren
+                onTapped: control.toggleExpanded()
+            }
+            HoverHandler {
+                enabled: control.hasChildren
+                cursorShape: Qt.PointingHandCursor
+            }
         }
 
         Icon {
@@ -150,8 +156,7 @@ Button {
             text: control.numberOfItems
             Layout.fillHeight: true
             verticalAlignment: Text.AlignVCenter
-            visible: control.numberOfItems !== undefined && control.numberOfItems !== null
-                     && control.width > Math.round(64 * AppStyle.scale)
+            visible: control.numberOfItems !== undefined && control.numberOfItems !== null && control.width > Math.round(64 * AppStyle.scale)
         }
     }
 }

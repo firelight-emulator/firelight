@@ -4,12 +4,10 @@
 #include "../../../gui/image_qt.hpp"
 
 namespace firelight::saves {
-SuspendPointListModel::SuspendPointListModel(
-    gui::GameImageProvider &imageProvider, QObject *parent)
+SuspendPointListModel::SuspendPointListModel(gui::GameImageProvider &imageProvider, QObject *parent)
     : QAbstractListModel(parent), m_imageProvider(imageProvider) {}
 
-bool SuspendPointListModel::setData(const QModelIndex &index,
-                                    const QVariant &value, int role) {
+bool SuspendPointListModel::setData(const QModelIndex &index, const QVariant &value, int role) {
   auto &item = m_items[index.row()];
 
   if (role == HasData) {
@@ -34,9 +32,7 @@ QHash<int, QByteArray> SuspendPointListModel::roleNames() const {
   return roles;
 }
 
-int SuspendPointListModel::rowCount(const QModelIndex &parent) const {
-  return m_items.size();
-}
+int SuspendPointListModel::rowCount(const QModelIndex &parent) const { return m_items.size(); }
 
 QVariant SuspendPointListModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
@@ -68,14 +64,11 @@ void SuspendPointListModel::deleteData(const int index) {
   emit dataChanged(createIndex(index, 0), createIndex(index, 0), {});
 }
 
-void SuspendPointListModel::updateData(const int index,
-                                       const SuspendPoint &suspendPoint) {
+void SuspendPointListModel::updateData(const int index, const SuspendPoint &suspendPoint) {
   if (index >= m_items.size()) {
     beginInsertRows(QModelIndex(), m_items.size(), m_items.size());
-    m_items.append({QDateTime::fromMSecsSinceEpoch(suspendPoint.timestamp)
-                        .toString("yyyy-MM-dd hh:mm:ss"),
-                    suspendPoint.locked,
-                    m_imageProvider.setImage(firelight::gui::toQImage(suspendPoint.image)), true});
+    m_items.append({QDateTime::fromMSecsSinceEpoch(suspendPoint.timestamp).toString("yyyy-MM-dd hh:mm:ss"),
+                    suspendPoint.locked, m_imageProvider.setImage(firelight::gui::toQImage(suspendPoint.image)), true});
     endInsertRows();
     return;
   }
@@ -90,8 +83,7 @@ void SuspendPointListModel::updateData(const int index,
   item.locked = suspendPoint.locked;
   item.hasData = true;
   item.imageUrl = url;
-  item.datetime = QDateTime::fromMSecsSinceEpoch(suspendPoint.timestamp)
-                      .toString("yyyy-MM-dd hh:mm:ss");
+  item.datetime = QDateTime::fromMSecsSinceEpoch(suspendPoint.timestamp).toString("yyyy-MM-dd hh:mm:ss");
 
   emit dataChanged(createIndex(index, 0), createIndex(index, 0), {});
 }

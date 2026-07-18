@@ -1,12 +1,13 @@
 #include "content_directory_model.hpp"
+
 #include <spdlog/spdlog.h>
 
 namespace firelight::gui {
 
-bool ContentDirectoryModel::setData(const QModelIndex &index,
-                                    const QVariant &value, int role) {
-  if (index.row() < 0 || index.row() >= m_items.size())
+bool ContentDirectoryModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+  if (index.row() < 0 || index.row() >= m_items.size()) {
     return false;
+  }
 
   library::ContentDirectory &item = m_items[index.row()];
 
@@ -44,6 +45,7 @@ void ContentDirectoryModel::deleteItem(const int id) {
     }
   }
 }
+
 void ContentDirectoryModel::addItem(QString path) {
   library::ContentDirectory item;
   item.path = path.toStdString();
@@ -57,14 +59,11 @@ void ContentDirectoryModel::addItem(QString path) {
   endInsertRows();
 }
 
-ContentDirectoryModel::ContentDirectoryModel(library::UserLibraryService &library)
-    : m_library(library) {
+ContentDirectoryModel::ContentDirectoryModel(library::UserLibraryService &library) : m_library(library) {
   m_items = m_library.getContentDirectories();
 }
 
-int ContentDirectoryModel::rowCount(const QModelIndex &parent) const {
-  return m_items.size();
-}
+int ContentDirectoryModel::rowCount(const QModelIndex &parent) const { return m_items.size(); }
 
 QVariant ContentDirectoryModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {

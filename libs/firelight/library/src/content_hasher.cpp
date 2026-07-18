@@ -1,12 +1,10 @@
 #include <firelight/library/content_hasher.hpp>
-
-#include <md5.h>
-#include <rcheevos/rc_hash.h>
-
 #include <firelight/platforms/platform_service.hpp>
 
 #include <algorithm>
 #include <cstring>
+#include <md5.h>
+#include <rcheevos/rc_hash.h>
 
 namespace firelight::library {
 namespace {
@@ -22,8 +20,7 @@ std::string toHex(const uint8_t *data, size_t len) {
   return out;
 }
 
-bool startsWith(const std::vector<uint8_t> &bytes, const uint8_t *signature,
-                size_t n) {
+bool startsWith(const std::vector<uint8_t> &bytes, const uint8_t *signature, size_t n) {
   return bytes.size() >= n && std::memcmp(bytes.data(), signature, n) == 0;
 }
 
@@ -98,8 +95,7 @@ std::string ContentHasher::md5(const uint8_t *data, const size_t len) {
   return toHex(digest, 16);
 }
 
-HashedContent ContentHasher::hash(const int platformId,
-                                  const std::vector<uint8_t> &fileBytes) const {
+HashedContent ContentHasher::hash(const int platformId, const std::vector<uint8_t> &fileBytes) const {
   HashedContent result;
 
   switch (platformId) {
@@ -118,8 +114,7 @@ HashedContent ContentHasher::hash(const int platformId,
   case firelight::platforms::PlatformService::PLATFORM_ID_SNES:
     result.contentBytes = fileBytes;
     if (fileBytes.size() % 1024 == 512) {
-      result.contentHash =
-          md5(fileBytes.data() + 512, fileBytes.size() - 512);
+      result.contentHash = md5(fileBytes.data() + 512, fileBytes.size() - 512);
     } else {
       result.contentHash = md5(fileBytes.data(), fileBytes.size());
     }
@@ -167,8 +162,7 @@ HashedContent ContentHasher::hash(const int platformId,
 
   default: {
     char hash[33] = {0};
-    rc_hash_generate_from_buffer(hash, rcConsoleForPlatform(platformId),
-                                 fileBytes.data(), fileBytes.size());
+    rc_hash_generate_from_buffer(hash, rcConsoleForPlatform(platformId), fileBytes.data(), fileBytes.size());
     result.contentBytes = fileBytes;
     result.contentHash = std::string(hash);
     return result;

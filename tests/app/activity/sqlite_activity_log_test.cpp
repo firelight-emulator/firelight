@@ -2,14 +2,12 @@
 #include <firelight/activity/sqlite_activity_log.hpp>
 
 #include <gtest/gtest.h>
-
 #include <string>
 
 namespace firelight::activity {
 
 namespace {
-PlaySession makeSession(const std::string &hash, uint64_t start, uint64_t end,
-                        uint64_t durationMillis = 0) {
+PlaySession makeSession(const std::string &hash, uint64_t start, uint64_t end, uint64_t durationMillis = 0) {
   PlaySession s;
   s.contentHash = hash;
   s.slotNumber = 1;
@@ -20,7 +18,6 @@ PlaySession makeSession(const std::string &hash, uint64_t start, uint64_t end,
 }
 } // namespace
 
-// TODO
 // NOTE: getDatabase() caches the :memory: connection per-thread and there is no
 // teardown, so instances on this thread share one database. Each test therefore
 // uses a unique content hash and only queries by that hash to stay isolated

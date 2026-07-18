@@ -2,8 +2,6 @@
 
 namespace firelight::libretro {
 
-class IKeyboardInputProvider {
+class IKeyboardInputProvider {};
 
-};
-
-}
+} // namespace firelight::libretro

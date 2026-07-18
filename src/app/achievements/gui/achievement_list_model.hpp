@@ -15,13 +15,11 @@ public:
     achievements::UserUnlock unlockState;
   };
 
-  explicit AchievementListModel(const QVector<Item> &items,
-                                QObject *parent = nullptr);
+  explicit AchievementListModel(const QVector<Item> &items, QObject *parent = nullptr);
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
-  [[nodiscard]] QVariant data(const QModelIndex &index,
-                              int role) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
 
   int size() const;
 

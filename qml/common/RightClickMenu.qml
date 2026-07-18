@@ -12,25 +12,24 @@ Menu {
     overlap: 4
 
     implicitWidth: {
-        var maxWidth = 0
+        var maxWidth = 0;
 
         for (var i = 0; i < count; i++) {
-            var item = itemAt(i)
+            var item = itemAt(i);
             if (item.implicitWidth > maxWidth) {
-                maxWidth = item.implicitWidth
+                maxWidth = item.implicitWidth;
             }
         }
 
-        return maxWidth + horizontalPadding * 2
+        return maxWidth + horizontalPadding * 2;
     }
     implicitHeight: {
-        var height = 0
+        var height = 0;
 
         for (var i = 0; i < count; i++) {
-            height += itemAt(i).implicitHeight
+            height += itemAt(i).implicitHeight;
         }
-        return height + verticalPadding * 2
-
+        return height + verticalPadding * 2;
     }
 
     currentIndex: 0
@@ -38,16 +37,16 @@ Menu {
     // overlap: 10
 
     function popupNormal() {
-        control.modal = false
-        control.popup()
+        control.modal = false;
+        control.popup();
     }
 
     function popupModal(x, y) {
-        control.modal = true
-        control.popup(x, y)
+        control.modal = true;
+        control.popup(x, y);
         // print all keys in first item in content data
-        control.itemAt(0).forceActiveFocus()
-        currentIndex = 0
+        control.itemAt(0).forceActiveFocus();
+        currentIndex = 0;
     }
 
     Overlay.modal: Rectangle {

@@ -28,11 +28,9 @@ public:
 struct TransportEvents {
   std::function<void(PlayerId, IPeerLink &)> peerConnected;
   std::function<void(PlayerId)> peerDisconnected;
-  std::function<void(PlayerId, ChannelKind, std::span<const uint8_t>)>
-      messageReceived;
+  std::function<void(PlayerId, ChannelKind, std::span<const uint8_t>)> messageReceived;
 };
 
-// TODO
 // Peer-to-peer data plane. Connection handshakes ride the lobby backend's
 // signaling channel: the transport emits payloads via signalOut, and inbound
 // payloads are delivered to handleSignal.
@@ -48,10 +46,8 @@ public:
   virtual void closeAll() = 0;
 
   void setEvents(TransportEvents events) { m_events = std::move(events); }
-  void setSignalOut(
-      std::function<void(PlayerId to, const std::string &payload)> out) {
-    m_signalOut = std::move(out);
-  }
+
+  void setSignalOut(std::function<void(PlayerId to, const std::string &payload)> out) { m_signalOut = std::move(out); }
 
 protected:
   TransportEvents m_events;

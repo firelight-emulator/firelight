@@ -1,13 +1,12 @@
 #include <firelight/media/clip_recorder.hpp>
 
 #include <QImage>
-#include <spdlog/spdlog.h>
-
 #include <algorithm>
 #include <atomic>
 #include <condition_variable>
 #include <deque>
 #include <mutex>
+#include <spdlog/spdlog.h>
 #include <thread>
 #include <vector>
 
@@ -35,8 +34,8 @@ struct RawFrame {
 
 struct ClipRecorder::Impl {
   explicit Impl(const int windowSeconds)
-      : windowUs(static_cast<int64_t>(windowSeconds > 0 ? windowSeconds : 15) *
-                 1'000'000) {}
+      : windowUs(static_cast<int64_t>(windowSeconds > 0 ? windowSeconds : 15) * 1'000'000) {}
+
   ~Impl() { stop(); }
 
   const int64_t windowUs;
@@ -86,8 +85,7 @@ struct ClipRecorder::Impl {
   void trimVideoRing(); // caller holds ringMutex
 };
 
-bool ClipRecorder::Impl::start(const int w, const int h, const int f,
-                               const int sr, const int ch) {
+bool ClipRecorder::Impl::start(const int w, const int h, const int f, const int sr, const int ch) {
   stop(); // clean restart
 
   fps = f > 0 ? f : 60;
@@ -96,7 +94,6 @@ bool ClipRecorder::Impl::start(const int w, const int h, const int f,
   if (w <= 0 || h <= 0) {
     return false;
   }
-  // TODO
   // Retro frames are tiny; a raw native-res encode looks soft once a player
   // upscales it. Integer-upscale (nearest-neighbor, done in encodeFrame) to
   // roughly 720 lines so the clip stays pixel-sharp on playback
@@ -123,8 +120,8 @@ bool ClipRecorder::Impl::start(const int w, const int h, const int f,
   enc->pix_fmt = AV_PIX_FMT_YUV420P;
   enc->time_base = AVRational{1, fps};
   enc->framerate = AVRational{fps, 1};
-  enc->gop_size = fps;    // ~1s keyframe interval -> tight rolling trim
-  enc->max_b_frames = 0;  // no reordering: pts==dts, simplest mux
+  enc->gop_size = fps;                       // ~1s keyframe interval -> tight rolling trim
+  enc->max_b_frames = 0;                     // no reordering: pts==dts, simplest mux
   enc->flags |= AV_CODEC_FLAG_GLOBAL_HEADER; // SPS/PPS in extradata for mp4
   av_opt_set(enc->priv_data, "preset", "veryfast", 0);
   av_opt_set(enc->priv_data, "tune", "zerolatency", 0);
@@ -199,10 +196,8 @@ void ClipRecorder::Impl::pushVideo(const QImage &frame, const int64_t ptsMs) {
   // Premultiplied-opaque bytes are identical to straight RGBA (alpha == 255),
   // so accept both without a conversion copy; convert anything else
   const bool rgbaBytes =
-      frame.format() == QImage::Format_RGBA8888 ||
-      frame.format() == QImage::Format_RGBA8888_Premultiplied;
-  const QImage img =
-      rgbaBytes ? frame : frame.convertToFormat(QImage::Format_RGBA8888);
+      frame.format() == QImage::Format_RGBA8888 || frame.format() == QImage::Format_RGBA8888_Premultiplied;
+  const QImage img = rgbaBytes ? frame : frame.convertToFormat(QImage::Format_RGBA8888);
 
   RawFrame rf;
   rf.width = img.width();
@@ -220,8 +215,7 @@ void ClipRecorder::Impl::pushVideo(const QImage &frame, const int64_t ptsMs) {
   queueCv.notify_one();
 }
 
-void ClipRecorder::Impl::pushAudio(const int16_t *data,
-                                   const std::size_t numFrames) {
+void ClipRecorder::Impl::pushAudio(const int16_t *data, const std::size_t numFrames) {
   if (!running.load() || !data || numFrames == 0) {
     return;
   }
@@ -229,11 +223,9 @@ void ClipRecorder::Impl::pushAudio(const int16_t *data,
   std::lock_guard<std::mutex> lk(ringMutex);
   pcmRing.insert(pcmRing.end(), data, data + samples);
   // Keep ~window + 0.5s of audio so it comfortably covers the video window
-  const auto windowSamples =
-      static_cast<std::size_t>(windowUs / 1'000'000) *
-          static_cast<std::size_t>(sampleRate) *
-          static_cast<std::size_t>(channels) +
-      static_cast<std::size_t>(sampleRate / 2) * channels;
+  const auto windowSamples = static_cast<std::size_t>(windowUs / 1'000'000) * static_cast<std::size_t>(sampleRate) *
+                                 static_cast<std::size_t>(channels) +
+                             static_cast<std::size_t>(sampleRate / 2) * channels;
   while (pcmRing.size() > windowSamples) {
     pcmRing.pop_front();
   }
@@ -265,17 +257,14 @@ void ClipRecorder::Impl::workerLoop() {
 
 void ClipRecorder::Impl::flush() {
   std::unique_lock<std::mutex> lk(queueMutex);
-  idleCv.wait(lk, [this] {
-    return !running.load() || (queue.empty() && !encoding);
-  });
+  idleCv.wait(lk, [this] { return !running.load() || (queue.empty() && !encoding); });
 }
 
 void ClipRecorder::Impl::encodeFrame(const RawFrame &f) {
   if (!sws || swsSrcW != f.width || swsSrcH != f.height) {
     // SWS_POINT = nearest-neighbor: keeps upscaled pixels sharp (no blur)
-    sws = sws_getCachedContext(sws, f.width, f.height, AV_PIX_FMT_RGBA, encWidth,
-                               encHeight, AV_PIX_FMT_YUV420P, SWS_POINT,
-                               nullptr, nullptr, nullptr);
+    sws = sws_getCachedContext(sws, f.width, f.height, AV_PIX_FMT_RGBA, encWidth, encHeight, AV_PIX_FMT_YUV420P,
+                               SWS_POINT, nullptr, nullptr, nullptr);
     swsSrcW = f.width;
     swsSrcH = f.height;
   }
@@ -341,8 +330,7 @@ void ClipRecorder::Impl::trimVideoRing() {
       break; // only one GOP buffered
     }
     if (latest - videoRing[secondKey].ptsUs >= windowUs) {
-      videoRing.erase(videoRing.begin(),
-                      videoRing.begin() + static_cast<long>(secondKey));
+      videoRing.erase(videoRing.begin(), videoRing.begin() + static_cast<long>(secondKey));
     } else {
       break;
     }
@@ -362,8 +350,7 @@ ClipSnapshot ClipRecorder::Impl::snapshot() const {
   if (start >= videoRing.size()) {
     return snap; // no keyframe buffered yet
   }
-  snap.video.assign(videoRing.begin() + static_cast<long>(start),
-                    videoRing.end());
+  snap.video.assign(videoRing.begin() + static_cast<long>(start), videoRing.end());
   snap.extradata = extradata;
   snap.pcm.assign(pcmRing.begin(), pcmRing.end());
   snap.fps = fps;
@@ -376,24 +363,26 @@ ClipSnapshot ClipRecorder::Impl::snapshot() const {
 
 // --- public forwarding ---
 
-ClipRecorder::ClipRecorder(const int windowSeconds)
-    : m_impl(std::make_unique<Impl>(windowSeconds)) {}
+ClipRecorder::ClipRecorder(const int windowSeconds) : m_impl(std::make_unique<Impl>(windowSeconds)) {}
+
 ClipRecorder::~ClipRecorder() = default;
 
-bool ClipRecorder::start(const int width, const int height, const int fps,
-                         const int sampleRate, const int channels) {
+bool ClipRecorder::start(const int width, const int height, const int fps, const int sampleRate, const int channels) {
   return m_impl->start(width, height, fps, sampleRate, channels);
 }
+
 void ClipRecorder::stop() { m_impl->stop(); }
+
 void ClipRecorder::reset() { m_impl->reset(); }
+
 void ClipRecorder::flush() { m_impl->flush(); }
+
 bool ClipRecorder::isRecording() const { return m_impl->running.load(); }
-void ClipRecorder::pushVideoFrame(const QImage &frame, const int64_t ptsMs) {
-  m_impl->pushVideo(frame, ptsMs);
-}
-void ClipRecorder::pushAudio(const int16_t *data, const std::size_t numFrames) {
-  m_impl->pushAudio(data, numFrames);
-}
+
+void ClipRecorder::pushVideoFrame(const QImage &frame, const int64_t ptsMs) { m_impl->pushVideo(frame, ptsMs); }
+
+void ClipRecorder::pushAudio(const int16_t *data, const std::size_t numFrames) { m_impl->pushAudio(data, numFrames); }
+
 ClipSnapshot ClipRecorder::snapshot() const { return m_impl->snapshot(); }
 
 } // namespace firelight::media

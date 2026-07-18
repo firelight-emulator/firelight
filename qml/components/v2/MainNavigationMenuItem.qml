@@ -23,7 +23,6 @@ Button {
 
     implicitHeight: 36
 
-    // TODO
     // onClicked: {
     //     ListView.view.currentIndex = index
     // }

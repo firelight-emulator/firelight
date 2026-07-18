@@ -17,8 +17,7 @@ public:
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
 
-  [[nodiscard]] QVariant data(const QModelIndex &index,
-                              int role) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 

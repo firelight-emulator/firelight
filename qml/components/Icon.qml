@@ -1,6 +1,5 @@
 import QtQuick
 
-// TODO
 // Reusable crisp icon backed by the Material Symbols Rounded variable font
 // Usage: Icon { name: "settings"; size: 22; color: Theme.textPrimary }
 // Renders a font glyph (not a raster/SVG), so it is sharp at any size and DPR and
@@ -31,11 +30,11 @@ Text {
     // Drive the optical-size axis to the rendered size (font range is 20-48) so the
     // glyph outline is optically correct; expose fill/weight/grade for variants
     font.variableAxes: ({
-        "opsz": Math.max(20, Math.min(48, root.size)),
-        "wght": root.weight,
-        "FILL": root.filled ? 1 : 0,
-        "GRAD": root.grade
-    })
+            "opsz": Math.max(20, Math.min(48, root.size)),
+            "wght": root.weight,
+            "FILL": root.filled ? 1 : 0,
+            "GRAD": root.grade
+        })
 
     // GPU curve rasterizer: crisp, resolution-independent, and safe under rotation/scaling
     // (unlike NativeRendering). Set per-instance if a different mode is ever needed

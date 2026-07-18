@@ -6,7 +6,6 @@
 
 namespace firelight::library {
 
-// TODO
 // The app-facing curation surface for the user library. A thin, concrete facade
 // over the repository (no Qt, no QObject): it exposes only the operations the GUI
 // and emulation need — browsing/updating entries, managing folders, and managing
@@ -17,8 +16,7 @@ namespace firelight::library {
 // the user never has to pick or configure a primary games folder
 class UserLibraryService {
 public:
-  UserLibraryService(IUserLibraryRepository &repository,
-                     const std::string &defaultContentDirectory);
+  UserLibraryService(IUserLibraryRepository &repository, const std::string &defaultContentDirectory);
 
   // Entries
   std::vector<Entry> getEntries(int offset = 0, int limit = -1);

@@ -8,7 +8,6 @@
 
 namespace firelight::netplay {
 
-// TODO
 // A guest's controller as the host's core sees it: fed by InputPackets, read
 // once per frame by the input router. Goes neutral when packets stop so a
 // dropped guest never leaves a button stuck
@@ -56,27 +55,22 @@ public:
     }
   }
 
-  int16_t getLeftStickXPosition(int, int) override {
-    return currentFrame().leftStickX;
-  }
-  int16_t getLeftStickYPosition(int, int) override {
-    return currentFrame().leftStickY;
-  }
-  int16_t getRightStickXPosition(int, int) override {
-    return currentFrame().rightStickX;
-  }
-  int16_t getRightStickYPosition(int, int) override {
-    return currentFrame().rightStickY;
-  }
+  int16_t getLeftStickXPosition(int, int) override { return currentFrame().leftStickX; }
+
+  int16_t getLeftStickYPosition(int, int) override { return currentFrame().leftStickY; }
+
+  int16_t getRightStickXPosition(int, int) override { return currentFrame().rightStickX; }
+
+  int16_t getRightStickYPosition(int, int) override { return currentFrame().rightStickY; }
 
   void setStrongRumble(int, uint16_t) override {}
+
   void setWeakRumble(int, uint16_t) override {}
 
 private:
   [[nodiscard]] input::InputFrame currentFrame() const {
     std::lock_guard lock(m_mutex);
-    if (!m_hasFrame ||
-        std::chrono::steady_clock::now() - m_lastUpdate > STALE_AFTER) {
+    if (!m_hasFrame || std::chrono::steady_clock::now() - m_lastUpdate > STALE_AFTER) {
       return {};
     }
     return m_frame;

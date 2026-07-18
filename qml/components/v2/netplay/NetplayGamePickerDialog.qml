@@ -43,12 +43,11 @@ Dialog {
             }
 
             onClicked: {
-                NetworkService.selectGame(model.entryId)
-                root.close()
+                NetworkService.selectGame(model.entryId);
+                root.close();
             }
         }
 
-        ScrollBar.vertical: ScrollBar {
-        }
+        ScrollBar.vertical: ScrollBar {}
     }
 }

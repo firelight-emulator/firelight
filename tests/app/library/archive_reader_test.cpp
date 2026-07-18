@@ -1,11 +1,10 @@
 #include <firelight/library/archive_reader.hpp>
 
+#include <algorithm>
 #include <archive.h>
 #include <archive_entry.h>
-#include <gtest/gtest.h>
-
-#include <algorithm>
 #include <filesystem>
+#include <gtest/gtest.h>
 #include <random>
 #include <string>
 #include <utility>
@@ -18,8 +17,7 @@ protected:
 
   void SetUp() override {
     std::random_device rd;
-    tempDir = std::filesystem::temp_directory_path() /
-              ("fl_artest_" + std::to_string(rd()));
+    tempDir = std::filesystem::temp_directory_path() / ("fl_artest_" + std::to_string(rd()));
     std::error_code ec;
     std::filesystem::create_directories(tempDir, ec);
   }
@@ -30,8 +28,7 @@ protected:
   }
 
   // Writes a .zip with the given (name, content) entries; returns its path
-  std::string
-  writeZip(const std::vector<std::pair<std::string, std::string>> &entries) {
+  std::string writeZip(const std::vector<std::pair<std::string, std::string>> &entries) {
     const std::string zipPath = (tempDir / "test.zip").string();
 
     archive *a = archive_write_new();
@@ -62,9 +59,7 @@ TEST_F(ArchiveReaderTest, ListsEntries) {
   ASSERT_EQ(entries.size(), 2u);
 
   const auto byName = [&](const std::string &name) {
-    return std::find_if(entries.begin(), entries.end(), [&](const auto &e) {
-      return e.pathName == name;
-    });
+    return std::find_if(entries.begin(), entries.end(), [&](const auto &e) { return e.pathName == name; });
   };
   ASSERT_NE(byName("a.txt"), entries.end());
   ASSERT_EQ(byName("a.txt")->size, 5);

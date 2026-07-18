@@ -18,7 +18,7 @@ FocusScope {
     signal itemSelected(index: int)
 
     function itemAtIndex(index) {
-        return list.itemAtIndex(index)
+        return list.itemAtIndex(index);
     }
 
     required property var model
@@ -32,24 +32,24 @@ FocusScope {
     }
 
     WheelHandler {
-        onWheel: function(event) {
+        onWheel: function (event) {
             if (wheelTimer.running) {
                 if (list.currentIndex === 0 && event.angleDelta.y < 0) {
-                    wheelTimer.restart()
-                    return
+                    wheelTimer.restart();
+                    return;
                 } else if (list.currentIndex === list.count - 1 && event.angleDelta.y >= 0) {
-                    wheelTimer.restart()
-                    return
+                    wheelTimer.restart();
+                    return;
                 }
             }
 
             if (event.angleDelta.y >= 0) {
-                list.incrementCurrentIndex()
+                list.incrementCurrentIndex();
             } else {
-                list.decrementCurrentIndex()
+                list.decrementCurrentIndex();
             }
 
-            wheelTimer.restart()
+            wheelTimer.restart();
         }
     }
 
@@ -76,82 +76,82 @@ FocusScope {
 
         onCurrentIndexChanged: {
             sfx.play();
-            console.log("Current index changed: ", list.currentIndex)
+            console.log("Current index changed: ", list.currentIndex);
         }
 
         model: root.model
 
         delegate: FocusScope {
-          id: dele
+            id: dele
 
-          required property var model
-          required property var index
+            required property var model
+            required property var index
 
-          height: 180
-          width: height * root.aspectRatio
+            height: 180
+            width: height * root.aspectRatio
 
-          Behavior on width {
-              NumberAnimation {
-                  duration: 80
-              }
-          }
+            Behavior on width {
+                NumberAnimation {
+                    duration: 80
+                }
+            }
 
-          Button {
-              property bool showGlobalCursor: true
-              anchors.verticalCenter: parent.verticalCenter
-              padding: 0
-              spacing: 0
-              horizontalPadding: 0
-              focus: true
-              height: 180
-              // height: dele.ListView.isCurrentItem ? 270 : 180
-              width: height * root.aspectRatio
+            Button {
+                property bool showGlobalCursor: true
+                anchors.verticalCenter: parent.verticalCenter
+                padding: 0
+                spacing: 0
+                horizontalPadding: 0
+                focus: true
+                height: 180
+                // height: dele.ListView.isCurrentItem ? 270 : 180
+                width: height * root.aspectRatio
 
-              property var inputHints: [
-                  {
-                      input: Qt.Key_Select,
-                      label: "Play"
-                  },
-                  {
-                      input: Qt.Key_Menu,
-                      label: "Details"
-                  }
-              ]
+                property var inputHints: [
+                    {
+                        input: Qt.Key_Select,
+                        label: "Play"
+                    },
+                    {
+                        input: Qt.Key_Menu,
+                        label: "Details"
+                    }
+                ]
 
-              Behavior on height {
-                  NumberAnimation {
-                      duration: 80
-                  }
-              }
-              // radius: 4
+                Behavior on height {
+                    NumberAnimation {
+                        duration: 80
+                    }
+                }
+                // radius: 4
 
-              Behavior on width {
-                  NumberAnimation {
-                      duration: 80
-                  }
-              }
+                Behavior on width {
+                    NumberAnimation {
+                        duration: 80
+                    }
+                }
 
-              onClicked: {
-                  if (!dele.ListView.isCurrentItem) {
-                      dele.ListView.view.currentIndex = dele.index
-                      return
-                  } else {
-                        console.log("selected: ", dele.index)
-                      root.itemSelected(dele.index)
-                  }
-              }
+                onClicked: {
+                    if (!dele.ListView.isCurrentItem) {
+                        dele.ListView.view.currentIndex = dele.index;
+                        return;
+                    } else {
+                        console.log("selected: ", dele.index);
+                        root.itemSelected(dele.index);
+                    }
+                }
 
-              HoverHandler {
-                  cursorShape: Qt.PointingHandCursor
-              }
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
 
-              background: Item {}
+                background: Item {}
 
-              contentItem: Image {
-                  id: sourceImage
-                  source: dele.model.modelData.image_url
-              }
-          }
-      }
+                contentItem: Image {
+                    id: sourceImage
+                    source: dele.model.modelData.image_url
+                }
+            }
+        }
     }
 }

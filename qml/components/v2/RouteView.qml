@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
 
-// TODO
 // Renders the current route as a screen and mirrors Router's history. Recently
 // visited screens are kept alive in an LRU cache so navigating back returns to a
 // page exactly as it was left (scroll position, selection, sub-tab). Router owns
@@ -31,38 +30,73 @@ StackView {
     // show a loading indicator
     property bool loading: false
 
-    // TODO
     // Route pattern -> screen Component. Params (Router.params) are passed as
     // initial properties, so a pattern's :name captures must match the screen's
     // property names (e.g. :entryId -> FLGameDetailsPanel.entryId)
     readonly property var routes: ({
-        "/library": libraryComponent,
-        "/library/entries/:entryId": gameDetailsComponent,
-        "/shop": shopComponent,
-        "/shop/mods/:modId": shopItemComponent,
-        "/settings": settingsComponent,
-        "/controllers": controllersComponent,
-        "/controllers/profiles/:playerNumber": controllerProfileComponent,
-        "/controllers/manage": profileManagementComponent,
-        "/gallery": galleryComponent,
-        "/gallery/games/:gameContentHash": galleryComponent,
-        "/activity": activityComponent,
-        "/netplay": netplayComponent,
-        "/help": helpComponent
-    })
+            "/library": libraryComponent,
+            "/library/entries/:entryId": gameDetailsComponent,
+            "/shop": shopComponent,
+            "/shop/mods/:modId": shopItemComponent,
+            "/settings": settingsComponent,
+            "/controllers": controllersComponent,
+            "/controllers/profiles/:playerNumber": controllerProfileComponent,
+            "/controllers/manage": profileManagementComponent,
+            "/gallery": galleryComponent,
+            "/gallery/games/:gameContentHash": galleryComponent,
+            "/activity": activityComponent,
+            "/netplay": netplayComponent,
+            "/help": helpComponent
+        })
 
-    Component { id: libraryComponent; LibraryPageV2 {} }
-    Component { id: gameDetailsComponent; FLGameDetailsPanel {} }
-    Component { id: shopComponent; ShopLandingPage {} }
-    Component { id: shopItemComponent; ShopItemPage {} }
-    Component { id: settingsComponent; SettingsScreen {} }
-    Component { id: controllersComponent; ControllersPage {} }
-    Component { id: controllerProfileComponent; ControllerProfilePage {} }
-    Component { id: profileManagementComponent; ProfileManagementPage {} }
-    Component { id: galleryComponent; GalleryPage {} }
-    Component { id: activityComponent; ActivityPageV2 {} }
-    Component { id: netplayComponent; NetplayPage {} }
-    Component { id: helpComponent; HelpScreen {} }
+    Component {
+        id: libraryComponent
+        LibraryPageV2 {}
+    }
+    Component {
+        id: gameDetailsComponent
+        FLGameDetailsPanel {}
+    }
+    Component {
+        id: shopComponent
+        ShopLandingPage {}
+    }
+    Component {
+        id: shopItemComponent
+        ShopItemPage {}
+    }
+    Component {
+        id: settingsComponent
+        SettingsScreen {}
+    }
+    Component {
+        id: controllersComponent
+        ControllersPage {}
+    }
+    Component {
+        id: controllerProfileComponent
+        ControllerProfilePage {}
+    }
+    Component {
+        id: profileManagementComponent
+        ProfileManagementPage {}
+    }
+    Component {
+        id: galleryComponent
+        GalleryPage {}
+    }
+    Component {
+        id: activityComponent
+        ActivityPageV2 {}
+    }
+    Component {
+        id: netplayComponent
+        NetplayPage {}
+    }
+    Component {
+        id: helpComponent
+        HelpScreen {}
+    }
 
     Component {
         id: notFoundComponent
@@ -155,7 +189,6 @@ StackView {
     replaceEnter: Transition {}
     replaceExit: Transition {}
 
-
     // Off-screen, invisible parent where pages are built asynchronously before
     // they're shown. Sized like the stack so layout matches their final home
     Item {
@@ -170,7 +203,6 @@ StackView {
     // Builds currently in flight, keyed by mount key, so a route isn't built twice
     property var _incubators: ({})
 
-    // TODO
     // A route pattern that owns its subtree (e.g. /settings) keeps one instance
     // for all its sub-paths; everything else is keyed by full path so distinct
     // entries get distinct pages
@@ -215,7 +247,10 @@ StackView {
         if (idx >= 0) {
             _cache.splice(idx, 1);
         }
-        _cache.push({ key: key, item: item });
+        _cache.push({
+            key: key,
+            item: item
+        });
         _evict();
     }
 
@@ -240,7 +275,6 @@ StackView {
 
     function _show(item, transition) {
         stack.loading = false;
-        // TODO
         // Keep the depth-1 invariant: if a screen ever pushes onto our stack
         // directly (outside the router), drop those extras so nothing lingers
         // behind the next page
@@ -252,9 +286,7 @@ StackView {
             return;
         }
         var previous = stack.currentItem;
-        var op = transition === "push" ? StackView.PushTransition
-               : transition === "pop" ? StackView.PopTransition
-               : StackView.ReplaceTransition;
+        var op = transition === "push" ? StackView.PushTransition : transition === "pop" ? StackView.PopTransition : StackView.ReplaceTransition;
         stack.replaceCurrentItem(item, {}, op);
         _setActive(previous, false);
         _setActive(item, true);
@@ -274,7 +306,10 @@ StackView {
             if (idx >= 0) {
                 var item = stack._cache[idx].item;
                 stack._cache.splice(idx, 1);
-                stack._cache.push({ key: key, item: item });
+                stack._cache.push({
+                    key: key,
+                    item: item
+                });
                 stack._show(item, transition);
                 return;
             }

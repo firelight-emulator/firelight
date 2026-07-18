@@ -10,9 +10,9 @@ Pane {
         ListView {
             property var anchorMargins: {
                 if (parent.width > 1000) {
-                    return (parent.width - 1000) / 2
+                    return (parent.width - 1000) / 2;
                 } else {
-                    return 0
+                    return 0;
                 }
             }
 
@@ -20,79 +20,76 @@ Pane {
             anchors.rightMargin: anchorMargins
             anchors.fill: parent
 
-            model: GameActivityModel{}
-            delegate:  RowLayout {
+            model: GameActivityModel {}
+            delegate: RowLayout {
                 height: 60
                 required property var model
                 required property var index
-              spacing: 16
-              Rectangle {
-                  color: "#292929"
-                  visible: model.iconUrl1x1 === ""
-                  implicitWidth: 48
-                  implicitHeight: 48
+                spacing: 16
+                Rectangle {
+                    color: "#292929"
+                    visible: model.iconUrl1x1 === ""
+                    implicitWidth: 48
+                    implicitHeight: 48
 
-                  FLIcon {
-                      icon: model.platformSlug
-                      color: "#595959"
-                      anchors.centerIn: parent
-                      height: parent.height - 16
-                      width: parent.width - 16
-                      size: height
-                  }
-              }
-              Image {
-                  source: model.iconUrl1x1
-                  visible: model.iconUrl1x1 !== ""
-                  asynchronous: true
-                  Layout.preferredHeight: 48
-                  Layout.preferredWidth: 48
-                  Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                  sourceSize.width: 48
-                  sourceSize.height: 48
-                  smooth: true
-                  fillMode: Image.PreserveAspectFit
-              }
-              Text {
-                  text: model.displayName
-                  font.pixelSize: AppStyle.fontSizeMedium
-                  font.weight: Font.DemiBold
-                  font.family: Constants.regularFontFamily
-                  color: "white"
-                  Layout.fillHeight: true
-                  Layout.preferredWidth: 600
-                  elide: Text.ElideRight
-                  maximumLineCount: 1
-                  horizontalAlignment: Text.AlignLeft
-                  verticalAlignment: Text.AlignVCenter
-              }
-              Item {
-                 Layout.fillHeight: true
-                 Layout.fillWidth: true
-             }
-              Text {
-                  property var hours: {
-                      return Math.floor(model.numSecondsPlayed / 3600);
-                  }
+                    FLIcon {
+                        icon: model.platformSlug
+                        color: "#595959"
+                        anchors.centerIn: parent
+                        height: parent.height - 16
+                        width: parent.width - 16
+                        size: height
+                    }
+                }
+                Image {
+                    source: model.iconUrl1x1
+                    visible: model.iconUrl1x1 !== ""
+                    asynchronous: true
+                    Layout.preferredHeight: 48
+                    Layout.preferredWidth: 48
+                    Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                    sourceSize.width: 48
+                    sourceSize.height: 48
+                    smooth: true
+                    fillMode: Image.PreserveAspectFit
+                }
+                Text {
+                    text: model.displayName
+                    font.pixelSize: AppStyle.fontSizeMedium
+                    font.weight: Font.DemiBold
+                    font.family: Constants.regularFontFamily
+                    color: "white"
+                    Layout.fillHeight: true
+                    Layout.preferredWidth: 600
+                    elide: Text.ElideRight
+                    maximumLineCount: 1
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                }
+                Item {
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+                }
+                Text {
+                    property var hours: {
+                        return Math.floor(model.numSecondsPlayed / 3600);
+                    }
 
-                  property var minutes: {
-                      return Math.floor((model.numSecondsPlayed % 3600) / 60);
-                  }
+                    property var minutes: {
+                        return Math.floor((model.numSecondsPlayed % 3600) / 60);
+                    }
 
-                  property var seconds: {
-                      return model.numSecondsPlayed % 60;
-                  }
+                    property var seconds: {
+                        return model.numSecondsPlayed % 60;
+                    }
 
-                  text: (hours > 0 ? hours + " hours, " : "") + (minutes > 0 ? minutes + " minutes, " : "") + (seconds > 0 ? seconds + ( seconds > 1 ? " seconds" : " second") : "")
-                  color: ColorPalette.neutral300
-                  font.pixelSize: AppStyle.fontSizeMedium
-                  font.weight: Font.Medium
-                  font.family: Constants.regularFontFamily
-              }
-
-          }
-
+                    text: (hours > 0 ? hours + " hours, " : "") + (minutes > 0 ? minutes + " minutes, " : "") + (seconds > 0 ? seconds + (seconds > 1 ? " seconds" : " second") : "")
+                    color: ColorPalette.neutral300
+                    font.pixelSize: AppStyle.fontSizeMedium
+                    font.weight: Font.Medium
+                    font.family: Constants.regularFontFamily
+                }
+            }
         }
-
     }
 }

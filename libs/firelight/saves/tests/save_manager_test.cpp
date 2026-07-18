@@ -2,11 +2,10 @@
 
 #include <firelight/saves/save_manager_impl.hpp>
 
-#include <gtest/gtest.h>
-
 #include <atomic>
 #include <chrono>
 #include <filesystem>
+#include <gtest/gtest.h>
 #include <memory>
 #include <string>
 #include <vector>
@@ -29,8 +28,7 @@ protected:
 
   void SetUp() override {
     const auto unique =
-        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) +
-        "_" + std::to_string(g_counter++);
+        std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "_" + std::to_string(g_counter++);
     m_tempDir = fs::temp_directory_path() / ("fl_saves_test_" + unique);
     fs::create_directories(m_tempDir);
     m_saveManager = std::make_unique<SaveManager>(m_tempDir.string(), m_db);
@@ -60,21 +58,18 @@ TEST_F(SaveManagerTest, WriteThenReadRoundTrips) {
 }
 
 TEST_F(SaveManagerTest, WriteCreatesFileAtSlotPath) {
-  ASSERT_TRUE(
-      m_saveManager->writeSaveData(m_hash, 3, Savefile(bytesOf("x"))).get());
+  ASSERT_TRUE(m_saveManager->writeSaveData(m_hash, 3, Savefile(bytesOf("x"))).get());
   const auto expected = m_tempDir / m_hash / "slot3" / "savefile.srm";
   EXPECT_TRUE(fs::exists(expected));
 }
 
 TEST_F(SaveManagerTest, FirstWriteCreatesMetadataSecondUpdates) {
-  ASSERT_TRUE(
-      m_saveManager->writeSaveData(m_hash, 1, Savefile(bytesOf("aaaa"))).get());
+  ASSERT_TRUE(m_saveManager->writeSaveData(m_hash, 1, Savefile(bytesOf("aaaa"))).get());
   EXPECT_EQ(m_db.createCount, 1);
   EXPECT_EQ(m_db.updateCount, 0);
 
   // Different data -> different MD5 -> an update, not a second create
-  ASSERT_TRUE(
-      m_saveManager->writeSaveData(m_hash, 1, Savefile(bytesOf("bbbb"))).get());
+  ASSERT_TRUE(m_saveManager->writeSaveData(m_hash, 1, Savefile(bytesOf("bbbb"))).get());
   EXPECT_EQ(m_db.createCount, 1);
   EXPECT_EQ(m_db.updateCount, 1);
 }
@@ -92,8 +87,7 @@ TEST_F(SaveManagerTest, UnchangedDataSkipsRewrite) {
 }
 
 TEST_F(SaveManagerTest, SetsLastModifiedTimestamp) {
-  ASSERT_TRUE(
-      m_saveManager->writeSaveData(m_hash, 1, Savefile(bytesOf("data"))).get());
+  ASSERT_TRUE(m_saveManager->writeSaveData(m_hash, 1, Savefile(bytesOf("data"))).get());
   const auto md = m_db.getSavefileMetadata(m_hash, 1);
   ASSERT_TRUE(md.has_value());
   EXPECT_GT(md->lastModifiedAt, 0);

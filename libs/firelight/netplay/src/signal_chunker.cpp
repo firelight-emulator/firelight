@@ -16,13 +16,11 @@ std::string generateSignalId() {
   return id;
 }
 
-std::vector<SignalChunk> chunkSignal(const std::string &payload,
-                                     const size_t maxContentChars,
+std::vector<SignalChunk> chunkSignal(const std::string &payload, const size_t maxContentChars,
                                      const std::string &signalId) {
   const auto encoded = base64EncodeText(payload);
   const size_t chunkSize = maxContentChars > 0 ? maxContentChars : 1;
-  const int total =
-      static_cast<int>((encoded.size() + chunkSize - 1) / chunkSize);
+  const int total = static_cast<int>((encoded.size() + chunkSize - 1) / chunkSize);
 
   std::vector<SignalChunk> chunks;
   for (int i = 0; i < total; ++i) {
@@ -30,19 +28,16 @@ std::vector<SignalChunk> chunkSignal(const std::string &payload,
         .signalId = signalId,
         .index = i,
         .total = total,
-        .content = encoded.substr(static_cast<size_t>(i) * chunkSize,
-                                  chunkSize),
+        .content = encoded.substr(static_cast<size_t>(i) * chunkSize, chunkSize),
     });
   }
   if (chunks.empty()) {
-    chunks.push_back(
-        SignalChunk{.signalId = signalId, .index = 0, .total = 1});
+    chunks.push_back(SignalChunk{.signalId = signalId, .index = 0, .total = 1});
   }
   return chunks;
 }
 
-std::optional<std::string>
-SignalReassembler::accept(const PlayerId from, const SignalChunk &chunk) {
+std::optional<std::string> SignalReassembler::accept(const PlayerId from, const SignalChunk &chunk) {
   if (chunk.total < 1 || chunk.index < 0 || chunk.index >= chunk.total) {
     return std::nullopt;
   }

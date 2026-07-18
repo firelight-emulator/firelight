@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Effects
 import Firelight 1.0
 
-// TODO
 // Hosts routes that present as a popup over the current view (e.g. /settings)
 // Driven entirely by Router: opens when the current route is an overlay, closes
 // otherwise. Dismissing the popup (Escape / click-away) calls Router.back() so
@@ -23,10 +22,13 @@ Popup {
 
     // Overlay route pattern -> screen Component
     readonly property var routes: ({
-        "/settings": settingsComponent
-    })
+            "/settings": settingsComponent
+        })
 
-    Component { id: settingsComponent; SettingsScreen {} }
+    Component {
+        id: settingsComponent
+        SettingsScreen {}
+    }
 
     property string _loadedPattern: ""
 
@@ -50,7 +52,10 @@ Popup {
         color: "black"
         opacity: 0.7
         Behavior on opacity {
-            NumberAnimation { duration: 160; easing.type: Easing.InOutQuad }
+            NumberAnimation {
+                duration: 160
+                easing.type: Easing.InOutQuad
+            }
         }
     }
 
@@ -100,11 +105,35 @@ Popup {
     }
 
     enter: Transition {
-        NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 160; easing.type: Easing.InOutQuad }
-        NumberAnimation { property: "scale"; from: 0.98; to: 1.0; duration: 160; easing.type: Easing.InOutQuad }
+        NumberAnimation {
+            property: "opacity"
+            from: 0.0
+            to: 1.0
+            duration: 160
+            easing.type: Easing.InOutQuad
+        }
+        NumberAnimation {
+            property: "scale"
+            from: 0.98
+            to: 1.0
+            duration: 160
+            easing.type: Easing.InOutQuad
+        }
     }
     exit: Transition {
-        NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 160; easing.type: Easing.InOutQuad }
-        NumberAnimation { property: "scale"; from: 1.0; to: 0.98; duration: 160; easing.type: Easing.InOutQuad }
+        NumberAnimation {
+            property: "opacity"
+            from: 1.0
+            to: 0.0
+            duration: 160
+            easing.type: Easing.InOutQuad
+        }
+        NumberAnimation {
+            property: "scale"
+            from: 1.0
+            to: 0.98
+            duration: 160
+            easing.type: Easing.InOutQuad
+        }
     }
 }

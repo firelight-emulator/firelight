@@ -7,7 +7,6 @@
 
 namespace firelight::library {
 
-// TODO
 // The primitive attributes of a library entry needed to evaluate smart-folder
 // criteria. Deliberately Qt-free and self-contained so matches() is a pure
 // function and fully unit-testable. The model layer builds it from a loaded
@@ -31,7 +30,6 @@ struct EntryFields {
   int64_t secondsPlayed = 0;
 };
 
-// TODO
 // Criteria defining a smart folder's membership. Two orthogonal parts:
 //   SOURCE (which pool of games): contentDirectoryIds (specific content
 //     directories) and/or pathContains (case-insensitive substring of a file
@@ -56,7 +54,6 @@ struct SmartFolderCriteria {
   std::optional<int> yearMax;
   std::optional<int64_t> playedAfterMillis;
   std::optional<int64_t> minSecondsPlayed;
-  // TODO
   // Rolling window: the entry must have been played within the last N days,
   // resolved against "now" at evaluation time so it never goes stale (unlike
   // playedAfterMillis, which is a fixed timestamp)
@@ -72,7 +69,6 @@ struct SmartFolderCriteria {
   // True when no source and no filter is set — the folder matches everything
   [[nodiscard]] bool isEmpty() const;
 
-  // TODO
   // Pure predicate: does the entry satisfy every specified criterion? The
   // no-clock overload resolves the rolling playedWithinDays window against the
   // system clock; pass nowMillis explicitly for deterministic tests

@@ -11,9 +11,7 @@ QHash<int, QByteArray> PlaySessionListModel::roleNames() const {
   return roles;
 }
 
-int PlaySessionListModel::rowCount(const QModelIndex &parent) const {
-  return m_items.size();
-}
+int PlaySessionListModel::rowCount(const QModelIndex &parent) const { return m_items.size(); }
 
 QVariant PlaySessionListModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
@@ -35,8 +33,8 @@ QVariant PlaySessionListModel::data(const QModelIndex &index, int role) const {
     return QVariant{};
   }
 }
-void PlaySessionListModel::refreshItems(
-    std::vector<PlaySession> &playSessions) {
+
+void PlaySessionListModel::refreshItems(std::vector<PlaySession> &playSessions) {
 
   emit beginResetModel();
   m_items.clear();

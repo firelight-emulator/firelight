@@ -11,7 +11,6 @@ Item {
 
     // --- Scope (the base set — one at a time, chosen in the sidebar) ---
     property int filterPlatformId: -1
-    // TODO
     // A folder scope matches the folder AND all its descendants. The sidebar
     // supplies the descendant ids split by kind (manual = membership, smart =
     // computed), so selecting a parent shows everything nested under it
@@ -34,27 +33,62 @@ Item {
     property string filterGenre: ""
 
     readonly property var playTimeOptions: [
-        { label: "Any play time", value: "any" },
-        { label: "Never played", value: "never" },
-        { label: "Under 1 hour", value: "short" },
-        { label: "1–10 hours", value: "medium" },
-        { label: "Over 10 hours", value: "long" }
+        {
+            label: "Any play time",
+            value: "any"
+        },
+        {
+            label: "Never played",
+            value: "never"
+        },
+        {
+            label: "Under 1 hour",
+            value: "short"
+        },
+        {
+            label: "1–10 hours",
+            value: "medium"
+        },
+        {
+            label: "Over 10 hours",
+            value: "long"
+        }
     ]
     readonly property var decadeOptions: [
-        { label: "Any decade", value: 0 },
-        { label: "1970s", value: 1970 },
-        { label: "1980s", value: 1980 },
-        { label: "1990s", value: 1990 },
-        { label: "2000s", value: 2000 },
-        { label: "2010s", value: 2010 },
-        { label: "2020s", value: 2020 }
+        {
+            label: "Any decade",
+            value: 0
+        },
+        {
+            label: "1970s",
+            value: 1970
+        },
+        {
+            label: "1980s",
+            value: 1980
+        },
+        {
+            label: "1990s",
+            value: 1990
+        },
+        {
+            label: "2000s",
+            value: 2000
+        },
+        {
+            label: "2010s",
+            value: 2010
+        },
+        {
+            label: "2020s",
+            value: 2020
+        }
     ]
-    readonly property bool anyAdvancedFilter: filterHasAchievements || filterCompleted
-                                              || filterPlayTime !== "any" || filterDecade !== 0
-                                              || filterGenre.trim().length > 0
+    readonly property bool anyAdvancedFilter: filterHasAchievements || filterCompleted || filterPlayTime !== "any" || filterDecade !== 0 || filterGenre.trim().length > 0
     function playTimeLabel(v) {
         for (var i = 0; i < playTimeOptions.length; i++)
-            if (playTimeOptions[i].value === v) return playTimeOptions[i].label;
+            if (playTimeOptions[i].value === v)
+                return playTimeOptions[i].label;
         return "";
     }
     function clearAdvancedFilters() {
@@ -78,19 +112,28 @@ Item {
 
     // The scoped folder, but only when it's a manual folder we can remove from
     // (a smart folder's membership is computed, so "remove" is meaningless)
-    readonly property int removableFolderId: filterManualIds.indexOf(filterFolderId) !== -1
-                                             ? filterFolderId : -1
+    readonly property int removableFolderId: filterManualIds.indexOf(filterFolderId) !== -1 ? filterFolderId : -1
 
     readonly property var sortOptions: [
-        { label: "Name", role: "displayName" },
-        { label: "Recently played", role: "lastPlayedAt" },
-        { label: "Platform", role: "platformId" },
-        { label: "Date added", role: "createdAt" }
+        {
+            label: "Name",
+            role: "displayName"
+        },
+        {
+            label: "Recently played",
+            role: "lastPlayedAt"
+        },
+        {
+            label: "Platform",
+            role: "platformId"
+        },
+        {
+            label: "Date added",
+            role: "createdAt"
+        }
     ]
 
-    readonly property bool isDirty: filterPlatformId !== -1 || filterFolderId !== -1
-                                    || showOnlyFavorites || showOnlyUnplayed || filterText !== ""
-                                    || anyAdvancedFilter
+    readonly property bool isDirty: filterPlatformId !== -1 || filterFolderId !== -1 || showOnlyFavorites || showOnlyUnplayed || filterText !== "" || anyAdvancedFilter
 
     signal folderCrumbClicked(int folderId)
 
@@ -156,14 +199,18 @@ Item {
     function _selectionRecount() {
         var n = 0;
         for (var k in root.selectedIds)
-            if (root.selectedIds[k]) n++;
+            if (root.selectedIds[k])
+                n++;
         root.selectedCount = n;
     }
-    function isSelected(entryId) { return root.selectedIds[entryId] === true; }
+    function isSelected(entryId) {
+        return root.selectedIds[entryId] === true;
+    }
     function selectedIdList() {
         var out = [];
         for (var k in root.selectedIds)
-            if (root.selectedIds[k]) out.push(parseInt(k));
+            if (root.selectedIds[k])
+                out.push(parseInt(k));
         return out;
     }
     function selectOnly(entryId, rowIndex) {
@@ -176,8 +223,12 @@ Item {
     function toggleSelect(entryId, rowIndex) {
         var s = {};
         for (var k in root.selectedIds)
-            if (root.selectedIds[k]) s[k] = true;
-        if (s[entryId]) delete s[entryId]; else s[entryId] = true;
+            if (root.selectedIds[k])
+                s[k] = true;
+        if (s[entryId])
+            delete s[entryId];
+        else
+            s[entryId] = true;
         root.selectedIds = s;
         root.selectionAnchorRow = rowIndex;
         root._selectionRecount();
@@ -190,7 +241,8 @@ Item {
         var s = {};
         for (var i = lo; i <= hi && i < gameMirror.count; i++) {
             var o = gameMirror.objectAt(i);
-            if (o) s[o.entryId] = true;
+            if (o)
+                s[o.entryId] = true;
         }
         root.selectedIds = s;
         root._selectionRecount();
@@ -215,7 +267,8 @@ Item {
             LibraryEntryModel.setEntryFavorite(t[i], fav);
     }
     function bulkRemoveFromFolder() {
-        if (root.removableFolderId === -1) return;
+        if (root.removableFolderId === -1)
+            return;
         var t = root.selectedIdList();
         for (var i = 0; i < t.length; i++)
             LibraryEntryModel.removeEntryFromFolder(t[i], root.removableFolderId);
@@ -240,9 +293,21 @@ Item {
         model: LibraryEntryModel
 
         filters: [
-            ValueFilter { roleName: "favorite"; value: true; enabled: root.showOnlyFavorites },
-            ValueFilter { roleName: "lastPlayedAt"; value: 0; enabled: root.showOnlyUnplayed },
-            ValueFilter { roleName: "platformId"; value: root.filterPlatformId; enabled: root.filterPlatformId !== -1 },
+            ValueFilter {
+                roleName: "favorite"
+                value: true
+                enabled: root.showOnlyFavorites
+            },
+            ValueFilter {
+                roleName: "lastPlayedAt"
+                value: 0
+                enabled: root.showOnlyUnplayed
+            },
+            ValueFilter {
+                roleName: "platformId"
+                value: root.filterPlatformId
+                enabled: root.filterPlatformId !== -1
+            },
             FunctionFilter {
                 property var manualIds: root.filterManualIds
                 property var smartIds: root.filterSmartIds
@@ -269,7 +334,9 @@ Item {
             FunctionFilter {
                 property bool on: root.filterHasAchievements
                 enabled: root.filterHasAchievements
-                function filter(data: RoleData): bool { return data.achievementsTotal > 0; }
+                function filter(data: RoleData): bool {
+                    return data.achievementsTotal > 0;
+                }
                 onOnChanged: invalidate()
             },
             FunctionFilter {
@@ -285,10 +352,14 @@ Item {
                 enabled: root.filterPlayTime !== "any"
                 function filter(data: RoleData): bool {
                     var s = data.numSecondsPlayed;
-                    if (bucket === "never") return !s || s <= 0;
-                    if (bucket === "short") return s > 0 && s < 3600;
-                    if (bucket === "medium") return s >= 3600 && s < 36000;
-                    if (bucket === "long") return s >= 36000;
+                    if (bucket === "never")
+                        return !s || s <= 0;
+                    if (bucket === "short")
+                        return s > 0 && s < 3600;
+                    if (bucket === "medium")
+                        return s >= 3600 && s < 36000;
+                    if (bucket === "long")
+                        return s >= 36000;
                     return true;
                 }
                 onBucketChanged: invalidate()
@@ -318,7 +389,6 @@ Item {
         ]
     }
 
-    // TODO
     // A lightweight, ordered mirror of the filtered/sorted rows. Qt's tech-preview
     // SortFilterProxyModel exposes neither get(row) nor count, so this Instantiator
     // is how QML reads the result set in order — it backs the live count and
@@ -375,15 +445,23 @@ Item {
                         required property var modelData
                         required property int index
                         spacing: AppStyle.spacingXs
-                        Icon { name: "chevron-forward"; size: AppStyle.iconSizeSm; color: Theme.textMuted }
+                        Icon {
+                            name: "chevron-forward"
+                            size: AppStyle.iconSizeSm
+                            color: Theme.textMuted
+                        }
                         Text {
                             text: parent.modelData.label
                             color: parent.index === root.scopeCrumb.length - 1 ? Theme.textPrimary : Theme.textMuted
                             font.family: Constants.regularFontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                             font.weight: Font.DemiBold
-                            TapHandler { onTapped: root.folderCrumbClicked(parent.modelData.folderId) }
-                            HoverHandler { cursorShape: Qt.PointingHandCursor }
+                            TapHandler {
+                                onTapped: root.folderCrumbClicked(parent.modelData.folderId)
+                            }
+                            HoverHandler {
+                                cursorShape: Qt.PointingHandCursor
+                            }
                         }
                     }
                 }
@@ -408,7 +486,9 @@ Item {
                     font.family: Constants.regularFontFamily
                     font.pixelSize: AppStyle.fontSizeMedium
                 }
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
                 FLButton {
                     visible: root.isDirty
                     size: "sm"
@@ -451,7 +531,9 @@ Item {
                     visible: root.removableFolderId !== -1
                     onClicked: root.bulkRemoveFromFolder()
                 }
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
                 FLButton {
                     size: "sm"
                     variant: "ghost"
@@ -492,7 +574,10 @@ Item {
                     iconName: root.sortAscending ? "arrow-up" : "arrow-down"
                     size: "sm"
                     tooltipText: root.sortAscending ? "Ascending" : "Descending"
-                    onClicked: { root.sortAscending = !root.sortAscending; root.persistFolderSort(); }
+                    onClicked: {
+                        root.sortAscending = !root.sortAscending;
+                        root.persistFolderSort();
+                    }
                 }
 
                 FLButton {
@@ -572,10 +657,13 @@ Item {
                                 textRole: "label"
                                 currentIndex: {
                                     for (var i = 0; i < root.playTimeOptions.length; i++)
-                                        if (root.playTimeOptions[i].value === root.filterPlayTime) return i;
+                                        if (root.playTimeOptions[i].value === root.filterPlayTime)
+                                            return i;
                                     return 0;
                                 }
-                                onActivated: function (index) { root.filterPlayTime = root.playTimeOptions[index].value; }
+                                onActivated: function (index) {
+                                    root.filterPlayTime = root.playTimeOptions[index].value;
+                                }
                             }
 
                             Text {
@@ -590,10 +678,13 @@ Item {
                                 textRole: "label"
                                 currentIndex: {
                                     for (var i = 0; i < root.decadeOptions.length; i++)
-                                        if (root.decadeOptions[i].value === root.filterDecade) return i;
+                                        if (root.decadeOptions[i].value === root.filterDecade)
+                                            return i;
                                     return 0;
                                 }
-                                onActivated: function (index) { root.filterDecade = root.decadeOptions[index].value; }
+                                onActivated: function (index) {
+                                    root.filterDecade = root.decadeOptions[index].value;
+                                }
                             }
 
                             Text {
@@ -621,12 +712,16 @@ Item {
                     }
                 }
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 FLSegmentedControl {
                     segments: ["Grid", "List"]
                     currentIndex: root.viewMode === "grid" ? 0 : 1
-                    onActivated: function (index) { root.viewMode = index === 0 ? "grid" : "list"; }
+                    onActivated: function (index) {
+                        root.viewMode = index === 0 ? "grid" : "list";
+                    }
                 }
 
                 FLButton {
@@ -643,11 +738,31 @@ Item {
                 visible: root.anyAdvancedFilter
                 spacing: AppStyle.spacingXs
 
-                RefineChip { visible: root.filterHasAchievements; label: "Has achievements"; onCleared: root.filterHasAchievements = false }
-                RefineChip { visible: root.filterCompleted; label: "Completed"; onCleared: root.filterCompleted = false }
-                RefineChip { visible: root.filterPlayTime !== "any"; label: root.playTimeLabel(root.filterPlayTime); onCleared: root.filterPlayTime = "any" }
-                RefineChip { visible: root.filterDecade !== 0; label: root.filterDecade + "s"; onCleared: root.filterDecade = 0 }
-                RefineChip { visible: root.filterGenre.trim().length > 0; label: "Genre: " + root.filterGenre; onCleared: genreFilterField.text = "" }
+                RefineChip {
+                    visible: root.filterHasAchievements
+                    label: "Has achievements"
+                    onCleared: root.filterHasAchievements = false
+                }
+                RefineChip {
+                    visible: root.filterCompleted
+                    label: "Completed"
+                    onCleared: root.filterCompleted = false
+                }
+                RefineChip {
+                    visible: root.filterPlayTime !== "any"
+                    label: root.playTimeLabel(root.filterPlayTime)
+                    onCleared: root.filterPlayTime = "any"
+                }
+                RefineChip {
+                    visible: root.filterDecade !== 0
+                    label: root.filterDecade + "s"
+                    onCleared: root.filterDecade = 0
+                }
+                RefineChip {
+                    visible: root.filterGenre.trim().length > 0
+                    label: "Genre: " + root.filterGenre
+                    onCleared: genreFilterField.text = ""
+                }
             }
         }
 
@@ -668,7 +783,6 @@ Item {
         }
     }
 
-    // TODO
     // Right dock: details for the last-clicked game. Width animates 0 -> open so
     // the grid reflows to make room; the panel keeps a fixed content width and is
     // clipped, so it slides rather than reflowing while animating
@@ -680,7 +794,12 @@ Item {
         readonly property int openWidth: Math.round(320 * AppStyle.scale)
         width: root.detailOpen ? openWidth : 0
         clip: true
-        Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.InOutQuad } }
+        Behavior on width {
+            NumberAnimation {
+                duration: 180
+                easing.type: Easing.InOutQuad
+            }
+        }
 
         GameDetailPanel {
             anchors.right: parent.right
@@ -688,9 +807,9 @@ Item {
             anchors.bottom: parent.bottom
             width: detailDock.openWidth
             gameData: root.detailData
-            onRequestPlay: (entryId) => EmulationService.loadEntry(entryId)
+            onRequestPlay: entryId => EmulationService.loadEntry(entryId)
             onRequestFavorite: (entryId, fav) => root.setDetailFavorite(entryId, fav)
-            onRequestAddToFolder: (entryId) => addToFolderDialog.openFor([entryId])
+            onRequestAddToFolder: entryId => addToFolderDialog.openFor([entryId])
         }
     }
 
@@ -699,11 +818,17 @@ Item {
         GameListView {
             model: gameModel
             selectedIds: root.selectedIds
-            onSortRoleChanged: { root.sortRole = sortRole; root.persistFolderSort(); }
-            onSortAscendingChanged: { root.sortAscending = sortAscending; root.persistFolderSort(); }
+            onSortRoleChanged: {
+                root.sortRole = sortRole;
+                root.persistFolderSort();
+            }
+            onSortAscendingChanged: {
+                root.sortAscending = sortAscending;
+                root.persistFolderSort();
+            }
             onGameClicked: (entryId, rowIndex, modifiers) => root.handleGameClick(entryId, rowIndex, modifiers)
-            onGameFocused: (data) => root.detailData = data
-            onRequestAddToFolder: (entryIds) => addToFolderDialog.openFor(entryIds)
+            onGameFocused: data => root.detailData = data
+            onRequestAddToFolder: entryIds => addToFolderDialog.openFor(entryIds)
             onRequestChangeArt: (hash, name, platformId) => artPicker.openFor(hash, name, platformId)
         }
     }
@@ -714,8 +839,8 @@ Item {
             model: gameModel
             selectedIds: root.selectedIds
             onGameClicked: (entryId, rowIndex, modifiers) => root.handleGameClick(entryId, rowIndex, modifiers)
-            onGameFocused: (data) => root.detailData = data
-            onRequestAddToFolder: (entryIds) => addToFolderDialog.openFor(entryIds)
+            onGameFocused: data => root.detailData = data
+            onRequestAddToFolder: entryIds => addToFolderDialog.openFor(entryIds)
             onRequestChangeArt: (hash, name, platformId) => artPicker.openFor(hash, name, platformId)
         }
     }
@@ -735,7 +860,7 @@ Item {
     component RefineChip: Rectangle {
         id: chip
         property string label: ""
-        signal cleared()
+        signal cleared
         implicitHeight: Math.round(24 * AppStyle.scale)
         implicitWidth: chipRow.implicitWidth + AppStyle.spacingMd
         radius: implicitHeight / 2
@@ -757,8 +882,12 @@ Item {
                 name: "close"
                 size: AppStyle.iconSizeSm
                 color: Theme.textMuted
-                TapHandler { onTapped: chip.cleared() }
-                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                TapHandler {
+                    onTapped: chip.cleared()
+                }
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
         }
     }

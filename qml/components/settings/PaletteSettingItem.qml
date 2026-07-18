@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // Bespoke delegate for the Game Boy palette (widget "gbc-palette"): the usual
 // dropdown row plus a live preview of the selected palette underneath. The
 // reference for what `type: "custom"` looks like — extend a row component and
@@ -45,9 +44,7 @@ ComboBoxSettingItem {
         Layout.preferredHeight: 240
         fillMode: Image.PreserveAspectFit
         // Preview assets are named like "gb-dmg" for value "GB - DMG"
-        source: root.value !== ""
-                ? "qrc:images/gbc-previews/" + root.value.toLowerCase().replace(/ /g, "")
-                : ""
+        source: root.value !== "" ? "qrc:images/gbc-previews/" + root.value.toLowerCase().replace(/ /g, "") : ""
         visible: source.toString() !== ""
     }
 }

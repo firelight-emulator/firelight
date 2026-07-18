@@ -10,7 +10,7 @@ Button {
 
     property bool showGlobalCursor: true
     checkable: true
-    
+
     required property string label
     required property string iconName
 
@@ -59,6 +59,4 @@ Button {
             }
         }
     }
-
-
 }

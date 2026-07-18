@@ -11,7 +11,6 @@
 
 namespace firelight::saves {
 
-// TODO
 // The save/suspend-point persistence contract. A plain domain interface: it
 // carries no Qt notification concerns (the QML save-directory binding lives in
 // QtSaveManagerProxy, and suspend-point changes are announced through the
@@ -22,26 +21,21 @@ class ISaveManager {
 public:
   virtual ~ISaveManager() = default;
 
-  [[nodiscard]] virtual std::vector<SavefileInfo>
-  getSaveFileInfoList(const std::string &contentHash) const = 0;
+  [[nodiscard]] virtual std::vector<SavefileInfo> getSaveFileInfoList(const std::string &contentHash) const = 0;
 
-  virtual std::future<bool> writeSaveData(const std::string &contentHash,
-                                          int saveSlotNumber,
+  virtual std::future<bool> writeSaveData(const std::string &contentHash, int saveSlotNumber,
                                           const Savefile &saveData) = 0;
 
-  [[nodiscard]] virtual std::optional<Savefile>
-  readSaveData(const std::string &contentHash, int saveSlotNumber) const = 0;
+  [[nodiscard]] virtual std::optional<Savefile> readSaveData(const std::string &contentHash,
+                                                             int saveSlotNumber) const = 0;
 
-  virtual void writeSuspendPoint(const std::string &contentHash,
-                                 int saveSlotNumber, int index,
+  virtual void writeSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index,
                                  const SuspendPoint &suspendPoint) = 0;
 
-  virtual std::optional<SuspendPoint>
-  readSuspendPoint(const std::string &contentHash, int saveSlotNumber,
-                   int index) = 0;
+  virtual std::optional<SuspendPoint> readSuspendPoint(const std::string &contentHash, int saveSlotNumber,
+                                                       int index) = 0;
 
-  virtual void deleteSuspendPoint(const std::string &contentHash,
-                                  int saveSlotNumber, int index) = 0;
+  virtual void deleteSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index) = 0;
 
   [[nodiscard]] virtual std::string getSaveDirectory() const = 0;
   virtual void setSaveDirectory(const std::string &saveDirectory) = 0;

@@ -4,7 +4,7 @@ import QtQuick.Layouts
 Rectangle {
     id: root
 
-    signal clicked()
+    signal clicked
 
     color: model.occupied ? "#2d3542" : "#222222"
     border.color: model.isSelf ? "#5588dd" : "#333333"

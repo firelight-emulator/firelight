@@ -71,20 +71,18 @@ public:
 private:
   class FakeLink final : public IPeerLink {
   public:
-    FakeLink(FakeTransport &owner, const PlayerId remoteId)
-        : m_owner(owner), m_remoteId(remoteId) {}
+    FakeLink(FakeTransport &owner, const PlayerId remoteId) : m_owner(owner), m_remoteId(remoteId) {}
 
-    void send(const ChannelKind channel,
-              std::span<const uint8_t> data) override {
+    void send(const ChannelKind channel, std::span<const uint8_t> data) override {
       if (auto *remote = m_owner.peerTransport(m_remoteId)) {
         if (remote->m_events.messageReceived) {
           remote->m_events.messageReceived(m_owner.m_selfId, channel, data);
         }
       }
     }
-    [[nodiscard]] size_t bufferedBytes(ChannelKind) const override {
-      return 0;
-    }
+
+    [[nodiscard]] size_t bufferedBytes(ChannelKind) const override { return 0; }
+
     [[nodiscard]] int roundTripMs() const override { return 1; }
 
   private:

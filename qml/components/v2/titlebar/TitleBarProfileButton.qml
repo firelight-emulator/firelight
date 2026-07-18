@@ -31,7 +31,7 @@ Button {
     TapHandler {
         id: avatarButtonTapHandler
         onTapped: {
-            contextMenu.open()
+            contextMenu.open();
         }
     }
 

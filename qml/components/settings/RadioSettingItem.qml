@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // A vertical list of mutually exclusive options, rendered full-width below the
 // label. `options` is [{label, value, note?}]; `currentValue` is the selected
 // value; emits `changed` on selection
@@ -32,7 +31,9 @@ BaseSettingItem {
                 focusPolicy: Qt.NoFocus
                 onClicked: root.changed(modelData.value)
 
-                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
 
                 background: Item {}
 
@@ -67,7 +68,9 @@ BaseSettingItem {
                         verticalAlignment: Text.AlignVCenter
                     }
 
-                    Item { Layout.fillWidth: true }
+                    Item {
+                        Layout.fillWidth: true
+                    }
 
                     Text {
                         visible: opt.modelData.note !== undefined && opt.modelData.note !== ""

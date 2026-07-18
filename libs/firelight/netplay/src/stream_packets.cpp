@@ -16,10 +16,8 @@ void put32(std::vector<uint8_t> &out, const uint32_t value) {
 }
 
 uint32_t get32(std::span<const uint8_t> data, const size_t offset) {
-  return static_cast<uint32_t>(data[offset]) |
-         (static_cast<uint32_t>(data[offset + 1]) << 8) |
-         (static_cast<uint32_t>(data[offset + 2]) << 16) |
-         (static_cast<uint32_t>(data[offset + 3]) << 24);
+  return static_cast<uint32_t>(data[offset]) | (static_cast<uint32_t>(data[offset + 1]) << 8) |
+         (static_cast<uint32_t>(data[offset + 2]) << 16) | (static_cast<uint32_t>(data[offset + 3]) << 24);
 }
 } // namespace
 
@@ -106,8 +104,7 @@ std::optional<InputPacket> decodeInputPacket(std::span<const uint8_t> data) {
   }
   packet.frames.resize(count);
   for (uint8_t i = 0; i < count; ++i) {
-    std::memcpy(packet.frames[i].data(),
-                data.data() + 10 + static_cast<size_t>(i) * RETROPAD_FRAME_BYTES,
+    std::memcpy(packet.frames[i].data(), data.data() + 10 + static_cast<size_t>(i) * RETROPAD_FRAME_BYTES,
                 RETROPAD_FRAME_BYTES);
   }
   return packet;

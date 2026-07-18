@@ -1,9 +1,8 @@
 #include <firelight/netplay/rtc_transport.hpp>
 
-#include <gtest/gtest.h>
-
 #include <chrono>
 #include <condition_variable>
+#include <gtest/gtest.h>
 #include <mutex>
 
 namespace firelight::netplay {
@@ -17,12 +16,8 @@ struct Loopback {
     first = std::make_unique<RtcTransport>(config);
     second = std::make_unique<RtcTransport>(config);
 
-    first->setSignalOut([this](PlayerId, const std::string &payload) {
-      second->handleSignal(1, payload);
-    });
-    second->setSignalOut([this](PlayerId, const std::string &payload) {
-      first->handleSignal(2, payload);
-    });
+    first->setSignalOut([this](PlayerId, const std::string &payload) { second->handleSignal(1, payload); });
+    second->setSignalOut([this](PlayerId, const std::string &payload) { first->handleSignal(2, payload); });
   }
 
   std::unique_ptr<RtcTransport> first;
@@ -30,14 +25,12 @@ struct Loopback {
 };
 
 template <typename Predicate>
-bool waitFor(std::mutex &mutex, std::condition_variable &cv,
-             Predicate predicate, const int seconds = 15) {
+bool waitFor(std::mutex &mutex, std::condition_variable &cv, Predicate predicate, const int seconds = 15) {
   std::unique_lock lock(mutex);
   return cv.wait_for(lock, std::chrono::seconds(seconds), predicate);
 }
 } // namespace
 
-// TODO
 // Disabled by default: two WebRTC endpoints in ONE process share usrsctp's
 // process-global state, and its synchronous loopback delivery can re-enter
 // libdatachannel on the same thread (read->write lock upgrade -> EDEADLK
@@ -67,8 +60,7 @@ TEST(RtcTransportTest, DISABLED_LoopbackConnectExchangeAndClose) {
     disconnects++;
     cv.notify_all();
   };
-  firstEvents.messageReceived = [&](PlayerId, const ChannelKind channel,
-                                    std::span<const uint8_t> data) {
+  firstEvents.messageReceived = [&](PlayerId, const ChannelKind channel, std::span<const uint8_t> data) {
     std::lock_guard lock(mutex);
     firstReceived[channel].assign(data.begin(), data.end());
     cv.notify_all();
@@ -81,8 +73,7 @@ TEST(RtcTransportTest, DISABLED_LoopbackConnectExchangeAndClose) {
     secondLink = &link;
     cv.notify_all();
   };
-  secondEvents.messageReceived = [&](PlayerId, const ChannelKind channel,
-                                     std::span<const uint8_t> data) {
+  secondEvents.messageReceived = [&](PlayerId, const ChannelKind channel, std::span<const uint8_t> data) {
     std::lock_guard lock(mutex);
     secondReceived[channel].assign(data.begin(), data.end());
     cv.notify_all();
@@ -92,35 +83,28 @@ TEST(RtcTransportTest, DISABLED_LoopbackConnectExchangeAndClose) {
   // Transport 1 offers toward member 2.
   loop.first->connectToPeer(2, true);
 
-  ASSERT_TRUE(waitFor(mutex, cv,
-                      [&] { return firstLink && secondLink; }))
-      << "peers did not connect";
+  ASSERT_TRUE(waitFor(mutex, cv, [&] { return firstLink && secondLink; })) << "peers did not connect";
 
   // Exchange one payload per channel in each direction
-  for (const auto kind : {ChannelKind::Control, ChannelKind::Video,
-                          ChannelKind::Audio, ChannelKind::Input}) {
+  for (const auto kind : {ChannelKind::Control, ChannelKind::Video, ChannelKind::Audio, ChannelKind::Input}) {
     const std::vector<uint8_t> toSecond{static_cast<uint8_t>(kind), 1, 2, 3};
     const std::vector<uint8_t> toFirst{static_cast<uint8_t>(kind), 9, 8, 7};
     firstLink->send(kind, toSecond);
     secondLink->send(kind, toFirst);
   }
 
-  ASSERT_TRUE(waitFor(mutex, cv, [&] {
-    return firstReceived.size() == 4 && secondReceived.size() == 4;
-  })) << "messages did not arrive on all channels";
+  ASSERT_TRUE(waitFor(mutex, cv, [&] { return firstReceived.size() == 4 && secondReceived.size() == 4; }))
+      << "messages did not arrive on all channels";
 
   EXPECT_EQ(secondReceived[ChannelKind::Video],
-            (std::vector<uint8_t>{static_cast<uint8_t>(ChannelKind::Video), 1,
-                                  2, 3}));
+            (std::vector<uint8_t>{static_cast<uint8_t>(ChannelKind::Video), 1, 2, 3}));
   EXPECT_EQ(firstReceived[ChannelKind::Input],
-            (std::vector<uint8_t>{static_cast<uint8_t>(ChannelKind::Input), 9,
-                                  8, 7}));
+            (std::vector<uint8_t>{static_cast<uint8_t>(ChannelKind::Input), 9, 8, 7}));
   EXPECT_GE(firstLink->roundTripMs(), -1);
 
   // Closing one end reports the drop on the other
   loop.second->closeAll();
-  EXPECT_TRUE(waitFor(mutex, cv, [&] { return disconnects >= 1; }))
-      << "disconnect was not reported";
+  EXPECT_TRUE(waitFor(mutex, cv, [&] { return disconnects >= 1; })) << "disconnect was not reported";
 }
 
 } // namespace firelight::netplay

@@ -11,7 +11,6 @@ struct CoreOptionValue {
   std::string label;
 };
 
-// TODO
 // A raw libretro core option as the core declares it (SET_CORE_OPTIONS_V2)
 // Cached per core so the advanced options editor can render before a core has
 // been launched in the current session

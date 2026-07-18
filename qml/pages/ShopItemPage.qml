@@ -11,7 +11,6 @@ Flickable {
 
     required property var modId
 
-    // TODO
     // onWidthChanged: function() {
     //     console.log("page width changed: ", width)
     // }
@@ -30,6 +29,4 @@ Flickable {
         modId: page.modId
         width: Math.min(parent.width, 1200)
     }
-
 }
-

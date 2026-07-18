@@ -4,7 +4,6 @@
 #include <QUrl>
 #include <gtest/gtest.h>
 
-// TODO
 // Covers FilesystemUtils::readTextFile, which loads bundled help articles for
 // the in-app Help section (and any other text resource). The qrc:/ path is
 // exercised by the app at runtime (the fl_test binary has no resources linked)
@@ -16,8 +15,7 @@ TEST(FilesystemUtilsTest, ReadsPlainFilePath) {
   ASSERT_TRUE(file.open());
   file.write("hello world");
   file.flush();
-  EXPECT_EQ(FilesystemUtils::readTextFile(file.fileName()),
-            QStringLiteral("hello world"));
+  EXPECT_EQ(FilesystemUtils::readTextFile(file.fileName()), QStringLiteral("hello world"));
 }
 
 // A file:// URL is resolved to a local path (notably file:///C:/... on Windows)
@@ -33,8 +31,7 @@ TEST(FilesystemUtilsTest, ReadsFileUrl) {
 // Missing files (plain path or URL) return an empty string, never throw
 TEST(FilesystemUtilsTest, MissingFileReturnsEmpty) {
   EXPECT_TRUE(FilesystemUtils::readTextFile("/no/such/file_xyz.md").isEmpty());
-  EXPECT_TRUE(
-      FilesystemUtils::readTextFile("file:///no/such/file_xyz.md").isEmpty());
+  EXPECT_TRUE(FilesystemUtils::readTextFile("file:///no/such/file_xyz.md").isEmpty());
 }
 
 } // namespace firelight::gui

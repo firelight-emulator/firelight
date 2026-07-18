@@ -1,7 +1,6 @@
-#include <firelight/media/media_service.hpp>
-
 #include <firelight/media/clip_muxer.hpp>
 #include <firelight/media/clip_thumbnailer.hpp>
+#include <firelight/media/media_service.hpp>
 
 #include <QDateTime>
 #include <QDir>
@@ -16,17 +15,14 @@ namespace {
 int64_t timestampFromFile(const QString &filePath) {
   bool ok = false;
   const int64_t stamp = QFileInfo(filePath).completeBaseName().toLongLong(&ok);
-  return ok ? stamp
-            : QFileInfo(filePath).lastModified().toMSecsSinceEpoch();
+  return ok ? stamp : QFileInfo(filePath).lastModified().toMSecsSinceEpoch();
 }
 } // namespace
 
-MediaService::MediaService(QString capturesDirectory,
-                           IGameCaptureRepository &captures)
+MediaService::MediaService(QString capturesDirectory, IGameCaptureRepository &captures)
     : m_capturesDirectory(std::move(capturesDirectory)), m_captures(captures) {}
 
-std::optional<QString> MediaService::saveScreenshot(const QString &contentHash,
-                                                    const QImage &image) {
+std::optional<QString> MediaService::saveScreenshot(const QString &contentHash, const QImage &image) {
   if (image.isNull() || contentHash.isEmpty()) {
     return std::nullopt;
   }
@@ -49,8 +45,7 @@ std::optional<QString> MediaService::saveScreenshot(const QString &contentHash,
   return path;
 }
 
-std::optional<QString> MediaService::saveClip(const QString &contentHash,
-                                              const ClipSnapshot &snapshot) {
+std::optional<QString> MediaService::saveClip(const QString &contentHash, const ClipSnapshot &snapshot) {
   if (snapshot.empty() || contentHash.isEmpty()) {
     return std::nullopt;
   }
@@ -80,8 +75,7 @@ std::optional<QString> MediaService::saveClip(const QString &contentHash,
 }
 
 void MediaService::reconcile() {
-  scanCaptureDir(m_capturesDirectory + "/screenshots", CaptureType::Screenshot,
-                 "png");
+  scanCaptureDir(m_capturesDirectory + "/screenshots", CaptureType::Screenshot, "png");
   scanCaptureDir(m_capturesDirectory + "/clips", CaptureType::Clip, "mp4");
 
   // Prune index rows whose files were deleted outside the app
@@ -92,9 +86,8 @@ void MediaService::reconcile() {
   }
 }
 
-void MediaService::index(CaptureType type, const QString &contentHash,
-                         const QString &filePath, const QString &thumbnailPath,
-                         int64_t timestamp) {
+void MediaService::index(CaptureType type, const QString &contentHash, const QString &filePath,
+                         const QString &thumbnailPath, int64_t timestamp) {
   GameCapture capture;
   capture.contentHash = contentHash.toStdString();
   capture.type = type;
@@ -104,27 +97,22 @@ void MediaService::index(CaptureType type, const QString &contentHash,
   m_captures.add(capture);
 }
 
-void MediaService::scanCaptureDir(const QString &base, CaptureType type,
-                                  const QString &ext) {
+void MediaService::scanCaptureDir(const QString &base, CaptureType type, const QString &ext) {
   QDir root(base);
   if (!root.exists()) {
     return;
   }
-  for (const auto &hash :
-       root.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+  for (const auto &hash : root.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
     QDir gameDir(root.filePath(hash));
-    for (const auto &name :
-         gameDir.entryList(QStringList{"*." + ext}, QDir::Files)) {
+    for (const auto &name : gameDir.entryList(QStringList{"*." + ext}, QDir::Files)) {
       const QString filePath = gameDir.filePath(name);
       if (m_captures.existsForPath(filePath.toStdString())) {
         continue;
       }
       QString thumbnail = filePath;
       if (type == CaptureType::Clip) {
-        thumbnail =
-            gameDir.filePath(QFileInfo(name).completeBaseName() + ".png");
-        if (!QFileInfo::exists(thumbnail) &&
-            !ClipThumbnailer::writePoster(filePath, thumbnail)) {
+        thumbnail = gameDir.filePath(QFileInfo(name).completeBaseName() + ".png");
+        if (!QFileInfo::exists(thumbnail) && !ClipThumbnailer::writePoster(filePath, thumbnail)) {
           thumbnail.clear();
         }
       }

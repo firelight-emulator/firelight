@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QQuickItem>
-
 #include "service_accessor.hpp"
+
+#include <QQuickItem>
 
 namespace firelight {
 class LibraryEntryItem : public QQuickItem, public ServiceAccessor {
@@ -11,12 +11,9 @@ class LibraryEntryItem : public QQuickItem, public ServiceAccessor {
   Q_PROPERTY(QString contentHash READ getContentHash NOTIFY contentHashChanged)
   Q_PROPERTY(int platformId READ getPlatformId NOTIFY platformIdChanged)
   Q_PROPERTY(QString name READ getName NOTIFY nameChanged)
-  Q_PROPERTY(QString icon1x1SourceUrl READ getIcon1x1SourceUrl NOTIFY
-                 icon1x1SourceUrlChanged)
-  Q_PROPERTY(QString platformIconName READ getPlatformIconName NOTIFY
-                 platformIconNameChanged)
-  Q_PROPERTY(int achievementSetId READ getAchievementSetId NOTIFY
-                 achievementSetIdChanged)
+  Q_PROPERTY(QString icon1x1SourceUrl READ getIcon1x1SourceUrl NOTIFY icon1x1SourceUrlChanged)
+  Q_PROPERTY(QString platformIconName READ getPlatformIconName NOTIFY platformIconNameChanged)
+  Q_PROPERTY(int achievementSetId READ getAchievementSetId NOTIFY achievementSetIdChanged)
   //        Q_PROPERTY(QString abbreviation READ getAbbreviation NOTIFY
   //        abbreviationChanged)
 

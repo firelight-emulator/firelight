@@ -9,6 +9,4 @@ import QtMultimedia
 import QtQuick.Effects
 import Firelight 1.0
 
-Item {
-
-}
+Item {}

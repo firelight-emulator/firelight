@@ -28,7 +28,6 @@ struct LobbyInfo {
   std::vector<LobbyMember> members;
 };
 
-// TODO
 // Callbacks a backend fires as the lobby changes. chatReceived fires only for
 // REMOTE senders — the session appends the local user's messages itself
 // memberRenamed fires for every rename, the local user's included
@@ -36,14 +35,11 @@ struct LobbyEvents {
   std::function<void(const LobbyMember &)> memberJoined;
   std::function<void(PlayerId)> memberLeft;
   std::function<void(PlayerId, const std::string &newName)> memberRenamed;
-  std::function<void(PlayerId senderId, const std::string &senderName,
-                     const std::string &text)>
-      chatReceived;
+  std::function<void(PlayerId senderId, const std::string &senderName, const std::string &text)> chatReceived;
   std::function<void(PlayerId from, const std::string &payload)> signalReceived;
   std::function<void()> lobbyClosed;
 };
 
-// TODO
 // The only seam the rest of the app sees for lobbies, chat, connection
 // signaling, AND identity — implementations (Discord today, LAN or a custom
 // server later) keep their sign-in flows and tokens internal.
@@ -58,12 +54,12 @@ public:
   [[nodiscard]] virtual PlayerIdentity localIdentity() const = 0;
   // Human-readable provider name for UI copy ("Discord")
   [[nodiscard]] virtual std::string providerName() const = 0;
+
   // Backends without account-owned names accept a user-chosen one; applies to
   // the next lobby joined. Provider-named backends ignore it
   virtual void setPreferredDisplayName(const std::string &) {}
 
-  virtual void createLobby(const std::string &joinCode,
-                           ResultCallback done) = 0;
+  virtual void createLobby(const std::string &joinCode, ResultCallback done) = 0;
   virtual void joinLobby(const std::string &joinCode, ResultCallback done) = 0;
   virtual void leaveLobby() = 0;
 

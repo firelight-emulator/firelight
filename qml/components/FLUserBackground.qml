@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Effects
 
-// TODO
 // App background. Renders a solid color, a two-color gradient, or an image
 // (animated ok), with an optional blur and dim. Driven by AppearanceSettings via
 // its host (see Main4)
@@ -28,8 +27,14 @@ Rectangle {
     // Solid mode collapses the two stops to the same color; gradient mode uses
     // both. Image mode is covered by the AnimatedImage below
     gradient: Gradient {
-        GradientStop { position: 0.0; color: root.color1 }
-        GradientStop { position: 1.0; color: root.mode === "gradient" ? root.color2 : root.color1 }
+        GradientStop {
+            position: 0.0
+            color: root.color1
+        }
+        GradientStop {
+            position: 1.0
+            color: root.mode === "gradient" ? root.color2 : root.color1
+        }
     }
 
     Behavior on blurAmount {
@@ -64,7 +69,7 @@ Rectangle {
             cache: false
 
             onSourceChanged: {
-                playing = true
+                playing = true;
             }
         }
 
@@ -82,10 +87,12 @@ Rectangle {
             height: 200
             gradient: Gradient {
                 GradientStop {
-                    position: 0.0; color: "black"
+                    position: 0.0
+                    color: "black"
                 }
                 GradientStop {
-                    position: 1.0; color: "transparent"
+                    position: 1.0
+                    color: "transparent"
                 }
             }
         }
@@ -98,10 +105,12 @@ Rectangle {
             height: 200
             gradient: Gradient {
                 GradientStop {
-                    position: 1.0; color: "black"
+                    position: 1.0
+                    color: "black"
                 }
                 GradientStop {
-                    position: 0.0; color: "transparent"
+                    position: 0.0
+                    color: "transparent"
                 }
             }
         }

@@ -23,7 +23,10 @@ BaseSettingItem {
             color: theControl.checked ? "#35c46b" : "#5a5751"
 
             Behavior on color {
-                ColorAnimation { duration: 160; easing.type: Easing.InOutQuad }
+                ColorAnimation {
+                    duration: 160
+                    easing.type: Easing.InOutQuad
+                }
             }
 
             Rectangle {
@@ -35,7 +38,10 @@ BaseSettingItem {
                 color: "#ffffff"
 
                 Behavior on x {
-                    NumberAnimation { duration: 160; easing.type: Easing.InOutQuad }
+                    NumberAnimation {
+                        duration: 160
+                        easing.type: Easing.InOutQuad
+                    }
                 }
             }
         }

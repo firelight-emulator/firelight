@@ -6,7 +6,6 @@
 #include <string>
 
 namespace firelight::saves {
-// TODO
 // Sqlite/filesystem-backed implementation of the ISaveManager domain contract
 // Announces suspend-point changes through the EventDispatcher (see
 // save_events.hpp) rather than Qt signals, so it is a plain, Qt-free class. The
@@ -17,40 +16,30 @@ public:
   SaveManager(const std::string &saveDir, ISaveDatabase &saveDatabase);
   ~SaveManager() override;
 
-  [[nodiscard]] std::vector<SavefileInfo>
-  getSaveFileInfoList(const std::string &contentHash) const override;
+  [[nodiscard]] std::vector<SavefileInfo> getSaveFileInfoList(const std::string &contentHash) const override;
 
-  std::future<bool> writeSaveData(const std::string &contentHash,
-                                  int saveSlotNumber,
+  std::future<bool> writeSaveData(const std::string &contentHash, int saveSlotNumber,
                                   const Savefile &saveData) override;
 
-  [[nodiscard]] std::optional<Savefile>
-  readSaveData(const std::string &contentHash,
-               int saveSlotNumber) const override;
+  [[nodiscard]] std::optional<Savefile> readSaveData(const std::string &contentHash, int saveSlotNumber) const override;
 
-  void writeSuspendPoint(const std::string &contentHash, int saveSlotNumber,
-                         int index, const SuspendPoint &suspendPoint) override;
+  void writeSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index,
+                         const SuspendPoint &suspendPoint) override;
 
-  std::optional<SuspendPoint> readSuspendPoint(const std::string &contentHash,
-                                               int saveSlotNumber,
-                                               int index) override;
+  std::optional<SuspendPoint> readSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index) override;
 
-  void deleteSuspendPoint(const std::string &contentHash, int saveSlotNumber,
-                          int index) override;
+  void deleteSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index) override;
 
   [[nodiscard]] std::string getSaveDirectory() const override;
   void setSaveDirectory(const std::string &saveDirectory) override;
 
 private:
-  void writeSuspendPointToDisk(const std::string &contentHash, int index,
-                               const SuspendPoint &suspendPoint);
+  void writeSuspendPointToDisk(const std::string &contentHash, int index, const SuspendPoint &suspendPoint);
 
-  [[nodiscard]] std::optional<SuspendPoint>
-  readSuspendPointFromDisk(const std::string &contentHash, int saveSlotNumber,
-                           int index) const;
+  [[nodiscard]] std::optional<SuspendPoint> readSuspendPointFromDisk(const std::string &contentHash, int saveSlotNumber,
+                                                                     int index) const;
 
-  void deleteSuspendPointFromDisk(const std::string &contentHash,
-                                  int saveSlotNumber, int index);
+  void deleteSuspendPointFromDisk(const std::string &contentHash, int saveSlotNumber, int index);
 
   ISaveDatabase &m_saveDatabase;
   std::string m_saveDirectory;

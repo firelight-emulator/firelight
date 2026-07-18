@@ -17,7 +17,6 @@ struct LoadedContent {
   std::string contentHash;
 };
 
-// TODO
 // Loads content for play: reads a ROM (on disk or from an archive) and produces
 // the normalized content bytes the core expects. The launch-time counterpart to
 // ContentIdentifier
@@ -26,8 +25,7 @@ public:
   [[nodiscard]] LoadedContent load(const ContentFile &info) const;
 
   // Applies a patch to already-loaded content, recomputing the bytes and hash
-  void applyPatch(LoadedContent &content, int platformId,
-                  const PatchFile &patch) const;
+  void applyPatch(LoadedContent &content, int platformId, const PatchFile &patch) const;
 };
 
 } // namespace firelight::library

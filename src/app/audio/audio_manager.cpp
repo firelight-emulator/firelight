@@ -4,8 +4,7 @@
 #include <spdlog/spdlog.h>
 
 QAudioDevice AudioManager::selectedOutputDevice() const {
-  const auto chosen =
-      m_settingsService.getGlobalValue(OUTPUT_DEVICE_KEY).value_or("");
+  const auto chosen = m_settingsService.getGlobalValue(OUTPUT_DEVICE_KEY).value_or("");
   if (!chosen.empty()) {
     const auto description = QString::fromStdString(chosen);
     for (const auto &device : QMediaDevices::audioOutputs()) {
@@ -15,20 +14,16 @@ QAudioDevice AudioManager::selectedOutputDevice() const {
     }
     // The chosen device is gone (unplugged, or renamed by the OS). Fall back
     // rather than play nothing
-    spdlog::warn("Audio output '{}' not found; using the system default",
-                 chosen);
+    spdlog::warn("Audio output '{}' not found; using the system default", chosen);
   }
   return QMediaDevices::defaultAudioOutput();
 }
 
-AudioManager::AudioManager(
-    firelight::settings::SettingsService &settingsService,
-    std::function<void()> onAudioBufferLevelChanged)
-  : m_settingsService(settingsService),
-    m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
+AudioManager::AudioManager(firelight::settings::SettingsService &settingsService,
+                           std::function<void()> onAudioBufferLevelChanged)
+    : m_settingsService(settingsService), m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
   m_mediaDevices = new QMediaDevices(this);
-  connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this,
-          &AudioManager::onAudioDevicesChanged);
+  connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this, &AudioManager::onAudioDevicesChanged);
 
   refreshUserMuted();
   refreshVolume();
@@ -44,23 +39,14 @@ AudioManager::AudioManager(
       refreshVolume();
     }
   };
-  m_settingChangedConnection =
-      EventDispatcher::instance()
-          .subscribe<firelight::settings::GlobalSettingChangedEvent>(
-              [onKey](const firelight::settings::GlobalSettingChangedEvent &e) {
-                onKey(e.key);
-              });
-  m_settingResetConnection =
-      EventDispatcher::instance()
-          .subscribe<firelight::settings::GlobalSettingResetEvent>(
-              [onKey](const firelight::settings::GlobalSettingResetEvent &e) {
-                onKey(e.key);
-              });
+  m_settingChangedConnection = EventDispatcher::instance().subscribe<firelight::settings::GlobalSettingChangedEvent>(
+      [onKey](const firelight::settings::GlobalSettingChangedEvent &e) { onKey(e.key); });
+  m_settingResetConnection = EventDispatcher::instance().subscribe<firelight::settings::GlobalSettingResetEvent>(
+      [onKey](const firelight::settings::GlobalSettingResetEvent &e) { onKey(e.key); });
 }
 
 void AudioManager::refreshUserMuted() {
-  m_userMuted =
-      m_settingsService.getGlobalValue(MUTED_KEY).value_or("false") == "true";
+  m_userMuted = m_settingsService.getGlobalValue(MUTED_KEY).value_or("false") == "true";
 }
 
 void AudioManager::refreshVolume() {
@@ -76,9 +62,8 @@ void AudioManager::refreshVolume() {
   if (m_audioSink) {
     // Perceptual, not linear: halfway along the slider should sound halfway,
     // and a linear 0.5 doesn't
-    m_audioSink->setVolume(QtAudio::convertVolume(
-        m_volume.load(), QtAudio::LogarithmicVolumeScale,
-        QtAudio::LinearVolumeScale));
+    m_audioSink->setVolume(
+        QtAudio::convertVolume(m_volume.load(), QtAudio::LogarithmicVolumeScale, QtAudio::LinearVolumeScale));
   }
 }
 
@@ -87,7 +72,6 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     return numFrames;
   }
 
-  // TODO
   // Note: we run this path even when muted (writing silence below) so the audio
   // buffer keeps draining at the device rate — the "audio" sync method paces the
   // emulation off this buffer's occupancy and must not stall when muted
@@ -95,8 +79,9 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
   if (m_audioDevice && m_audioSink) {
     // Added m_audioSink check
     const auto bufferTotalCapacity = m_audioSink->bufferSize();
-    if (bufferTotalCapacity == 0)
+    if (bufferTotalCapacity == 0) {
       return numFrames; // Avoid division by zero
+    }
 
     const auto usedBytes = bufferTotalCapacity - m_audioSink->bytesFree();
     m_currentBufferLevel = static_cast<float>(usedBytes) / bufferTotalCapacity;
@@ -106,12 +91,9 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
 
     // Steer the buffer toward ~50% full by nudging the resample rate, unless the
     // user has disabled Dynamic Rate Control (advanced setting)
-    const int delta =
-        m_drcEnabled.load()
-          ? m_rateController.computeCompensation(
-            static_cast<int>(usedBytes),
-            static_cast<int>(bufferTotalCapacity))
-          : 0;
+    const int delta = m_drcEnabled.load() ? m_rateController.computeCompensation(static_cast<int>(usedBytes),
+                                                                                 static_cast<int>(bufferTotalCapacity))
+                                          : 0;
 
     std::vector<int16_t> output = m_resampler.process(data, numFrames, delta);
     if (output.empty()) {
@@ -159,16 +141,14 @@ void AudioManager::openAudioSink() {
   }
 
   m_deviceSampleRate = deviceRate;
-  spdlog::info("Audio: resampling core {} Hz -> device {} Hz", m_sampleRate,
-               m_deviceSampleRate);
+  spdlog::info("Audio: resampling core {} Hz -> device {} Hz", m_sampleRate, m_deviceSampleRate);
 
   // Initialize the resampler to convert from the core's sample rate to the device's sample rate
   m_resampler.initialize(m_sampleRate, m_deviceSampleRate);
 
   m_audioSink = std::make_unique<QAudioSink>(dev, format);
-  m_audioSink->setVolume(QtAudio::convertVolume(m_volume.load(),
-                                                QtAudio::LogarithmicVolumeScale,
-                                                QtAudio::LinearVolumeScale));
+  m_audioSink->setVolume(
+      QtAudio::convertVolume(m_volume.load(), QtAudio::LogarithmicVolumeScale, QtAudio::LinearVolumeScale));
 
   // Set a larger buffer for higher sample rates
   const int bufferMultiplier = m_deviceSampleRate > 44000 ? 4 : 2;
@@ -188,6 +168,7 @@ void AudioManager::initialize(const double new_freq) {
 }
 
 void AudioManager::setMuted(bool muted) { m_isMuted = muted; }
+
 bool AudioManager::isMuted() const { return m_isMuted; }
 
 void AudioManager::setPaused(const bool paused) {
@@ -205,7 +186,6 @@ void AudioManager::setPaused(const bool paused) {
 }
 
 float AudioManager::getBufferLevel() const {
-  // TODO
   // Live read of the sink's occupancy. The "audio" sync method paces frames off
   // this value from another thread; a cached value only refreshed while we're
   // feeding the sink would freeze once the buffer fills and we stop feeding it,
@@ -222,13 +202,9 @@ float AudioManager::getBufferLevel() const {
   return m_currentBufferLevel.load();
 }
 
-void AudioManager::setPlaybackRateRatio(double ratio) {
-  m_resampler.setPlaybackRateRatio(ratio);
-}
+void AudioManager::setPlaybackRateRatio(double ratio) { m_resampler.setPlaybackRateRatio(ratio); }
 
-void AudioManager::setDynamicRateControlEnabled(const bool enabled) {
-  m_drcEnabled.store(enabled);
-}
+void AudioManager::setDynamicRateControlEnabled(const bool enabled) { m_drcEnabled.store(enabled); }
 
 void AudioManager::reinitializeAudioDevice() {
   std::lock_guard lock(m_sinkMutex);
@@ -236,8 +212,7 @@ void AudioManager::reinitializeAudioDevice() {
     return; // Not initialized yet
   }
 
-  spdlog::info(
-    "Default audio output device changed, reinitializing audio device.");
+  spdlog::info("Default audio output device changed, reinitializing audio device.");
 
   if (m_audioDevice) {
     m_audioDevice->close();

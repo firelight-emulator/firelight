@@ -4,15 +4,13 @@
 
 namespace firelight::metadata {
 
-HttpResponse CprHttpClient::get(const std::string &url,
-                                const std::vector<HttpHeader> &headers) {
+HttpResponse CprHttpClient::get(const std::string &url, const std::vector<HttpHeader> &headers) {
   cpr::Header cprHeaders;
   for (const auto &header : headers) {
     cprHeaders[header.name] = header.value;
   }
 
-  const auto response =
-      cpr::Get(cpr::Url{url}, cprHeaders, cpr::Timeout{15000});
+  const auto response = cpr::Get(cpr::Url{url}, cprHeaders, cpr::Timeout{15000});
 
   HttpResponse result;
   // A transport-level failure leaves status 0 (ok() == false); callers treat

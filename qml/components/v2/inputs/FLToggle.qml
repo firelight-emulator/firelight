@@ -23,7 +23,11 @@ Switch {
         color: control.checked ? Theme.accent : Theme.surfaceHover
         border.width: 1
         border.color: control.checked ? Theme.accent : Theme.border
-        Behavior on color { ColorAnimation { duration: 120 } }
+        Behavior on color {
+            ColorAnimation {
+                duration: 120
+            }
+        }
 
         Rectangle {
             width: control._thumb
@@ -32,7 +36,12 @@ Switch {
             x: control.checked ? parent.width - width - control._inset : control._inset
             anchors.verticalCenter: parent.verticalCenter
             color: "white"
-            Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.InOutQuad } }
+            Behavior on x {
+                NumberAnimation {
+                    duration: 120
+                    easing.type: Easing.InOutQuad
+                }
+            }
         }
     }
 }

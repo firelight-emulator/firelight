@@ -1,8 +1,8 @@
 #pragma once
 
-#include <SQLiteCpp/Database.h>
 #include <firelight/settings/core_option_repository.hpp>
 
+#include <SQLiteCpp/Database.h>
 #include <memory>
 #include <string>
 
@@ -13,11 +13,9 @@ public:
   explicit SqliteCoreOptionRepository(std::string databaseFile);
   ~SqliteCoreOptionRepository() override;
 
-  void upsertCoreOptions(const std::string &coreName,
-                         const std::vector<CoreOption> &options) override;
+  void upsertCoreOptions(const std::string &coreName, const std::vector<CoreOption> &options) override;
 
-  [[nodiscard]] std::vector<CoreOption>
-  getCoreOptions(const std::string &coreName) override;
+  [[nodiscard]] std::vector<CoreOption> getCoreOptions(const std::string &coreName) override;
 
 private:
   std::string m_databaseFile;

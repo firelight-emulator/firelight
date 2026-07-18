@@ -12,19 +12,19 @@ FocusScope {
     property int lastIndex: 0
     property int currentIndex: 0
 
-    signal doneButtonPressed()
+    signal doneButtonPressed
 
     onCurrentIndexChanged: function () {
-        movingRight = currentIndex > lastIndex
-        lastIndex = currentIndex
+        movingRight = currentIndex > lastIndex;
+        lastIndex = currentIndex;
         if (currentIndex === 0) {
-            contentStack.replaceCurrentItem(welcomePage, {}, StackView.ReplaceTransition)
+            contentStack.replaceCurrentItem(welcomePage, {}, StackView.ReplaceTransition);
         } else if (currentIndex === 1) {
-            contentStack.replaceCurrentItem(directoriesPage, {}, StackView.ReplaceTransition)
+            contentStack.replaceCurrentItem(directoriesPage, {}, StackView.ReplaceTransition);
         } else if (currentIndex === 2) {
-            contentStack.replaceCurrentItem(achievementsPage, {}, StackView.ReplaceTransition)
+            contentStack.replaceCurrentItem(achievementsPage, {}, StackView.ReplaceTransition);
         } else if (currentIndex === 3) {
-            contentStack.replaceCurrentItem(readyPage, {}, StackView.ReplaceTransition)
+            contentStack.replaceCurrentItem(readyPage, {}, StackView.ReplaceTransition);
         }
     }
 
@@ -38,8 +38,7 @@ FocusScope {
 
         KeyNavigation.down: contentStack
 
-        background: Item {
-        }
+        background: Item {}
 
         contentItem: RowLayout {
             spacing: 48
@@ -55,23 +54,22 @@ FocusScope {
                     cursorShape: Qt.PointingHandCursor
                 }
                 onClicked: function () {
-                    root.currentIndex = 0
+                    root.currentIndex = 0;
                 }
                 background: Rectangle {
                     color: "transparent"
                     radius: 4
                 }
-                contentItem:
-                    Text {
-                        text: "Welcome"
-                        color: Theme.textPrimary
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.weight: root.currentIndex === 0 ? Font.DemiBold : Font.Medium
-                        opacity: root.currentIndex === 0 ? 1.0 : 0.5
-                        font.family: Constants.regularFontFamily
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
+                contentItem: Text {
+                    text: "Welcome"
+                    color: Theme.textPrimary
+                    font.pixelSize: AppStyle.fontSizeMedium
+                    font.weight: root.currentIndex === 0 ? Font.DemiBold : Font.Medium
+                    opacity: root.currentIndex === 0 ? 1.0 : 0.5
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
 
             Button {
@@ -90,19 +88,18 @@ FocusScope {
                     cursorShape: Qt.PointingHandCursor
                 }
                 onClicked: function () {
-                    root.currentIndex = 1
+                    root.currentIndex = 1;
                 }
-                contentItem:
-                    Text {
-                        text: "Directories"
-                        color: Theme.textPrimary
-                        font.weight: root.currentIndex === 1 ? Font.DemiBold : Font.Medium
-                        opacity: root.currentIndex === 1 ? 1.0 : 0.5
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: Constants.regularFontFamily
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
+                contentItem: Text {
+                    text: "Directories"
+                    color: Theme.textPrimary
+                    font.weight: root.currentIndex === 1 ? Font.DemiBold : Font.Medium
+                    opacity: root.currentIndex === 1 ? 1.0 : 0.5
+                    font.pixelSize: AppStyle.fontSizeMedium
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
 
             Button {
@@ -120,19 +117,18 @@ FocusScope {
                     cursorShape: Qt.PointingHandCursor
                 }
                 onClicked: function () {
-                    root.currentIndex = 2
+                    root.currentIndex = 2;
                 }
-                contentItem:
-                    Text {
-                        text: "Achievements"
-                        color: Theme.textPrimary
-                        font.weight: root.currentIndex === 2 ? Font.DemiBold : Font.Medium
-                        opacity: root.currentIndex === 2 ? 1.0 : 0.5
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: Constants.regularFontFamily
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
+                contentItem: Text {
+                    text: "Achievements"
+                    color: Theme.textPrimary
+                    font.weight: root.currentIndex === 2 ? Font.DemiBold : Font.Medium
+                    opacity: root.currentIndex === 2 ? 1.0 : 0.5
+                    font.pixelSize: AppStyle.fontSizeMedium
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
 
             Button {
@@ -149,19 +145,18 @@ FocusScope {
                     cursorShape: Qt.PointingHandCursor
                 }
                 onClicked: function () {
-                    root.currentIndex = 3
+                    root.currentIndex = 3;
                 }
-                contentItem:
-                    Text {
-                        text: "Ready to play!"
-                        color: Theme.textPrimary
-                        font.weight: root.currentIndex === 3 ? Font.DemiBold : Font.Medium
-                        opacity: root.currentIndex === 3 ? 1.0 : 0.5
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: Constants.regularFontFamily
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
+                contentItem: Text {
+                    text: "Ready to play!"
+                    color: Theme.textPrimary
+                    font.weight: root.currentIndex === 3 ? Font.DemiBold : Font.Medium
+                    opacity: root.currentIndex === 3 ? 1.0 : 0.5
+                    font.pixelSize: AppStyle.fontSizeMedium
+                    font.family: Constants.regularFontFamily
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
             }
         }
     }
@@ -169,8 +164,7 @@ FocusScope {
     Component {
         id: welcomePage
         Pane {
-            background: Item {
-            }
+            background: Item {}
             contentItem: ColumnLayout {
                 width: Math.max(parent.width / 3, 700)
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -213,7 +207,7 @@ FocusScope {
                     Layout.alignment: Qt.AlignCenter
 
                     onClicked: function () {
-                        root.currentIndex = 1
+                        root.currentIndex = 1;
                     }
                 }
                 Item {
@@ -227,8 +221,7 @@ FocusScope {
     Component {
         id: directoriesPage
         Pane {
-            background: Item {
-            }
+            background: Item {}
             contentItem: ColumnLayout {
                 DirectoryOption {
                     id: saveDirectoryOption
@@ -240,7 +233,7 @@ FocusScope {
                     value: SaveManager.saveDirectory
 
                     onValueChanged: function () {
-                        SaveManager.saveDirectory = value
+                        SaveManager.saveDirectory = value;
                     }
                 }
                 Item {
@@ -259,7 +252,7 @@ FocusScope {
                         id: dirNextButton
                         label: "Next"
                         onClicked: function () {
-                            root.currentIndex = 2
+                            root.currentIndex = 2;
                         }
                     }
                 }
@@ -270,8 +263,7 @@ FocusScope {
     Component {
         id: achievementsPage
         Pane {
-            background: Item {
-            }
+            background: Item {}
             contentItem: ColumnLayout {
                 RetroAchievementsAccountPane {
                     id: accountPane
@@ -292,7 +284,7 @@ FocusScope {
                     checked: achievement_manager.defaultToHardcore
 
                     onCheckedChanged: {
-                        achievement_manager.defaultToHardcore = checked
+                        achievement_manager.defaultToHardcore = checked;
                     }
                 }
 
@@ -304,7 +296,7 @@ FocusScope {
                     Layout.topMargin: 8
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: {
-                        Qt.openUrlExternally("https://docs.retroachievements.org/general/faq.html#what-is-hardcore-mode")
+                        Qt.openUrlExternally("https://docs.retroachievements.org/general/faq.html#what-is-hardcore-mode");
                     }
                 }
                 Item {
@@ -324,20 +316,18 @@ FocusScope {
                         label: "Next"
                         KeyNavigation.up: !achievement_manager.loggedIn ? accountPane : null
                         onClicked: function () {
-                            root.currentIndex = 3
+                            root.currentIndex = 3;
                         }
                     }
                 }
             }
         }
-
     }
 
     Component {
         id: readyPage
         Pane {
-            background: Item {
-            }
+            background: Item {}
             contentItem: ColumnLayout {
                 Item {
                     Layout.fillWidth: true
@@ -361,8 +351,8 @@ FocusScope {
                     focus: true
                     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                     onClicked: function () {
-                        root.doneButtonPressed()
-                        // contentStack.pushItem(achievementsPage, {}, StackView.PushTransition)
+                        root.doneButtonPressed();
+                    // contentStack.pushItem(achievementsPage, {}, StackView.PushTransition)
                     }
                 }
 
@@ -386,8 +376,7 @@ FocusScope {
         anchors.rightMargin: Math.max(Math.max(parent.width - 1200, 0) / 2, 60)
         anchors.bottomMargin: 48
 
-        background: Item {
-        }
+        background: Item {}
 
         focus: true
 
@@ -423,16 +412,14 @@ FocusScope {
             }
             NumberAnimation {
                 property: "x"
-                from: 0;
+                from: 0
                 to: -30
                 duration: 200
                 easing.type: Easing.InOutQuad
             }
         }
-        popEnter: Transition {
-        }
-        popExit: Transition {
-        }
+        popEnter: Transition {}
+        popExit: Transition {}
         replaceEnter: Transition {
             NumberAnimation {
                 property: "opacity"
@@ -452,5 +439,4 @@ FocusScope {
             }
         }
     }
-
 }

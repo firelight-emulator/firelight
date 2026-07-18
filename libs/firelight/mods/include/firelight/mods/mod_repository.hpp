@@ -1,5 +1,6 @@
 #pragma once
 #include <firelight/mods/mod_info.hpp>
+
 #include <optional>
 
 namespace firelight::mods {

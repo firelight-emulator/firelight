@@ -12,6 +12,7 @@
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_C_COMPILER": "clang",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "VCPKG_DISABLE_COMPILER_TRACKING": "ON",
                 "VCPKG_HOST_TRIPLET": "x64-windows-static",
                 "VCPKG_TARGET_TRIPLET": "x64-windows-static"

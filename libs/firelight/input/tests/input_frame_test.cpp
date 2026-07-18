@@ -16,11 +16,17 @@ public:
     const auto id = static_cast<unsigned>(b);
     return id < 16 && ((buttons >> id) & 1u) != 0;
   }
+
   int16_t getLeftStickXPosition(int, int) override { return lx; }
+
   int16_t getLeftStickYPosition(int, int) override { return ly; }
+
   int16_t getRightStickXPosition(int, int) override { return rx; }
+
   int16_t getRightStickYPosition(int, int) override { return ry; }
+
   void setStrongRumble(int, uint16_t) override {}
+
   void setWeakRumble(int, uint16_t) override {}
 };
 } // namespace

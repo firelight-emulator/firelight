@@ -1,6 +1,7 @@
 #pragma once
 
 #include <firelight/platforms/platform.hpp>
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -12,12 +13,10 @@ public:
   virtual ~IPlatformService() = default;
   [[nodiscard]] virtual std::optional<Platform> getPlatform(unsigned id) const = 0;
   [[nodiscard]] virtual std::vector<Platform> listPlatforms() const = 0;
-  // TODO
   // The platform whose file associations include `extension` (lowercase, no
   // dot), or PLATFORM_ID_UNKNOWN. Cartridge extensions only; ambiguous disc
   // extensions are identified by content, not extension
-  [[nodiscard]] virtual int
-  platformIdForExtension(const std::string &extension) const = 0;
+  [[nodiscard]] virtual int platformIdForExtension(const std::string &extension) const = 0;
   // Maps an rcheevos console id (RC_CONSOLE_*) to a Firelight platform id
   [[nodiscard]] virtual int platformIdForRcConsole(int rcConsoleId) const = 0;
 };
@@ -54,8 +53,7 @@ public:
 
   [[nodiscard]] std::optional<Platform> getPlatform(unsigned id) const override;
   [[nodiscard]] std::vector<Platform> listPlatforms() const override;
-  [[nodiscard]] int
-  platformIdForExtension(const std::string &extension) const override;
+  [[nodiscard]] int platformIdForExtension(const std::string &extension) const override;
   [[nodiscard]] int platformIdForRcConsole(int rcConsoleId) const override;
 
 private:

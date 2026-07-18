@@ -1,15 +1,15 @@
-#include <firelight/event_dispatcher.hpp>
-#include <firelight/library/sqlite_user_library.hpp>
-
 #include "fake_core.hpp"
 
-#include <emulation/emulation_service.hpp>
+#include <firelight/event_dispatcher.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/library_ingest_service.hpp>
+#include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_service.hpp>
-#include <gtest/gtest.h>
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
+
+#include <emulation/emulation_service.hpp>
+#include <gtest/gtest.h>
 
 namespace firelight::emulation {
 
@@ -35,13 +35,12 @@ protected:
     m_ingest = std::make_unique<library::LibraryIngestService>(*m_library);
     m_service = std::make_unique<library::UserLibraryService>(*m_library, ".");
     m_resolver = std::make_unique<library::EntryResolver>(*m_library);
-    m_settingsService = std::make_unique<settings::SettingsService>(
-        *new settings::SqliteSettingsRepository(":memory:"));
+    m_settingsService =
+        std::make_unique<settings::SettingsService>(*new settings::SqliteSettingsRepository(":memory:"));
     settings::SettingsService::setInstance(m_settingsService.get());
     m_emulationService = std::make_unique<EmulationService>(
         *m_service, *m_resolver, *m_settingsService, EmulationContext{},
-        [](const firelight::libretro::CoreRunConfig &)
-            -> std::unique_ptr<::libretro::ICore> {
+        [](const firelight::libretro::CoreRunConfig &) -> std::unique_ptr<::libretro::ICore> {
           return std::make_unique<FakeCore>();
         });
   }
@@ -64,17 +63,13 @@ protected:
  */
 TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
   bool gameLoadFailedEventReceived = false;
-  ScopedConnection loadFailedConnection =
-      EventDispatcher::instance().subscribe<GameLoadFailedEvent>(
-          [&gameLoadFailedEventReceived](const GameLoadFailedEvent &event) {
-            gameLoadFailedEventReceived = true;
-          });
+  ScopedConnection loadFailedConnection = EventDispatcher::instance().subscribe<GameLoadFailedEvent>(
+      [&gameLoadFailedEventReceived](const GameLoadFailedEvent &event) { gameLoadFailedEventReceived = true; });
 
   library::SqliteUserLibraryRepository library(":memory:");
   library::UserLibraryService libraryService(library, ".");
   library::EntryResolver resolver(library);
-  EmulationService service(libraryService, resolver, *m_settingsService,
-                           EmulationContext{});
+  EmulationService service(libraryService, resolver, *m_settingsService, EmulationContext{});
 
   ASSERT_EQ(nullptr, service.loadEntry(1).get());
   ASSERT_TRUE(gameLoadFailedEventReceived);
@@ -89,24 +84,19 @@ TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
  */
 TEST_F(EmulationServiceTest, LoadWithMissingContentPathFails) {
   bool gameLoadFailedEventReceived = false;
-  ScopedConnection loadFailedConnection =
-      EventDispatcher::instance().subscribe<GameLoadFailedEvent>(
-          [&gameLoadFailedEventReceived](const GameLoadFailedEvent &) {
-            gameLoadFailedEventReceived = true;
-          });
+  ScopedConnection loadFailedConnection = EventDispatcher::instance().subscribe<GameLoadFailedEvent>(
+      [&gameLoadFailedEventReceived](const GameLoadFailedEvent &) { gameLoadFailedEventReceived = true; });
 
   library::ContentFile info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/does_not_exist.gba",
                             .m_fileMd5 = "deadbeefdeadbeefdeadbeefdeadbeef",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash =
-                                "deadbeefdeadbeefdeadbeefdeadbeef"};
+                            .m_contentHash = "deadbeefdeadbeefdeadbeefdeadbeef"};
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry =
-      m_library->getEntryWithContentHash("deadbeefdeadbeefdeadbeefdeadbeef");
+  auto entry = m_library->getEntryWithContentHash("deadbeefdeadbeefdeadbeefdeadbeef");
   ASSERT_TRUE(entry.has_value());
 
   ASSERT_EQ(nullptr, m_emulationService->loadEntry(entry->id).get());
@@ -122,35 +112,28 @@ TEST_F(EmulationServiceTest, LoadWithMissingContentPathFails) {
  */
 TEST_F(EmulationServiceTest, LoadValidRomSucceeds) {
   bool gameLoadedEventReceived = false;
-  ScopedConnection loadedConnection =
-      EventDispatcher::instance().subscribe<GameLoadedEvent>(
-          [&gameLoadedEventReceived](const GameLoadedEvent &event) {
-            gameLoadedEventReceived = true;
-          });
+  ScopedConnection loadedConnection = EventDispatcher::instance().subscribe<GameLoadedEvent>(
+      [&gameLoadedEventReceived](const GameLoadedEvent &event) { gameLoadedEventReceived = true; });
 
   library::ContentFile info{.m_fileSizeBytes = 16777216,
                             .m_filePath = "test_resources/testrom.gba",
                             .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
                             .m_inArchive = false,
                             .m_platformId = 3,
-                            .m_contentHash =
-                                "e26ee0d44e809351c8ce2d73c7400cdd"};
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry =
-      m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
+  auto entry = m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
   ASSERT_TRUE(entry.has_value());
 
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
   ASSERT_TRUE(gameLoadedEventReceived);
 
-  auto currentEmulatorInstance =
-      m_emulationService->getCurrentEmulatorInstance();
+  auto currentEmulatorInstance = m_emulationService->getCurrentEmulatorInstance();
   ASSERT_FALSE(currentEmulatorInstance->isInitialized());
-  ASSERT_EQ("e26ee0d44e809351c8ce2d73c7400cdd",
-            currentEmulatorInstance->getContentHash());
+  ASSERT_EQ("e26ee0d44e809351c8ce2d73c7400cdd", currentEmulatorInstance->getContentHash());
   ASSERT_EQ(3, currentEmulatorInstance->getPlatformId());
 }
 
@@ -163,36 +146,29 @@ TEST_F(EmulationServiceTest, LoadValidRomSucceeds) {
  */
 TEST_F(EmulationServiceTest, LoadValidRomInZipSucceeds) {
   bool gameLoadedEventReceived = false;
-  ScopedConnection loadedConnection =
-      EventDispatcher::instance().subscribe<GameLoadedEvent>(
-          [&gameLoadedEventReceived](const GameLoadedEvent &event) {
-            gameLoadedEventReceived = true;
-          });
+  ScopedConnection loadedConnection = EventDispatcher::instance().subscribe<GameLoadedEvent>(
+      [&gameLoadedEventReceived](const GameLoadedEvent &event) { gameLoadedEventReceived = true; });
 
-  library::ContentFile info{
-      .m_fileSizeBytes = 0,
-      .m_filePath = "testrom.gba",
-      .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
-      .m_inArchive = true,
-      .m_archivePathName = "test_resources/testrom.gba.zip",
-      .m_platformId = 3,
-      .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+  library::ContentFile info{.m_fileSizeBytes = 0,
+                            .m_filePath = "testrom.gba",
+                            .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
+                            .m_inArchive = true,
+                            .m_archivePathName = "test_resources/testrom.gba.zip",
+                            .m_platformId = 3,
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry =
-      m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
+  auto entry = m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
   ASSERT_TRUE(entry.has_value());
 
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
   ASSERT_TRUE(gameLoadedEventReceived);
 
-  auto currentEmulatorInstance =
-      m_emulationService->getCurrentEmulatorInstance();
+  auto currentEmulatorInstance = m_emulationService->getCurrentEmulatorInstance();
   ASSERT_FALSE(currentEmulatorInstance->isInitialized());
-  ASSERT_EQ("e26ee0d44e809351c8ce2d73c7400cdd",
-            currentEmulatorInstance->getContentHash());
+  ASSERT_EQ("e26ee0d44e809351c8ce2d73c7400cdd", currentEmulatorInstance->getContentHash());
   ASSERT_EQ(3, currentEmulatorInstance->getPlatformId());
 }
 
@@ -205,36 +181,29 @@ TEST_F(EmulationServiceTest, LoadValidRomInZipSucceeds) {
  */
 TEST_F(EmulationServiceTest, LoadValidRomIn7ZSucceeds) {
   bool gameLoadedEventReceived = false;
-  ScopedConnection loadedConnection =
-      EventDispatcher::instance().subscribe<GameLoadedEvent>(
-          [&gameLoadedEventReceived](const GameLoadedEvent &event) {
-            gameLoadedEventReceived = true;
-          });
+  ScopedConnection loadedConnection = EventDispatcher::instance().subscribe<GameLoadedEvent>(
+      [&gameLoadedEventReceived](const GameLoadedEvent &event) { gameLoadedEventReceived = true; });
 
-  library::ContentFile info{
-      .m_fileSizeBytes = 0,
-      .m_filePath = "testrom.gba",
-      .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
-      .m_inArchive = true,
-      .m_archivePathName = "test_resources/testrom.gba.7z",
-      .m_platformId = 3,
-      .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+  library::ContentFile info{.m_fileSizeBytes = 0,
+                            .m_filePath = "testrom.gba",
+                            .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
+                            .m_inArchive = true,
+                            .m_archivePathName = "test_resources/testrom.gba.7z",
+                            .m_platformId = 3,
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry =
-      m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
+  auto entry = m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
   ASSERT_TRUE(entry.has_value());
 
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
   ASSERT_TRUE(gameLoadedEventReceived);
 
-  auto currentEmulatorInstance =
-      m_emulationService->getCurrentEmulatorInstance();
+  auto currentEmulatorInstance = m_emulationService->getCurrentEmulatorInstance();
   ASSERT_FALSE(currentEmulatorInstance->isInitialized());
-  ASSERT_EQ("e26ee0d44e809351c8ce2d73c7400cdd",
-            currentEmulatorInstance->getContentHash());
+  ASSERT_EQ("e26ee0d44e809351c8ce2d73c7400cdd", currentEmulatorInstance->getContentHash());
   ASSERT_EQ(3, currentEmulatorInstance->getPlatformId());
 }
 
@@ -247,36 +216,29 @@ TEST_F(EmulationServiceTest, LoadValidRomIn7ZSucceeds) {
  */
 TEST_F(EmulationServiceTest, LoadValidRomInTarSucceeds) {
   bool gameLoadedEventReceived = false;
-  ScopedConnection loadedConnection =
-      EventDispatcher::instance().subscribe<GameLoadedEvent>(
-          [&gameLoadedEventReceived](const GameLoadedEvent &event) {
-            gameLoadedEventReceived = true;
-          });
+  ScopedConnection loadedConnection = EventDispatcher::instance().subscribe<GameLoadedEvent>(
+      [&gameLoadedEventReceived](const GameLoadedEvent &event) { gameLoadedEventReceived = true; });
 
-  library::ContentFile info{
-      .m_fileSizeBytes = 0,
-      .m_filePath = "testrom.gba",
-      .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
-      .m_inArchive = true,
-      .m_archivePathName = "test_resources/testrom.gba.tar",
-      .m_platformId = 3,
-      .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
+  library::ContentFile info{.m_fileSizeBytes = 0,
+                            .m_filePath = "testrom.gba",
+                            .m_fileMd5 = "e26ee0d44e809351c8ce2d73c7400cdd",
+                            .m_inArchive = true,
+                            .m_archivePathName = "test_resources/testrom.gba.tar",
+                            .m_platformId = 3,
+                            .m_contentHash = "e26ee0d44e809351c8ce2d73c7400cdd"};
 
   m_library->create(info);
   ASSERT_NE(info.m_id, -1);
 
-  auto entry =
-      m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
+  auto entry = m_library->getEntryWithContentHash("e26ee0d44e809351c8ce2d73c7400cdd");
   ASSERT_TRUE(entry.has_value());
 
   ASSERT_NE(nullptr, m_emulationService->loadEntry(entry->id).get());
   ASSERT_TRUE(gameLoadedEventReceived);
 
-  auto currentEmulatorInstance =
-      m_emulationService->getCurrentEmulatorInstance();
+  auto currentEmulatorInstance = m_emulationService->getCurrentEmulatorInstance();
   ASSERT_FALSE(currentEmulatorInstance->isInitialized());
-  ASSERT_EQ("e26ee0d44e809351c8ce2d73c7400cdd",
-            currentEmulatorInstance->getContentHash());
+  ASSERT_EQ("e26ee0d44e809351c8ce2d73c7400cdd", currentEmulatorInstance->getContentHash());
   ASSERT_EQ(3, currentEmulatorInstance->getPlatformId());
 }
 

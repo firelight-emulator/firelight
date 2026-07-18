@@ -12,7 +12,7 @@ FocusScope {
     property alias text: field.text
     // sm | lg
     property string size: "sm"
-    signal accepted()
+    signal accepted
 
     readonly property int _font: size === "lg" ? AppStyle.fontSizeLarge : AppStyle.fontSizeMedium
     readonly property int _icon: size === "lg" ? AppStyle.iconSizeMd : AppStyle.iconSizeSm
@@ -20,7 +20,10 @@ FocusScope {
     implicitWidth: Math.round(240 * AppStyle.scale)
     implicitHeight: Math.max(AppStyle.minTarget, row.implicitHeight + AppStyle.spacingSm * 2)
 
-    function clear() { field.text = ""; field.forceActiveFocus(); }
+    function clear() {
+        field.text = "";
+        field.forceActiveFocus();
+    }
 
     Rectangle {
         anchors.fill: parent

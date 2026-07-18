@@ -2,13 +2,12 @@
 
 #include "libretro/core_registry.hpp"
 
-#include <cstdio>
-#include <string>
-
-#include <QCoreApplication>
-
 #include <firelight/settings/setting_definition.hpp>
 #include <firelight/settings/settings_catalog.hpp>
+
+#include <QCoreApplication>
+#include <cstdio>
+#include <string>
 
 namespace firelight::cli {
 
@@ -49,9 +48,7 @@ void printSetting(const firelight::settings::SettingDefinition &s) {
 }
 
 bool loadCatalog() {
-  const auto path =
-      (QCoreApplication::applicationDirPath() + "/system/settings_catalog.json")
-          .toStdString();
+  const auto path = (QCoreApplication::applicationDirPath() + "/system/settings_catalog.json").toStdString();
   return firelight::settings::SettingsCatalog::instance().loadFromFile(path);
 }
 
@@ -107,8 +104,7 @@ int runListCores(int argc, char **argv) {
       }
       platforms += std::to_string(id);
     }
-    std::printf("  %-30s %-20s platforms=[%s]\n", core.id.c_str(),
-                core.displayName.c_str(), platforms.c_str());
+    std::printf("  %-30s %-20s platforms=[%s]\n", core.id.c_str(), core.displayName.c_str(), platforms.c_str());
   }
   std::printf("\nUse: firelight --core <id> <rom>\n");
   return 0;

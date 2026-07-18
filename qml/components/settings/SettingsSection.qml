@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // A titled group of setting rows rendered as one card. Put the rows in as
 // children; they stack inside the card, separated by hairlines, with the section
 // title above it
@@ -34,7 +33,6 @@ FocusScope {
 
         for (let i = 0; i < visible.length; i++) {
             const next = (i + 1 < visible.length) ? visible[i + 1] : null;
-            // TODO
             // No line after the card's last row, and none between a row and
             // whatever depends on it: a sub-setting welds to the setting above
             // it, so they read as one block
@@ -43,7 +41,6 @@ FocusScope {
         }
     }
 
-    // TODO
     // Reading every row's `visible` makes this re-evaluate whenever rows are
     // added, removed, shown or hidden — which is the trigger for updateRows()
     // Rows arrive from a Repeater long after Component.onCompleted, and

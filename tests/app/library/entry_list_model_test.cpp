@@ -1,4 +1,5 @@
 #include "app/library/gui/entry_list_model.hpp"
+
 #include "sqlite_achievement_repository.hpp"
 
 #include <firelight/achievement_service.hpp>
@@ -13,7 +14,6 @@
 #include <QTimer>
 #include <gtest/gtest.h>
 
-// TODO
 // Verifies that EntryListModel stays in sync with the library incrementally:
 // EntryCreatedEvent inserts a row, EntryUpdatedEvent removes a now-hidden entry
 // and re-inserts an unhidden one -- all without a full model reset. The events
@@ -27,8 +27,7 @@ void pump() {
   loop.exec();
 }
 
-Entry makeEntry(const std::string &name, const std::string &hash,
-                unsigned platformId) {
+Entry makeEntry(const std::string &name, const std::string &hash, unsigned platformId) {
   Entry e;
   e.displayName = name;
   e.contentHash = hash;
@@ -41,14 +40,12 @@ Entry makeEntry(const std::string &name, const std::string &hash,
 class EntryListModelSyncTest : public testing::Test {
 protected:
   SqliteUserLibraryRepository m_repo{":memory:"};
-  UserLibraryService m_service{
-      m_repo, (QDir::tempPath() + "/fl_elm_test").toStdString()};
+  UserLibraryService m_service{m_repo, (QDir::tempPath() + "/fl_elm_test").toStdString()};
   activity::SqliteActivityLog m_activityLog{":memory:"};
   platforms::PlatformService m_platformService;
   achievements::SqliteAchievementRepository m_achievementRepo{":memory:"};
   achievements::AchievementService m_achievementService{m_achievementRepo};
-  EntryListModel m_model{m_service, m_activityLog, m_platformService,
-                         m_achievementService};
+  EntryListModel m_model{m_service, m_activityLog, m_platformService, m_achievementService};
 
   int rows() { return m_model.rowCount(QModelIndex()); }
 };

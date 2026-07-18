@@ -22,8 +22,7 @@ std::string trim(const std::string &s) {
 }
 
 std::string toLower(std::string s) {
-  std::transform(s.begin(), s.end(), s.begin(),
-                 [](unsigned char c) { return std::tolower(c); });
+  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
   return s;
 }
 
@@ -39,8 +38,7 @@ std::string jsonValueToString(const nlohmann::json &value) {
   if (value.is_number() || value.is_null()) {
     return value.dump(); // e.g. "120", "1.5", "null"
   }
-  throw std::runtime_error(
-      "settings-file JSON values must be strings, numbers, or booleans");
+  throw std::runtime_error("settings-file JSON values must be strings, numbers, or booleans");
 }
 
 std::vector<OverridePair> parseJson(const std::string &contents) {
@@ -48,8 +46,7 @@ std::vector<OverridePair> parseJson(const std::string &contents) {
   try {
     json = nlohmann::json::parse(contents);
   } catch (const nlohmann::json::exception &e) {
-    throw std::runtime_error(std::string("invalid JSON settings-file: ") +
-                             e.what());
+    throw std::runtime_error(std::string("invalid JSON settings-file: ") + e.what());
   }
   if (!json.is_object()) {
     throw std::runtime_error("settings-file JSON must be an object of key/value "
@@ -80,8 +77,7 @@ std::vector<OverridePair> parseProperties(const std::string &contents) {
     const auto key = trim(trimmed.substr(0, eq));
     const auto value = trim(trimmed.substr(eq + 1));
     if (key.empty()) {
-      throw std::runtime_error("settings-file line has an empty key: " +
-                               trimmed);
+      throw std::runtime_error("settings-file line has an empty key: " + trimmed);
     }
     result.emplace_back(key, value);
   }

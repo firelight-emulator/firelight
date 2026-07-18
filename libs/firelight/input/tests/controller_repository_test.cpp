@@ -58,8 +58,7 @@ TEST_F(ControllerRepositoryTest, NewProfileIsSeededFromTheDefaultPreset) {
   EXPECT_EQ(pad->getPresetId(), "firelight");
   EXPECT_FALSE(pad->isKeyboardProfile());
 
-  const auto &sources =
-      pad->getShortcutMapping()->getBindings("fast_forward");
+  const auto &sources = pad->getShortcutMapping()->getBindings("fast_forward");
   ASSERT_EQ(sources.size(), 1u);
   EXPECT_EQ(sources[0].code, GamepadInput::RightTrigger);
   ASSERT_EQ(sources[0].modifiers.size(), 1u);
@@ -89,7 +88,6 @@ TEST_F(ControllerRepositoryTest, KeyboardProfileIsSeededFromTheKeyboardTable) {
   EXPECT_TRUE(keyboard->getShortcutMapping()->getBindings("fast_forward").empty());
 }
 
-// TODO
 // Reads a profile back with none of the in-memory state that created it
 // Connections are keyed per thread, so a second repository here shares the same
 // live database while keeping its own empty profile cache — which is exactly the
@@ -115,8 +113,7 @@ TEST_F(ControllerRepositoryTest, PersistedProfileStateIsReadBack) {
   EXPECT_FALSE(loadedPad->isKeyboardProfile());
   // Seeding writes through the mapping's sync callback, so it has to have
   // reached the shortcuts row rather than just the profile in memory
-  EXPECT_EQ(loadedPad->getShortcutMapping()->getBindings("fast_forward").size(),
-            1u);
+  EXPECT_EQ(loadedPad->getShortcutMapping()->getBindings("fast_forward").size(), 1u);
 }
 
 TEST_F(ControllerRepositoryTest, ProfileWithNoPresetCatalogStartsUnbound) {
@@ -175,8 +172,7 @@ TEST_F(ControllerRepositoryTest, ExportImportRoundTrip) {
   const auto platformId = platforms.front().id;
   const auto controllerType = platforms.front().controllerTypes.front().id;
 
-  auto mapping =
-      src->getMappingForPlatformAndController(platformId, controllerType);
+  auto mapping = src->getMappingForPlatformAndController(platformId, controllerType);
   ASSERT_TRUE(mapping);
   mapping->addMapping(GamepadInput::SouthFace, GamepadInput::EastFace);
   mapping->sync();
@@ -189,8 +185,7 @@ TEST_F(ControllerRepositoryTest, ExportImportRoundTrip) {
   EXPECT_NE(imported->getId(), src->getId());
   EXPECT_EQ(imported->getDefaultAnalogSettings(), settings);
 
-  auto importedMapping =
-      imported->getMappingForPlatformAndController(platformId, controllerType);
+  auto importedMapping = imported->getMappingForPlatformAndController(platformId, controllerType);
   ASSERT_TRUE(importedMapping);
   const auto mapped = importedMapping->getMappedInput(GamepadInput::SouthFace);
   ASSERT_TRUE(mapped.has_value());
@@ -223,8 +218,7 @@ TEST_F(ControllerRepositoryTest, DeviceInfoLookupByVendorProductVersion) {
   EXPECT_EQ(found->displayName, "My Xbox");
 
   // A different product is a different device
-  const DeviceIdentifier other{
-      .vendorId = 1118, .productId = 999, .productVersion = 272};
+  const DeviceIdentifier other{.vendorId = 1118, .productId = 999, .productVersion = 272};
   EXPECT_FALSE(m_repo.getDeviceInfo(other).has_value());
 }
 
@@ -239,8 +233,7 @@ TEST_F(ControllerRepositoryTest, PlatformPreferredTypeRoundTrip) {
 
   // Overwrite is allowed
   m_repo.setPlatformPreferredType(platformId, SONY_DUALSENSE);
-  EXPECT_EQ(m_repo.getPlatformPreferredType(platformId).value(),
-            static_cast<int>(SONY_DUALSENSE));
+  EXPECT_EQ(m_repo.getPlatformPreferredType(platformId).value(), static_cast<int>(SONY_DUALSENSE));
 
   m_repo.clearPlatformPreferredType(platformId);
   EXPECT_FALSE(m_repo.getPlatformPreferredType(platformId).has_value());
@@ -294,16 +287,14 @@ TEST_F(ControllerRepositoryTest, CloneCopiesPerPlatformBindings) {
 
   const auto src = m_repo.createProfile("BindingSrc");
   ASSERT_TRUE(src);
-  auto mapping =
-      src->getMappingForPlatformAndController(platformId, controllerType);
+  auto mapping = src->getMappingForPlatformAndController(platformId, controllerType);
   ASSERT_TRUE(mapping);
   mapping->addMapping(GamepadInput::SouthFace, GamepadInput::EastFace);
   mapping->sync();
 
   const auto clone = m_repo.cloneProfile(src->getId(), "BindingClone");
   ASSERT_TRUE(clone);
-  auto clonedMapping =
-      clone->getMappingForPlatformAndController(platformId, controllerType);
+  auto clonedMapping = clone->getMappingForPlatformAndController(platformId, controllerType);
   ASSERT_TRUE(clonedMapping);
   const auto mapped = clonedMapping->getMappedInput(GamepadInput::SouthFace);
   ASSERT_TRUE(mapped.has_value());

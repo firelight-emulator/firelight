@@ -40,14 +40,11 @@ protected:
 
   // profileId -1 keeps the model off the (absent) repository; the preset it
   // measures against is passed in directly
-  std::unique_ptr<ShortcutsModel> makeModel(const bool isKeyboard,
-                                            const std::string &presetId) {
-    return std::make_unique<ShortcutsModel>(-1, isKeyboard, m_mapping,
-                                            presetId);
+  std::unique_ptr<ShortcutsModel> makeModel(const bool isKeyboard, const std::string &presetId) {
+    return std::make_unique<ShortcutsModel>(-1, isKeyboard, m_mapping, presetId);
   }
 
-  static QVariant valueAt(const ShortcutsModel &model, const QString &id,
-                          const char *role) {
+  static QVariant valueAt(const ShortcutsModel &model, const QString &id, const char *role) {
     const auto roles = model.roleNames();
     int wanted = -1;
     for (auto it = roles.begin(); it != roles.end(); ++it) {
@@ -66,12 +63,8 @@ protected:
 };
 
 TEST_F(ShortcutsModelTest, SeededRowsMatchThePresetAndReadUnmodified) {
-  m_mapping->setBindings(
-      "fast_forward",
-      {*input::parseInputSource("Select+RightTrigger", DeviceType::Gamepad)});
-  m_mapping->setBindings(
-      "screenshot",
-      {*input::parseInputSource("Select+DpadUp", DeviceType::Gamepad)});
+  m_mapping->setBindings("fast_forward", {*input::parseInputSource("Select+RightTrigger", DeviceType::Gamepad)});
+  m_mapping->setBindings("screenshot", {*input::parseInputSource("Select+DpadUp", DeviceType::Gamepad)});
 
   const auto model = makeModel(false, "firelight");
   EXPECT_FALSE(valueAt(*model, "fast_forward", "isModified").toBool());
@@ -92,9 +85,7 @@ TEST_F(ShortcutsModelTest, RebindingMarksTheRowModified) {
 // Clearing is how a shortcut is disabled, so it counts as modified against a
 // preset that binds it — otherwise Reset would look like a no-op
 TEST_F(ShortcutsModelTest, ClearingAPresetBoundRowMarksItModified) {
-  m_mapping->setBindings(
-      "fast_forward",
-      {*input::parseInputSource("Select+RightTrigger", DeviceType::Gamepad)});
+  m_mapping->setBindings("fast_forward", {*input::parseInputSource("Select+RightTrigger", DeviceType::Gamepad)});
 
   const auto model = makeModel(false, "firelight");
   model->clearBindings("fast_forward");
@@ -112,8 +103,7 @@ TEST_F(ShortcutsModelTest, ResetToDefaultRestoresThePresetBinding) {
 
   EXPECT_FALSE(valueAt(*model, "fast_forward", "isModified").toBool());
   EXPECT_EQ(m_mapping->getBindings("fast_forward"),
-            std::vector{*input::parseInputSource("Select+RightTrigger",
-                                                 DeviceType::Gamepad)});
+            std::vector{*input::parseInputSource("Select+RightTrigger", DeviceType::Gamepad)});
 }
 
 // Reset is a write, not an erase: for a row the preset leaves alone, it means

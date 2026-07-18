@@ -5,6 +5,7 @@
 #include <firelight/input/shortcut_registry.hpp>
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
+
 #include <gtest/gtest.h>
 
 namespace firelight::emulation {
@@ -23,13 +24,21 @@ public:
   int clips = 0;
 
   [[nodiscard]] float playbackMultiplier() const override { return multiplier; }
+
   void setPlaybackMultiplier(const float m) override { multiplier = m; }
+
   [[nodiscard]] bool paused() const override { return isPaused; }
+
   void setPaused(const bool p) override { isPaused = p; }
+
   void advanceOneFrame() override { ++framesAdvanced; }
+
   void writeSuspendPoint(const int index) override { written.push_back(index); }
+
   void loadSuspendPoint(const int index) override { loaded.push_back(index); }
+
   void captureScreenshot() override { ++screenshots; }
+
   void captureVideoClip() override { ++clips; }
 };
 } // namespace
@@ -45,19 +54,15 @@ protected:
         .toggleFullscreen = [this] { ++m_fullscreens; },
         .resetGame = [this] { ++m_resets; },
         .exitGame = [this] { ++m_exits; },
-        .notify = [this](const std::string &message) {
-          m_messages.push_back(message);
-        },
+        .notify = [this](const std::string &message) { m_messages.push_back(message); },
     });
   }
+
   void TearDown() override { input::ShortcutRegistry::instance().clear(); }
 
-  void press(const std::string &id) {
-    m_actions.handle(id, input::ShortcutPhase::Started);
-  }
-  void release(const std::string &id) {
-    m_actions.handle(id, input::ShortcutPhase::Ended);
-  }
+  void press(const std::string &id) { m_actions.handle(id, input::ShortcutPhase::Started); }
+
+  void release(const std::string &id) { m_actions.handle(id, input::ShortcutPhase::Ended); }
 
   settings::SqliteSettingsRepository m_settingsRepo{":memory:"};
   settings::SettingsService m_settingsService{m_settingsRepo};
@@ -71,8 +76,7 @@ protected:
   int m_exits = 0;
   std::vector<std::string> m_messages;
 
-  ShortcutActions m_actions{m_settingsService, [this] { return m_hardcore; },
-                            ShortcutActions::Intents{}};
+  ShortcutActions m_actions{m_settingsService, [this] { return m_hardcore; }, ShortcutActions::Intents{}};
 };
 
 // A hotkey's only feedback is the toast, so the wording is behaviour
@@ -241,11 +245,9 @@ TEST_F(ShortcutActionsTest, PauseFlipsWhicheverDevicePressedIt) {
 
 TEST_F(ShortcutActionsTest, MuteTogglesTheSettingSoItOutlivesTheGame) {
   press("toggle_mute");
-  EXPECT_EQ(m_settingsService.getGlobalValue(audio::MUTED_KEY).value_or(""),
-            "true");
+  EXPECT_EQ(m_settingsService.getGlobalValue(audio::MUTED_KEY).value_or(""), "true");
   press("toggle_mute");
-  EXPECT_EQ(m_settingsService.getGlobalValue(audio::MUTED_KEY).value_or(""),
-            "false");
+  EXPECT_EQ(m_settingsService.getGlobalValue(audio::MUTED_KEY).value_or(""), "false");
 }
 
 TEST_F(ShortcutActionsTest, MuteAndScreenshotWorkWithNoGameRunning) {
@@ -253,8 +255,7 @@ TEST_F(ShortcutActionsTest, MuteAndScreenshotWorkWithNoGameRunning) {
   m_actions.setController(nullptr);
 
   press("toggle_mute");
-  EXPECT_EQ(m_settingsService.getGlobalValue(audio::MUTED_KEY).value_or(""),
-            "true");
+  EXPECT_EQ(m_settingsService.getGlobalValue(audio::MUTED_KEY).value_or(""), "true");
 
   press("screenshot"); // must not crash on the absent controller
   press("open_quick_menu");
@@ -304,7 +305,6 @@ TEST_F(ShortcutActionsTest, EveryShippedActionActuallyDoesSomething) {
   ASSERT_FALSE(registry.listActions().empty());
 
   for (const auto &action : registry.listActions()) {
-    // TODO
     // The one action ShortcutActions is right to ignore: it turns off the
     // hotkeys of the device that pressed it, and only the engine knows which
     // device that was. ShortcutEngine tests cover it
@@ -325,26 +325,19 @@ TEST_F(ShortcutActionsTest, EveryShippedActionActuallyDoesSomething) {
 
     press(action.id);
 
-    const bool touchedEmulator =
-        controller.multiplier != 1.0f || controller.isPaused ||
-        controller.framesAdvanced > 0 || !controller.written.empty() ||
-        !controller.loaded.empty() ||
-        controller.screenshots > 0 || controller.clips > 0;
-    const bool touchedUi = m_quickMenus != quickMenus ||
-                           m_rewindMenus != rewindMenus ||
-                           m_fullscreens != fullscreens;
-    const bool touchedSettings =
-        m_settingsService.getGlobalValue(audio::MUTED_KEY) != muted ||
-        m_settingsService.getGlobalValue(audio::VOLUME_KEY) != volume;
+    const bool touchedEmulator = controller.multiplier != 1.0f || controller.isPaused ||
+                                 controller.framesAdvanced > 0 || !controller.written.empty() ||
+                                 !controller.loaded.empty() || controller.screenshots > 0 || controller.clips > 0;
+    const bool touchedUi = m_quickMenus != quickMenus || m_rewindMenus != rewindMenus || m_fullscreens != fullscreens;
+    const bool touchedSettings = m_settingsService.getGlobalValue(audio::MUTED_KEY) != muted ||
+                                 m_settingsService.getGlobalValue(audio::VOLUME_KEY) != volume;
     const bool touchedLifecycle = m_resets > 0 || m_exits > 0;
     // The slot cursor is the only visible effect of the slot steppers
-    const bool movedSlotCursor =
-        action.id == "state_slot_next" || action.id == "state_slot_prev";
+    const bool movedSlotCursor = action.id == "state_slot_next" || action.id == "state_slot_prev";
     m_resets = 0;
     m_exits = 0;
 
-    EXPECT_TRUE(touchedEmulator || touchedUi || touchedSettings ||
-                touchedLifecycle || movedSlotCursor)
+    EXPECT_TRUE(touchedEmulator || touchedUi || touchedSettings || touchedLifecycle || movedSlotCursor)
         << "data/shortcuts.json declares '" << action.id
         << "' but ShortcutActions does nothing with it, so binding it would "
            "silently do nothing";

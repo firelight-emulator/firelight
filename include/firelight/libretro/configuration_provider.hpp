@@ -39,8 +39,7 @@ public:
 
   virtual bool anyOptionValueHasChanged() = 0;
 
-  virtual void setDefaultValue(const std::string &key,
-                               const std::string &value) = 0;
+  virtual void setDefaultValue(const std::string &key, const std::string &value) = 0;
 
   virtual std::optional<std::string> getOptionValue(const std::string &key) = 0;
 

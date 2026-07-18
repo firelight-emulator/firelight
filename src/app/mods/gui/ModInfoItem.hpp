@@ -1,8 +1,7 @@
 #pragma once
-#include <service_accessor.hpp>
-
 #include <QObject>
 #include <QVariant>
+#include <service_accessor.hpp>
 
 namespace firelight::mods {
 
@@ -60,7 +59,6 @@ private:
   QString m_description;
   QString m_clearLogoUrl;
   QVariantList m_mediaUrls;
-
 };
 
-} // firelight::mods
+} // namespace firelight::mods

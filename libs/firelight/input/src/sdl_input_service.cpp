@@ -1,6 +1,6 @@
-#include <firelight/input/sdl_input_service.hpp>
-
 #include "firelight/event_dispatcher.hpp"
+
+#include <firelight/input/sdl_input_service.hpp>
 
 #include <SDL_hints.h>
 #include <algorithm>
@@ -10,8 +10,8 @@ namespace firelight::input {
 // Axis magnitude past which a stick counts as a directional press for menu
 // navigation (25% of the int16 range)
 constexpr int NAV_STICK_THRESHOLD = 8192;
-SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
-    : m_gamepadRepository(gamepadRepository) {
+
+SDLInputService::SDLInputService(IControllerRepository &gamepadRepository) : m_gamepadRepository(gamepadRepository) {
   SDL_SetHint(SDL_HINT_APP_NAME, "Firelight");
   SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS, "0");
 
@@ -24,25 +24,21 @@ SDLInputService::SDLInputService(IControllerRepository &gamepadRepository)
   // Feed keyboard key events into the shortcut engine (the keyboard is treated
   // like any other device)
   m_keyboardKeyConnection =
-      EventDispatcher::instance().subscribe<KeyboardKeyEvent>(
-          [this](const KeyboardKeyEvent &event) {
-            // Snapshot the keyboard under the device lock, then feed the engine
-            // without holding it (the engine takes its own lock)
-            std::shared_ptr<IGamepad> keyboard;
-            {
-              std::shared_lock lock(m_devicesMutex);
-              keyboard = m_keyboard;
-            }
-            if (keyboard) {
-              m_shortcutEngine.onInput(keyboard->getPlayerIndex(),
-                                       keyboard.get(), event.key,
-                                       event.pressed);
-            }
-          });
+      EventDispatcher::instance().subscribe<KeyboardKeyEvent>([this](const KeyboardKeyEvent &event) {
+        // Snapshot the keyboard under the device lock, then feed the engine
+        // without holding it (the engine takes its own lock)
+        std::shared_ptr<IGamepad> keyboard;
+        {
+          std::shared_lock lock(m_devicesMutex);
+          keyboard = m_keyboard;
+        }
+        if (keyboard) {
+          m_shortcutEngine.onInput(keyboard->getPlayerIndex(), keyboard.get(), event.key, event.pressed);
+        }
+      });
 }
 
-void SDLInputService::setHotkeysEnabled(const bool enabled,
-                                        const std::optional<DeviceType> only) {
+void SDLInputService::setHotkeysEnabled(const bool enabled, const std::optional<DeviceType> only) {
   // Snapshot under the lock, then talk to the engine without it: the engine
   // takes its own, and the device collections are read by other threads
   std::vector<std::shared_ptr<IGamepad>> devices;
@@ -60,9 +56,7 @@ void SDLInputService::setHotkeysEnabled(const bool enabled,
   }
 }
 
-void SDLInputService::setShortcutContext(const int scope) {
-  m_shortcutEngine.setContext(scope);
-}
+void SDLInputService::setShortcutContext(const int scope) { m_shortcutEngine.setContext(scope); }
 
 SDLInputService::~SDLInputService() {
   if (m_running) {
@@ -70,8 +64,7 @@ SDLInputService::~SDLInputService() {
   }
 }
 
-std::shared_ptr<GamepadProfile> SDLInputService::resolveProfileForGamepad(
-    const std::shared_ptr<IGamepad> &gamepad) {
+std::shared_ptr<GamepadProfile> SDLInputService::resolveProfileForGamepad(const std::shared_ptr<IGamepad> &gamepad) {
   std::shared_ptr<GamepadProfile> profile;
 
   // A per-game override (if active) wins over the device's stored default
@@ -80,16 +73,14 @@ std::shared_ptr<GamepadProfile> SDLInputService::resolveProfileForGamepad(
   }
 
   if (!profile) {
-    const auto info =
-        m_gamepadRepository.getDeviceInfo(gamepad->getDeviceIdentifier());
+    const auto info = m_gamepadRepository.getDeviceInfo(gamepad->getDeviceIdentifier());
     if (info) {
       profile = m_gamepadRepository.getProfile(info->profileId);
     } else {
       const auto name = "Default " + gamepad->getName() + " Profile";
       profile = m_gamepadRepository.createProfile(name, gamepad->getDeviceType());
-      m_gamepadRepository.updateDeviceInfo(
-          gamepad->getDeviceIdentifier(),
-          DeviceInfo{gamepad->getName(), profile->getId()});
+      m_gamepadRepository.updateDeviceInfo(gamepad->getDeviceIdentifier(),
+                                           DeviceInfo{gamepad->getName(), profile->getId()});
     }
   }
 
@@ -101,8 +92,7 @@ std::shared_ptr<GamepadProfile> SDLInputService::resolveProfileForGamepad(
   return profile;
 }
 
-void SDLInputService::publishConnected(
-    const std::shared_ptr<IGamepad> &gamepad) {
+void SDLInputService::publishConnected(const std::shared_ptr<IGamepad> &gamepad) {
   EventDispatcher::instance().publish(GamepadConnectedEvent{gamepad});
 }
 
@@ -110,21 +100,18 @@ void SDLInputService::publishDisconnected(const int playerIndex) {
   EventDispatcher::instance().publish(GamepadDisconnectedEvent{playerIndex});
 }
 
-void SDLInputService::assignToSlot(const int slot,
-                                   const std::shared_ptr<IGamepad> &gamepad) {
+void SDLInputService::assignToSlot(const int slot, const std::shared_ptr<IGamepad> &gamepad) {
   m_playerSlots[slot] = gamepad;
   gamepad->setPlayerIndex(slot);
   spdlog::info("Assigned {} to player number {}", gamepad->getName(), slot + 1);
 }
 
-void SDLInputService::assignPlayerSlot(
-    const std::shared_ptr<IGamepad> &gamepad) {
+void SDLInputService::assignPlayerSlot(const std::shared_ptr<IGamepad> &gamepad) {
   const int nextSlot = getNextAvailablePlayerIndex();
 
   // When gamepads are preferred, a new gamepad bumps the keyboard out of the
   // earliest slot it occupies
-  if (gamepad->getDeviceType() == DeviceType::Gamepad &&
-      m_preferGamepadOverKeyboard && m_keyboard) {
+  if (gamepad->getDeviceType() == DeviceType::Gamepad && m_preferGamepadOverKeyboard && m_keyboard) {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
       const auto it = m_playerSlots.find(i);
       if (it == m_playerSlots.end() || it->second == nullptr) {
@@ -169,8 +156,7 @@ void SDLInputService::reapplyDeviceProfiles() {
   }
 }
 
-bool SDLInputService::promoteDeviceToPlayerOne(
-    const std::shared_ptr<IGamepad> &gamepad) {
+bool SDLInputService::promoteDeviceToPlayerOne(const std::shared_ptr<IGamepad> &gamepad) {
   // Precondition: m_devicesMutex is held by the caller
   const int current = gamepad->getPlayerIndex();
   if (current == 0) {
@@ -201,28 +187,23 @@ bool SDLInputService::promoteDeviceToPlayerOne(
   return true; // caller publishes GamepadOrderChangedEvent outside the lock
 }
 
-void SDLInputService::applyGameContext(std::optional<std::string> contentHash,
-                                       const int platformId) {
+void SDLInputService::applyGameContext(std::optional<std::string> contentHash, const int platformId) {
   bool orderChanged = false;
   {
     std::unique_lock lock(m_devicesMutex);
     // 1. Per-game profile override
     m_gameProfileOverride =
-        contentHash.has_value()
-            ? m_gamepadRepository.getGameProfileOverride(*contentHash)
-            : std::nullopt;
+        contentHash.has_value() ? m_gamepadRepository.getGameProfileOverride(*contentHash) : std::nullopt;
     reapplyDeviceProfiles();
 
-    // TODO
     // 2. Preferred controller type for this platform: if a connected controller
     //    matches, promote it to player one. A CLI `--controller` session
     //    override for this platform wins over the stored preference
     if (platformId >= 0) {
       const auto sessionIt = m_sessionPreferredTypes.find(platformId);
-      const std::optional<int> preferred =
-          sessionIt != m_sessionPreferredTypes.end()
-              ? std::optional<int>(sessionIt->second)
-              : m_gamepadRepository.getPlatformPreferredType(platformId);
+      const std::optional<int> preferred = sessionIt != m_sessionPreferredTypes.end()
+                                               ? std::optional<int>(sessionIt->second)
+                                               : m_gamepadRepository.getPlatformPreferredType(platformId);
       if (preferred.has_value()) {
         for (const auto &gamepad : m_gamepads) {
           if (gamepad && static_cast<int>(gamepad->getType()) == *preferred) {
@@ -244,8 +225,7 @@ void SDLInputService::clearGameContext() {
   reapplyDeviceProfiles();
 }
 
-void SDLInputService::setSessionPreferredControllerType(const int platformId,
-                                                        const int gamepadType) {
+void SDLInputService::setSessionPreferredControllerType(const int platformId, const int gamepadType) {
   std::unique_lock lock(m_devicesMutex);
   if (gamepadType < 0) {
     m_sessionPreferredTypes.erase(platformId);
@@ -301,8 +281,7 @@ bool SDLInputService::removeGamepadByPlayerIndex(int playerIndex) {
 
 std::vector<std::shared_ptr<IGamepad>> SDLInputService::listGamepads() {
   std::shared_lock lock(m_devicesMutex);
-  std::vector<std::shared_ptr<IGamepad>> connectedGamepads(m_gamepads.begin(),
-                                                           m_gamepads.end());
+  std::vector<std::shared_ptr<IGamepad>> connectedGamepads(m_gamepads.begin(), m_gamepads.end());
   if (m_keyboard) {
     connectedGamepads.emplace_back(m_keyboard);
   }
@@ -310,15 +289,13 @@ std::vector<std::shared_ptr<IGamepad>> SDLInputService::listGamepads() {
   return connectedGamepads;
 }
 
-std::shared_ptr<IGamepad>
-SDLInputService::getPlayerGamepad(const int playerIndex) {
+std::shared_ptr<IGamepad> SDLInputService::getPlayerGamepad(const int playerIndex) {
   std::shared_lock lock(m_devicesMutex);
   const auto it = m_playerSlots.find(playerIndex);
   return it != m_playerSlots.end() ? it->second : nullptr;
 }
 
-std::shared_ptr<IGamepad>
-SDLInputService::findGamepadByInstanceId(const int instanceId) {
+std::shared_ptr<IGamepad> SDLInputService::findGamepadByInstanceId(const int instanceId) {
   std::shared_lock lock(m_devicesMutex);
   for (const auto &gamepad : m_gamepads) {
     if (gamepad && gamepad->getInstanceId() == instanceId) {
@@ -328,30 +305,28 @@ SDLInputService::findGamepadByInstanceId(const int instanceId) {
   return nullptr;
 }
 
-std::shared_ptr<libretro::IRetroPad>
-SDLInputService::getRetropadForPlayerIndex(const int t_player) {
+std::shared_ptr<libretro::IRetroPad> SDLInputService::getRetropadForPlayerIndex(const int t_player) {
   // Upcast IGamepad -> IRetroPad, sharing ownership so the caller can hold the
   // device across an unplug. Null if the slot is empty
   return getPlayerGamepad(t_player);
 }
 
-std::pair<int16_t, int16_t> SDLInputService::getPointerPosition() const {
-  return {m_mouseX.load(), m_mouseY.load()};
-}
+std::pair<int16_t, int16_t> SDLInputService::getPointerPosition() const { return {m_mouseX.load(), m_mouseY.load()}; }
+
 bool SDLInputService::isPressed() const { return m_mousePressed; }
+
 void SDLInputService::updateMouseState(double x, double y, bool mousePressed) {
   m_mouseX.store(static_cast<int16_t>(x * 32767));
   m_mouseY.store(static_cast<int16_t>(y * 32767));
   m_mousePressed = mousePressed;
 }
+
 void SDLInputService::nudgeCursor(const int dx, const int dy) {
   if (dx == 0 && dy == 0) {
     return;
   }
-  m_mouseX.store(static_cast<int16_t>(
-      std::clamp(m_mouseX.load() + dx, -32767, 32767)));
-  m_mouseY.store(static_cast<int16_t>(
-      std::clamp(m_mouseY.load() + dy, -32767, 32767)));
+  m_mouseX.store(static_cast<int16_t>(std::clamp(m_mouseX.load() + dx, -32767, 32767)));
+  m_mouseY.store(static_cast<int16_t>(std::clamp(m_mouseY.load() + dy, -32767, 32767)));
   // A gamepad is actively aiming, so the "gun" is on-screen; clear any stale
   // off-screen flag left by the mouse leaving the game surface
   m_mouseOffscreen.store(false);
@@ -359,15 +334,13 @@ void SDLInputService::nudgeCursor(const int dx, const int dy) {
   m_mouseRelX.fetch_add(dx);
   m_mouseRelY.fetch_add(dy);
 }
-void SDLInputService::updateMousePressed(bool mousePressed) {
-  m_mousePressed = mousePressed;
-}
+
+void SDLInputService::updateMousePressed(bool mousePressed) { m_mousePressed = mousePressed; }
 
 std::pair<int16_t, int16_t> SDLInputService::getRelativeMotion() {
   const int dx = m_mouseRelX.exchange(0);
   const int dy = m_mouseRelY.exchange(0);
-  return {static_cast<int16_t>(std::clamp(dx, -32768, 32767)),
-          static_cast<int16_t>(std::clamp(dy, -32768, 32767))};
+  return {static_cast<int16_t>(std::clamp(dx, -32768, 32767)), static_cast<int16_t>(std::clamp(dy, -32768, 32767))};
 }
 
 bool SDLInputService::isMouseButtonPressed(const int retroMouseButtonId) const {
@@ -383,12 +356,9 @@ bool SDLInputService::isMouseButtonPressed(const int retroMouseButtonId) const {
   }
 }
 
-bool SDLInputService::isPointerOffscreen() const {
-  return m_mouseOffscreen.load();
-}
+bool SDLInputService::isPointerOffscreen() const { return m_mouseOffscreen.load(); }
 
-void SDLInputService::updateMouseButtons(const bool left, const bool right,
-                                         const bool middle) {
+void SDLInputService::updateMouseButtons(const bool left, const bool right, const bool middle) {
   m_mousePressed = left;
   m_mouseRightPressed.store(right);
   m_mouseMiddlePressed.store(middle);
@@ -399,25 +369,18 @@ void SDLInputService::updateMouseMotion(const int dx, const int dy) {
   m_mouseRelY.fetch_add(dy);
 }
 
-void SDLInputService::updateMouseOffscreen(const bool offscreen) {
-  m_mouseOffscreen.store(offscreen);
-}
+void SDLInputService::updateMouseOffscreen(const bool offscreen) { m_mouseOffscreen.store(offscreen); }
 
-std::vector<std::pair<GamepadInput, bool>>
-SDLInputService::decodeAxisMotion(const int sdlAxis, const int value) {
+std::vector<std::pair<GamepadInput, bool>> SDLInputService::decodeAxisMotion(const int sdlAxis, const int value) {
   switch (sdlAxis) {
   case SDL_CONTROLLER_AXIS_LEFTX:
-    return {{LeftStickLeft, value < -NAV_STICK_THRESHOLD},
-            {LeftStickRight, value > NAV_STICK_THRESHOLD}};
+    return {{LeftStickLeft, value < -NAV_STICK_THRESHOLD}, {LeftStickRight, value > NAV_STICK_THRESHOLD}};
   case SDL_CONTROLLER_AXIS_LEFTY:
-    return {{LeftStickUp, value < -NAV_STICK_THRESHOLD},
-            {LeftStickDown, value > NAV_STICK_THRESHOLD}};
+    return {{LeftStickUp, value < -NAV_STICK_THRESHOLD}, {LeftStickDown, value > NAV_STICK_THRESHOLD}};
   case SDL_CONTROLLER_AXIS_RIGHTX:
-    return {{RightStickLeft, value < -NAV_STICK_THRESHOLD},
-            {RightStickRight, value > NAV_STICK_THRESHOLD}};
+    return {{RightStickLeft, value < -NAV_STICK_THRESHOLD}, {RightStickRight, value > NAV_STICK_THRESHOLD}};
   case SDL_CONTROLLER_AXIS_RIGHTY:
-    return {{RightStickUp, value < -NAV_STICK_THRESHOLD},
-            {RightStickDown, value > NAV_STICK_THRESHOLD}};
+    return {{RightStickUp, value < -NAV_STICK_THRESHOLD}, {RightStickDown, value > NAV_STICK_THRESHOLD}};
   // Triggers rest at zero and only travel positive, so there is no opposite
   // direction to clear
   case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
@@ -429,8 +392,7 @@ SDLInputService::decodeAxisMotion(const int sdlAxis, const int value) {
   }
 }
 
-void SDLInputService::handleAxisMotion(const int instanceId, const int sdlAxis,
-                                       const int value) {
+void SDLInputService::handleAxisMotion(const int instanceId, const int sdlAxis, const int value) {
   const auto gamepad = findGamepadByInstanceId(instanceId);
   if (!gamepad) {
     return;
@@ -442,17 +404,14 @@ void SDLInputService::handleAxisMotion(const int instanceId, const int sdlAxis,
   }
 }
 
-void SDLInputService::setGamepadInputState(const int playerIndex,
-                                           IGamepad *gamepad,
-                                           const GamepadInput input,
+void SDLInputService::setGamepadInputState(const int playerIndex, IGamepad *gamepad, const GamepadInput input,
                                            const bool pressed) {
   if (m_gamepadLastStates[playerIndex][input] == pressed) {
     return;
   }
   m_gamepadLastStates[playerIndex][input] = pressed;
 
-  m_shortcutEngine.onInput(playerIndex, gamepad, static_cast<int>(input),
-                           pressed);
+  m_shortcutEngine.onInput(playerIndex, gamepad, static_cast<int>(input), pressed);
 
   EventDispatcher::instance().publish(GamepadInputEvent{
       .playerIndex = playerIndex,
@@ -484,12 +443,10 @@ void SDLInputService::run() {
           break;
         }
 
-        const auto input = sdlToGamepadInputs.contains(ev.cbutton.button)
-                               ? sdlToGamepadInputs.at(ev.cbutton.button)
-                               : None;
+        const auto input =
+            sdlToGamepadInputs.contains(ev.cbutton.button) ? sdlToGamepadInputs.at(ev.cbutton.button) : None;
 
-        m_shortcutEngine.onInput(gamepad->getPlayerIndex(), gamepad.get(),
-                                 static_cast<int>(input), false);
+        m_shortcutEngine.onInput(gamepad->getPlayerIndex(), gamepad.get(), static_cast<int>(input), false);
 
         EventDispatcher::instance().publish(GamepadInputEvent{
             .playerIndex = gamepad->getPlayerIndex(),
@@ -507,12 +464,10 @@ void SDLInputService::run() {
           break;
         }
 
-        const auto input = sdlToGamepadInputs.contains(ev.cbutton.button)
-                               ? sdlToGamepadInputs.at(ev.cbutton.button)
-                               : None;
+        const auto input =
+            sdlToGamepadInputs.contains(ev.cbutton.button) ? sdlToGamepadInputs.at(ev.cbutton.button) : None;
 
-        m_shortcutEngine.onInput(gamepad->getPlayerIndex(), gamepad.get(),
-                                 static_cast<int>(input), true);
+        m_shortcutEngine.onInput(gamepad->getPlayerIndex(), gamepad.get(), static_cast<int>(input), true);
 
         EventDispatcher::instance().publish(GamepadInputEvent{
             .playerIndex = gamepad->getPlayerIndex(),
@@ -548,6 +503,7 @@ void SDLInputService::run() {
 
   spdlog::info("Stopping SDL Input Service...");
 }
+
 void SDLInputService::stop() {
   m_running = false;
   SDL_Event quitEvent;
@@ -555,8 +511,7 @@ void SDLInputService::stop() {
   SDL_PushEvent(&quitEvent);
 }
 
-void SDLInputService::changeGamepadOrder(
-    const std::map<int, int> &oldToNewIndex) {
+void SDLInputService::changeGamepadOrder(const std::map<int, int> &oldToNewIndex) {
   {
     std::unique_lock lock(m_devicesMutex);
     std::map<int, std::shared_ptr<IGamepad>> newPlayerSlots;
@@ -568,8 +523,7 @@ void SDLInputService::changeGamepadOrder(
         newPlayerSlots[newIndex] = gamepad;
         if (gamepad) {
           gamepad->setPlayerIndex(newIndex);
-          spdlog::info("Changed player slot for {} to {}", gamepad->getName(),
-                       newIndex + 1);
+          spdlog::info("Changed player slot for {} to {}", gamepad->getName(), newIndex + 1);
         }
       }
     }
@@ -587,13 +541,9 @@ void SDLInputService::changeGamepadOrder(
   EventDispatcher::instance().publish(GamepadOrderChangedEvent{});
 }
 
-bool SDLInputService::preferGamepadOverKeyboard() const {
-  return m_preferGamepadOverKeyboard;
-}
+bool SDLInputService::preferGamepadOverKeyboard() const { return m_preferGamepadOverKeyboard; }
 
-void SDLInputService::setPreferGamepadOverKeyboard(const bool prefer) {
-  m_preferGamepadOverKeyboard = prefer;
-}
+void SDLInputService::setPreferGamepadOverKeyboard(const bool prefer) { m_preferGamepadOverKeyboard = prefer; }
 
 void SDLInputService::setKeyboard(std::shared_ptr<IGamepad> keyboard) {
   std::shared_ptr<IGamepad> assigned;
@@ -641,8 +591,7 @@ int SDLInputService::getNextAvailablePlayerIndex() const {
 
 bool SDLInputService::moveGamepadToPlayerIndex(int oldIndex, int newIndex) {
   if (oldIndex == newIndex || !m_playerSlots.contains(oldIndex) ||
-      (m_playerSlots.contains(newIndex) &&
-       m_playerSlots[newIndex] != nullptr)) {
+      (m_playerSlots.contains(newIndex) && m_playerSlots[newIndex] != nullptr)) {
     spdlog::warn("Cannot move gamepad from {} "
                  "to {}: invalid indices",
                  oldIndex, newIndex);
@@ -653,8 +602,7 @@ bool SDLInputService::moveGamepadToPlayerIndex(int oldIndex, int newIndex) {
   m_playerSlots[newIndex]->setPlayerIndex(newIndex);
   m_playerSlots.erase(oldIndex);
 
-  spdlog::info("Moved {} from player slot {} to {}",
-               m_playerSlots[newIndex]->getName(), oldIndex + 1, newIndex + 1);
+  spdlog::info("Moved {} from player slot {} to {}", m_playerSlots[newIndex]->getName(), oldIndex + 1, newIndex + 1);
   return true;
 }
 

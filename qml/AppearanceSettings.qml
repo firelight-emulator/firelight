@@ -3,7 +3,6 @@ pragma Singleton
 import QtQuick
 import Firelight 1.0
 
-// TODO
 // Typed read path for the appearance settings declared in the settings catalog
 // The settings page writes them through SettingsModel; Theme and everything else
 // bind to the named properties here. Both go to the same store, so there's one
@@ -15,27 +14,52 @@ import Firelight 1.0
 QtObject {
     id: root
 
-    property SettingBinding accentBinding: SettingBinding { key: "accent-color" }
-    property SettingBinding modeBinding: SettingBinding { key: "background-mode" }
-    property SettingBinding colorBinding: SettingBinding { key: "background-color" }
-    property SettingBinding color2Binding: SettingBinding { key: "background-color-2" }
-    property SettingBinding fileBinding: SettingBinding { key: "background-file" }
-    property SettingBinding blurBinding: SettingBinding { key: "background-blur" }
-    property SettingBinding dimBinding: SettingBinding { key: "background-dim" }
-    property SettingBinding tintBinding: SettingBinding { key: "theme-intensity" }
-    property SettingBinding glassBinding: SettingBinding { key: "glass-opacity" }
-    property SettingBinding tileSizeBinding: SettingBinding { key: "library-tile-size" }
-    property SettingBinding scaleBinding: SettingBinding { key: "interface-scale" }
-    property SettingBinding densityBinding: SettingBinding { key: "interface-density" }
+    property SettingBinding accentBinding: SettingBinding {
+        key: "accent-color"
+    }
+    property SettingBinding modeBinding: SettingBinding {
+        key: "background-mode"
+    }
+    property SettingBinding colorBinding: SettingBinding {
+        key: "background-color"
+    }
+    property SettingBinding color2Binding: SettingBinding {
+        key: "background-color-2"
+    }
+    property SettingBinding fileBinding: SettingBinding {
+        key: "background-file"
+    }
+    property SettingBinding blurBinding: SettingBinding {
+        key: "background-blur"
+    }
+    property SettingBinding dimBinding: SettingBinding {
+        key: "background-dim"
+    }
+    property SettingBinding tintBinding: SettingBinding {
+        key: "theme-intensity"
+    }
+    property SettingBinding glassBinding: SettingBinding {
+        key: "glass-opacity"
+    }
+    property SettingBinding tileSizeBinding: SettingBinding {
+        key: "library-tile-size"
+    }
+    property SettingBinding scaleBinding: SettingBinding {
+        key: "interface-scale"
+    }
+    property SettingBinding densityBinding: SettingBinding {
+        key: "interface-density"
+    }
 
-    // TODO
     // Colors are "#rrggbb" strings, not `color`: that's what consumers were
     // built against, they coerce to `color` where used, and they round-trip the
     // picker unchanged
     property string accentColor: accentBinding.value
 
     Behavior on accentColor {
-        ColorAnimation { duration: 64 }
+        ColorAnimation {
+            duration: 64
+        }
     }
 
     // "solid" | "gradient" | "image"
@@ -45,12 +69,10 @@ QtObject {
     // Gradient stop 2 (only used in "gradient" mode)
     readonly property string backgroundColor2: color2Binding.value
 
-    // TODO
     // The setting stores a plain path — that's what the file picker deals in —
     // but Image.source and samplePalette both need a URL. Convert once, here,
     // rather than at every use site
-    readonly property string backgroundFile: fileBinding.value === ""
-                                             ? "" : FilesystemUtils.prependFileURI(fileBinding.value)
+    readonly property string backgroundFile: fileBinding.value === "" ? "" : FilesystemUtils.prependFileURI(fileBinding.value)
 
     readonly property real backgroundBlur: parseFloat(blurBinding.value)
     // Darkens an image background behind the frosted surfaces, so panels read
@@ -64,7 +86,6 @@ QtObject {
     // to this and GameTile decodes to match
     readonly property int libraryTileSize: parseInt(tileSizeBinding.value)
 
-    // TODO
     // Accessibility scaling. AppStyle multiplies its metric tokens by these:
     // uiScale enlarges everything (fonts + dimensions), uiDensity only affects
     // spacing/heights. The `|| ` guards a not-yet-loaded binding from poisoning
@@ -72,12 +93,10 @@ QtObject {
     readonly property real uiScale: parseFloat(scaleBinding.value) || 1.0
     readonly property real uiDensity: parseFloat(densityBinding.value) || 1.0
 
-    // TODO
     // In image mode the theme tints itself from the image rather than from
     // backgroundColor. Derived, not stored: it's a function of the chosen file,
     // so sampling it on demand can't fall out of sync the way a saved copy did
-    readonly property var imagePalette: (backgroundMode === "image" && backgroundFile !== "")
-                                        ? ImageUtils.samplePalette(backgroundFile) : null
+    readonly property var imagePalette: (backgroundMode === "image" && backgroundFile !== "") ? ImageUtils.samplePalette(backgroundFile) : null
     readonly property string imageColorTop: (imagePalette && imagePalette.ok) ? imagePalette.top : ""
     readonly property string imageColorBottom: (imagePalette && imagePalette.ok) ? imagePalette.bottom : ""
 }

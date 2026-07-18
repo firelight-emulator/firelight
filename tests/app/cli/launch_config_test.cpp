@@ -1,9 +1,8 @@
 #include "cli/launch_config.hpp"
 
-#include <gtest/gtest.h>
-
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <map>
 #include <string>
 
@@ -11,8 +10,7 @@ namespace firelight::cli {
 namespace {
 
 std::string writeTempFile(const std::string &name, const std::string &contents) {
-  const auto path =
-      (std::filesystem::temp_directory_path() / name).string();
+  const auto path = (std::filesystem::temp_directory_path() / name).string();
   std::ofstream out(path, std::ios::binary);
   out << contents;
   out.close();
@@ -46,8 +44,7 @@ TEST(LaunchConfigTest, ParsesPropertiesFile) {
 }
 
 TEST(LaunchConfigTest, ParsesJsonFileWithMixedScalarTypes) {
-  const auto path = writeTempFile(
-      "fl_over.json", R"({"rewind-enabled": false, "target-framerate": 120,
+  const auto path = writeTempFile("fl_over.json", R"({"rewind-enabled": false, "target-framerate": 120,
                           "sync-method": "fixed"})");
   const auto map = asMap(loadOverrideFile(path));
   EXPECT_EQ(map.at("rewind-enabled"), "false");
@@ -57,12 +54,9 @@ TEST(LaunchConfigTest, ParsesJsonFileWithMixedScalarTypes) {
 }
 
 TEST(LaunchConfigTest, PropertiesAndJsonAgree) {
-  const auto propsPath = writeTempFile(
-      "fl_a.properties", "rewind-enabled=false\nsync-method=fixed\n");
-  const auto jsonPath = writeTempFile(
-      "fl_a.json", R"({"rewind-enabled": "false", "sync-method": "fixed"})");
-  EXPECT_EQ(asMap(loadOverrideFile(propsPath)),
-            asMap(loadOverrideFile(jsonPath)));
+  const auto propsPath = writeTempFile("fl_a.properties", "rewind-enabled=false\nsync-method=fixed\n");
+  const auto jsonPath = writeTempFile("fl_a.json", R"({"rewind-enabled": "false", "sync-method": "fixed"})");
+  EXPECT_EQ(asMap(loadOverrideFile(propsPath)), asMap(loadOverrideFile(jsonPath)));
   std::filesystem::remove(propsPath);
   std::filesystem::remove(jsonPath);
 }
@@ -91,8 +85,7 @@ TEST(LaunchConfigTest, JsonArrayIsRejected) {
 }
 
 TEST(LaunchConfigTest, CommentAndBlankOnlyPropertiesYieldsNothing) {
-  const auto path =
-      writeTempFile("fl_comments.properties", "# just a comment\n\n; and another\n   \n");
+  const auto path = writeTempFile("fl_comments.properties", "# just a comment\n\n; and another\n   \n");
   EXPECT_TRUE(loadOverrideFile(path).empty());
   std::filesystem::remove(path);
 }

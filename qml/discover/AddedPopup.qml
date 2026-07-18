@@ -2,18 +2,17 @@ import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
 
-
 Pane {
     id: root
 
     required property string modName
 
     function show() {
-        root.state = "shown"
+        root.state = "shown";
     }
 
     function hide() {
-        root.state = "hidden"
+        root.state = "hidden";
     }
 
     background: Rectangle {

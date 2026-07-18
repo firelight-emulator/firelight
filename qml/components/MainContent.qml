@@ -12,9 +12,8 @@ FocusScope {
     property bool gameRunning: false
 
     function goToContent(title, page, args, transition) {
-        content.title = title
-        contentStack.replaceCurrentItem(page, args, transition)
-
+        content.title = title;
+        contentStack.replaceCurrentItem(page, args, transition);
     }
 
     LeftNavigationBar {
@@ -26,7 +25,7 @@ FocusScope {
 
         showQuickMenuButton: root.gameRunning
         onPowerButtonClicked: {
-            quitDialog.open()
+            quitDialog.open();
         }
     }
 
@@ -62,7 +61,7 @@ FocusScope {
             }
 
             Component.onCompleted: {
-                Router.navigateTo("/library")
+                Router.navigateTo("/library");
             }
 
             pushEnter: Transition {
@@ -138,8 +137,7 @@ FocusScope {
         id: quitDialog
         text: "Are you sure you want to quit Firelight?"
         onAccepted: {
-            Qt.quit()
+            Qt.quit();
         }
     }
-
 }

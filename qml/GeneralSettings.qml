@@ -3,7 +3,6 @@ pragma Singleton
 import QtQuick
 import Firelight 1.0
 
-// TODO
 // Typed read path for the general app settings declared in the settings
 // catalog, mirroring AppearanceSettings. The settings page writes these through
 // SettingsModel; the rest of the app binds to the names here
@@ -16,10 +15,18 @@ import Firelight 1.0
 QtObject {
     id: root
 
-    property SettingBinding fullscreenBinding: SettingBinding { key: "fullscreen" }
-    property SettingBinding advancedBinding: SettingBinding { key: "show-advanced-settings" }
-    property SettingBinding sortBinding: SettingBinding { key: "library-sort-method" }
-    property SettingBinding newUserBinding: SettingBinding { key: "show-new-user-flow" }
+    property SettingBinding fullscreenBinding: SettingBinding {
+        key: "fullscreen"
+    }
+    property SettingBinding advancedBinding: SettingBinding {
+        key: "show-advanced-settings"
+    }
+    property SettingBinding sortBinding: SettingBinding {
+        key: "library-sort-method"
+    }
+    property SettingBinding newUserBinding: SettingBinding {
+        key: "show-new-user-flow"
+    }
 
     readonly property bool fullscreen: fullscreenBinding.value === "true"
     readonly property bool showAdvancedSettings: advancedBinding.value === "true"

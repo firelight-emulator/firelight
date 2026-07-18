@@ -11,10 +11,7 @@ namespace {
 std::string pokesToJson(const std::vector<CheatPoke> &pokes) {
   nlohmann::json arr = nlohmann::json::array();
   for (const auto &p : pokes) {
-    arr.push_back({{"a", p.address},
-                   {"v", p.value},
-                   {"s", p.size},
-                   {"be", p.bigEndian}});
+    arr.push_back({{"a", p.address}, {"v", p.value}, {"s", p.size}, {"be", p.bigEndian}});
   }
   return arr.dump();
 }
@@ -36,10 +33,8 @@ std::vector<CheatPoke> pokesFromJson(const std::string &s) {
 }
 } // namespace
 
-SqliteCheatRepository::SqliteCheatRepository(std::string databaseFile)
-    : m_databaseFile(std::move(databaseFile)) {
-  m_database = std::make_unique<SQLite::Database>(
-      m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+SqliteCheatRepository::SqliteCheatRepository(std::string databaseFile) : m_databaseFile(std::move(databaseFile)) {
+  m_database = std::make_unique<SQLite::Database>(m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
   m_database->exec(R"(
     CREATE TABLE IF NOT EXISTS cheats (
@@ -54,21 +49,17 @@ SqliteCheatRepository::SqliteCheatRepository(std::string databaseFile)
         ordinal INTEGER NOT NULL DEFAULT 0
     );
   )");
-  m_database->exec(
-      "CREATE INDEX IF NOT EXISTS idx_cheats_hash ON cheats(content_hash)");
+  m_database->exec("CREATE INDEX IF NOT EXISTS idx_cheats_hash ON cheats(content_hash)");
 }
 
 SqliteCheatRepository::~SqliteCheatRepository() = default;
 
-std::vector<Cheat>
-SqliteCheatRepository::getCheats(const std::string &contentHash) {
+std::vector<Cheat> SqliteCheatRepository::getCheats(const std::string &contentHash) {
   std::vector<Cheat> cheats;
   try {
-    SQLite::Statement query(
-        *m_database,
-        "SELECT id, content_hash, name, type, raw_code, pokes_json, enabled, "
-        "affects_hardcore, ordinal FROM cheats WHERE content_hash = :hash "
-        "ORDER BY ordinal, id");
+    SQLite::Statement query(*m_database, "SELECT id, content_hash, name, type, raw_code, pokes_json, enabled, "
+                                         "affects_hardcore, ordinal FROM cheats WHERE content_hash = :hash "
+                                         "ORDER BY ordinal, id");
     query.bind(":hash", contentHash);
     while (query.executeStep()) {
       Cheat cheat;
@@ -93,20 +84,17 @@ bool SqliteCheatRepository::addCheat(Cheat &cheat) {
   try {
     int nextOrdinal = 0;
     {
-      SQLite::Statement q(*m_database,
-                          "SELECT COALESCE(MAX(ordinal) + 1, 0) FROM cheats "
-                          "WHERE content_hash = :hash");
+      SQLite::Statement q(*m_database, "SELECT COALESCE(MAX(ordinal) + 1, 0) FROM cheats "
+                                       "WHERE content_hash = :hash");
       q.bind(":hash", cheat.contentHash);
       if (q.executeStep()) {
         nextOrdinal = q.getColumn(0).getInt();
       }
     }
 
-    SQLite::Statement insert(
-        *m_database,
-        "INSERT INTO cheats (content_hash, name, type, raw_code, pokes_json, "
-        "enabled, affects_hardcore, ordinal) VALUES (:hash, :name, :type, "
-        ":raw, :pokes, :enabled, :hardcore, :ordinal)");
+    SQLite::Statement insert(*m_database, "INSERT INTO cheats (content_hash, name, type, raw_code, pokes_json, "
+                                          "enabled, affects_hardcore, ordinal) VALUES (:hash, :name, :type, "
+                                          ":raw, :pokes, :enabled, :hardcore, :ordinal)");
     insert.bind(":hash", cheat.contentHash);
     insert.bind(":name", cheat.name);
     insert.bind(":type", static_cast<int>(cheat.type));
@@ -128,11 +116,9 @@ bool SqliteCheatRepository::addCheat(Cheat &cheat) {
 
 bool SqliteCheatRepository::updateCheat(const Cheat &cheat) {
   try {
-    SQLite::Statement update(
-        *m_database,
-        "UPDATE cheats SET name = :name, type = :type, raw_code = :raw, "
-        "pokes_json = :pokes, enabled = :enabled, affects_hardcore = :hardcore, "
-        "ordinal = :ordinal WHERE id = :id");
+    SQLite::Statement update(*m_database, "UPDATE cheats SET name = :name, type = :type, raw_code = :raw, "
+                                          "pokes_json = :pokes, enabled = :enabled, affects_hardcore = :hardcore, "
+                                          "ordinal = :ordinal WHERE id = :id");
     update.bind(":name", cheat.name);
     update.bind(":type", static_cast<int>(cheat.type));
     update.bind(":raw", cheat.rawCode);
@@ -150,8 +136,7 @@ bool SqliteCheatRepository::updateCheat(const Cheat &cheat) {
 
 bool SqliteCheatRepository::setEnabled(int id, bool enabled) {
   try {
-    SQLite::Statement update(
-        *m_database, "UPDATE cheats SET enabled = :enabled WHERE id = :id");
+    SQLite::Statement update(*m_database, "UPDATE cheats SET enabled = :enabled WHERE id = :id");
     update.bind(":enabled", enabled ? 1 : 0);
     update.bind(":id", id);
     return update.exec() > 0;

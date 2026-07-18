@@ -12,8 +12,7 @@ Pane {
 
     property bool isSubItem: false
 
-    background: Item {
-    }
+    background: Item {}
 
     verticalPadding: 8
     horizontalPadding: 0
@@ -71,6 +70,5 @@ Pane {
 
             sourceComponent: control
         }
-
     }
 }

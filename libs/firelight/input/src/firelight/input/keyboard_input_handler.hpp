@@ -1,14 +1,13 @@
 #pragma once
 
+#include <firelight/input/igamepad.hpp>
+#include <firelight/libretro/retropad.hpp>
+
 #include <QEvent>
 #include <QMap>
 #include <QPointF>
 #include <QTimer>
-
 #include <mutex>
-
-#include <firelight/input/igamepad.hpp>
-#include <firelight/libretro/retropad.hpp>
 
 namespace firelight::input {
 class KeyboardInputHandler final : public QObject, public IGamepad {
@@ -17,7 +16,6 @@ class KeyboardInputHandler final : public QObject, public IGamepad {
 public:
   KeyboardInputHandler();
 
-  // TODO
   // The keys a console input falls back to when the profile has no binding
   // Built on first use rather than in the constructor, so callers that only want
   // to know the defaults (the shortcut catalog, validating that a shipped
@@ -32,8 +30,7 @@ public:
 
   [[nodiscard]] int16_t evaluateRawInput(GamepadInput input) const override;
 
-  bool isButtonPressed(int platformId, int controllerTypeId,
-                       Input t_button) override;
+  bool isButtonPressed(int platformId, int controllerTypeId, Input t_button) override;
 
   int16_t getLeftStickXPosition(int platformId, int controllerTypeId) override;
 
@@ -67,10 +64,8 @@ protected:
   bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
-
   QMap<Input, bool> m_buttonStates;
   QMap<Qt::Key, bool> m_keyStates;
-  // TODO
   // m_keyStates is written on the GUI thread (eventFilter) and read on the render
   // thread (input poll during core->run). QMap isn't thread-safe and operator[]
   // mutates the tree, so every access is serialized here

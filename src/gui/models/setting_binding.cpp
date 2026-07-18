@@ -19,12 +19,10 @@ SettingBinding::SettingBinding(QObject *parent) : QObject(parent) {
       refresh();
     }
   };
-  m_changedConnection =
-      EventDispatcher::instance().subscribe<GlobalSettingChangedEvent>(
-          [onKey](const GlobalSettingChangedEvent &e) { onKey(e.key); });
-  m_resetConnection =
-      EventDispatcher::instance().subscribe<GlobalSettingResetEvent>(
-          [onKey](const GlobalSettingResetEvent &e) { onKey(e.key); });
+  m_changedConnection = EventDispatcher::instance().subscribe<GlobalSettingChangedEvent>(
+      [onKey](const GlobalSettingChangedEvent &e) { onKey(e.key); });
+  m_resetConnection = EventDispatcher::instance().subscribe<GlobalSettingResetEvent>(
+      [onKey](const GlobalSettingResetEvent &e) { onKey(e.key); });
 }
 
 QString SettingBinding::key() const { return m_key; }
@@ -47,8 +45,7 @@ void SettingBinding::refresh() {
     stored = service->getGlobalValue(m_key.toStdString());
   }
 
-  const auto resolved = QString::fromStdString(
-      stored.value_or(definition ? definition->defaultValue : std::string{}));
+  const auto resolved = QString::fromStdString(stored.value_or(definition ? definition->defaultValue : std::string{}));
   const bool overridden = stored.has_value();
 
   if (resolved == m_value && overridden == m_overridden) {
@@ -91,14 +88,12 @@ QString SettingBinding::label() const {
 
 QString SettingBinding::description() const {
   const auto *definition = definitionFor(m_key);
-  return definition ? QString::fromStdString(definition->description)
-                    : QString();
+  return definition ? QString::fromStdString(definition->description) : QString();
 }
 
 QString SettingBinding::defaultValue() const {
   const auto *definition = definitionFor(m_key);
-  return definition ? QString::fromStdString(definition->defaultValue)
-                    : QString();
+  return definition ? QString::fromStdString(definition->defaultValue) : QString();
 }
 
 QString SettingBinding::widget() const {
@@ -114,8 +109,7 @@ QVariantList SettingBinding::options() const {
   }
   for (const auto &option : definition->options) {
     options.append(
-        QVariantMap{{"label", QString::fromStdString(option.label)},
-                    {"value", QString::fromStdString(option.value)}});
+        QVariantMap{{"label", QString::fromStdString(option.label)}, {"value", QString::fromStdString(option.value)}});
   }
   return options;
 }

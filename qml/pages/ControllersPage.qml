@@ -33,41 +33,41 @@ FocusScope {
                 focus: true
                 property bool showGlobalCursor: true
 
-                Keys.onPressed: function(event) {
+                Keys.onPressed: function (event) {
                     if (event.key === Qt.Key_Select) {
                         if (root.isDragging) {
-                            return
+                            return;
                         }
 
                         if (root.keyboardDragging) {
-                            root.keyboardDragging = false
-                            let list = {}
+                            root.keyboardDragging = false;
+                            let list = {};
                             for (let i = 0; i < visualModel.items.count; i++) {
                                 // console.log(visualModel.items.get(i).model.index)
-                                list[i] = visualModel.items.get(i).model.index
+                                list[i] = visualModel.items.get(i).model.index;
                                 // visualModel.items.get(i).model.itemsIndex = i
                             }
 
                             // theAnimation.thingy = list
                             // theAnimation.start()
 
-                            root.gamepads.changeGamepadOrder(list)
+                            root.gamepads.changeGamepadOrder(list);
                             // visualModel.items.sort()
                         } else if (!root.keyboardDragging) {
-                            root.keyboardDragging = true
+                            root.keyboardDragging = true;
                         }
-                        event.accept = true
+                        event.accept = true;
                     }
                     if (event.key === Qt.Key_Right) {
                         if (root.keyboardDragging && listThing.currentIndex < 3) {
-                            visualModel.items.move(listThing.currentIndex, listThing.currentIndex + 1, 1)
-                            event.accept = true
+                            visualModel.items.move(listThing.currentIndex, listThing.currentIndex + 1, 1);
+                            event.accept = true;
                         }
                     }
                     if (event.key === Qt.Key_Left) {
                         if (root.keyboardDragging && listThing.currentIndex > 0) {
-                            visualModel.items.move(listThing.currentIndex, listThing.currentIndex - 1, 1)
-                            event.accept = true
+                            visualModel.items.move(listThing.currentIndex, listThing.currentIndex - 1, 1);
+                            event.accept = true;
                         }
                     }
                 }
@@ -96,13 +96,16 @@ FocusScope {
                     capStyle: ShapePath.RoundCap
                     strokeWidth: 2
                     PathLine {
-                        x: 0; y: leftArrow.height / 2
+                        x: 0
+                        y: leftArrow.height / 2
                     }
                     PathLine {
-                        x: leftArrow.width; y: leftArrow.height
+                        x: leftArrow.width
+                        y: leftArrow.height
                     }
                     PathLine {
-                        x: leftArrow.width; y: 0
+                        x: leftArrow.width
+                        y: 0
                     }
                 }
             }
@@ -124,13 +127,16 @@ FocusScope {
                     capStyle: ShapePath.RoundCap
                     strokeWidth: 2
                     PathLine {
-                        x: 0; y: rightArrow.height
+                        x: 0
+                        y: rightArrow.height
                     }
                     PathLine {
-                        x: rightArrow.width; y: rightArrow.height / 2
+                        x: rightArrow.width
+                        y: rightArrow.height / 2
                     }
                     PathLine {
-                        x: 0; y: 0
+                        x: 0
+                        y: 0
                     }
                 }
             }
@@ -179,8 +185,7 @@ FocusScope {
                 label: "Edit profile"
 
                 onClicked: function () {
-                    Router.navigate("/settings/controllers?profileId="
-                                    + encodeURIComponent(content.model.profile_id))
+                    Router.navigate("/settings/controllers?profileId=" + encodeURIComponent(content.model.profile_id));
                 }
             }
 
@@ -215,26 +220,26 @@ FocusScope {
                 xAxis.minimum: -30
 
                 onActiveChanged: {
-                    root.isDragging = dragArea.active
+                    root.isDragging = dragArea.active;
                     if (dragArea.active) {
-                        content.dragEnd = Qt.point(content.x, content.y)
-                        root.keyboardDragging = false
+                        content.dragEnd = Qt.point(content.x, content.y);
+                        root.keyboardDragging = false;
                     }
 
                     if (!dragArea.active) {
-                        let list = {}
+                        let list = {};
                         for (let i = 0; i < visualModel.items.count; i++) {
                             // console.log(visualModel.items.get(i).model.index)
-                            list[i] = visualModel.items.get(i).model.index
+                            list[i] = visualModel.items.get(i).model.index;
                             // visualModel.items.get(i).model.itemsIndex = i
                         }
 
-                        console.log(list)
+                        console.log(list);
 
                         // theAnimation.thingy = list
                         // theAnimation.start()
 
-                        root.gamepads.changeGamepadOrder(list)
+                        root.gamepads.changeGamepadOrder(list);
                         // visualModel.items.sort()
                     }
                 }
@@ -245,13 +250,13 @@ FocusScope {
                 height: parent.height
                 anchors.left: parent.left
 
-                onEntered: (drag) => {
-                    drag.source.dragEnd = Qt.point(content.x, content.y)
+                onEntered: drag => {
+                    drag.source.dragEnd = Qt.point(content.x, content.y);
 
-                    const mine = content.DelegateModel.itemsIndex
-                    const theirs = drag.source.DelegateModel.itemsIndex
+                    const mine = content.DelegateModel.itemsIndex;
+                    const theirs = drag.source.DelegateModel.itemsIndex;
                     if (mine < theirs) {
-                        visualModel.items.move(theirs, mine)
+                        visualModel.items.move(theirs, mine);
                     }
                 }
             }
@@ -261,18 +266,17 @@ FocusScope {
                 height: parent.height
                 anchors.right: parent.right
 
-                onEntered: (drag) => {
-                    drag.source.dragEnd = Qt.point(content.x, content.y)
+                onEntered: drag => {
+                    drag.source.dragEnd = Qt.point(content.x, content.y);
 
-                    const mine = content.DelegateModel.itemsIndex
-                    const theirs = drag.source.DelegateModel.itemsIndex
+                    const mine = content.DelegateModel.itemsIndex;
+                    const theirs = drag.source.DelegateModel.itemsIndex;
                     if (mine > theirs) {
-                        visualModel.items.move(theirs, mine)
+                        visualModel.items.move(theirs, mine);
                     }
                 }
             }
         }
-
     }
 
     DelegateModel {
@@ -315,12 +319,11 @@ FocusScope {
                     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
 
                     onClicked: function () {
-                        Router.navigate("/controllers/manage")
+                        Router.navigate("/controllers/manage");
                     }
                 }
             }
 
-            // TODO
             // Steam reads gamepads globally through its own driver, so its Guide
             // shortcut fires even for games it didn't launch. We can't pre-empt
             // it from in here — say so rather than let it look like our bug
@@ -355,9 +358,7 @@ FocusScope {
 
                     Text {
                         Layout.fillWidth: true
-                        text: "Steam is running, and can take the Guide button before Firelight sees it. "
-                            + "If that's a problem, turn off \"Guide button focuses Steam\" in Steam's "
-                            + "Settings → Controller. Firelight doesn't bind Guide to anything."
+                        text: "Steam is running, and can take the Guide button before Firelight sees it. " + "If that's a problem, turn off \"Guide button focuses Steam\" in Steam's " + "Settings → Controller. Firelight doesn't bind Guide to anything."
                         color: Theme.textMuted
                         font.pixelSize: AppStyle.fontSizeSmall
                         font.family: Constants.regularFontFamily
@@ -381,7 +382,8 @@ FocusScope {
 
                 moveDisplaced: Transition {
                     NumberAnimation {
-                        properties: "x,y"; duration: 100;
+                        properties: "x,y"
+                        duration: 100
                         easing.type: Easing.InOutQuad
                     }
                 }
@@ -389,14 +391,14 @@ FocusScope {
                 move: Transition {
                     enabled: root.keyboardDragging
                     NumberAnimation {
-                        properties: "x,y"; duration: 100;
+                        properties: "x,y"
+                        duration: 100
                         easing.type: Easing.InOutQuad
                     }
                 }
 
                 model: visualModel
                 spacing: 12
-
             }
         }
 
@@ -406,5 +408,4 @@ FocusScope {
             Layout.horizontalStretchFactor: 1
         }
     }
-
 }

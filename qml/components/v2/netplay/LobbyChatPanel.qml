@@ -58,8 +58,8 @@ Rectangle {
                 placeholderText: "Say something..."
                 Layout.fillWidth: true
                 onAccepted: {
-                    NetworkService.sendChat(text)
-                    text = ""
+                    NetworkService.sendChat(text);
+                    text = "";
                 }
             }
             FLButton {

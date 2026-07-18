@@ -21,52 +21,51 @@ FocusScope {
         controllerTypeId: root.controllerType
     }
 
-    // TODO
     // Image for the currently-selected controller type. controllerImages is
     // aligned 1:1 with controllerTypeIds, so look up by the type's position
     // rather than assuming contiguous 1-based ids (e.g. NES = 1, 3)
     readonly property string controllerImageUrl: {
-        const ids = platformMetadataModel ? platformMetadataModel.controllerTypeIds : undefined
-        const idx = ids ? ids.indexOf(root.controllerType) : -1
-        return (idx >= 0 && platformMetadataModel) ? platformMetadataModel.controllerImages[idx] : ""
+        const ids = platformMetadataModel ? platformMetadataModel.controllerTypeIds : undefined;
+        const idx = ids ? ids.indexOf(root.controllerType) : -1;
+        return (idx >= 0 && platformMetadataModel) ? platformMetadataModel.controllerImages[idx] : "";
     }
 
     FirelightDialog {
         id: confirmDialog
         text: {
             if (!root.isKeyboard) {
-                return "You're about to walk through assigning an input on your controller to each " + platformMetadataModel.displayName + " input.\n\n Continue?"
+                return "You're about to walk through assigning an input on your controller to each " + platformMetadataModel.displayName + " input.\n\n Continue?";
             } else {
-                return "You're about to walk through assigning a key on your keyboard to each " + platformMetadataModel.displayName + " input.\n\n Continue?"
+                return "You're about to walk through assigning a key on your keyboard to each " + platformMetadataModel.displayName + " input.\n\n Continue?";
             }
         }
 
         showButtons: true
 
         onAccepted: function () {
-            dialog.buttons = []
+            dialog.buttons = [];
             for (var i = 0; i < buttonList.count; ++i) {
                 dialog.buttons.push({
                     display_name: buttonList.model.index(i, 0).data(258),
                     retropad_button: buttonList.model.index(i, 0).data(257)
-                })
+                });
             }
             // dialog.buttons = platformMetadataModel.buttons
-            dialog.currentIndex = 0
-            dialog.open()
+            dialog.currentIndex = 0;
+            dialog.open();
         }
     }
 
     FirelightDialog {
-            id: resetAllDialog
+        id: resetAllDialog
 
-            text: "Reset all mappings to default?"
-            showButtons: true
+        text: "Reset all mappings to default?"
+        showButtons: true
 
-            onAccepted: function () {
-                inputMappingsModel.resetAllToDefault()
-            }
+        onAccepted: function () {
+            inputMappingsModel.resetAllToDefault();
         }
+    }
 
     InputPromptDialog {
         id: dialog
@@ -76,8 +75,8 @@ FocusScope {
         gamepad: root.gamepad
         isKeyboard: root.isKeyboard
 
-        onMappingAdded: function(original, mapped) {
-            inputMappingsModel.setMapping(original, mapped)
+        onMappingAdded: function (original, mapped) {
+            inputMappingsModel.setMapping(original, mapped);
         }
     }
 
@@ -126,8 +125,7 @@ FocusScope {
         preferredHighlightBegin: 64
         preferredHighlightEnd: height - 64
 
-        ScrollBar.vertical: ScrollBar {
-        }
+        ScrollBar.vertical: ScrollBar {}
 
         spacing: 4
 
@@ -137,7 +135,6 @@ FocusScope {
             spacing: 16
             // height: 200
 
-            // TODO
             // Device-class selector (e.g. Gamepad / Mouse / Light Gun): switches
             // which controller type's bindings this view edits. Hidden when the
             // platform only has one type. Uses the actual controller-type ids
@@ -170,8 +167,12 @@ FocusScope {
                             font.family: Constants.regularFontFamily
                             font.weight: Font.Medium
                         }
-                        HoverHandler { cursorShape: Qt.PointingHandCursor }
-                        TapHandler { onTapped: root.controllerType = classTab.typeId }
+                        HoverHandler {
+                            cursorShape: Qt.PointingHandCursor
+                        }
+                        TapHandler {
+                            onTapped: root.controllerType = classTab.typeId
+                        }
                     }
                 }
             }
@@ -205,7 +206,7 @@ FocusScope {
                     focus: true
 
                     onClicked: function () {
-                        confirmDialog.open()
+                        confirmDialog.open();
                     }
                 }
 
@@ -215,7 +216,7 @@ FocusScope {
                     Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
 
                     onClicked: function () {
-                        resetAllDialog.open()
+                        resetAllDialog.open();
                     }
                 }
             }
@@ -252,12 +253,14 @@ FocusScope {
                     text: "Assign"
 
                     onTriggered: {
-                      dialog.buttons = []
-                      dialog.buttons = [{
-                          display_name: model.originalInputName,
-                          retropad_button: model.originalInput
-                      }]
-                      dialog.open()
+                        dialog.buttons = [];
+                        dialog.buttons = [
+                            {
+                                display_name: model.originalInputName,
+                                retropad_button: model.originalInput
+                            }
+                        ];
+                        dialog.open();
                     }
                 }
 
@@ -265,14 +268,14 @@ FocusScope {
                     text: "Reset to default"
 
                     onTriggered: {
-                      inputMappingsModel.resetToDefault(model.originalInput)
+                        inputMappingsModel.resetToDefault(model.originalInput);
                     }
                 }
 
                 RightClickMenuItem {
                     text: "Clear mapping"
                     onTriggered: {
-                          inputMappingsModel.clearMapping(model.originalInput)
+                        inputMappingsModel.clearMapping(model.originalInput);
                     }
                 }
 
@@ -280,22 +283,24 @@ FocusScope {
                     text: "Turbo & alternate bindings…"
                     visible: !root.isKeyboard
                     onTriggered: {
-                        bindingOptionsPopup.targetInput = model.originalInput
-                        bindingOptionsPopup.targetLabel = model.originalInputName
-                        bindingOptionsPopup.open()
+                        bindingOptionsPopup.targetInput = model.originalInput;
+                        bindingOptionsPopup.targetLabel = model.originalInputName;
+                        bindingOptionsPopup.open();
                     }
                 }
             }
-            onClicked: function() {
+            onClicked: function () {
                 ListView.view.currentIndex = index;
             }
-            onDoubleClicked: function() {
-                dialog.buttons = []
-                dialog.buttons = [{
-                    display_name: model.originalInputName,
-                    retropad_button: model.originalInput
-                }]
-                dialog.open()
+            onDoubleClicked: function () {
+                dialog.buttons = [];
+                dialog.buttons = [
+                    {
+                        display_name: model.originalInputName,
+                        retropad_button: model.originalInput
+                    }
+                ];
+                dialog.open();
             }
             contentItem: RowLayout {
                 spacing: 12
@@ -363,7 +368,6 @@ FocusScope {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
-
             }
         }
     }
@@ -372,6 +376,5 @@ FocusScope {
         anchors.fill: parent
         spacing: 16
         visible: false
-
     }
 }

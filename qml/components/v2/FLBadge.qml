@@ -8,11 +8,7 @@ Rectangle {
     property string text: ""
     property string tone: "neutral"
 
-    readonly property color _c: tone === "accent" ? Theme.accent
-                              : tone === "success" ? Theme.success
-                              : tone === "warning" ? Theme.warning
-                              : tone === "danger" ? Theme.danger
-                              : Theme.textMuted
+    readonly property color _c: tone === "accent" ? Theme.accent : tone === "success" ? Theme.success : tone === "warning" ? Theme.warning : tone === "danger" ? Theme.danger : Theme.textMuted
 
     implicitWidth: label.implicitWidth + AppStyle.spacingMd
     implicitHeight: label.implicitHeight + AppStyle.spacingXs

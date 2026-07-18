@@ -6,6 +6,10 @@ structure. Tick one once it reads as yours.
 Formatting is handled mechanically per batch *before* you start that batch, so you are never
 editing text that is about to be reflowed. See the plan for the per-batch loop.
 
+**Formatting status: done for every batch below.** clang-format has run over all C++ (libs,
+`include/`, `src/`, `tests/`) and qmlformat over all 215 QML files, verified by build, the full
+test suite and an app launch. Nothing here is waiting on a reflow — every remaining tick is prose.
+
 Scope is the substantive diff against `main` as of `6cc7daa` (the commit before line-ending
 normalization), so files that only changed line endings are excluded. Vendored trees
 (`thirdparty/`, `libs/rcheevos`, `libs/discord`, `include/{rcheevos,libretro,discord}`) are excluded.

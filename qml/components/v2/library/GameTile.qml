@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Effects
 import Firelight 1.0
 
-// TODO
 // A game boxart thumbnail. `source` is the art url (empty or still-loading
 // shows the placeholder frame); `size` sets the tile edge and drives the decode
 // resolution so a scaled-up tile stays crisp without over-decoding a small one

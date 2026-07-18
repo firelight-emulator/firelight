@@ -1,4 +1,5 @@
 #include "pm_star_rod_mod_patch.hpp"
+
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -24,18 +25,15 @@ PMStarRodModPatch::PMStarRodModPatch(const std::vector<uint8_t> &data) {
   memcpy(&pmsr, cursor, 4);
   cursor += 4;
 
-  uint32_t numRecords =
-      cursor[0] << 24 | cursor[1] << 16 | cursor[2] << 8 | cursor[3];
+  uint32_t numRecords = cursor[0] << 24 | cursor[1] << 16 | cursor[2] << 8 | cursor[3];
   cursor += 4;
 
   for (int i = 0; i < numRecords; ++i) {
     PMStarRodPatchRecord record{};
-    record.offset =
-        cursor[0] << 24 | cursor[1] << 16 | cursor[2] << 8 | cursor[3];
+    record.offset = cursor[0] << 24 | cursor[1] << 16 | cursor[2] << 8 | cursor[3];
     cursor += 4;
 
-    uint32_t dataLength =
-        cursor[0] << 24 | cursor[1] << 16 | cursor[2] << 8 | cursor[3];
+    uint32_t dataLength = cursor[0] << 24 | cursor[1] << 16 | cursor[2] << 8 | cursor[3];
     cursor += 4;
     //    printf("offset: %d, len: %d\n", record.offset, dataLength);
 
@@ -47,8 +45,7 @@ PMStarRodModPatch::PMStarRodModPatch(const std::vector<uint8_t> &data) {
   }
 }
 
-std::vector<uint8_t>
-PMStarRodModPatch::patchRom(const std::vector<uint8_t> &data) const {
+std::vector<uint8_t> PMStarRodModPatch::patchRom(const std::vector<uint8_t> &data) const {
   const auto last = records[records.size() - 1];
 
   const auto totalLen = last.offset + last.data.size();
@@ -70,9 +67,8 @@ PMStarRodModPatch::patchRom(const std::vector<uint8_t> &data) const {
 
   return result;
 }
-std::vector<PMStarRodPatchRecord> PMStarRodModPatch::getRecords() {
-  return records;
-}
+
+std::vector<PMStarRodPatchRecord> PMStarRodModPatch::getRecords() { return records; }
 
 bool PMStarRodModPatch::isValid() const { return true; }
 

@@ -62,7 +62,7 @@ Button {
             checked: root.checked
 
             onCheckedChanged: {
-                root.checked = theControl.checked
+                root.checked = theControl.checked;
             }
 
             indicator: Rectangle {

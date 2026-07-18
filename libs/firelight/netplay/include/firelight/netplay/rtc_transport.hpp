@@ -14,7 +14,6 @@ struct RtcTransportConfig {
   std::string turnServer;
 };
 
-// TODO
 // WebRTC data-channel transport (libdatachannel): one peer connection per
 // member with four channels mapped from ChannelKind — Control/Video reliable
 // ordered, Audio/Input unreliable unordered. Signaling is non-trickle: each

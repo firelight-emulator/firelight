@@ -5,13 +5,11 @@
 
 #include <QAbstractListModel>
 #include <QList>
-
 #include <string>
 #include <unordered_map>
 
 namespace firelight::gui {
 
-// TODO
 // Exposes the capture index (screenshots + clips) to the QML gallery. A flat
 // list; filtering/sorting/grouping-by-game is done in QML with a
 // SortFilterProxyModel over these roles
@@ -33,16 +31,13 @@ public:
     Favorite,
   };
 
-  CaptureListModel(media::IGameCaptureRepository &captures,
-                   library::UserLibraryService &library,
+  CaptureListModel(media::IGameCaptureRepository &captures, library::UserLibraryService &library,
                    QObject *parent = nullptr);
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
-  [[nodiscard]] QVariant data(const QModelIndex &index,
-                              int role) const override;
-  bool setData(const QModelIndex &index, const QVariant &value,
-               int role) override;
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
+  bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
   // Reloads from the repository (e.g. when the gallery opens)
   Q_INVOKABLE void refresh();
@@ -50,9 +45,7 @@ public:
   // Removes the capture from the index and deletes its file(s)
   Q_INVOKABLE void removeCapture(int captureId);
 
-  [[nodiscard]] int getCount() const {
-    return static_cast<int>(m_items.size());
-  }
+  [[nodiscard]] int getCount() const { return static_cast<int>(m_items.size()); }
 
 signals:
   void countChanged();
@@ -62,6 +55,7 @@ private:
     QString name;
     QString iconUrl;
   };
+
   const GameInfo &gameInfoFor(const std::string &contentHash) const;
 
   media::IGameCaptureRepository &m_captures;

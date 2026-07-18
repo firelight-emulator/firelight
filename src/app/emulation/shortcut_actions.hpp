@@ -13,7 +13,6 @@ class SettingsService;
 
 namespace firelight::emulation {
 
-// TODO
 // What every emulator hotkey actually does
 //
 // This is where the shortcut behaviour lives, rather than in QML: it is the only
@@ -39,8 +38,8 @@ public:
     std::function<void(const std::string &)> notify;
   };
 
-  ShortcutActions(settings::SettingsService &settingsService,
-                  std::function<bool()> hardcoreModeActive, Intents intents);
+  ShortcutActions(settings::SettingsService &settingsService, std::function<bool()> hardcoreModeActive,
+                  Intents intents);
 
   // The emulator to act on, or nullptr when no game is running. Set by
   // EmulatorItem as it comes and goes
@@ -68,7 +67,6 @@ private:
   // "2x" / "0.5x" for a playback multiplier
   [[nodiscard]] static std::string speedLabel(float multiplier);
 
-  // TODO
   // Rewind and slow motion rewrite history or trivialise a game, so hardcore
   // mode blocks them. One gate: EmulatorItem's own speed helpers used to check
   // separately, and QML gated the rewind menu on its own
@@ -81,7 +79,6 @@ private:
   IEmulatorController *m_controller = nullptr;
 
   int m_saveSlot = 1;
-  // TODO
   // The speed to go back to when a hold ends. Four actions write the multiplier
   // (fast_forward, toggle_fast_forward, speed_up, slow_down) and only a hold has
   // to be undone, so the value to restore is remembered when the hold starts

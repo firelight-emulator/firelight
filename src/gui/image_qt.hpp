@@ -25,8 +25,7 @@ inline firelight::Image toImage(const QImage &image) {
 inline QImage toQImage(const firelight::Image &image) {
   QImage result;
   if (!image.isNull()) {
-    result.loadFromData(image.pngData.data(),
-                        static_cast<int>(image.pngData.size()), "PNG");
+    result.loadFromData(image.pngData.data(), static_cast<int>(image.pngData.size()), "PNG");
   }
   return result;
 }

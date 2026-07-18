@@ -10,7 +10,6 @@
 
 namespace firelight::media {
 
-// TODO
 // Owns writing gameplay captures to disk under a captures directory, split by
 // type (screenshots/, clips/) and then by content hash so the gallery can group
 // by game, and records each one in the capture index (captures.db)
@@ -18,35 +17,28 @@ class MediaService {
 public:
   MediaService(QString capturesDirectory, IGameCaptureRepository &captures);
 
-  // TODO
   // Saves `image` as a PNG under
   // <capturesDirectory>/screenshots/<contentHash>/<epochMs>.png, creating the
   // directory if needed, and indexes it. Returns the absolute path, or nullopt
   // if the image is null, the content hash is empty, or the write failed
-  std::optional<QString> saveScreenshot(const QString &contentHash,
-                                        const QImage &image);
+  std::optional<QString> saveScreenshot(const QString &contentHash, const QImage &image);
 
-  // TODO
   // Muxes an Instant Replay `snapshot` to an mp4 under
   // <capturesDirectory>/clips/<contentHash>/<epochMs>.mp4, generates a poster
   // thumbnail, and indexes it. Returns the absolute path, or nullopt on empty
   // snapshot / missing content hash / write failure
-  std::optional<QString> saveClip(const QString &contentHash,
-                                  const ClipSnapshot &snapshot);
+  std::optional<QString> saveClip(const QString &contentHash, const ClipSnapshot &snapshot);
 
-  // TODO
   // Syncs the index with the captures directory: indexes files present on disk
   // but missing from the index (regenerating missing clip posters) and prunes
   // rows whose files were deleted. Safe to call at startup / on a manual refresh
   void reconcile();
 
 private:
-  void index(CaptureType type, const QString &contentHash,
-             const QString &filePath, const QString &thumbnailPath,
+  void index(CaptureType type, const QString &contentHash, const QString &filePath, const QString &thumbnailPath,
              int64_t timestamp);
   // Indexes not-yet-indexed *.ext files under <base>/<hash>/
-  void scanCaptureDir(const QString &base, CaptureType type,
-                      const QString &ext);
+  void scanCaptureDir(const QString &base, CaptureType type, const QString &ext);
 
   QString m_capturesDirectory;
   IGameCaptureRepository &m_captures;

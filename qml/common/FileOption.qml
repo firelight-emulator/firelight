@@ -15,27 +15,27 @@ Button {
     verticalPadding: 12
 
     onValueChanged: function () {
-        let file = root.value
+        let file = root.value;
         if (FilesystemUtils.isFile(file)) {
-            fileDialog.selectedFile = file
-            return
+            fileDialog.selectedFile = file;
+            return;
         }
 
-        file = FilesystemUtils.prependFileURI(file)
-        fileDialog.selectedFile = file
+        file = FilesystemUtils.prependFileURI(file);
+        fileDialog.selectedFile = file;
     }
 
     FileDialog {
         id: fileDialog
         nameFilters: ["Image files (*.png *.jpg *.jpeg *.gif)"]
         onAccepted: {
-            root.value = fileDialog.selectedFile
+            root.value = fileDialog.selectedFile;
             // console.log("found it")
         }
     }
 
     onClicked: function () {
-        fileDialog.open()
+        fileDialog.open();
     }
 
     // implicitHeight: Math.max(72, theColumn.)
@@ -85,6 +85,5 @@ Button {
             verticalAlignment: Text.AlignVCenter
             color: Theme.textMuted
         }
-
     }
 }

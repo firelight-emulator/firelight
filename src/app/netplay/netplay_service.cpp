@@ -3,6 +3,7 @@
 #include "../emulation/emulation_service.hpp"
 
 #include <firelight/netplay/stream_packets.hpp>
+
 #include <rcheevos/ra_client.hpp>
 #include <spdlog/spdlog.h>
 
@@ -14,20 +15,14 @@ std::string httpUrlOrEmpty(const std::string &url) {
 }
 } // namespace
 
-NetplayService::NetplayService(
-    ILobbyBackend &lobbyBackend, IPeerTransport &transport,
-    library::UserLibraryService &library, std::string appVersion,
-    achievements::RAClient *achievementClient,
-    libretro::IRetropadProvider *localPads,
-    std::function<std::shared_ptr<IAudioOutput>()> guestAudioFactory)
-    : m_lobbyBackend(lobbyBackend), m_library(library),
-      m_achievementClient(achievementClient),
-      m_session(lobbyBackend, transport, std::move(appVersion)),
-      m_retropadProvider(localPads, m_session),
+NetplayService::NetplayService(ILobbyBackend &lobbyBackend, IPeerTransport &transport,
+                               library::UserLibraryService &library, std::string appVersion,
+                               achievements::RAClient *achievementClient, libretro::IRetropadProvider *localPads,
+                               std::function<std::shared_ptr<IAudioOutput>()> guestAudioFactory)
+    : m_lobbyBackend(lobbyBackend), m_library(library), m_achievementClient(achievementClient),
+      m_session(lobbyBackend, transport, std::move(appVersion)), m_retropadProvider(localPads, m_session),
       m_receiver(m_session, std::move(guestAudioFactory), localPads) {
-  m_sender.setConfigReadyCallback([this](StreamConfig config) {
-    m_session.announceStreamConfig(config);
-  });
+  m_sender.setConfigReadyCallback([this](StreamConfig config) { m_session.announceStreamConfig(config); });
   SessionEvents events;
   events.lobbyChanged = [this] {
     autoAssignMembers();
@@ -91,16 +86,13 @@ NetplayService::NetplayService(
       m_forward.lobbyEnded(reason);
     }
   };
-  events.packetReceived = [this](const PlayerId id, const ChannelKind channel,
-                                 std::span<const uint8_t> data) {
+  events.packetReceived = [this](const PlayerId id, const ChannelKind channel, std::span<const uint8_t> data) {
     switch (channel) {
     case ChannelKind::Input: {
       // Host: a guest's controller state for their slot
-      if (const auto packet = decodeInputPacket(data);
-          packet && !packet->frames.empty()) {
-        m_retropadProvider.padForMember(id)->applyFrame(
-            packet->seq,
-            input::InputFrame::deserialize(packet->frames.front()));
+      if (const auto packet = decodeInputPacket(data); packet && !packet->frames.empty()) {
+        m_retropadProvider.padForMember(id)->applyFrame(packet->seq,
+                                                        input::InputFrame::deserialize(packet->frames.front()));
       }
       break;
     }
@@ -119,61 +111,44 @@ NetplayService::NetplayService(
   };
   m_session.setEvents(std::move(events));
 
-  m_emulationStoppedConnection =
-      EventDispatcher::instance().subscribe<emulation::EmulationStoppedEvent>(
-          [this](const emulation::EmulationStoppedEvent &) {
-            if (m_session.isHost() &&
-                m_session.phase() == GamePhase::InGame) {
-              m_session.endGame("finished");
-            }
-          });
-}
-
-void NetplayService::setEvents(SessionEvents events) {
-  m_forward = std::move(events);
-}
-
-void NetplayService::signIn(std::function<void(bool)> done) {
-  m_lobbyBackend.beginSignIn(std::move(done));
-}
-
-SignInState NetplayService::signInState() const {
-  return m_lobbyBackend.signInState();
-}
-
-PlayerIdentity NetplayService::localIdentity() const {
-  return m_lobbyBackend.localIdentity();
-}
-
-std::string NetplayService::providerName() const {
-  return m_lobbyBackend.providerName();
-}
-
-void NetplayService::setPlayerName(const std::string &name) {
-  m_lobbyBackend.setPreferredDisplayName(name);
-}
-
-void NetplayService::hostLobby(ILobbyBackend::ResultCallback done) {
-  m_session.hostLobby(
-      [this, done = std::move(done)](const bool ok, const std::string &error) {
-        if (ok) {
-          autoAssignMembers();
-        }
-        if (done) {
-          done(ok, error);
+  m_emulationStoppedConnection = EventDispatcher::instance().subscribe<emulation::EmulationStoppedEvent>(
+      [this](const emulation::EmulationStoppedEvent &) {
+        if (m_session.isHost() && m_session.phase() == GamePhase::InGame) {
+          m_session.endGame("finished");
         }
       });
 }
 
-void NetplayService::joinLobby(const std::string &joinCode,
-                               ILobbyBackend::ResultCallback done) {
+void NetplayService::setEvents(SessionEvents events) { m_forward = std::move(events); }
+
+void NetplayService::signIn(std::function<void(bool)> done) { m_lobbyBackend.beginSignIn(std::move(done)); }
+
+SignInState NetplayService::signInState() const { return m_lobbyBackend.signInState(); }
+
+PlayerIdentity NetplayService::localIdentity() const { return m_lobbyBackend.localIdentity(); }
+
+std::string NetplayService::providerName() const { return m_lobbyBackend.providerName(); }
+
+void NetplayService::setPlayerName(const std::string &name) { m_lobbyBackend.setPreferredDisplayName(name); }
+
+void NetplayService::hostLobby(ILobbyBackend::ResultCallback done) {
+  m_session.hostLobby([this, done = std::move(done)](const bool ok, const std::string &error) {
+    if (ok) {
+      autoAssignMembers();
+    }
+    if (done) {
+      done(ok, error);
+    }
+  });
+}
+
+void NetplayService::joinLobby(const std::string &joinCode, ILobbyBackend::ResultCallback done) {
   m_session.joinLobby(joinCode, std::move(done));
 }
 
 void NetplayService::leaveLobby() { m_session.leaveLobby(); }
 
-void NetplayService::assignSlot(const int slot, const PlayerId memberId,
-                                const int localPadIndex) {
+void NetplayService::assignSlot(const int slot, const PlayerId memberId, const int localPadIndex) {
   m_session.assignSlot(slot, memberId, localPadIndex);
 }
 
@@ -192,20 +167,16 @@ void NetplayService::selectGameByEntryId(const int entryId) {
       .gameName = entry->displayName,
       .contentHash = entry->contentHash,
       .platformId = static_cast<int>(entry->platformId),
-      .artUrl = httpUrlOrEmpty(entry->boxartFrontSourceUrl.empty()
-                                   ? entry->icon1x1SourceUrl
-                                   : entry->boxartFrontSourceUrl),
+      .artUrl =
+          httpUrlOrEmpty(entry->boxartFrontSourceUrl.empty() ? entry->icon1x1SourceUrl : entry->boxartFrontSourceUrl),
       .strategy = SyncStrategyKind::HostStream,
   });
 }
 
-void NetplayService::sendChat(const std::string &text) {
-  m_session.sendChat(text);
-}
+void NetplayService::sendChat(const std::string &text) { m_session.sendChat(text); }
 
 bool NetplayService::startGame() {
-  if (!m_session.isHost() || !m_session.game() ||
-      m_session.phase() != GamePhase::Idle) {
+  if (!m_session.isHost() || !m_session.game() || m_session.phase() != GamePhase::Idle) {
     return false;
   }
   // The encoder announces its config once frames flow (announceStreamConfig)
@@ -219,8 +190,7 @@ void NetplayService::confirmLaunch() {
   }
   // Remote inputs would trip RetroAchievements hardcore; suppress for the
   // duration of the online game
-  if (m_achievementClient &&
-      m_session.slotTable().anyRemoteOccupant(m_session.lobby().hostId) &&
+  if (m_achievementClient && m_session.slotTable().anyRemoteOccupant(m_session.lobby().hostId) &&
       m_achievementClient->hardcoreModeActive()) {
     m_achievementClient->setDefaultToHardcore(false);
     m_hardcoreSuppressed = true;

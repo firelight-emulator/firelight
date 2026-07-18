@@ -4,7 +4,6 @@
 
 namespace firelight::library {
 
-// TODO
 // A member file of a multi-file disc set: a data/audio track referenced by a
 // cue/gdi sheet, or a disc image listed in an .m3u playlist. The set's primary
 // file is the ContentFile identified by m_contentFileId; members capture the

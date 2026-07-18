@@ -1,7 +1,6 @@
-#include <firelight/library/content_loader.hpp>
-
 #include <firelight/library/archive_reader.hpp>
 #include <firelight/library/content_hasher.hpp>
+#include <firelight/library/content_loader.hpp>
 #include <firelight/library/file_bytes.hpp>
 
 #include <spdlog/spdlog.h>
@@ -9,7 +8,6 @@
 namespace firelight::library {
 
 LoadedContent ContentLoader::load(const ContentFile &info) const {
-  // TODO
   // Disc images are opened by the core directly from their file path (the
   // libretro core sets need_fullpath). We don't read the (potentially multi-GB)
   // image into memory, and we reuse the canonical hash computed at scan time --
@@ -27,8 +25,7 @@ LoadedContent ContentLoader::load(const ContentFile &info) const {
   } else {
     rawBytes = readAllBytes(info.m_filePath);
     if (rawBytes.empty()) {
-      spdlog::error("[ContentLoader] Could not read content file: {}",
-                    info.m_filePath);
+      spdlog::error("[ContentLoader] Could not read content file: {}", info.m_filePath);
       return {};
     }
   }
@@ -42,8 +39,7 @@ LoadedContent ContentLoader::load(const ContentFile &info) const {
   return content;
 }
 
-void ContentLoader::applyPatch(LoadedContent &content, const int platformId,
-                               const PatchFile &patch) const {
+void ContentLoader::applyPatch(LoadedContent &content, const int platformId, const PatchFile &patch) const {
   if (content.contentBytes.empty()) {
     spdlog::warn("[ContentLoader] No content bytes to apply patch to");
     return;

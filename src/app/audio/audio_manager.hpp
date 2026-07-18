@@ -1,6 +1,12 @@
 #pragma once
 
 #include "audio_settings.hpp"
+#include "firelight/libretro/audio_output.hpp"
+
+#include <firelight/audio/audio_rate_controller.hpp>
+#include <firelight/audio/audio_resampler.hpp>
+#include <firelight/event_dispatcher.hpp>
+#include <firelight/settings/settings_service.hpp>
 
 #include <QAudioSink>
 #include <QMediaDevices>
@@ -9,13 +15,6 @@
 #include <memory>
 #include <mutex>
 
-#include <firelight/audio/audio_rate_controller.hpp>
-#include <firelight/audio/audio_resampler.hpp>
-#include <firelight/event_dispatcher.hpp>
-#include <firelight/settings/settings_service.hpp>
-#include "firelight/libretro/audio_output.hpp"
-
-// TODO
 // Threading: created on the render thread (injected into EmulatorInstance),
 // where receive() is called each frame. The QAudioSink runs on Qt's audio
 // thread. Buffer-level/rate/mute reads come from the pacing thread, so the
@@ -23,7 +22,6 @@
 class AudioManager : public QObject, public IAudioOutput {
   Q_OBJECT
 public:
-  // TODO
   // Both live in audio_settings.hpp so a caller can name a key without pulling
   // Qt Multimedia in through this header. Read here rather than pushed in, which
   // is what makes mute outlive a game: this class is rebuilt on every load, so
@@ -32,15 +30,13 @@ public:
   static constexpr auto MUTED_KEY = firelight::audio::MUTED_KEY;
   static constexpr auto VOLUME_KEY = firelight::audio::VOLUME_KEY;
 
-  explicit AudioManager(
-      firelight::settings::SettingsService &settingsService,
-      std::function<void()> onAudioBufferLevelChanged = nullptr);
+  explicit AudioManager(firelight::settings::SettingsService &settingsService,
+                        std::function<void()> onAudioBufferLevelChanged = nullptr);
 
   size_t receive(const int16_t *data, size_t numFrames) override;
 
   void initialize(double new_freq) override;
 
-  // TODO
   // Transient silencing driven by the running emulator (pause, fast-forward) —
   // not the user's mute, which this class reads from MUTED_KEY itself. Output is
   // silent when either is set
@@ -48,7 +44,6 @@ public:
 
   bool isMuted() const override;
 
-  // TODO
   // Suspends/resumes the output device. On pause we stop feeding the sink, so
   // without this the device keeps draining its queued buffer (an audible "tail");
   // suspend() halts playback immediately and preserves the buffer for a seamless
@@ -59,14 +54,12 @@ public:
   // emulation pacing thread when sync method is "audio")
   float getBufferLevel() const override;
 
-  // TODO
   // Biases the resampler so audio plays back `ratio`x faster/slower than the
   // core's native rate (1.0 = native). Used by sync-to-monitor to resample audio
   // to the display's refresh rate (ratio = refreshHz / coreFps) so it stays
   // matched to the paced video. Dynamic rate control still corrects residual drift
   void setPlaybackRateRatio(double ratio) override;
 
-  // TODO
   // Enables/disables Dynamic Rate Control: the drift compensation that nudges the
   // resample rate to keep the sink buffer near 50% full. On by default; exposed
   // as an advanced setting so users can let the emulation pacer manage the buffer
@@ -100,7 +93,6 @@ private:
   std::unique_ptr<QAudioSink> m_audioSink;
   QIODevice *m_audioDevice = nullptr;
 
-  // TODO
   // QAudioSink/QIODevice aren't thread-safe. receive() (render thread) and
   // getBufferLevel() (the "audio" sync method's pacing thread) both touch the
   // sink, so all access is serialized on this. Held only for the brief sink
@@ -123,7 +115,6 @@ private:
   // advanced setting
   std::atomic<bool> m_drcEnabled{true};
 
-  // TODO
   // Pre-buffering. The sink starts suspended so it doesn't drain an empty buffer
   // (an underrunning, stuttery "skip-ahead" start); receive() fills it and
   // resumes playback once it's ~half full

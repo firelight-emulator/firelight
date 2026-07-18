@@ -12,10 +12,10 @@ TEST(CheatEngineTest, WritesPokesRespectingSizeEndiannessAndBounds) {
 
   CheatEngine engine;
   engine.setActivePokes({
-      {0x10u, 0x2Au, 1, false},        // single byte
-      {0x20u, 0x1234u, 2, false},      // 2 bytes, little-endian
-      {0x30u, 0x1234u, 2, true},       // 2 bytes, big-endian
-      {0xFEu, 0xDEADBEEFu, 4, false},  // 0xFE+4 > 256 -> out of range, skipped
+      {0x10u, 0x2Au, 1, false},       // single byte
+      {0x20u, 0x1234u, 2, false},     // 2 bytes, little-endian
+      {0x30u, 0x1234u, 2, true},      // 2 bytes, big-endian
+      {0xFEu, 0xDEADBEEFu, 4, false}, // 0xFE+4 > 256 -> out of range, skipped
   });
   engine.apply(core);
 

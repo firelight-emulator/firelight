@@ -1,6 +1,5 @@
-import QtQuick
-
 pragma Singleton
+import QtQuick
 
 Item {
     readonly property color primary800: "#142850"
@@ -30,7 +29,6 @@ Item {
     readonly property color neutral200: "#e6e6e6"
     readonly property color neutral100: "#f9f9f9"
 
-
     readonly property color red900: "#b71c1c"
     readonly property color red700: "#ca1f17"
     readonly property color red500: "#d62727"
@@ -42,12 +40,10 @@ Item {
     readonly property color containerLowColor: neutral800
     readonly property color containerMidColor: neutral700
 
-
     readonly property color dropdownBackgroundColor: containerMidColor
     readonly property color dropdownPopupBackgroundColor: containerVeryLowColor
     readonly property color dropdownPopupBorderColor: containerMidColor
     readonly property color dropdownInactiveTextColor: neutral400
-
 
     readonly property color backgroundColorOne: "#2d2d32"
     readonly property color backgroundColorTwo: "#353739"

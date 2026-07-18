@@ -1,29 +1,25 @@
 #pragma once
 #include "service_accessor.hpp"
 
-#include <QAbstractListModel>
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/settings/settings_service.hpp>
 
+#include <QAbstractListModel>
 #include <optional>
 
 namespace firelight::settings {
 
-// TODO
 // Backs the "advanced" core-options editor: lists the raw libretro options a
 // core declared (cached by ICoreOptionRepository, populated after a core loads)
 // and lets the user override any of them at the current tier (Game / Platform /
 // Global). Definitions come from the repository; values from SettingsService
 class CoreOptionsModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
-  Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY
-                 platformIdChanged)
+  Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY platformIdChanged)
   Q_PROPERTY(int level READ getLevel WRITE setLevel NOTIFY levelChanged)
-  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
-                 contentHashChanged)
+  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY contentHashChanged)
   // Only options in this category are listed ("" = top-level/uncategorized)
-  Q_PROPERTY(QString categoryFilter READ getCategoryFilter WRITE
-                 setCategoryFilter NOTIFY categoryFilterChanged)
+  Q_PROPERTY(QString categoryFilter READ getCategoryFilter WRITE setCategoryFilter NOTIFY categoryFilterChanged)
   // Distinct non-empty categories the core declares, as [{key, label}]
   Q_PROPERTY(QVariantList categories READ categories NOTIFY categoriesChanged)
 public:
@@ -49,8 +45,7 @@ public:
   QVariant data(const QModelIndex &index, int role) const override;
   QHash<int, QByteArray> roleNames() const override;
   Qt::ItemFlags flags(const QModelIndex &index) const override;
-  bool setData(const QModelIndex &index, const QVariant &value,
-               int role) override;
+  bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
   // Clears this tier's override for the row so it falls back to the inherited
   // value (lower tier -> the core's declared default)
@@ -75,6 +70,7 @@ private:
     CategoryKeyRole,
     CategoryLabelRole
   };
+
   struct Item {
     QString key;
     QString label;

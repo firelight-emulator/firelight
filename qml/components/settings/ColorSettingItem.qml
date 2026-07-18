@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // Color setting: a row of preset swatches plus a hex entry for arbitrary
 // colors. `value` is a hex string (e.g. "#ff8800"); `presets` is an optional
 // list of {label, value} swatches (from the setting's `options`)
@@ -40,8 +39,7 @@ BaseSettingItem {
                 radius: width / 2
                 color: modelData
                 border.width: root.value.toLowerCase() === modelData.toLowerCase() ? 3 : 1
-                border.color: root.value.toLowerCase() === modelData.toLowerCase()
-                    ? "white" : "#00000040"
+                border.color: root.value.toLowerCase() === modelData.toLowerCase() ? "white" : "#00000040"
 
                 TapHandler {
                     enabled: root.enabled
@@ -60,7 +58,8 @@ BaseSettingItem {
             inputMask: "\\#HHHHHH"
 
             Component.onCompleted: text = root.value
-            onEditingFinished: if (text.length === 7) root.picked(text)
+            onEditingFinished: if (text.length === 7)
+                root.picked(text)
 
             Connections {
                 target: root

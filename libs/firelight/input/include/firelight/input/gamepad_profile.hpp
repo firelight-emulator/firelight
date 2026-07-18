@@ -1,7 +1,7 @@
 #pragma once
 #include <firelight/input/analog_settings.hpp>
-#include <firelight/input/shortcut_mapping.hpp>
 #include <firelight/input/input_mapping.hpp>
+#include <firelight/input/shortcut_mapping.hpp>
 
 #include <memory>
 #include <string>
@@ -28,7 +28,6 @@ public:
   [[nodiscard]] int getBasedOnType() const;
   void setBasedOnType(int type);
 
-  // TODO
   // The preset this profile's shortcuts were seeded from. Kept so the editor can
   // show which rows differ from it and reset them back — the bindings themselves
   // are the profile's own from the moment it's created, not resolved through it
@@ -40,8 +39,8 @@ public:
 
   void setName(const std::string &name);
 
-  [[nodiscard]] std::shared_ptr<InputMapping>
-  getMappingForPlatformAndController(int platformId, int controllerType) const;
+  [[nodiscard]] std::shared_ptr<InputMapping> getMappingForPlatformAndController(int platformId,
+                                                                                 int controllerType) const;
 
   void addMapping(const std::shared_ptr<InputMapping> &mapping);
 
@@ -56,8 +55,7 @@ public:
 
   // Resolves the analog settings to use for a platform: the platform mapping's
   // override if present, otherwise the profile default
-  [[nodiscard]] AnalogSettings getAnalogSettings(int platformId,
-                                                 int controllerType) const;
+  [[nodiscard]] AnalogSettings getAnalogSettings(int platformId, int controllerType) const;
 
 private:
   int m_id = -1;

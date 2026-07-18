@@ -5,9 +5,8 @@
 #include <QColor>
 #include <QImage>
 #include <QTemporaryDir>
-#include <gtest/gtest.h>
-
 #include <cstdint>
+#include <gtest/gtest.h>
 
 namespace firelight::media {
 namespace {
@@ -25,8 +24,7 @@ bool writeSampleClip(const QString &path, int w, int h) {
   }
   constexpr int fps = 30;
   for (int i = 0; i < fps * 2; ++i) {
-    recorder.pushVideoFrame(makeFrame(w, h, i),
-                            static_cast<int64_t>(i) * 1000 / fps);
+    recorder.pushVideoFrame(makeFrame(w, h, i), static_cast<int64_t>(i) * 1000 / fps);
   }
   recorder.flush();
   const auto snap = recorder.snapshot();
@@ -59,8 +57,7 @@ TEST(ClipThumbnailerTest, WritesPosterFromValidMp4) {
 TEST(ClipThumbnailerTest, FailsOnMissingFile) {
   QTemporaryDir dir;
   ASSERT_TRUE(dir.isValid());
-  EXPECT_FALSE(ClipThumbnailer::writePoster(dir.path() + "/nope.mp4",
-                                            dir.path() + "/x.png"));
+  EXPECT_FALSE(ClipThumbnailer::writePoster(dir.path() + "/nope.mp4", dir.path() + "/x.png"));
 }
 
 } // namespace firelight::media

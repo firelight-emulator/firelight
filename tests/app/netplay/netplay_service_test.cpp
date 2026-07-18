@@ -1,6 +1,7 @@
+#include "../../../src/app/netplay/netplay_service.hpp"
+
 #include "../../../libs/firelight/netplay/tests/fake_lobby_backend.hpp"
 #include "../../../libs/firelight/netplay/tests/fake_transport.hpp"
-#include "../../../src/app/netplay/netplay_service.hpp"
 
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/netplay/stream_packets.hpp>
@@ -13,12 +14,10 @@ namespace firelight::netplay {
 namespace {
 struct Fixture : testing::Test {
   std::shared_ptr<FakeLobbyHub> lobbyHub = std::make_shared<FakeLobbyHub>();
-  std::shared_ptr<FakeTransportHub> transportHub =
-      std::make_shared<FakeTransportHub>();
+  std::shared_ptr<FakeTransportHub> transportHub = std::make_shared<FakeTransportHub>();
 
   library::SqliteUserLibraryRepository libraryRepo{":memory:"};
-  library::UserLibraryService library{
-      libraryRepo, std::filesystem::temp_directory_path().string()};
+  library::UserLibraryService library{libraryRepo, std::filesystem::temp_directory_path().string()};
 
   FakeLobbyBackend hostBackend{lobbyHub, PlayerIdentity{1, "Host"}};
   FakeTransport hostTransport{transportHub, 1};
@@ -30,15 +29,10 @@ struct Fixture : testing::Test {
 
   void hostUpAndJoin() {
     bool ok = false;
-    host.hostLobby([&](const bool result, const std::string &) {
-      ok = result;
-    });
+    host.hostLobby([&](const bool result, const std::string &) { ok = result; });
     ASSERT_TRUE(ok);
     ok = false;
-    guest.joinLobby(host.session().joinCode(),
-                    [&](const bool result, const std::string &) {
-                      ok = result;
-                    });
+    guest.joinLobby(host.session().joinCode(), [&](const bool result, const std::string &) { ok = result; });
     ASSERT_TRUE(ok);
   }
 };
@@ -114,8 +108,7 @@ TEST_F(NetplayServiceTest, LateJoinerDuringGameIsSeated) {
   FakeTransport lateTransport{transportHub, 3};
   NetplayService late{lateBackend, lateTransport, library, "0.1.0"};
   bool ok = false;
-  late.joinLobby(host.session().joinCode(),
-                 [&](const bool result, const std::string &) { ok = result; });
+  late.joinLobby(host.session().joinCode(), [&](const bool result, const std::string &) { ok = result; });
   ASSERT_TRUE(ok);
 
   EXPECT_EQ(late.session().phase(), GamePhase::InGame);
@@ -162,12 +155,10 @@ TEST_F(NetplayServiceTest, StreamConfigReachesGuestReceiver) {
   host.startGame();
   host.confirmLaunch();
 
-  // TODO
   // The host announces a config mid-game (as the encoder would); the guest's
   // receiver takes it without a valid extradata blob being decodable — the
   // decoder rejects garbage extradata gracefully
-  host.session().announceStreamConfig(StreamConfig{
-      .extradataB64 = "!!!not-base64!!!", .width = 240, .height = 160});
+  host.session().announceStreamConfig(StreamConfig{.extradataB64 = "!!!not-base64!!!", .width = 240, .height = 160});
   EXPECT_EQ(guest.session().streamConfig()->width, 240);
 }
 

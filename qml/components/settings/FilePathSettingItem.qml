@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import Firelight 1.0
 
-// TODO
 // File / folder path setting. `value` is a filesystem path; `directoryMode`
 // picks a folder instead of a file; `extensions` (no dot) filters files. Emits
 // `chosen` when a path is picked or cleared

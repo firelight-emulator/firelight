@@ -1,9 +1,9 @@
+#include <firelight/library/file_bytes.hpp>
 #include <firelight/library/patch_file.hpp>
 
-#include <firelight/library/file_bytes.hpp>
-#include <patching/rom_patch.hpp>
 #include <patching/bps_patch.hpp>
 #include <patching/ips_patch.hpp>
+#include <patching/rom_patch.hpp>
 #include <patching/ups_patch.hpp>
 
 namespace firelight::library {

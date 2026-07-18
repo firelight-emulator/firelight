@@ -18,49 +18,38 @@ QVariantList QtCoreRegistryProxy::coresForPlatform(const int platformId) const {
   return result;
 }
 
-QString QtCoreRegistryProxy::resolvedCore(const int platformId,
-                                          const QString &contentHash) const {
-  return QString::fromStdString(CoreRegistry::instance().resolveCoreName(
-      platformId, contentHash.toStdString(),
-      settings::SettingsService::instance()));
+QString QtCoreRegistryProxy::resolvedCore(const int platformId, const QString &contentHash) const {
+  return QString::fromStdString(CoreRegistry::instance().resolveCoreName(platformId, contentHash.toStdString(),
+                                                                         settings::SettingsService::instance()));
 }
 
-QString QtCoreRegistryProxy::coreOverride(const int level, const int platformId,
-                                          const QString &contentHash) const {
+QString QtCoreRegistryProxy::coreOverride(const int level, const int platformId, const QString &contentHash) const {
   auto *settings = settings::SettingsService::instance();
   if (!settings) {
     return {};
   }
-  const auto value = settings->getValueAtLevel(
-      static_cast<settings::SettingsLevel>(level), contentHash.toStdString(),
-      platformId, CoreRegistry::CORE_SETTING_KEY);
+  const auto value = settings->getValueAtLevel(static_cast<settings::SettingsLevel>(level), contentHash.toStdString(),
+                                               platformId, CoreRegistry::CORE_SETTING_KEY);
   return value ? QString::fromStdString(*value) : QString{};
 }
 
-void QtCoreRegistryProxy::setCoreOverride(const int level, const int platformId,
-                                          const QString &contentHash,
+void QtCoreRegistryProxy::setCoreOverride(const int level, const int platformId, const QString &contentHash,
                                           const QString &coreId) {
   if (auto *settings = settings::SettingsService::instance()) {
-    settings->setValueAtLevel(static_cast<settings::SettingsLevel>(level),
-                              contentHash.toStdString(), platformId,
-                              CoreRegistry::CORE_SETTING_KEY,
-                              coreId.toStdString());
+    settings->setValueAtLevel(static_cast<settings::SettingsLevel>(level), contentHash.toStdString(), platformId,
+                              CoreRegistry::CORE_SETTING_KEY, coreId.toStdString());
   }
 }
 
-void QtCoreRegistryProxy::clearCoreOverride(const int level,
-                                            const int platformId,
-                                            const QString &contentHash) {
+void QtCoreRegistryProxy::clearCoreOverride(const int level, const int platformId, const QString &contentHash) {
   if (auto *settings = settings::SettingsService::instance()) {
-    settings->resetValueAtLevel(static_cast<settings::SettingsLevel>(level),
-                                contentHash.toStdString(), platformId,
+    settings->resetValueAtLevel(static_cast<settings::SettingsLevel>(level), contentHash.toStdString(), platformId,
                                 CoreRegistry::CORE_SETTING_KEY);
   }
 }
 
 QString QtCoreRegistryProxy::displayNameFor(const QString &coreId) const {
-  return QString::fromStdString(
-      CoreRegistry::instance().displayNameFor(coreId.toStdString()));
+  return QString::fromStdString(CoreRegistry::instance().displayNameFor(coreId.toStdString()));
 }
 
 } // namespace firelight::gui

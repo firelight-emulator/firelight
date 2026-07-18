@@ -5,6 +5,7 @@
 #include "game.hpp"
 #include "rcheevos/startsession_response.hpp"
 #include "user_unlock.hpp"
+
 #include <optional>
 #include <utility>
 
@@ -22,7 +23,6 @@ struct AchievementSessionEndedEvent {
   bool hardcore;
 };
 
-// TODO
 // Published when the logged-in user changes (login sets a username, logout
 // clears it). Login completes asynchronously after startup, so consumers that
 // show per-user data (e.g. the library's achievement counts) refresh on this
@@ -59,16 +59,13 @@ public:
    */
   bool create(const User &user);
 
-  [[nodiscard]] std::optional<AchievementSet>
-  getAchievementSetByContentHash(const std::string &contentHash) const;
+  [[nodiscard]] std::optional<AchievementSet> getAchievementSetByContentHash(const std::string &contentHash) const;
 
   bool setGameId(const std::string &contentHash, int gameId);
 
-  bool setAchievementSetHash(unsigned achievementSetId,
-                             const std::string &contentHash);
+  bool setAchievementSetHash(unsigned achievementSetId, const std::string &contentHash);
 
-  [[nodiscard]] std::optional<Achievement>
-  getAchievement(unsigned achievementId) const;
+  [[nodiscard]] std::optional<Achievement> getAchievement(unsigned achievementId) const;
 
   bool create(const Game &game);
   bool create(const AchievementSet &achievementSet);
@@ -88,39 +85,31 @@ public:
    * @param contentHash The content hash to look up
    * @return The achievement set ID if found, std::nullopt otherwise
    */
-  [[nodiscard]] std::optional<int>
-  getGameId(const std::string &contentHash) const;
-
+  [[nodiscard]] std::optional<int> getGameId(const std::string &contentHash) const;
 
   std::optional<Game> getGameForHash(const std::string &contentHash) const;
 
-  [[nodiscard]] std::optional<UserUnlock>
-  getUserUnlock(const std::string &username, unsigned achievementId) const;
+  [[nodiscard]] std::optional<UserUnlock> getUserUnlock(const std::string &username, unsigned achievementId) const;
 
-  [[nodiscard]] std::vector<UserUnlock>
-  getAllUserUnlocks(const std::string &username, unsigned gameId) const;
+  [[nodiscard]] std::vector<UserUnlock> getAllUserUnlocks(const std::string &username, unsigned gameId) const;
 
-  // TODO
   // Offline {earned, total} achievement counts for a game by content hash
   // total is the achievement-set size; earned counts the user's unlocks
   // (softcore or hardcore). {0, 0} when the game has no achievement set;
   // earned stays 0 when username is empty. Used by the library model to show
   // per-game progress
-  [[nodiscard]] std::pair<int, int>
-  getAchievementCounts(const std::string &contentHash,
-                       const std::string &username) const;
+  [[nodiscard]] std::pair<int, int> getAchievementCounts(const std::string &contentHash,
+                                                         const std::string &username) const;
 
-  bool
-  processStartSessionResponse(const std::string &username, unsigned gameId,
-                              const StartSessionResponse &startSessionResponse);
+  bool processStartSessionResponse(const std::string &username, unsigned gameId,
+                                   const StartSessionResponse &startSessionResponse);
 
   /**
    * Attempts to send an unlock request for every unsynced achievement unlock
    */
   void syncOfflineAchievements();
 
-  void startSession(const std::string &username, unsigned gameId,
-                    bool hardcore);
+  void startSession(const std::string &username, unsigned gameId, bool hardcore);
   void endSession();
 
   /**

@@ -1,22 +1,20 @@
 #include <firelight/netplay/rtc_transport.hpp>
 
-#include <nlohmann/json.hpp>
-#include <rtc/rtc.hpp>
-#include <spdlog/spdlog.h>
-
 #include <algorithm>
 #include <array>
 #include <condition_variable>
 #include <deque>
 #include <map>
 #include <mutex>
+#include <nlohmann/json.hpp>
+#include <rtc/rtc.hpp>
+#include <spdlog/spdlog.h>
 #include <thread>
 
 namespace firelight::netplay {
 
 namespace {
-constexpr std::array<const char *, 4> CHANNEL_LABELS{"control", "video",
-                                                     "audio", "input"};
+constexpr std::array<const char *, 4> CHANNEL_LABELS{"control", "video", "audio", "input"};
 
 std::optional<ChannelKind> channelForLabel(const std::string &label) {
   for (size_t i = 0; i < CHANNEL_LABELS.size(); ++i) {
@@ -42,8 +40,7 @@ struct RtcTransport::Impl {
   public:
     Link(Impl &owner, const PlayerId peerId) : m_owner(owner), m_peerId(peerId) {}
 
-    void send(const ChannelKind channel,
-              const std::span<const uint8_t> data) override {
+    void send(const ChannelKind channel, const std::span<const uint8_t> data) override {
       std::shared_ptr<rtc::DataChannel> target;
       {
         std::lock_guard lock(m_owner.mutex);
@@ -54,8 +51,7 @@ struct RtcTransport::Impl {
         target = it->second.channels[static_cast<size_t>(channel)];
       }
       if (target && target->isOpen()) {
-        target->send(reinterpret_cast<const std::byte *>(data.data()),
-                     data.size());
+        target->send(reinterpret_cast<const std::byte *>(data.data()), data.size());
       }
     }
 
@@ -114,7 +110,6 @@ struct RtcTransport::Impl {
   mutable std::recursive_mutex mutex;
   std::map<PlayerId, Peer> peers;
 
-  // TODO
   // libdatachannel fires callbacks while holding connection-internal locks
   // (with host-only candidates, even synchronously inside setRemoteDescription)
   // — calling back into the connection from a callback can deadlock. Work that
@@ -170,50 +165,44 @@ struct RtcTransport::Impl {
     peer.connection = std::make_shared<rtc::PeerConnection>(rtcConfig());
     peer.link = std::make_unique<Link>(*this, memberId);
 
-    peer.connection->onGatheringStateChange(
-        [this, memberId](const rtc::PeerConnection::GatheringState state) {
-          if (state != rtc::PeerConnection::GatheringState::Complete) {
-            return;
-          }
-          post([this, memberId] { sendLocalDescription(memberId); });
-        });
+    peer.connection->onGatheringStateChange([this, memberId](const rtc::PeerConnection::GatheringState state) {
+      if (state != rtc::PeerConnection::GatheringState::Complete) {
+        return;
+      }
+      post([this, memberId] { sendLocalDescription(memberId); });
+    });
 
-    peer.connection->onStateChange(
-        [this, memberId](const rtc::PeerConnection::State state) {
-          if (state != rtc::PeerConnection::State::Disconnected &&
-              state != rtc::PeerConnection::State::Failed &&
-              state != rtc::PeerConnection::State::Closed) {
-            return;
-          }
-          bool fire = false;
-          {
-            std::lock_guard lock(mutex);
-            const auto it = peers.find(memberId);
-            if (it != peers.end() && it->second.announced &&
-                !it->second.dead) {
-              it->second.dead = true;
-              fire = true;
-            }
-          }
-          if (fire && owner.m_events.peerDisconnected) {
-            owner.m_events.peerDisconnected(memberId);
-          }
-        });
+    peer.connection->onStateChange([this, memberId](const rtc::PeerConnection::State state) {
+      if (state != rtc::PeerConnection::State::Disconnected && state != rtc::PeerConnection::State::Failed &&
+          state != rtc::PeerConnection::State::Closed) {
+        return;
+      }
+      bool fire = false;
+      {
+        std::lock_guard lock(mutex);
+        const auto it = peers.find(memberId);
+        if (it != peers.end() && it->second.announced && !it->second.dead) {
+          it->second.dead = true;
+          fire = true;
+        }
+      }
+      if (fire && owner.m_events.peerDisconnected) {
+        owner.m_events.peerDisconnected(memberId);
+      }
+    });
 
-    peer.connection->onDataChannel(
-        [this, memberId](std::shared_ptr<rtc::DataChannel> channel) {
-          const auto kind = channelForLabel(channel->label());
-          if (!kind) {
-            return;
-          }
-          adoptChannel(memberId, *kind, std::move(channel));
-        });
+    peer.connection->onDataChannel([this, memberId](std::shared_ptr<rtc::DataChannel> channel) {
+      const auto kind = channelForLabel(channel->label());
+      if (!kind) {
+        return;
+      }
+      adoptChannel(memberId, *kind, std::move(channel));
+    });
 
     return peer;
   }
 
-  void adoptChannel(const PlayerId memberId, const ChannelKind kind,
-                    std::shared_ptr<rtc::DataChannel> channel) {
+  void adoptChannel(const PlayerId memberId, const ChannelKind kind, std::shared_ptr<rtc::DataChannel> channel) {
     {
       std::lock_guard lock(mutex);
       const auto it = peers.find(memberId);
@@ -231,16 +220,12 @@ struct RtcTransport::Impl {
       }
       if (std::holds_alternative<rtc::binary>(message)) {
         const auto &binary = std::get<rtc::binary>(message);
-        owner.m_events.messageReceived(
-            memberId, kind,
-            std::span(reinterpret_cast<const uint8_t *>(binary.data()),
-                      binary.size()));
+        owner.m_events.messageReceived(memberId, kind,
+                                       std::span(reinterpret_cast<const uint8_t *>(binary.data()), binary.size()));
       } else {
         const auto &text = std::get<std::string>(message);
-        owner.m_events.messageReceived(
-            memberId, kind,
-            std::span(reinterpret_cast<const uint8_t *>(text.data()),
-                      text.size()));
+        owner.m_events.messageReceived(memberId, kind,
+                                       std::span(reinterpret_cast<const uint8_t *>(text.data()), text.size()));
       }
     });
 
@@ -262,8 +247,7 @@ struct RtcTransport::Impl {
       description = it->second.connection->localDescription();
     }
     if (description && owner.m_signalOut) {
-      const nlohmann::json payload = {{"type", description->typeString()},
-                                      {"sdp", std::string(*description)}};
+      const nlohmann::json payload = {{"type", description->typeString()}, {"sdp", std::string(*description)}};
       owner.m_signalOut(memberId, payload.dump());
     }
   }
@@ -279,8 +263,7 @@ struct RtcTransport::Impl {
       auto &peer = it->second;
       peer.channelOpen[static_cast<size_t>(kind)] = true;
       const bool allOpen =
-          std::all_of(peer.channelOpen.begin(), peer.channelOpen.end(),
-                      [](const bool open) { return open; });
+          std::all_of(peer.channelOpen.begin(), peer.channelOpen.end(), [](const bool open) { return open; });
       announce = allOpen && !peer.announced;
       if (announce) {
         peer.announced = true;
@@ -308,13 +291,11 @@ struct RtcTransport::Impl {
   }
 };
 
-RtcTransport::RtcTransport(RtcTransportConfig config)
-    : m_impl(std::make_unique<Impl>(*this, std::move(config))) {}
+RtcTransport::RtcTransport(RtcTransportConfig config) : m_impl(std::make_unique<Impl>(*this, std::move(config))) {}
 
 RtcTransport::~RtcTransport() { closeAll(); }
 
-void RtcTransport::connectToPeer(const PlayerId memberId,
-                                 const bool isOfferer) {
+void RtcTransport::connectToPeer(const PlayerId memberId, const bool isOfferer) {
   if (!isOfferer) {
     return; // the answering side reacts to the offer in handleSignal
   }
@@ -324,18 +305,15 @@ void RtcTransport::connectToPeer(const PlayerId memberId,
     auto &peer = m_impl->createPeer(memberId);
     // Creating the channels triggers negotiation + candidate gathering
     for (size_t i = 0; i < CHANNEL_LABELS.size(); ++i) {
-      created[i] = peer.connection->createDataChannel(
-          CHANNEL_LABELS[i], initFor(static_cast<ChannelKind>(i)));
+      created[i] = peer.connection->createDataChannel(CHANNEL_LABELS[i], initFor(static_cast<ChannelKind>(i)));
     }
   }
   for (size_t i = 0; i < created.size(); ++i) {
-    m_impl->adoptChannel(memberId, static_cast<ChannelKind>(i),
-                         std::move(created[i]));
+    m_impl->adoptChannel(memberId, static_cast<ChannelKind>(i), std::move(created[i]));
   }
 }
 
-void RtcTransport::handleSignal(const PlayerId from,
-                                const std::string &payload) {
+void RtcTransport::handleSignal(const PlayerId from, const std::string &payload) {
   const auto parsed = nlohmann::json::parse(payload, nullptr, false);
   if (parsed.is_discarded() || !parsed.is_object()) {
     spdlog::warn("[Netplay] undecodable signal payload from {}", from);
@@ -359,8 +337,7 @@ void RtcTransport::handleSignal(const PlayerId from,
       }
     }
   } catch (const std::exception &e) {
-    spdlog::warn("[Netplay] failed to apply {} from {}: {}", type, from,
-                 e.what());
+    spdlog::warn("[Netplay] failed to apply {} from {}: {}", type, from, e.what());
   }
 }
 

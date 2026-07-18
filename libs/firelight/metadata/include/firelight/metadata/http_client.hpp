@@ -23,8 +23,7 @@ class IHttpClient {
 public:
   virtual ~IHttpClient() = default;
 
-  [[nodiscard]] virtual HttpResponse
-  get(const std::string &url, const std::vector<HttpHeader> &headers) = 0;
+  [[nodiscard]] virtual HttpResponse get(const std::string &url, const std::vector<HttpHeader> &headers) = 0;
 };
 
 } // namespace firelight::metadata

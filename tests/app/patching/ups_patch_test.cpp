@@ -1,14 +1,14 @@
 
 #include "../../../src/app/patching/ups_patch.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
-
 #include <zlib.h>
 
 /**
  * @brief Test fixture for UPS (Universal Patching System) patch functionality
- * 
+ *
  * Tests the UPS patch format implementation, including patch parsing, record
  * extraction, CRC32 validation, and ROM patching operations. UPS is a universal
  * binary patch format that supports bidirectional patching and integrity checks
@@ -30,7 +30,7 @@ protected:
 
 /**
  * @brief Test UPS patch constructor and record validation
- * 
+ *
  * Verifies that a UPS patch file is correctly parsed, extracting patch records,
  * input/output file sizes, and CRC32 checksums. Tests against a well-formatted
  * UPS file with 1,069,392 patch records and validates input ROM CRC32 checksum
@@ -62,7 +62,7 @@ TEST_F(UPSPatchTest, ConstructorTest) {
 
 /**
  * @brief Test UPS patch application and output validation
- * 
+ *
  * Verifies that a UPS patch can be successfully applied to ROM data and that
  * the resulting patched data matches the expected output CRC32 checksum. Tests
  * the core patching functionality using a GBA ROM file

@@ -21,7 +21,6 @@ FocusScope {
                     background: Rectangle {
                         color: enabled ? (backButton.hovered ? "#404143" : "transparent") : "transparent"
                         radius: height / 2
-
                     }
 
                     Layout.fillHeight: true
@@ -39,7 +38,7 @@ FocusScope {
                     checkable: false
 
                     onClicked: {
-                        root.StackView.view.pop()
+                        root.StackView.view.pop();
                     }
                 }
 
@@ -78,33 +77,37 @@ FocusScope {
                         property string currentValue
                         // description: "Simulates the physical response of the Game Boy Color LCD panel when illuminated from different angles."
                         control: MyComboBox {
-                            model: [{
-                                text: "Disabled",
-                                value: "disabled"
-                            }, {
-                                text: "Auto",
-                                value: "auto"
-                            }, {
-                                text: "Specific palette",
-                                value: "internal"
-                            }]
+                            model: [
+                                {
+                                    text: "Disabled",
+                                    value: "disabled"
+                                },
+                                {
+                                    text: "Auto",
+                                    value: "auto"
+                                },
+                                {
+                                    text: "Specific palette",
+                                    value: "internal"
+                                }
+                            ]
                             textRole: "text"
                             valueRole: "value"
 
                             Component.onCompleted: {
-                                const value = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gb_colorization")
+                                const value = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gb_colorization");
 
                                 if (value) {
-                                    currentIndex = indexOfValue(value)
-                                    colorizePalette.currentValue = value
+                                    currentIndex = indexOfValue(value);
+                                    colorizePalette.currentValue = value;
                                 } else {
-                                    currentIndex = 0
+                                    currentIndex = 0;
                                 }
                             }
 
                             onActivated: function (index) {
-                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gb_colorization", currentValue)
-                                colorizePalette.currentValue = currentValue
+                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gb_colorization", currentValue);
+                                colorizePalette.currentValue = currentValue;
                             }
                         }
                     },
@@ -118,174 +121,225 @@ FocusScope {
                         property string currentValue
                         control: MyComboBox {
                             enabled: colorizePalette.currentValue === "internal"
-                            model: [{
-                                text: "GB - DMG",
-                                value: "GB - DMG"
-                            }, {
-                                text: "GB - Pocket",
-                                value: "GB - Pocket"
-                            }, {
-                                text: "GB - Light",
-                                value: "GB - Light"
-                            }, {
-                                text: "GBC - Blue",
-                                value: "GBC - Blue"
-                            }, {
-                                text: "GBC - Brown",
-                                value: "GBC - Brown"
-                            }, {
-                                text: "GBC - Dark Blue",
-                                value: "GBC - Dark Blue"
-                            }, {
-                                text: "GBC - Dark Brown",
-                                value: "GBC - Dark Brown"
-                            }, {
-                                text: "GBC - Dark Green",
-                                value: "GBC - Dark Green"
-                            }, {
-                                text: "GBC - Grayscale",
-                                value: "GBC - Grayscale"
-                            }, {
-                                text: "GBC - Green",
-                                value: "GBC - Green"
-                            }, {
-                                text: "GBC - Inverted",
-                                value: "GBC - Inverted"
-                            }, {
-                                text: "GBC - Orange",
-                                value: "GBC - Orange"
-                            }, {
-                                text: "GBC - Pastel Mix",
-                                value: "GBC - Pastel Mix"
-                            }, {
-                                text: "GBC - Red",
-                                value: "GBC - Red"
-                            }, {
-                                text: "GBC - Yellow",
-                                value: "GBC - Yellow"
-                            }, {
-                                text: "SGB - 1A",
-                                value: "SGB - 1A"
-                            }, {
-                                text: "SGB - 1B",
-                                value: "SGB - 1B"
-                            }, {
-                                text: "SGB - 1C",
-                                value: "SGB - 1C"
-                            }, {
-                                text: "SGB - 1D",
-                                value: "SGB - 1D"
-                            }, {
-                                text: "SGB - 1E",
-                                value: "SGB - 1E"
-                            }, {
-                                text: "SGB - 1F",
-                                value: "SGB - 1F"
-                            }, {
-                                text: "SGB - 1G",
-                                value: "SGB - 1G"
-                            }, {
-                                text: "SGB - 1H",
-                                value: "SGB - 1H"
-                            }, {
-                                text: "SGB - 2A",
-                                value: "SGB - 2A"
-                            }, {
-                                text: "SGB - 2B",
-                                value: "SGB - 2B"
-                            }, {
-                                text: "SGB - 2C",
-                                value: "SGB - 2C"
-                            }, {
-                                text: "SGB - 2D",
-                                value: "SGB - 2D"
-                            }, {
-                                text: "SGB - 2E",
-                                value: "SGB - 2E"
-                            }, {
-                                text: "SGB - 2F",
-                                value: "SGB - 2F"
-                            }, {
-                                text: "SGB - 2G",
-                                value: "SGB - 2G"
-                            }, {
-                                text: "SGB - 2H",
-                                value: "SGB - 2H"
-                            }, {
-                                text: "SGB - 3A",
-                                value: "SGB - 3A"
-                            }, {
-                                text: "SGB - 3B",
-                                value: "SGB - 3B"
-                            }, {
-                                text: "SGB - 3C",
-                                value: "SGB - 3C"
-                            }, {
-                                text: "SGB - 3D",
-                                value: "SGB - 3D"
-                            }, {
-                                text: "SGB - 3E",
-                                value: "SGB - 3E"
-                            }, {
-                                text: "SGB - 3F",
-                                value: "SGB - 3F"
-                            }, {
-                                text: "SGB - 3G",
-                                value: "SGB - 3G"
-                            }, {
-                                text: "SGB - 3H",
-                                value: "SGB - 3H"
-                            }, {
-                                text: "SGB - 4A",
-                                value: "SGB - 4A"
-                            }, {
-                                text: "SGB - 4B",
-                                value: "SGB - 4B"
-                            }, {
-                                text: "SGB - 4C",
-                                value: "SGB - 4C"
-                            }, {
-                                text: "SGB - 4D",
-                                value: "SGB - 4D"
-                            }, {
-                                text: "SGB - 4E",
-                                value: "SGB - 4E"
-                            }, {
-                                text: "SGB - 4F",
-                                value: "SGB - 4F"
-                            }, {
-                                text: "SGB - 4G",
-                                value: "SGB - 4G"
-                            }, {
-                                text: "SGB - 4H",
-                                value: "SGB - 4H"
-                            }, {
-                                text: "Special 1",
-                                value: "Special 1"
-                            }, {
-                                text: "Special 2",
-                                value: "Special 2"
-                            }, {
-                                text: "Special 3",
-                                value: "Special 3"
-                            }]
+                            model: [
+                                {
+                                    text: "GB - DMG",
+                                    value: "GB - DMG"
+                                },
+                                {
+                                    text: "GB - Pocket",
+                                    value: "GB - Pocket"
+                                },
+                                {
+                                    text: "GB - Light",
+                                    value: "GB - Light"
+                                },
+                                {
+                                    text: "GBC - Blue",
+                                    value: "GBC - Blue"
+                                },
+                                {
+                                    text: "GBC - Brown",
+                                    value: "GBC - Brown"
+                                },
+                                {
+                                    text: "GBC - Dark Blue",
+                                    value: "GBC - Dark Blue"
+                                },
+                                {
+                                    text: "GBC - Dark Brown",
+                                    value: "GBC - Dark Brown"
+                                },
+                                {
+                                    text: "GBC - Dark Green",
+                                    value: "GBC - Dark Green"
+                                },
+                                {
+                                    text: "GBC - Grayscale",
+                                    value: "GBC - Grayscale"
+                                },
+                                {
+                                    text: "GBC - Green",
+                                    value: "GBC - Green"
+                                },
+                                {
+                                    text: "GBC - Inverted",
+                                    value: "GBC - Inverted"
+                                },
+                                {
+                                    text: "GBC - Orange",
+                                    value: "GBC - Orange"
+                                },
+                                {
+                                    text: "GBC - Pastel Mix",
+                                    value: "GBC - Pastel Mix"
+                                },
+                                {
+                                    text: "GBC - Red",
+                                    value: "GBC - Red"
+                                },
+                                {
+                                    text: "GBC - Yellow",
+                                    value: "GBC - Yellow"
+                                },
+                                {
+                                    text: "SGB - 1A",
+                                    value: "SGB - 1A"
+                                },
+                                {
+                                    text: "SGB - 1B",
+                                    value: "SGB - 1B"
+                                },
+                                {
+                                    text: "SGB - 1C",
+                                    value: "SGB - 1C"
+                                },
+                                {
+                                    text: "SGB - 1D",
+                                    value: "SGB - 1D"
+                                },
+                                {
+                                    text: "SGB - 1E",
+                                    value: "SGB - 1E"
+                                },
+                                {
+                                    text: "SGB - 1F",
+                                    value: "SGB - 1F"
+                                },
+                                {
+                                    text: "SGB - 1G",
+                                    value: "SGB - 1G"
+                                },
+                                {
+                                    text: "SGB - 1H",
+                                    value: "SGB - 1H"
+                                },
+                                {
+                                    text: "SGB - 2A",
+                                    value: "SGB - 2A"
+                                },
+                                {
+                                    text: "SGB - 2B",
+                                    value: "SGB - 2B"
+                                },
+                                {
+                                    text: "SGB - 2C",
+                                    value: "SGB - 2C"
+                                },
+                                {
+                                    text: "SGB - 2D",
+                                    value: "SGB - 2D"
+                                },
+                                {
+                                    text: "SGB - 2E",
+                                    value: "SGB - 2E"
+                                },
+                                {
+                                    text: "SGB - 2F",
+                                    value: "SGB - 2F"
+                                },
+                                {
+                                    text: "SGB - 2G",
+                                    value: "SGB - 2G"
+                                },
+                                {
+                                    text: "SGB - 2H",
+                                    value: "SGB - 2H"
+                                },
+                                {
+                                    text: "SGB - 3A",
+                                    value: "SGB - 3A"
+                                },
+                                {
+                                    text: "SGB - 3B",
+                                    value: "SGB - 3B"
+                                },
+                                {
+                                    text: "SGB - 3C",
+                                    value: "SGB - 3C"
+                                },
+                                {
+                                    text: "SGB - 3D",
+                                    value: "SGB - 3D"
+                                },
+                                {
+                                    text: "SGB - 3E",
+                                    value: "SGB - 3E"
+                                },
+                                {
+                                    text: "SGB - 3F",
+                                    value: "SGB - 3F"
+                                },
+                                {
+                                    text: "SGB - 3G",
+                                    value: "SGB - 3G"
+                                },
+                                {
+                                    text: "SGB - 3H",
+                                    value: "SGB - 3H"
+                                },
+                                {
+                                    text: "SGB - 4A",
+                                    value: "SGB - 4A"
+                                },
+                                {
+                                    text: "SGB - 4B",
+                                    value: "SGB - 4B"
+                                },
+                                {
+                                    text: "SGB - 4C",
+                                    value: "SGB - 4C"
+                                },
+                                {
+                                    text: "SGB - 4D",
+                                    value: "SGB - 4D"
+                                },
+                                {
+                                    text: "SGB - 4E",
+                                    value: "SGB - 4E"
+                                },
+                                {
+                                    text: "SGB - 4F",
+                                    value: "SGB - 4F"
+                                },
+                                {
+                                    text: "SGB - 4G",
+                                    value: "SGB - 4G"
+                                },
+                                {
+                                    text: "SGB - 4H",
+                                    value: "SGB - 4H"
+                                },
+                                {
+                                    text: "Special 1",
+                                    value: "Special 1"
+                                },
+                                {
+                                    text: "Special 2",
+                                    value: "Special 2"
+                                },
+                                {
+                                    text: "Special 3",
+                                    value: "Special 3"
+                                }
+                            ]
                             textRole: "text"
                             valueRole: "value"
 
                             Component.onCompleted: {
-                                const value = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gb_internal_palette")
+                                const value = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gb_internal_palette");
 
                                 if (value) {
-                                    currentIndex = indexOfValue(value)
-                                    colorizationOption.currentValue = value
+                                    currentIndex = indexOfValue(value);
+                                    colorizationOption.currentValue = value;
                                 } else {
-                                    currentIndex = 0
+                                    currentIndex = 0;
                                 }
                             }
 
                             onActivated: function (index) {
-                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gb_internal_palette", currentValue)
-                                colorizationOption.currentValue = currentValue
+                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gb_internal_palette", currentValue);
+                                colorizationOption.currentValue = currentValue;
                             }
                         }
                     },
@@ -317,12 +371,9 @@ FocusScope {
                                 target: colorizationOption
 
                                 function onCurrentValueChanged() {
-                                    let filename = colorizationOption.currentValue ? colorizationOption.currentValue.toLowerCase() : ""
-                                    let removedSpacesText = filename.replace(
-                                        / /g,
-                                        ""
-                                    );
-                                    colorPreviewImg.source = "qrc:images/gbc-previews/" + removedSpacesText
+                                    let filename = colorizationOption.currentValue ? colorizationOption.currentValue.toLowerCase() : "";
+                                    let removedSpacesText = filename.replace(/ /g, "");
+                                    colorPreviewImg.source = "qrc:images/gbc-previews/" + removedSpacesText;
                                 }
                             }
                         }
@@ -342,21 +393,18 @@ FocusScope {
                         // description: "Enables simulation of LCD ghosting effects by blending the current and previous frames."
                         checked: emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
 
-                        // TODO
                         // Component.onCompleted: {
                         //     checked = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
                         // }
 
                         onCheckedChanged: {
                             if (checked) {
-                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_mix_frames", "accurate")
+                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_mix_frames", "accurate");
                             } else {
-                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_mix_frames", "disabled")
+                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_mix_frames", "disabled");
                             }
                         }
-
                     },
-
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
@@ -371,13 +419,12 @@ FocusScope {
 
                         onCheckedChanged: function () {
                             if (checked) {
-                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gbc_color_correction", "GBC only")
+                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gbc_color_correction", "GBC only");
                             } else {
-                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gbc_color_correction", "disabled")
+                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gbc_color_correction", "disabled");
                             }
                         }
                     },
-
                     Option {
                         Layout.fillWidth: true
                         // Layout.leftMargin: 36
@@ -388,45 +435,46 @@ FocusScope {
                         control: MyComboBox {
                             id: frontlightPositionComboBox
                             enabled: colorCorrectionOption.checked
-                            model: [{
-                                text: "Center of screen",
-                                value: "central"
-                            }, {
-                                text: "Above screen",
-                                value: "above screen"
-                            }, {
-                                text: "Below screen",
-                                value: "below screen"
-                            }]
+                            model: [
+                                {
+                                    text: "Center of screen",
+                                    value: "central"
+                                },
+                                {
+                                    text: "Above screen",
+                                    value: "above screen"
+                                },
+                                {
+                                    text: "Below screen",
+                                    value: "below screen"
+                                }
+                            ]
                             textRole: "text"
                             valueRole: "value"
 
                             Component.onCompleted: {
-                                const val = frontlightPositionComboBox.indexOfValue(emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gbc_frontlight_position"))
-                                console.log("VALUE: " + val)
-                                frontlightPositionComboBox.currentIndex = val
+                                const val = frontlightPositionComboBox.indexOfValue(emulator_config_manager.getOptionValueForPlatform(1, "gambatte_gbc_frontlight_position"));
+                                console.log("VALUE: " + val);
+                                frontlightPositionComboBox.currentIndex = val;
                             }
 
                             onActivated: function (index) {
                                 if (!currentValue) {
-                                    return
+                                    return;
                                 }
-                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gbc_frontlight_position", currentValue)
+                                emulator_config_manager.setOptionValueForPlatform(1, "gambatte_gbc_frontlight_position", currentValue);
                             }
                         }
                     },
-
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
                         color: "#333333"
                     },
-
                     Option {
                         Layout.fillWidth: true
                         label: "Darken screen to reduce harshness"
                     },
-
                     MySlider {
                         Layout.fillWidth: true
                         // Layout.preferredHeight: 48
@@ -439,13 +487,11 @@ FocusScope {
                         value: emulator_config_manager.getOptionValueForPlatform(1, "gambatte_dark_filter_level")
 
                         onValueChanged: function () {
-                            emulator_config_manager.setOptionValueForPlatform(1, "gambatte_dark_filter_level", value)
+                            emulator_config_manager.setOptionValueForPlatform(1, "gambatte_dark_filter_level", value);
                         }
                     }
-
                 ]
             }
-
         }
     }
 }

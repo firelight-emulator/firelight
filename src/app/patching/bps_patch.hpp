@@ -17,25 +17,22 @@ class BPSPatch final : public IRomPatch {
 public:
   explicit BPSPatch(const std::string &path);
   explicit BPSPatch(const std::vector<uint8_t> &data);
-  [[nodiscard]] std::vector<uint8_t>
-  patchRom(const std::vector<uint8_t> &data) const override;
+  [[nodiscard]] std::vector<uint8_t> patchRom(const std::vector<uint8_t> &data) const override;
 
   [[nodiscard]] uint32_t getInputFileSize() const { return m_inputFileSize; }
-  [[nodiscard]] uint32_t getOutputFileSize() const { return m_outputFileSize; }
-  [[nodiscard]] uint32_t getInputFileCRC32Checksum() const {
-    return m_inputFileCRC32Checksum;
-  }
-  [[nodiscard]] uint32_t getOutputFileCRC32Checksum() const {
-    return m_outputFileCRC32Checksum;
-  }
-  [[nodiscard]] uint32_t getPatchFileCRC32Checksum() const {
-    return m_patchFileCRC32Checksum;
-  }
 
-  [[nodiscard]] std::vector<BPSPatchAction> getActions() const {
-    return m_actions;
-  }
+  [[nodiscard]] uint32_t getOutputFileSize() const { return m_outputFileSize; }
+
+  [[nodiscard]] uint32_t getInputFileCRC32Checksum() const { return m_inputFileCRC32Checksum; }
+
+  [[nodiscard]] uint32_t getOutputFileCRC32Checksum() const { return m_outputFileCRC32Checksum; }
+
+  [[nodiscard]] uint32_t getPatchFileCRC32Checksum() const { return m_patchFileCRC32Checksum; }
+
+  [[nodiscard]] std::vector<BPSPatchAction> getActions() const { return m_actions; }
+
   [[nodiscard]] std::string getMetadata() const { return m_metadata; }
+
   [[nodiscard]] bool isValid() const override;
 
 private:

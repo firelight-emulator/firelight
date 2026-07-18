@@ -19,7 +19,7 @@ FocusScope {
         target: ShortcutDispatcher
 
         function onOpenRewindMenuRequested() {
-            root.createRewindPoints()
+            root.createRewindPoints();
         }
     }
 
@@ -31,12 +31,11 @@ FocusScope {
     // muted state so it doesn't fight the derived pause/fast-forward muting
     property bool startMuted: false
 
-    signal closing()
-    signal aboutToRunFrame()
+    signal closing
+    signal aboutToRunFrame
 
     focus: true
 
-    // TODO
     // In-game shortcut scope while this page is the active stack item; an
     // overlay pushed on top (or leaving) drops back to menu scope. Without this
     // the engine stays in menu scope and only ScopeAlways shortcuts (e.g.
@@ -51,10 +50,10 @@ FocusScope {
     // Consume any per-launch start knobs (CLI --mute / --pause). These are
     // one-shot on StartupOptions, so only the CLI-launched game is affected
     Component.onCompleted: {
-        InputService.setShortcutsInGame(shortcutsInGame)
-        root.startMuted = StartupOptions.consumeStartMuted()
+        InputService.setShortcutsInGame(shortcutsInGame);
+        root.startMuted = StartupOptions.consumeStartMuted();
         if (StartupOptions.consumeStartPaused()) {
-            root.paused = true
+            root.paused = true;
         }
     }
 
@@ -64,19 +63,18 @@ FocusScope {
         repeat: false
 
         onTriggered: {
-            redThing.opacity = 0.7
+            redThing.opacity = 0.7;
         }
     }
 
     Keys.onDigit9Pressed: {
-        emulator.incrementPlaybackMultiplier()
+        emulator.incrementPlaybackMultiplier();
     }
 
     Keys.onDigit8Pressed: {
-        emulator.decrementPlaybackMultiplier()
+        emulator.decrementPlaybackMultiplier();
     }
 
-    // TODO
     // Keys.onPressed: function(event) {
     //     console.log("pressed: " + event.key)
     //     if (event.key === Qt.Key_Control) {
@@ -99,10 +97,10 @@ FocusScope {
         target: window_resize_handler
 
         function onWindowResizeStarted() {
-            root.windowResizing = true
+            root.windowResizing = true;
         }
         function onWindowResizeFinished() {
-            root.windowResizing = false
+            root.windowResizing = false;
         }
     }
 
@@ -114,34 +112,34 @@ FocusScope {
     property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
 
     function startGame() {
-        emulator.startGame()
+        emulator.startGame();
     }
 
     signal rewindPointsReady(var points)
 
-    signal gameReady()
+    signal gameReady
 
     function createRewindPoints() {
         if (!EmulationService.rewindEnabled) {
-            return
+            return;
         }
-        emulator.createRewindPoints()
+        emulator.createRewindPoints();
     }
 
     function loadRewindPoint(index) {
-        emulator.loadRewindPoint(index)
+        emulator.loadRewindPoint(index);
     }
 
     function loadSuspendPoint(index) {
-        emulator.loadSuspendPoint(index)
+        emulator.loadSuspendPoint(index);
     }
 
     function writeSuspendPoint(index) {
-        emulator.writeSuspendPoint(index)
+        emulator.writeSuspendPoint(index);
     }
 
     function undoLoadSuspendPoint() {
-        emulator.undoLastLoadSuspendPoint()
+        emulator.undoLastLoadSuspendPoint();
     }
 
     Rectangle {
@@ -161,28 +159,28 @@ FocusScope {
         layer.enabled: true
 
         property real aspectRatio: {
-            let mode = EmulationService.aspectRatioMode
-             if (mode === "emulator-corrected") {
-                 return emulator.videoAspectRatio
-             } else {
-                 return emulator.trueAspectRatio
-             }
+            let mode = EmulationService.aspectRatioMode;
+            if (mode === "emulator-corrected") {
+                return emulator.videoAspectRatio;
+            } else {
+                return emulator.trueAspectRatio;
+            }
         }
 
         property real fitScale: {
             if (!emulator.videoWidth || !emulator.videoHeight) {
-                return 1.0 // Avoid division by zero
+                return 1.0; // Avoid division by zero
             }
 
             // Calculate the ratio of the container itself
-            const containerRatio = root.width / root.height
+            const containerRatio = root.width / root.height;
 
             // If the container is wider than the target aspect ratio, fit to height
             // Otherwise, fit to width
             if (containerRatio > aspectRatio) {
-                return root.height / (emulator.videoWidth / aspectRatio)
+                return root.height / (emulator.videoWidth / aspectRatio);
             } else {
-                return root.width / emulator.videoWidth
+                return root.width / emulator.videoWidth;
             }
         }
 
@@ -191,42 +189,42 @@ FocusScope {
 
         property int integerScale: {
             if (!sourceWidth || !sourceHeight) {
-                return 1 // Avoid division by zero
+                return 1; // Avoid division by zero
             }
             // Find how many times our correct shape fits into the container
-            const widthScale = root.width / sourceWidth
-            const heightScale = root.height / sourceHeight
+            const widthScale = root.width / sourceWidth;
+            const heightScale = root.height / sourceHeight;
 
-            let intScale = EmulationService.integerScale
+            let intScale = EmulationService.integerScale;
             if (intScale === 0) {
-                intScale = Math.max(widthScale, heightScale) // If integer scale is 0, treat it as "unlimited"
+                intScale = Math.max(widthScale, heightScale); // If integer scale is 0, treat it as "unlimited"
             }
 
             // Take the smaller of the two, and floor it to get the largest whole number scale
-            return Math.floor(Math.min(intScale, Math.min(widthScale, heightScale)))
+            return Math.floor(Math.min(intScale, Math.min(widthScale, heightScale)));
         }
 
         width: {
             if (EmulationService.pictureMode === "stretch") {
-                return root.width
+                return root.width;
             } else if (EmulationService.pictureMode === "aspect-ratio-fill") {
-                return emulator.videoWidth * fitScale
+                return emulator.videoWidth * fitScale;
             } else if (EmulationService.pictureMode === "integer-scale") {
-                return sourceWidth * integerScale
+                return sourceWidth * integerScale;
             }
 
-            return emulator.videoWidth
+            return emulator.videoWidth;
         }
         height: {
             if (EmulationService.pictureMode === "stretch") {
-                return root.height
+                return root.height;
             } else if (EmulationService.pictureMode === "aspect-ratio-fill") {
-                return (emulator.videoWidth * fitScale) / aspectRatio
-            } else if (EmulationService.pictureMode === "integer-scale"){
-                return sourceHeight * integerScale
+                return (emulator.videoWidth * fitScale) / aspectRatio;
+            } else if (EmulationService.pictureMode === "integer-scale") {
+                return sourceHeight * integerScale;
             }
 
-            return emulator.videoHeight
+            return emulator.videoHeight;
         }
 
         rewindEnabled: EmulationService.rewindEnabled
@@ -234,22 +232,22 @@ FocusScope {
         smooth: false
 
         onAboutToRunFrame: {
-            root.aboutToRunFrame()
+            root.aboutToRunFrame();
         }
 
         onRewindPointsReady: function (points) {
             overlayStack.pushItem(rewindPage, {
                 model: points,
                 aspectRatio: emulator.aspectRatio
-            }, StackView.Immediate)
-            overlayStack.forceActiveFocus()
+            }, StackView.Immediate);
+            overlayStack.forceActiveFocus();
         }
 
-        onPlaybackMultiplierChanged: function() {
+        onPlaybackMultiplierChanged: function () {
             if (emulator.playbackMultiplier === 1) {
-                timer.running = true
+                timer.running = true;
             } else {
-                speedIndicator.opacity = 1
+                speedIndicator.opacity = 1;
             }
         }
     }
@@ -258,7 +256,7 @@ FocusScope {
         id: speedIndicator
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.margins:16
+        anchors.margins: 16
         width: 100
         height: 40
         padding: 12
@@ -278,7 +276,7 @@ FocusScope {
             running: false
             repeat: false
             onTriggered: {
-                speedIndicator.opacity = 0
+                speedIndicator.opacity = 0;
             }
         }
 
@@ -314,14 +312,14 @@ FocusScope {
     }
 
     GameLaunchPopup {
-        objectName: "Game Launch Popup"
         id: gameLaunchPopup
+        objectName: "Game Launch Popup"
 
         Connections {
             target: achievement_manager
 
             function onGameLoadSucceeded(imageUrl, title, numEarned, numTotal) {
-                gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore)
+                gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore);
             }
         }
     }
@@ -333,31 +331,31 @@ FocusScope {
         property bool isPopupVisible: false
 
         function add(popup) {
-            popups.push(popup)
+            popups.push(popup);
             if (!isPopupVisible) {
-                displayNext()
+                displayNext();
             }
         }
 
         function displayNext() {
             if (isPopupVisible || popups.length === 0) {
-                return
+                return;
             }
-            isPopupVisible = true
-            const popup = popups[0]
-            popup.onClosed.connect(onPopupClosed)
-            popup.open()
+            isPopupVisible = true;
+            const popup = popups[0];
+            popup.onClosed.connect(onPopupClosed);
+            popup.open();
         }
 
         function onPopupClosed() {
-            const closedPopup = popups.shift()
+            const closedPopup = popups.shift();
             if (closedPopup) {
-                closedPopup.onClosed.disconnect(onPopupClosed)
-                closedPopup.destroy()
+                closedPopup.onClosed.disconnect(onPopupClosed);
+                closedPopup.destroy();
             }
-            isPopupVisible = false
+            isPopupVisible = false;
             if (popups.length > 0) {
-                displayNext()
+                displayNext();
             }
         }
 
@@ -366,7 +364,7 @@ FocusScope {
 
             function onAchievementUnlocked(imageUrl, name, description) {
                 if (!achievement_manager.unlockNotificationsEnabled) {
-                    return
+                    return;
                 }
 
                 // This component ID should point to a Component object
@@ -377,12 +375,12 @@ FocusScope {
                     description: description
                 });
 
-                achievementPopupQueue.add(popup)
+                achievementPopupQueue.add(popup);
             }
 
             function onGameBeaten(imageUrl, name, description) {
                 if (!achievement_manager.unlockNotificationsEnabled) {
-                    return
+                    return;
                 }
 
                 // This component ID should point to a Component object
@@ -394,12 +392,12 @@ FocusScope {
                     splashText: "All achievements unlocked!"
                 });
 
-                achievementPopupQueue.add(popup)
+                achievementPopupQueue.add(popup);
             }
 
             function onGameMastered(imageUrl, name, description) {
                 if (!achievement_manager.unlockNotificationsEnabled) {
-                    return
+                    return;
                 }
 
                 // This component ID should point to a Component object
@@ -411,15 +409,14 @@ FocusScope {
                     splashText: "Game mastered!"
                 });
 
-                achievementPopupQueue.add(popup)
+                achievementPopupQueue.add(popup);
             }
         }
     }
 
     Component {
         id: achievementUnlockIndicatorComponent
-        AchievementUnlockIndicator {
-        }
+        AchievementUnlockIndicator {}
     }
 
     AchievementProgressIndicator {
@@ -430,7 +427,7 @@ FocusScope {
 
             function onAchievementProgressUpdated(imageUrl, id, name, description, current, desired) {
                 if (achievement_manager.progressNotificationsEnabled) {
-                    achievementProgressIndicator.openWith(imageUrl, name, description, current, desired)
+                    achievementProgressIndicator.openWith(imageUrl, name, description, current, desired);
                 }
             }
         }
@@ -455,12 +452,11 @@ FocusScope {
     Component {
         id: rewindPage
         RewindMenu {
-            onRewindPointSelected: function(index) {
-                emulator.loadRewindPoint(index)
-                overlayStack.popCurrentItem()
-                root.forceActiveFocus()
+            onRewindPointSelected: function (index) {
+                emulator.loadRewindPoint(index);
+                overlayStack.popCurrentItem();
+                root.forceActiveFocus();
             }
         }
     }
-
 }

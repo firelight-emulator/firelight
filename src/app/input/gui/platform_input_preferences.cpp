@@ -7,8 +7,7 @@
 
 namespace firelight::input {
 
-PlatformInputPreferences::PlatformInputPreferences(QObject *parent)
-    : QObject(parent) {}
+PlatformInputPreferences::PlatformInputPreferences(QObject *parent) : QObject(parent) {}
 
 int PlatformInputPreferences::preferredType(const int platformId) const {
   const auto repo = getControllerProfileRepository();
@@ -18,8 +17,7 @@ int PlatformInputPreferences::preferredType(const int platformId) const {
   return repo->getPlatformPreferredType(platformId).value_or(-1);
 }
 
-void PlatformInputPreferences::setPreferredType(const int platformId,
-                                                const int gamepadType) {
+void PlatformInputPreferences::setPreferredType(const int platformId, const int gamepadType) {
   const auto repo = getControllerProfileRepository();
   if (!repo) {
     return;

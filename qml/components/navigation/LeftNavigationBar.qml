@@ -6,7 +6,7 @@ import Firelight 1.0
 Pane {
     id: root
 
-    signal powerButtonClicked()
+    signal powerButtonClicked
 
     // implicitWidth: 320
     padding: 12
@@ -43,7 +43,6 @@ Pane {
 
     background: Rectangle {
         color: "transparent"
-
     }
 
     contentItem: ColumnLayout {
@@ -75,7 +74,7 @@ Pane {
             checked: Router.currentRoute.startsWith("/quick-menu")
             onToggled: {
                 if (toggled) {
-                    Router.navigateTo("/quick-menu")
+                    Router.navigateTo("/quick-menu");
                 }
             }
         }
@@ -94,7 +93,7 @@ Pane {
             checked: Router.currentRoute.startsWith("/library")
             onToggled: {
                 if (toggled) {
-                    Router.navigateTo("/library")
+                    Router.navigateTo("/library");
                 }
             }
         }
@@ -111,7 +110,7 @@ Pane {
             checked: Router.currentRoute.startsWith("/shop")
             onToggled: {
                 if (toggled) {
-                    Router.navigateTo("/shop")
+                    Router.navigateTo("/shop");
                 }
             }
         }
@@ -128,7 +127,7 @@ Pane {
             checked: Router.currentRoute.startsWith("/controllers")
             onToggled: {
                 if (toggled) {
-                    Router.navigateTo("/controllers")
+                    Router.navigateTo("/controllers");
                 }
             }
         }
@@ -145,7 +144,7 @@ Pane {
             checked: Router.currentRoute.startsWith("/activity")
             onToggled: {
                 if (toggled) {
-                    Router.navigateTo("/activity")
+                    Router.navigateTo("/activity");
                 }
             }
         }
@@ -162,7 +161,7 @@ Pane {
             checked: Router.currentRoute.startsWith("/netplay")
             onToggled: {
                 if (toggled) {
-                    Router.navigateTo("/netplay")
+                    Router.navigateTo("/netplay");
                 }
             }
         }
@@ -184,12 +183,12 @@ Pane {
             checked: Router.currentRoute.startsWith("/settings")
             onClicked: {
                 if (toggled) {
-                    return
+                    return;
                 }
             }
             onToggled: {
                 if (toggled) {
-                    Router.navigateTo("/settings")
+                    Router.navigateTo("/settings");
                 }
             }
         }
@@ -206,7 +205,7 @@ Pane {
             checked: Router.currentRoute.startsWith("/gallery")
             onToggled: {
                 if (toggled) {
-                    Router.navigateTo("/gallery")
+                    Router.navigateTo("/gallery");
                 }
             }
         }
@@ -223,7 +222,7 @@ Pane {
             checked: Router.currentRoute.startsWith("/help")
             onToggled: {
                 if (toggled) {
-                    Router.navigateTo("/help")
+                    Router.navigateTo("/help");
                 }
             }
         }
@@ -238,7 +237,7 @@ Pane {
             checkable: false
 
             onClicked: {
-                root.powerButtonClicked()
+                root.powerButtonClicked();
             }
         }
     }

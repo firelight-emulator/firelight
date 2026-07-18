@@ -7,16 +7,16 @@ import QtCharts 2.7
 FocusScope {
     id: root
 
-    signal playPressed()
+    signal playPressed
 
     required property int entryId
     property var achievements: null
     property var entryData: {}
 
     Component.onCompleted: {
-        entryData = library_database.getLibraryEntryJson(entryId)
+        entryData = library_database.getLibraryEntryJson(entryId);
 
-        root.achievements = achievement_manager.getAchievementsModelForGameId(entryData.game_id)
+        root.achievements = achievement_manager.getAchievementsModelForGameId(entryData.game_id);
     }
 
     ColumnLayout {
@@ -68,7 +68,7 @@ FocusScope {
                     font.pixelSize: AppStyle.fontSizeMedium
                 }
                 onClicked: {
-                    root.playPressed()
+                    root.playPressed();
                 }
             }
         }
@@ -101,7 +101,7 @@ FocusScope {
                     Layout.preferredHeight: 40
 
                     onCurrentIndexChanged: function () {
-                        view.setCurrentIndex(currentIndex)
+                        view.setCurrentIndex(currentIndex);
                     }
                 }
 
@@ -118,7 +118,7 @@ FocusScope {
                     clip: true
 
                     onCurrentIndexChanged: function () {
-                        bar.setCurrentIndex(currentIndex)
+                        bar.setCurrentIndex(currentIndex);
                     }
 
                     EntrySummaryPage {

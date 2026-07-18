@@ -1,12 +1,11 @@
 #include "game_image_provider.hpp"
+
 #include <QUuid>
 
 namespace firelight::gui {
 GameImageProvider::GameImageProvider() : QQuickImageProvider(Image) {}
 
-QImage GameImageProvider::requestImage(const QString &id, QSize *size,
-                                       const QSize &requestedSize) {
-  // TODO
+QImage GameImageProvider::requestImage(const QString &id, QSize *size, const QSize &requestedSize) {
   // Copy the stored image out under the lock, then scale outside it: QImage is
   // copy-on-write, so the copy is cheap and stays valid even if another thread
   // replaces the map entry while we scale
@@ -28,13 +27,11 @@ QImage GameImageProvider::requestImage(const QString &id, QSize *size,
   }
 
   if (requestedSize.height() > 0) {
-    return image.scaledToHeight(requestedSize.height(),
-                                Qt::SmoothTransformation);
+    return image.scaledToHeight(requestedSize.height(), Qt::SmoothTransformation);
   }
 
   if (requestedSize.width() > 0) {
-    return image.scaledToWidth(requestedSize.width(),
-                               Qt::SmoothTransformation);
+    return image.scaledToWidth(requestedSize.width(), Qt::SmoothTransformation);
   }
 
   return image;

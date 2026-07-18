@@ -36,34 +36,21 @@ QString phaseName(const netplay::GamePhase phase) {
 }
 } // namespace
 
-QtNetworkServiceProxy::QtNetworkServiceProxy(netplay::NetplayService &service,
-                                             QObject *parent)
+QtNetworkServiceProxy::QtNetworkServiceProxy(netplay::NetplayService &service, QObject *parent)
     : QObject(parent), m_service(service) {
   netplay::SessionEvents events;
-  events.lobbyChanged = [this] {
-    onGuiThread([this] { emit lobbyStateChanged(); });
-  };
-  events.slotsChanged = [this] {
-    onGuiThread([this] { emit slotsChanged(); });
-  };
-  events.gameChanged = [this] {
-    onGuiThread([this] { emit gameChanged(); });
-  };
-  events.phaseChanged = [this](netplay::GamePhase) {
-    onGuiThread([this] { emit phaseChanged(); });
-  };
-  events.chatMessageAdded = [this](const netplay::ChatMessage &) {
-    onGuiThread([this] { emit chatChanged(); });
-  };
+  events.lobbyChanged = [this] { onGuiThread([this] { emit lobbyStateChanged(); }); };
+  events.slotsChanged = [this] { onGuiThread([this] { emit slotsChanged(); }); };
+  events.gameChanged = [this] { onGuiThread([this] { emit gameChanged(); }); };
+  events.phaseChanged = [this](netplay::GamePhase) { onGuiThread([this] { emit phaseChanged(); }); };
+  events.chatMessageAdded = [this](const netplay::ChatMessage &) { onGuiThread([this] { emit chatChanged(); }); };
   events.peerReady = [this](netplay::PlayerId, netplay::IPeerLink &) {
     onGuiThread([this] {
       emit lobbyStateChanged();
       emit slotsChanged();
     });
   };
-  events.peerLost = [this](netplay::PlayerId) {
-    onGuiThread([this] { emit lobbyStateChanged(); });
-  };
+  events.peerLost = [this](netplay::PlayerId) { onGuiThread([this] { emit lobbyStateChanged(); }); };
   events.lobbyEnded = [this](const std::string &reason) {
     onGuiThread([this, reason] {
       emit lobbyStateChanged();
@@ -79,33 +66,21 @@ QtNetworkServiceProxy::QtNetworkServiceProxy(netplay::NetplayService &service,
   m_service.setEvents(std::move(events));
 }
 
-QString QtNetworkServiceProxy::signInState() const {
-  return signInStateName(m_service.signInState());
-}
+QString QtNetworkServiceProxy::signInState() const { return signInStateName(m_service.signInState()); }
 
-QString QtNetworkServiceProxy::providerName() const {
-  return QString::fromStdString(m_service.providerName());
-}
+QString QtNetworkServiceProxy::providerName() const { return QString::fromStdString(m_service.providerName()); }
 
 QString QtNetworkServiceProxy::playerName() const {
   return QString::fromStdString(m_service.localIdentity().displayName);
 }
 
-bool QtNetworkServiceProxy::inLobby() const {
-  return m_service.session().inLobby();
-}
+bool QtNetworkServiceProxy::inLobby() const { return m_service.session().inLobby(); }
 
-bool QtNetworkServiceProxy::isHost() const {
-  return m_service.session().isHost();
-}
+bool QtNetworkServiceProxy::isHost() const { return m_service.session().isHost(); }
 
-QString QtNetworkServiceProxy::joinCode() const {
-  return QString::fromStdString(m_service.session().joinCode());
-}
+QString QtNetworkServiceProxy::joinCode() const { return QString::fromStdString(m_service.session().joinCode()); }
 
-QString QtNetworkServiceProxy::sessionPhase() const {
-  return phaseName(m_service.session().phase());
-}
+QString QtNetworkServiceProxy::sessionPhase() const { return phaseName(m_service.session().phase()); }
 
 QString QtNetworkServiceProxy::gameName() const {
   const auto game = m_service.session().game();
@@ -122,13 +97,9 @@ int QtNetworkServiceProxy::gamePlatformId() const {
   return game ? game->platformId : 0;
 }
 
-bool QtNetworkServiceProxy::hasGame() const {
-  return m_service.session().game().has_value();
-}
+bool QtNetworkServiceProxy::hasGame() const { return m_service.session().game().has_value(); }
 
-int QtNetworkServiceProxy::memberCount() const {
-  return static_cast<int>(m_service.session().lobby().members.size());
-}
+int QtNetworkServiceProxy::memberCount() const { return static_cast<int>(m_service.session().lobby().members.size()); }
 
 int QtNetworkServiceProxy::readySlotCount() const {
   int count = 0;
@@ -140,9 +111,7 @@ int QtNetworkServiceProxy::readySlotCount() const {
   return count;
 }
 
-int QtNetworkServiceProxy::occupiedSlotCount() const {
-  return m_service.session().slotTable().occupiedCount();
-}
+int QtNetworkServiceProxy::occupiedSlotCount() const { return m_service.session().slotTable().occupiedCount(); }
 
 void QtNetworkServiceProxy::setPlayerName(const QString &name) {
   m_service.setPlayerName(name.trimmed().toStdString());
@@ -176,20 +145,18 @@ void QtNetworkServiceProxy::hostLobby() {
 
 void QtNetworkServiceProxy::joinLobby(const QString &joinCode) {
   setBusy(true);
-  m_service.joinLobby(
-      joinCode.trimmed().toStdString(),
-      [this](const bool ok, const std::string &error) {
-        onGuiThread([this, ok, error] {
-          setBusy(false);
-          emit lobbyStateChanged();
-          emit slotsChanged();
-          emit gameChanged();
-          emit phaseChanged();
-          if (!ok) {
-            emit errorOccurred(QString::fromStdString(error));
-          }
-        });
-      });
+  m_service.joinLobby(joinCode.trimmed().toStdString(), [this](const bool ok, const std::string &error) {
+    onGuiThread([this, ok, error] {
+      setBusy(false);
+      emit lobbyStateChanged();
+      emit slotsChanged();
+      emit gameChanged();
+      emit phaseChanged();
+      if (!ok) {
+        emit errorOccurred(QString::fromStdString(error));
+      }
+    });
+  });
 }
 
 void QtNetworkServiceProxy::leaveLobby() {
@@ -201,8 +168,7 @@ void QtNetworkServiceProxy::leaveLobby() {
   emit chatChanged();
 }
 
-void QtNetworkServiceProxy::assignSlot(const int slot, const QString &memberId,
-                                       const int localPadIndex) {
+void QtNetworkServiceProxy::assignSlot(const int slot, const QString &memberId, const int localPadIndex) {
   bool ok = false;
   const auto id = memberId.toULongLong(&ok);
   if (ok) {
@@ -210,17 +176,11 @@ void QtNetworkServiceProxy::assignSlot(const int slot, const QString &memberId,
   }
 }
 
-void QtNetworkServiceProxy::clearSlot(const int slot) {
-  m_service.clearSlot(slot);
-}
+void QtNetworkServiceProxy::clearSlot(const int slot) { m_service.clearSlot(slot); }
 
-void QtNetworkServiceProxy::setReady(const bool ready) {
-  m_service.setReady(ready);
-}
+void QtNetworkServiceProxy::setReady(const bool ready) { m_service.setReady(ready); }
 
-void QtNetworkServiceProxy::selectGame(const int entryId) {
-  m_service.selectGameByEntryId(entryId);
-}
+void QtNetworkServiceProxy::selectGame(const int entryId) { m_service.selectGameByEntryId(entryId); }
 
 void QtNetworkServiceProxy::sendChat(const QString &text) {
   const auto trimmed = text.trimmed();
@@ -239,9 +199,7 @@ void QtNetworkServiceProxy::confirmLaunch() { m_service.confirmLaunch(); }
 
 void QtNetworkServiceProxy::endSession() { m_service.endGame(); }
 
-int QtNetworkServiceProxy::selectedGameEntryId() const {
-  return m_service.selectedEntryId();
-}
+int QtNetworkServiceProxy::selectedGameEntryId() const { return m_service.selectedEntryId(); }
 
 void QtNetworkServiceProxy::attachStreamItem(QObject *item) {
   auto *streamItem = qobject_cast<NetplayStreamItem *>(item);
@@ -252,12 +210,11 @@ void QtNetworkServiceProxy::attachStreamItem(QObject *item) {
   // QPointer: the item is QML-owned and may be destroyed while frames are in
   // flight; presentFrame marshals internally, so a stale call is a no-op
   QPointer<NetplayStreamItem> guard(streamItem);
-  m_service.streamReceiver().setFrameSink(
-      [guard](firelight::media::StreamVideoFrame frame) {
-        if (auto *target = guard.data()) {
-          target->presentFrame(std::move(frame));
-        }
-      });
+  m_service.streamReceiver().setFrameSink([guard](firelight::media::StreamVideoFrame frame) {
+    if (auto *target = guard.data()) {
+      target->presentFrame(std::move(frame));
+    }
+  });
 }
 
 void QtNetworkServiceProxy::detachStreamItem(QObject *item) {

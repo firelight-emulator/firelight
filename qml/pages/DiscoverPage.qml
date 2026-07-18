@@ -3,15 +3,13 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQml.Models
 
-
 Flickable {
     id: root
 
     contentHeight: theColumn.height
     boundsBehavior: Flickable.StopAtBounds
 
-    ScrollBar.vertical: ScrollBar {
-    }
+    ScrollBar.vertical: ScrollBar {}
 
     RowLayout {
         id: contentRow
@@ -89,8 +87,7 @@ Flickable {
                     readonly property int cellContentWidth: 180 + cellSpacing
                     readonly property int cellContentHeight: 260 + cellSpacing
 
-                    populate: Transition {
-                    }
+                    populate: Transition {}
 
                     currentIndex: 0
 
@@ -98,8 +95,7 @@ Flickable {
                     boundsBehavior: Flickable.StopAtBounds
                     keyNavigationEnabled: true
 
-                    highlight: Item {
-                    }
+                    highlight: Item {}
 
                     delegate: Item {
                         id: rootItem
@@ -182,11 +178,11 @@ Flickable {
                             }
 
                             onClicked: function () {
-                                let targetInLibrary = false
+                                let targetInLibrary = false;
                                 for (let i = 0; i < model.rom_ids.length; i++) {
                                     if (library_model.isRomInLibrary(model.rom_ids[i])) {
-                                        targetInLibrary = true
-                                        break
+                                        targetInLibrary = true;
+                                        break;
                                     }
                                 }
 
@@ -198,9 +194,9 @@ Flickable {
                                     targetGameName: model.target_game_name,
                                     modInLibrary: library_model.isModInLibrary(model.id),
                                     targetInLibrary: targetInLibrary
-                                })
+                                });
 
-                                // rootItem.GridView.view.currentIndex = model.index
+                            // rootItem.GridView.view.currentIndex = model.index
                             }
                         }
                     }
@@ -218,7 +214,6 @@ Flickable {
     Component {
         id: contentThing
 
-        StoreContent {
-        }
+        StoreContent {}
     }
 }

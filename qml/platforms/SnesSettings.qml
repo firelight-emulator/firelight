@@ -21,7 +21,6 @@ FocusScope {
                     background: Rectangle {
                         color: enabled ? (backButton.hovered ? "#404143" : "transparent") : "transparent"
                         radius: height / 2
-
                     }
 
                     Layout.fillHeight: true
@@ -39,7 +38,7 @@ FocusScope {
                     checkable: false
 
                     onClicked: {
-                        root.StackView.view.pop()
+                        root.StackView.view.pop();
                     }
                 }
 

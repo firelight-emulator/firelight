@@ -14,7 +14,6 @@ struct EncodedPacket {
   bool keyframe = false;
 };
 
-// TODO
 // A self-contained, ffmpeg-free description of a clip ready to be written to an
 // mp4. `video` is a run of H.264 packets that begins on a keyframe; `extradata`
 // is the codec's SPS/PPS needed to set up the output stream when stream-copying

@@ -7,10 +7,7 @@
 
 namespace firelight::input {
 
-ProfileListModel::ProfileListModel(QObject *parent)
-    : QAbstractListModel(parent) {
-  refresh();
-}
+ProfileListModel::ProfileListModel(QObject *parent) : QAbstractListModel(parent) { refresh(); }
 
 int ProfileListModel::rowCount(const QModelIndex &parent) const {
   if (parent.isValid()) {
@@ -44,9 +41,8 @@ QVariant ProfileListModel::data(const QModelIndex &index, int role) const {
 
 QHash<int, QByteArray> ProfileListModel::roleNames() const {
   return {
-      {ProfileId, "profileId"}, {Name, "name"},
-      {Builtin, "builtin"},     {BasedOnType, "basedOnType"},
-      {Icon, "icon"},         {IsKeyboard, "isKeyboard"},
+      {ProfileId, "profileId"},     {Name, "name"}, {Builtin, "builtin"},
+      {BasedOnType, "basedOnType"}, {Icon, "icon"}, {IsKeyboard, "isKeyboard"},
   };
 }
 
@@ -124,12 +120,10 @@ bool ProfileListModel::exportProfile(const int id, const QUrl &fileUrl) {
     return false;
   }
 
-  const auto path = fileUrl.isLocalFile() ? fileUrl.toLocalFile()
-                                          : fileUrl.toString();
+  const auto path = fileUrl.isLocalFile() ? fileUrl.toLocalFile() : fileUrl.toString();
   QFile file(path);
   if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-    spdlog::error("Failed to open {} for profile export",
-                  path.toStdString());
+    spdlog::error("Failed to open {} for profile export", path.toStdString());
     return false;
   }
   file.write(QByteArray::fromStdString(json));
@@ -142,12 +136,10 @@ int ProfileListModel::importProfile(const QUrl &fileUrl) {
     return -1;
   }
 
-  const auto path = fileUrl.isLocalFile() ? fileUrl.toLocalFile()
-                                          : fileUrl.toString();
+  const auto path = fileUrl.isLocalFile() ? fileUrl.toLocalFile() : fileUrl.toString();
   QFile file(path);
   if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-    spdlog::error("Failed to open {} for profile import",
-                  path.toStdString());
+    spdlog::error("Failed to open {} for profile import", path.toStdString());
     return -1;
   }
   const auto json = file.readAll().toStdString();

@@ -7,8 +7,7 @@ namespace firelight::netplay {
 
 TEST(Base64Test, RoundTripsIncludingPadding) {
   const std::vector<std::string> samples{
-      "", "a", "ab", "abc", "abcd", "v=0\r\no=- 4611731 2 IN IP4 127.0.0.1",
-      std::string(5000, 'x')};
+      "", "a", "ab", "abc", "abcd", "v=0\r\no=- 4611731 2 IN IP4 127.0.0.1", std::string(5000, 'x')};
   for (const auto &text : samples) {
     const auto decoded = base64DecodeText(base64EncodeText(text));
     ASSERT_TRUE(decoded.has_value());
@@ -62,18 +61,10 @@ TEST(SignalChunkerTest, SendersAndSignalsDoNotMix) {
 
 TEST(SignalChunkerTest, RejectsNonsenseChunks) {
   SignalReassembler reassembler;
-  EXPECT_FALSE(reassembler
-                   .accept(1, SignalChunk{.signalId = "x",
-                                          .index = 5,
-                                          .total = 2,
-                                          .content = "zz"})
-                   .has_value());
-  EXPECT_FALSE(reassembler
-                   .accept(1, SignalChunk{.signalId = "x",
-                                          .index = 0,
-                                          .total = 0,
-                                          .content = "zz"})
-                   .has_value());
+  EXPECT_FALSE(
+      reassembler.accept(1, SignalChunk{.signalId = "x", .index = 5, .total = 2, .content = "zz"}).has_value());
+  EXPECT_FALSE(
+      reassembler.accept(1, SignalChunk{.signalId = "x", .index = 0, .total = 0, .content = "zz"}).has_value());
 }
 
 TEST(SignalChunkerTest, SignalIdShape) {

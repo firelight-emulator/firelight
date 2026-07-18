@@ -25,27 +25,20 @@ public:
   [[nodiscard]] std::vector<Entry> listEntries() const;
 
   // Reads the full bytes of the entry with the exact path name (empty if none)
-  [[nodiscard]] std::vector<uint8_t>
-  readEntryByPath(const std::string &entryPath) const;
+  [[nodiscard]] std::vector<uint8_t> readEntryByPath(const std::string &entryPath) const;
 
   // Reads the full bytes of the first entry whose base name matches
   // (case-insensitive); empty if none
-  [[nodiscard]] std::vector<uint8_t>
-  readEntryByBaseName(const std::string &baseNameLower) const;
+  [[nodiscard]] std::vector<uint8_t> readEntryByBaseName(const std::string &baseNameLower) const;
 
   // Streams every entry whose lower-cased base name is in `wantedBaseNamesLower`
   // to `destDir/<baseName>`. Returns false if the archive could not be opened
-  bool extractEntries(const std::set<std::string> &wantedBaseNamesLower,
-                      const std::filesystem::path &destDir) const;
+  bool extractEntries(const std::set<std::string> &wantedBaseNamesLower, const std::filesystem::path &destDir) const;
 
-  // TODO
   // Single-pass iteration: invokes `fn` for each entry with a lazy reader that,
   // when called, returns the current entry's bytes. Entries whose reader is not
   // invoked are skipped without reading their payload
-  void forEachEntry(
-      const std::function<void(const Entry &,
-                               const std::function<std::vector<uint8_t>()> &)>
-          &fn) const;
+  void forEachEntry(const std::function<void(const Entry &, const std::function<std::vector<uint8_t>()> &)> &fn) const;
 
 private:
   std::string m_archivePath;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <QQuickImageProvider>
-
 #include <mutex>
 
 namespace firelight::gui {
@@ -11,8 +10,7 @@ class GameImageProvider : public QQuickImageProvider {
 public:
   GameImageProvider();
 
-  QImage requestImage(const QString &id, QSize *size,
-                      const QSize &requestedSize) override;
+  QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
 
   void setImage(const QString &id, const QImage &image);
 
@@ -30,4 +28,5 @@ private:
   // emulation::RewindModel *m_rewindModel;
 };
 } // namespace firelight::gui
+
 // firelight

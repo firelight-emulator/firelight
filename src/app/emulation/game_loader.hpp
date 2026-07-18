@@ -4,6 +4,7 @@
 
 #include <firelight/library/entry.hpp>
 #include <firelight/platforms/platform.hpp>
+
 #include <memory>
 #include <optional>
 #include <string>
@@ -21,7 +22,6 @@ class SettingsService;
 
 namespace firelight::emulation {
 
-// TODO
 // Outcome of a load attempt: a ready EmulatorInstance plus the state the
 // EmulationService facade retains (entry/platform/hash + the core config whose
 // declared options it caches once the core starts). success == false on any
@@ -35,19 +35,15 @@ struct GameLoadResult {
   std::string contentHash;
 };
 
-// TODO
 // The load pipeline extracted from EmulationService: resolve entry -> content +
 // patch -> bytes -> save data -> core + config -> instance. EmulationService
 // stays the facade (publishes events, holds the current instance)
 class GameLoader {
 public:
-  GameLoader(library::UserLibraryService &library,
-             library::EntryResolver &resolver,
-             settings::SettingsService &settingsService,
-             const EmulationContext &context);
+  GameLoader(library::UserLibraryService &library, library::EntryResolver &resolver,
+             settings::SettingsService &settingsService, const EmulationContext &context);
 
-  GameLoadResult load(int entryId, LaunchOverrides launch,
-                      const CoreFactory &factory);
+  GameLoadResult load(int entryId, LaunchOverrides launch, const CoreFactory &factory);
 
 private:
   library::UserLibraryService &m_library;

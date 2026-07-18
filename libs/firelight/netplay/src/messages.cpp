@@ -48,9 +48,7 @@ json toJson(const SessionDescriptor &game) {
           {"contentHash", game.contentHash},
           {"platformId", game.platformId},
           {"artUrl", game.artUrl},
-          {"strategy", game.strategy == SyncStrategyKind::Lockstep
-                           ? "lockstep"
-                           : "host-stream"}};
+          {"strategy", game.strategy == SyncStrategyKind::Lockstep ? "lockstep" : "host-stream"}};
 }
 
 SessionDescriptor gameFromJson(const json &obj) {
@@ -59,9 +57,8 @@ SessionDescriptor gameFromJson(const json &obj) {
       .contentHash = obj.value("contentHash", ""),
       .platformId = obj.value("platformId", 0),
       .artUrl = obj.value("artUrl", ""),
-      .strategy = obj.value("strategy", "host-stream") == "lockstep"
-                      ? SyncStrategyKind::Lockstep
-                      : SyncStrategyKind::HostStream,
+      .strategy = obj.value("strategy", "host-stream") == "lockstep" ? SyncStrategyKind::Lockstep
+                                                                     : SyncStrategyKind::HostStream,
   };
 }
 
@@ -120,15 +117,9 @@ std::string encodeMessage(const ControlMessage &message) {
       [&out](const auto &m) {
         using T = std::decay_t<decltype(m)>;
         if constexpr (std::is_same_v<T, Hello>) {
-          out = {{"type", "hello"},
-                 {"proto", m.proto},
-                 {"appVersion", m.appVersion},
-                 {"memberId", m.memberId}};
+          out = {{"type", "hello"}, {"proto", m.proto}, {"appVersion", m.appVersion}, {"memberId", m.memberId}};
         } else if constexpr (std::is_same_v<T, Welcome>) {
-          out = {{"type", "welcome"},
-                 {"proto", m.proto},
-                 {"phase", phaseName(m.phase)},
-                 {"slots", toJson(m.table)}};
+          out = {{"type", "welcome"}, {"proto", m.proto}, {"phase", phaseName(m.phase)}, {"slots", toJson(m.table)}};
           if (m.game) {
             out["game"] = toJson(*m.game);
           }
@@ -189,12 +180,10 @@ std::optional<ControlMessage> decodeMessage(const std::string &text) {
     return welcome;
   }
   if (type == "reject") {
-    return Reject{.code = parsed.value("code", ""),
-                  .message = parsed.value("message", "")};
+    return Reject{.code = parsed.value("code", ""), .message = parsed.value("message", "")};
   }
   if (type == "slots") {
-    return SlotTableMessage{
-        .table = slotTableFromJson(parsed.value("slots", json()))};
+    return SlotTableMessage{.table = slotTableFromJson(parsed.value("slots", json()))};
   }
   if (type == "gameSelected") {
     return GameSelected{.game = gameFromJson(parsed.value("game", json()))};

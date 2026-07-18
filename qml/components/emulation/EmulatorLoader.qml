@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Effects
 import Firelight 1.0
 
-// TODO
 // Hosts the emulator page. Pause and blur are owned by the host (GameplayLayer):
 // it drives `blurAmount` when something is layered over the game and toggles the
 // page's `paused`. This just loads/unloads the page, applies the blur/dim, and
@@ -11,7 +10,7 @@ import Firelight 1.0
 Loader {
     id: emulatorLoader
 
-    signal suspended()
+    signal suspended
 
     // 0 = clear, 1 = fully blurred+dimmed (game behind the quick menu)
     property real blurAmount: 0
@@ -25,7 +24,7 @@ Loader {
 
     function startGame() {
         if (item) {
-            item.startGame()
+            item.startGame();
         }
     }
 
@@ -51,10 +50,10 @@ Loader {
 
     Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Home || event.key === Qt.Key_Escape) {
-            emulatorLoader.suspended()
-            event.accepted = true
-            return
+            emulatorLoader.suspended();
+            event.accepted = true;
+            return;
         }
-        event.accepted = false
+        event.accepted = false;
     }
 }

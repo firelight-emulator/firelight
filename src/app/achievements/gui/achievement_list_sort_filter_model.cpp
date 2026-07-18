@@ -3,8 +3,7 @@
 #include "achievement_list_model.hpp"
 
 namespace firelight::gui {
-AchievementListSortFilterModel::AchievementListSortFilterModel(QObject *parent)
-    : QSortFilterProxyModel(parent) {
+AchievementListSortFilterModel::AchievementListSortFilterModel(QObject *parent) : QSortFilterProxyModel(parent) {
   setDynamicSortFilter(true);
 }
 
@@ -56,52 +55,29 @@ void AchievementListSortFilterModel::setSortMethod(const QString &sortType) {
   }
 }
 
-bool AchievementListSortFilterModel::filterAcceptsRow(
-    int source_row, const QModelIndex &sourceParent) const {
+bool AchievementListSortFilterModel::filterAcceptsRow(int source_row, const QModelIndex &sourceParent) const {
   return QSortFilterProxyModel::filterAcceptsRow(source_row, sourceParent);
 }
 
-bool AchievementListSortFilterModel::lessThan(
-    const QModelIndex &source_left, const QModelIndex &source_right) const {
+bool AchievementListSortFilterModel::lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const {
   if (m_sortType == SortType::AToZ) {
-    const auto left = sourceModel()
-                          ->data(source_left, AchievementListModel::Roles::Name)
-                          .toString();
-    const auto right =
-        sourceModel()
-            ->data(source_right, AchievementListModel::Roles::Name)
-            .toString();
+    const auto left = sourceModel()->data(source_left, AchievementListModel::Roles::Name).toString();
+    const auto right = sourceModel()->data(source_right, AchievementListModel::Roles::Name).toString();
     return left < right;
   }
   if (m_sortType == SortType::ZToA) {
-    const auto left = sourceModel()
-                          ->data(source_left, AchievementListModel::Roles::Name)
-                          .toString();
-    const auto right =
-        sourceModel()
-            ->data(source_right, AchievementListModel::Roles::Name)
-            .toString();
+    const auto left = sourceModel()->data(source_left, AchievementListModel::Roles::Name).toString();
+    const auto right = sourceModel()->data(source_right, AchievementListModel::Roles::Name).toString();
     return left > right;
   }
   if (m_sortType == SortType::Type) {
-    const auto left = sourceModel()
-                          ->data(source_left, AchievementListModel::Roles::Type)
-                          .toString();
-    const auto right =
-        sourceModel()
-            ->data(source_right, AchievementListModel::Roles::Type)
-            .toString();
+    const auto left = sourceModel()->data(source_left, AchievementListModel::Roles::Type).toString();
+    const auto right = sourceModel()->data(source_right, AchievementListModel::Roles::Type).toString();
     return left > right;
   }
   if (m_sortType == SortType::EarnedDate) {
-    const auto left =
-        sourceModel()
-            ->data(source_left, AchievementListModel::Roles::EarnedTimestamp)
-            .toULongLong();
-    const auto right =
-        sourceModel()
-            ->data(source_right, AchievementListModel::Roles::EarnedTimestamp)
-            .toULongLong();
+    const auto left = sourceModel()->data(source_left, AchievementListModel::Roles::EarnedTimestamp).toULongLong();
+    const auto right = sourceModel()->data(source_right, AchievementListModel::Roles::EarnedTimestamp).toULongLong();
     // Make sure unearned go to the bottom of the list
     if (left == 0 && right == 0) {
       return true;
@@ -116,38 +92,20 @@ bool AchievementListSortFilterModel::lessThan(
     return left < right;
   }
   if (m_sortType == SortType::PointsMost) {
-    const auto left =
-        sourceModel()
-            ->data(source_left, AchievementListModel::Roles::Points)
-            .toInt();
-    const auto right =
-        sourceModel()
-            ->data(source_right, AchievementListModel::Roles::Points)
-            .toInt();
+    const auto left = sourceModel()->data(source_left, AchievementListModel::Roles::Points).toInt();
+    const auto right = sourceModel()->data(source_right, AchievementListModel::Roles::Points).toInt();
     return left > right;
   }
 
   if (m_sortType == SortType::PointsLeast) {
-    const auto left =
-        sourceModel()
-            ->data(source_left, AchievementListModel::Roles::Points)
-            .toInt();
-    const auto right =
-        sourceModel()
-            ->data(source_right, AchievementListModel::Roles::Points)
-            .toInt();
+    const auto left = sourceModel()->data(source_left, AchievementListModel::Roles::Points).toInt();
+    const auto right = sourceModel()->data(source_right, AchievementListModel::Roles::Points).toInt();
     return left < right;
   }
 
   if (m_sortType == SortType::Default) {
-    const auto left =
-        sourceModel()
-            ->data(source_left, AchievementListModel::Roles::DisplayOrder)
-            .toInt();
-    const auto right =
-        sourceModel()
-            ->data(source_right, AchievementListModel::Roles::DisplayOrder)
-            .toInt();
+    const auto left = sourceModel()->data(source_left, AchievementListModel::Roles::DisplayOrder).toInt();
+    const auto right = sourceModel()->data(source_right, AchievementListModel::Roles::DisplayOrder).toInt();
     return left < right;
   }
 

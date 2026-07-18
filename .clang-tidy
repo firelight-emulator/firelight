@@ -161,6 +161,10 @@ CheckOptions:
     value: CamelCase
   - key: readability-identifier-naming.FunctionCase
     value: camelBack
+  # to_json/from_json are the names nlohmann::json looks up by ADL. Renaming
+  # them still compiles but silently stops serializing.
+  - key: readability-identifier-naming.FunctionIgnoredRegexp
+    value: '(to|from)_json'
   - key: readability-identifier-naming.ParameterCase
     value: camelBack
   - key: readability-identifier-naming.LocalVariableCase

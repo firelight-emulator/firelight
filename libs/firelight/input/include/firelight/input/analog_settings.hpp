@@ -1,21 +1,18 @@
 #pragma once
-#include <nlohmann/json.hpp>
-
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <nlohmann/json.hpp>
 
 namespace firelight::input {
 
 enum class ResponseCurve { Linear, Exponential };
 
-NLOHMANN_JSON_SERIALIZE_ENUM(ResponseCurve,
-                             {
-                                 {ResponseCurve::Linear, "linear"},
-                                 {ResponseCurve::Exponential, "exponential"},
-                             })
+NLOHMANN_JSON_SERIALIZE_ENUM(ResponseCurve, {
+                                                {ResponseCurve::Linear, "linear"},
+                                                {ResponseCurve::Exponential, "exponential"},
+                                            })
 
-// TODO
 // Tuning for one analog stick axis. Fractions are of full range (0..1). The
 // defaults reproduce the previous hardcoded behavior: an inner deadzone of
 // 8192/32767 (~0.25) with everything else identity
@@ -28,12 +25,10 @@ struct AxisSettings {
   float curveExponent = 1.0f;
 
   bool operator==(const AxisSettings &o) const {
-    return innerDeadzone == o.innerDeadzone && outerDeadzone == o.outerDeadzone &&
-           sensitivity == o.sensitivity && antiDeadzone == o.antiDeadzone &&
-           curve == o.curve && curveExponent == o.curveExponent;
+    return innerDeadzone == o.innerDeadzone && outerDeadzone == o.outerDeadzone && sensitivity == o.sensitivity &&
+           antiDeadzone == o.antiDeadzone && curve == o.curve && curveExponent == o.curveExponent;
   }
 
-  // TODO
   // Maps a raw SDL axis value (-32768..32767) through these settings and returns
   // a processed value in the same range. Each axis is processed as an
   // independent scalar, matching the previous per-axis deadzone behavior
@@ -48,14 +43,12 @@ struct AxisSettings {
     float magnitude = std::fabs(normalized);
 
     const float innerBound = std::clamp(innerDeadzone, 0.0f, 1.0f);
-    const float outerBound =
-        std::clamp(1.0f - outerDeadzone, innerBound + MIN_DEADZONE_SPAN, 1.0f);
+    const float outerBound = std::clamp(1.0f - outerDeadzone, innerBound + MIN_DEADZONE_SPAN, 1.0f);
     if (magnitude <= innerBound) {
       return 0;
     }
     // Rescale the live range (innerBound..outerBound) back to a full 0..1.
-    magnitude = std::clamp((magnitude - innerBound) / (outerBound - innerBound),
-                           0.0f, 1.0f);
+    magnitude = std::clamp((magnitude - innerBound) / (outerBound - innerBound), 0.0f, 1.0f);
 
     if (curve == ResponseCurve::Exponential && curveExponent > 0.0f) {
       magnitude = std::pow(magnitude, curveExponent);
@@ -93,9 +86,7 @@ struct TriggerSettings {
   float deadzone = 0.0f;
   float threshold = 0.5f; // fraction of full range to count as "pressed"
 
-  bool operator==(const TriggerSettings &o) const {
-    return deadzone == o.deadzone && threshold == o.threshold;
-  }
+  bool operator==(const TriggerSettings &o) const { return deadzone == o.deadzone && threshold == o.threshold; }
 };
 
 inline void to_json(nlohmann::json &j, const TriggerSettings &t) {
@@ -114,8 +105,8 @@ struct AnalogSettings {
   TriggerSettings rightTrigger;
 
   bool operator==(const AnalogSettings &o) const {
-    return leftStick == o.leftStick && rightStick == o.rightStick &&
-           leftTrigger == o.leftTrigger && rightTrigger == o.rightTrigger;
+    return leftStick == o.leftStick && rightStick == o.rightStick && leftTrigger == o.leftTrigger &&
+           rightTrigger == o.rightTrigger;
   }
 };
 

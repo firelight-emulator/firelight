@@ -1,18 +1,16 @@
-#include <gtest/gtest.h>
-
 #include <firelight/input/gamepad_input.hpp>
 #include <firelight/input/sdl_input_service.hpp>
 #include <firelight/input/sqlite_controller_repository.hpp>
-#include <firelight/platforms/platform_service.hpp>
 #include <firelight/libretro/pointer_input_provider.hpp>
+#include <firelight/platforms/platform_service.hpp>
+
+#include <gtest/gtest.h>
 
 namespace firelight::input {
 
 // --- cursorGlideDelta: per-frame velocity glide ------------------------------
 
-TEST(AnalogCursorTest, GlideDeltaIsZeroWhenStickCentered) {
-  EXPECT_EQ(libretro::cursorGlideDelta(0, 0.025), 0);
-}
+TEST(AnalogCursorTest, GlideDeltaIsZeroWhenStickCentered) { EXPECT_EQ(libretro::cursorGlideDelta(0, 0.025), 0); }
 
 TEST(AnalogCursorTest, GlideDeltaScalesWithDeflection) {
   const int full = libretro::cursorGlideDelta(32767, 0.025);
@@ -28,8 +26,7 @@ TEST(AnalogCursorTest, GlideDeltaSignFollowsStick) {
 }
 
 TEST(AnalogCursorTest, GlideDeltaFasterSpeedMovesFarther) {
-  EXPECT_GT(libretro::cursorGlideDelta(32767, 0.040),
-            libretro::cursorGlideDelta(32767, 0.015));
+  EXPECT_GT(libretro::cursorGlideDelta(32767, 0.040), libretro::cursorGlideDelta(32767, 0.015));
 }
 
 // --- defaultPhysicalBinding: sensible out-of-the-box gamepad buttons ---------

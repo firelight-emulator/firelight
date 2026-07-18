@@ -7,65 +7,53 @@
 
 namespace firelight::gui {
 QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
-    : QObject(parent),
-      m_emulationService(emulation::EmulationService::getInstance()) {
+    : QObject(parent), m_emulationService(emulation::EmulationService::getInstance()) {
 
   m_gameLoadedConnection =
-      EventDispatcher::instance().subscribe<emulation::GameLoadedEvent>(
-          [this](emulation::GameLoadedEvent) {
-            emit gameLoaded();
-            emit currentGameNameChanged();
-            emit rewindEnabledChanged();
-            emit pictureModeChanged();
-            emit aspectRatioModeChanged();
-          });
+      EventDispatcher::instance().subscribe<emulation::GameLoadedEvent>([this](emulation::GameLoadedEvent) {
+        emit gameLoaded();
+        emit currentGameNameChanged();
+        emit rewindEnabledChanged();
+        emit pictureModeChanged();
+        emit aspectRatioModeChanged();
+      });
 
-  m_emulationStartedConnection =
-      EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
-          [this](const emulation::EmulationStartedEvent &) {
-            emit gameRunningChanged(true);
-          });
+  m_emulationStartedConnection = EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
+      [this](const emulation::EmulationStartedEvent &) { emit gameRunningChanged(true); });
 
   m_emulationStoppedConnection =
-      EventDispatcher::instance().subscribe<emulation::EmulationStoppedEvent>(
-          [this](emulation::EmulationStoppedEvent) {
-            emit emulationStopped();
-            emit gameRunningChanged(false);
-            emit currentGameNameChanged();
-          });
+      EventDispatcher::instance().subscribe<emulation::EmulationStoppedEvent>([this](emulation::EmulationStoppedEvent) {
+        emit emulationStopped();
+        emit gameRunningChanged(false);
+        emit currentGameNameChanged();
+      });
 
-  m_emulationSettingChangedConnection =
-      EventDispatcher::instance()
-          .subscribe<settings::EmulationSettingChangedEvent>(
-              [this](const settings::EmulationSettingChangedEvent &e) {
-                spdlog::info("Emulation setting changed: {} = {}", e.key,
-                             e.contentHash);
-                if (e.key == "rewind-enabled") {
-                  emit rewindEnabledChanged();
-                } else if (e.key == "picture-mode") {
-                  emit pictureModeChanged();
-                } else if (e.key == "aspect-ratio") {
-                  emit aspectRatioModeChanged();
-                } else if (e.key == "integer-scale") {
-                  emit integerScaleChanged();
-                }
-              });
+  m_emulationSettingChangedConnection = EventDispatcher::instance().subscribe<settings::EmulationSettingChangedEvent>(
+      [this](const settings::EmulationSettingChangedEvent &e) {
+        spdlog::info("Emulation setting changed: {} = {}", e.key, e.contentHash);
+        if (e.key == "rewind-enabled") {
+          emit rewindEnabledChanged();
+        } else if (e.key == "picture-mode") {
+          emit pictureModeChanged();
+        } else if (e.key == "aspect-ratio") {
+          emit aspectRatioModeChanged();
+        } else if (e.key == "integer-scale") {
+          emit integerScaleChanged();
+        }
+      });
 
-  m_controllerDevicesConnection =
-      EventDispatcher::instance().subscribe<emulation::ControllerDevicesEvent>(
-          [this](const emulation::ControllerDevicesEvent &) {
-            emit controllerDevicesChanged();
-          });
+  m_controllerDevicesConnection = EventDispatcher::instance().subscribe<emulation::ControllerDevicesEvent>(
+      [this](const emulation::ControllerDevicesEvent &) { emit controllerDevicesChanged(); });
 }
+
 QtEmulationServiceProxy::~QtEmulationServiceProxy() = default;
 
-bool QtEmulationServiceProxy::isGameRunning() const {
-  return m_emulationService->isGameRunning();
-}
+bool QtEmulationServiceProxy::isGameRunning() const { return m_emulationService->isGameRunning(); }
+
 QString QtEmulationServiceProxy::getCurrentGameName() const {
-  return QString::fromStdString(
-      m_emulationService->getCurrentGameName().value_or(""));
+  return QString::fromStdString(m_emulationService->getCurrentGameName().value_or(""));
 }
+
 QString QtEmulationServiceProxy::getCurrentContentHash() const {
   const auto entry = m_emulationService->getCurrentEntry();
   if (entry.has_value()) {
@@ -74,6 +62,7 @@ QString QtEmulationServiceProxy::getCurrentContentHash() const {
 
   return "";
 }
+
 int QtEmulationServiceProxy::getCurrentEntryId() const {
   const auto entry = m_emulationService->getCurrentEntry();
   if (entry.has_value()) {
@@ -82,6 +71,7 @@ int QtEmulationServiceProxy::getCurrentEntryId() const {
 
   return -1;
 }
+
 int QtEmulationServiceProxy::getCurrentPlatformId() const {
   const auto entry = m_emulationService->getCurrentEntry();
   if (entry.has_value()) {
@@ -90,6 +80,7 @@ int QtEmulationServiceProxy::getCurrentPlatformId() const {
 
   return -1;
 }
+
 QString QtEmulationServiceProxy::getCurrentPlatformName() const {
   const auto platform = m_emulationService->getCurrentPlatform();
   if (platform.has_value()) {
@@ -98,6 +89,7 @@ QString QtEmulationServiceProxy::getCurrentPlatformName() const {
 
   return {};
 }
+
 int QtEmulationServiceProxy::getCurrentSaveSlotNumber() const {
   auto instance = m_emulationService->getCurrentEmulatorInstance();
   if (!instance) {
@@ -115,6 +107,7 @@ bool QtEmulationServiceProxy::isRewindEnabled() const {
 
   return instance->isRewindEnabled();
 }
+
 QString QtEmulationServiceProxy::getPictureMode() const {
   const auto instance = m_emulationService->getCurrentEmulatorInstance();
   if (!instance) {
@@ -123,6 +116,7 @@ QString QtEmulationServiceProxy::getPictureMode() const {
 
   return QString::fromStdString(instance->getPictureMode());
 }
+
 QString QtEmulationServiceProxy::getAspectRatioMode() const {
   const auto instance = m_emulationService->getCurrentEmulatorInstance();
   if (!instance) {
@@ -131,6 +125,7 @@ QString QtEmulationServiceProxy::getAspectRatioMode() const {
 
   return QString::fromStdString(instance->getAspectRatioMode());
 }
+
 int QtEmulationServiceProxy::getIntegerScale() const {
 
   const auto instance = m_emulationService->getCurrentEmulatorInstance();
@@ -145,12 +140,11 @@ void QtEmulationServiceProxy::loadEntry(const int entryId) {
   // Fired immediately on the GUI thread so the UI can react to the launch (e.g.
   // fade to black) before the load runs on the pool
   emit gameLoadStarted();
-  QThreadPool::globalInstance()->start(
-      [this, entryId] { m_emulationService->loadEntry(entryId); });
+  QThreadPool::globalInstance()->start([this, entryId] { m_emulationService->loadEntry(entryId); });
 }
-void QtEmulationServiceProxy::stopEmulation() {
-  m_emulationService->stopEmulation();
-}
+
+void QtEmulationServiceProxy::stopEmulation() { m_emulationService->stopEmulation(); }
+
 void QtEmulationServiceProxy::resetGame() { m_emulationService->resetGame(); }
 
 int QtEmulationServiceProxy::controllerPortCount() const {
@@ -158,8 +152,7 @@ int QtEmulationServiceProxy::controllerPortCount() const {
   return instance ? static_cast<int>(instance->getControllerPortCount()) : 0;
 }
 
-QVariantList
-QtEmulationServiceProxy::controllerVariantsForPort(const int port) const {
+QVariantList QtEmulationServiceProxy::controllerVariantsForPort(const int port) const {
   QVariantList result;
   const auto instance = m_emulationService->getCurrentEmulatorInstance();
   if (!instance || port < 0) {
@@ -178,14 +171,12 @@ QtEmulationServiceProxy::controllerVariantsForPort(const int port) const {
   return result;
 }
 
-void QtEmulationServiceProxy::setControllerVariant(const int port,
-                                                   const int coreDeviceId) {
+void QtEmulationServiceProxy::setControllerVariant(const int port, const int coreDeviceId) {
   const auto instance = m_emulationService->getCurrentEmulatorInstance();
   if (!instance || port < 0) {
     return;
   }
-  instance->setPortControllerVariant(static_cast<unsigned>(port),
-                                     static_cast<unsigned>(coreDeviceId));
+  instance->setPortControllerVariant(static_cast<unsigned>(port), static_cast<unsigned>(coreDeviceId));
   emit controllerDevicesChanged();
 }
 } // namespace firelight::gui

@@ -1,31 +1,26 @@
 #pragma once
 #include <firelight/activity/play_session.hpp>
+
 #include <QAbstractListModel>
 
 namespace firelight::activity {
-  class PlaySessionListModel : public QAbstractListModel {
-    Q_OBJECT
+class PlaySessionListModel : public QAbstractListModel {
+  Q_OBJECT
 
-  public:
-    enum Roles {
-      StartTime = Qt::UserRole + 1,
-      EndTime,
-      NumUnpausedSeconds,
-      SaveSlotNumber
-    };
+public:
+  enum Roles { StartTime = Qt::UserRole + 1, EndTime, NumUnpausedSeconds, SaveSlotNumber };
 
-    [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
+  [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
-    [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
+  [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
 
-    [[nodiscard]] QVariant data(const QModelIndex &index,
-                                int role) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
 
-    void refreshItems(std::vector<PlaySession> &playSessions);
+  void refreshItems(std::vector<PlaySession> &playSessions);
 
-    QVector<PlaySession> getItems() const;
+  QVector<PlaySession> getItems() const;
 
-  private:
-    QVector<PlaySession> m_items{};
-  };
+private:
+  QVector<PlaySession> m_items{};
+};
 } // namespace firelight::activity

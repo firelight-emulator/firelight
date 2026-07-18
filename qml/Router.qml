@@ -3,7 +3,6 @@ pragma Singleton
 import QtQuick
 import "routing.js" as Routing
 
-// TODO
 // App-wide URL navigation. Single source of truth for the current path, params,
 // and history; the view layer (RouteView, nav popup) mirrors it. All logic lives
 // in routing.js — this only holds state and emits change notifications

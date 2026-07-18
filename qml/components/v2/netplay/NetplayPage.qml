@@ -9,12 +9,12 @@ Item {
         anchors.fill: parent
         currentIndex: {
             if (!NetworkService.inLobby) {
-                return 0
+                return 0;
             }
             if (!NetworkService.isHost && NetworkService.sessionPhase === "in-game") {
-                return 2
+                return 2;
             }
-            return 1
+            return 1;
         }
 
         // Entry view: sign in, then host or join by code
@@ -33,9 +33,7 @@ Item {
                 }
 
                 Text {
-                    text: "Host a lobby and share your IP address, or enter a " +
-                          "host's IP to join them. Friends can join and leave " +
-                          "any time."
+                    text: "Host a lobby and share your IP address, or enter a " + "host's IP to join them. Friends can join and leave " + "any time."
                     color: Theme.textMuted
                     font.pixelSize: AppStyle.fontSizeSmall
                     wrapMode: Text.WordWrap
@@ -51,9 +49,7 @@ Item {
 
                     FLButton {
                         variant: "primary"
-                        text: NetworkService.signInState === "signing-in"
-                              ? "Signing in..."
-                              : "Sign in with " + NetworkService.providerName
+                        text: NetworkService.signInState === "signing-in" ? "Signing in..." : "Sign in with " + NetworkService.providerName
                         enabled: NetworkService.signInState !== "signing-in"
                         Layout.alignment: Qt.AlignHCenter
                         onClicked: NetworkService.signIn()
@@ -97,7 +93,7 @@ Item {
                             Layout.fillWidth: true
                             onEditingFinished: {
                                 if (text.trim().length > 0) {
-                                    NetworkService.setPlayerName(text)
+                                    NetworkService.setPlayerName(text);
                                 }
                             }
                         }
@@ -125,8 +121,7 @@ Item {
                             id: joinButton
                             variant: "primary"
                             text: "Join"
-                            enabled: joinCodeField.text.trim().length > 0
-                                     && !NetworkService.busy
+                            enabled: joinCodeField.text.trim().length > 0 && !NetworkService.busy
                             onClicked: NetworkService.joinLobby(joinCodeField.text)
                         }
                     }
@@ -145,21 +140,19 @@ Item {
             }
         }
 
-        NetplayLobbyPage {
-        }
+        NetplayLobbyPage {}
 
-        GuestStreamPage {
-        }
+        GuestStreamPage {}
     }
 
     Connections {
         target: NetworkService
         function onErrorOccurred(message) {
-            errorLabel.text = message
+            errorLabel.text = message;
         }
         function onLobbyStateChanged() {
             if (NetworkService.inLobby) {
-                errorLabel.text = ""
+                errorLabel.text = "";
             }
         }
     }

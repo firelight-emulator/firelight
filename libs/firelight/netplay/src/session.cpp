@@ -1,25 +1,20 @@
 #include <firelight/netplay/protocol.hpp>
 #include <firelight/netplay/session.hpp>
 
-#include <spdlog/spdlog.h>
-
 #include <chrono>
+#include <spdlog/spdlog.h>
 
 namespace firelight::netplay {
 
 namespace {
 int64_t nowMs() {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(
-             std::chrono::system_clock::now().time_since_epoch())
+  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
       .count();
 }
 } // namespace
 
-NetplaySession::NetplaySession(ILobbyBackend &lobbyBackend,
-                               IPeerTransport &transport,
-                               std::string appVersion)
-    : m_lobbyBackend(lobbyBackend), m_transport(transport),
-      m_appVersion(std::move(appVersion)) {
+NetplaySession::NetplaySession(ILobbyBackend &lobbyBackend, IPeerTransport &transport, std::string appVersion)
+    : m_lobbyBackend(lobbyBackend), m_transport(transport), m_appVersion(std::move(appVersion)) {
   wireBackendEvents();
   wireTransportEvents();
 }
@@ -31,32 +26,28 @@ NetplaySession::~NetplaySession() {
   m_transport.closeAll();
 }
 
-void NetplaySession::setEvents(SessionEvents events) {
-  m_events = std::move(events);
-}
+void NetplaySession::setEvents(SessionEvents events) { m_events = std::move(events); }
 
 // --- host ---
 
 void NetplaySession::hostLobby(ILobbyBackend::ResultCallback done) {
-  m_lobbyBackend.createLobby(
-      generateJoinCode(),
-      [this, done = std::move(done)](const bool ok, const std::string &error) {
-        {
-          std::lock_guard lock(m_mutex);
-          m_isHost = ok;
-          m_inLobby = ok;
-        }
-        if (ok && m_events.lobbyChanged) {
-          m_events.lobbyChanged();
-        }
-        if (done) {
-          done(ok, error);
-        }
-      });
+  m_lobbyBackend.createLobby(generateJoinCode(),
+                             [this, done = std::move(done)](const bool ok, const std::string &error) {
+                               {
+                                 std::lock_guard lock(m_mutex);
+                                 m_isHost = ok;
+                                 m_inLobby = ok;
+                               }
+                               if (ok && m_events.lobbyChanged) {
+                                 m_events.lobbyChanged();
+                               }
+                               if (done) {
+                                 done(ok, error);
+                               }
+                             });
 }
 
-void NetplaySession::assignSlot(const int slot, const PlayerId memberId,
-                                const int localPadIndex) {
+void NetplaySession::assignSlot(const int slot, const PlayerId memberId, const int localPadIndex) {
   {
     std::lock_guard lock(m_mutex);
     if (!m_isHost) {
@@ -69,9 +60,8 @@ void NetplaySession::assignSlot(const int slot, const PlayerId memberId,
         break;
       }
     }
-    if (!m_slots.assign(slot, SlotAssignment{.memberId = memberId,
-                                             .localPadIndex = localPadIndex,
-                                             .displayName = displayName})) {
+    if (!m_slots.assign(
+            slot, SlotAssignment{.memberId = memberId, .localPadIndex = localPadIndex, .displayName = displayName})) {
       return;
     }
   }
@@ -193,30 +183,27 @@ void NetplaySession::endGame(const std::string &reason) {
 
 // --- guest ---
 
-void NetplaySession::joinLobby(const std::string &joinCode,
-                               ILobbyBackend::ResultCallback done) {
-  m_lobbyBackend.joinLobby(
-      joinCode,
-      [this, done = std::move(done)](const bool ok, const std::string &error) {
-        PlayerId hostId = 0;
-        {
-          std::lock_guard lock(m_mutex);
-          m_isHost = false;
-          m_inLobby = ok;
-          if (ok) {
-            hostId = m_lobbyBackend.currentLobby().hostId;
-          }
-        }
-        if (ok) {
-          if (m_events.lobbyChanged) {
-            m_events.lobbyChanged();
-          }
-          m_transport.connectToPeer(hostId, true);
-        }
-        if (done) {
-          done(ok, error);
-        }
-      });
+void NetplaySession::joinLobby(const std::string &joinCode, ILobbyBackend::ResultCallback done) {
+  m_lobbyBackend.joinLobby(joinCode, [this, done = std::move(done)](const bool ok, const std::string &error) {
+    PlayerId hostId = 0;
+    {
+      std::lock_guard lock(m_mutex);
+      m_isHost = false;
+      m_inLobby = ok;
+      if (ok) {
+        hostId = m_lobbyBackend.currentLobby().hostId;
+      }
+    }
+    if (ok) {
+      if (m_events.lobbyChanged) {
+        m_events.lobbyChanged();
+      }
+      m_transport.connectToPeer(hostId, true);
+    }
+    if (done) {
+      done(ok, error);
+    }
+  });
 }
 
 void NetplaySession::setReady(const bool ready) {
@@ -239,11 +226,10 @@ void NetplaySession::setReady(const bool ready) {
       m_events.slotsChanged();
     }
   } else {
-    sendToHost(ChannelKind::Control,
-               [&] {
-                 const auto text = encodeMessage(ReadyState{.ready = ready});
-                 return std::vector<uint8_t>(text.begin(), text.end());
-               }());
+    sendToHost(ChannelKind::Control, [&] {
+      const auto text = encodeMessage(ReadyState{.ready = ready});
+      return std::vector<uint8_t>(text.begin(), text.end());
+    }());
   }
 }
 
@@ -271,10 +257,7 @@ void NetplaySession::sendChat(const std::string &text) {
       return;
     }
     const auto self = m_lobbyBackend.currentLobby().self;
-    message = ChatMessage{.senderId = self.id,
-                          .senderName = self.displayName,
-                          .text = text,
-                          .timestampMs = nowMs()};
+    message = ChatMessage{.senderId = self.id, .senderName = self.displayName, .text = text, .timestampMs = nowMs()};
     m_chat.append(message);
   }
   m_lobbyBackend.sendChat(text);
@@ -283,9 +266,7 @@ void NetplaySession::sendChat(const std::string &text) {
   }
 }
 
-void NetplaySession::sendToMember(const PlayerId memberId,
-                                  const ChannelKind channel,
-                                  std::span<const uint8_t> data) {
+void NetplaySession::sendToMember(const PlayerId memberId, const ChannelKind channel, std::span<const uint8_t> data) {
   IPeerLink *link = nullptr;
   {
     std::lock_guard lock(m_mutex);
@@ -299,8 +280,7 @@ void NetplaySession::sendToMember(const PlayerId memberId,
   }
 }
 
-void NetplaySession::broadcastPacket(const ChannelKind channel,
-                                     std::span<const uint8_t> data) {
+void NetplaySession::broadcastPacket(const ChannelKind channel, std::span<const uint8_t> data) {
   std::vector<IPeerLink *> links;
   {
     std::lock_guard lock(m_mutex);
@@ -315,8 +295,7 @@ void NetplaySession::broadcastPacket(const ChannelKind channel,
   }
 }
 
-void NetplaySession::sendToHost(const ChannelKind channel,
-                                std::span<const uint8_t> data) {
+void NetplaySession::sendToHost(const ChannelKind channel, std::span<const uint8_t> data) {
   IPeerLink *link = nullptr;
   {
     std::lock_guard lock(m_mutex);
@@ -337,40 +316,46 @@ bool NetplaySession::isHost() const {
   std::lock_guard lock(m_mutex);
   return m_isHost;
 }
+
 bool NetplaySession::inLobby() const {
   std::lock_guard lock(m_mutex);
   return m_inLobby;
 }
+
 GamePhase NetplaySession::phase() const {
   std::lock_guard lock(m_mutex);
   return m_phase;
 }
+
 SlotTable NetplaySession::slotTable() const {
   std::lock_guard lock(m_mutex);
   return m_slots;
 }
+
 std::optional<SessionDescriptor> NetplaySession::game() const {
   std::lock_guard lock(m_mutex);
   return m_game;
 }
+
 std::optional<StreamConfig> NetplaySession::streamConfig() const {
   std::lock_guard lock(m_mutex);
   return m_streamConfig;
 }
-std::string NetplaySession::joinCode() const {
-  return m_lobbyBackend.currentLobby().joinCode;
-}
-LobbyInfo NetplaySession::lobby() const {
-  return m_lobbyBackend.currentLobby();
-}
+
+std::string NetplaySession::joinCode() const { return m_lobbyBackend.currentLobby().joinCode; }
+
+LobbyInfo NetplaySession::lobby() const { return m_lobbyBackend.currentLobby(); }
+
 std::deque<ChatMessage> NetplaySession::chatMessages() const {
   std::lock_guard lock(m_mutex);
   return m_chat.entries();
 }
+
 bool NetplaySession::isPaused() const {
   std::lock_guard lock(m_mutex);
   return m_paused;
 }
+
 std::vector<PlayerId> NetplaySession::connectedPeers() const {
   std::lock_guard lock(m_mutex);
   std::vector<PlayerId> result;
@@ -422,8 +407,7 @@ void NetplaySession::wireBackendEvents() {
       m_events.lobbyChanged();
     }
   };
-  events.memberRenamed = [this](const PlayerId memberId,
-                                const std::string &newName) {
+  events.memberRenamed = [this](const PlayerId memberId, const std::string &newName) {
     bool renamedSlots = false;
     {
       std::lock_guard lock(m_mutex);
@@ -446,13 +430,8 @@ void NetplaySession::wireBackendEvents() {
       m_events.lobbyChanged();
     }
   };
-  events.chatReceived = [this](const PlayerId senderId,
-                               const std::string &senderName,
-                               const std::string &text) {
-    ChatMessage message{.senderId = senderId,
-                        .senderName = senderName,
-                        .text = text,
-                        .timestampMs = nowMs()};
+  events.chatReceived = [this](const PlayerId senderId, const std::string &senderName, const std::string &text) {
+    ChatMessage message{.senderId = senderId, .senderName = senderName, .text = text, .timestampMs = nowMs()};
     {
       std::lock_guard lock(m_mutex);
       if (!m_inLobby) {
@@ -464,8 +443,7 @@ void NetplaySession::wireBackendEvents() {
       m_events.chatMessageAdded(message);
     }
   };
-  events.signalReceived = [this](const PlayerId from,
-                                 const std::string &payload) {
+  events.signalReceived = [this](const PlayerId from, const std::string &payload) {
     m_transport.handleSignal(from, payload);
   };
   events.lobbyClosed = [this] { teardown("lobby-closed", true); };
@@ -474,9 +452,7 @@ void NetplaySession::wireBackendEvents() {
 
 void NetplaySession::wireTransportEvents() {
   m_transport.setSignalOut(
-      [this](const PlayerId to, const std::string &payload) {
-        m_lobbyBackend.sendSignal(to, payload);
-      });
+      [this](const PlayerId to, const std::string &payload) { m_lobbyBackend.sendSignal(to, payload); });
 
   TransportEvents events;
   events.peerConnected = [this](const PlayerId memberId, IPeerLink &link) {
@@ -492,9 +468,7 @@ void NetplaySession::wireTransportEvents() {
     }
     if (sendHello) {
       const auto self = m_lobbyBackend.currentLobby().self;
-      sendControl(memberId, Hello{.proto = PROTOCOL_VERSION,
-                                  .appVersion = m_appVersion,
-                                  .memberId = self.id});
+      sendControl(memberId, Hello{.proto = PROTOCOL_VERSION, .appVersion = m_appVersion, .memberId = self.id});
     }
   };
   events.peerDisconnected = [this](const PlayerId memberId) {
@@ -506,11 +480,9 @@ void NetplaySession::wireTransportEvents() {
       m_events.peerLost(memberId);
     }
   };
-  events.messageReceived = [this](const PlayerId from, const ChannelKind channel,
-                                  std::span<const uint8_t> data) {
+  events.messageReceived = [this](const PlayerId from, const ChannelKind channel, std::span<const uint8_t> data) {
     if (channel == ChannelKind::Control) {
-      handleControlMessage(from,
-                           std::string(data.begin(), data.end()));
+      handleControlMessage(from, std::string(data.begin(), data.end()));
     } else if (m_events.packetReceived) {
       m_events.packetReceived(from, channel, data);
     }
@@ -520,8 +492,7 @@ void NetplaySession::wireTransportEvents() {
 
 // --- control-message handling ---
 
-void NetplaySession::handleControlMessage(const PlayerId from,
-                                          const std::string &text) {
+void NetplaySession::handleControlMessage(const PlayerId from, const std::string &text) {
   const auto decoded = decodeMessage(text);
   if (!decoded) {
     spdlog::warn("[Netplay] undecodable control message from {}", from);
@@ -537,8 +508,7 @@ void NetplaySession::handleControlMessage(const PlayerId from,
         } else if constexpr (std::is_same_v<T, Welcome>) {
           handleWelcome(message);
         } else if constexpr (std::is_same_v<T, Reject>) {
-          spdlog::info("[Netplay] rejected: {} ({})", message.code,
-                       message.message);
+          spdlog::info("[Netplay] rejected: {} ({})", message.code, message.message);
           teardown(message.code, true);
         } else if constexpr (std::is_same_v<T, SlotTableMessage>) {
           {
@@ -667,8 +637,7 @@ void NetplaySession::handleHello(const PlayerId from, const Hello &hello) {
     }
   }
   if (!accepted) {
-    sendControl(from, Reject{.code = REJECT_PROTOCOL_MISMATCH,
-                             .message = "Update Firelight to play together"});
+    sendControl(from, Reject{.code = REJECT_PROTOCOL_MISMATCH, .message = "Update Firelight to play together"});
     m_transport.closePeer(from);
     return;
   }
@@ -730,19 +699,14 @@ void NetplaySession::handleWelcome(const Welcome &welcome) {
 
 // --- helpers ---
 
-void NetplaySession::broadcastSlots() {
-  broadcastControl(SlotTableMessage{.table = slotTable()});
-}
+void NetplaySession::broadcastSlots() { broadcastControl(SlotTableMessage{.table = slotTable()}); }
 
 void NetplaySession::broadcastControl(const ControlMessage &message) {
   const auto text = encodeMessage(message);
-  broadcastPacket(ChannelKind::Control,
-                  std::span(reinterpret_cast<const uint8_t *>(text.data()),
-                            text.size()));
+  broadcastPacket(ChannelKind::Control, std::span(reinterpret_cast<const uint8_t *>(text.data()), text.size()));
 }
 
-void NetplaySession::sendControl(const PlayerId to,
-                                 const ControlMessage &message) {
+void NetplaySession::sendControl(const PlayerId to, const ControlMessage &message) {
   const auto text = encodeMessage(message);
   IPeerLink *link = nullptr;
   {
@@ -753,22 +717,16 @@ void NetplaySession::sendControl(const PlayerId to,
     }
   }
   if (link) {
-    link->send(ChannelKind::Control,
-               std::span(reinterpret_cast<const uint8_t *>(text.data()),
-                         text.size()));
+    link->send(ChannelKind::Control, std::span(reinterpret_cast<const uint8_t *>(text.data()), text.size()));
   }
 }
 
 Welcome NetplaySession::buildWelcome() const {
-  return Welcome{.proto = PROTOCOL_VERSION,
-                 .phase = m_phase,
-                 .table = m_slots,
-                 .game = m_game,
-                 .streamConfig = m_streamConfig};
+  return Welcome{
+      .proto = PROTOCOL_VERSION, .phase = m_phase, .table = m_slots, .game = m_game, .streamConfig = m_streamConfig};
 }
 
-void NetplaySession::teardown(const std::string &reason,
-                              const bool fireLobbyEnded) {
+void NetplaySession::teardown(const std::string &reason, const bool fireLobbyEnded) {
   bool wasInLobby = false;
   {
     std::lock_guard lock(m_mutex);

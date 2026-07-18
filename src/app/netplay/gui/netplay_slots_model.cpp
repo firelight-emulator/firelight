@@ -2,18 +2,13 @@
 
 namespace firelight::gui {
 
-NetplaySlotsModel::NetplaySlotsModel(netplay::NetplayService &service,
-                                     QObject *parent)
+NetplaySlotsModel::NetplaySlotsModel(netplay::NetplayService &service, QObject *parent)
     : QAbstractListModel(parent), m_service(service) {}
 
-int NetplaySlotsModel::rowCount(const QModelIndex &parent) const {
-  return parent.isValid() ? 0 : netplay::MAX_SLOTS;
-}
+int NetplaySlotsModel::rowCount(const QModelIndex &parent) const { return parent.isValid() ? 0 : netplay::MAX_SLOTS; }
 
-QVariant NetplaySlotsModel::data(const QModelIndex &index,
-                                 const int role) const {
-  if (!index.isValid() || index.row() < 0 ||
-      index.row() >= netplay::MAX_SLOTS) {
+QVariant NetplaySlotsModel::data(const QModelIndex &index, const int role) const {
+  if (!index.isValid() || index.row() < 0 || index.row() >= netplay::MAX_SLOTS) {
     return {};
   }
   const auto &slot = m_slots.slot(index.row());
@@ -41,10 +36,10 @@ QVariant NetplaySlotsModel::data(const QModelIndex &index,
 }
 
 QHash<int, QByteArray> NetplaySlotsModel::roleNames() const {
-  return {{SlotNumber, "slotNumber"},   {Occupied, "occupied"},
-          {MemberId, "memberId"},       {DisplayName, "displayName"},
-          {IsSelf, "isSelf"},           {IsHostMember, "isHostMember"},
-          {Ready, "ready"},             {LocalPadIndex, "localPadIndex"}};
+  return {{SlotNumber, "slotNumber"}, {Occupied, "occupied"},
+          {MemberId, "memberId"},     {DisplayName, "displayName"},
+          {IsSelf, "isSelf"},         {IsHostMember, "isHostMember"},
+          {Ready, "ready"},           {LocalPadIndex, "localPadIndex"}};
 }
 
 void NetplaySlotsModel::refresh() {

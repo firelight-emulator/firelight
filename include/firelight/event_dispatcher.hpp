@@ -11,15 +11,16 @@
 class ScopedConnection {
 public:
   ScopedConnection() = default;
-  explicit ScopedConnection(std::function<void()> disconnect)
-      : m_disconnect(std::move(disconnect)) {}
+
+  explicit ScopedConnection(std::function<void()> disconnect) : m_disconnect(std::move(disconnect)) {}
+
   ~ScopedConnection() {
     if (m_disconnect) {
       m_disconnect();
     }
   }
-  ScopedConnection(ScopedConnection &&other) noexcept
-      : m_disconnect(std::move(other.m_disconnect)) {}
+
+  ScopedConnection(ScopedConnection &&other) noexcept : m_disconnect(std::move(other.m_disconnect)) {}
 
   ScopedConnection &operator=(ScopedConnection &&other) noexcept {
     if (this != &other) {
@@ -36,7 +37,6 @@ private:
   std::function<void()> m_disconnect;
 };
 
-// TODO
 // Threading: subscribe()/publish() are called from many threads (render, SDL
 // input, GUI) and are mutex-guarded. Callbacks run synchronously on the
 // publishing thread, so a subscriber must not assume its own thread affinity (a
@@ -54,9 +54,7 @@ public:
     return dispatcher;
   }
 
-  template <typename TEvent>
-  [[nodiscard]] ScopedConnection
-  subscribe(std::function<void(const TEvent &)> callback) {
+  template <typename TEvent> [[nodiscard]] ScopedConnection subscribe(std::function<void(const TEvent &)> callback) {
     auto type = std::type_index(typeid(TEvent));
 
     std::list<std::function<void(const std::any &)>>::iterator it;
@@ -64,10 +62,9 @@ public:
       std::lock_guard lock(m_mutex);
       auto &subscribers = m_subscribers[type];
       // Using a list to prevent iterator invalidation on add/remove
-      it = subscribers.emplace(
-          subscribers.end(), [cb = std::move(callback)](const std::any &event) {
-            cb(std::any_cast<const TEvent &>(event));
-          });
+      it = subscribers.emplace(subscribers.end(), [cb = std::move(callback)](const std::any &event) {
+        cb(std::any_cast<const TEvent &>(event));
+      });
     }
 
     return ScopedConnection([this, type, it]() {
@@ -94,6 +91,5 @@ public:
 
 private:
   std::mutex m_mutex;
-  std::map<std::type_index, std::list<std::function<void(const std::any &)>>>
-      m_subscribers;
+  std::map<std::type_index, std::list<std::function<void(const std::any &)>>> m_subscribers;
 };

@@ -17,12 +17,15 @@ Rectangle {
     color: Theme.surface
 
     function iconSource(u) {
-        if (!u) return "";
-        if (u.indexOf("://") >= 0) return u;
+        if (!u)
+            return "";
+        if (u.indexOf("://") >= 0)
+            return u;
         return "file:///" + u.replace(/\\/g, "/");
     }
     function fmtTime(seconds) {
-        if (!seconds || seconds <= 0) return "—";
+        if (!seconds || seconds <= 0)
+            return "—";
         var h = Math.floor(seconds / 3600);
         var m = Math.round((seconds % 3600) / 60);
         return h > 0 ? (h + "h " + m + "m") : (m > 0 ? (m + "m") : "<1m");
@@ -65,9 +68,7 @@ Rectangle {
             Layout.preferredHeight: Math.round(220 * AppStyle.scale)
             fillMode: Image.PreserveAspectFit
             horizontalAlignment: Image.AlignHCenter
-            source: panel.gameData ? panel.iconSource(panel.gameData.boxartFrontSourceUrl !== ""
-                                                  ? panel.gameData.boxartFrontSourceUrl
-                                                  : panel.gameData.icon1x1SourceUrl) : ""
+            source: panel.gameData ? panel.iconSource(panel.gameData.boxartFrontSourceUrl !== "" ? panel.gameData.boxartFrontSourceUrl : panel.gameData.icon1x1SourceUrl) : ""
             sourceSize.width: 512
             smooth: true
         }
@@ -85,16 +86,19 @@ Rectangle {
         }
         Text {
             Layout.fillWidth: true
-            text: panel.gameData ? (panel.gameData.platformId
-                                + (panel.gameData.releaseYear > 0 ? "  ·  " + panel.gameData.releaseYear : "")
-                                + (panel.gameData.developer !== "" ? "  ·  " + panel.gameData.developer : "")) : ""
+            text: panel.gameData ? (panel.gameData.platformId + (panel.gameData.releaseYear > 0 ? "  ·  " + panel.gameData.releaseYear : "") + (panel.gameData.developer !== "" ? "  ·  " + panel.gameData.developer : "")) : ""
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             elide: Text.ElideRight
         }
 
-        Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.textPrimary; opacity: 0.12 }
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 1
+            color: Theme.textPrimary
+            opacity: 0.12
+        }
 
         // Stat rows
         GridLayout {
@@ -150,7 +154,9 @@ Rectangle {
                     font.family: Constants.regularFontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                 }
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
                 Text {
                     text: panel.gameData ? (panel.gameData.achievementsEarned + " / " + panel.gameData.achievementsTotal) : ""
                     color: Theme.textPrimary
@@ -167,11 +173,13 @@ Rectangle {
                 Rectangle {
                     height: parent.height
                     radius: parent.radius
-                    width: parent.width * (panel.gameData && panel.gameData.achievementsTotal > 0
-                                           ? Math.min(1, panel.gameData.achievementsEarned / panel.gameData.achievementsTotal)
-                                           : 0)
+                    width: parent.width * (panel.gameData && panel.gameData.achievementsTotal > 0 ? Math.min(1, panel.gameData.achievementsEarned / panel.gameData.achievementsTotal) : 0)
                     color: Theme.accent
-                    Behavior on width { NumberAnimation { duration: 160 } }
+                    Behavior on width {
+                        NumberAnimation {
+                            duration: 160
+                        }
+                    }
                 }
             }
         }
@@ -205,20 +213,23 @@ Rectangle {
                 size: "sm"
                 variant: "primary"
                 text: "Play"
-                onClicked: if (panel.gameData) panel.requestPlay(panel.gameData.entryId)
+                onClicked: if (panel.gameData)
+                    panel.requestPlay(panel.gameData.entryId)
             }
             FLIconButton {
                 size: "sm"
                 iconName: "favorite"
                 checked: panel.gameData ? panel.gameData.favorite : false
                 tooltipText: (panel.gameData && panel.gameData.favorite) ? "Remove from favorites" : "Add to favorites"
-                onClicked: if (panel.gameData) panel.requestFavorite(panel.gameData.entryId, !panel.gameData.favorite)
+                onClicked: if (panel.gameData)
+                    panel.requestFavorite(panel.gameData.entryId, !panel.gameData.favorite)
             }
             FLIconButton {
                 size: "sm"
                 iconName: "folder"
                 tooltipText: "Add to folder"
-                onClicked: if (panel.gameData) panel.requestAddToFolder(panel.gameData.entryId)
+                onClicked: if (panel.gameData)
+                    panel.requestAddToFolder(panel.gameData.entryId)
             }
         }
     }

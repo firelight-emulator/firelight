@@ -10,7 +10,6 @@ class ICore;
 
 namespace firelight::cheats {
 
-// TODO
 // Firelight's own equivalent of RetroArch's "retro" cheat handler: it replays a
 // set of RAM writes into the core's live system memory every emulated frame, so
 // values the game overwrites are continuously re-applied (GameShark / Action
@@ -21,6 +20,7 @@ public:
   // Replaces the active write set (typically the enabled RAM cheats' pokes)
   void setActivePokes(std::vector<CheatPoke> pokes);
   void clear();
+
   [[nodiscard]] bool empty() const { return m_pokes.empty(); }
 
   // Writes every active poke into the core's system RAM, bounds-checked. A no-op

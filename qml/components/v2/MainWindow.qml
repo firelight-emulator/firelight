@@ -24,24 +24,24 @@ ApplicationWindow {
     minimumHeight: 600
 
     Component.onCompleted: {
-        WindowFrame.setWindow(root)
-        WindowFrame.setNativePosition(WindowGeometry.mainWindowX, WindowGeometry.mainWindowY)
-        visible = true
-        frameReady = true
+        WindowFrame.setWindow(root);
+        WindowFrame.setNativePosition(WindowGeometry.mainWindowX, WindowGeometry.mainWindowY);
+        visible = true;
+        frameReady = true;
     }
 
     function maximize() {
         if (visibility === Window.Maximized) {
-            visibility = Window.Windowed
-            WindowFrame.setNativePosition(previousX, previousY)
-            width = previousWidth
-            height = previousHeight
+            visibility = Window.Windowed;
+            WindowFrame.setNativePosition(previousX, previousY);
+            width = previousWidth;
+            height = previousHeight;
         } else {
-            previousX = WindowFrame.nativeX()
-            previousY = WindowFrame.nativeY()
-            previousWidth = width
-            previousHeight = height
-            visibility = Window.Maximized
+            previousX = WindowFrame.nativeX();
+            previousY = WindowFrame.nativeY();
+            previousWidth = width;
+            previousHeight = height;
+            visibility = Window.Maximized;
         }
     }
 
@@ -53,10 +53,12 @@ ApplicationWindow {
         WindowGeometry.mainWindowWidth = width;
     }
     onXChanged: {
-        if (frameReady) WindowGeometry.mainWindowX = WindowFrame.nativeX()
+        if (frameReady)
+            WindowGeometry.mainWindowX = WindowFrame.nativeX();
     }
     onYChanged: {
-        if (frameReady) WindowGeometry.mainWindowY = WindowFrame.nativeY()
+        if (frameReady)
+            WindowGeometry.mainWindowY = WindowFrame.nativeY();
     }
 
     FLFocusHighlight {
@@ -66,35 +68,88 @@ ApplicationWindow {
 
     // Resize edges — z:100 so they sit above all content
     Item {
-        anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-        width: 6; z: 100
-        HoverHandler { cursorShape: Qt.SizeHorCursor }
-        DragHandler { target: null; onActiveChanged: if (active) root.startSystemResize(Qt.LeftEdge) }
+        anchors {
+            left: parent.left
+            top: parent.top
+            bottom: parent.bottom
+        }
+        width: 6
+        z: 100
+        HoverHandler {
+            cursorShape: Qt.SizeHorCursor
+        }
+        DragHandler {
+            target: null
+            onActiveChanged: if (active)
+                root.startSystemResize(Qt.LeftEdge)
+        }
     }
     Item {
-        anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-        width: 6; z: 100
-        HoverHandler { cursorShape: Qt.SizeHorCursor }
-        DragHandler { target: null; onActiveChanged: if (active) root.startSystemResize(Qt.RightEdge) }
+        anchors {
+            right: parent.right
+            top: parent.top
+            bottom: parent.bottom
+        }
+        width: 6
+        z: 100
+        HoverHandler {
+            cursorShape: Qt.SizeHorCursor
+        }
+        DragHandler {
+            target: null
+            onActiveChanged: if (active)
+                root.startSystemResize(Qt.RightEdge)
+        }
     }
     Item {
-        anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-        height: 6; z: 100
-        HoverHandler { cursorShape: Qt.SizeVerCursor }
-        DragHandler { target: null; onActiveChanged: if (active) root.startSystemResize(Qt.BottomEdge) }
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
+        height: 6
+        z: 100
+        HoverHandler {
+            cursorShape: Qt.SizeVerCursor
+        }
+        DragHandler {
+            target: null
+            onActiveChanged: if (active)
+                root.startSystemResize(Qt.BottomEdge)
+        }
     }
     Item {
-        anchors { left: parent.left; bottom: parent.bottom }
-        width: 12; height: 12; z: 100
-        HoverHandler { cursorShape: Qt.SizeBDiagCursor }
-        DragHandler { target: null; onActiveChanged: if (active) root.startSystemResize(Qt.LeftEdge | Qt.BottomEdge) }
+        anchors {
+            left: parent.left
+            bottom: parent.bottom
+        }
+        width: 12
+        height: 12
+        z: 100
+        HoverHandler {
+            cursorShape: Qt.SizeBDiagCursor
+        }
+        DragHandler {
+            target: null
+            onActiveChanged: if (active)
+                root.startSystemResize(Qt.LeftEdge | Qt.BottomEdge)
+        }
     }
     Item {
-        anchors { right: parent.right; bottom: parent.bottom }
-        width: 12; height: 12; z: 100
-        HoverHandler { cursorShape: Qt.SizeFDiagCursor }
-        DragHandler { target: null; onActiveChanged: if (active) root.startSystemResize(Qt.RightEdge | Qt.BottomEdge) }
+        anchors {
+            right: parent.right
+            bottom: parent.bottom
+        }
+        width: 12
+        height: 12
+        z: 100
+        HoverHandler {
+            cursorShape: Qt.SizeFDiagCursor
+        }
+        DragHandler {
+            target: null
+            onActiveChanged: if (active)
+                root.startSystemResize(Qt.RightEdge | Qt.BottomEdge)
+        }
     }
-
-
 }

@@ -12,7 +12,7 @@ Rectangle {
     visible: NetworkService.inLobby && NetworkService.sessionPhase === "starting"
     onVisibleChanged: {
         if (!visible) {
-            selfReady = false
+            selfReady = false;
         }
     }
 
@@ -61,8 +61,7 @@ Rectangle {
             }
             Text {
                 text: NetworkService.readySlotCount + "/" + NetworkService.occupiedSlotCount + " ready"
-                color: NetworkService.readySlotCount === NetworkService.occupiedSlotCount
-                       ? Theme.success : Theme.textMuted
+                color: NetworkService.readySlotCount === NetworkService.occupiedSlotCount ? Theme.success : Theme.textMuted
                 font.pixelSize: AppStyle.fontSizeSmall
             }
         }
@@ -78,8 +77,8 @@ Rectangle {
                 enabled: !root.selfReady
                 Layout.fillWidth: true
                 onClicked: {
-                    root.selfReady = true
-                    NetworkService.setReady(true)
+                    root.selfReady = true;
+                    NetworkService.setReady(true);
                 }
             }
 
@@ -99,5 +98,5 @@ Rectangle {
         }
     }
 
-    signal hostLaunchRequested()
+    signal hostLaunchRequested
 }

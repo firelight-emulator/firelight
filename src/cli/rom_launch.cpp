@@ -9,8 +9,7 @@
 
 namespace firelight::cli {
 
-int resolveRomEntryId(const std::string &romPath,
-                      library::UserLibraryService &library,
+int resolveRomEntryId(const std::string &romPath, library::UserLibraryService &library,
                       platforms::IPlatformService &platformService) {
   if (romPath.empty()) {
     return -1;
@@ -31,8 +30,7 @@ int resolveRomEntryId(const std::string &romPath,
 
   const auto entry = library.getEntryWithContentHash(identified.contentHash);
   if (!entry) {
-    spdlog::warn("ROM is not in the library yet (scan or import it first): {}",
-                 romPath);
+    spdlog::warn("ROM is not in the library yet (scan or import it first): {}", romPath);
     return -1;
   }
 

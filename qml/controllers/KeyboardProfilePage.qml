@@ -44,7 +44,6 @@ FocusScope {
 
             currentIndex: 0
 
-            // TODO
             // onCurrentItemChanged: {
             //     gamepadProfile.currentPlatformId = platformList.currentItem.model.platform_id
             // }
@@ -64,7 +63,7 @@ FocusScope {
 
                 onToggled: {
                     if (checked) {
-                        ListView.view.currentIndex = index
+                        ListView.view.currentIndex = index;
                     }
                 }
             }
@@ -81,7 +80,7 @@ FocusScope {
             Layout.leftMargin: 12
 
             Keys.onBackPressed: {
-                platformList.forceActiveFocus()
+                platformList.forceActiveFocus();
             }
 
             spacing: 8
@@ -109,7 +108,6 @@ FocusScope {
                         easing.type: Easing.InOutQuad
                     }
                 }
-
             }
 
             RowLayout {
@@ -129,7 +127,7 @@ FocusScope {
                     label: "Assign all"
 
                     onClicked: function () {
-                        confirmDialog.open()
+                        confirmDialog.open();
                     }
                 }
 
@@ -139,7 +137,7 @@ FocusScope {
                     label: "Reset all"
 
                     onClicked: function () {
-                        confirmResetAllDialog.open()
+                        confirmResetAllDialog.open();
                     }
                 }
             }
@@ -208,8 +206,7 @@ FocusScope {
 
                 KeyNavigation.up: assignAllButton
 
-                ScrollBar.vertical: ScrollBar {
-                }
+                ScrollBar.vertical: ScrollBar {}
 
                 visible: platformList.currentItem.model.buttons.length > 0
 
@@ -267,12 +264,14 @@ FocusScope {
                             iconCode: "\ue3c9"
 
                             onClicked: {
-                                dialog.buttons = []
-                                dialog.buttons = [{
-                                    display_name: modelData.display_name,
-                                    retropad_button: modelData.retropad_button
-                                }]
-                                dialog.open()
+                                dialog.buttons = [];
+                                dialog.buttons = [
+                                    {
+                                        display_name: modelData.display_name,
+                                        retropad_button: modelData.retropad_button
+                                    }
+                                ];
+                                dialog.open();
                             }
                         }
 
@@ -289,8 +288,7 @@ FocusScope {
                             iconCode: "\ue5d5"
 
                             onClicked: {
-                                inputMapping.removeMapping(modelData.retropad_button)
-                                // TODO
+                                inputMapping.removeMapping(modelData.retropad_button);
                                 // dialog.buttons = []
                                 // dialog.buttons = [{
                                 //     display_name: modelData.display_name,
@@ -304,10 +302,8 @@ FocusScope {
                             Layout.fillHeight: true
                             Layout.fillWidth: true
                         }
-
                     }
                 }
-
             }
         }
 
@@ -330,9 +326,9 @@ FocusScope {
         showButtons: true
 
         onAccepted: function () {
-            dialog.buttons = platformList.currentItem.model.buttons
-            dialog.currentIndex = 0
-            dialog.open()
+            dialog.buttons = platformList.currentItem.model.buttons;
+            dialog.currentIndex = 0;
+            dialog.open();
         }
     }
 
@@ -345,7 +341,7 @@ FocusScope {
         showButtons: true
 
         onAccepted: function () {
-            inputMapping.removeAllMappings()
+            inputMapping.removeAllMappings();
         }
     }
 
@@ -364,20 +360,20 @@ FocusScope {
         closePolicy: Popup.NoAutoClose
 
         onAboutToShow: {
-            controller_manager.blockGamepadInput = true
-            currentIndex = 0
-            frameAnimation.reset()
+            controller_manager.blockGamepadInput = true;
+            currentIndex = 0;
+            frameAnimation.reset();
         }
 
         onOpened: function () {
             // theBar.widthThing = parent.width
-            timer.start()
+            timer.start();
         }
 
         onClosed: function () {
-            timer.stop()
-            controller_manager.blockGamepadInput = false
-            dialog.buttons = []
+            timer.stop();
+            controller_manager.blockGamepadInput = false;
+            dialog.buttons = [];
         }
 
         Timer {
@@ -392,19 +388,18 @@ FocusScope {
 
             function onRetropadInputStateChanged(player, input, activated) {
                 if (!dialog.visible) {
-                    return
+                    return;
                 }
                 if (activated && !axisDebounceTimer.running) {
-                    axisDebounceTimer.restart()
-                    inputMapping.addMapping(dialog.buttons[dialog.currentIndex].retropad_button, input)
+                    axisDebounceTimer.restart();
+                    inputMapping.addMapping(dialog.buttons[dialog.currentIndex].retropad_button, input);
                     if (dialog.buttons.length > dialog.currentIndex + 1) {
-                        dialog.currentIndex++
-                        timer.stop()
-                        frameAnimation.reset()
-                        timer.restart()
-
+                        dialog.currentIndex++;
+                        timer.stop();
+                        frameAnimation.reset();
+                        timer.restart();
                     } else {
-                        dialog.accept()
+                        dialog.accept();
                         // dialog.close()
                         // saveMapping()
                     }
@@ -417,22 +412,21 @@ FocusScope {
             focus: true
 
             Keys.onPressed: function (event) {
-                inputMapping.addMapping(dialog.buttons[dialog.currentIndex].retropad_button, event.key)
+                inputMapping.addMapping(dialog.buttons[dialog.currentIndex].retropad_button, event.key);
                 if (dialog.buttons.length > dialog.currentIndex + 1) {
-                    dialog.currentIndex++
-                    timer.stop()
-                    frameAnimation.reset()
-                    timer.restart()
-
+                    dialog.currentIndex++;
+                    timer.stop();
+                    frameAnimation.reset();
+                    timer.restart();
                 } else {
-                    dialog.accept()
+                    dialog.accept();
                     // dialog.close()
                     // saveMapping()
                 }
             }
 
             Keys.onReleased: function (event) {
-                event.accept = false
+                event.accept = false;
             }
 
             Image {
@@ -474,7 +468,7 @@ FocusScope {
                 running: false
                 repeat: false
                 onTriggered: {
-                    dialog.reject()
+                    dialog.reject();
                     // dialog.close()
                     // saveMapping()
                 }
@@ -493,8 +487,6 @@ FocusScope {
                 Layout.preferredHeight: 10
                 color: "green"
             }
-
         }
     }
-
 }

@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-
 Item {
     Text {
         text: "Firelight Emulator\nv0.12.2"

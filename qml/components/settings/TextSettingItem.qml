@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // Free-text setting. Emits `edited` on commit (focus loss / Enter) rather than
 // on every keystroke; stays in sync with external value changes when not being
 // edited (so a Reset refreshes it)

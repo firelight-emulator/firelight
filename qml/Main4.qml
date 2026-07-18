@@ -67,11 +67,11 @@ MainWindow {
             anchors.fill: parent
 
             onMenuButtonClicked: {
-                navigationPane.open()
+                navigationPane.open();
             }
 
             onMaximizeClicked: {
-                window.maximize()
+                window.maximize();
                 // emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: contentStack})
             }
             onMinimizeClicked: window.showMinimized()
@@ -98,12 +98,36 @@ MainWindow {
 
             Repeater {
                 model: [
-                    { displayName: "Library", iconName: "browse", route: "/library" },
-                    { displayName: "Mod Shop", iconName: "shopping-bag", route: "/shop" },
-                    { displayName: "Controllers", iconName: "controller", route: "/controllers" },
-                    { displayName: "Gallery", iconName: "photo-library", route: "/gallery" },
-                    { displayName: "Activity", iconName: "bar-chart", route: "/activity" },
-                    { displayName: "Online Lobby", iconName: "online", route: "/netplay" }
+                    {
+                        displayName: "Library",
+                        iconName: "browse",
+                        route: "/library"
+                    },
+                    {
+                        displayName: "Mod Shop",
+                        iconName: "shopping-bag",
+                        route: "/shop"
+                    },
+                    {
+                        displayName: "Controllers",
+                        iconName: "controller",
+                        route: "/controllers"
+                    },
+                    {
+                        displayName: "Gallery",
+                        iconName: "photo-library",
+                        route: "/gallery"
+                    },
+                    {
+                        displayName: "Activity",
+                        iconName: "bar-chart",
+                        route: "/activity"
+                    },
+                    {
+                        displayName: "Online Lobby",
+                        iconName: "online",
+                        route: "/netplay"
+                    }
                 ]
 
                 delegate: FLIconButton {
@@ -120,7 +144,7 @@ MainWindow {
                     Layout.alignment: Qt.AlignVCenter
 
                     onClicked: {
-                        Router.navigate(model.route)
+                        Router.navigate(model.route);
                     }
                 }
             }
@@ -143,7 +167,7 @@ MainWindow {
                 Layout.alignment: Qt.AlignVCenter
 
                 onClicked: {
-                    Router.navigate(route)
+                    Router.navigate(route);
                 }
             }
         }
@@ -173,7 +197,6 @@ MainWindow {
         z: 10
     }
 
-    // TODO
     // The running game + quick menu, layered above the router. It grows to full
     // screen when foregrounded and shrinks into a bottom bar when backgrounded —
     // the game render itself becomes the "now playing" bar

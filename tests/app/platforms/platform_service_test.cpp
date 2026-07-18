@@ -1,13 +1,13 @@
 #include <firelight/input/gamepad_input.hpp>
 #include <firelight/platforms/platform_service.hpp>
+
 #include <gtest/gtest.h>
 #include <rcheevos/rc_consoles.h>
 
 class PlatformServiceTest : public testing::Test {
 protected:
-  static void
-  assertPlatformsEqual(const firelight::platforms::Platform &first,
-                       const firelight::platforms::Platform &second) {
+  static void assertPlatformsEqual(const firelight::platforms::Platform &first,
+                                   const firelight::platforms::Platform &second) {
     EXPECT_EQ(first.id, second.id);
     EXPECT_EQ(first.name, second.name);
     EXPECT_EQ(first.abbreviation, second.abbreviation);
@@ -22,8 +22,7 @@ protected:
       EXPECT_EQ(actualController.id, expectedController.id);
       EXPECT_EQ(actualController.name, expectedController.name);
       EXPECT_EQ(actualController.imageUrl, expectedController.imageUrl);
-      EXPECT_EQ(actualController.inputs.size(),
-                expectedController.inputs.size());
+      EXPECT_EQ(actualController.inputs.size(), expectedController.inputs.size());
 
       for (size_t j = 0; j < actualController.inputs.size(); ++j) {
         const auto &expectedInput = expectedController.inputs[j];
@@ -42,11 +41,9 @@ TEST_F(PlatformServiceTest, AllPlatformsPresent) {
   // Fully-modeled platforms (with controller data) plus the identity-only
   // RetroAchievements-coverage consoles are all registered
   EXPECT_GT(service.listPlatforms().size(), 60u);
-  for (const int id : {PS::PLATFORM_ID_GAMEBOY, PS::PLATFORM_ID_N64,
-                       PS::PLATFORM_ID_SNES, PS::PLATFORM_ID_PS1,
+  for (const int id : {PS::PLATFORM_ID_GAMEBOY, PS::PLATFORM_ID_N64, PS::PLATFORM_ID_SNES, PS::PLATFORM_ID_PS1,
                        PS::PLATFORM_ID_VIRTUAL_BOY}) {
-    EXPECT_TRUE(service.getPlatform(id).has_value())
-        << "missing platform id " << id;
+    EXPECT_TRUE(service.getPlatform(id).has_value()) << "missing platform id " << id;
   }
 }
 
@@ -101,27 +98,19 @@ TEST_F(PlatformServiceTest, PlatformIdForRcConsoleMapsConsoles) {
   const PS service;
 
   // Consoles modeled with legacy platform ids map to them directly
-  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_NINTENDO),
-            PS::PLATFORM_ID_NES);
-  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_SUPER_NINTENDO),
-            PS::PLATFORM_ID_SNES);
-  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_NINTENDO_64),
-            PS::PLATFORM_ID_N64);
-  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_SATURN),
-            PS::PLATFORM_ID_SEGA_SATURN);
-  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_PLAYSTATION_2),
-            PS::PLATFORM_ID_PS2);
+  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_NINTENDO), PS::PLATFORM_ID_NES);
+  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_SUPER_NINTENDO), PS::PLATFORM_ID_SNES);
+  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_NINTENDO_64), PS::PLATFORM_ID_N64);
+  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_SATURN), PS::PLATFORM_ID_SEGA_SATURN);
+  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_PLAYSTATION_2), PS::PLATFORM_ID_PS2);
 
   // Unknown maps to PLATFORM_ID_UNKNOWN
-  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_UNKNOWN),
-            PS::PLATFORM_ID_UNKNOWN);
+  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_UNKNOWN), PS::PLATFORM_ID_UNKNOWN);
 
   // Consoles Firelight doesn't fully model map to the provisional id
   // (1000 + rc console id) that identifies them by name only
-  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_ATARI_LYNX),
-            1000 + RC_CONSOLE_ATARI_LYNX);
-  EXPECT_TRUE(
-      service.getPlatform(1000 + RC_CONSOLE_ATARI_LYNX).has_value());
+  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_ATARI_LYNX), 1000 + RC_CONSOLE_ATARI_LYNX);
+  EXPECT_TRUE(service.getPlatform(1000 + RC_CONSOLE_ATARI_LYNX).has_value());
 }
 
 // RA-coverage consoles Firelight doesn't fully model still resolve to an
@@ -132,8 +121,7 @@ TEST_F(PlatformServiceTest, RaCoverageConsoleHasIdentityPlatform) {
   const auto lynx = service.getPlatform(1000 + RC_CONSOLE_ATARI_LYNX);
   ASSERT_TRUE(lynx.has_value());
   EXPECT_EQ(lynx->name, "Atari Lynx");
-  EXPECT_EQ(lynx->retroAchievementsId,
-            static_cast<unsigned>(RC_CONSOLE_ATARI_LYNX));
+  EXPECT_EQ(lynx->retroAchievementsId, static_cast<unsigned>(RC_CONSOLE_ATARI_LYNX));
   // Identity-only: no controller/extension data
   EXPECT_TRUE(lynx->controllerTypes.empty());
   EXPECT_TRUE(lynx->fileAssociations.empty());
@@ -180,7 +168,6 @@ TEST_F(PlatformServiceTest, PlatformJsonRoundTrip) {
   EXPECT_EQ(restored.discordImage, original.discordImage);
 }
 
-// TODO
 // TEST_F(PlatformServiceTest, PlatformGameboyIsCorrect) {
 //   const auto expectedNes = firelight::platforms::Platform{
 //       .id = firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY,

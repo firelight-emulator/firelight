@@ -1,7 +1,9 @@
 #include "save_files_item.hpp"
-#include <spdlog/spdlog.h>
-#include <firelight/saves/isave_manager.hpp>
+
 #include <firelight/library/user_library_service.hpp>
+#include <firelight/saves/isave_manager.hpp>
+
+#include <spdlog/spdlog.h>
 
 namespace firelight::saves {
 
@@ -23,17 +25,12 @@ void SaveFilesItem::setEntryId(const int entryId) {
 
   setActiveSaveSlotNumber(entry->activeSaveSlot);
 
-  m_saveFilesModel->reset(
-      getSaveManager()->getSaveFileInfoList(entry->contentHash));
+  m_saveFilesModel->reset(getSaveManager()->getSaveFileInfoList(entry->contentHash));
 }
 
-SavefileListModel *SaveFilesItem::getSaveFiles() const {
-  return m_saveFilesModel;
-}
+SavefileListModel *SaveFilesItem::getSaveFiles() const { return m_saveFilesModel; }
 
-int SaveFilesItem::getActiveSaveSlotNumber() const {
-  return m_activeSaveSlotNumber;
-}
+int SaveFilesItem::getActiveSaveSlotNumber() const { return m_activeSaveSlotNumber; }
 
 void SaveFilesItem::setActiveSaveSlotNumber(const int activeSaveSlotNumber) {
   if (m_activeSaveSlotNumber == activeSaveSlotNumber) {
@@ -51,8 +48,7 @@ void SaveFilesItem::setActiveSaveSlotNumber(const int activeSaveSlotNumber) {
 
   entry->activeSaveSlot = activeSaveSlotNumber;
   if (!getLibraryService()->update(*entry)) {
-    spdlog::error("SaveFilesItem: Failed to update entry with ID {}",
-                  m_entryId);
+    spdlog::error("SaveFilesItem: Failed to update entry with ID {}", m_entryId);
   }
 }
 

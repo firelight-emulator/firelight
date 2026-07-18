@@ -16,13 +16,21 @@ public:
   std::vector<int> written;
 
   [[nodiscard]] float playbackMultiplier() const override { return 1.0f; }
+
   void setPlaybackMultiplier(float) override {}
+
   [[nodiscard]] bool paused() const override { return false; }
+
   void setPaused(bool) override {}
+
   void advanceOneFrame() override {}
+
   void writeSuspendPoint(const int index) override { written.push_back(index); }
+
   void loadSuspendPoint(int) override {}
+
   void captureScreenshot() override {}
+
   void captureVideoClip() override {}
 };
 } // namespace
@@ -36,8 +44,7 @@ protected:
   RecordingController m_controller;
   bool m_onlyPlayerOne = false;
 
-  ShortcutActions m_actions{m_settingsService, [] { return false; },
-                            ShortcutActions::Intents{}};
+  ShortcutActions m_actions{m_settingsService, [] { return false; }, ShortcutActions::Intents{}};
 
   std::unique_ptr<ShortcutDispatcher> m_dispatcher;
 
@@ -45,9 +52,7 @@ protected:
     settings::SettingsService::setInstance(&m_settingsService);
     m_actions.setController(&m_controller);
     m_dispatcher = std::make_unique<ShortcutDispatcher>(
-        m_actions, [this](const int playerIndex) {
-          return !m_onlyPlayerOne || playerIndex <= 0;
-        });
+        m_actions, [this](const int playerIndex) { return !m_onlyPlayerOne || playerIndex <= 0; });
   }
 
   void TearDown() override {
@@ -58,9 +63,8 @@ protected:
   // The dispatcher hops to the GUI thread, so the queued call needs the event
   // loop to turn over before anything has happened
   void fire(const int playerIndex, const std::string &id) {
-    EventDispatcher::instance().publish(input::ShortcutEvent{
-        .playerIndex = playerIndex, .id = id,
-        .phase = input::ShortcutPhase::Started});
+    EventDispatcher::instance().publish(
+        input::ShortcutEvent{.playerIndex = playerIndex, .id = id, .phase = input::ShortcutPhase::Started});
     QCoreApplication::processEvents();
   }
 };
@@ -112,8 +116,7 @@ TEST_F(ShortcutDispatcherTest, TriggerIgnoresThePlayerPolicy) {
 TEST_F(ShortcutDispatcherTest, HotkeysToggledBecomesAMessageNamingThePlayer) {
   QSignalSpy spy(m_dispatcher.get(), &ShortcutDispatcher::notified);
 
-  EventDispatcher::instance().publish(
-      input::HotkeysToggledEvent{.playerIndex = 1, .enabled = false});
+  EventDispatcher::instance().publish(input::HotkeysToggledEvent{.playerIndex = 1, .enabled = false});
   QCoreApplication::processEvents();
 
   ASSERT_EQ(spy.count(), 1);
@@ -123,8 +126,7 @@ TEST_F(ShortcutDispatcherTest, HotkeysToggledBecomesAMessageNamingThePlayer) {
 TEST_F(ShortcutDispatcherTest, TurningHotkeysBackOnSaysSo) {
   QSignalSpy spy(m_dispatcher.get(), &ShortcutDispatcher::notified);
 
-  EventDispatcher::instance().publish(
-      input::HotkeysToggledEvent{.playerIndex = 0, .enabled = true});
+  EventDispatcher::instance().publish(input::HotkeysToggledEvent{.playerIndex = 0, .enabled = true});
   QCoreApplication::processEvents();
 
   ASSERT_EQ(spy.count(), 1);

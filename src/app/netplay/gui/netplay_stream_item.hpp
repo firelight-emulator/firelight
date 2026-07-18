@@ -3,13 +3,11 @@
 #include <firelight/media/stream_decoder.hpp>
 
 #include <QQuickItem>
-
 #include <mutex>
 #include <optional>
 
 namespace firelight::gui {
 
-// TODO
 // Displays the incoming game stream: frames are handed in from decode
 // threads and uploaded as scene-graph textures on the render thread
 // (Not final: qmlRegisterType subclasses it.)
@@ -25,6 +23,7 @@ public:
   void presentFrame(media::StreamVideoFrame frame);
 
   [[nodiscard]] int frameWidth() const { return m_frameWidth; }
+
   [[nodiscard]] int frameHeight() const { return m_frameHeight; }
 
 signals:

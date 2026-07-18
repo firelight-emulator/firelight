@@ -40,8 +40,7 @@ std::string localPlayerName() {
 }
 } // namespace
 
-DirectLobbyBackend::DirectLobbyBackend(QObject *parent)
-    : QObject(parent), m_displayName(localPlayerName()) {}
+DirectLobbyBackend::DirectLobbyBackend(QObject *parent) : QObject(parent), m_displayName(localPlayerName()) {}
 
 void DirectLobbyBackend::setPreferredDisplayName(const std::string &name) {
   const auto trimmed = QString::fromStdString(name).trimmed();
@@ -73,10 +72,7 @@ void DirectLobbyBackend::setPreferredDisplayName(const std::string &name) {
 
   // Renames apply live: tell the lobby, and report the local change too
   if (m_server) {
-    broadcastToGuests({{"t", "member-renamed"},
-                       {"id", QString::number(selfId)},
-                       {"name", trimmed}},
-                      nullptr);
+    broadcastToGuests({{"t", "member-renamed"}, {"id", QString::number(selfId)}, {"name", trimmed}}, nullptr);
   } else if (m_hostSocket) {
     m_hostSocket->write(encodeLine({{"t", "rename"}, {"name", trimmed}}));
   }
@@ -91,9 +87,7 @@ void DirectLobbyBackend::beginSignIn(std::function<void(bool)> done) {
   }
 }
 
-SignInState DirectLobbyBackend::signInState() const {
-  return SignInState::Ready;
-}
+SignInState DirectLobbyBackend::signInState() const { return SignInState::Ready; }
 
 PlayerIdentity DirectLobbyBackend::localIdentity() const {
   std::lock_guard lock(m_stateMutex);
@@ -116,8 +110,7 @@ void DirectLobbyBackend::createLobby(const std::string &, ResultCallback done) {
     m_server->deleteLater();
     m_server = nullptr;
     if (done) {
-      done(false, "Couldn't open port " + std::to_string(DEFAULT_PORT) + ": " +
-                      error);
+      done(false, "Couldn't open port " + std::to_string(DEFAULT_PORT) + ": " + error);
     }
     return;
   }
@@ -131,12 +124,9 @@ void DirectLobbyBackend::createLobby(const std::string &, ResultCallback done) {
           return;
         }
         it->second.buffer += socket->readAll();
-        drainLines(it->second.buffer, [this, socket](const QJsonObject &m) {
-          handleGuestLine(socket, m);
-        });
+        drainLines(it->second.buffer, [this, socket](const QJsonObject &m) { handleGuestLine(socket, m); });
       });
-      connect(socket, &QTcpSocket::disconnected, this,
-              [this, socket] { guestSocketClosed(socket); });
+      connect(socket, &QTcpSocket::disconnected, this, [this, socket] { guestSocketClosed(socket); });
     }
   });
 
@@ -154,8 +144,7 @@ void DirectLobbyBackend::createLobby(const std::string &, ResultCallback done) {
   }
 }
 
-void DirectLobbyBackend::handleGuestLine(QTcpSocket *socket,
-                                         const QJsonObject &message) {
+void DirectLobbyBackend::handleGuestLine(QTcpSocket *socket, const QJsonObject &message) {
   auto it = m_guests.find(socket);
   if (it == m_guests.end()) {
     return;
@@ -173,19 +162,17 @@ void DirectLobbyBackend::handleGuestLine(QTcpSocket *socket,
       std::lock_guard lock(m_stateMutex);
       m_members.push_back(LobbyMember{guest.id, guest.name});
       for (const auto &member : m_members) {
-        members.append(QJsonObject{
-            {"id", QString::number(member.id)},
-            {"name", QString::fromStdString(member.displayName)}});
+        members.append(
+            QJsonObject{{"id", QString::number(member.id)}, {"name", QString::fromStdString(member.displayName)}});
       }
     }
     socket->write(encodeLine({{"t", "welcome"},
                               {"id", QString::number(guest.id)},
                               {"hostId", QString::number(m_hostId)},
                               {"members", members}}));
-    broadcastToGuests({{"t", "member-joined"},
-                       {"id", QString::number(guest.id)},
-                       {"name", QString::fromStdString(guest.name)}},
-                      socket);
+    broadcastToGuests(
+        {{"t", "member-joined"}, {"id", QString::number(guest.id)}, {"name", QString::fromStdString(guest.name)}},
+        socket);
     if (m_events.memberJoined) {
       m_events.memberJoined(LobbyMember{guest.id, guest.name});
     }
@@ -219,10 +206,7 @@ void DirectLobbyBackend::handleGuestLine(QTcpSocket *socket,
         }
       }
     }
-    broadcastToGuests({{"t", "member-renamed"},
-                       {"id", QString::number(guest.id)},
-                       {"name", newName}},
-                      socket);
+    broadcastToGuests({{"t", "member-renamed"}, {"id", QString::number(guest.id)}, {"name", newName}}, socket);
     if (m_events.memberRenamed) {
       m_events.memberRenamed(guest.id, guest.name);
     }
@@ -230,9 +214,7 @@ void DirectLobbyBackend::handleGuestLine(QTcpSocket *socket,
     const auto to = message.value("to").toString().toULongLong();
     if (to == m_hostId) {
       if (m_events.signalReceived) {
-        m_events.signalReceived(guest.id,
-                                message.value("payload").toString()
-                                    .toStdString());
+        m_events.signalReceived(guest.id, message.value("payload").toString().toStdString());
       }
       return;
     }
@@ -261,18 +243,15 @@ void DirectLobbyBackend::guestSocketClosed(QTcpSocket *socket) {
   }
   {
     std::lock_guard lock(m_stateMutex);
-    std::erase_if(m_members,
-                  [id](const LobbyMember &member) { return member.id == id; });
+    std::erase_if(m_members, [id](const LobbyMember &member) { return member.id == id; });
   }
-  broadcastToGuests({{"t", "member-left"}, {"id", QString::number(id)}},
-                    nullptr);
+  broadcastToGuests({{"t", "member-left"}, {"id", QString::number(id)}}, nullptr);
   if (m_events.memberLeft) {
     m_events.memberLeft(id);
   }
 }
 
-void DirectLobbyBackend::broadcastToGuests(const QJsonObject &message,
-                                           QTcpSocket *except) {
+void DirectLobbyBackend::broadcastToGuests(const QJsonObject &message, QTcpSocket *except) {
   const auto line = encodeLine(message);
   for (auto &[socket, guest] : m_guests) {
     if (socket != except && guest.helloReceived) {
@@ -283,8 +262,7 @@ void DirectLobbyBackend::broadcastToGuests(const QJsonObject &message,
 
 // --- guest ---
 
-void DirectLobbyBackend::joinLobby(const std::string &hostAddress,
-                                   ResultCallback done) {
+void DirectLobbyBackend::joinLobby(const std::string &hostAddress, ResultCallback done) {
   if (m_server || m_hostSocket) {
     if (done) {
       done(false, "Already in a lobby");
@@ -294,9 +272,7 @@ void DirectLobbyBackend::joinLobby(const std::string &hostAddress,
 
   const auto input = QString::fromStdString(hostAddress).trimmed();
   const auto host = input.section(':', 0, 0);
-  const auto port = input.contains(':')
-                        ? static_cast<uint16_t>(input.section(':', 1).toUInt())
-                        : DEFAULT_PORT;
+  const auto port = input.contains(':') ? static_cast<uint16_t>(input.section(':', 1).toUInt()) : DEFAULT_PORT;
   if (host.isEmpty() || port == 0) {
     if (done) {
       done(false, "Enter the host's IP address");
@@ -309,33 +285,26 @@ void DirectLobbyBackend::joinLobby(const std::string &hostAddress,
   m_hostBuffer.clear();
 
   connect(m_hostSocket, &QTcpSocket::connected, this, [this] {
-    m_hostSocket->write(encodeLine(
-        {{"t", "hello"}, {"name", QString::fromStdString(m_displayName)}}));
+    m_hostSocket->write(encodeLine({{"t", "hello"}, {"name", QString::fromStdString(m_displayName)}}));
   });
   connect(m_hostSocket, &QTcpSocket::readyRead, this, [this] {
     m_hostBuffer += m_hostSocket->readAll();
-    drainLines(m_hostBuffer,
-               [this](const QJsonObject &m) { handleHostLine(m); });
+    drainLines(m_hostBuffer, [this](const QJsonObject &m) { handleHostLine(m); });
   });
-  connect(m_hostSocket, &QTcpSocket::disconnected, this,
-          [this] { hostSocketClosed(); });
-  connect(m_hostSocket, &QTcpSocket::errorOccurred, this,
-          [this](QAbstractSocket::SocketError) {
-            if (m_pendingJoin) {
-              const auto reason = m_hostSocket
-                                      ? m_hostSocket->errorString().toStdString()
-                                      : "Connection failed";
-              const auto pending = std::move(m_pendingJoin);
-              m_pendingJoin = nullptr;
-              resetState();
-              pending(false, reason);
-            }
-          });
+  connect(m_hostSocket, &QTcpSocket::disconnected, this, [this] { hostSocketClosed(); });
+  connect(m_hostSocket, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError) {
+    if (m_pendingJoin) {
+      const auto reason = m_hostSocket ? m_hostSocket->errorString().toStdString() : "Connection failed";
+      const auto pending = std::move(m_pendingJoin);
+      m_pendingJoin = nullptr;
+      resetState();
+      pending(false, reason);
+    }
+  });
 
   // Cap the OS connect timeout at something a person will wait through
   QTimer::singleShot(10000, this, [this] {
-    if (m_pendingJoin && m_hostSocket &&
-        m_hostSocket->state() != QAbstractSocket::ConnectedState) {
+    if (m_pendingJoin && m_hostSocket && m_hostSocket->state() != QAbstractSocket::ConnectedState) {
       m_hostSocket->abort();
     }
   });
@@ -354,14 +323,12 @@ void DirectLobbyBackend::handleHostLine(const QJsonObject &message) {
       m_selfId = message.value("id").toString().toULongLong();
       m_hostId = message.value("hostId").toString().toULongLong();
       m_joinCodeDisplay =
-          m_hostSocket->peerAddress().toString().toStdString() + ":" +
-          std::to_string(m_hostSocket->peerPort());
+          m_hostSocket->peerAddress().toString().toStdString() + ":" + std::to_string(m_hostSocket->peerPort());
       m_members.clear();
       for (const auto &entry : message.value("members").toArray()) {
         const auto member = entry.toObject();
         m_members.push_back(
-            LobbyMember{member.value("id").toString().toULongLong(),
-                        member.value("name").toString().toStdString()});
+            LobbyMember{member.value("id").toString().toULongLong(), member.value("name").toString().toStdString()});
       }
     }
     if (m_pendingJoin) {
@@ -386,9 +353,7 @@ void DirectLobbyBackend::handleHostLine(const QJsonObject &message) {
     const auto id = message.value("id").toString().toULongLong();
     {
       std::lock_guard lock(m_stateMutex);
-      std::erase_if(m_members, [id](const LobbyMember &member) {
-        return member.id == id;
-      });
+      std::erase_if(m_members, [id](const LobbyMember &member) { return member.id == id; });
     }
     if (m_events.memberLeft) {
       m_events.memberLeft(id);
@@ -416,8 +381,7 @@ void DirectLobbyBackend::handleHostLine(const QJsonObject &message) {
   } else if (type == "signal") {
     if (m_events.signalReceived) {
       m_events.signalReceived(message.value("from").toString().toULongLong(),
-                              message.value("payload").toString()
-                                  .toStdString());
+                              message.value("payload").toString().toStdString());
     }
   }
 }
@@ -444,8 +408,7 @@ void DirectLobbyBackend::hostSocketClosed() {
 
 void DirectLobbyBackend::leaveLobby() {
   // Marshal: teardown touches sockets, which live on the main thread
-  QMetaObject::invokeMethod(this, [this] { resetState(); },
-                            Qt::QueuedConnection);
+  QMetaObject::invokeMethod(this, [this] { resetState(); }, Qt::QueuedConnection);
 }
 
 void DirectLobbyBackend::sendChat(const std::string &text) {
@@ -464,23 +427,20 @@ void DirectLobbyBackend::sendChat(const std::string &text) {
                              {"text", QString::fromStdString(text)}},
                             nullptr);
         } else if (m_hostSocket) {
-          m_hostSocket->write(encodeLine(
-              {{"t", "chat"}, {"text", QString::fromStdString(text)}}));
+          m_hostSocket->write(encodeLine({{"t", "chat"}, {"text", QString::fromStdString(text)}}));
         }
       },
       Qt::QueuedConnection);
 }
 
-void DirectLobbyBackend::sendSignal(const PlayerId to,
-                                    const std::string &payload) {
+void DirectLobbyBackend::sendSignal(const PlayerId to, const std::string &payload) {
   QMetaObject::invokeMethod(
       this,
       [this, to, payload] {
-        const QJsonObject message{
-            {"t", "signal"},
-            {"from", QString::number(m_selfId)},
-            {"to", QString::number(to)},
-            {"payload", QString::fromStdString(payload)}};
+        const QJsonObject message{{"t", "signal"},
+                                  {"from", QString::number(m_selfId)},
+                                  {"to", QString::number(to)},
+                                  {"payload", QString::fromStdString(payload)}};
         if (m_server) {
           for (auto &[socket, guest] : m_guests) {
             if (guest.id == to) {
@@ -542,8 +502,7 @@ void DirectLobbyBackend::resetState() {
 std::string DirectLobbyBackend::listenAddressDisplay() const {
   QString address = "127.0.0.1";
   for (const auto &candidate : QNetworkInterface::allAddresses()) {
-    if (candidate.protocol() == QAbstractSocket::IPv4Protocol &&
-        !candidate.isLoopback()) {
+    if (candidate.protocol() == QAbstractSocket::IPv4Protocol && !candidate.isLoopback()) {
       address = candidate.toString();
       break;
     }

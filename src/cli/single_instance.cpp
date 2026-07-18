@@ -16,14 +16,11 @@ constexpr int IO_TIMEOUT_MS = 300;
 } // namespace
 
 QString singleInstanceServerName(const QString &appDataPath) {
-  const auto digest = QCryptographicHash::hash(appDataPath.toUtf8(),
-                                               QCryptographicHash::Sha1)
-                          .toHex();
+  const auto digest = QCryptographicHash::hash(appDataPath.toUtf8(), QCryptographicHash::Sha1).toHex();
   return "firelight-" + QString::fromLatin1(digest.left(16));
 }
 
-bool forwardLaunchToRunningInstance(const QString &serverName,
-                                    const CliOptions &opts) {
+bool forwardLaunchToRunningInstance(const QString &serverName, const CliOptions &opts) {
   QLocalSocket socket;
   socket.connectToServer(serverName);
   if (!socket.waitForConnected(CONNECT_TIMEOUT_MS)) {
@@ -40,21 +37,17 @@ bool forwardLaunchToRunningInstance(const QString &serverName,
   return true;
 }
 
-SingleInstanceServer::SingleInstanceServer(
-    QString serverName, library::UserLibraryService &library,
-    platforms::IPlatformService &platformService, QObject *parent)
-    : QObject(parent), m_serverName(std::move(serverName)), m_library(library),
-      m_platformService(platformService) {
-  connect(&m_server, &QLocalServer::newConnection, this,
-          &SingleInstanceServer::onNewConnection);
+SingleInstanceServer::SingleInstanceServer(QString serverName, library::UserLibraryService &library,
+                                           platforms::IPlatformService &platformService, QObject *parent)
+    : QObject(parent), m_serverName(std::move(serverName)), m_library(library), m_platformService(platformService) {
+  connect(&m_server, &QLocalServer::newConnection, this, &SingleInstanceServer::onNewConnection);
 }
 
 bool SingleInstanceServer::start() {
   // A prior crash can leave a stale socket file; clear it before listening
   QLocalServer::removeServer(m_serverName);
   if (!m_server.listen(m_serverName)) {
-    spdlog::warn("Single-instance: could not listen on {} ({})",
-                 m_serverName.toStdString(),
+    spdlog::warn("Single-instance: could not listen on {} ({})", m_serverName.toStdString(),
                  m_server.errorString().toStdString());
     return false;
   }
@@ -75,8 +68,7 @@ void SingleInstanceServer::onNewConnection() {
   if (romPath.isEmpty()) {
     return; // a bare ping with no ROM to launch
   }
-  const int entryId =
-      resolveRomEntryId(romPath.toStdString(), m_library, m_platformService);
+  const int entryId = resolveRomEntryId(romPath.toStdString(), m_library, m_platformService);
   if (entryId >= 0) {
     emit launchRequested(entryId);
   } else {

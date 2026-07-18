@@ -10,19 +10,12 @@ class NetplayChatModel final : public QAbstractListModel {
   Q_OBJECT
 
 public:
-  enum Roles {
-    SenderName = Qt::UserRole + 1,
-    Text,
-    IsSelf,
-    TimestampMs
-  };
+  enum Roles { SenderName = Qt::UserRole + 1, Text, IsSelf, TimestampMs };
 
-  explicit NetplayChatModel(netplay::NetplayService &service,
-                            QObject *parent = nullptr);
+  explicit NetplayChatModel(netplay::NetplayService &service, QObject *parent = nullptr);
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
-  [[nodiscard]] QVariant data(const QModelIndex &index,
-                              int role) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
 public slots:

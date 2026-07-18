@@ -6,7 +6,6 @@
 
 namespace firelight::netplay {
 
-// TODO
 // The game the lobby has selected. contentHash/platformId identify the content
 // (lockstep verifies them later); gameName/artUrl are for display, so guests
 // without the content can still see what's being played

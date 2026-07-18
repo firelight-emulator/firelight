@@ -43,8 +43,7 @@ TEST(GamepadInputDisplayNameTest, LightgunLabels) {
 // An input value outside the labeled set falls back to "Unknown" (the switch's
 // default), so the UI never renders an empty label
 TEST(GamepadInputDisplayNameTest, UnknownValueFallsBack) {
-  EXPECT_EQ(std::string_view(displayName(static_cast<GamepadInput>(99999))),
-            "Unknown");
+  EXPECT_EQ(std::string_view(displayName(static_cast<GamepadInput>(99999))), "Unknown");
 }
 
 // displayName agrees with classOf on device family for representative inputs

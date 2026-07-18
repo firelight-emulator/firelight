@@ -14,7 +14,7 @@ Pane {
     leftPadding: 0
     rightPadding: 0
 
-    background: Item{}
+    background: Item {}
     contentItem: RowLayout {
         spacing: 12
         Rectangle {
@@ -34,4 +34,3 @@ Pane {
         }
     }
 }
-

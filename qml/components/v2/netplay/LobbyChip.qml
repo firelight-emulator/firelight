@@ -29,10 +29,9 @@ Rectangle {
         Text {
             text: {
                 if (NetworkService.sessionPhase === "in-game") {
-                    return "Playing " + NetworkService.gameName
+                    return "Playing " + NetworkService.gameName;
                 }
-                return "Lobby · " + NetworkService.memberCount + " player"
-                       + (NetworkService.memberCount === 1 ? "" : "s")
+                return "Lobby · " + NetworkService.memberCount + " player" + (NetworkService.memberCount === 1 ? "" : "s");
             }
             color: Theme.textPrimary
             font.pixelSize: AppStyle.fontSizeSmall

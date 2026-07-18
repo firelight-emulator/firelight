@@ -1,6 +1,5 @@
-#include <firelight/library/content_loader.hpp>
-
 #include <firelight/library/content_hasher.hpp>
+#include <firelight/library/content_loader.hpp>
 #include <firelight/library/patch_file.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
@@ -8,10 +7,9 @@
 #include <QTemporaryDir>
 #include <archive.h>
 #include <archive_entry.h>
-#include <gtest/gtest.h>
-
 #include <cstdint>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <vector>
 
 namespace firelight::library {
@@ -29,8 +27,7 @@ std::vector<uint8_t> makeRom(size_t size, uint8_t seed) {
 
 void writeFile(const std::string &path, const std::vector<uint8_t> &bytes) {
   std::ofstream out(path, std::ios::binary);
-  out.write(reinterpret_cast<const char *>(bytes.data()),
-            static_cast<std::streamsize>(bytes.size()));
+  out.write(reinterpret_cast<const char *>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 }
 } // namespace
 
@@ -48,10 +45,8 @@ protected:
   }
 
   // Writes a single-entry .zip and returns its path
-  std::string writeZip(const std::string &zipName, const std::string &entryName,
-                       const std::vector<uint8_t> &bytes) {
-    const std::string zipPath =
-        tempDir.filePath(QString::fromStdString(zipName)).toStdString();
+  std::string writeZip(const std::string &zipName, const std::string &entryName, const std::vector<uint8_t> &bytes) {
+    const std::string zipPath = tempDir.filePath(QString::fromStdString(zipName)).toStdString();
     archive *a = archive_write_new();
     archive_write_set_format_zip(a);
     EXPECT_EQ(archive_write_open_filename(a, zipPath.c_str()), ARCHIVE_OK);
@@ -132,9 +127,7 @@ TEST_F(ContentLoaderTest, NesHeaderIsStrippedFromHash) {
 
 // A missing file yields an invalid result with no bytes (never a bogus hash)
 TEST_F(ContentLoaderTest, MissingFileIsInvalid) {
-  const auto loaded = loader.load(
-      cartridgeOnDisk(tempDir.filePath("nope.gb").toStdString(),
-                      PS::PLATFORM_ID_GAMEBOY));
+  const auto loaded = loader.load(cartridgeOnDisk(tempDir.filePath("nope.gb").toStdString(), PS::PLATFORM_ID_GAMEBOY));
   EXPECT_FALSE(loaded.valid);
   EXPECT_TRUE(loaded.contentBytes.empty());
   EXPECT_TRUE(loaded.contentHash.empty());
@@ -187,8 +180,8 @@ TEST_F(ContentLoaderTest, ApplyIpsPatchRewritesBytesAndHash) {
   // Minimal IPS: overwrite 3 bytes at offset 4.
   const std::vector<uint8_t> newBytes = {0xAA, 0xBB, 0xCC};
   std::vector<uint8_t> ips = {'P', 'A', 'T', 'C', 'H'};
-  ips.insert(ips.end(), {0x00, 0x00, 0x04});       // offset = 4
-  ips.insert(ips.end(), {0x00, 0x03});             // size = 3
+  ips.insert(ips.end(), {0x00, 0x00, 0x04}); // offset = 4
+  ips.insert(ips.end(), {0x00, 0x03});       // size = 3
   ips.insert(ips.end(), newBytes.begin(), newBytes.end());
   ips.insert(ips.end(), {'E', 'O', 'F'});
   const std::string ipsPath = tempDir.filePath("patch.ips").toStdString();
@@ -210,8 +203,7 @@ TEST_F(ContentLoaderTest, ApplyIpsPatchRewritesBytesAndHash) {
   loader.applyPatch(content, PS::PLATFORM_ID_GAMEBOY, patch);
 
   EXPECT_EQ(content.contentBytes, expected);
-  EXPECT_EQ(content.contentHash,
-            ContentHasher::md5(expected.data(), expected.size()));
+  EXPECT_EQ(content.contentHash, ContentHasher::md5(expected.data(), expected.size()));
   EXPECT_NE(content.contentHash, ContentHasher::md5(rom.data(), rom.size()));
 }
 

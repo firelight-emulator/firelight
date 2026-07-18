@@ -11,7 +11,6 @@
 
 namespace firelight::input {
 
-// TODO
 // QML-facing editor for a profile's default analog tuning. Bind `profileId`,
 // then read/write the per-axis properties; every change is persisted to the
 // profile immediately. Curve is exposed as an int (0 = Linear, 1 = Exponential)
@@ -20,36 +19,25 @@ class AnalogSettingsModel : public QObject, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int profileId READ profileId WRITE setProfileId NOTIFY profileIdChanged)
 
-  Q_PROPERTY(double leftStickInnerDeadzone READ leftStickInnerDeadzone WRITE
-                 setLeftStickInnerDeadzone NOTIFY changed)
-  Q_PROPERTY(double leftStickOuterDeadzone READ leftStickOuterDeadzone WRITE
-                 setLeftStickOuterDeadzone NOTIFY changed)
-  Q_PROPERTY(double leftStickSensitivity READ leftStickSensitivity WRITE
-                 setLeftStickSensitivity NOTIFY changed)
-  Q_PROPERTY(double leftStickAntiDeadzone READ leftStickAntiDeadzone WRITE
-                 setLeftStickAntiDeadzone NOTIFY changed)
-  Q_PROPERTY(int leftStickCurve READ leftStickCurve WRITE setLeftStickCurve
-                 NOTIFY changed)
-  Q_PROPERTY(double leftStickCurveExponent READ leftStickCurveExponent WRITE
-                 setLeftStickCurveExponent NOTIFY changed)
+  Q_PROPERTY(double leftStickInnerDeadzone READ leftStickInnerDeadzone WRITE setLeftStickInnerDeadzone NOTIFY changed)
+  Q_PROPERTY(double leftStickOuterDeadzone READ leftStickOuterDeadzone WRITE setLeftStickOuterDeadzone NOTIFY changed)
+  Q_PROPERTY(double leftStickSensitivity READ leftStickSensitivity WRITE setLeftStickSensitivity NOTIFY changed)
+  Q_PROPERTY(double leftStickAntiDeadzone READ leftStickAntiDeadzone WRITE setLeftStickAntiDeadzone NOTIFY changed)
+  Q_PROPERTY(int leftStickCurve READ leftStickCurve WRITE setLeftStickCurve NOTIFY changed)
+  Q_PROPERTY(double leftStickCurveExponent READ leftStickCurveExponent WRITE setLeftStickCurveExponent NOTIFY changed)
 
-  Q_PROPERTY(double rightStickInnerDeadzone READ rightStickInnerDeadzone WRITE
-                 setRightStickInnerDeadzone NOTIFY changed)
-  Q_PROPERTY(double rightStickOuterDeadzone READ rightStickOuterDeadzone WRITE
-                 setRightStickOuterDeadzone NOTIFY changed)
-  Q_PROPERTY(double rightStickSensitivity READ rightStickSensitivity WRITE
-                 setRightStickSensitivity NOTIFY changed)
-  Q_PROPERTY(double rightStickAntiDeadzone READ rightStickAntiDeadzone WRITE
-                 setRightStickAntiDeadzone NOTIFY changed)
-  Q_PROPERTY(int rightStickCurve READ rightStickCurve WRITE setRightStickCurve
-                 NOTIFY changed)
-  Q_PROPERTY(double rightStickCurveExponent READ rightStickCurveExponent WRITE
-                 setRightStickCurveExponent NOTIFY changed)
+  Q_PROPERTY(
+      double rightStickInnerDeadzone READ rightStickInnerDeadzone WRITE setRightStickInnerDeadzone NOTIFY changed)
+  Q_PROPERTY(
+      double rightStickOuterDeadzone READ rightStickOuterDeadzone WRITE setRightStickOuterDeadzone NOTIFY changed)
+  Q_PROPERTY(double rightStickSensitivity READ rightStickSensitivity WRITE setRightStickSensitivity NOTIFY changed)
+  Q_PROPERTY(double rightStickAntiDeadzone READ rightStickAntiDeadzone WRITE setRightStickAntiDeadzone NOTIFY changed)
+  Q_PROPERTY(int rightStickCurve READ rightStickCurve WRITE setRightStickCurve NOTIFY changed)
+  Q_PROPERTY(
+      double rightStickCurveExponent READ rightStickCurveExponent WRITE setRightStickCurveExponent NOTIFY changed)
 
-  Q_PROPERTY(double leftTriggerThreshold READ leftTriggerThreshold WRITE
-                 setLeftTriggerThreshold NOTIFY changed)
-  Q_PROPERTY(double rightTriggerThreshold READ rightTriggerThreshold WRITE
-                 setRightTriggerThreshold NOTIFY changed)
+  Q_PROPERTY(double leftTriggerThreshold READ leftTriggerThreshold WRITE setLeftTriggerThreshold NOTIFY changed)
+  Q_PROPERTY(double rightTriggerThreshold READ rightTriggerThreshold WRITE setRightTriggerThreshold NOTIFY changed)
 
 public:
   explicit AnalogSettingsModel(QObject *parent = nullptr);

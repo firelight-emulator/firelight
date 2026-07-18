@@ -18,8 +18,7 @@ Flickable {
     contentHeight: theColumn.height
     boundsBehavior: Flickable.StopAtBounds
 
-    ScrollBar.vertical: ScrollBar {
-    }
+    ScrollBar.vertical: ScrollBar {}
 
     Image {
         id: headerBanner
@@ -121,9 +120,9 @@ Flickable {
                         color: "#d5d5d5"
                     }
                     Button {
+                        id: addToLibraryButton
                         Layout.preferredHeight: 60
                         Layout.preferredWidth: 180
-                        id: addToLibraryButton
                         Layout.alignment: Qt.AlignRight | Qt.AlignBottom
                         background: Rectangle {
                             color: enabled ? "white" : "grey"
@@ -146,10 +145,10 @@ Flickable {
                         }
 
                         onClicked: {
-                            addedPopup.open()
-                            timer.start()
-                            root.modInLibrary = true
-                            library_model.addModToLibrary(root.modId)
+                            addedPopup.open();
+                            timer.start();
+                            root.modInLibrary = true;
+                            library_model.addModToLibrary(root.modId);
                         }
                     }
                 }
@@ -290,7 +289,7 @@ Flickable {
         }
 
         onAboutToShow: {
-            words.text = "Added " + root.name + " to library"
+            words.text = "Added " + root.name + " to library";
         }
 
         enter: Transition {
@@ -320,8 +319,7 @@ Flickable {
         running: false
         repeat: false
         onTriggered: {
-            addedPopup.close()
+            addedPopup.close();
         }
     }
 }
-

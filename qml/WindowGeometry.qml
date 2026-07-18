@@ -1,9 +1,7 @@
+pragma Singleton
 import QtCore
 import QtQuick
 
-pragma Singleton
-
-// TODO
 // Where the window was last time. Not a setting: nobody chooses it, it isn't in
 // the settings catalog, and it shouldn't be searchable or resettable. It just
 // needs to survive a restart, which is exactly what QSettings is for

@@ -35,7 +35,6 @@ struct StreamConfig {
   bool operator==(const StreamConfig &) const = default;
 };
 
-// TODO
 // Full state snapshot sent to any member whose control channel opens — a fresh
 // join, a mid-game join, or a reconnect all recover from this one message
 // (Fields avoid the name `slots`: Qt defines it as a macro and these headers
@@ -85,13 +84,10 @@ struct Pong {
   int64_t t = 0;
 };
 
-using ControlMessage =
-    std::variant<Hello, Welcome, Reject, SlotTableMessage, GameSelected,
-                 ReadyState, SessionStarting, StreamConfig, StreamStart,
-                 PauseState, SessionEnded, Ping, Pong>;
+using ControlMessage = std::variant<Hello, Welcome, Reject, SlotTableMessage, GameSelected, ReadyState, SessionStarting,
+                                    StreamConfig, StreamStart, PauseState, SessionEnded, Ping, Pong>;
 
 [[nodiscard]] std::string encodeMessage(const ControlMessage &message);
-[[nodiscard]] std::optional<ControlMessage>
-decodeMessage(const std::string &text);
+[[nodiscard]] std::optional<ControlMessage> decodeMessage(const std::string &text);
 
 } // namespace firelight::netplay

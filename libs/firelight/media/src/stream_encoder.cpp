@@ -1,12 +1,11 @@
 #include <firelight/media/stream_encoder.hpp>
 
 #include <QImage>
-#include <spdlog/spdlog.h>
-
 #include <atomic>
 #include <condition_variable>
 #include <deque>
 #include <mutex>
+#include <spdlog/spdlog.h>
 #include <thread>
 
 extern "C" {
@@ -116,8 +115,7 @@ struct StreamEncoder::Impl {
       spdlog::warn("[StreamEncoder] failed to open H.264 encoder");
       return false;
     }
-    videoExtradata.assign(videoCodec->extradata,
-                          videoCodec->extradata + videoCodec->extradata_size);
+    videoExtradata.assign(videoCodec->extradata, videoCodec->extradata + videoCodec->extradata_size);
 
     yuv = av_frame_alloc();
     yuv->format = AV_PIX_FMT_YUV420P;
@@ -226,10 +224,8 @@ struct StreamEncoder::Impl {
       return;
     }
     const bool rgbaBytes =
-        frame.format() == QImage::Format_RGBA8888 ||
-        frame.format() == QImage::Format_RGBA8888_Premultiplied;
-    const QImage img =
-        rgbaBytes ? frame : frame.convertToFormat(QImage::Format_RGBA8888);
+        frame.format() == QImage::Format_RGBA8888 || frame.format() == QImage::Format_RGBA8888_Premultiplied;
+    const QImage img = rgbaBytes ? frame : frame.convertToFormat(QImage::Format_RGBA8888);
 
     RawFrame raw;
     raw.width = img.width();
@@ -273,10 +269,8 @@ struct StreamEncoder::Impl {
 
   void encodeVideoFrame(const RawFrame &frame) {
     if (!sws || swsSrcW != frame.width || swsSrcH != frame.height) {
-      sws = sws_getCachedContext(sws, frame.width, frame.height,
-                                 AV_PIX_FMT_RGBA, config.width, config.height,
-                                 AV_PIX_FMT_YUV420P, SWS_POINT, nullptr,
-                                 nullptr, nullptr);
+      sws = sws_getCachedContext(sws, frame.width, frame.height, AV_PIX_FMT_RGBA, config.width, config.height,
+                                 AV_PIX_FMT_YUV420P, SWS_POINT, nullptr, nullptr, nullptr);
       swsSrcW = frame.width;
       swsSrcH = frame.height;
     }
@@ -285,8 +279,7 @@ struct StreamEncoder::Impl {
     }
     const uint8_t *srcData[4] = {frame.rgba.data(), nullptr, nullptr, nullptr};
     const int srcStride[4] = {frame.stride, 0, 0, 0};
-    sws_scale(sws, srcData, srcStride, 0, frame.height, yuv->data,
-              yuv->linesize);
+    sws_scale(sws, srcData, srcStride, 0, frame.height, yuv->data, yuv->linesize);
 
     int64_t pts = frame.ptsMs;
     if (pts <= lastVideoPts) {
@@ -294,18 +287,15 @@ struct StreamEncoder::Impl {
     }
     lastVideoPts = pts;
     yuv->pts = pts;
-    yuv->pict_type = keyframeRequested.exchange(false) ? AV_PICTURE_TYPE_I
-                                                       : AV_PICTURE_TYPE_NONE;
+    yuv->pict_type = keyframeRequested.exchange(false) ? AV_PICTURE_TYPE_I : AV_PICTURE_TYPE_NONE;
 
     if (avcodec_send_frame(videoCodec, yuv) < 0) {
       return;
     }
     while (avcodec_receive_packet(videoCodec, videoPacket) >= 0) {
       if (videoCallback) {
-        videoCallback(
-            std::vector<uint8_t>(videoPacket->data,
-                                 videoPacket->data + videoPacket->size),
-            videoPacket->pts, (videoPacket->flags & AV_PKT_FLAG_KEY) != 0);
+        videoCallback(std::vector<uint8_t>(videoPacket->data, videoPacket->data + videoPacket->size), videoPacket->pts,
+                      (videoPacket->flags & AV_PKT_FLAG_KEY) != 0);
       }
       av_packet_unref(videoPacket);
     }
@@ -322,24 +312,19 @@ struct StreamEncoder::Impl {
     std::vector<int16_t> resampled(static_cast<size_t>(maxOut) * 2);
     auto *outPlane = reinterpret_cast<uint8_t *>(resampled.data());
     const auto *inPlane = reinterpret_cast<const uint8_t *>(data);
-    const int converted = swr_convert(swr, &outPlane, maxOut, &inPlane,
-                                      static_cast<int>(numFrames));
+    const int converted = swr_convert(swr, &outPlane, maxOut, &inPlane, static_cast<int>(numFrames));
     if (converted <= 0) {
       return;
     }
-    pcmPending.insert(pcmPending.end(), resampled.begin(),
-                      resampled.begin() + static_cast<size_t>(converted) * 2);
+    pcmPending.insert(pcmPending.end(), resampled.begin(), resampled.begin() + static_cast<size_t>(converted) * 2);
 
     const auto frameSamples = static_cast<size_t>(audioFrame->nb_samples);
     while (pcmPending.size() >= frameSamples * 2) {
       if (av_frame_make_writable(audioFrame) < 0) {
         return;
       }
-      std::memcpy(audioFrame->data[0], pcmPending.data(),
-                  frameSamples * 2 * sizeof(int16_t));
-      pcmPending.erase(pcmPending.begin(),
-                       pcmPending.begin() +
-                           static_cast<long long>(frameSamples * 2));
+      std::memcpy(audioFrame->data[0], pcmPending.data(), frameSamples * 2 * sizeof(int16_t));
+      pcmPending.erase(pcmPending.begin(), pcmPending.begin() + static_cast<long long>(frameSamples * 2));
       audioFrame->pts = audioSamplesSent;
       audioSamplesSent += static_cast<int64_t>(frameSamples);
 
@@ -349,10 +334,7 @@ struct StreamEncoder::Impl {
       while (avcodec_receive_packet(audioCodec, audioPacket) >= 0) {
         if (audioCallback) {
           const int64_t ptsMs = audioPacket->pts * 1000 / OPUS_SAMPLE_RATE;
-          audioCallback(
-              std::vector<uint8_t>(audioPacket->data,
-                                   audioPacket->data + audioPacket->size),
-              ptsMs);
+          audioCallback(std::vector<uint8_t>(audioPacket->data, audioPacket->data + audioPacket->size), ptsMs);
         }
         av_packet_unref(audioPacket);
       }
@@ -361,33 +343,36 @@ struct StreamEncoder::Impl {
 
   void flushVideo() {
     std::unique_lock lock(queueMutex);
-    idleCv.wait(lock,
-                [this] { return !running.load() || (queue.empty() && !encoding); });
+    idleCv.wait(lock, [this] { return !running.load() || (queue.empty() && !encoding); });
   }
 };
 
 StreamEncoder::StreamEncoder() : m_impl(std::make_unique<Impl>()) {}
+
 StreamEncoder::~StreamEncoder() = default;
 
 void StreamEncoder::setVideoPacketCallback(VideoPacketCallback callback) {
   m_impl->videoCallback = std::move(callback);
 }
+
 void StreamEncoder::setAudioPacketCallback(AudioPacketCallback callback) {
   m_impl->audioCallback = std::move(callback);
 }
-bool StreamEncoder::start(const StreamEncoderConfig &config) {
-  return m_impl->start(config);
-}
+
+bool StreamEncoder::start(const StreamEncoderConfig &config) { return m_impl->start(config); }
+
 void StreamEncoder::stop() { m_impl->stop(); }
+
 bool StreamEncoder::isRunning() const { return m_impl->running.load(); }
+
 void StreamEncoder::requestKeyframe() { m_impl->keyframeRequested = true; }
-std::vector<uint8_t> StreamEncoder::extradata() const {
-  return m_impl->videoExtradata;
-}
+
+std::vector<uint8_t> StreamEncoder::extradata() const { return m_impl->videoExtradata; }
+
 void StreamEncoder::flush() { m_impl->flushVideo(); }
-void StreamEncoder::pushVideoFrame(const QImage &frame, const int64_t ptsMs) {
-  m_impl->pushVideo(frame, ptsMs);
-}
+
+void StreamEncoder::pushVideoFrame(const QImage &frame, const int64_t ptsMs) { m_impl->pushVideo(frame, ptsMs); }
+
 void StreamEncoder::pushAudio(const int16_t *data, const std::size_t numFrames) {
   m_impl->pushAudioSamples(data, numFrames);
 }

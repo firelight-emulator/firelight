@@ -1,23 +1,20 @@
 #pragma once
 
-#include <firelight/input/input_service.hpp>
 #include "service_accessor.hpp"
 
-#include <QAbstractListModel>
+#include <firelight/input/input_service.hpp>
 #include <firelight/libretro/retropad.hpp>
+
+#include <QAbstractListModel>
 #include <qqmlintegration.h>
 
 namespace firelight::input {
 
-class InputMappingsModel : public QAbstractListModel,
-                           public ServiceAccessor {
+class InputMappingsModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
-  Q_PROPERTY(int profileId READ getProfileId WRITE setProfileId NOTIFY
-                 profileIdChanged)
-  Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY
-                 platformIdChanged)
-  Q_PROPERTY(int controllerTypeId READ getControllerTypeId WRITE
-                 setControllerTypeId NOTIFY controllerTypeIdChanged)
+  Q_PROPERTY(int profileId READ getProfileId WRITE setProfileId NOTIFY profileIdChanged)
+  Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY platformIdChanged)
+  Q_PROPERTY(int controllerTypeId READ getControllerTypeId WRITE setControllerTypeId NOTIFY controllerTypeIdChanged)
 
 public:
   explicit InputMappingsModel(QObject *parent = nullptr);

@@ -22,8 +22,7 @@ FocusScope {
 
         header: Pane {
             width: parent.width
-            background: Item {
-            }
+            background: Item {}
             verticalPadding: 12
             horizontalPadding: 0
             contentItem: RowLayout {
@@ -48,13 +47,24 @@ FocusScope {
                     valueRole: "value"
 
                     model: [
-                        {text: "Default", value: "default"},
-                        {text: "A-Z", value: "title"},
-                        {text: "Earned date", value: "earned_date"},
-                        {text: "Points", value: "points"}
+                        {
+                            text: "Default",
+                            value: "default"
+                        },
+                        {
+                            text: "A-Z",
+                            value: "title"
+                        },
+                        {
+                            text: "Earned date",
+                            value: "earned_date"
+                        },
+                        {
+                            text: "Points",
+                            value: "points"
+                        }
                     ]
 
-                    // TODO
                     // onActivated: function () {
                     //     root.achievements.sortType = currentValue
                     // }
@@ -105,7 +115,7 @@ FocusScope {
                 font.pixelSize: AppStyle.fontSizeMedium
             }
             onClicked: {
-                Router.navigate("/settings/achievements")
+                Router.navigate("/settings/achievements");
             }
         }
         Item {

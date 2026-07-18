@@ -2,14 +2,12 @@
 
 #include <QTemporaryDir>
 #include <gtest/gtest.h>
-
 #include <memory>
 #include <string>
 
 namespace firelight::media {
 namespace {
-GameCapture makeCapture(const std::string &hash, CaptureType type,
-                        const std::string &path) {
+GameCapture makeCapture(const std::string &hash, CaptureType type, const std::string &path) {
   GameCapture c;
   c.contentHash = hash;
   c.type = type;
@@ -27,8 +25,7 @@ protected:
 
   void SetUp() override {
     ASSERT_TRUE(dir.isValid());
-    repo = std::make_unique<SqliteGameCaptureRepository>(
-        (dir.path() + "/captures.db").toStdString());
+    repo = std::make_unique<SqliteGameCaptureRepository>((dir.path() + "/captures.db").toStdString());
   }
 };
 

@@ -7,13 +7,13 @@ namespace {
 struct FooEvent {
   int value;
 };
+
 struct BarEvent {};
 
 TEST(EventDispatcherTest, DeliversToSubscriber) {
   EventDispatcher bus;
   int received = 0;
-  auto conn =
-      bus.subscribe<FooEvent>([&](const FooEvent &e) { received += e.value; });
+  auto conn = bus.subscribe<FooEvent>([&](const FooEvent &e) { received += e.value; });
 
   bus.publish(FooEvent{.value = 5});
   bus.publish(FooEvent{.value = 3});

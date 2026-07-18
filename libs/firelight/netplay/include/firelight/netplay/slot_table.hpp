@@ -36,10 +36,7 @@ public:
 
   // Named all() rather than slots(): Qt defines `slots` as a macro, and this
   // header is included from Qt code
-  [[nodiscard]] const std::array<std::optional<SlotAssignment>, MAX_SLOTS> &
-  all() const {
-    return m_slots;
-  }
+  [[nodiscard]] const std::array<std::optional<SlotAssignment>, MAX_SLOTS> &all() const { return m_slots; }
 
   bool operator==(const SlotTable &) const = default;
 

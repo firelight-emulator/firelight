@@ -1,9 +1,8 @@
 #include <firelight/media/stream_decoder.hpp>
 
-#include <spdlog/spdlog.h>
-
 #include <cstring>
 #include <mutex>
+#include <spdlog/spdlog.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -45,8 +44,7 @@ struct StreamDecoder::Impl {
     }
     videoCodec = avcodec_alloc_context3(video);
     if (!extradata.empty()) {
-      videoCodec->extradata = static_cast<uint8_t *>(
-          av_mallocz(extradata.size() + AV_INPUT_BUFFER_PADDING_SIZE));
+      videoCodec->extradata = static_cast<uint8_t *>(av_mallocz(extradata.size() + AV_INPUT_BUFFER_PADDING_SIZE));
       std::memcpy(videoCodec->extradata, extradata.data(), extradata.size());
       videoCodec->extradata_size = static_cast<int>(extradata.size());
     }
@@ -141,9 +139,8 @@ struct StreamDecoder::Impl {
       return;
     }
     if (!sws || swsW != width || swsH != height) {
-      sws = sws_getCachedContext(
-          sws, width, height, static_cast<AVPixelFormat>(videoFrame->format),
-          width, height, AV_PIX_FMT_RGBA, SWS_POINT, nullptr, nullptr, nullptr);
+      sws = sws_getCachedContext(sws, width, height, static_cast<AVPixelFormat>(videoFrame->format), width, height,
+                                 AV_PIX_FMT_RGBA, SWS_POINT, nullptr, nullptr, nullptr);
       swsW = width;
       swsH = height;
     }
@@ -156,11 +153,9 @@ struct StreamDecoder::Impl {
     out.rgba.resize(static_cast<size_t>(width) * height * 4);
     uint8_t *dstData[4] = {out.rgba.data(), nullptr, nullptr, nullptr};
     const int dstStride[4] = {width * 4, 0, 0, 0};
-    sws_scale(sws, videoFrame->data, videoFrame->linesize, 0, height, dstData,
-              dstStride);
+    sws_scale(sws, videoFrame->data, videoFrame->linesize, 0, height, dstData, dstStride);
 
-    const int64_t pts =
-        videoFrame->pts != AV_NOPTS_VALUE ? videoFrame->pts : fallbackPtsMs;
+    const int64_t pts = videoFrame->pts != AV_NOPTS_VALUE ? videoFrame->pts : fallbackPtsMs;
     videoCallback(std::move(out), pts);
   }
 
@@ -197,8 +192,7 @@ struct StreamDecoder::Impl {
       av_opt_set_chlayout(swr, "out_chlayout", &stereo, 0);
       av_opt_set_int(swr, "in_sample_rate", audioFrame->sample_rate, 0);
       av_opt_set_int(swr, "out_sample_rate", 48000, 0);
-      av_opt_set_sample_fmt(swr, "in_sample_fmt",
-                            static_cast<AVSampleFormat>(audioFrame->format), 0);
+      av_opt_set_sample_fmt(swr, "in_sample_fmt", static_cast<AVSampleFormat>(audioFrame->format), 0);
       av_opt_set_sample_fmt(swr, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
       if (swr_init(swr) < 0) {
         swr_free(&swr);
@@ -207,10 +201,8 @@ struct StreamDecoder::Impl {
     }
     std::vector<int16_t> out(static_cast<size_t>(audioFrame->nb_samples) * 2);
     auto *outPlane = reinterpret_cast<uint8_t *>(out.data());
-    const int converted =
-        swr_convert(swr, &outPlane, audioFrame->nb_samples,
-                    const_cast<const uint8_t **>(audioFrame->data),
-                    audioFrame->nb_samples);
+    const int converted = swr_convert(swr, &outPlane, audioFrame->nb_samples,
+                                      const_cast<const uint8_t **>(audioFrame->data), audioFrame->nb_samples);
     if (converted <= 0) {
       return;
     }
@@ -220,31 +212,29 @@ struct StreamDecoder::Impl {
 };
 
 StreamDecoder::StreamDecoder() : m_impl(std::make_unique<Impl>()) {}
+
 StreamDecoder::~StreamDecoder() = default;
 
-void StreamDecoder::setVideoFrameCallback(VideoFrameCallback callback) {
-  m_impl->videoCallback = std::move(callback);
-}
-void StreamDecoder::setAudioCallback(AudioCallback callback) {
-  m_impl->audioCallback = std::move(callback);
-}
-bool StreamDecoder::start(std::span<const uint8_t> videoExtradata) {
-  return m_impl->start(videoExtradata);
-}
+void StreamDecoder::setVideoFrameCallback(VideoFrameCallback callback) { m_impl->videoCallback = std::move(callback); }
+
+void StreamDecoder::setAudioCallback(AudioCallback callback) { m_impl->audioCallback = std::move(callback); }
+
+bool StreamDecoder::start(std::span<const uint8_t> videoExtradata) { return m_impl->start(videoExtradata); }
+
 void StreamDecoder::stop() { m_impl->stop(); }
+
 bool StreamDecoder::isRunning() const {
   std::lock_guard lock(m_impl->mutex);
   return m_impl->running;
 }
-bool StreamDecoder::reset(std::span<const uint8_t> videoExtradata) {
-  return m_impl->start(videoExtradata);
-}
-void StreamDecoder::pushVideoPacket(std::span<const uint8_t> data,
-                                    const int64_t ptsMs) {
+
+bool StreamDecoder::reset(std::span<const uint8_t> videoExtradata) { return m_impl->start(videoExtradata); }
+
+void StreamDecoder::pushVideoPacket(std::span<const uint8_t> data, const int64_t ptsMs) {
   m_impl->pushVideo(data, ptsMs);
 }
-void StreamDecoder::pushAudioPacket(std::span<const uint8_t> data,
-                                    const int64_t ptsMs) {
+
+void StreamDecoder::pushAudioPacket(std::span<const uint8_t> data, const int64_t ptsMs) {
   m_impl->pushAudio(data, ptsMs);
 }
 

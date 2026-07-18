@@ -5,10 +5,8 @@ namespace firelight::input {
 
 class TestGamepad final : public IGamepad {
 public:
-  explicit TestGamepad(int instanceId = 0, int vendorId = 0, int productId = 0,
-                       int productVersion = 0);
-  bool isButtonPressed(int platformId, int controllerTypeId,
-                       Input t_button) override;
+  explicit TestGamepad(int instanceId = 0, int vendorId = 0, int productId = 0, int productVersion = 0);
+  bool isButtonPressed(int platformId, int controllerTypeId, Input t_button) override;
   int16_t getLeftStickXPosition(int platformId, int controllerTypeId) override;
   int16_t getLeftStickYPosition(int platformId, int controllerTypeId) override;
   int16_t getRightStickXPosition(int platformId, int controllerTypeId) override;

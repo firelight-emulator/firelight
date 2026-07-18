@@ -1,21 +1,21 @@
 #include "gamepad_profile_item.hpp"
 
-#include <firelight/input/controller_repository.hpp>
 #include "shortcuts_model.hpp"
+
+#include <firelight/input/controller_repository.hpp>
 
 namespace firelight::gui {
 int GamepadProfileItem::id() const { return m_id; }
+
 void GamepadProfileItem::setId(const int id) {
   if (m_id != id) {
     m_id = id;
 
     m_profile = getControllerProfileRepository()->getProfile(m_id);
-    m_shortcutsModel =
-        m_profile ? std::make_unique<ShortcutsModel>(
-                        m_profile->getId(), m_profile->isKeyboardProfile(),
-                        m_profile->getShortcutMapping(),
-                        m_profile->getPresetId())
-                  : nullptr;
+    m_shortcutsModel = m_profile
+                           ? std::make_unique<ShortcutsModel>(m_profile->getId(), m_profile->isKeyboardProfile(),
+                                                              m_profile->getShortcutMapping(), m_profile->getPresetId())
+                           : nullptr;
     emit profileIdChanged(m_id);
     emit nameChanged(name());
     emit isKeyboardProfileChanged();
@@ -42,9 +42,8 @@ void GamepadProfileItem::setName(const QString &name) {
   }
 }
 
-QAbstractListModel *GamepadProfileItem::getShortcutsModel() const {
-  return m_shortcutsModel.get();
-}
+QAbstractListModel *GamepadProfileItem::getShortcutsModel() const { return m_shortcutsModel.get(); }
+
 bool GamepadProfileItem::isKeyboardProfile() const {
   if (!m_profile) {
     return false;

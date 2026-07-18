@@ -2,32 +2,25 @@
 #include "emulation/emulation_service.hpp"
 #include "firelight/event_dispatcher.hpp"
 
+#include <firelight/settings/settings_service.hpp>
+
 #include <QObject>
 #include <QVariant>
-#include <firelight/settings/settings_service.hpp>
 
 namespace firelight::gui {
 
 class QtEmulationServiceProxy final : public QObject {
   Q_OBJECT
   Q_PROPERTY(bool isGameRunning READ isGameRunning NOTIFY gameRunningChanged)
-  Q_PROPERTY(QString currentGameName READ getCurrentGameName NOTIFY
-                 currentGameNameChanged)
-  Q_PROPERTY(
-      int currentEntryId READ getCurrentEntryId NOTIFY currentGameNameChanged)
-  Q_PROPERTY(QString currentContentHash READ getCurrentContentHash NOTIFY
-                 gameRunningChanged)
-  Q_PROPERTY(
-      int currentPlatformId READ getCurrentPlatformId NOTIFY gameRunningChanged)
-  Q_PROPERTY(QString currentPlatformName READ getCurrentPlatformName NOTIFY
-                 gameRunningChanged)
-  Q_PROPERTY(int currentSaveSlotNumber READ getCurrentSaveSlotNumber NOTIFY
-                 gameRunningChanged)
-  Q_PROPERTY(
-      bool rewindEnabled READ isRewindEnabled NOTIFY rewindEnabledChanged)
+  Q_PROPERTY(QString currentGameName READ getCurrentGameName NOTIFY currentGameNameChanged)
+  Q_PROPERTY(int currentEntryId READ getCurrentEntryId NOTIFY currentGameNameChanged)
+  Q_PROPERTY(QString currentContentHash READ getCurrentContentHash NOTIFY gameRunningChanged)
+  Q_PROPERTY(int currentPlatformId READ getCurrentPlatformId NOTIFY gameRunningChanged)
+  Q_PROPERTY(QString currentPlatformName READ getCurrentPlatformName NOTIFY gameRunningChanged)
+  Q_PROPERTY(int currentSaveSlotNumber READ getCurrentSaveSlotNumber NOTIFY gameRunningChanged)
+  Q_PROPERTY(bool rewindEnabled READ isRewindEnabled NOTIFY rewindEnabledChanged)
   Q_PROPERTY(QString pictureMode READ getPictureMode NOTIFY pictureModeChanged)
-  Q_PROPERTY(QString aspectRatioMode READ getAspectRatioMode NOTIFY
-                 aspectRatioModeChanged)
+  Q_PROPERTY(QString aspectRatioMode READ getAspectRatioMode NOTIFY aspectRatioModeChanged)
   Q_PROPERTY(int integerScale READ getIntegerScale NOTIFY integerScaleChanged)
 
 public:
@@ -54,7 +47,6 @@ public:
   // --- per-game controller device selection (Mouse / Light Gun / Gamepad) ---
   // Number of controller ports the running game's core exposes
   Q_INVOKABLE int controllerPortCount() const;
-  // TODO
   // For `port`, the selectable device variants as a list of maps:
   // { coreDeviceId:int, name:string, deviceClass:int (1=Joypad,2=Mouse,
   // 3=LightGun), isCurrent:bool }. Empty (or a single entry) means no real

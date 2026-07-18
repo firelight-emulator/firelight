@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
 
-// TODO
 // Icon-only button. Glyph size from AppStyle (sm/md/lg, or an explicit
 // iconSize), colors from Theme. The hit target is floored at minTarget
 // (WCAG 2.5.8) even when the glyph is small. Checkable for toolbar toggles
@@ -15,9 +14,7 @@ RoundButton {
     required property string iconName
     // sm | md | lg
     property string size: "md"
-    property int iconSize: size === "sm" ? AppStyle.iconSizeSm
-                         : size === "lg" ? AppStyle.iconSizeLg
-                         : AppStyle.iconSizeMd
+    property int iconSize: size === "sm" ? AppStyle.iconSizeSm : size === "lg" ? AppStyle.iconSizeLg : AppStyle.iconSizeMd
     property string tooltipText: ""
     // Icon color when checked. Defaults to accent for toolbar toggles; set to
     // Theme.textPrimary for nav-style buttons that shouldn't tint on select
@@ -32,7 +29,10 @@ RoundButton {
     TapHandler {
         id: tapHandler
         // toggle() is a no-op unless checkable; clicked() always fires
-        onTapped: { control.toggle(); control.clicked(); }
+        onTapped: {
+            control.toggle();
+            control.clicked();
+        }
         onDoubleTapped: control.doubleClicked()
         margin: 8
     }
@@ -56,9 +56,7 @@ RoundButton {
     background: Rectangle {
         radius: width / 2
         color: Theme.textPrimary
-        opacity: !control.enabled ? 0
-               : tapHandler.pressed ? 0.14
-               : (hoverHandler.hovered || control.checked) ? 0.10 : 0
+        opacity: !control.enabled ? 0 : tapHandler.pressed ? 0.14 : (hoverHandler.hovered || control.checked) ? 0.10 : 0
     }
 
     FLToolTip {

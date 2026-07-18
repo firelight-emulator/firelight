@@ -24,10 +24,15 @@ FirelightDialog {
         id: manualFolders
         model: LibraryFolderModel
         filters: [
-            ValueFilter { roleName: "folderType"; value: 0 }
+            ValueFilter {
+                roleName: "folderType"
+                value: 0
+            }
         ]
         sorters: [
-            RoleSorter { roleName: "displayName" }
+            RoleSorter {
+                roleName: "displayName"
+            }
         ]
     }
 
@@ -38,9 +43,7 @@ FirelightDialog {
             Layout.fillWidth: true
             Layout.topMargin: AppStyle.spacingSm
             visible: folderList.count === 0
-            text: control.targetIds.length > 1
-                  ? "Adding " + control.targetIds.length + " games. No folders yet — create one from the sidebar."
-                  : "No folders yet. Create one from the sidebar."
+            text: control.targetIds.length > 1 ? "Adding " + control.targetIds.length + " games. No folders yet — create one from the sidebar." : "No folders yet. Create one from the sidebar."
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
             font.pixelSize: AppStyle.fontSizeMedium

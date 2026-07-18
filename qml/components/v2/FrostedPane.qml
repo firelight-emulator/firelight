@@ -34,7 +34,7 @@ Pane {
             maskEnabled: true
             maskSource: theMask3
             maskThresholdMin: 0.5
-                maskSpreadAtMin: 1.0
+            maskSpreadAtMin: 1.0
             autoPaddingEnabled: false
             anchors.fill: parent
             blurEnabled: true
@@ -62,4 +62,3 @@ Pane {
         }
     }
 }
-

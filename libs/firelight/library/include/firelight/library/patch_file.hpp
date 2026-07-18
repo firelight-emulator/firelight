@@ -13,6 +13,7 @@ namespace firelight::library {
 class PatchFile {
 public:
   enum PatchType { UNKNOWN, IPS, BPS, UPS, XDELTA };
+
   ~PatchFile();
   PatchFile() = default;
   int m_id = 0;
@@ -30,8 +31,7 @@ public:
 
   [[nodiscard]] PatchType getType() const;
 
-  [[nodiscard]] std::vector<uint8_t>
-  patch(const std::vector<uint8_t> &data) const;
+  [[nodiscard]] std::vector<uint8_t> patch(const std::vector<uint8_t> &data) const;
 
 private:
   bool m_valid = false;

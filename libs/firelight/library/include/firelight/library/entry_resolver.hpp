@@ -28,8 +28,7 @@ public:
 
 private:
   static bool contentFileExists(const ContentFile &info);
-  static int scoreConfig(const RunConfiguration &config,
-                         const ContentFile &contentFile);
+  static int scoreConfig(const RunConfiguration &config, const ContentFile &contentFile);
 
   IUserLibraryRepository &m_library;
 };

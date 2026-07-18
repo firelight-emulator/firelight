@@ -23,8 +23,8 @@ TEST(EmulationSettingMappingTest, IdentityMappingPassesValueThrough) {
 TEST(EmulationSettingMappingTest, ValueTranslation) {
   SettingDefinition s;
   s.key = "color-correction";
-  s.mapping = {{.coreKey = "gambatte_gbc_color_correction_mode",
-                .valueMap = {{"Accurate", "accurate"}, {"Fast", "fast"}}}};
+  s.mapping = {
+      {.coreKey = "gambatte_gbc_color_correction_mode", .valueMap = {{"Accurate", "accurate"}, {"Fast", "fast"}}}};
 
   const auto accurate = resolveCoreOptionValues(s, "Accurate");
   ASSERT_EQ(accurate.size(), 1u);

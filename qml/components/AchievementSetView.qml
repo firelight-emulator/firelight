@@ -25,7 +25,7 @@ FocusScope {
         preferredHighlightEnd: height - 64
         model: achievementSet.achievements
 
-        ScrollBar.vertical: ScrollBar { }
+        ScrollBar.vertical: ScrollBar {}
 
         spacing: 0
 
@@ -35,8 +35,4 @@ FocusScope {
             text: model.name
         }
     }
-
-
-
-
 }

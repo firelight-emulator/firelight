@@ -16,8 +16,7 @@ SettingsCatalog &SettingsCatalog::instance() {
 
 namespace {
 
-void parseConditions(const nlohmann::json &j, const char *field,
-                     std::vector<SettingCondition> &out) {
+void parseConditions(const nlohmann::json &j, const char *field, std::vector<SettingCondition> &out) {
   if (!j.contains(field)) {
     return;
   }
@@ -33,8 +32,7 @@ void parseConditions(const nlohmann::json &j, const char *field,
   }
 }
 
-void parseStringArray(const nlohmann::json &j, const char *field,
-                      std::vector<std::string> &out) {
+void parseStringArray(const nlohmann::json &j, const char *field, std::vector<std::string> &out) {
   if (!j.contains(field)) {
     return;
   }
@@ -63,7 +61,6 @@ bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
   } else if (typeStr == "custom") {
     s.type = SettingType::CUSTOM;
   } else if (typeStr == "game-picker") {
-    // TODO
     // A dropdown whose options are the user's eligible library games (filled in
     // by the app layer at runtime); value semantics are OPTIONS (the chosen
     // game's content hash)
@@ -85,8 +82,7 @@ bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
   } else if (typeStr == "file" || typeStr == "file-picker") {
     s.type = SettingType::STRING;
     s.widget = "file-picker";
-  } else if (typeStr == "folder" || typeStr == "folder-picker" ||
-             typeStr == "directory") {
+  } else if (typeStr == "folder" || typeStr == "folder-picker" || typeStr == "directory") {
     s.type = SettingType::STRING;
     s.widget = "folder-picker";
     s.directoryMode = true;
@@ -115,8 +111,7 @@ bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
   return true;
 }
 
-SettingDefinition parseSetting(const nlohmann::json &j,
-                               std::vector<std::string> &problems) {
+SettingDefinition parseSetting(const nlohmann::json &j, std::vector<std::string> &problems) {
   SettingDefinition s;
   s.key = j.value("key", std::string{});
   s.label = j.value("label", std::string{});
@@ -132,8 +127,7 @@ SettingDefinition parseSetting(const nlohmann::json &j,
 
   const auto typeStr = j.value("type", std::string("options"));
   if (!applyTypeAlias(typeStr, s)) {
-    problems.push_back("setting '" + s.key + "': unknown type '" + typeStr +
-                       "' (fell back to dropdown)");
+    problems.push_back("setting '" + s.key + "': unknown type '" + typeStr + "' (fell back to dropdown)");
   }
   s.widget = j.value("widget", s.widget);
   s.minValue = j.value("min", 0.0);
@@ -142,8 +136,7 @@ SettingDefinition parseSetting(const nlohmann::json &j,
 
   if (j.contains("options")) {
     for (const auto &o : j["options"]) {
-      s.options.push_back(
-          {o.value("label", std::string{}), o.value("value", std::string{})});
+      s.options.push_back({o.value("label", std::string{}), o.value("value", std::string{})});
     }
   }
 
@@ -178,12 +171,10 @@ SettingDefinition parseSetting(const nlohmann::json &j,
   return s;
 }
 
-// TODO
 // App settings are single-valued and never reach a core, so the core-facing
 // fields are meaningless there. Strip them rather than let them look load-
 // bearing
-SettingDefinition parseAppSetting(const nlohmann::json &j,
-                                  std::vector<std::string> &problems) {
+SettingDefinition parseAppSetting(const nlohmann::json &j, std::vector<std::string> &problems) {
   auto s = parseSetting(j, problems);
   for (const char *field : {"mapping", "trueValue", "falseValue"}) {
     if (j.contains(field)) {
@@ -219,9 +210,7 @@ SettingsGroup parseGroup(const nlohmann::json &j) {
 
 void sortByOrder(std::vector<SettingDefinition> &settings) {
   std::stable_sort(settings.begin(), settings.end(),
-                   [](const SettingDefinition &a, const SettingDefinition &b) {
-                     return a.order < b.order;
-                   });
+                   [](const SettingDefinition &a, const SettingDefinition &b) { return a.order < b.order; });
 }
 
 } // namespace
@@ -268,8 +257,7 @@ bool SettingsCatalog::loadFromJson(const std::string &json) {
           }
         }
         if (core.contains("defaults")) {
-          for (auto d = core["defaults"].begin(); d != core["defaults"].end();
-               ++d) {
+          for (auto d = core["defaults"].begin(); d != core["defaults"].end(); ++d) {
             coreDefaults[coreName][d.key()] = d.value().get<std::string>();
           }
         }
@@ -277,13 +265,9 @@ bool SettingsCatalog::loadFromJson(const std::string &json) {
     }
 
     std::stable_sort(pages.begin(), pages.end(),
-                     [](const SettingsPage &a, const SettingsPage &b) {
-                       return a.order < b.order;
-                     });
+                     [](const SettingsPage &a, const SettingsPage &b) { return a.order < b.order; });
     std::stable_sort(groups.begin(), groups.end(),
-                     [](const SettingsGroup &a, const SettingsGroup &b) {
-                       return a.order < b.order;
-                     });
+                     [](const SettingsGroup &a, const SettingsGroup &b) { return a.order < b.order; });
 
     m_pages = std::move(pages);
     m_groups = std::move(groups);
@@ -338,33 +322,27 @@ std::vector<std::string> SettingsCatalog::validate() const {
       problems.push_back("duplicate group id '" + group.id + "'");
     }
     if (!group.pageId.empty() && !pageIds.count(group.pageId)) {
-      problems.push_back("group '" + group.id + "' names undeclared page '" +
-                         group.pageId + "'");
+      problems.push_back("group '" + group.id + "' names undeclared page '" + group.pageId + "'");
     }
   }
 
   std::set<std::string> keys;
-  const auto checkSetting = [&](const SettingDefinition &s,
-                                const std::string &where) {
+  const auto checkSetting = [&](const SettingDefinition &s, const std::string &where) {
     if (s.key.empty()) {
       problems.push_back("a setting in " + where + " has no key");
       return;
     }
     if (!keys.insert(s.key).second) {
-      problems.push_back("duplicate setting key '" + s.key + "' (" + where +
-                         ")");
+      problems.push_back("duplicate setting key '" + s.key + "' (" + where + ")");
     }
     if (!s.groupId.empty() && !groupIds.count(s.groupId)) {
-      problems.push_back("setting '" + s.key + "' names undeclared group '" +
-                         s.groupId + "'");
+      problems.push_back("setting '" + s.key + "' names undeclared group '" + s.groupId + "'");
     }
     if (s.type == SettingType::CUSTOM && s.widget.empty()) {
-      problems.push_back("setting '" + s.key +
-                         "' is custom but names no widget");
+      problems.push_back("setting '" + s.key + "' is custom but names no widget");
     }
     // Runtime-sourced options are authored empty on purpose
-    if (s.type == SettingType::OPTIONS && s.options.empty() &&
-        !s.libraryGameSource && !s.audioDeviceSource) {
+    if (s.type == SettingType::OPTIONS && s.options.empty() && !s.libraryGameSource && !s.audioDeviceSource) {
       problems.push_back("setting '" + s.key + "' has no options");
     }
   };
@@ -385,44 +363,36 @@ std::vector<std::string> SettingsCatalog::validate() const {
 }
 
 const SettingsPage *SettingsCatalog::findPage(const std::string &id) const {
-  const auto it = std::find_if(
-      m_pages.begin(), m_pages.end(),
-      [&](const SettingsPage &p) { return p.id == id; });
+  const auto it = std::find_if(m_pages.begin(), m_pages.end(), [&](const SettingsPage &p) { return p.id == id; });
   return it != m_pages.end() ? &*it : nullptr;
 }
 
 const SettingsGroup *SettingsCatalog::findGroup(const std::string &id) const {
-  const auto it = std::find_if(
-      m_groups.begin(), m_groups.end(),
-      [&](const SettingsGroup &g) { return g.id == id; });
+  const auto it = std::find_if(m_groups.begin(), m_groups.end(), [&](const SettingsGroup &g) { return g.id == id; });
   return it != m_groups.end() ? &*it : nullptr;
 }
 
-const std::vector<SettingDefinition> &
-SettingsCatalog::coreSpecificSettings(const std::string &coreName) const {
-  static const std::vector<SettingDefinition> empty;
+const std::vector<SettingDefinition> &SettingsCatalog::coreSpecificSettings(const std::string &coreName) const {
+  static const std::vector<SettingDefinition> EMPTY;
   const auto it = m_perCore.find(coreName);
-  return it != m_perCore.end() ? it->second : empty;
+  return it != m_perCore.end() ? it->second : EMPTY;
 }
 
-const std::map<std::string, std::string> &
-SettingsCatalog::coreDefaults(const std::string &coreName) const {
-  static const std::map<std::string, std::string> empty;
+const std::map<std::string, std::string> &SettingsCatalog::coreDefaults(const std::string &coreName) const {
+  static const std::map<std::string, std::string> EMPTY;
   const auto it = m_coreDefaults.find(coreName);
-  return it != m_coreDefaults.end() ? it->second : empty;
+  return it != m_coreDefaults.end() ? it->second : EMPTY;
 }
 
-std::vector<SettingDefinition>
-SettingsCatalog::settingsForCore(const std::string &coreName) const {
+std::vector<SettingDefinition> SettingsCatalog::settingsForCore(const std::string &coreName) const {
   std::vector<SettingDefinition> result = m_common;
   const auto &specific = coreSpecificSettings(coreName);
   result.insert(result.end(), specific.begin(), specific.end());
   return result;
 }
 
-std::vector<SettingDefinition>
-SettingsCatalog::settingsForGroup(const std::string &groupId,
-                                  const std::string &coreName) const {
+std::vector<SettingDefinition> SettingsCatalog::settingsForGroup(const std::string &groupId,
+                                                                 const std::string &coreName) const {
   std::vector<SettingDefinition> result;
   if (groupId.empty()) {
     return result;
@@ -443,8 +413,7 @@ SettingsCatalog::settingsForGroup(const std::string &groupId,
   return result;
 }
 
-const SettingDefinition *
-SettingsCatalog::findByKey(const std::string &key) const {
+const SettingDefinition *SettingsCatalog::findByKey(const std::string &key) const {
   for (const auto *s : allSettings()) {
     if (s->key == key) {
       return s;
@@ -471,9 +440,7 @@ std::vector<const SettingDefinition *> SettingsCatalog::allSettings() const {
 }
 
 bool SettingsCatalog::isAppSetting(const std::string &key) const {
-  return std::any_of(
-      m_app.begin(), m_app.end(),
-      [&](const SettingDefinition &s) { return s.key == key; });
+  return std::any_of(m_app.begin(), m_app.end(), [&](const SettingDefinition &s) { return s.key == key; });
 }
 
 std::string SettingsCatalog::defaultForCommonKey(const std::string &key) const {

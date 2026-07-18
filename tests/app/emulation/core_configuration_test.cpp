@@ -1,10 +1,9 @@
-#include <libretro/core_configuration.hpp>
-
 #include <firelight/settings/setting_definition.hpp>
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <gtest/gtest.h>
+#include <libretro/core_configuration.hpp>
 
 namespace {
 
@@ -18,8 +17,8 @@ protected:
   const int m_platformId = 42;
   const std::string m_hash = "hash1";
 
-  static firelight::libretro::IConfigurationProvider::Option
-  coreOption(const std::string &key, const std::string &def) {
+  static firelight::libretro::IConfigurationProvider::Option coreOption(const std::string &key,
+                                                                        const std::string &def) {
     firelight::libretro::IConfigurationProvider::Option o;
     o.key = key;
     o.defaultValueKey = def;
@@ -44,8 +43,7 @@ TEST_F(CoreConfigurationTest, FallsBackToCoreDeclaredDefault) {
 }
 
 TEST_F(CoreConfigurationTest, CatalogCoreDefaultBeatsCoreDeclaredDefault) {
-  CoreConfiguration config(m_hash, m_platformId, {},
-                           {{"core_x", "catalogdefault"}}, m_service);
+  CoreConfiguration config(m_hash, m_platformId, {}, {{"core_x", "catalogdefault"}}, m_service);
   config.registerOption(coreOption("core_x", "coredefault"));
   EXPECT_EQ(config.getOptionValue("core_x").value_or(""), "catalogdefault");
 }
@@ -54,8 +52,7 @@ TEST_F(CoreConfigurationTest, FriendlyMappingDrivesCoreValue) {
   SettingDefinition s;
   s.key = "friendly-color";
   s.defaultValue = "Accurate";
-  s.mapping = {{.coreKey = "core_color",
-                .valueMap = {{"Accurate", "accurate"}, {"Fast", "fast"}}}};
+  s.mapping = {{.coreKey = "core_color", .valueMap = {{"Accurate", "accurate"}, {"Fast", "fast"}}}};
 
   CoreConfiguration config(m_hash, m_platformId, {s}, {}, m_service);
   config.registerOption(coreOption("core_color", "coredefault"));
@@ -96,7 +93,6 @@ TEST_F(CoreConfigurationTest, OverridesResolveGameOverPlatformOverGlobal) {
   EXPECT_EQ(config.getOptionValue("core_x").value_or(""), "gameval");
 }
 
-// TODO
 // A CLI --set targeting a raw core option key flows through getEffectiveValue,
 // so it wins over every stored tier here too (proving one session-override
 // mechanism covers both common settings and per-core options)

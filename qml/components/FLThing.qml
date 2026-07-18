@@ -22,30 +22,28 @@ FocusScope {
 
     Component {
         id: gameDetailsPanel
-        FLGameDetailsPanel {
-
-        }
+        FLGameDetailsPanel {}
     }
 
     WheelHandler {
-        onWheel: function(event) {
+        onWheel: function (event) {
             if (wheelTimer.running) {
                 if (list.currentIndex === 0 && event.angleDelta.y >= 0) {
-                    wheelTimer.restart()
-                    return
+                    wheelTimer.restart();
+                    return;
                 } else if (list.currentIndex === list.count - 1 && event.angleDelta.y < 0) {
-                    wheelTimer.restart()
-                    return
+                    wheelTimer.restart();
+                    return;
                 }
             }
 
             if (event.angleDelta.y >= 0) {
-                list.decrementCurrentIndex()
+                list.decrementCurrentIndex();
             } else {
-                list.incrementCurrentIndex()
+                list.incrementCurrentIndex();
             }
 
-            wheelTimer.restart()
+            wheelTimer.restart();
         }
     }
 
@@ -143,7 +141,6 @@ FocusScope {
             // sound.stop()
             // sound.play()
             sfx.play();
-            // TODO
             // if (sound.playbackState === SoundEffect.PlayingState) {
             //     volumeFadeOut.start()
             // } else {
@@ -172,7 +169,7 @@ FocusScope {
             ParallelAnimation {
                 ScriptAction {
                     script: {
-                        sfx_player.play("startgame")
+                        sfx_player.play("startgame");
                     }
                 }
                 NumberAnimation {
@@ -284,16 +281,16 @@ FocusScope {
                         }
 
                         Keys.onMenuPressed: function (event) {
-                            root.StackView.view.push(gameDetailsPanel, {}, StackView.PushTransition)
+                            root.StackView.view.push(gameDetailsPanel, {}, StackView.PushTransition);
                         }
 
                         onClicked: {
                             if (!gameDele.ListView.isCurrentItem) {
-                                gameDele.ListView.view.currentIndex = gameDele.index
-                                return
+                                gameDele.ListView.view.currentIndex = gameDele.index;
+                                return;
                             } else {
-                                listAnimation.target = imageClone
-                                listAnimation.start()
+                                listAnimation.target = imageClone;
+                                listAnimation.start();
                             }
                         }
 
@@ -310,7 +307,6 @@ FocusScope {
                                 anchors.fill: parent
                                 source: model.cover
                             }
-
                         }
                     }
 
@@ -393,9 +389,8 @@ FocusScope {
                         }
 
                         onClicked: {
-                            root.StackView.view.pushItem(libraryPage, {}, StackView.PushTransition)
+                            root.StackView.view.pushItem(libraryPage, {}, StackView.PushTransition);
                         }
-
                     }
 
                     Text {
@@ -410,7 +405,6 @@ FocusScope {
                     }
                 }
             }
-
         }
     }
 

@@ -1,4 +1,5 @@
 #include "ups_patch.hpp"
+
 #include "util.hpp"
 
 #include <filesystem>
@@ -39,14 +40,11 @@ UPSPatch::UPSPatch(const std::vector<uint8_t> &data) {
     records.emplace_back(UPSPatchRecord{relativeOffset, XORdifferences});
   }
 
-  inputFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 |
-                           data[index + 1] << 8 | data[index];
+  inputFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 | data[index + 1] << 8 | data[index];
   index += 4;
-  outputFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 |
-                            data[index + 1] << 8 | data[index];
+  outputFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 | data[index + 1] << 8 | data[index];
   index += 4;
-  patchFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 |
-                           data[index + 1] << 8 | data[index];
+  patchFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 | data[index + 1] << 8 | data[index];
 
   auto crc = crc32(0L, nullptr, 0);
   crc = crc32(crc, data.data(), data.size() - 4);
@@ -56,8 +54,7 @@ UPSPatch::UPSPatch(const std::vector<uint8_t> &data) {
   }
 }
 
-std::vector<uint8_t>
-UPSPatch::patchRom(const std::vector<uint8_t> &data) const {
+std::vector<uint8_t> UPSPatch::patchRom(const std::vector<uint8_t> &data) const {
   std::vector<uint8_t> patchedRom(outputFileSize);
 
   std::copy(data.begin(), data.end(), patchedRom.begin());
@@ -82,6 +79,8 @@ UPSPatch::patchRom(const std::vector<uint8_t> &data) const {
 
   return patchedRom;
 }
+
 std::vector<UPSPatchRecord> UPSPatch::getRecords() const { return records; }
+
 bool UPSPatch::isValid() const { return m_isValid; }
 } // namespace firelight::patching

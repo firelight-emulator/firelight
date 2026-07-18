@@ -4,15 +4,13 @@
 #include <QImage>
 #include <filesystem>
 #include <gtest/gtest.h>
-
 #include <memory>
 
 namespace firelight::media {
 namespace {
 
 QString uniqueTempDir(const std::string &name) {
-  return QString::fromStdString(
-      (std::filesystem::temp_directory_path() / name).string());
+  return QString::fromStdString((std::filesystem::temp_directory_path() / name).string());
 }
 
 QImage solidImage(const QColor &color) {
@@ -30,10 +28,10 @@ struct Fixture {
   explicit Fixture(const QString &dir) : base(dir) {
     std::filesystem::remove_all(base.toStdString());
     std::filesystem::create_directories(base.toStdString());
-    repo = std::make_unique<SqliteGameCaptureRepository>(
-        (base + "/captures.db").toStdString());
+    repo = std::make_unique<SqliteGameCaptureRepository>((base + "/captures.db").toStdString());
     service = std::make_unique<MediaService>(base, *repo);
   }
+
   ~Fixture() {
     service.reset();
     repo.reset();
@@ -99,8 +97,7 @@ TEST(MediaServiceTest, ReconcileIndexesOrphansAndPrunesMissing) {
   Fixture f(uniqueTempDir("fl_media_reconcile"));
 
   // A screenshot placed on disk without going through saveScreenshot
-  const std::string gameDir =
-      (f.base + "/screenshots/gameX").toStdString();
+  const std::string gameDir = (f.base + "/screenshots/gameX").toStdString();
   std::filesystem::create_directories(gameDir);
   const QString file = QString::fromStdString(gameDir) + "/12345.png";
   ASSERT_TRUE(solidImage(Qt::red).save(file, "PNG"));

@@ -2,6 +2,7 @@
 
 namespace firelight::saves {
 QString SuspendPointsItem::getContentHash() const { return m_contentHash; }
+
 void SuspendPointsItem::setContentHash(const QString &contentHash) {
   if (m_contentHash == contentHash) {
     return;
@@ -10,9 +11,7 @@ void SuspendPointsItem::setContentHash(const QString &contentHash) {
   m_contentHash = contentHash;
 
   for (auto i = 0; i < 16; ++i) {
-    auto point =
-        getSaveManager()->readSuspendPoint(m_contentHash.toStdString(),
-                                           m_saveSlotNumber, i);
+    auto point = getSaveManager()->readSuspendPoint(m_contentHash.toStdString(), m_saveSlotNumber, i);
     if (point.has_value()) {
       m_suspendPointsModel->updateData(i, point.value());
     }
@@ -23,6 +22,7 @@ void SuspendPointsItem::setContentHash(const QString &contentHash) {
 }
 
 int SuspendPointsItem::getSaveSlotNumber() const { return m_saveSlotNumber; }
+
 void SuspendPointsItem::setSaveSlotNumber(const int saveSlotNumber) {
   if (m_saveSlotNumber == saveSlotNumber) {
     return;
@@ -31,9 +31,7 @@ void SuspendPointsItem::setSaveSlotNumber(const int saveSlotNumber) {
   m_saveSlotNumber = saveSlotNumber;
 
   for (auto i = 0; i < 16; ++i) {
-    auto point =
-        getSaveManager()->readSuspendPoint(m_contentHash.toStdString(),
-                                           m_saveSlotNumber, i);
+    auto point = getSaveManager()->readSuspendPoint(m_contentHash.toStdString(), m_saveSlotNumber, i);
     if (point.has_value()) {
       m_suspendPointsModel->updateData(i, point.value());
     }
@@ -43,7 +41,5 @@ void SuspendPointsItem::setSaveSlotNumber(const int saveSlotNumber) {
   emit saveSlotNumberChanged();
 }
 
-SuspendPointListModel *SuspendPointsItem::getSuspendPoints() const {
-  return m_suspendPointsModel;
-}
+SuspendPointListModel *SuspendPointsItem::getSuspendPoints() const { return m_suspendPointsModel; }
 } // namespace firelight::saves

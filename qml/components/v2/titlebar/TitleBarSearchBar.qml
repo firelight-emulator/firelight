@@ -7,16 +7,16 @@ import Firelight 1.0
 FocusScope {
     id: control
 
-    Keys.onEscapePressed: function(event) {
-        console.log(event)
+    Keys.onEscapePressed: function (event) {
+        console.log(event);
         if (searchField.activeFocus || searchPopup.activeFocus) {
             if (searchField.text !== "") {
-                searchField.text = ""
-                searchField.forceActiveFocus()
-                event.accepted = true
+                searchField.text = "";
+                searchField.forceActiveFocus();
+                event.accepted = true;
             } else {
-                control.Window.window.contentItem.forceActiveFocus()
-                event.accepted = true
+                control.Window.window.contentItem.forceActiveFocus();
+                event.accepted = true;
             }
         }
     }
@@ -56,7 +56,6 @@ FocusScope {
                     }
                 }
             }
-
         }
 
         contentItem: RowLayout {
@@ -97,7 +96,7 @@ FocusScope {
                 }
 
                 onClicked: {
-                    searchField.forceActiveFocus(Qt.MouseFocusReason)
+                    searchField.forceActiveFocus(Qt.MouseFocusReason);
                 }
             }
 
@@ -112,7 +111,7 @@ FocusScope {
                 Keys.onDownPressed: {
                     if (searchPopup.visible) {
                         // searchResultsList.currentIndex = 0
-                        searchResultsList.headerItem.forceActiveFocus()
+                        searchResultsList.headerItem.forceActiveFocus();
                     }
                 }
 
@@ -125,7 +124,7 @@ FocusScope {
                 }
 
                 onTextChanged: {
-                    textChangedAnimation.start()
+                    textChangedAnimation.start();
                 }
             }
 
@@ -133,10 +132,12 @@ FocusScope {
                 id: textChangedAnimation
 
                 running: false
-                PauseAnimation { duration: 240 }
+                PauseAnimation {
+                    duration: 240
+                }
                 ScriptAction {
                     script: {
-                        SearchResultsModel.setFilterString(searchField.text)
+                        SearchResultsModel.setFilterString(searchField.text);
                     }
                 }
             }
@@ -171,10 +172,9 @@ FocusScope {
                 }
 
                 onClicked: {
-                    searchField.text = ""
+                    searchField.text = "";
                 }
             }
-
         }
     }
 
@@ -187,7 +187,7 @@ FocusScope {
         padding: 0
 
         onClosed: {
-            searchResultsList.contentY = 0
+            searchResultsList.contentY = 0;
         }
 
         closePolicy: Popup.NoAutoClose
@@ -260,7 +260,7 @@ FocusScope {
                             Connections {
                                 target: SearchResultsModel
                                 function onCountChanged() {
-                                    countText.text = "(" + SearchResultsModel.rowCount() + ")"
+                                    countText.text = "(" + SearchResultsModel.rowCount() + ")";
                                 }
                             }
                         }
@@ -294,7 +294,6 @@ FocusScope {
                                 color: Theme.textMuted
                             }
                         }
-
                     }
                 }
                 footer: Item {
@@ -326,7 +325,6 @@ FocusScope {
                             anchors.left: parent.left
                             anchors.leftMargin: 12
                         }
-
                     }
                 }
 
@@ -427,11 +425,9 @@ FocusScope {
                             Layout.fillHeight: true
                         }
                     }
-
                 }
             }
         }
-
     }
 
     component RoleData: QtObject {

@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import QtQml.Models
 import Firelight 1.0
 
-// TODO
 // Renders every setting declared in one catalog group as a section card, title
 // and all. Adding a setting to the group is a catalog edit — nothing here
 // changes. When a control needs to be bespoke, declare the setting `custom` and
@@ -46,28 +45,69 @@ SettingsSection {
 
         delegate: DelegateChooser {
             role: "widget"
-            DelegateChoice { roleValue: "toggle"; delegate: toggleDelegate }
-            DelegateChoice { roleValue: "slider"; delegate: sliderDelegate }
-            DelegateChoice { roleValue: "spinbox"; delegate: sliderDelegate }
-            DelegateChoice { roleValue: "stepper"; delegate: stepperDelegate }
-            DelegateChoice { roleValue: "segmented"; delegate: segmentedDelegate }
-            DelegateChoice { roleValue: "radio"; delegate: radioDelegate }
-            DelegateChoice { roleValue: "gbc-palette"; delegate: paletteDelegate }
-            DelegateChoice { roleValue: "text"; delegate: textDelegate }
-            DelegateChoice { roleValue: "color"; delegate: colorDelegate }
-            DelegateChoice { roleValue: "file-picker"; delegate: filePathDelegate }
-            DelegateChoice { roleValue: "folder-picker"; delegate: filePathDelegate }
-            DelegateChoice { roleValue: "multi-select"; delegate: multiSelectDelegate }
-            DelegateChoice { roleValue: "key-binding"; delegate: keyBindingDelegate }
-            DelegateChoice { delegate: comboBoxDelegate }
+            DelegateChoice {
+                roleValue: "toggle"
+                delegate: toggleDelegate
+            }
+            DelegateChoice {
+                roleValue: "slider"
+                delegate: sliderDelegate
+            }
+            DelegateChoice {
+                roleValue: "spinbox"
+                delegate: sliderDelegate
+            }
+            DelegateChoice {
+                roleValue: "stepper"
+                delegate: stepperDelegate
+            }
+            DelegateChoice {
+                roleValue: "segmented"
+                delegate: segmentedDelegate
+            }
+            DelegateChoice {
+                roleValue: "radio"
+                delegate: radioDelegate
+            }
+            DelegateChoice {
+                roleValue: "gbc-palette"
+                delegate: paletteDelegate
+            }
+            DelegateChoice {
+                roleValue: "text"
+                delegate: textDelegate
+            }
+            DelegateChoice {
+                roleValue: "color"
+                delegate: colorDelegate
+            }
+            DelegateChoice {
+                roleValue: "file-picker"
+                delegate: filePathDelegate
+            }
+            DelegateChoice {
+                roleValue: "folder-picker"
+                delegate: filePathDelegate
+            }
+            DelegateChoice {
+                roleValue: "multi-select"
+                delegate: multiSelectDelegate
+            }
+            DelegateChoice {
+                roleValue: "key-binding"
+                delegate: keyBindingDelegate
+            }
+            DelegateChoice {
+                delegate: comboBoxDelegate
+            }
         }
 
         onItemAdded: function (index, item) {
             if (index === 0) {
-                item.isFirstInSection = true
+                item.isFirstInSection = true;
             }
             if (index === settingsModel.rowCount() - 1) {
-                item.isLastInSection = true
+                item.isLastInSection = true;
             }
         }
     }
@@ -103,7 +143,9 @@ SettingsSection {
             resettable: model.resettable
 
             onReset: settingsModel.resetValue(index)
-            onClicked: function () { model.value = !checked }
+            onClicked: function () {
+                model.value = !checked;
+            }
         }
     }
 
@@ -124,7 +166,9 @@ SettingsSection {
             value: parseFloat(model.value)
 
             onReset: settingsModel.resetValue(index)
-            onMoved: function (v) { model.value = v.toString() }
+            onMoved: function (v) {
+                model.value = v.toString();
+            }
         }
     }
 
@@ -145,7 +189,9 @@ SettingsSection {
             value: parseFloat(model.value)
 
             onReset: settingsModel.resetValue(index)
-            onChanged: function (v) { model.value = v.toString() }
+            onChanged: function (v) {
+                model.value = v.toString();
+            }
         }
     }
 
@@ -164,7 +210,9 @@ SettingsSection {
             currentValue: model.value
 
             onReset: settingsModel.resetValue(index)
-            onChanged: function (v) { model.value = v }
+            onChanged: function (v) {
+                model.value = v;
+            }
         }
     }
 
@@ -183,7 +231,9 @@ SettingsSection {
             currentValue: model.value
 
             onReset: settingsModel.resetValue(index)
-            onChanged: function (v) { model.value = v }
+            onChanged: function (v) {
+                model.value = v;
+            }
         }
     }
 
@@ -202,7 +252,9 @@ SettingsSection {
             resettable: model.resettable
 
             onReset: settingsModel.resetValue(index)
-            onActivated: function (v) { model.value = v }
+            onActivated: function (v) {
+                model.value = v;
+            }
         }
     }
 
@@ -221,7 +273,9 @@ SettingsSection {
             placeholder: model.placeholder
 
             onReset: settingsModel.resetValue(index)
-            onEdited: function (v) { model.value = v }
+            onEdited: function (v) {
+                model.value = v;
+            }
         }
     }
 
@@ -240,7 +294,9 @@ SettingsSection {
             presets: model.options
 
             onReset: settingsModel.resetValue(index)
-            onPicked: function (hex) { model.value = hex }
+            onPicked: function (hex) {
+                model.value = hex;
+            }
         }
     }
 
@@ -260,7 +316,9 @@ SettingsSection {
             extensions: model.fileExtensions
 
             onReset: settingsModel.resetValue(index)
-            onChosen: function (path) { model.value = path }
+            onChosen: function (path) {
+                model.value = path;
+            }
         }
     }
 
@@ -279,7 +337,9 @@ SettingsSection {
             options: model.options
 
             onReset: settingsModel.resetValue(index)
-            onChanged: function (jsonValue) { model.value = jsonValue }
+            onChanged: function (jsonValue) {
+                model.value = jsonValue;
+            }
         }
     }
 

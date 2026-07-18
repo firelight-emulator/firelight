@@ -24,7 +24,6 @@ enum MemoryType {
   VIDEO_RAM = RETRO_MEMORY_VIDEO_RAM
 };
 
-// TODO
 // Abstraction over a loaded libretro core. `Core` is the real (dlopen'd)
 // implementation; tests substitute a lightweight fake. Kept to exactly the
 // surface its consumers use: EmulatorInstance drives the lifecycle/state, and
@@ -34,15 +33,11 @@ public:
   virtual ~ICore() = default;
 
   // --- wiring (set before init/loadGame) ---
-  virtual void
-  setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver) = 0;
+  virtual void setVideoReceiver(firelight::libretro::IVideoDataReceiver *receiver) = 0;
   virtual void setAudioReceiver(std::shared_ptr<IAudioOutput> receiver) = 0;
-  virtual void
-  setRetropadProvider(firelight::libretro::IRetropadProvider *provider) = 0;
-  virtual void setPointerInputProvider(
-      firelight::libretro::IPointerInputProvider *provider) = 0;
-  virtual void setAudioInputProvider(
-      firelight::libretro::IAudioInputProvider *provider) = 0;
+  virtual void setRetropadProvider(firelight::libretro::IRetropadProvider *provider) = 0;
+  virtual void setPointerInputProvider(firelight::libretro::IPointerInputProvider *provider) = 0;
+  virtual void setAudioInputProvider(firelight::libretro::IAudioInputProvider *provider) = 0;
   virtual void setSystemDirectory(const std::string &dir) = 0;
   // Directory the core may read/write its own persistent data in (memstick,
   // pak files, NAND, …). Firelight hands it a per-game, per-slot managed path
@@ -55,17 +50,13 @@ public:
   virtual void reset() = 0;
 
   // --- save data / state ---
-  virtual void writeMemoryData(MemoryType memType,
-                               const std::vector<char> &data) = 0;
-  [[nodiscard]] virtual std::vector<char>
-  getMemoryData(MemoryType memType) const = 0;
+  virtual void writeMemoryData(MemoryType memType, const std::vector<char> &data) = 0;
+  [[nodiscard]] virtual std::vector<char> getMemoryData(MemoryType memType) const = 0;
   [[nodiscard]] virtual std::vector<uint8_t> serializeState() const = 0;
-  // TODO
   // The size of a serialized state for the loaded game (0 if the core has no
   // savestate support). Lets callers pre-size buffers and detect a state-size
   // change. Stable while a game is loaded
   [[nodiscard]] virtual std::size_t getSerializeSize() const = 0;
-  // TODO
   // Restores a previously serialized state. Returns false (without touching the
   // core) if the data doesn't match the current serialize size or the core
   // rejects it
@@ -76,7 +67,6 @@ public:
   [[nodiscard]] virtual std::size_t getMemorySize(unsigned id) const = 0;
   virtual retro_memory_map *getMemoryMap() = 0;
 
-  // TODO
   // --- disc control (multi-disc games) ---
   // Number of disc images the core exposes (0 when the core has no disk-control
   // interface, i.e. single-disc/cartridge content)
@@ -87,7 +77,6 @@ public:
   // has no disk control or the index is out of range
   virtual bool setDiskIndex(unsigned index) = 0;
 
-  // TODO
   // --- controller port devices ---
   // One device type a core advertises for a port (from SET_CONTROLLER_INFO),
   // e.g. {RETRO_DEVICE_JOYPAD, "N64 Controller"} or a lightgun/mouse subclass
@@ -95,14 +84,13 @@ public:
     unsigned id;
     std::string description;
   };
+
   // The devices the core advertises, indexed by port. Empty (or a single entry)
   // means the port only has the default RetroPad — nothing to choose
-  [[nodiscard]] virtual std::vector<std::vector<ControllerDeviceOption>>
-  getControllerDevices() const = 0;
+  [[nodiscard]] virtual std::vector<std::vector<ControllerDeviceOption>> getControllerDevices() const = 0;
   // Tells the core which device (RETRO_DEVICE_*) is plugged into `port`
   virtual void setControllerPortDevice(unsigned port, unsigned device) = 0;
 
-  // TODO
   // Informs the core of the resolved input device *class* on a port (the
   // firelight::input::GamepadInputClass value: 1=Joypad, 2=Mouse, 3=Light Gun)
   // so it can drive the pointer cursor from a gamepad analog stick for Mouse /
@@ -110,15 +98,15 @@ public:
   // travelled per frame at full stick deflection). Default no-ops so test
   // doubles and pointer-less cores ignore them
   virtual void setPortInputDeviceClass(unsigned /*port*/, int /*deviceClass*/) {}
+
   virtual void setAnalogPointerSpeed(double /*stepPerFrame*/) {}
-  // TODO
+
   // When enabled (default), the physical mouse drives any light-gun / mouse
   // device the core presents, regardless of the port's selected device type —
   // the mouse "just works" for these games. The gamepad still only drives them
   // when that device type is selected. Default no-op
   virtual void setMouseControlsPointerDevices(bool /*enabled*/) {}
 
-  // TODO
   // --- cheats (Game Genie / Action Replay) ---
   // Applies cheat `code` (passed to the core verbatim; the core decodes the
   // format) in slot `index`, toggled by `enabled`
@@ -126,12 +114,10 @@ public:
   // Clears all applied cheats
   virtual void clearCheats() = 0;
 
-  // TODO
   // Hands a key press/release to a core that asked for the keyboard. `key` is a
   // RETROK_* value and `character` its unicode codepoint (0 if none). A no-op
   // for the cores that never asked, which is most of them
-  virtual void sendKeyboardEvent(bool down, unsigned key, uint32_t character,
-                                 uint16_t modifiers) = 0;
+  virtual void sendKeyboardEvent(bool down, unsigned key, uint32_t character, uint16_t modifiers) = 0;
   // Whether the core asked for the keyboard at all — the signal behind
   // "automatically disable keyboard hotkeys"
   [[nodiscard]] virtual bool wantsKeyboard() const = 0;

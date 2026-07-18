@@ -36,8 +36,7 @@ QColor averageBand(const QImage &img, const int y0, const int y1) {
   if (count == 0) {
     return {Qt::black};
   }
-  return {static_cast<int>(r / count), static_cast<int>(g / count),
-          static_cast<int>(b / count)};
+  return {static_cast<int>(r / count), static_cast<int>(g / count), static_cast<int>(b / count)};
 }
 } // namespace
 
@@ -49,8 +48,7 @@ QVariantMap ImageUtils::samplePalette(const QString &url) const {
   reader.setAutoTransform(true);
   // A coarse average is all we need, so downscale large images (and gif first
   // frames) while reading to keep this cheap
-  if (const QSize orig = reader.size();
-      orig.isValid() && (orig.width() > 128 || orig.height() > 128)) {
+  if (const QSize orig = reader.size(); orig.isValid() && (orig.width() > 128 || orig.height() > 128)) {
     reader.setScaledSize(orig.scaled(128, 128, Qt::KeepAspectRatio));
   }
 

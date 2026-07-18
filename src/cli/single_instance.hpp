@@ -20,12 +20,10 @@ namespace firelight::cli {
 // distinct --config-dir / --portable instances don't collide
 QString singleInstanceServerName(const QString &appDataPath);
 
-// TODO
 // If another Firelight is already listening on `serverName`, forwards this
 // launch (the ROM path) to it and returns true (the caller should exit)
 // Returns false when no running instance was found (this process is primary)
-bool forwardLaunchToRunningInstance(const QString &serverName,
-                                    const CliOptions &opts);
+bool forwardLaunchToRunningInstance(const QString &serverName, const CliOptions &opts);
 
 // The primary instance's listener: turns each forwarded launch from a secondary
 // process into a launchRequested(entryId) the root window connects to
@@ -33,10 +31,8 @@ class SingleInstanceServer : public QObject {
   Q_OBJECT
 
 public:
-  SingleInstanceServer(QString serverName,
-                       library::UserLibraryService &library,
-                       platforms::IPlatformService &platformService,
-                       QObject *parent = nullptr);
+  SingleInstanceServer(QString serverName, library::UserLibraryService &library,
+                       platforms::IPlatformService &platformService, QObject *parent = nullptr);
 
   // Starts listening (clearing any stale socket first). Returns false if the
   // address is already in use (another primary won a startup race)

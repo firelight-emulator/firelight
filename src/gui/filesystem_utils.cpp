@@ -68,13 +68,11 @@ bool FilesystemUtils::showInFilesystem(const QString &path) {
 #ifdef __APPLE__
   QStringList scriptArgs;
   scriptArgs << QLatin1String("-e")
-             << QString::fromLatin1(
-                    "tell application \"Finder\" to reveal POSIX file \"%1\"")
+             << QString::fromLatin1("tell application \"Finder\" to reveal POSIX file \"%1\"")
                     .arg(fileInfo.canonicalFilePath());
   QProcess::execute(QLatin1String("/usr/bin/osascript"), scriptArgs);
   scriptArgs.clear();
-  scriptArgs << QLatin1String("-e")
-             << QLatin1String("tell application \"Finder\" to activate");
+  scriptArgs << QLatin1String("-e") << QLatin1String("tell application \"Finder\" to activate");
   QProcess::execute(QLatin1String("/usr/bin/osascript"), scriptArgs);
 #endif
   return true;

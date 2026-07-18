@@ -5,9 +5,7 @@
 
 namespace firelight::gui {
 
-NetplayStreamItem::NetplayStreamItem(QQuickItem *parent) : QQuickItem(parent) {
-  setFlag(ItemHasContents);
-}
+NetplayStreamItem::NetplayStreamItem(QQuickItem *parent) : QQuickItem(parent) { setFlag(ItemHasContents); }
 
 void NetplayStreamItem::presentFrame(media::StreamVideoFrame frame) {
   {
@@ -17,8 +15,7 @@ void NetplayStreamItem::presentFrame(media::StreamVideoFrame frame) {
   QMetaObject::invokeMethod(this, [this] { update(); }, Qt::QueuedConnection);
 }
 
-QSGNode *NetplayStreamItem::updatePaintNode(QSGNode *oldNode,
-                                            UpdatePaintNodeData *) {
+QSGNode *NetplayStreamItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) {
   auto *node = static_cast<QSGSimpleTextureNode *>(oldNode);
 
   std::optional<media::StreamVideoFrame> frame;
@@ -28,8 +25,7 @@ QSGNode *NetplayStreamItem::updatePaintNode(QSGNode *oldNode,
   }
 
   if (frame && frame->width > 0 && frame->height > 0 && window()) {
-    QImage image(frame->rgba.data(), frame->width, frame->height,
-                 frame->width * 4, QImage::Format_RGBA8888);
+    QImage image(frame->rgba.data(), frame->width, frame->height, frame->width * 4, QImage::Format_RGBA8888);
     auto *texture = window()->createTextureFromImage(image.copy());
     if (texture) {
       if (!node) {
@@ -40,8 +36,7 @@ QSGNode *NetplayStreamItem::updatePaintNode(QSGNode *oldNode,
       if (frame->width != m_frameWidth || frame->height != m_frameHeight) {
         m_frameWidth = frame->width;
         m_frameHeight = frame->height;
-        QMetaObject::invokeMethod(this, [this] { emit frameSizeChanged(); },
-                                  Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, [this] { emit frameSizeChanged(); }, Qt::QueuedConnection);
       }
     }
   }

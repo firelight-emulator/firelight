@@ -19,20 +19,20 @@ Popup {
 
     function openWith(imageUrl, title, description, current, desired) {
         if (!achievement_manager.progressNotificationsEnabled) {
-            return
+            return;
         }
-        root.imageUrl = imageUrl
-        root.title = title
-        root.description = description
-        root.current = current
-        root.desired = desired
-        root.open()
+        root.imageUrl = imageUrl;
+        root.title = title;
+        root.description = description;
+        root.current = current;
+        root.desired = desired;
+        root.open();
         if (bounceAnimation.running) {
-            bounceAnimation.restart()
+            bounceAnimation.restart();
         } else {
-            bounceAnimation.running = true
+            bounceAnimation.running = true;
         }
-        timer.restart()
+        timer.restart();
     }
 
     Timer {
@@ -41,7 +41,7 @@ Popup {
         running: false
         repeat: false
         onTriggered: {
-            root.close()
+            root.close();
         }
     }
 
@@ -74,7 +74,7 @@ Popup {
 
         ScriptAction {
             script: {
-                timer.start()
+                timer.start();
             }
         }
     }
@@ -189,9 +189,7 @@ Popup {
                         verticalAlignment: Text.AlignBottom
                     }
                 }
-
             }
         }
-
     }
 }

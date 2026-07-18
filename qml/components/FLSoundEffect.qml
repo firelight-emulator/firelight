@@ -10,9 +10,15 @@ Item {
     property alias audioOutput: player.audioOutput
     property alias playbackState: player.playbackState
 
-    function play() { volumeFadeOut.start() }
-    function pause() { player.pause() }
-    function stop() { player.stop() }
+    function play() {
+        volumeFadeOut.start();
+    }
+    function pause() {
+        player.pause();
+    }
+    function stop() {
+        player.stop();
+    }
 
     MediaPlayer {
         id: player

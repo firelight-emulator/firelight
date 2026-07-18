@@ -12,15 +12,13 @@ struct Migration {
   std::function<void()> apply;
 };
 
-// TODO
 // Applies every migration whose version exceeds currentVersion, in list order,
 // running apply() then setVersion(version) for each; returns the version the
 // database ends at. The caller reads currentVersion (from PRAGMA user_version),
 // writes it back in setVersion, and should wrap the call in a transaction so a
 // throwing migration rolls back. Migrations must be listed in ascending order
 // Engine-agnostic: nothing here depends on SQLiteCpp or QSqlDatabase
-inline int applyMigrations(int currentVersion,
-                           const std::vector<Migration> &migrations,
+inline int applyMigrations(int currentVersion, const std::vector<Migration> &migrations,
                            const std::function<void(int)> &setVersion) {
   int version = currentVersion;
   for (const auto &migration : migrations) {

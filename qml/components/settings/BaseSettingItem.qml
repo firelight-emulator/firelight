@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // One settings row inside a section card: the label with its description beneath
 // it, the control to the right (or full-width below when `controlBelow`), and a
 // full-bleed hairline between rows. A subtle highlight appears on hover or
@@ -40,7 +39,7 @@ FocusScope {
     // Shown when this setting has an override at the current tier; emits reset()
     // so the caller can clear it (falling back to the inherited value)
     property bool resettable: false
-    signal reset()
+    signal reset
 
     property var onClicked: null
 
@@ -73,7 +72,8 @@ FocusScope {
     }
     TapHandler {
         enabled: root.onClicked !== null
-        onTapped: if (root.onClicked) root.onClicked()
+        onTapped: if (root.onClicked)
+            root.onClicked()
     }
 
     // Full-bleed hover / focus highlight behind the row
@@ -86,13 +86,16 @@ FocusScope {
         topLeftRadius: root.isFirstInSection ? 12 : 0
         topRightRadius: root.isFirstInSection ? 12 : 0
         bottomLeftRadius: root.isLastInSection ? 12 : 0
-        bottomRightRadius: root.isLastInSection ? 12: 0
+        bottomRightRadius: root.isLastInSection ? 12 : 0
 
         color: Theme.textPrimary
         opacity: hover.hovered || (!InputMethodManager.usingMouse && root.activeFocus) ? 0.08 : 0
 
         Behavior on opacity {
-            NumberAnimation { duration: 100; easing.type: Easing.InOutQuad }
+            NumberAnimation {
+                duration: 100
+                easing.type: Easing.InOutQuad
+            }
         }
     }
 
@@ -137,7 +140,9 @@ FocusScope {
                 hoverEnabled: true
                 onClicked: root.reset()
 
-                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
 
                 background: Rectangle {
                     radius: 6
@@ -158,7 +163,6 @@ FocusScope {
                 id: sideSlot
                 visible: !root.controlBelow
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                // TODO
                 // A control that asks for more than it can have — a long file
                 // path, say — would otherwise squeeze the label to nothing and
                 // draw straight over it. Cap it and let the control shrink

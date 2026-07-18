@@ -1,6 +1,5 @@
-import QtQuick
-
 pragma Singleton
+import QtQuick
 
 Item {
 
@@ -21,9 +20,7 @@ Item {
 
     readonly property color surface_color: "#121212"
 
-
     readonly property real standardTitleBarHeight: 60
-
 
     FontLoader {
         id: symbols
@@ -71,7 +68,6 @@ Item {
     readonly property color colorTestTextMuted: "#737373"
     readonly property color colorTestCard: "#48240c"
     readonly property color colorTestCardActive: "#833800"
-
 
     readonly property color color_primary: "#FFB787"
     readonly property color color_surfaceTint: "#FFB787"

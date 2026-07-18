@@ -2,6 +2,7 @@
 
 #include <firelight/library/disc_inspector.hpp>
 #include <firelight/library/user_library_repository.hpp>
+
 #include <QFileSystemWatcher>
 #include <QFuture>
 #include <QObject>
@@ -20,7 +21,6 @@ class IPlatformService;
 }
 
 namespace firelight::library {
-// TODO
 // Threading: a QObject on the GUI thread; QFileSystemWatcher/QTimer callbacks
 // arrive there. A scan runs on a worker thread (startScan returns a QFuture), so
 // scan state is guarded (QReadWriteLock/atomics); setScanningSuspended() is safe
@@ -30,8 +30,7 @@ class LibraryScanner2 : public QObject {
   Q_PROPERTY(bool scanning MEMBER m_scanRunning NOTIFY scanningChanged)
 
 public:
-  LibraryScanner2(IUserLibraryRepository &library,
-                  platforms::IPlatformService &platformService);
+  LibraryScanner2(IUserLibraryRepository &library, platforms::IPlatformService &platformService);
 
   ~LibraryScanner2() override;
 
@@ -43,7 +42,6 @@ public:
 
   void scanAll();
 
-  // TODO
   // Suspends scanning (e.g. while a game is running) and resumes it. Directory
   // changes seen while suspended are retained and processed on resume. Safe to
   // call from any thread
@@ -60,7 +58,6 @@ signals:
   void scanningChanged();
 
 private:
-  // TODO
   // Watching game folders (not the whole tree) keeps the count small; the
   // periodic rescan is the actual guarantee that changes are caught, so this is
   // just a rarely-hit backstop against exhausting OS watch handles
@@ -68,7 +65,6 @@ private:
   static constexpr int PERIODIC_SCAN_INTERVAL_MS = 5 * 60 * 1000;
 
   QTimer m_scanTimer;
-  // TODO
   // Low-frequency safety rescan for changes the watcher misses (network/
   // removable drives, watch-limit overflow, dropped events). Cheap because
   // unchanged directories are skipped by mtime
@@ -81,7 +77,6 @@ private:
   // that hold games). Main-thread-owned; bounded by MAX_WATCHED_DIRECTORIES
   QSet<QString> m_watchedDirs;
   bool m_watchCapLogged = false;
-  // TODO
   // Last-seen directory mtime (epoch ms) keyed by absolute path. Owned by the
   // single scan worker thread, so no lock is needed. Empty at launch, so the
   // first scan of the session is always a full/deep scan
@@ -91,7 +86,6 @@ private:
   // Suspends scanning while a game is running. Queued directory changes are
   // retained and processed on resume
   std::atomic_bool m_suspended = false;
-  // TODO
   // Content files added/removed during the in-flight scan. scanFinished (which
   // refreshes the library UI) is only emitted when this ends > 0, so a periodic
   // no-op scan never flickers the list
@@ -109,14 +103,12 @@ private:
 
   bool pathIsQueued(const QString &path);
 
-  // TODO
   // Registers `path` with the filesystem watcher. Safe to call from the scan
   // worker thread: it marshals onto the object's (main) thread, since
   // QFileSystemWatcher is not thread-safe
   void scheduleWatch(const QString &path);
 
   // Persists a disc set's member files against its primary ContentFile
-  void persistDiscMembers(int contentFileId,
-                          const std::vector<IdentifiedDiscMember> &members);
+  void persistDiscMembers(int contentFileId, const std::vector<IdentifiedDiscMember> &members);
 };
 } // namespace firelight::library

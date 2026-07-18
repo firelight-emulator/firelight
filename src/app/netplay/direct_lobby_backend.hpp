@@ -5,14 +5,12 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
-
 #include <map>
 #include <mutex>
 #include <vector>
 
 namespace firelight::netplay {
 
-// TODO
 // Direct-connection lobby: the host listens on a TCP port and shares their
 // IP; guests join by entering it. That one socket carries lobby membership,
 // chat, and the WebRTC signaling — the game streams still flow over the peer
@@ -32,7 +30,9 @@ public:
   void beginSignIn(std::function<void(bool)> done) override;
   [[nodiscard]] SignInState signInState() const override;
   [[nodiscard]] PlayerIdentity localIdentity() const override;
+
   [[nodiscard]] std::string providerName() const override { return ""; }
+
   void setPreferredDisplayName(const std::string &name) override;
 
   void createLobby(const std::string &joinCode, ResultCallback done) override;

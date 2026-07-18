@@ -1,23 +1,21 @@
 #include "input_method_detection_handler.hpp"
 
 namespace firelight::gui {
-  bool InputMethodDetectionHandler::usingMouse() const {
-    return m_mouseUsedLast;
-  }
+bool InputMethodDetectionHandler::usingMouse() const { return m_mouseUsedLast; }
 
-  bool InputMethodDetectionHandler::eventFilter(QObject *obj, QEvent *event) {
-    if (event->type() == QEvent::MouseMove || event->type() == QEvent::TouchUpdate) {
-      if (!m_mouseUsedLast) {
-        m_mouseUsedLast = true;
-        emit inputMethodChanged();
-      }
-    } else if (event->type() == QEvent::KeyPress) {
-      if (m_mouseUsedLast) {
-        m_mouseUsedLast = false;
-        emit inputMethodChanged();
-      }
+bool InputMethodDetectionHandler::eventFilter(QObject *obj, QEvent *event) {
+  if (event->type() == QEvent::MouseMove || event->type() == QEvent::TouchUpdate) {
+    if (!m_mouseUsedLast) {
+      m_mouseUsedLast = true;
+      emit inputMethodChanged();
     }
-
-    return QObject::eventFilter(obj, event);
+  } else if (event->type() == QEvent::KeyPress) {
+    if (m_mouseUsedLast) {
+      m_mouseUsedLast = false;
+      emit inputMethodChanged();
+    }
   }
-} // firelight::gui
+
+  return QObject::eventFilter(obj, event);
+}
+} // namespace firelight::gui

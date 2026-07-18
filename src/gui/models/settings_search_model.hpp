@@ -1,12 +1,11 @@
 #pragma once
 
-#include <QAbstractListModel>
-
 #include <firelight/settings/settings_index.hpp>
+
+#include <QAbstractListModel>
 
 namespace firelight::settings {
 
-// TODO
 // Search over every declared page and setting, for the settings nav's search
 // field. Set `query`; the rows are the ranked hits. A hit carries the `route`
 // to navigate to and, for a setting, the `key` the page should reveal.
@@ -41,8 +40,7 @@ public:
   [[nodiscard]] Q_INVOKABLE QString topKey() const;
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
-  [[nodiscard]] QVariant data(const QModelIndex &index,
-                              int role) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
 signals:

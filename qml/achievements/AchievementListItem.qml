@@ -30,10 +30,8 @@ Pane {
                     color: "#6c5312"
                     // color: "#7e7d7d"
                 }
-
             }
         }
-
     }
 
     HoverHandler {
@@ -43,7 +41,7 @@ Pane {
     TapHandler {
         acceptedButtons: Qt.RightButton
         onTapped: {
-            rightClickMenu.popup()
+            rightClickMenu.popup();
         }
     }
 
@@ -54,7 +52,7 @@ Pane {
             text: "Open at RetroAchievements.org"
             externalLink: true
             onTriggered: {
-                Qt.openUrlExternally("https://retroachievements.org/achievement/" + row.model.achievement_id)
+                Qt.openUrlExternally("https://retroachievements.org/achievement/" + row.model.achievement_id);
             }
         }
     }
@@ -105,7 +103,6 @@ Pane {
             Layout.fillHeight: true
             Layout.preferredWidth: 1
             color: row.model.earned ? "#aeaeae" : "#4c4c4c"
-
         }
         ColumnLayout {
             Layout.fillHeight: true
@@ -144,7 +141,7 @@ Pane {
         DetailsButton {
             Layout.alignment: Qt.AlignRight | Qt.AlignTop
             onClicked: function () {
-                rightClickMenu.popup()
+                rightClickMenu.popup();
             }
         }
     }

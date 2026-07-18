@@ -11,7 +11,6 @@ class Database;
 }
 
 namespace firelight::saves {
-// TODO
 // SQLiteCpp-backed save/suspend metadata index. Qt-free. A single connection is
 // guarded by a mutex so it can be shared across threads (matching the pattern in
 // SqliteGameCaptureRepository). The Phase 2 save worker will hold its own
@@ -23,25 +22,21 @@ public:
 
   bool createSavefileMetadata(SavefileMetadata &metadata) override;
 
-  std::optional<SavefileMetadata> getSavefileMetadata(std::string contentId,
-                                                      int slotNumber) override;
+  std::optional<SavefileMetadata> getSavefileMetadata(std::string contentId, int slotNumber) override;
 
   bool updateSavefileMetadata(SavefileMetadata metadata) override;
 
-  std::vector<SavefileMetadata>
-  getSavefileMetadataForContent(std::string contentId) override;
+  std::vector<SavefileMetadata> getSavefileMetadataForContent(std::string contentId) override;
 
   bool createSuspendPointMetadata(SuspendPointMetadata &metadata) override;
 
-  std::optional<SuspendPointMetadata>
-  getSuspendPointMetadata(std::string contentId, int saveSlotNumber,
-                          int slotNumber) override;
+  std::optional<SuspendPointMetadata> getSuspendPointMetadata(std::string contentId, int saveSlotNumber,
+                                                              int slotNumber) override;
 
   bool updateSuspendPointMetadata(const SuspendPointMetadata &metadata) override;
 
-  std::vector<SuspendPointMetadata>
-  getSuspendPointMetadataForContent(std::string contentId,
-                                    int saveSlotNumber) override;
+  std::vector<SuspendPointMetadata> getSuspendPointMetadataForContent(std::string contentId,
+                                                                      int saveSlotNumber) override;
 
   bool deleteSuspendPointMetadata(int id) override;
 

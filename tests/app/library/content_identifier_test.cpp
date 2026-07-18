@@ -1,4 +1,5 @@
 #include <firelight/library/content_identifier.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 #include <QByteArray>
 #include <QDir>
@@ -6,8 +7,6 @@
 #include <archive.h>
 #include <archive_entry.h>
 #include <gtest/gtest.h>
-
-#include <firelight/platforms/platform_service.hpp>
 
 namespace firelight::library {
 class ContentIdentifierTest : public testing::Test {
@@ -31,8 +30,7 @@ protected:
   }
 
   // Writes a .zip containing a single entry with the given magic-prefixed data
-  QString writeMagicIsoZip(const QString &zipName, const QString &entryName,
-                           const QByteArray &magic) {
+  QString writeMagicIsoZip(const QString &zipName, const QString &entryName, const QByteArray &magic) {
     QByteArray data = magic;
     data.append(64 * 1024 - magic.size(), '\0');
 
@@ -40,8 +38,7 @@ protected:
 
     archive *a = archive_write_new();
     archive_write_set_format_zip(a);
-    EXPECT_EQ(archive_write_open_filename(a, zipPath.toStdString().c_str()),
-              ARCHIVE_OK);
+    EXPECT_EQ(archive_write_open_filename(a, zipPath.toStdString().c_str()), ARCHIVE_OK);
 
     archive_entry *entry = archive_entry_new();
     archive_entry_set_pathname(entry, entryName.toStdString().c_str());
@@ -88,13 +85,11 @@ TEST_F(ContentIdentifierTest, DetectsSaturnFromMagic) {
 // the same way (exercises the two-pass, extract-only-what's-needed path)
 TEST_F(ContentIdentifierTest, DetectsDiscInsideArchive) {
   ASSERT_TRUE(tempDir.isValid());
-  const QString zipPath =
-      writeMagicIsoZip("saturn.zip", "saturn.iso", "SEGA SEGASATURN ");
+  const QString zipPath = writeMagicIsoZip("saturn.zip", "saturn.iso", "SEGA SEGASATURN ");
 
   // Mirrors how LibraryScanner2 identifies in-archive disc entries: no buffer,
   // detection re-opens the archive itself
-  const auto result =
-      identifier.identifyInArchive("saturn.iso", {}, 0, zipPath.toStdString());
+  const auto result = identifier.identifyInArchive("saturn.iso", {}, 0, zipPath.toStdString());
 
   ASSERT_TRUE(result.valid);
   ASSERT_EQ(result.platformId, firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN);

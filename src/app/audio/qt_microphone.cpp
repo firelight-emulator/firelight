@@ -57,8 +57,7 @@ void QtMicrophone::closeMicrophone(retro_microphone_t *microphone) {
   m_mic.reset();
 }
 
-bool QtMicrophone::getMicrophoneParameters(const retro_microphone_t *microphone,
-                                           retro_microphone_params_t *params) {
+bool QtMicrophone::getMicrophoneParameters(const retro_microphone_t *microphone, retro_microphone_params_t *params) {
   if (!microphone || !params) {
     return false;
   }
@@ -66,8 +65,7 @@ bool QtMicrophone::getMicrophoneParameters(const retro_microphone_t *microphone,
   return true;
 }
 
-bool QtMicrophone::setMicrophoneState(retro_microphone_t *microphone,
-                                      bool state) {
+bool QtMicrophone::setMicrophoneState(retro_microphone_t *microphone, bool state) {
   if (!microphone || !microphone->source) {
     return false;
   }
@@ -85,18 +83,14 @@ bool QtMicrophone::setMicrophoneState(retro_microphone_t *microphone,
   return true;
 }
 
-bool QtMicrophone::getMicrophoneState(const retro_microphone_t *microphone) {
-  return microphone && microphone->active;
-}
+bool QtMicrophone::getMicrophoneState(const retro_microphone_t *microphone) { return microphone && microphone->active; }
 
-int QtMicrophone::readMicrophone(retro_microphone_t *microphone,
-                                 int16_t *samples, size_t num_samples) {
+int QtMicrophone::readMicrophone(retro_microphone_t *microphone, int16_t *samples, size_t num_samples) {
   if (!microphone || !microphone->active || !microphone->io || !samples) {
     return 0;
   }
   const qint64 wanted = static_cast<qint64>(num_samples) * sizeof(int16_t);
-  const qint64 read =
-      microphone->io->read(reinterpret_cast<char *>(samples), wanted);
+  const qint64 read = microphone->io->read(reinterpret_cast<char *>(samples), wanted);
   if (read < 0) {
     return -1;
   }

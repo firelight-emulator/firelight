@@ -21,16 +21,16 @@ ComboBox {
 
     onCurrentValueChanged: function () {
         if (firstTime) {
-            firstTime = false
-            return
+            firstTime = false;
+            return;
         }
-        entryId = currentValue
-        currentEntry: library_database.getLibraryEntryJson(entryId)
+        entryId = currentValue;
+        currentEntry: library_database.getLibraryEntryJson(entryId);
     }
 
     Component.onCompleted: function () {
         if (entryId !== -1) {
-            currentEntry = library_database.getLibraryEntryJson(entryId)
+            currentEntry = library_database.getLibraryEntryJson(entryId);
         }
     }
 
@@ -91,11 +91,9 @@ ComboBox {
             model: root.popup.visible ? root.delegateModel : null
             currentIndex: root.highlightedIndex
 
-            highlight: Item {
-            }
+            highlight: Item {}
 
-            ScrollIndicator.vertical: ScrollIndicator {
-            }
+            ScrollIndicator.vertical: ScrollIndicator {}
         }
 
         background: Rectangle {

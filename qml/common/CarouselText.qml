@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 
-
 Text {
     id: root
 
@@ -12,24 +11,24 @@ Text {
     property real scrollDuration: 0
 
     Component.onCompleted: {
-        originalX = x
-        updateScrollDistance()
+        originalX = x;
+        updateScrollDistance();
     }
 
     onWidthChanged: {
-        updateScrollDistance()
+        updateScrollDistance();
     }
 
     onContentWidthChanged: {
-        updateScrollDistance()
+        updateScrollDistance();
     }
 
     function updateScrollDistance() {
-        scrollDistance = contentWidth - originalX - width
+        scrollDistance = contentWidth - originalX - width;
         if (scrollDistance < 0) {
-            scrollDistance = 0
+            scrollDistance = 0;
         }
-        scrollDuration = scrollDistance / scrollSpeed * 1000
+        scrollDuration = scrollDistance / scrollSpeed * 1000;
     }
 
     maximumLineCount: 1
@@ -46,9 +45,9 @@ Text {
             to: "hovered"
             ScriptAction {
                 script: {
-                    root.originalX = root.x
+                    root.originalX = root.x;
                     if (root.contentWidth > root.width) {
-                        scrollAnimation.running = true
+                        scrollAnimation.running = true;
                     }
                 }
             }
@@ -57,8 +56,8 @@ Text {
             from: "hovered"
             ScriptAction {
                 script: {
-                    scrollAnimation.running = false
-                    root.x = root.originalX
+                    scrollAnimation.running = false;
+                    root.x = root.originalX;
                 }
             }
         }

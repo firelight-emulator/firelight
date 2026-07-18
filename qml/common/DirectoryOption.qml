@@ -15,26 +15,26 @@ Button {
     verticalPadding: 12
 
     onValueChanged: function () {
-        let folder = root.value
+        let folder = root.value;
         if (FilesystemUtils.isFile(folder)) {
-            folderDialog.currentFolder = folder
-            return
+            folderDialog.currentFolder = folder;
+            return;
         }
 
-        folder = FilesystemUtils.prependFileURI(folder)
-        folderDialog.currentFolder = folder
+        folder = FilesystemUtils.prependFileURI(folder);
+        folderDialog.currentFolder = folder;
     }
 
     FolderDialog {
         id: folderDialog
         onAccepted: {
-            root.value = folder
+            root.value = folder;
             // console.log("found it")
         }
     }
 
     onClicked: function () {
-        folderDialog.open()
+        folderDialog.open();
     }
 
     // implicitHeight: Math.max(72, theColumn.)
@@ -81,6 +81,5 @@ Button {
             verticalAlignment: Text.AlignVCenter
             color: Theme.textMuted
         }
-
     }
 }

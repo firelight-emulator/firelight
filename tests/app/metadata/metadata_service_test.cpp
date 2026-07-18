@@ -6,14 +6,13 @@
 #include <firelight/metadata/sqlite_game_metadata_source.hpp>
 #include <firelight/metadata/sqlite_media_asset_repository.hpp>
 
-#include <SQLiteCpp/Database.h>
 #include <QThread>
+#include <SQLiteCpp/Database.h>
 #include <atomic>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
 
-// TODO
 // Verifies MetadataService auto-population: the shipped-source name/metadata/art
 // is written onto the entry and seeded into the media store, a user-renamed
 // entry keeps its name, and the EntryCreatedEvent path triggers population
@@ -23,8 +22,7 @@ namespace {
 std::string makeFixtureDb() {
   static std::atomic<int> counter{0};
   const auto path =
-      (std::filesystem::temp_directory_path() /
-       ("fl_metasvc_fixture_" + std::to_string(counter.fetch_add(1)) + ".db"))
+      (std::filesystem::temp_directory_path() / ("fl_metasvc_fixture_" + std::to_string(counter.fetch_add(1)) + ".db"))
           .string();
   std::filesystem::remove(path);
 
@@ -51,8 +49,7 @@ std::string makeFixtureDb() {
 class MetadataServiceTest : public testing::Test {
 protected:
   std::string metadataDbPath = makeFixtureDb();
-  std::string mediaDir =
-      (std::filesystem::temp_directory_path() / "fl_metasvc_media").string();
+  std::string mediaDir = (std::filesystem::temp_directory_path() / "fl_metasvc_media").string();
   library::SqliteUserLibraryRepository library{":memory:"};
   SqliteMediaAssetRepository media{":memory:"};
   SqliteGameMetadataSource source{metadataDbPath};
@@ -65,8 +62,7 @@ protected:
 
   // Creates an entry. EntryCreatedEvent fires here; construct the service after
   // this call to avoid a concurrent async populate in the deterministic tests
-  int makeEntry(const std::string &name, const std::string &hash,
-                unsigned platformId) {
+  int makeEntry(const std::string &name, const std::string &hash, unsigned platformId) {
     library::Entry entry;
     entry.displayName = name;
     entry.contentHash = hash;
@@ -130,7 +126,7 @@ TEST_F(MetadataServiceTest, UnknownHashLeavesEntryUntouched) {
 
 TEST_F(MetadataServiceTest, EntryCreatedEventTriggersPopulation) {
   MetadataService service(library, source, media, mediaDir); // subscribes first
-  const int id = makeEntry("metroid.sfc", "hashA", 6); // fires the event
+  const int id = makeEntry("metroid.sfc", "hashA", 6);       // fires the event
 
   bool populated = false;
   for (int i = 0; i < 300; ++i) { // ~3s budget for the background worker
@@ -199,7 +195,10 @@ TEST_F(MetadataServiceTest, ImportLocalImageCopiesAndSelects) {
   std::error_code ec;
   std::filesystem::create_directories(mediaDir, ec);
   const auto src = (std::filesystem::path(mediaDir) / "src.png").string();
-  { std::ofstream f(src, std::ios::binary); f << "PNGDATA"; }
+  {
+    std::ofstream f(src, std::ios::binary);
+    f << "PNGDATA";
+  }
 
   MetadataService service(library, source, media, mediaDir);
   ASSERT_TRUE(service.importLocalImage("hashA", MediaType::Icon, src));

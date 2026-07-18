@@ -21,7 +21,6 @@ FocusScope {
                     background: Rectangle {
                         color: enabled ? (backButton.hovered ? "#404143" : "transparent") : "transparent"
                         radius: height / 2
-
                     }
 
                     Layout.fillHeight: true
@@ -39,7 +38,7 @@ FocusScope {
                     checkable: false
 
                     onClicked: {
-                        root.StackView.view.pop()
+                        root.StackView.view.pop();
                     }
                 }
 
@@ -70,7 +69,6 @@ FocusScope {
                 label: "General"
 
                 content: [
-
                     ToggleOption {
                         Layout.fillWidth: true
                         label: "Filter out overly harsh audio"
@@ -80,19 +78,17 @@ FocusScope {
 
                         onCheckedChanged: {
                             if (checked) {
-                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_audio_low_pass_filter", "enabled")
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_audio_low_pass_filter", "enabled");
                             } else {
-                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_audio_low_pass_filter", "disabled")
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_audio_low_pass_filter", "disabled");
                             }
                         }
                     },
-
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
                         color: "#333333"
                     },
-
                     ToggleOption {
                         Layout.fillWidth: true
                         label: "Adjust output colors to match original hardware"
@@ -102,19 +98,17 @@ FocusScope {
 
                         onCheckedChanged: {
                             if (checked) {
-                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_color_correction", "Auto")
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_color_correction", "Auto");
                             } else {
-                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_color_correction", "OFF")
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_color_correction", "OFF");
                             }
                         }
                     },
-
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
                         color: "#333333"
                     },
-
                     ToggleOption {
                         Layout.fillWidth: true
                         label: "Simulate LCD ghosting effects"
@@ -124,25 +118,22 @@ FocusScope {
 
                         onCheckedChanged: {
                             if (checked) {
-                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_interframe_blending", "mix_smart")
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_interframe_blending", "mix_smart");
                             } else {
-                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_interframe_blending", "OFF")
+                                emulator_config_manager.setOptionValueForPlatform(3, "mgba_interframe_blending", "OFF");
                             }
                         }
                     },
-
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
                         color: "#333333"
                     },
-
                     Option {
                         Layout.fillWidth: true
                         label: "Solar sensor level"
                         // description: "Sets ambient sunlight intensity. Can be used by games that included a solar sensor in their cartridges, e.g: the Boktai series."
                     },
-
                     MySlider {
                         Layout.fillWidth: true
                         // Layout.preferredHeight: 48
@@ -155,10 +146,9 @@ FocusScope {
                         value: emulator_config_manager.getOptionValueForPlatform(3, "mgba_solar_sensor_level") * 10
 
                         onValueChanged: function () {
-                            emulator_config_manager.setOptionValueForPlatform(3, "mgba_solar_sensor_level", value / 10)
+                            emulator_config_manager.setOptionValueForPlatform(3, "mgba_solar_sensor_level", value / 10);
                         }
                     }
-
                 ]
             }
         }

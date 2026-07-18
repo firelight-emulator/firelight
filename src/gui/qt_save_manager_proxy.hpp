@@ -7,18 +7,15 @@
 
 namespace firelight::gui {
 
-// TODO
 // Thin QML adapter over the (Qt-notification-free) saves::ISaveManager. Its only
 // job is to expose the save directory as a bindable Q_PROPERTY for the settings
 // UI; the domain interface itself carries no QObject/signal concerns
 class QtSaveManagerProxy : public QObject {
   Q_OBJECT
-  Q_PROPERTY(QString saveDirectory READ getSaveDirectory WRITE setSaveDirectory
-                 NOTIFY saveDirectoryChanged)
+  Q_PROPERTY(QString saveDirectory READ getSaveDirectory WRITE setSaveDirectory NOTIFY saveDirectoryChanged)
 
 public:
-  explicit QtSaveManagerProxy(saves::ISaveManager &saveManager,
-                              QObject *parent = nullptr);
+  explicit QtSaveManagerProxy(saves::ISaveManager &saveManager, QObject *parent = nullptr);
 
   [[nodiscard]] QString getSaveDirectory() const;
   void setSaveDirectory(const QString &saveDirectory);

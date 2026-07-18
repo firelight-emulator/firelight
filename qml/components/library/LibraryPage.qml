@@ -16,8 +16,8 @@ Pane {
         focus: true
 
         Component.onCompleted: {
-            FilteredLibraryEntryModel.folderId = -1
-            theList.currentIndex = 0
+            FilteredLibraryEntryModel.folderId = -1;
+            theList.currentIndex = 0;
         }
 
         ButtonGroup {
@@ -27,7 +27,7 @@ Pane {
         CreateFolderDialog {
             id: createFolderDialog
             onAccepted: {
-                LibraryFolderModel.addFolder(createFolderDialog.folderName)
+                LibraryFolderModel.addFolder(createFolderDialog.folderName);
             }
         }
         UpdateFolderDialog {
@@ -67,8 +67,8 @@ Pane {
 
                     onToggled: {
                         if (checked) {
-                          FilteredLibraryEntryModel.folderId = -1
-                            theList.currentIndex = 0
+                            FilteredLibraryEntryModel.folderId = -1;
+                            theList.currentIndex = 0;
                         }
                     }
                 }
@@ -99,7 +99,7 @@ Pane {
                         flat: true
                         circle: true
                         onClicked: {
-                            createFolderDialog.open()
+                            createFolderDialog.open();
                         }
                     }
                 }
@@ -133,7 +133,7 @@ Pane {
                     currentIndex: 0
 
                     onCurrentIndexChanged: {
-                        theList.currentIndex = 0
+                        theList.currentIndex = 0;
                     }
 
                     model: LibraryFolderModel
@@ -146,7 +146,7 @@ Pane {
                                 text: "Rename"
 
                                 onTriggered: {
-                                  editClicked(folderDelegate.model.playlist_id, folderDelegate.model.display_name)
+                                    editClicked(folderDelegate.model.playlist_id, folderDelegate.model.display_name);
                                 }
                             }
 
@@ -155,19 +155,19 @@ Pane {
                                 dangerous: true
 
                                 onTriggered: {
-                                      LibraryFolderModel.deleteFolder(folderDelegate.model.playlist_id)
-                                      if (folderDelegate.ListView.isCurrentItem) {
-                                          FilteredLibraryEntryModel.folderId = -1
-                                          allGamesButton.toggle()
-                                      }
+                                    LibraryFolderModel.deleteFolder(folderDelegate.model.playlist_id);
+                                    if (folderDelegate.ListView.isCurrentItem) {
+                                        FilteredLibraryEntryModel.folderId = -1;
+                                        allGamesButton.toggle();
+                                    }
                                 }
                             }
                         }
 
-                        onEditClicked: function(folderId, folderName) {
-                            updateFolderDialog.folderName = folderName
-                            updateFolderDialog.openAndDoOnAccepted(function() {
-                                folderDelegate.model.display_name = updateFolderDialog.folderName
+                        onEditClicked: function (folderId, folderName) {
+                            updateFolderDialog.folderName = folderName;
+                            updateFolderDialog.openAndDoOnAccepted(function () {
+                                folderDelegate.model.display_name = updateFolderDialog.folderName;
                             });
                         }
                     }
@@ -208,34 +208,42 @@ Pane {
                     color: "white"
                     verticalAlignment: Text.AlignVCenter
                     Layout.rightMargin: 8
-                 }
+                }
 
                 MyComboBox {
-                   id: comboBox
-                   model: [
-                       { text: "A-Z", sortRole: "alphabetical" },
-                       { text: "Recently played", sortRole: "recent" },
-                       { text: "Newest first", sortRole: "newest"}
-                   ]
-
-                   property bool initialized: false
-
-                   currentIndex: {
-                      for (var i = 0; i < comboBox.count; i++) {
-                        if (comboBox.valueAt(i) === GeneralSettings.librarySortMethod) {
-                             return i
+                    id: comboBox
+                    model: [
+                        {
+                            text: "A-Z",
+                            sortRole: "alphabetical"
+                        },
+                        {
+                            text: "Recently played",
+                            sortRole: "recent"
+                        },
+                        {
+                            text: "Newest first",
+                            sortRole: "newest"
                         }
-                      }
-                      return 0
-                   }
+                    ]
 
-                   onCurrentIndexChanged: {
-                        let val = comboBox.valueAt(currentIndex)
-                        FilteredLibraryEntryModel.sortMethod = val
-                        GeneralSettings.setLibrarySortMethod(val)
-                   }
+                    property bool initialized: false
 
-                    // TODO
+                    currentIndex: {
+                        for (var i = 0; i < comboBox.count; i++) {
+                            if (comboBox.valueAt(i) === GeneralSettings.librarySortMethod) {
+                                return i;
+                            }
+                        }
+                        return 0;
+                    }
+
+                    onCurrentIndexChanged: {
+                        let val = comboBox.valueAt(currentIndex);
+                        FilteredLibraryEntryModel.sortMethod = val;
+                        GeneralSettings.setLibrarySortMethod(val);
+                    }
+
                     // Component.onCompleted: {
                     //     // Set the initial sort method
                     //     for (var i = 0; i < comboBox.count; i++) {
@@ -249,20 +257,20 @@ Pane {
                     //     console.log("initialized")
                     //
                     // }
-                   //
-                   //
-                   // onCurrentValueChanged: {
-                   //     if (!initialized) {
-                   //          console.log("not initialized")
-                   //         return
-                   //     };
-                   //     FilteredLibraryEntryModel.sortMethod = currentValue
-                   //     GeneralSettings.librarySortMethod = currentValue
-                   // }
+                    //
+                    //
+                    // onCurrentValueChanged: {
+                    //     if (!initialized) {
+                    //          console.log("not initialized")
+                    //         return
+                    //     };
+                    //     FilteredLibraryEntryModel.sortMethod = currentValue
+                    //     GeneralSettings.librarySortMethod = currentValue
+                    // }
 
-                   textRole: "text"
-                   valueRole: "sortRole"
-               }
+                    textRole: "text"
+                    valueRole: "sortRole"
+                }
             }
 
             Rectangle {
@@ -284,7 +292,7 @@ Pane {
             highlightRangeMode: InputMethodManager.usingMouse ? ListView.NoHighlightRange : ListView.ApplyRange
             preferredHighlightBegin: 64
             preferredHighlightEnd: height - 64
-            ScrollBar.vertical: ScrollBar { }
+            ScrollBar.vertical: ScrollBar {}
             model: LibraryEntryModel
             focus: true
 
@@ -293,8 +301,8 @@ Pane {
             clip: true
 
             delegate: LibraryEntryListDelegate {
-                onStartGameClicked: function(entryId) {
-                    root.startGame(entryId)
+                onStartGameClicked: function (entryId) {
+                    root.startGame(entryId);
                 }
 
                 ContextMenu.menu: LibraryEntryRightClickMenu {
@@ -304,24 +312,24 @@ Pane {
                     showRemoveFromFolder: FilteredLibraryEntryModel.folderId !== -1
                     showManageSaveData: root.currentEntryId !== entryId
 
-                    onStartGameClicked: function(entryId) {
-                        root.startGame(entryId)
+                    onStartGameClicked: function (entryId) {
+                        root.startGame(entryId);
                     }
 
-                    onEditEntryClicked: function(entryId) {
-                        editEntryDialog.text = model.displayName
-                        editEntryDialog.openAndDoOnAccepted(function() {
-                            model.displayName = editEntryDialog.text
+                    onEditEntryClicked: function (entryId) {
+                        editEntryDialog.text = model.displayName;
+                        editEntryDialog.openAndDoOnAccepted(function () {
+                            model.displayName = editEntryDialog.text;
                         });
                     }
 
-                    onRemoveFromFolderClicked: function(entryId) {
-                        LibraryEntryModel.removeEntryFromFolder(entryId, FilteredLibraryEntryModel.folderId)
+                    onRemoveFromFolderClicked: function (entryId) {
+                        LibraryEntryModel.removeEntryFromFolder(entryId, FilteredLibraryEntryModel.folderId);
                     }
 
-                    onManageSaveDataClicked: function(entryId) {
-                        manageSaveDataDialog.entryId = entryId
-                        manageSaveDataDialog.open()
+                    onManageSaveDataClicked: function (entryId) {
+                        manageSaveDataDialog.entryId = entryId;
+                        manageSaveDataDialog.open();
                     }
                 }
             }

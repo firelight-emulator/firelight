@@ -37,9 +37,7 @@ std::string trim(const std::string &s) {
   return s.substr(begin, end - begin + 1);
 }
 
-bool startsWith(const std::string &haystack, const std::string &needle) {
-  return haystack.rfind(needle, 0) == 0;
-}
+bool startsWith(const std::string &haystack, const std::string &needle) { return haystack.rfind(needle, 0) == 0; }
 
 bool contains(const std::string &haystack, const std::string &needle) {
   return haystack.find(needle) != std::string::npos;
@@ -47,9 +45,7 @@ bool contains(const std::string &haystack, const std::string &needle) {
 
 } // namespace
 
-SettingsIndex::SettingsIndex(const SettingsCatalog &catalog) {
-  rebuild(catalog);
-}
+SettingsIndex::SettingsIndex(const SettingsCatalog &catalog) { rebuild(catalog); }
 
 void SettingsIndex::rebuild(const SettingsCatalog &catalog) {
   m_entries.clear();
@@ -93,8 +89,7 @@ void SettingsIndex::rebuild(const SettingsCatalog &catalog) {
   }
 }
 
-std::vector<SettingSearchResult> SettingsIndex::search(const std::string &query,
-                                                       const int limit) const {
+std::vector<SettingSearchResult> SettingsIndex::search(const std::string &query, const int limit) const {
   const auto needle = toLower(trim(query));
   if (needle.empty()) {
     return {};
@@ -103,9 +98,7 @@ std::vector<SettingSearchResult> SettingsIndex::search(const std::string &query,
   std::vector<SettingSearchResult> results;
   for (const auto &entry : m_entries) {
     int score = 0;
-    const auto consider = [&score](const int candidate) {
-      score = std::max(score, candidate);
-    };
+    const auto consider = [&score](const int candidate) { score = std::max(score, candidate); };
 
     if (entry.keyLower == needle) {
       consider(SCORE_EXACT_KEY);
@@ -142,15 +135,13 @@ std::vector<SettingSearchResult> SettingsIndex::search(const std::string &query,
     }
   }
 
-  std::stable_sort(results.begin(), results.end(),
-                   [](const SettingSearchResult &a,
-                      const SettingSearchResult &b) {
-                     if (a.score != b.score) {
-                       return a.score > b.score;
-                     }
-                     // Ties read better alphabetically than in catalog order
-                     return a.label < b.label;
-                   });
+  std::stable_sort(results.begin(), results.end(), [](const SettingSearchResult &a, const SettingSearchResult &b) {
+    if (a.score != b.score) {
+      return a.score > b.score;
+    }
+    // Ties read better alphabetically than in catalog order
+    return a.label < b.label;
+  });
 
   if (limit > 0 && results.size() > static_cast<size_t>(limit)) {
     results.resize(static_cast<size_t>(limit));

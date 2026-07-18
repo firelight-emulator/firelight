@@ -8,9 +8,9 @@ FocusScope {
     id: root
     objectName: "Top Bar Utility Buttons"
 
-    signal closeClicked()
-    signal maximizeClicked()
-    signal minimizeClicked()
+    signal closeClicked
+    signal maximizeClicked
+    signal minimizeClicked
 
     implicitWidth: buttonRow.implicitWidth
     implicitHeight: buttonRow.implicitHeight
@@ -45,7 +45,7 @@ FocusScope {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
                     ctx.fillStyle = "white";
-                    ctx.fillRect(0, height / 2, width, 1)
+                    ctx.fillRect(0, height / 2, width, 1);
                     // ctx.fillRect(width * 0.25, height * 0.45, width * 0.5, height * 0.1);
                 }
             }
@@ -111,7 +111,6 @@ FocusScope {
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
-                    // TODO
                     // Without beginPath the path accumulates across repaints
                     // (e.g. the first paint at 0-size before the size binding
                     // resolves), leaving stray segments in the X

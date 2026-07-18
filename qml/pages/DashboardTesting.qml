@@ -257,34 +257,32 @@ FocusScope {
                     id: dragger
                     onActiveChanged: {
                         if (!active) {
-                            let mine = dele.index
-                            let theirs = deleButton.Drag.target.index
+                            let mine = dele.index;
+                            let theirs = deleButton.Drag.target.index;
 
                             if (mine === theirs) {
-                                return
+                                return;
                             }
 
-                            let iHaveItem = dele.GridView.view.itemAtIndex(mine).model.hasItem
-                            let theyHaveItem = dele.GridView.view.itemAtIndex(theirs).model.hasItem
+                            let iHaveItem = dele.GridView.view.itemAtIndex(mine).model.hasItem;
+                            let theyHaveItem = dele.GridView.view.itemAtIndex(theirs).model.hasItem;
 
-                            let mySource = dele.GridView.view.itemAtIndex(mine).model.source
-                            let theirSource = dele.GridView.view.itemAtIndex(theirs).model.source
+                            let mySource = dele.GridView.view.itemAtIndex(mine).model.source;
+                            let theirSource = dele.GridView.view.itemAtIndex(theirs).model.source;
 
-                            dele.GridView.view.itemAtIndex(mine).model.hasItem = theyHaveItem
-                            dele.GridView.view.itemAtIndex(theirs).model.hasItem = iHaveItem
+                            dele.GridView.view.itemAtIndex(mine).model.hasItem = theyHaveItem;
+                            dele.GridView.view.itemAtIndex(theirs).model.hasItem = iHaveItem;
 
-                            dele.GridView.view.itemAtIndex(mine).model.source = theirSource
-                            dele.GridView.view.itemAtIndex(theirs).model.source = mySource
+                            dele.GridView.view.itemAtIndex(mine).model.source = theirSource;
+                            dele.GridView.view.itemAtIndex(theirs).model.source = mySource;
 
-                            console.log("my index is", dele.index, " their index is", deleButton.Drag.target.index)
+                            console.log("my index is", dele.index, " their index is", deleButton.Drag.target.index);
                         }
-                        console.log("drop target: ", deleButton.Drag.target)
-                        console.log("active changed to", active)
+                        console.log("drop target: ", deleButton.Drag.target);
+                        console.log("active changed to", active);
                     }
                 }
             }
         }
     }
-
 }
-

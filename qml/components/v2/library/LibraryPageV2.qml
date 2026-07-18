@@ -19,16 +19,14 @@ SplitView {
     CreateFolderDialog {
         id: createFolderDialog
         property int targetParentId: -1
-        onAccepted: LibraryFolderModel.createFolder(createFolderDialog.folderName,
-                                                    createFolderDialog.targetParentId)
+        onAccepted: LibraryFolderModel.createFolder(createFolderDialog.folderName, createFolderDialog.targetParentId)
     }
 
     CreateFolderDialog {
         id: renameFolderDialog
         property int targetFolderId: -1
         headerText: "Rename folder"
-        onAccepted: LibraryFolderModel.setFolderName(renameFolderDialog.targetFolderId,
-                                                     renameFolderDialog.folderName)
+        onAccepted: LibraryFolderModel.setFolderName(renameFolderDialog.targetFolderId, renameFolderDialog.folderName)
     }
 
     SmartFolderDialog {
@@ -42,7 +40,6 @@ SplitView {
         model: PlatformModel
         filters: FunctionFilter {
             enabled: !splitView.showAllPlatforms
-            // TODO
             // Counts populate after entries finish loading; binding the map here
             // re-invalidates the filter when it changes, so owned platforms
             // appear once the library is ready instead of staying empty
@@ -54,7 +51,6 @@ SplitView {
         }
     }
 
-    // TODO
     // Folder tree: the folder model is flat, so flatten its parentId/position
     // into a pre-ordered, depth-tagged list gated by an expanded set. Collapsed
     // folders (id present with value false) hide their descendants
@@ -72,16 +68,28 @@ SplitView {
         var all = [];
         for (var i = 0; i < folderCollector.count; i++) {
             var o = folderCollector.objectAt(i);
-            if (!o) continue;
-            all.push({ folderId: o.folderId, parentId: o.parentId, position: o.position,
-                displayName: o.displayName, color: o.color, folderType: o.folderType,
-                icon1x1SourceUrl: o.icon1x1SourceUrl, sortRole: o.sortRole,
-                sortAscending: o.sortAscending });
+            if (!o)
+                continue;
+            all.push({
+                folderId: o.folderId,
+                parentId: o.parentId,
+                position: o.position,
+                displayName: o.displayName,
+                color: o.color,
+                folderType: o.folderType,
+                icon1x1SourceUrl: o.icon1x1SourceUrl,
+                sortRole: o.sortRole,
+                sortAscending: o.sortAscending
+            });
         }
         var byParent = {};
-        all.forEach(function (f) { (byParent[f.parentId] = byParent[f.parentId] || []).push(f); });
+        all.forEach(function (f) {
+            (byParent[f.parentId] = byParent[f.parentId] || []).push(f);
+        });
         Object.keys(byParent).forEach(function (k) {
-            byParent[k].sort(function (a, b) { return a.position - b.position; });
+            byParent[k].sort(function (a, b) {
+                return a.position - b.position;
+            });
         });
         var out = [];
         function walk(pid, depth) {
@@ -89,12 +97,14 @@ SplitView {
                 var kids = byParent[f.folderId] || [];
                 var expanded = splitView.expandedFolders[f.folderId] !== false;
                 var row = {};
-                for (var key in f) row[key] = f[key];
+                for (var key in f)
+                    row[key] = f[key];
                 row.depth = depth;
                 row.hasChildren = kids.length > 0;
                 row.expanded = expanded;
                 out.push(row);
-                if (expanded) walk(f.folderId, depth + 1);
+                if (expanded)
+                    walk(f.folderId, depth + 1);
             });
         }
         walk(-1, 0);
@@ -108,17 +118,24 @@ SplitView {
         var typeOf = {};
         for (var i = 0; i < folderCollector.count; i++) {
             var o = folderCollector.objectAt(i);
-            if (!o) continue;
+            if (!o)
+                continue;
             (kids[o.parentId] = kids[o.parentId] || []).push(o.folderId);
             typeOf[o.folderId] = o.folderType;
         }
         var manual = [], smart = [];
         function walk(id) {
-            if (typeOf[id] === 1) smart.push(id); else manual.push(id);
+            if (typeOf[id] === 1)
+                smart.push(id);
+            else
+                manual.push(id);
             (kids[id] || []).forEach(walk);
         }
         walk(folderId);
-        return { manual: manual, smart: smart };
+        return {
+            manual: manual,
+            smart: smart
+        };
     }
 
     // Moves `draggedId` next to `targetFolderId` (into the target's parent scope,
@@ -128,21 +145,30 @@ SplitView {
         var byParent = {};
         for (var i = 0; i < folderCollector.count; i++) {
             var o = folderCollector.objectAt(i);
-            if (!o) continue;
+            if (!o)
+                continue;
             parentOf[o.folderId] = o.parentId;
-            (byParent[o.parentId] = byParent[o.parentId] || []).push({ id: o.folderId, pos: o.position });
+            (byParent[o.parentId] = byParent[o.parentId] || []).push({
+                id: o.folderId,
+                pos: o.position
+            });
         }
         var targetParent = parentOf[targetFolderId];
-        if (targetParent === undefined) return;
+        if (targetParent === undefined)
+            return;
         if (parentOf[draggedId] !== targetParent) {
             LibraryFolderModel.setFolderParent(draggedId, targetParent);
         }
-        var sibs = (byParent[targetParent] || []).slice()
-            .sort(function (a, b) { return a.pos - b.pos; })
-            .map(function (s) { return s.id; })
-            .filter(function (id) { return id !== draggedId; });
+        var sibs = (byParent[targetParent] || []).slice().sort(function (a, b) {
+            return a.pos - b.pos;
+        }).map(function (s) {
+            return s.id;
+        }).filter(function (id) {
+            return id !== draggedId;
+        });
         var idx = sibs.indexOf(targetFolderId);
-        if (idx === -1) idx = sibs.length - 1;
+        if (idx === -1)
+            idx = sibs.length - 1;
         sibs.splice(before ? idx : idx + 1, 0, draggedId);
         LibraryFolderModel.reorderFolders(targetParent, sibs);
     }
@@ -166,9 +192,15 @@ SplitView {
     }
     Connections {
         target: LibraryFolderModel
-        function onDataChanged() { Qt.callLater(splitView.rebuildFolderTree); }
-        function onModelReset() { Qt.callLater(splitView.rebuildFolderTree); }
-        function onLayoutChanged() { Qt.callLater(splitView.rebuildFolderTree); }
+        function onDataChanged() {
+            Qt.callLater(splitView.rebuildFolderTree);
+        }
+        function onModelReset() {
+            Qt.callLater(splitView.rebuildFolderTree);
+        }
+        function onLayoutChanged() {
+            Qt.callLater(splitView.rebuildFolderTree);
+        }
     }
 
     handle: Item {
@@ -209,7 +241,12 @@ SplitView {
         // Animating a local property (not SplitView.preferredWidth directly, which
         // can't take a Behavior) makes the collapse glide
         property real animatedWidth: splitView.sidebarCollapsed ? railWidth : fullWidth
-        Behavior on animatedWidth { NumberAnimation { duration: 180; easing.type: Easing.InOutQuad } }
+        Behavior on animatedWidth {
+            NumberAnimation {
+                duration: 180
+                easing.type: Easing.InOutQuad
+            }
+        }
 
         SplitView.fillHeight: true
         SplitView.minimumWidth: railWidth
@@ -330,7 +367,7 @@ SplitView {
                         anchors.right: parent.right
                         anchors.rightMargin: -4
                         width: 0
-                     }
+                    }
 
                     ColumnLayout {
                         id: libraryNavColumn
@@ -344,14 +381,17 @@ SplitView {
 
                             title: ""
                             model: [
-                                { displayName: "All games", iconName: "browse" }
+                                {
+                                    displayName: "All games",
+                                    iconName: "browse"
+                                }
                             ]
                             focus: true
 
                             onActiveFocusChanged: {
                                 if (activeFocus) {
-                                    platformMenuSection.currentIndex = 0
-                                    folderMenuSection.currentIndex = 0
+                                    platformMenuSection.currentIndex = 0;
+                                    folderMenuSection.currentIndex = 0;
                                 }
                             }
 
@@ -365,8 +405,7 @@ SplitView {
 
                                 iconSource: "qrc:/icons/" + model.iconName
                                 displayText: model.displayName
-                                numberOfItems: model.displayName === "All games"
-                                               ? LibraryEntryModel.rowCount() : 0
+                                numberOfItems: model.displayName === "All games" ? LibraryEntryModel.rowCount() : 0
 
                                 width: ListView.view.width
                                 ButtonGroup.group: libraryButtonGroup
@@ -390,8 +429,8 @@ SplitView {
 
                             onActiveFocusChanged: {
                                 if (activeFocus) {
-                                    folderMenuSection.currentIndex = 0
-                                    libraryMenuSection.currentIndex = libraryMenuSection.count - 1
+                                    folderMenuSection.currentIndex = 0;
+                                    libraryMenuSection.currentIndex = libraryMenuSection.count - 1;
                                 }
                             }
 
@@ -425,8 +464,12 @@ SplitView {
                             font.family: Constants.regularFontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                             font.weight: Font.DemiBold
-                            TapHandler { onTapped: splitView.showAllPlatforms = !splitView.showAllPlatforms }
-                            HoverHandler { cursorShape: Qt.PointingHandCursor }
+                            TapHandler {
+                                onTapped: splitView.showAllPlatforms = !splitView.showAllPlatforms
+                            }
+                            HoverHandler {
+                                cursorShape: Qt.PointingHandCursor
+                            }
                         }
 
                         LibraryNavigationMenuSection {
@@ -439,8 +482,8 @@ SplitView {
 
                             onActiveFocusChanged: {
                                 if (activeFocus) {
-                                    platformMenuSection.currentIndex = platformMenuSection.count - 1
-                                    libraryMenuSection.currentIndex = libraryMenuSection.count - 1
+                                    platformMenuSection.currentIndex = platformMenuSection.count - 1;
+                                    libraryMenuSection.currentIndex = libraryMenuSection.count - 1;
                                 }
                             }
 
@@ -477,14 +520,38 @@ SplitView {
                                         function apply(c) {
                                             LibraryFolderModel.setFolderColor(folderMenuItem.modelData.folderId, c);
                                         }
-                                        RightClickMenuItem { text: qsTr("Default"); onTriggered: colorMenu.apply("") }
-                                        RightClickMenuItem { text: qsTr("Red"); onTriggered: colorMenu.apply("#e5484d") }
-                                        RightClickMenuItem { text: qsTr("Orange"); onTriggered: colorMenu.apply("#f76b15") }
-                                        RightClickMenuItem { text: qsTr("Yellow"); onTriggered: colorMenu.apply("#f5d90a") }
-                                        RightClickMenuItem { text: qsTr("Green"); onTriggered: colorMenu.apply("#46a758") }
-                                        RightClickMenuItem { text: qsTr("Blue"); onTriggered: colorMenu.apply("#0091ff") }
-                                        RightClickMenuItem { text: qsTr("Purple"); onTriggered: colorMenu.apply("#8e4ec6") }
-                                        RightClickMenuItem { text: qsTr("Pink"); onTriggered: colorMenu.apply("#e93d82") }
+                                        RightClickMenuItem {
+                                            text: qsTr("Default")
+                                            onTriggered: colorMenu.apply("")
+                                        }
+                                        RightClickMenuItem {
+                                            text: qsTr("Red")
+                                            onTriggered: colorMenu.apply("#e5484d")
+                                        }
+                                        RightClickMenuItem {
+                                            text: qsTr("Orange")
+                                            onTriggered: colorMenu.apply("#f76b15")
+                                        }
+                                        RightClickMenuItem {
+                                            text: qsTr("Yellow")
+                                            onTriggered: colorMenu.apply("#f5d90a")
+                                        }
+                                        RightClickMenuItem {
+                                            text: qsTr("Green")
+                                            onTriggered: colorMenu.apply("#46a758")
+                                        }
+                                        RightClickMenuItem {
+                                            text: qsTr("Blue")
+                                            onTriggered: colorMenu.apply("#0091ff")
+                                        }
+                                        RightClickMenuItem {
+                                            text: qsTr("Purple")
+                                            onTriggered: colorMenu.apply("#8e4ec6")
+                                        }
+                                        RightClickMenuItem {
+                                            text: qsTr("Pink")
+                                            onTriggered: colorMenu.apply("#e93d82")
+                                        }
                                     }
                                     RightClickMenuItem {
                                         text: qsTr("Delete folder")
@@ -498,15 +565,14 @@ SplitView {
                                 displayText: modelData.displayName
                                 accentColor: modelData.color
                                 numberOfItems: {
-                                    var num = LibraryEntryModel.countByFolderId[modelData.folderId]
-                                    return num !== undefined ? num : 0
+                                    var num = LibraryEntryModel.countByFolderId[modelData.folderId];
+                                    return num !== undefined ? num : 0;
                                 }
 
                                 containsDrag: dropArea.dropZone === "into"
                                 width: ListView.view.width
                                 ButtonGroup.group: libraryButtonGroup
 
-                                // TODO
                                 // Drag a folder onto another to re-nest it, or onto a
                                 // row's top/bottom edge to reorder. mimeData + active
                                 // are set imperatively in the grab callback (a
@@ -535,15 +601,15 @@ SplitView {
                                 onCheckedChanged: {
                                     if (folderMenuItem.checked) {
                                         var sub = splitView.collectFolderSubtree(modelData.folderId);
-                                        gameView.setScopeFolder(modelData.folderId,
-                                            modelData.displayName,
-                                            [{ label: modelData.displayName, folderId: modelData.folderId }],
-                                            modelData.sortRole, modelData.sortAscending,
-                                            sub.manual, sub.smart);
+                                        gameView.setScopeFolder(modelData.folderId, modelData.displayName, [
+                                            {
+                                                label: modelData.displayName,
+                                                folderId: modelData.folderId
+                                            }
+                                        ], modelData.sortRole, modelData.sortAscending, sub.manual, sub.smart);
                                     }
                                 }
 
-                                // TODO
                                 // Folder drops: top/bottom edge reorders next to this row,
                                 // middle nests into it (cycle-guarded). Game drops add to
                                 // this folder (manual folders only). dropZone tracks the
@@ -563,12 +629,15 @@ SplitView {
                                             return;
                                         }
                                         var h = dropArea.height;
-                                        dropZone = drag.y < h * 0.30 ? "top"
-                                                 : drag.y > h * 0.70 ? "bottom" : "into";
+                                        dropZone = drag.y < h * 0.30 ? "top" : drag.y > h * 0.70 ? "bottom" : "into";
                                     }
 
-                                    onEntered: function (drag) { updateZone(drag); }
-                                    onPositionChanged: function (drag) { updateZone(drag); }
+                                    onEntered: function (drag) {
+                                        updateZone(drag);
+                                    }
+                                    onPositionChanged: function (drag) {
+                                        updateZone(drag);
+                                    }
                                     onExited: dropZone = "none"
 
                                     onDropped: function (event) {
@@ -653,5 +722,4 @@ SplitView {
             id: gameView
         }
     }
-
 }

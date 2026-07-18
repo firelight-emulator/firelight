@@ -23,16 +23,16 @@ Button {
     hoverEnabled: true
 
     ContextMenu.menu: RightClickMenu {
-           id: rightClickMenu
+        id: rightClickMenu
 
-           RightClickMenuItem {
-               text: "Open at RetroAchievements.org"
-               externalLink: true
-               onTriggered: {
-                   Qt.openUrlExternally("https://retroachievements.org/achievement/" + control.achievementId)
-               }
-           }
-       }
+        RightClickMenuItem {
+            text: "Open at RetroAchievements.org"
+            externalLink: true
+            onTriggered: {
+                Qt.openUrlExternally("https://retroachievements.org/achievement/" + control.achievementId);
+            }
+        }
+    }
 
     background: Rectangle {
         color: "transparent"
@@ -112,7 +112,6 @@ Button {
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
-
                 }
             }
 

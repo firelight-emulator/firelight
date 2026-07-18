@@ -57,7 +57,8 @@ Popup {
             videoOutput: videoOut
             audioOutput: AudioOutput {}
             loops: MediaPlayer.Infinite
-            onSourceChanged: if (source !== "") play()
+            onSourceChanged: if (source !== "")
+                play()
         }
 
         FLIconButton {
@@ -75,10 +76,8 @@ Popup {
             anchors.bottom: parent.bottom
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.margins: AppStyle.spacingMd
-            text: player.playbackState === MediaPlayer.PlayingState ? "Pause"
-                                                                    : "Play"
-            onClicked: player.playbackState === MediaPlayer.PlayingState
-                       ? player.pause() : player.play()
+            text: player.playbackState === MediaPlayer.PlayingState ? "Pause" : "Play"
+            onClicked: player.playbackState === MediaPlayer.PlayingState ? player.pause() : player.play()
         }
     }
 }

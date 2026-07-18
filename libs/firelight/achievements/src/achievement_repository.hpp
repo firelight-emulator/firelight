@@ -38,8 +38,7 @@ public:
    * @param username The username to retrieve data for
    * @return User data if found, std::nullopt otherwise
    */
-  [[nodiscard]] virtual std::optional<User>
-  getUser(const std::string &username) const = 0;
+  [[nodiscard]] virtual std::optional<User> getUser(const std::string &username) const = 0;
 
   /**
    * @brief Retrieves all users from the repository
@@ -108,8 +107,7 @@ public:
    * @param gameId The unique identifier of the achievement set
    * @return The list of achievement sets if found, empty vector otherwise
    */
-  [[nodiscard]] virtual std::vector<AchievementSet>
-  getAchievementSetsByGameId(unsigned gameId) const = 0;
+  [[nodiscard]] virtual std::vector<AchievementSet> getAchievementSetsByGameId(unsigned gameId) const = 0;
 
   /**
    * @brief Retrieves an achievement set by content hash
@@ -141,8 +139,7 @@ public:
    * @param contentHash The content hash to look up
    * @return The achievement set ID if found, std::nullopt otherwise
    */
-  [[nodiscard]] virtual std::optional<int>
-  getGameId(const std::string &contentHash) const = 0;
+  [[nodiscard]] virtual std::optional<int> getGameId(const std::string &contentHash) const = 0;
 
   /**
    * @brief Retrieves the content hash associated with an achievement set ID
@@ -178,8 +175,7 @@ public:
    * @see setGameId() to create or update hash mappings
    * @see getAchievementSetByContentHash() to retrieve achievement sets by hash
    */
-  [[nodiscard]] virtual std::optional<std::string>
-  getGameHash(unsigned gameId) const = 0;
+  [[nodiscard]] virtual std::optional<std::string> getGameHash(unsigned gameId) const = 0;
 
   // Individual Achievement Operations
 
@@ -205,8 +201,7 @@ public:
    * @param achievementId The unique ID of the achievement to retrieve
    * @return Achievement data if found, std::nullopt otherwise
    */
-  [[nodiscard]] virtual std::optional<Achievement>
-  getAchievement(unsigned achievementId) const = 0;
+  [[nodiscard]] virtual std::optional<Achievement> getAchievement(unsigned achievementId) const = 0;
 
   // Achievement Progress Operations
 
@@ -238,8 +233,7 @@ public:
    */
   virtual bool setGameId(const std::string &contentHash, int gameId) = 0;
 
-  virtual bool setAchievementSetHash(unsigned achievementSetId,
-                                     const std::string &contentHash) = 0;
+  virtual bool setAchievementSetHash(unsigned achievementSetId, const std::string &contentHash) = 0;
 
   // User Unlock Operations
 
@@ -254,8 +248,8 @@ public:
    * @param achievementId The achievement ID to query
    * @return The unlock data if found, std::nullopt otherwise
    */
-  [[nodiscard]] virtual std::optional<UserUnlock>
-  getUserUnlock(const std::string &username, unsigned achievementId) = 0;
+  [[nodiscard]] virtual std::optional<UserUnlock> getUserUnlock(const std::string &username,
+                                                                unsigned achievementId) = 0;
 
   /**
    * @brief Creates or updates user unlock status for an achievement
@@ -280,8 +274,8 @@ public:
    * @param gameId The achievement set ID to filter unlocks by
    * @return Vector of UserUnlock records, empty if none found or on error
    */
-  [[nodiscard]] virtual std::vector<UserUnlock>
-  getAllUserUnlocks(const std::string &username, unsigned gameId) const = 0;
+  [[nodiscard]] virtual std::vector<UserUnlock> getAllUserUnlocks(const std::string &username,
+                                                                  unsigned gameId) const = 0;
 
   /**
    * @brief Retrieves all unsynced user unlock records for a specific user
@@ -304,8 +298,7 @@ public:
    * @note The returned unlocks include both normal and hardcore mode completion
    *       data with their respective timestamps
    */
-  [[nodiscard]] virtual std::vector<UserUnlock>
-  getAllUnsyncedUserUnlocks(const std::string &username) const = 0;
+  [[nodiscard]] virtual std::vector<UserUnlock> getAllUnsyncedUserUnlocks(const std::string &username) const = 0;
 };
 
 } // namespace firelight::achievements

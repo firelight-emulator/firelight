@@ -134,8 +134,7 @@ TEST(InputModelTest, InputMappingMultipleBindings) {
 
   mapping.removeBinding(GamepadInput::DpadUp, 0);
   ASSERT_EQ(mapping.getBindings(GamepadInput::DpadUp).size(), 1u);
-  EXPECT_EQ(mapping.getBindings(GamepadInput::DpadUp).front().source.type,
-            SourceType::AxisNegative);
+  EXPECT_EQ(mapping.getBindings(GamepadInput::DpadUp).front().source.type, SourceType::AxisNegative);
 }
 
 TEST(InputModelTest, InputMappingJsonRoundTrip) {
@@ -157,8 +156,7 @@ TEST(InputModelTest, InputMappingJsonRoundTrip) {
   InputMapping restored(1, 1, 1, 1);
   restored.deserialize(serialized);
 
-  EXPECT_EQ(restored.getBindings(GamepadInput::SouthFace),
-            mapping.getBindings(GamepadInput::SouthFace));
+  EXPECT_EQ(restored.getBindings(GamepadInput::SouthFace), mapping.getBindings(GamepadInput::SouthFace));
   ASSERT_TRUE(restored.getAnalogOverride().has_value());
   EXPECT_EQ(restored.getAnalogOverride().value(), override);
 }
@@ -181,8 +179,7 @@ TEST(InputModelTest, InputMappingRemoveAndClear) {
 
   mapping.removeBinding(GamepadInput::DpadUp, 0);
   ASSERT_EQ(mapping.getBindings(GamepadInput::DpadUp).size(), 1u);
-  EXPECT_EQ(mapping.getBindings(GamepadInput::DpadUp).front().source.code,
-            GamepadInput::EastFace);
+  EXPECT_EQ(mapping.getBindings(GamepadInput::DpadUp).front().source.code, GamepadInput::EastFace);
 
   // Removing the last binding prunes the entry entirely
   mapping.removeBinding(GamepadInput::DpadUp, 0);

@@ -60,10 +60,7 @@ Pane {
                                 Layout.preferredHeight: 1
                             }
 
-                            ButtonBar {
-
-                            }
-
+                            ButtonBar {}
                         }
 
                         Item {
@@ -95,14 +92,14 @@ Pane {
                                 }
 
                                 onClicked: {
-                                    var newIndex = root.currentIndex - 1
+                                    var newIndex = root.currentIndex - 1;
                                     var playtimeAtNewIndex = ActivityBucketsModel.get(newIndex).playtimeSeconds;
                                     while (playtimeAtNewIndex === 0 && newIndex > 0) {
                                         newIndex--;
                                         playtimeAtNewIndex = ActivityBucketsModel.get(newIndex).playtimeSeconds;
                                     }
 
-                                    root.currentIndex = newIndex
+                                    root.currentIndex = newIndex;
                                 }
                             }
 
@@ -221,9 +218,7 @@ Pane {
                                         width: activityDisplay.width / 24
                                         height: activityDisplay.height
 
-                                        readonly property real barHeight: activityDisplay.dayData.maxPlaytimeSeconds > 0
-                                            ? activityDisplay.height / activityDisplay.dayData.maxPlaytimeSeconds
-                                            : 0
+                                        readonly property real barHeight: activityDisplay.dayData.maxPlaytimeSeconds > 0 ? activityDisplay.height / activityDisplay.dayData.maxPlaytimeSeconds : 0
 
                                         Rectangle {
                                             anchors.fill: parent
@@ -353,15 +348,15 @@ Pane {
 
                                                                 let result = "";
                                                                 if (hours > 0) {
-                                                                    result += hours + "h "
+                                                                    result += hours + "h ";
                                                                 }
                                                                 if (minutes > 0) {
-                                                                    result += minutes + "m"
+                                                                    result += minutes + "m";
                                                                 }
                                                                 if (result === "") {
-                                                                    result = seconds + "s"
+                                                                    result = seconds + "s";
                                                                 }
-                                                                return result
+                                                                return result;
                                                             }
                                                             font.pixelSize: AppStyle.fontSizeMedium
                                                             font.family: Constants.regularFontFamily
@@ -378,7 +373,6 @@ Pane {
                                                     }
                                                 }
                                             }
-
                                         }
 
                                         Column {
@@ -408,9 +402,7 @@ Pane {
                                 }
                             }
                         }
-
                     }
-
                 }
                 Pane {
                     Layout.preferredWidth: 500
@@ -463,13 +455,13 @@ Pane {
 
                                         let result = "";
                                         if (hours > 0) {
-                                            result += hours + "h "
+                                            result += hours + "h ";
                                         }
                                         if (minutes > 0) {
-                                            result += minutes + "m"
+                                            result += minutes + "m";
                                         }
                                         if (result === "") {
-                                            result = seconds + "s"
+                                            result = seconds + "s";
                                         }
                                         return result;
                                     }
@@ -483,8 +475,6 @@ Pane {
                     }
                 }
             }
-
         }
     }
-
 }

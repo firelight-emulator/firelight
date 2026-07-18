@@ -3,20 +3,19 @@
 #include "emulation_context.hpp"
 
 #include <firelight/event_dispatcher.hpp>
+
 #include <string>
 
 namespace firelight::emulation {
 
 class EmulatorInstance;
 
-// TODO
 // Resolves this game's common settings (game -> platform -> global -> catalog
 // default) and applies them to the EmulatorInstance, refreshing whenever a
 // change at any tier could affect the effective value
 class CoreSettingsApplier {
 public:
-  CoreSettingsApplier(EmulatorInstance &instance,
-                      const EmulationContext &context, std::string contentHash,
+  CoreSettingsApplier(EmulatorInstance &instance, const EmulationContext &context, std::string contentHash,
                       int platformId);
 
   void refresh();

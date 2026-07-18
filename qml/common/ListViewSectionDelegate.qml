@@ -4,8 +4,7 @@ import QtQuick.Controls
 Pane {
     property alias text: label.text
 
-    background: Item {
-    }
+    background: Item {}
 
     Text {
         id: label

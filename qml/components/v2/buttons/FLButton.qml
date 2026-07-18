@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // Text (+ optional leading icon) button. Colors from Theme, metrics from
 // AppStyle. Height is derived from content and floored at minTarget, so it
 // grows with the UI scale instead of clipping
@@ -20,23 +19,12 @@ Button {
     property string iconName: ""
     property bool showGlobalCursor: true
 
-    readonly property int _font: size === "sm" ? AppStyle.fontSizeSmall
-                               : size === "lg" ? AppStyle.fontSizeLarge
-                               : AppStyle.fontSizeMedium
-    readonly property int _vpad: size === "sm" ? AppStyle.spacingXs
-                               : size === "lg" ? AppStyle.spacingMd
-                               : AppStyle.spacingSm
-    readonly property int _hpad: size === "sm" ? AppStyle.spacingMd
-                               : size === "lg" ? AppStyle.spacingXl
-                               : AppStyle.spacingLg
+    readonly property int _font: size === "sm" ? AppStyle.fontSizeSmall : size === "lg" ? AppStyle.fontSizeLarge : AppStyle.fontSizeMedium
+    readonly property int _vpad: size === "sm" ? AppStyle.spacingXs : size === "lg" ? AppStyle.spacingMd : AppStyle.spacingSm
+    readonly property int _hpad: size === "sm" ? AppStyle.spacingMd : size === "lg" ? AppStyle.spacingXl : AppStyle.spacingLg
 
-    readonly property color _fill: variant === "primary" ? Theme.accent
-                                 : variant === "danger" ? Theme.danger
-                                 : variant === "ghost" ? "transparent"
-                                 : Theme.surfaceElevated
-    readonly property color _fg: variant === "primary" ? Theme.onAccent
-                               : variant === "danger" ? "white"
-                               : Theme.textPrimary
+    readonly property color _fill: variant === "primary" ? Theme.accent : variant === "danger" ? Theme.danger : variant === "ghost" ? "transparent" : Theme.surfaceElevated
+    readonly property color _fg: variant === "primary" ? Theme.onAccent : variant === "danger" ? "white" : Theme.textPrimary
     readonly property bool _focusRing: activeFocus && !InputMethodManager.usingMouse
 
     topPadding: _vpad
@@ -63,7 +51,11 @@ Button {
             radius: parent.radius
             color: Theme.textPrimary
             opacity: !control.enabled ? 0 : control.pressed ? 0.12 : hover.hovered ? 0.07 : 0
-            Behavior on opacity { NumberAnimation { duration: 64 } }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 64
+                }
+            }
         }
     }
 

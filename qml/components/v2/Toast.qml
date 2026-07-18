@@ -1,7 +1,6 @@
 import QtQuick
 import Firelight 1.0
 
-// TODO
 // A brief message over everything else. Deliberately not interactive and never
 // focusable: it reports what just happened, and a hotkey firing must not steal
 // input from the game
@@ -33,7 +32,10 @@ Rectangle {
     visible: opacity > 0
 
     Behavior on opacity {
-        NumberAnimation { duration: 160; easing.type: Easing.InOutQuad }
+        NumberAnimation {
+            duration: 160
+            easing.type: Easing.InOutQuad
+        }
     }
 
     Text {

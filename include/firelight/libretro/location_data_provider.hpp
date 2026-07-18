@@ -6,5 +6,5 @@ namespace firelight::libretro {
 class ILocationDataProvider {
 public:
   virtual ~ILocationDataProvider() = default;
-  };
-  }
+};
+} // namespace firelight::libretro

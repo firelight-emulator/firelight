@@ -3,7 +3,6 @@
 #include <firelight/cheats/cheat_repository.hpp>
 
 #include <SQLiteCpp/Database.h>
-
 #include <memory>
 #include <string>
 

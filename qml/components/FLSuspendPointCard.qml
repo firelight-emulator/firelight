@@ -11,8 +11,8 @@ Button {
     required property string dateTimeString
     required property int index
 
-    signal deleteClicked()
-    signal overwriteClicked()
+    signal deleteClicked
+    signal overwriteClicked
 
     padding: 8
 
@@ -92,8 +92,8 @@ Button {
                 visible: parent.enabled
             }
 
-            onClicked: function(event) {
-                emulatorLoader.item.loadSuspendPoint(theThing.index)
+            onClicked: function (event) {
+                emulatorLoader.item.loadSuspendPoint(theThing.index);
             }
 
             HoverHandler {
@@ -138,7 +138,7 @@ Button {
                 }
 
                 onClicked: {
-                    root.overwriteClicked()
+                    root.overwriteClicked();
                 }
             }
 
@@ -164,9 +164,8 @@ Button {
                 }
 
                 onClicked: {
-                    root.deleteClicked()
+                    root.deleteClicked();
                 }
-
             }
         }
     }

@@ -1,8 +1,9 @@
 #pragma once
-#include <QAbstractListModel>
-
 #include "../../../gui/game_image_provider.hpp"
+
 #include <firelight/saves/suspend_point.hpp>
+
+#include <QAbstractListModel>
 
 namespace firelight::saves {
 static constexpr int MAX_NUM_SUSPEND_POINTS = 16;
@@ -22,27 +23,17 @@ public:
    * @enum Roles
    * @brief The roles that can be used with this model
    */
-  enum Roles {
-    Id = Qt::UserRole + 1,
-    Index,
-    Timestamp,
-    Locked,
-    ImageUrl,
-    HasData
-  };
+  enum Roles { Id = Qt::UserRole + 1, Index, Timestamp, Locked, ImageUrl, HasData };
 
-  explicit SuspendPointListModel(gui::GameImageProvider &imageProvider,
-                                 QObject *parent = nullptr);
+  explicit SuspendPointListModel(gui::GameImageProvider &imageProvider, QObject *parent = nullptr);
 
-  bool setData(const QModelIndex &index, const QVariant &value,
-               int role) override;
+  bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
 
-  [[nodiscard]] QVariant data(const QModelIndex &index,
-                              int role) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
 
   [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
 

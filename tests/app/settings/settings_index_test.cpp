@@ -1,8 +1,7 @@
 #include <firelight/settings/settings_index.hpp>
 
-#include <gtest/gtest.h>
-
 #include <algorithm>
+#include <gtest/gtest.h>
 
 namespace firelight::settings {
 
@@ -51,10 +50,8 @@ SettingsIndex indexFor(const char *json) {
   return SettingsIndex(catalog);
 }
 
-const SettingSearchResult *find(const std::vector<SettingSearchResult> &v,
-                                const std::string &key) {
-  const auto it = std::find_if(v.begin(), v.end(),
-                               [&](const auto &r) { return r.key == key; });
+const SettingSearchResult *find(const std::vector<SettingSearchResult> &v, const std::string &key) {
+  const auto it = std::find_if(v.begin(), v.end(), [&](const auto &r) { return r.key == key; });
   return it != v.end() ? &*it : nullptr;
 }
 } // namespace

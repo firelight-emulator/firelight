@@ -3,23 +3,22 @@
 
 #include <QObject>
 #include <service_accessor.hpp>
+
 namespace firelight::activity {
 
 class GameActivityItem : public QObject, public ServiceAccessor {
   Q_OBJECT
-  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
-                 contentHashChanged)
+  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY contentHashChanged)
   Q_PROPERTY(int timesPlayed READ getTimesPlayed NOTIFY timesPlayedChanged)
-  Q_PROPERTY(int totalSecondsPlayed READ getTotalSecondsPlayed NOTIFY
-                 totalSecondsPlayedChanged)
-  Q_PROPERTY(QAbstractListModel *playSessions READ getPlaySessions NOTIFY
-                 playSessionsChanged)
+  Q_PROPERTY(int totalSecondsPlayed READ getTotalSecondsPlayed NOTIFY totalSecondsPlayedChanged)
+  Q_PROPERTY(QAbstractListModel *playSessions READ getPlaySessions NOTIFY playSessionsChanged)
 
 public:
   [[nodiscard]] QString getContentHash() const;
   void setContentHash(const QString &contentHash);
 
   [[nodiscard]] int getTimesPlayed() const { return m_timesPlayed; }
+
   [[nodiscard]] uint64_t getTotalSecondsPlayed() const;
 
   [[nodiscard]] QAbstractListModel *getPlaySessions() const;

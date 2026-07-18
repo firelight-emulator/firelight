@@ -12,4 +12,4 @@ struct PlaySession {
   uint64_t endTime = 0;
   uint64_t unpausedDurationMillis = 0;
 };
-} // namespace firelight::db
+} // namespace firelight::activity

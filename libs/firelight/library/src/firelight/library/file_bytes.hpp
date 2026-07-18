@@ -8,7 +8,6 @@
 
 namespace firelight::library {
 
-// TODO
 // Reads an entire file into memory with a single sized read. This is markedly
 // faster than the std::istreambuf_iterator idiom for large files (e.g. DS ROMs,
 // which run to hundreds of MB), which reads a byte at a time and repeatedly
@@ -27,8 +26,7 @@ inline std::vector<uint8_t> readAllBytes(const std::string &path) {
 
   std::vector<uint8_t> bytes(static_cast<size_t>(size));
   if (size > 0) {
-    file.read(reinterpret_cast<char *>(bytes.data()),
-              static_cast<std::streamsize>(size));
+    file.read(reinterpret_cast<char *>(bytes.data()), static_cast<std::streamsize>(size));
     bytes.resize(static_cast<size_t>(file.gcount()));
   }
   return bytes;

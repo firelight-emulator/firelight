@@ -197,8 +197,7 @@ ColumnLayout {
         Layout.topMargin: 24
         Layout.bottomMargin: 24
 
-        background: Item {
-        }
+        background: Item {}
         contentItem: Text {
             color: Theme.textMuted
             font.family: Constants.regularFontFamily

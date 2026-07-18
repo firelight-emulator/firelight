@@ -11,8 +11,8 @@ ColumnLayout {
         property int number: 0
 
         onClicked: function () {
-            achievementProgressIndicator.openWith("", "test", "test", number, 80)
-            number += 1
+            achievementProgressIndicator.openWith("", "test", "test", number, 80);
+            number += 1;
         }
 
         AchievementProgressIndicator {
@@ -26,7 +26,7 @@ ColumnLayout {
         text: "toggle achievement"
 
         onClicked: {
-            achievementUnlockIndicator.openWith("", "Mighty Morphin' Shy Guys", "Defeat the groups of two Red, Pink, Yellow, Green, and Blue Shy Guys IN ORDER in the Blue Zone of Shy Guys Toybox")
+            achievementUnlockIndicator.openWith("", "Mighty Morphin' Shy Guys", "Defeat the groups of two Red, Pink, Yellow, Green, and Blue Shy Guys IN ORDER in the Blue Zone of Shy Guys Toybox");
         }
 
         AchievementUnlockIndicator {
@@ -38,7 +38,7 @@ ColumnLayout {
         text: "show game launch popup"
 
         onClicked: {
-            gameLaunchPopup.open()
+            gameLaunchPopup.open();
         }
 
         GameLaunchPopup {
@@ -49,6 +49,5 @@ ColumnLayout {
     Item {
         Layout.fillWidth: true
         Layout.fillHeight: true
-
     }
 }

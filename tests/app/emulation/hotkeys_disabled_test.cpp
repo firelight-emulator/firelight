@@ -1,7 +1,6 @@
 #include "fake_core.hpp"
 #include "fake_input_service.hpp"
 
-#include <emulation/emulation_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -9,6 +8,7 @@
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
+#include <emulation/emulation_service.hpp>
 #include <gtest/gtest.h>
 
 namespace firelight::emulation {
@@ -31,14 +31,12 @@ protected:
   static constexpr int PLATFORM_ID = 3;
 
   void SetUp() override {
-    m_library =
-        std::make_unique<library::SqliteUserLibraryRepository>(":memory:");
+    m_library = std::make_unique<library::SqliteUserLibraryRepository>(":memory:");
     m_ingest = std::make_unique<library::LibraryIngestService>(*m_library);
-    m_libraryService =
-        std::make_unique<library::UserLibraryService>(*m_library, ".");
+    m_libraryService = std::make_unique<library::UserLibraryService>(*m_library, ".");
     m_resolver = std::make_unique<library::EntryResolver>(*m_library);
-    m_settingsService = std::make_unique<settings::SettingsService>(
-        *new settings::SqliteSettingsRepository(":memory:"));
+    m_settingsService =
+        std::make_unique<settings::SettingsService>(*new settings::SqliteSettingsRepository(":memory:"));
     settings::SettingsService::setInstance(m_settingsService.get());
 
     EmulationContext context;
@@ -47,8 +45,7 @@ protected:
 
     m_emulationService = std::make_unique<EmulationService>(
         *m_libraryService, *m_resolver, *m_settingsService, context,
-        [this](const firelight::libretro::CoreRunConfig &)
-            -> std::unique_ptr<::libretro::ICore> {
+        [this](const firelight::libretro::CoreRunConfig &) -> std::unique_ptr<::libretro::ICore> {
           auto fake = std::make_unique<FakeCore>();
           fake->m_registersKeyboardOnLoad = m_coreWantsKeyboard;
           m_fakeCore = fake.get();

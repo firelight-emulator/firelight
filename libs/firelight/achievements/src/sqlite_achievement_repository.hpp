@@ -101,8 +101,7 @@ public:
    * @param gameId The unique identifier of the achievement set
    * @return The list of achievement sets if found, empty vector otherwise
    */
-  [[nodiscard]] std::vector<AchievementSet>
-  getAchievementSetsByGameId(unsigned gameId) const override;
+  [[nodiscard]] std::vector<AchievementSet> getAchievementSetsByGameId(unsigned gameId) const override;
 
   /**
    * @brief Retrieves achievement set by game content hash
@@ -121,8 +120,7 @@ public:
   [[nodiscard]] std::optional<Game> getGameById(int gameId) const override;
   bool create(Game game) override;
 
-  [[nodiscard]] std::optional<int>
-  getGameId(const std::string &contentHash) const override;
+  [[nodiscard]] std::optional<int> getGameId(const std::string &contentHash) const override;
 
   /**
    * @brief Retrieves the content hash associated with an achievement set ID
@@ -161,8 +159,7 @@ public:
    * @see setGameId() to create or update hash <-> set ID mappings
    * @see getAchievementSetByContentHash() to retrieve sets directly by hash
    */
-  [[nodiscard]] std::optional<std::string>
-  getGameHash(unsigned gameId) const override;
+  [[nodiscard]] std::optional<std::string> getGameHash(unsigned gameId) const override;
 
   // Individual Achievement Operations
   bool create(const Leaderboard &leaderboard) override;
@@ -179,8 +176,7 @@ public:
    */
   bool create(Achievement achievement) override;
 
-  std::optional<Achievement>
-  getAchievement(unsigned achievementId) const override;
+  std::optional<Achievement> getAchievement(unsigned achievementId) const override;
 
   // Achievement Progress Operations
 
@@ -212,8 +208,7 @@ public:
    */
   bool setGameId(const std::string &contentHash, int gameId) override;
 
-  bool setAchievementSetHash(unsigned achievementSetId,
-                             const std::string &contentHash) override;
+  bool setAchievementSetHash(unsigned achievementSetId, const std::string &contentHash) override;
 
   // User Unlock Operations
 
@@ -227,8 +222,7 @@ public:
    * @param achievementId The achievement ID to check
    * @return The unlock data if found, std::nullopt if no unlock record exists
    */
-  [[nodiscard]] std::optional<UserUnlock>
-  getUserUnlock(const std::string &username, unsigned achievementId) override;
+  [[nodiscard]] std::optional<UserUnlock> getUserUnlock(const std::string &username, unsigned achievementId) override;
 
   /**
    * @brief Creates or updates user unlock status for an achievement
@@ -253,8 +247,7 @@ public:
    * @param gameId The achievement set ID to filter unlocks by
    * @return Vector of UserUnlock records, empty if none found or on error
    */
-  std::vector<UserUnlock> getAllUserUnlocks(const std::string &username,
-                                            unsigned gameId) const override;
+  std::vector<UserUnlock> getAllUserUnlocks(const std::string &username, unsigned gameId) const override;
 
   /**
    * @brief Retrieves all unsynced user unlock records for a specific user
@@ -289,8 +282,7 @@ public:
    *      upload
    * @see getAllUserUnlocks() to get all unlocks for a specific achievement set
    */
-  std::vector<UserUnlock>
-  getAllUnsyncedUserUnlocks(const std::string &username) const override;
+  std::vector<UserUnlock> getAllUnsyncedUserUnlocks(const std::string &username) const override;
 
 private:
   /** @brief Path to the SQLite database file */

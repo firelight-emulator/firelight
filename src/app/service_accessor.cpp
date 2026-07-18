@@ -1,136 +1,82 @@
 #include "service_accessor.hpp"
 
 namespace firelight {
-  input::InputService *ServiceAccessor::s_inputService;
-  input::IControllerRepository *ServiceAccessor::s_controllerProfileRepository;
-  platforms::PlatformService *ServiceAccessor::s_platformService;
-  settings::ICoreOptionRepository *ServiceAccessor::s_coreOptionRepository;
-  achievements::AchievementService *ServiceAccessor::s_achievementService;
-  library::UserLibraryService *ServiceAccessor::s_libraryService;
-  activity::IActivityLog *ServiceAccessor::s_activityService;
-  saves::ISaveManager *ServiceAccessor::s_saveManager;
-  achievements::RAClient *ServiceAccessor::s_achievementManager;
-  emulation::ShortcutActions *ServiceAccessor::s_shortcutActions;
-  gui::GameImageProvider *ServiceAccessor::s_gameImageProvider;
-  mods::IModRepository *ServiceAccessor::s_modRepository;
-  discord::IDiscordManager *ServiceAccessor::s_discordManager;
-  media::MediaService *ServiceAccessor::s_mediaService;
+input::InputService *ServiceAccessor::s_inputService;
+input::IControllerRepository *ServiceAccessor::s_controllerProfileRepository;
+platforms::PlatformService *ServiceAccessor::s_platformService;
+settings::ICoreOptionRepository *ServiceAccessor::s_coreOptionRepository;
+achievements::AchievementService *ServiceAccessor::s_achievementService;
+library::UserLibraryService *ServiceAccessor::s_libraryService;
+activity::IActivityLog *ServiceAccessor::s_activityService;
+saves::ISaveManager *ServiceAccessor::s_saveManager;
+achievements::RAClient *ServiceAccessor::s_achievementManager;
+emulation::ShortcutActions *ServiceAccessor::s_shortcutActions;
+gui::GameImageProvider *ServiceAccessor::s_gameImageProvider;
+mods::IModRepository *ServiceAccessor::s_modRepository;
+discord::IDiscordManager *ServiceAccessor::s_discordManager;
+media::MediaService *ServiceAccessor::s_mediaService;
 
-  void ServiceAccessor::setInputService(input::InputService *service) {
-    s_inputService = service;
-  }
+void ServiceAccessor::setInputService(input::InputService *service) { s_inputService = service; }
 
-  void ServiceAccessor::setControllerProfileRepository(
-    input::IControllerRepository *repository) {
-    s_controllerProfileRepository = repository;
-  }
+void ServiceAccessor::setControllerProfileRepository(input::IControllerRepository *repository) {
+  s_controllerProfileRepository = repository;
+}
 
-  void ServiceAccessor::setPlatformService(platforms::PlatformService *service) {
-    s_platformService = service;
-  }
+void ServiceAccessor::setPlatformService(platforms::PlatformService *service) { s_platformService = service; }
 
-  void ServiceAccessor::setCoreOptionRepository(
-    settings::ICoreOptionRepository *repository) {
-    s_coreOptionRepository = repository;
-  }
+void ServiceAccessor::setCoreOptionRepository(settings::ICoreOptionRepository *repository) {
+  s_coreOptionRepository = repository;
+}
 
-  void ServiceAccessor::setAchievementService(
-    achievements::AchievementService *service) {
-    s_achievementService = service;
-  }
+void ServiceAccessor::setAchievementService(achievements::AchievementService *service) {
+  s_achievementService = service;
+}
 
-  void ServiceAccessor::setLibraryService(library::UserLibraryService *service) {
-    s_libraryService = service;
-  }
+void ServiceAccessor::setLibraryService(library::UserLibraryService *service) { s_libraryService = service; }
 
-  void ServiceAccessor::setActivityService(activity::IActivityLog *service) {
-    s_activityService = service;
-  }
+void ServiceAccessor::setActivityService(activity::IActivityLog *service) { s_activityService = service; }
 
-  void ServiceAccessor::setSaveManager(saves::ISaveManager *manager) {
-    s_saveManager = manager;
-  }
+void ServiceAccessor::setSaveManager(saves::ISaveManager *manager) { s_saveManager = manager; }
 
-  void ServiceAccessor::setShortcutActions(emulation::ShortcutActions *actions) {
-    s_shortcutActions = actions;
-  }
+void ServiceAccessor::setShortcutActions(emulation::ShortcutActions *actions) { s_shortcutActions = actions; }
 
-  emulation::ShortcutActions *ServiceAccessor::getShortcutActions() {
-    return s_shortcutActions;
-  }
+emulation::ShortcutActions *ServiceAccessor::getShortcutActions() { return s_shortcutActions; }
 
-  void ServiceAccessor::setAchievementManager(achievements::RAClient *manager) {
-    s_achievementManager = manager;
-  }
+void ServiceAccessor::setAchievementManager(achievements::RAClient *manager) { s_achievementManager = manager; }
 
-  void ServiceAccessor::setGameImageProvider(gui::GameImageProvider *provider) {
-    s_gameImageProvider = provider;
-  }
+void ServiceAccessor::setGameImageProvider(gui::GameImageProvider *provider) { s_gameImageProvider = provider; }
 
-  void ServiceAccessor::setModRepository(mods::IModRepository *repository) {
-    s_modRepository = repository;
-  }
+void ServiceAccessor::setModRepository(mods::IModRepository *repository) { s_modRepository = repository; }
 
+void ServiceAccessor::setDiscordManager(discord::IDiscordManager *manager) { s_discordManager = manager; }
 
-  void ServiceAccessor::setDiscordManager(discord::IDiscordManager *manager) {
-    s_discordManager = manager;
-  }
+void ServiceAccessor::setMediaService(media::MediaService *service) { s_mediaService = service; }
 
-  void ServiceAccessor::setMediaService(media::MediaService *service) {
-    s_mediaService = service;
-  }
+input::InputService *ServiceAccessor::getInputService() { return s_inputService; }
 
-  input::InputService *ServiceAccessor::getInputService() {
-    return s_inputService;
-  }
+input::IControllerRepository *ServiceAccessor::getControllerProfileRepository() {
+  return s_controllerProfileRepository;
+}
 
-  input::IControllerRepository *
-  ServiceAccessor::getControllerProfileRepository() {
-    return s_controllerProfileRepository;
-  }
+platforms::PlatformService *ServiceAccessor::getPlatformService() { return s_platformService; }
 
-  platforms::PlatformService *ServiceAccessor::getPlatformService() {
-    return s_platformService;
-  }
+settings::ICoreOptionRepository *ServiceAccessor::getCoreOptionRepository() { return s_coreOptionRepository; }
 
-  settings::ICoreOptionRepository *ServiceAccessor::getCoreOptionRepository() {
-    return s_coreOptionRepository;
-  }
+achievements::AchievementService *ServiceAccessor::getAchievementService() { return s_achievementService; }
 
-  achievements::AchievementService *ServiceAccessor::getAchievementService() {
-    return s_achievementService;
-  }
+library::UserLibraryService *ServiceAccessor::getLibraryService() { return s_libraryService; }
 
-  library::UserLibraryService *ServiceAccessor::getLibraryService() {
-    return s_libraryService;
-  }
+activity::IActivityLog *ServiceAccessor::getActivityService() { return s_activityService; }
 
-  activity::IActivityLog *ServiceAccessor::getActivityService() {
-    return s_activityService;
-  }
+saves::ISaveManager *ServiceAccessor::getSaveManager() { return s_saveManager; }
 
-  saves::ISaveManager *ServiceAccessor::getSaveManager() {
-    return s_saveManager;
-  }
+achievements::RAClient *ServiceAccessor::getAchievementManager() { return s_achievementManager; }
 
-  achievements::RAClient *ServiceAccessor::getAchievementManager() {
-    return s_achievementManager;
-  }
+gui::GameImageProvider *ServiceAccessor::getGameImageProvider() { return s_gameImageProvider; }
 
-  gui::GameImageProvider *ServiceAccessor::getGameImageProvider() {
-    return s_gameImageProvider;
-  }
+mods::IModRepository *ServiceAccessor::getModRepository() { return s_modRepository; }
 
-  mods::IModRepository *ServiceAccessor::getModRepository() {
-    return s_modRepository;
-  }
+media::MediaService *ServiceAccessor::getMediaService() { return s_mediaService; }
 
-
-  media::MediaService *ServiceAccessor::getMediaService() {
-    return s_mediaService;
-  }
-
-  discord::IDiscordManager *ServiceAccessor::getDiscordManager() {
-    return s_discordManager;
-  }
+discord::IDiscordManager *ServiceAccessor::getDiscordManager() { return s_discordManager; }
 } // namespace firelight

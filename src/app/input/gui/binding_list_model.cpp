@@ -5,8 +5,7 @@
 
 namespace firelight::input {
 
-BindingListModel::BindingListModel(QObject *parent)
-    : QAbstractListModel(parent) {}
+BindingListModel::BindingListModel(QObject *parent) : QAbstractListModel(parent) {}
 
 int BindingListModel::rowCount(const QModelIndex &parent) const {
   if (parent.isValid()) {
@@ -22,8 +21,7 @@ QVariant BindingListModel::data(const QModelIndex &index, int role) const {
   const auto &binding = m_bindings.at(index.row());
   switch (role) {
   case SourceLabel:
-    return QString::fromStdString(firelight::input::displayName(
-        static_cast<GamepadInput>(binding.source.code)));
+    return QString::fromStdString(firelight::input::displayName(static_cast<GamepadInput>(binding.source.code)));
   case SourceCode:
     return binding.source.code;
   case Toggle:
@@ -39,13 +37,13 @@ QVariant BindingListModel::data(const QModelIndex &index, int role) const {
 
 QHash<int, QByteArray> BindingListModel::roleNames() const {
   return {
-      {SourceLabel, "sourceLabel"}, {SourceCode, "sourceCode"},
-      {Toggle, "toggle"},           {TurboEnabled, "turboEnabled"},
-      {TurboRate, "turboRate"},
+      {SourceLabel, "sourceLabel"},   {SourceCode, "sourceCode"}, {Toggle, "toggle"},
+      {TurboEnabled, "turboEnabled"}, {TurboRate, "turboRate"},
   };
 }
 
 int BindingListModel::profileId() const { return m_profileId; }
+
 void BindingListModel::setProfileId(const int id) {
   if (id == m_profileId) {
     return;
@@ -56,6 +54,7 @@ void BindingListModel::setProfileId(const int id) {
 }
 
 int BindingListModel::platformId() const { return m_platformId; }
+
 void BindingListModel::setPlatformId(const int id) {
   if (id == m_platformId) {
     return;
@@ -66,6 +65,7 @@ void BindingListModel::setPlatformId(const int id) {
 }
 
 int BindingListModel::controllerTypeId() const { return m_controllerTypeId; }
+
 void BindingListModel::setControllerTypeId(const int id) {
   if (id == m_controllerTypeId) {
     return;
@@ -76,6 +76,7 @@ void BindingListModel::setControllerTypeId(const int id) {
 }
 
 int BindingListModel::targetInput() const { return m_targetInput; }
+
 void BindingListModel::setTargetInput(const int input) {
   if (input == m_targetInput) {
     return;
@@ -89,8 +90,7 @@ std::shared_ptr<InputMapping> BindingListModel::currentMapping() const {
   if (!m_profile || m_platformId < 0 || m_controllerTypeId < 0) {
     return nullptr;
   }
-  return m_profile->getMappingForPlatformAndController(m_platformId,
-                                                       m_controllerTypeId);
+  return m_profile->getMappingForPlatformAndController(m_platformId, m_controllerTypeId);
 }
 
 void BindingListModel::reload() {
@@ -124,8 +124,7 @@ void BindingListModel::addBinding(const int sourceCode) {
   binding.source.type = SourceType::Button;
   binding.source.code = sourceCode;
 
-  beginInsertRows(QModelIndex(), static_cast<int>(m_bindings.size()),
-                  static_cast<int>(m_bindings.size()));
+  beginInsertRows(QModelIndex(), static_cast<int>(m_bindings.size()), static_cast<int>(m_bindings.size()));
   m_bindings.push_back(binding);
   endInsertRows();
   commit();

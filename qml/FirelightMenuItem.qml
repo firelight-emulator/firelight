@@ -5,7 +5,7 @@ import QtQuick.Layouts
 Button {
     id: control
 
-    signal rightClicked()
+    signal rightClicked
 
     autoExclusive: true
     checkable: true
@@ -64,7 +64,7 @@ Button {
         acceptedButtons: Qt.RightButton
         hoverEnabled: true
         onClicked: function (event) {
-            control.rightClicked()
+            control.rightClicked();
         }
         cursorShape: control.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
     }

@@ -1,5 +1,7 @@
 #include "bps_patch.hpp"
+
 #include "util.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <spdlog/spdlog.h>
@@ -34,8 +36,7 @@ BPSPatch::BPSPatch(const std::vector<uint8_t> &data) {
   const auto metadataSize = readVLV(data, index);
 
   m_metadata = std::string(data.begin() + index,
-                           data.begin() + index +
-                               metadataSize); // TODO: Check if this is correct
+                           data.begin() + index + metadataSize); // TODO: Check if this is correct
 
   index += metadataSize;
 
@@ -69,14 +70,11 @@ BPSPatch::BPSPatch(const std::vector<uint8_t> &data) {
     m_actions.emplace_back(action);
   }
 
-  m_inputFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 |
-                             data[index + 1] << 8 | data[index];
+  m_inputFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 | data[index + 1] << 8 | data[index];
   index += 4;
-  m_outputFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 |
-                              data[index + 1] << 8 | data[index];
+  m_outputFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 | data[index + 1] << 8 | data[index];
   index += 4;
-  m_patchFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 |
-                             data[index + 1] << 8 | data[index];
+  m_patchFileCRC32Checksum = data[index + 3] << 24 | data[index + 2] << 16 | data[index + 1] << 8 | data[index];
 
   auto crc = crc32(0L, nullptr, 0);
   crc = crc32(crc, data.data(), data.size() - 4);
@@ -85,8 +83,8 @@ BPSPatch::BPSPatch(const std::vector<uint8_t> &data) {
     m_isValid = false;
   }
 }
-std::vector<uint8_t>
-BPSPatch::patchRom(const std::vector<uint8_t> &data) const {
+
+std::vector<uint8_t> BPSPatch::patchRom(const std::vector<uint8_t> &data) const {
   uint32_t crc = crc32(0L, nullptr, 0);
   crc = crc32(crc, data.data(), data.size());
   if (crc != m_inputFileCRC32Checksum) {
@@ -126,8 +124,7 @@ BPSPatch::patchRom(const std::vector<uint8_t> &data) const {
       }
       break;
     default:
-      throw std::runtime_error("Invalid action type: " +
-                               std::to_string(action.type));
+      throw std::runtime_error("Invalid action type: " + std::to_string(action.type));
     }
   }
 

@@ -7,7 +7,6 @@ FocusScope {
 
     required property list<string> imageUrls
 
-    // TODO
     // onImageUrlsChanged: {
     //     listModel.clear()
     //     for (let i = 0; i < imageUrls.length; i++) {
@@ -15,9 +14,11 @@ FocusScope {
     //     }
     // }
 
-    Component.onCompleted: function() {
+    Component.onCompleted: function () {
         for (let i = 0; i < imageUrls.length; i++) {
-            listModel.append({source: imageUrls[i]})
+            listModel.append({
+                source: imageUrls[i]
+            });
         }
     }
 
@@ -62,7 +63,7 @@ FocusScope {
             radius: 4
             TapHandler {
                 onTapped: {
-                    previewList.currentIndex = index
+                    previewList.currentIndex = index;
                 }
             }
             Image {

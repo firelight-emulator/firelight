@@ -5,8 +5,7 @@ import QtQuick.Layouts
 ListView {
     id: root
 
-    model: ListModel {
-    }
+    model: ListModel {}
 
     spacing: 8
 
@@ -25,14 +24,14 @@ ListView {
                 "imageUrl": imageUrl,
                 "title": name,
                 "description": description
-            })
+            });
         }
 
         function onHideChallengeIndicator(id) {
             for (let i = 0; i < root.model.count; i++) {
                 if (root.model.get(i).achievementId === id) {
-                    root.model.remove(i)
-                    break
+                    root.model.remove(i);
+                    break;
                 }
             }
         }
@@ -92,7 +91,6 @@ ListView {
                     color: "#c1c1c1"
                 }
             }
-
         }
     }
 }

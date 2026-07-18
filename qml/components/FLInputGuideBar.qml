@@ -19,28 +19,29 @@ Pane {
 
     onHiddenChanged: {
         if (hidden) {
-            hideAnimation.start()
+            hideAnimation.start();
         } else {
-            showAnimation.start()
+            showAnimation.start();
         }
     }
 
     onTargetChanged: {
-        listView.model.clear()
+        listView.model.clear();
         if (target === null) {
-            return
+            return;
         }
 
         if (target.hasOwnProperty('inputHints')) {
             for (var i = 0; i < target.inputHints.length; i++) {
-                listView.model.append({label: target.inputHints[i].label,
-                    key: target.inputHints[i].input})
+                listView.model.append({
+                    label: target.inputHints[i].label,
+                    key: target.inputHints[i].input
+                });
             }
         }
     }
 
-    background: Item {
-    }
+    background: Item {}
 
     PropertyAnimation {
         id: hideAnimation
@@ -112,8 +113,8 @@ Pane {
                     opacity: hover.hovered ? 0.2 : 0
                     radius: height / 2
                 }
-                onClicked: function() {
-                    EventEmitter.emitKeyEvent(model.key)
+                onClicked: function () {
+                    EventEmitter.emitKeyEvent(model.key);
                 }
 
                 contentItem: RowLayout {

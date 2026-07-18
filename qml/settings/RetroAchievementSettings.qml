@@ -37,7 +37,7 @@ FocusScope {
                     checked: achievement_manager.defaultToHardcore
 
                     onCheckedChanged: {
-                        achievement_manager.defaultToHardcore = checked
+                        achievement_manager.defaultToHardcore = checked;
                     }
                 }
 
@@ -48,7 +48,7 @@ FocusScope {
                     KeyNavigation.down: achievementUnlockToggle
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: {
-                        Qt.openUrlExternally("https://docs.retroachievements.org/general/faq.html#what-is-hardcore-mode")
+                        Qt.openUrlExternally("https://docs.retroachievements.org/general/faq.html#what-is-hardcore-mode");
                     }
                 }
 
@@ -73,7 +73,7 @@ FocusScope {
                     checked: achievement_manager.unlockNotificationsEnabled
 
                     onCheckedChanged: {
-                        achievement_manager.unlockNotificationsEnabled = checked
+                        achievement_manager.unlockNotificationsEnabled = checked;
                     }
                 }
 
@@ -88,7 +88,7 @@ FocusScope {
                     checked: achievement_manager.progressNotificationsEnabled
 
                     onCheckedChanged: {
-                        achievement_manager.progressNotificationsEnabled = checked
+                        achievement_manager.progressNotificationsEnabled = checked;
                     }
                 }
 
@@ -102,7 +102,7 @@ FocusScope {
                     checked: achievement_manager.challengeIndicatorsEnabled
 
                     onCheckedChanged: {
-                        achievement_manager.challengeIndicatorsEnabled = checked
+                        achievement_manager.challengeIndicatorsEnabled = checked;
                     }
                 }
             }
@@ -110,9 +110,7 @@ FocusScope {
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-
             }
         }
     }
 }
-

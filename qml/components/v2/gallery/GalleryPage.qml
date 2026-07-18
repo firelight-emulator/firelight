@@ -71,7 +71,9 @@ Item {
                 readonly property var typeValues: ["all", "screenshot", "clip"]
                 segments: ["All", "Screenshots", "Clips"]
                 currentIndex: Math.max(0, typeValues.indexOf(root.typeFilter))
-                onActivated: function (index) { root.typeFilter = typeValues[index] }
+                onActivated: function (index) {
+                    root.typeFilter = typeValues[index];
+                }
             }
 
             FLButton {
@@ -98,8 +100,7 @@ Item {
     Text {
         anchors.centerIn: parent
         visible: captureProxy.count === 0
-        text: root.gameContentHash !== "" ? "No media for this game yet."
-                                          : "No screenshots or clips yet."
+        text: root.gameContentHash !== "" ? "No media for this game yet." : "No screenshots or clips yet."
         color: Theme.textMuted
         font.pixelSize: AppStyle.fontSizeMedium
         font.family: Constants.regularFontFamily

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rom_patch.hpp"
+
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -20,8 +21,7 @@ class IPSPatch final : public IRomPatch {
 public:
   explicit IPSPatch(const std::string &path);
   explicit IPSPatch(const std::vector<uint8_t> &data);
-  [[nodiscard]] std::vector<uint8_t>
-  patchRom(const std::vector<uint8_t> &data) const override;
+  [[nodiscard]] std::vector<uint8_t> patchRom(const std::vector<uint8_t> &data) const override;
   [[nodiscard]] std::vector<IPSPatchRecord> getRecords() const;
   [[nodiscard]] bool isValid() const override;
 

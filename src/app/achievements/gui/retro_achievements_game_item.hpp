@@ -1,24 +1,21 @@
 #pragma once
 #include "AchievementSetItem.hpp"
 
-#include <QObject>
 #include <firelight/platforms/platform.hpp>
+
+#include <QObject>
 
 namespace firelight::achievements {
 
 class RetroAchievementsGameItem : public QObject, public ServiceAccessor {
   Q_OBJECT
-  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
-                 contentHashChanged)
+  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY contentHashChanged)
   Q_PROPERTY(QString title MEMBER m_title NOTIFY contentHashChanged)
   Q_PROPERTY(QString iconUrl MEMBER m_iconUrl NOTIFY contentHashChanged)
-  Q_PROPERTY(
-      bool hardcore READ isHardcore WRITE setHardcore NOTIFY hardcoreChanged)
-  Q_PROPERTY(
-      QString platformName MEMBER m_platformName NOTIFY contentHashChanged)
+  Q_PROPERTY(bool hardcore READ isHardcore WRITE setHardcore NOTIFY hardcoreChanged)
+  Q_PROPERTY(QString platformName MEMBER m_platformName NOTIFY contentHashChanged)
 
-  Q_PROPERTY(QList<AchievementSetItem *> achievementSets READ getAchievementSets
-                 NOTIFY contentHashChanged)
+  Q_PROPERTY(QList<AchievementSetItem *> achievementSets READ getAchievementSets NOTIFY contentHashChanged)
 
 public:
   explicit RetroAchievementsGameItem(QObject *parent = nullptr);
@@ -26,6 +23,7 @@ public:
   void setContentHash(const QString &contentHash);
 
   [[nodiscard]] bool isHardcore() const { return m_hardcore; }
+
   void setHardcore(const bool hardcore) {
     if (m_hardcore == hardcore) {
       return;

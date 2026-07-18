@@ -21,9 +21,7 @@ struct Platform {
   std::vector<ControllerType> controllerTypes;
 
   // The Discord large-image key, defaulting to the slug when unset
-  [[nodiscard]] std::string discordImageOrSlug() const {
-    return discordImage.empty() ? slug : discordImage;
-  }
+  [[nodiscard]] std::string discordImageOrSlug() const { return discordImage.empty() ? slug : discordImage; }
 };
 
 inline void from_json(const nlohmann::json &j, Platform &p) {

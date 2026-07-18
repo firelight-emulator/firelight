@@ -4,7 +4,6 @@
 
 namespace firelight::library {
 
-// TODO
 // Associates a discovered patch file with the ROM(s) it targets, creating the
 // run configuration(s) that let an entry launch the patched content
 //

@@ -4,19 +4,16 @@
 
 namespace firelight::input {
 
-ShortcutMapping::ShortcutMapping(
-    std::function<void(ShortcutMapping &)> syncCallback)
+ShortcutMapping::ShortcutMapping(std::function<void(ShortcutMapping &)> syncCallback)
     : m_syncCallback(std::move(syncCallback)) {}
 
-const std::vector<InputSource> &
-ShortcutMapping::getBindings(const ShortcutId &id) const {
+const std::vector<InputSource> &ShortcutMapping::getBindings(const ShortcutId &id) const {
   static const std::vector<InputSource> EMPTY;
   const auto it = m_bindings.find(id);
   return it == m_bindings.end() ? EMPTY : it->second;
 }
 
-void ShortcutMapping::setBindings(const ShortcutId &id,
-                                  std::vector<InputSource> sources) {
+void ShortcutMapping::setBindings(const ShortcutId &id, std::vector<InputSource> sources) {
   if (sources.empty()) {
     m_bindings.erase(id);
   } else {
@@ -24,13 +21,9 @@ void ShortcutMapping::setBindings(const ShortcutId &id,
   }
 }
 
-void ShortcutMapping::addBinding(const ShortcutId &id,
-                                 const InputSource &source) {
-  m_bindings[id].push_back(source);
-}
+void ShortcutMapping::addBinding(const ShortcutId &id, const InputSource &source) { m_bindings[id].push_back(source); }
 
-void ShortcutMapping::removeBinding(const ShortcutId &id,
-                                    const std::size_t index) {
+void ShortcutMapping::removeBinding(const ShortcutId &id, const std::size_t index) {
   const auto it = m_bindings.find(id);
   if (it == m_bindings.end() || index >= it->second.size()) {
     return;
@@ -41,10 +34,7 @@ void ShortcutMapping::removeBinding(const ShortcutId &id,
   }
 }
 
-const std::map<ShortcutId, std::vector<InputSource>> &
-ShortcutMapping::getAll() const {
-  return m_bindings;
-}
+const std::map<ShortcutId, std::vector<InputSource>> &ShortcutMapping::getAll() const { return m_bindings; }
 
 std::string ShortcutMapping::serialize() const {
   nlohmann::json shortcuts = nlohmann::json::object();

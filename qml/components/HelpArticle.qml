@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
 
-// TODO
 // Renders a bundled Markdown help article. `source` is a qrc:/help/*.md URL;
 // the file is read into a string and shown with Qt's native Markdown rendering
 // In-app route links (e.g. /settings) navigate via the Router; web links open

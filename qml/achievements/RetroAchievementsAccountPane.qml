@@ -6,7 +6,7 @@ import Firelight 1.0
 FocusScope {
     id: root
 
-    signal nextClicked()
+    signal nextClicked
 
     implicitHeight: achievement_manager.loggedIn ? loggedInPane.height : contentPane.height
     implicitWidth: achievement_manager.loggedIn ? loggedInPane.width : contentPane.width
@@ -17,7 +17,7 @@ FocusScope {
         anchors.fill: parent
         focus: achievement_manager.loggedIn
         background: Item {}
-        contentItem:  ColumnLayout {
+        contentItem: ColumnLayout {
             spacing: 8
             Image {
                 Layout.maximumHeight: 60
@@ -91,7 +91,7 @@ FocusScope {
                         tooltipOnTop: true
                         iconCode: "\ue9ba"
                         onClicked: {
-                            logoutDialog.open()
+                            logoutDialog.open();
                         }
                     }
                 }
@@ -109,7 +109,7 @@ FocusScope {
         text: "Are you sure you want to log out of RetroAchievements?\n\nYou'll need to log in again to earn achievements."
 
         onAccepted: {
-            achievement_manager.logout()
+            achievement_manager.logout();
         }
     }
 
@@ -118,231 +118,229 @@ FocusScope {
         visible: !achievement_manager.loggedIn
         focus: !achievement_manager.loggedIn
         anchors.fill: parent
-        background: Item {
-        }
+        background: Item {}
 
         contentItem: ColumnLayout {
-                id: meColumn
-                spacing: 8
-                Image {
-                    Layout.maximumHeight: 60
-                    Layout.minimumHeight: 60
-                    sourceSize.height: 60
-                    Layout.alignment: Qt.AlignHCenter
-                    source: "qrc:images/retroachievements-banner"
-                    fillMode: Image.PreserveAspectFit
-                }
-                Text {
-                        text: "Login"
-                        Layout.topMargin: 24
-                        Layout.alignment: Qt.AlignHCenter
-                        color: Theme.textPrimary
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.weight: Font.Normal
-                        font.family: Constants.regularFontFamily
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    Pane {
-                        id: thePane
-                        Layout.topMargin: 8
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.preferredWidth: 280
-                        Layout.preferredHeight: 48
-                        background: Rectangle {
-                            color: Theme.surface
-                            radius: 4
-                        }
-
-                        focus: true
-
-                        HoverHandler {
-                            acceptedDevices: PointerDevice.Mouse
-                            cursorShape: Qt.IBeamCursor
-                        }
-
-                        contentItem: Item {
-                            Text {
-                                anchors.fill: parent
-                                font.pixelSize: AppStyle.fontSizeMedium
-                                font.family: Constants.regularFontFamily
-                                color: Theme.textMuted
-                                text: "Username"
-                                verticalAlignment: Text.AlignVCenter
-                                visible: usernameTextInput.length === 0
-                            }
-                            TextInput {
-                                id: usernameTextInput
-                                anchors.fill: parent
-                                activeFocusOnTab: true
-                                KeyNavigation.down: passwordTextInput
-                                property bool showGlobalCursor: true
-                                property var globalCursorProxy: thePane
-                                font.family: Constants.regularFontFamily
-                                focus: true
-                                font.pixelSize: AppStyle.fontSizeMedium
-                                color: Theme.textPrimary
-                                verticalAlignment: Text.AlignVCenter
-
-                                onAccepted: {
-                                    if (submitButton.enabled) {
-                                        submitButton.clicked()
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Pane {
-                        id: theOtherPane
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.preferredWidth: 280
-                        Layout.preferredHeight: 48
-                        background: Rectangle {
-                            color: Theme.surface
-                            radius: 4
-                        }
-
-                        HoverHandler {
-                            acceptedDevices: PointerDevice.Mouse
-                            cursorShape: Qt.IBeamCursor
-                        }
-
-                        contentItem: FocusScope {
-                            Text {
-                                anchors.fill: parent
-                                font.pixelSize: AppStyle.fontSizeMedium
-                                font.family: Constants.regularFontFamily
-                                color: Theme.textMuted
-                                text: "Password"
-                                verticalAlignment: Text.AlignVCenter
-                                visible: passwordTextInput.length === 0
-                            }
-                            TextInput {
-                                id: passwordTextInput
-                                activeFocusOnTab: true
-                                anchors.fill: parent
-                                echoMode: TextInput.Password
-                                KeyNavigation.down: submitButton
-                                property bool showGlobalCursor: true
-                                property var globalCursorProxy: theOtherPane
-                                font.family: Constants.regularFontFamily
-                                font.pixelSize: AppStyle.fontSizeMedium
-                                color: Theme.textPrimary
-                                verticalAlignment: Text.AlignVCenter
-
-                                onAccepted: {
-                                    if (submitButton.enabled) {
-                                        submitButton.clicked()
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    FirelightButton {
-                        id: submitButton
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.topMargin: 12
-                        KeyNavigation.down: goToWebsiteButton
-                        label: "Submit"
-                        enabled: usernameTextInput.text !== "" && passwordTextInput.text !== ""
-
-                        onClicked: function () {
-                            achievement_manager.logInUserWithPassword(usernameTextInput.text, passwordTextInput.text)
-                            submitButton.focus = false
-                            root.focus = false
-                        }
-                    }
-
-                    FirelightDialog {
-                        id: loginErrorDialog
-                        text: "Hey there buddy"
-                        showCancel: false
-
-                        Connections {
-                            target: achievement_manager
-
-                            function onLoginFailedWithInvalidCredentials() {
-                                loginErrorDialog.text = "Invalid credentials"
-                                loginErrorDialog.open()
-                            }
-
-                            function onLoginFailedWithAccessDenied() {
-                                loginErrorDialog.text = "There's an issue with your RetroAchievements account"
-                                loginErrorDialog.open()
-                            }
-
-                            function onLoginFailedWithInternalError() {
-                                loginErrorDialog.text = "There was an issue connecting to RetroAchievements; please try again in a few minutes"
-                                loginErrorDialog.open()
-                            }
-                        }
-                    }
-
-                    Text {
-                        text: "Don't have an account?"
-                        Layout.topMargin: 48
-                        Layout.alignment: Qt.AlignHCenter
-                        color: Theme.textPrimary
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.weight: Font.Normal
-                        font.family: Constants.regularFontFamily
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    Text {
-                        text: "This button will take you to the RetroAchievements website to create one"
-                        Layout.alignment: Qt.AlignHCenter
-                        color: Theme.textMuted
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.weight: Font.Normal
-                        font.family: Constants.regularFontFamily
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    FirelightButton {
-                        id: goToWebsiteButton
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.topMargin: 12
-                        label: "Go to website"
-                        onClicked: {
-                            Qt.openUrlExternally("https://retroachievements.org/createaccount.php")
-                        }
-                    }
-
-                    Connections {
-                        target: achievement_manager
-
-                        function onLoginSucceeded() {
-                            // control.accept()
-                        }
-
-                        function onLoginFailedWithInvalidCredentials() {
-                            console.log("Invalid credentials")
-                        }
-
-                        function onLoginFailedWithExpiredToken() {
-                            console.log("Expired token")
-                        }
-
-                        function onLoginFailedWithAccessDenied() {
-                            console.log("Access denied")
-                        }
-
-                        function onLoginFailedWithInternalError() {
-                            console.log("Internal error")
-                        }
-                    }
-
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
-
+            id: meColumn
+            spacing: 8
+            Image {
+                Layout.maximumHeight: 60
+                Layout.minimumHeight: 60
+                sourceSize.height: 60
+                Layout.alignment: Qt.AlignHCenter
+                source: "qrc:images/retroachievements-banner"
+                fillMode: Image.PreserveAspectFit
             }
+            Text {
+                text: "Login"
+                Layout.topMargin: 24
+                Layout.alignment: Qt.AlignHCenter
+                color: Theme.textPrimary
+                font.pixelSize: AppStyle.fontSizeMedium
+                font.weight: Font.Normal
+                font.family: Constants.regularFontFamily
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Pane {
+                id: thePane
+                Layout.topMargin: 8
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: 280
+                Layout.preferredHeight: 48
+                background: Rectangle {
+                    color: Theme.surface
+                    radius: 4
+                }
+
+                focus: true
+
+                HoverHandler {
+                    acceptedDevices: PointerDevice.Mouse
+                    cursorShape: Qt.IBeamCursor
+                }
+
+                contentItem: Item {
+                    Text {
+                        anchors.fill: parent
+                        font.pixelSize: AppStyle.fontSizeMedium
+                        font.family: Constants.regularFontFamily
+                        color: Theme.textMuted
+                        text: "Username"
+                        verticalAlignment: Text.AlignVCenter
+                        visible: usernameTextInput.length === 0
+                    }
+                    TextInput {
+                        id: usernameTextInput
+                        anchors.fill: parent
+                        activeFocusOnTab: true
+                        KeyNavigation.down: passwordTextInput
+                        property bool showGlobalCursor: true
+                        property var globalCursorProxy: thePane
+                        font.family: Constants.regularFontFamily
+                        focus: true
+                        font.pixelSize: AppStyle.fontSizeMedium
+                        color: Theme.textPrimary
+                        verticalAlignment: Text.AlignVCenter
+
+                        onAccepted: {
+                            if (submitButton.enabled) {
+                                submitButton.clicked();
+                            }
+                        }
+                    }
+                }
+            }
+
+            Pane {
+                id: theOtherPane
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: 280
+                Layout.preferredHeight: 48
+                background: Rectangle {
+                    color: Theme.surface
+                    radius: 4
+                }
+
+                HoverHandler {
+                    acceptedDevices: PointerDevice.Mouse
+                    cursorShape: Qt.IBeamCursor
+                }
+
+                contentItem: FocusScope {
+                    Text {
+                        anchors.fill: parent
+                        font.pixelSize: AppStyle.fontSizeMedium
+                        font.family: Constants.regularFontFamily
+                        color: Theme.textMuted
+                        text: "Password"
+                        verticalAlignment: Text.AlignVCenter
+                        visible: passwordTextInput.length === 0
+                    }
+                    TextInput {
+                        id: passwordTextInput
+                        activeFocusOnTab: true
+                        anchors.fill: parent
+                        echoMode: TextInput.Password
+                        KeyNavigation.down: submitButton
+                        property bool showGlobalCursor: true
+                        property var globalCursorProxy: theOtherPane
+                        font.family: Constants.regularFontFamily
+                        font.pixelSize: AppStyle.fontSizeMedium
+                        color: Theme.textPrimary
+                        verticalAlignment: Text.AlignVCenter
+
+                        onAccepted: {
+                            if (submitButton.enabled) {
+                                submitButton.clicked();
+                            }
+                        }
+                    }
+                }
+            }
+
+            FirelightButton {
+                id: submitButton
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 12
+                KeyNavigation.down: goToWebsiteButton
+                label: "Submit"
+                enabled: usernameTextInput.text !== "" && passwordTextInput.text !== ""
+
+                onClicked: function () {
+                    achievement_manager.logInUserWithPassword(usernameTextInput.text, passwordTextInput.text);
+                    submitButton.focus = false;
+                    root.focus = false;
+                }
+            }
+
+            FirelightDialog {
+                id: loginErrorDialog
+                text: "Hey there buddy"
+                showCancel: false
+
+                Connections {
+                    target: achievement_manager
+
+                    function onLoginFailedWithInvalidCredentials() {
+                        loginErrorDialog.text = "Invalid credentials";
+                        loginErrorDialog.open();
+                    }
+
+                    function onLoginFailedWithAccessDenied() {
+                        loginErrorDialog.text = "There's an issue with your RetroAchievements account";
+                        loginErrorDialog.open();
+                    }
+
+                    function onLoginFailedWithInternalError() {
+                        loginErrorDialog.text = "There was an issue connecting to RetroAchievements; please try again in a few minutes";
+                        loginErrorDialog.open();
+                    }
+                }
+            }
+
+            Text {
+                text: "Don't have an account?"
+                Layout.topMargin: 48
+                Layout.alignment: Qt.AlignHCenter
+                color: Theme.textPrimary
+                font.pixelSize: AppStyle.fontSizeMedium
+                font.weight: Font.Normal
+                font.family: Constants.regularFontFamily
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            Text {
+                text: "This button will take you to the RetroAchievements website to create one"
+                Layout.alignment: Qt.AlignHCenter
+                color: Theme.textMuted
+                font.pixelSize: AppStyle.fontSizeMedium
+                font.weight: Font.Normal
+                font.family: Constants.regularFontFamily
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            FirelightButton {
+                id: goToWebsiteButton
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 12
+                label: "Go to website"
+                onClicked: {
+                    Qt.openUrlExternally("https://retroachievements.org/createaccount.php");
+                }
+            }
+
+            Connections {
+                target: achievement_manager
+
+                function onLoginSucceeded() {
+                    // control.accept()
+                }
+
+                function onLoginFailedWithInvalidCredentials() {
+                    console.log("Invalid credentials");
+                }
+
+                function onLoginFailedWithExpiredToken() {
+                    console.log("Expired token");
+                }
+
+                function onLoginFailedWithAccessDenied() {
+                    console.log("Access denied");
+                }
+
+                function onLoginFailedWithInternalError() {
+                    console.log("Internal error");
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+        }
     }
 }

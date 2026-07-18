@@ -1,6 +1,6 @@
-#include <firelight/input/shortcut_registry.hpp>
-
 #include "firelight/input/keyboard_input_handler.hpp"
+
+#include <firelight/input/shortcut_registry.hpp>
 
 #include <QMetaEnum>
 #include <fstream>
@@ -52,13 +52,10 @@ std::optional<DeviceType> deviceFromName(const std::string &name) {
   return std::nullopt;
 }
 
-const char *deviceName(const DeviceType device) {
-  return device == DeviceType::Keyboard ? "keyboard" : "gamepad";
-}
+const char *deviceName(const DeviceType device) { return device == DeviceType::Keyboard ? "keyboard" : "gamepad"; }
 } // namespace
 
-std::optional<InputSource> parseInputSource(const std::string_view text,
-                                            const DeviceType device) {
+std::optional<InputSource> parseInputSource(const std::string_view text, const DeviceType device) {
   if (text.empty()) {
     return std::nullopt;
   }
@@ -85,8 +82,7 @@ std::optional<InputSource> parseInputSource(const std::string_view text,
   };
 
   InputSource source;
-  source.type =
-      device == DeviceType::Keyboard ? SourceType::Key : SourceType::Button;
+  source.type = device == DeviceType::Keyboard ? SourceType::Key : SourceType::Button;
 
   for (size_t i = 0; i < parts.size(); ++i) {
     const auto code = resolve(parts[i]);
@@ -102,12 +98,9 @@ std::optional<InputSource> parseInputSource(const std::string_view text,
   return source;
 }
 
-bool ShortcutPreset::appliesTo(const DeviceType device) const {
-  return bindings.contains(device);
-}
+bool ShortcutPreset::appliesTo(const DeviceType device) const { return bindings.contains(device); }
 
-const std::vector<InputSource> &
-ShortcutPreset::sourcesFor(const DeviceType device, const ShortcutId &id) const {
+const std::vector<InputSource> &ShortcutPreset::sourcesFor(const DeviceType device, const ShortcutId &id) const {
   static const std::vector<InputSource> EMPTY;
   const auto deviceIt = bindings.find(device);
   if (deviceIt == bindings.end()) {
@@ -146,19 +139,16 @@ bool ShortcutRegistry::loadFromString(const std::string &json) {
     action.displayName = entry.value("label", "");
     action.category = entry.value("category", "");
 
-    const auto activation =
-        activationFromName(entry.value("activation", "press"));
+    const auto activation = activationFromName(entry.value("activation", "press"));
     if (!activation) {
-      spdlog::error("Shortcut '{}' has an unknown activation '{}'", action.id,
-                    entry.value("activation", ""));
+      spdlog::error("Shortcut '{}' has an unknown activation '{}'", action.id, entry.value("activation", ""));
       return false;
     }
     action.activation = *activation;
 
     const auto scope = scopeFromName(entry.value("scope", "in-game"));
     if (!scope) {
-      spdlog::error("Shortcut '{}' has an unknown scope '{}'", action.id,
-                    entry.value("scope", ""));
+      spdlog::error("Shortcut '{}' has an unknown scope '{}'", action.id, entry.value("scope", ""));
       return false;
     }
     action.scope = *scope;
@@ -217,8 +207,7 @@ std::vector<std::string> ShortcutRegistry::validate() const {
   }
 
   if (!m_defaultPresetId.empty() && !findPreset(m_defaultPresetId)) {
-    problems.push_back("defaultPreset '" + m_defaultPresetId +
-                       "' isn't a declared preset");
+    problems.push_back("defaultPreset '" + m_defaultPresetId + "' isn't a declared preset");
   } else if (m_defaultPresetId.empty()) {
     problems.emplace_back("no defaultPreset, so new profiles get no bindings");
   }
@@ -233,8 +222,7 @@ std::vector<std::string> ShortcutRegistry::validate() const {
         // The engine skips ids with no action, so a typo here would just never
         // fire — with nothing logged
         if (!m_actions.contains(id)) {
-          problems.push_back("preset '" + preset.id + "' binds '" + id +
-                             "', which isn't a declared action");
+          problems.push_back("preset '" + preset.id + "' binds '" + id + "', which isn't a declared action");
         }
 
         for (const auto &source : sources) {
@@ -245,9 +233,8 @@ std::vector<std::string> ShortcutRegistry::validate() const {
             return gameplayKeys.values().contains(static_cast<Qt::Key>(code));
           };
           if (isGameplayKey(source.code)) {
-            problems.push_back(
-                "preset '" + preset.id + "' binds '" + id +
-                "' to a key the keyboard already uses for gameplay");
+            problems.push_back("preset '" + preset.id + "' binds '" + id +
+                               "' to a key the keyboard already uses for gameplay");
           }
         }
       }
@@ -256,9 +243,7 @@ std::vector<std::string> ShortcutRegistry::validate() const {
   return problems;
 }
 
-void ShortcutRegistry::registerAction(const ShortcutAction &action) {
-  m_actions[action.id] = action;
-}
+void ShortcutRegistry::registerAction(const ShortcutAction &action) { m_actions[action.id] = action; }
 
 const ShortcutAction *ShortcutRegistry::getAction(const ShortcutId &id) const {
   const auto it = m_actions.find(id);
@@ -274,9 +259,7 @@ std::vector<ShortcutAction> ShortcutRegistry::listActions() const {
   return result;
 }
 
-const std::vector<ShortcutPreset> &ShortcutRegistry::presets() const {
-  return m_presets;
-}
+const std::vector<ShortcutPreset> &ShortcutRegistry::presets() const { return m_presets; }
 
 const ShortcutPreset *ShortcutRegistry::findPreset(const std::string &id) const {
   for (const auto &preset : m_presets) {
@@ -287,9 +270,7 @@ const ShortcutPreset *ShortcutRegistry::findPreset(const std::string &id) const 
   return nullptr;
 }
 
-const std::string &ShortcutRegistry::defaultPresetId() const {
-  return m_defaultPresetId;
-}
+const std::string &ShortcutRegistry::defaultPresetId() const { return m_defaultPresetId; }
 
 void ShortcutRegistry::clear() {
   m_actions.clear();

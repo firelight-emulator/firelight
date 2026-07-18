@@ -1,13 +1,12 @@
 #pragma once
 
+#include <firelight/settings/settings_service.hpp>
+
 #include <QObject>
 #include <QtQml>
 
-#include <firelight/settings/settings_service.hpp>
-
 namespace firelight::gui {
 
-// TODO
 // Names the settings tiers for QML, so pages read `level: SettingsLevel.Global`
 // rather than `level: 2`
 //
@@ -26,8 +25,8 @@ enum Level {
 };
 Q_ENUM_NS(Level)
 
-static_assert(Game == settings::Game && Platform == settings::Platform &&
-                  Global == settings::Global && Unknown == settings::Unknown,
+static_assert(Game == settings::Game && Platform == settings::Platform && Global == settings::Global &&
+                  Unknown == settings::Unknown,
               "SettingsLevel and its QML shim have drifted apart");
 
 } // namespace SettingsLevelShim

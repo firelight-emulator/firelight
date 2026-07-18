@@ -1,5 +1,4 @@
 #include <firelight/library/entry_resolver.hpp>
-
 #include <firelight/library/user_library_repository.hpp>
 
 #include <filesystem>
@@ -13,8 +12,7 @@ bool EntryResolver::contentFileExists(const ContentFile &info) {
   return !path.empty() && std::filesystem::exists(path, ec);
 }
 
-int EntryResolver::scoreConfig(const RunConfiguration &config,
-                               const ContentFile &contentFile) {
+int EntryResolver::scoreConfig(const RunConfiguration &config, const ContentFile &contentFile) {
   int score = 0;
   if (contentFileExists(contentFile)) {
     score += 2;
@@ -46,8 +44,7 @@ ResolvedContent EntryResolver::resolve(const Entry &entry) const {
     }
 
     const int score = scoreConfig(config, *contentFile);
-    if (score > bestScore ||
-        (score == bestScore && best && config.id > best->id)) {
+    if (score > bestScore || (score == bestScore && best && config.id > best->id)) {
       bestScore = score;
       best = &config;
       bestContentFile = *contentFile;
@@ -55,8 +52,7 @@ ResolvedContent EntryResolver::resolve(const Entry &entry) const {
   }
 
   if (!best) {
-    spdlog::warn("[EntryResolver] No usable content for entry {} ({})", entry.id,
-                 entry.contentHash);
+    spdlog::warn("[EntryResolver] No usable content for entry {} ({})", entry.id, entry.contentHash);
     return {};
   }
 

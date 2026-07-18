@@ -1,30 +1,23 @@
-#include <gtest/gtest.h>
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/library/library_events.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 
+#include <gtest/gtest.h>
+
 namespace firelight::db {
 class SqliteUserLibraryTest : public testing::Test {};
 
-// TODO
 // Counts the repository's content/run-configuration events (the EventDispatcher
 // replacement for the old Qt signals). Subscriptions are released when it goes
 // out of scope
 struct LibraryEventCounters {
   int contentFileAdded = 0;
   int runConfigCreated = 0;
-  ScopedConnection contentFileAddedConn =
-      EventDispatcher::instance().subscribe<library::ContentFileAddedEvent>(
-          [this](const library::ContentFileAddedEvent &) {
-            ++contentFileAdded;
-          });
-  ScopedConnection runConfigCreatedConn =
-      EventDispatcher::instance()
-          .subscribe<library::RunConfigurationCreatedEvent>(
-              [this](const library::RunConfigurationCreatedEvent &) {
-                ++runConfigCreated;
-              });
+  ScopedConnection contentFileAddedConn = EventDispatcher::instance().subscribe<library::ContentFileAddedEvent>(
+      [this](const library::ContentFileAddedEvent &) { ++contentFileAdded; });
+  ScopedConnection runConfigCreatedConn = EventDispatcher::instance().subscribe<library::RunConfigurationCreatedEvent>(
+      [this](const library::RunConfigurationCreatedEvent &) { ++runConfigCreated; });
 };
 
 TEST_F(SqliteUserLibraryTest, CreateFolderSetsIdTest) {
@@ -55,9 +48,7 @@ TEST_F(SqliteUserLibraryTest, ListFoldersTest) {
 
   ASSERT_TRUE(library.listFolders().empty());
 
-  auto info = library::FolderInfo{.displayName = "test",
-                                  .description = "test description",
-                                  .iconSourceUrl = "testurl"};
+  auto info = library::FolderInfo{.displayName = "test", .description = "test description", .iconSourceUrl = "testurl"};
   ASSERT_TRUE(library.create(info));
 
   const auto folders = library.listFolders();
@@ -75,8 +66,7 @@ TEST_F(SqliteUserLibraryTest, UpdateFolderTest) {
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
 
-  auto folderEntry =
-      library::FolderEntryInfo{.folderId = info.id, .entryId = 1};
+  auto folderEntry = library::FolderEntryInfo{.folderId = info.id, .entryId = 1};
   ASSERT_TRUE(library.create(folderEntry));
 
   auto folders = library.listFolders();
@@ -104,8 +94,7 @@ TEST_F(SqliteUserLibraryTest, UpdateFolderInvalidIdTest) {
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
 
-  auto folderEntry =
-      library::FolderEntryInfo{.folderId = info.id, .entryId = 1};
+  auto folderEntry = library::FolderEntryInfo{.folderId = info.id, .entryId = 1};
   ASSERT_TRUE(library.create(folderEntry));
 
   auto folders = library.listFolders();
@@ -150,8 +139,7 @@ TEST_F(SqliteUserLibraryTest, CreateFolderEntryTest) {
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
 
-  auto folderEntry =
-      library::FolderEntryInfo{.folderId = info.id, .entryId = 1};
+  auto folderEntry = library::FolderEntryInfo{.folderId = info.id, .entryId = 1};
   ASSERT_TRUE(library.create(folderEntry));
 }
 
@@ -159,16 +147,14 @@ TEST_F(SqliteUserLibraryTest, DeleteFolderEntryTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
   library::LibraryIngestService ingest(library);
 
-  auto entry = library::Entry{
-      .displayName = "test entry", .contentHash = "1234", .platformId = 1};
+  auto entry = library::Entry{.displayName = "test entry", .contentHash = "1234", .platformId = 1};
 
   ASSERT_TRUE(library.createEntry(entry));
 
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
 
-  auto folderEntry =
-      library::FolderEntryInfo{.folderId = info.id, .entryId = entry.id};
+  auto folderEntry = library::FolderEntryInfo{.folderId = info.id, .entryId = entry.id};
   ASSERT_TRUE(library.create(folderEntry));
 
   auto actualEntry = library.getEntry(entry.id);
@@ -196,20 +182,17 @@ TEST_F(SqliteUserLibraryTest, AddRomWithNoEntryTest) {
                                .m_inArchive = false,
                                .m_archivePathName = "",
                                .m_platformId = 1,
-                               .m_contentHash =
-                                   "d41d8cd98f00b204e9800998ecf8427e"};
+                               .m_contentHash = "d41d8cd98f00b204e9800998ecf8427e"};
 
   ASSERT_TRUE(library.create(romInfo));
 
   auto actualRomInfo = library.getContentFile(romInfo.m_id);
   ASSERT_TRUE(actualRomInfo.has_value());
 
-  auto runConfigs = library.getRunConfigurations(
-      romInfo.m_contentHash);
+  auto runConfigs = library.getRunConfigurations(romInfo.m_contentHash);
   ASSERT_EQ(runConfigs.size(), 1);
 
-  auto entry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  auto entry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
@@ -228,13 +211,11 @@ TEST_F(SqliteUserLibraryTest, AddRomWithExistingEntryTest) {
                                .m_inArchive = false,
                                .m_archivePathName = "",
                                .m_platformId = 1,
-                               .m_contentHash =
-                                   "d41d8cd98f00b204e9800998ecf8427e"};
+                               .m_contentHash = "d41d8cd98f00b204e9800998ecf8427e"};
 
   ASSERT_TRUE(library.create(romInfo));
 
-  auto entry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  auto entry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
@@ -249,20 +230,17 @@ TEST_F(SqliteUserLibraryTest, AddRomWithExistingEntryTest) {
                                 .m_inArchive = false,
                                 .m_archivePathName = "",
                                 .m_platformId = 1,
-                                .m_contentHash =
-                                    "d41d8cd98f00b204e9800998ecf8427e"};
+                                .m_contentHash = "d41d8cd98f00b204e9800998ecf8427e"};
 
   ASSERT_TRUE(library.create(romInfo2));
 
   auto actualRomInfo = library.getContentFile(romInfo.m_id);
   ASSERT_TRUE(actualRomInfo.has_value());
 
-  auto runConfigs = library.getRunConfigurations(
-      romInfo.m_contentHash);
+  auto runConfigs = library.getRunConfigurations(romInfo.m_contentHash);
   ASSERT_EQ(runConfigs.size(), 2);
 
-  auto actualEntry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  auto actualEntry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_EQ(entry->id, actualEntry->id);
 
   ASSERT_EQ(counters.contentFileAdded, 1);
@@ -280,8 +258,7 @@ TEST_F(SqliteUserLibraryTest, AddRomWithDuplicatePathTest) {
                                .m_inArchive = false,
                                .m_archivePathName = "",
                                .m_platformId = 1,
-                               .m_contentHash =
-                                   "d41d8cd98f00b204e9800998ecf8427e"};
+                               .m_contentHash = "d41d8cd98f00b204e9800998ecf8427e"};
 
   ASSERT_TRUE(library.create(romInfo));
 
@@ -312,13 +289,11 @@ TEST_F(SqliteUserLibraryTest, DeleteRomForEntryWithMultipleRunConfigsTest) {
                                .m_inArchive = false,
                                .m_archivePathName = "",
                                .m_platformId = 1,
-                               .m_contentHash =
-                                   "d41d8cd98f00b204e9800998ecf8427e"};
+                               .m_contentHash = "d41d8cd98f00b204e9800998ecf8427e"};
 
   ASSERT_TRUE(library.create(romInfo));
 
-  auto entry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  auto entry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
@@ -330,32 +305,27 @@ TEST_F(SqliteUserLibraryTest, DeleteRomForEntryWithMultipleRunConfigsTest) {
                                 .m_inArchive = false,
                                 .m_archivePathName = "",
                                 .m_platformId = 1,
-                                .m_contentHash =
-                                    "d41d8cd98f00b204e9800998ecf8427e"};
+                                .m_contentHash = "d41d8cd98f00b204e9800998ecf8427e"};
 
   ASSERT_TRUE(library.create(romInfo2));
 
   auto actualRomInfo = library.getContentFile(romInfo.m_id);
   ASSERT_TRUE(actualRomInfo.has_value());
 
-  auto runConfigs = library.getRunConfigurations(
-      romInfo.m_contentHash);
+  auto runConfigs = library.getRunConfigurations(romInfo.m_contentHash);
   ASSERT_EQ(runConfigs.size(), 2);
 
-  auto actualEntry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  auto actualEntry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_EQ(entry->id, actualEntry->id);
 
   ASSERT_TRUE(library.deleteContentFile(romInfo.m_id));
 
   // Get run configs again after deletion
-  runConfigs = library.getRunConfigurations(
-      romInfo.m_contentHash);
+  runConfigs = library.getRunConfigurations(romInfo.m_contentHash);
   ASSERT_EQ(runConfigs.size(), 1);
 
   // Get entry again after deleting one rom
-  actualEntry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  actualEntry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_TRUE(actualEntry.has_value());
   ASSERT_FALSE(actualEntry->hidden);
 }
@@ -371,25 +341,21 @@ TEST_F(SqliteUserLibraryTest, DeleteRomHidesEntryTest) {
                                .m_inArchive = false,
                                .m_archivePathName = "",
                                .m_platformId = 1,
-                               .m_contentHash =
-                                   "d41d8cd98f00b204e9800998ecf8427e"};
+                               .m_contentHash = "d41d8cd98f00b204e9800998ecf8427e"};
 
   ASSERT_TRUE(library.create(romInfo));
 
-  auto entry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  auto entry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
-  auto actualEntry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  auto actualEntry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_EQ(entry->id, actualEntry->id);
 
   ASSERT_TRUE(library.deleteContentFile(romInfo.m_id));
 
   // Get entry again after deleting one rom
-  actualEntry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  actualEntry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_TRUE(actualEntry.has_value());
   ASSERT_TRUE(actualEntry->hidden);
 }
@@ -405,31 +371,26 @@ TEST_F(SqliteUserLibraryTest, AddingRomAfterDeletingUnhidesEntryTest) {
                                .m_inArchive = false,
                                .m_archivePathName = "",
                                .m_platformId = 1,
-                               .m_contentHash =
-                                   "d41d8cd98f00b204e9800998ecf8427e"};
+                               .m_contentHash = "d41d8cd98f00b204e9800998ecf8427e"};
 
   ASSERT_TRUE(library.create(romInfo));
 
-  auto entry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  auto entry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
-  auto actualEntry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  auto actualEntry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_EQ(entry->id, actualEntry->id);
 
   ASSERT_TRUE(library.deleteContentFile(romInfo.m_id));
 
-  actualEntry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  actualEntry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_TRUE(actualEntry.has_value());
   ASSERT_TRUE(actualEntry->hidden);
 
   ASSERT_TRUE(library.create(romInfo));
 
-  entry = library.getEntryWithContentHash(
-      romInfo.m_contentHash);
+  entry = library.getEntryWithContentHash(romInfo.m_contentHash);
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 }
@@ -450,8 +411,7 @@ TEST_F(SqliteUserLibraryTest, RomsRemovedWhenContentDirectoryDeletedTest) {
                                .m_inArchive = false,
                                .m_archivePathName = "",
                                .m_platformId = 1,
-                               .m_contentHash =
-                                   "d41d8cd98f00b204e9800998ecf8427e"};
+                               .m_contentHash = "d41d8cd98f00b204e9800998ecf8427e"};
 
   ASSERT_TRUE(library.create(romInfo));
 
@@ -476,10 +436,9 @@ TEST_F(SqliteUserLibraryTest, UpdateEntryTest) {
 TEST_F(SqliteUserLibraryTest, SmartFolderTypeAndFilterJsonRoundTripTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
 
-  auto info = library::FolderInfo{
-      .displayName = "SNES favorites",
-      .type = static_cast<int>(library::FolderType::Smart),
-      .filterJson = R"({"platformIds":[3],"favorite":true})"};
+  auto info = library::FolderInfo{.displayName = "SNES favorites",
+                                  .type = static_cast<int>(library::FolderType::Smart),
+                                  .filterJson = R"({"platformIds":[3],"favorite":true})"};
   ASSERT_TRUE(library.create(info));
 
   auto folders = library.listFolders();
@@ -587,8 +546,7 @@ TEST_F(SqliteUserLibraryTest, EntryFileLocationsPopulatedTest) {
 namespace {
 // Finds a folder by id in a listFolders() result, or a default-constructed
 // FolderInfo (id -1) if absent
-library::FolderInfo findFolder(const std::vector<library::FolderInfo> &folders,
-                               int id) {
+library::FolderInfo findFolder(const std::vector<library::FolderInfo> &folders, int id) {
   for (const auto &f : folders) {
     if (f.id == id) {
       return f;
@@ -601,10 +559,8 @@ library::FolderInfo findFolder(const std::vector<library::FolderInfo> &folders,
 TEST_F(SqliteUserLibraryTest, FolderColorAndSortRoundTripTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
 
-  auto info = library::FolderInfo{.displayName = "styled",
-                                  .color = "#ff8800",
-                                  .sortRole = "lastPlayedAt",
-                                  .sortAscending = false};
+  auto info = library::FolderInfo{
+      .displayName = "styled", .color = "#ff8800", .sortRole = "lastPlayedAt", .sortAscending = false};
   ASSERT_TRUE(library.create(info));
 
   auto stored = findFolder(library.listFolders(), info.id);
@@ -700,7 +656,6 @@ TEST_F(SqliteUserLibraryTest, EntryFileLocationsUseArchivePathTest) {
   library::ContentDirectory dir{.path = "roms"};
   ASSERT_TRUE(library.create(dir));
 
-  // TODO
   // An archived entry's on-disk location is the archive path; the file location
   // resolves against that, and contentPaths reports it (so "path contains"
   // works for archived content too)

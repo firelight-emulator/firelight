@@ -12,7 +12,6 @@ inline constexpr uint16_t RETROKMOD_CTRL = 0x02;
 inline constexpr uint16_t RETROKMOD_ALT = 0x04;
 inline constexpr uint16_t RETROKMOD_META = 0x08;
 
-// TODO
 // The RETROK_* a Qt::Key means, or RETROK_UNKNOWN if the core has no notion of
 // it. Only cores that ask for the keyboard (DOS, Amiga, MSX, ScummVM) read
 // these; everything else goes through the retropad

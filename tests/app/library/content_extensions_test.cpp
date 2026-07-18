@@ -4,13 +4,11 @@
 
 namespace firelight::library {
 
-// TODO
 // The scanner gates disc detection on isDiscExtension, so the full set of
 // container/sheet extensions must be recognized (a dropped entry silently stops
 // that format from ever being scanned as a disc)
 TEST(ContentExtensionsTest, RecognizesAllDiscExtensions) {
-  for (const auto *ext : {"iso", "bin", "cue", "chd", "pbp", "cso", "m3u",
-                          "gdi", "ccd", "img", "mdf", "nrg"}) {
+  for (const auto *ext : {"iso", "bin", "cue", "chd", "pbp", "cso", "m3u", "gdi", "ccd", "img", "mdf", "nrg"}) {
     EXPECT_TRUE(isDiscExtension(ext)) << ext;
   }
 }
@@ -27,8 +25,7 @@ TEST(ContentExtensionsTest, TrackExtensionsAreRawImagesOnly) {
   for (const auto *ext : {"bin", "img", "mdf", "nrg"}) {
     EXPECT_TRUE(isDiscTrackExtension(ext)) << ext;
   }
-  for (const auto *ext : {"iso", "chd", "pbp", "cso", "cue", "gdi", "ccd",
-                          "m3u"}) {
+  for (const auto *ext : {"iso", "chd", "pbp", "cso", "cue", "gdi", "ccd", "m3u"}) {
     EXPECT_FALSE(isDiscTrackExtension(ext)) << ext;
   }
 }
@@ -45,8 +42,7 @@ TEST(ContentExtensionsTest, SheetExtensionsReferenceTracks) {
 // Invariant the scanner relies on: every track and every sheet extension is
 // itself a disc extension, so isDiscExtension never lets one slip past the gate
 TEST(ContentExtensionsTest, TracksAndSheetsAreAlsoDiscExtensions) {
-  for (const auto *ext : {"bin", "img", "mdf", "nrg", "cue", "gdi", "ccd",
-                          "m3u"}) {
+  for (const auto *ext : {"bin", "img", "mdf", "nrg", "cue", "gdi", "ccd", "m3u"}) {
     EXPECT_TRUE(isDiscExtension(ext)) << ext;
     EXPECT_TRUE(isDiscTrackExtension(ext) || isDiscSheetExtension(ext)) << ext;
   }

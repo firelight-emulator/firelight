@@ -56,8 +56,7 @@ TabBar {
                 verticalAlignment: Text.AlignVCenter
             }
 
-            background: Item {
-            }
+            background: Item {}
 
             HoverHandler {
                 objectName: "hoverHandler"

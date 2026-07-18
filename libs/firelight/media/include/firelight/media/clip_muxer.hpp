@@ -6,7 +6,6 @@
 
 namespace firelight::media {
 
-// TODO
 // Writes a buffered clip to an mp4. The video is **stream-copied** (the H.264
 // was already produced incrementally by ClipRecorder — no re-encode here) with
 // PTS/DTS rebased so playback starts at zero. A pure function of the snapshot,
@@ -16,8 +15,7 @@ namespace firelight::media {
 // through so it can be added without touching the recorder or callers
 class ClipMuxer {
 public:
-  [[nodiscard]] static bool writeMp4(const ClipSnapshot &snap,
-                                     const QString &path);
+  [[nodiscard]] static bool writeMp4(const ClipSnapshot &snap, const QString &path);
 };
 
 } // namespace firelight::media

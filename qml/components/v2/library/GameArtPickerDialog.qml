@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import Firelight 1.0
 
-// TODO
 // Per-game "Change artwork" picker. Shows the stored candidates + current
 // selection for a media type, lets the user search SteamGridDB for more, and
 // import a local image. All actions go through GameArtService, which reprojects
@@ -19,10 +18,22 @@ Dialog {
 
     // The media types the picker can manage; `type` matches the C++ enum
     readonly property var mediaTypes: [
-        {label: "Icon", type: 0},
-        {label: "Box Art", type: 1},
-        {label: "Logo", type: 3},
-        {label: "Hero", type: 4}
+        {
+            label: "Icon",
+            type: 0
+        },
+        {
+            label: "Box Art",
+            type: 1
+        },
+        {
+            label: "Logo",
+            type: 3
+        },
+        {
+            label: "Hero",
+            type: 4
+        }
     ]
 
     property var storedList: []
@@ -38,68 +49,71 @@ Dialog {
     // Groups the flat result list by matched game name, preserving first-seen
     // (best-match) order so each game gets its own header in the picker
     function groupResults(list) {
-        var groups = []
-        var indexByName = ({})
+        var groups = [];
+        var indexByName = ({});
         for (var i = 0; i < list.length; i++) {
-            var item = list[i]
-            var name = (item.gameName && item.gameName.length > 0) ? item.gameName : "Other results"
+            var item = list[i];
+            var name = (item.gameName && item.gameName.length > 0) ? item.gameName : "Other results";
             if (indexByName[name] === undefined) {
-                indexByName[name] = groups.length
-                groups.push({gameName: name, items: []})
+                indexByName[name] = groups.length;
+                groups.push({
+                    gameName: name,
+                    items: []
+                });
             }
-            groups[indexByName[name]].items.push(item)
+            groups[indexByName[name]].items.push(item);
         }
-        return groups
+        return groups;
     }
 
     function openFor(hash, name, platform) {
-        control.contentHash = hash
-        control.gameName = name
-        control.platformId = platform
-        control.searchTerm = name
-        control.mediaType = 0
-        control.open()
+        control.contentHash = hash;
+        control.gameName = name;
+        control.platformId = platform;
+        control.searchTerm = name;
+        control.mediaType = 0;
+        control.open();
     }
 
     function refresh() {
         if (!control.visible || control.contentHash === "")
-            return
-        control.storedList = GameArtService.storedAssets(control.contentHash, control.mediaType)
-        control.onlineList = GameArtService.searchResults(control.contentHash, control.mediaType)
+            return;
+        control.storedList = GameArtService.storedAssets(control.contentHash, control.mediaType);
+        control.onlineList = GameArtService.searchResults(control.contentHash, control.mediaType);
     }
 
     function doSearch() {
         if (!GameArtService.providerConfigured)
-            return
-        var term = control.searchTerm.trim() !== "" ? control.searchTerm : control.gameName
-        GameArtService.search(control.contentHash, term, control.platformId, control.mediaType)
+            return;
+        var term = control.searchTerm.trim() !== "" ? control.searchTerm : control.gameName;
+        GameArtService.search(control.contentHash, term, control.platformId, control.mediaType);
     }
 
     // Load cached results when switching to a type; auto-search the first time
     function maybeAutoSearch() {
         if (GameArtService.providerConfigured && control.onlineList.length === 0)
-            control.doSearch()
+            control.doSearch();
     }
 
     onMediaTypeChanged: {
-        control.refresh()
-        control.maybeAutoSearch()
+        control.refresh();
+        control.maybeAutoSearch();
     }
 
     onOpened: {
-        control.refresh()
-        control.maybeAutoSearch()
+        control.refresh();
+        control.maybeAutoSearch();
     }
 
     Connections {
         target: GameArtService
         function onSearchResultsReady(hash, type) {
             if (hash === control.contentHash && type === control.mediaType)
-                control.onlineList = GameArtService.searchResults(hash, type)
+                control.onlineList = GameArtService.searchResults(hash, type);
         }
         function onAssetsChanged(hash, type) {
             if (hash === control.contentHash)
-                control.refresh()
+                control.refresh();
         }
     }
 
@@ -156,10 +170,10 @@ Dialog {
         // file:// URL so Image can load it
         function resolveSource(u) {
             if (!u)
-                return ""
+                return "";
             if (u.indexOf("://") >= 0)
-                return u
-            return "file:///" + u.replace(/\\/g, "/")
+                return u;
+            return "file:///" + u.replace(/\\/g, "/");
         }
 
         width: 104
@@ -353,8 +367,8 @@ Dialog {
                             implicitWidth: 110
                             enabled: keyField.text.length > 0
                             onClicked: {
-                                GameArtService.apiKey = keyField.text
-                                control.doSearch()
+                                GameArtService.apiKey = keyField.text;
+                                control.doSearch();
                             }
                         }
                     }

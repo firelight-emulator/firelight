@@ -14,7 +14,6 @@ class Client;
 
 namespace firelight::discord {
 
-// TODO
 // Maps ILobbyBackend onto the Discord Social SDK: the join code is the lobby
 // secret, chat rides SendLobbyMessage, and connection signaling rides
 // metadata-tagged lobby messages (chunked, filtered out of chat). Sign-in is
@@ -30,6 +29,7 @@ public:
   void beginSignIn(std::function<void(bool ok)> done) override;
   [[nodiscard]] netplay::SignInState signInState() const override;
   [[nodiscard]] netplay::PlayerIdentity localIdentity() const override;
+
   [[nodiscard]] std::string providerName() const override { return "Discord"; }
 
   void createLobby(const std::string &joinCode, ResultCallback done) override;

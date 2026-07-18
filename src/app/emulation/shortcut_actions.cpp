@@ -17,11 +17,9 @@ constexpr int MAX_SAVE_SLOT = 8;
 constexpr int VOLUME_STEP = 10;
 } // namespace
 
-ShortcutActions::ShortcutActions(settings::SettingsService &settingsService,
-                                 std::function<bool()> hardcoreModeActive,
+ShortcutActions::ShortcutActions(settings::SettingsService &settingsService, std::function<bool()> hardcoreModeActive,
                                  Intents intents)
-    : m_settingsService(settingsService),
-      m_hardcoreModeActive(std::move(hardcoreModeActive)),
+    : m_settingsService(settingsService), m_hardcoreModeActive(std::move(hardcoreModeActive)),
       m_intents(std::move(intents)) {}
 
 void ShortcutActions::setController(IEmulatorController *controller) {
@@ -36,12 +34,11 @@ bool ShortcutActions::blockedByHardcore(const input::ShortcutId &id) const {
   if (!m_hardcoreModeActive || !m_hardcoreModeActive()) {
     return false;
   }
-  return id == "rewind" || id == "open_rewind_menu" || id == "slow_motion" ||
-         id == "load_state" || id == "frame_advance";
+  return id == "rewind" || id == "open_rewind_menu" || id == "slow_motion" || id == "load_state" ||
+         id == "frame_advance";
 }
 
-void ShortcutActions::beginHold(const input::ShortcutId &id,
-                                const float multiplier) {
+void ShortcutActions::beginHold(const input::ShortcutId &id, const float multiplier) {
   if (!m_controller || !m_activeSpeedHold.empty()) {
     return;
   }
@@ -82,8 +79,7 @@ void ShortcutActions::setSaveSlot(const int slot) {
 void ShortcutActions::stepVolume(const int delta) {
   auto current = 100;
   try {
-    current = std::stoi(
-        m_settingsService.getGlobalValue(audio::VOLUME_KEY).value_or("100"));
+    current = std::stoi(m_settingsService.getGlobalValue(audio::VOLUME_KEY).value_or("100"));
   } catch (const std::exception &) {
     current = 100;
   }
@@ -92,8 +88,7 @@ void ShortcutActions::stepVolume(const int delta) {
 
   // Turning it up is also how you undo a mute — leaving it silent while the
   // number climbs would look broken
-  if (delta > 0 && m_settingsService.getGlobalValue(audio::MUTED_KEY)
-                           .value_or("false") == "true") {
+  if (delta > 0 && m_settingsService.getGlobalValue(audio::MUTED_KEY).value_or("false") == "true") {
     m_settingsService.setGlobalValue(audio::MUTED_KEY, "false");
   }
   notify("Volume " + std::to_string(next) + "%");
@@ -116,8 +111,7 @@ std::string ShortcutActions::speedLabel(const float multiplier) {
   return text + "x";
 }
 
-void ShortcutActions::handle(const input::ShortcutId &id,
-                             const input::ShortcutPhase phase) {
+void ShortcutActions::handle(const input::ShortcutId &id, const input::ShortcutPhase phase) {
   if (blockedByHardcore(id)) {
     return;
   }
@@ -193,18 +187,14 @@ void ShortcutActions::handle(const input::ShortcutId &id,
   } else if (id == "toggle_mute") {
     // Mute is a setting, not emulator state, so it works with no game running
     // and outlives the one you're playing
-    const auto muted =
-        m_settingsService.getGlobalValue(audio::MUTED_KEY).value_or("false") ==
-        "true";
-    m_settingsService.setGlobalValue(audio::MUTED_KEY,
-                                     muted ? "false" : "true");
+    const auto muted = m_settingsService.getGlobalValue(audio::MUTED_KEY).value_or("false") == "true";
+    m_settingsService.setGlobalValue(audio::MUTED_KEY, muted ? "false" : "true");
     notify(muted ? "Sound on" : "Muted");
   } else if (id == "volume_up") {
     stepVolume(VOLUME_STEP);
   } else if (id == "volume_down") {
     stepVolume(-VOLUME_STEP);
   } else if (id == "open_rewind_menu") {
-    // TODO
     // The intent, not the command: opening this menu means asking for the
     // rewind points and showing them when they arrive, and the UI already owns
     // both halves along with the rewind-enabled check

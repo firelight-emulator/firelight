@@ -8,8 +8,7 @@ namespace firelight::netplay {
 
 namespace {
 // Pumps the Qt event loop until the condition holds or the timeout passes
-template <typename Predicate>
-bool pumpUntil(Predicate predicate, const int timeoutMs = 5000) {
+template <typename Predicate> bool pumpUntil(Predicate predicate, const int timeoutMs = 5000) {
   QElapsedTimer timer;
   timer.start();
   while (!predicate()) {
@@ -30,16 +29,12 @@ struct RecordedEvents {
 
   LobbyEvents wire() {
     LobbyEvents events;
-    events.memberJoined = [this](const LobbyMember &m) {
-      joined.push_back(m);
-    };
+    events.memberJoined = [this](const LobbyMember &m) { joined.push_back(m); };
     events.memberLeft = [this](const PlayerId id) { left.push_back(id); };
-    events.chatReceived = [this](PlayerId, const std::string &name,
-                                 const std::string &text) {
+    events.chatReceived = [this](PlayerId, const std::string &name, const std::string &text) {
       chat.emplace_back(name, text);
     };
-    events.signalReceived = [this](const PlayerId from,
-                                   const std::string &payload) {
+    events.signalReceived = [this](const PlayerId from, const std::string &payload) {
       signals_.emplace_back(from, payload);
     };
     events.lobbyClosed = [this] { lobbyClosed++; };
@@ -55,9 +50,7 @@ TEST(DirectLobbyBackendTest, HostGuestJoinChatSignalLeave) {
   host.setEvents(hostEvents.wire());
 
   bool hostOk = false;
-  host.createLobby("ignored", [&](const bool ok, const std::string &) {
-    hostOk = ok;
-  });
+  host.createLobby("ignored", [&](const bool ok, const std::string &) { hostOk = ok; });
   ASSERT_TRUE(hostOk);
   EXPECT_TRUE(host.currentLobby().joined);
   EXPECT_EQ(host.currentLobby().hostId, 1u);
@@ -126,8 +119,7 @@ TEST(DirectLobbyBackendTest, HostClosingEndsLobbyForGuests) {
   guest.setEvents(guestEvents.wire());
 
   bool joined = false;
-  guest.joinLobby("127.0.0.1:47774",
-                  [&](const bool ok, const std::string &) { joined = ok; });
+  guest.joinLobby("127.0.0.1:47774", [&](const bool ok, const std::string &) { joined = ok; });
   ASSERT_TRUE(pumpUntil([&] { return joined; }));
 
   host.leaveLobby();
@@ -140,12 +132,11 @@ TEST(DirectLobbyBackendTest, JoinFailsWhenNobodyIsListening) {
   bool done = false;
   bool ok = true;
   std::string error;
-  guest.joinLobby("127.0.0.1:47799",
-                  [&](const bool result, const std::string &message) {
-                    done = true;
-                    ok = result;
-                    error = message;
-                  });
+  guest.joinLobby("127.0.0.1:47799", [&](const bool result, const std::string &message) {
+    done = true;
+    ok = result;
+    error = message;
+  });
   ASSERT_TRUE(pumpUntil([&] { return done; }, 15000));
   EXPECT_FALSE(ok);
   EXPECT_FALSE(error.empty());

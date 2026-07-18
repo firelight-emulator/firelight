@@ -26,9 +26,7 @@ public:
     }
   }
 
-  [[nodiscard]] const std::deque<ChatMessage> &entries() const {
-    return m_entries;
-  }
+  [[nodiscard]] const std::deque<ChatMessage> &entries() const { return m_entries; }
 
 private:
   size_t m_maxEntries;

@@ -9,8 +9,7 @@ static int64_t readVLV(const std::vector<uint8_t> &data, size_t &index) {
   uint32_t shift = 1;
   while (true) {
     if (index >= data.size()) {
-      throw std::runtime_error("Can't read UPS VLV at offset " +
-                               std::to_string(index));
+      throw std::runtime_error("Can't read UPS VLV at offset " + std::to_string(index));
     }
 
     uint8_t x = data[index++];

@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // Renders every group the catalog declares for a page, in declared order. This
 // is what a settings page normally is:
 //

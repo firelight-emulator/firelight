@@ -2,66 +2,54 @@
 
 #include "../include/firelight/achievement.hpp"
 
+#include <firelight/event_dispatcher.hpp>
+
 #include <cpr/api.h>
 #include <cpr/cprtypes.h>
-#include <firelight/event_dispatcher.hpp>
 #include <qcryptographichash.h>
 #include <rcheevos/ra_constants.h>
 #include <spdlog/spdlog.h>
 
 namespace firelight::achievements {
 
-AchievementService::AchievementService(IAchievementRepository &m_repository)
-    : m_repository(m_repository) {}
-std::optional<User>
-AchievementService::getUser(const std::string &username) const {
+AchievementService::AchievementService(IAchievementRepository &m_repository) : m_repository(m_repository) {}
+
+std::optional<User> AchievementService::getUser(const std::string &username) const {
   return m_repository.getUser(username);
 }
-bool AchievementService::create(const User &user) {
-  return m_repository.createOrUpdateUser(user);
-}
 
-std::optional<AchievementSet>
-AchievementService::getAchievementSetByContentHash(
-    const std::string &contentHash) const {
+bool AchievementService::create(const User &user) { return m_repository.createOrUpdateUser(user); }
+
+std::optional<AchievementSet> AchievementService::getAchievementSetByContentHash(const std::string &contentHash) const {
   return m_repository.getAchievementSetByContentHash(contentHash);
 }
 
-bool AchievementService::setGameId(const std::string &contentHash,
-                                   const int gameId) {
+bool AchievementService::setGameId(const std::string &contentHash, const int gameId) {
   return m_repository.setGameId(contentHash, gameId);
 }
-bool AchievementService::setAchievementSetHash(const unsigned achievementSetId,
-                                               const std::string &contentHash) {
+
+bool AchievementService::setAchievementSetHash(const unsigned achievementSetId, const std::string &contentHash) {
   return m_repository.setAchievementSetHash(achievementSetId, contentHash);
 }
 
-std::optional<Achievement>
-AchievementService::getAchievement(const unsigned achievementId) const {
+std::optional<Achievement> AchievementService::getAchievement(const unsigned achievementId) const {
   return m_repository.getAchievement(achievementId);
 }
 
 // TODO: Need a pass to make the interface smaller here
-bool AchievementService::create(const Game &game) {
-  return m_repository.create(game);
-}
-bool AchievementService::create(const AchievementSet &achievementSet) {
-  return m_repository.create(achievementSet);
-}
-bool AchievementService::create(const Achievement &achievement) {
-  return m_repository.create(achievement);
-}
-bool AchievementService::create(const Leaderboard &leaderboard) {
-  return m_repository.create(leaderboard);
-}
+bool AchievementService::create(const Game &game) { return m_repository.create(game); }
 
-std::optional<int>
-AchievementService::getGameId(const std::string &contentHash) const {
+bool AchievementService::create(const AchievementSet &achievementSet) { return m_repository.create(achievementSet); }
+
+bool AchievementService::create(const Achievement &achievement) { return m_repository.create(achievement); }
+
+bool AchievementService::create(const Leaderboard &leaderboard) { return m_repository.create(leaderboard); }
+
+std::optional<int> AchievementService::getGameId(const std::string &contentHash) const {
   return m_repository.getGameId(contentHash);
 }
 
-std::optional<Game>
-AchievementService::getGameForHash(const std::string &contentHash) const {
+std::optional<Game> AchievementService::getGameForHash(const std::string &contentHash) const {
   const auto id = m_repository.getGameId(contentHash);
   if (!id.has_value()) {
     return std::nullopt;
@@ -70,15 +58,13 @@ AchievementService::getGameForHash(const std::string &contentHash) const {
   return m_repository.getGameById(*id);
 }
 
-bool AchievementService::create(const AchievementProgress &progress) {
-  return m_repository.create(progress);
-}
+bool AchievementService::create(const AchievementProgress &progress) { return m_repository.create(progress); }
 
-std::optional<UserUnlock>
-AchievementService::getUserUnlock(const std::string &username,
-                                  const unsigned achievementId) const {
+std::optional<UserUnlock> AchievementService::getUserUnlock(const std::string &username,
+                                                            const unsigned achievementId) const {
   return m_repository.getUserUnlock(username, achievementId);
 }
+
 bool AchievementService::create(const UserUnlock &unlock) {
   if (m_currentSessionHardcore) {
     m_currentSessionHardcoreUnlocks.emplace_back(unlock.achievementId);
@@ -86,15 +72,12 @@ bool AchievementService::create(const UserUnlock &unlock) {
   return m_repository.createOrUpdate(unlock);
 }
 
-std::vector<UserUnlock>
-AchievementService::getAllUserUnlocks(const std::string &username,
-                                      unsigned gameId) const {
+std::vector<UserUnlock> AchievementService::getAllUserUnlocks(const std::string &username, unsigned gameId) const {
   return m_repository.getAllUserUnlocks(username, gameId);
 }
 
-std::pair<int, int>
-AchievementService::getAchievementCounts(const std::string &contentHash,
-                                         const std::string &username) const {
+std::pair<int, int> AchievementService::getAchievementCounts(const std::string &contentHash,
+                                                             const std::string &username) const {
   const auto set = m_repository.getAchievementSetByContentHash(contentHash);
   if (!set.has_value()) {
     return {0, 0};
@@ -109,8 +92,7 @@ AchievementService::getAchievementCounts(const std::string &contentHash,
   // getAllUserUnlocks filters by achievement_sets.game_id (the RA game id),
   // not the set's primary key — so pass gameId, not id
   int earned = 0;
-  for (const auto &unlock :
-       m_repository.getAllUserUnlocks(username, set->gameId)) {
+  for (const auto &unlock : m_repository.getAllUserUnlocks(username, set->gameId)) {
     if (unlock.earned || unlock.earnedHardcore) {
       earned++;
     }
@@ -118,9 +100,8 @@ AchievementService::getAchievementCounts(const std::string &contentHash,
   return {earned, total};
 }
 
-bool AchievementService::processStartSessionResponse(
-    const std::string &username, const unsigned gameId,
-    const StartSessionResponse &startSessionResponse) {
+bool AchievementService::processStartSessionResponse(const std::string &username, const unsigned gameId,
+                                                     const StartSessionResponse &startSessionResponse) {
   auto foundUnsupportedEmu = false;
 
   // Non-hardcore unlocks
@@ -140,8 +121,7 @@ bool AchievementService::processStartSessionResponse(
                                   .unlockTimestampHardcore = 0,
                                   .synced = true};
       if (!m_repository.createOrUpdate(newUnlock)) {
-        spdlog::error("Failed to create user unlock: {} for user {}", a.ID,
-                      username);
+        spdlog::error("Failed to create user unlock: {} for user {}", a.ID, username);
         return false;
       }
     }
@@ -164,8 +144,7 @@ bool AchievementService::processStartSessionResponse(
                                   .unlockTimestampHardcore = a.When,
                                   .synced = true};
       if (!m_repository.createOrUpdate(newUnlock)) {
-        spdlog::error("Failed to create user unlock: {} for user {}", a.ID,
-                      username);
+        spdlog::error("Failed to create user unlock: {} for user {}", a.ID, username);
         return false;
       }
     }
@@ -173,13 +152,11 @@ bool AchievementService::processStartSessionResponse(
 
   // TODO: Update user score
   for (auto &unlock : m_repository.getAllUserUnlocks(username, gameId)) {
-    auto foundInUnlocks = std::ranges::find_if(
-        startSessionResponse.Unlocks,
-        [&unlock](const Unlock &u) { return u.ID == unlock.achievementId; });
+    auto foundInUnlocks = std::ranges::find_if(startSessionResponse.Unlocks,
+                                               [&unlock](const Unlock &u) { return u.ID == unlock.achievementId; });
 
     auto foundInHardcoreUnlocks = std::ranges::find_if(
-        startSessionResponse.HardcoreUnlocks,
-        [&unlock](const Unlock &u) { return u.ID == unlock.achievementId; });
+        startSessionResponse.HardcoreUnlocks, [&unlock](const Unlock &u) { return u.ID == unlock.achievementId; });
 
     if (foundInHardcoreUnlocks != startSessionResponse.HardcoreUnlocks.end()) {
       // Hardcore unlock means both earned and earnedHardcore are true
@@ -209,21 +186,17 @@ bool AchievementService::processStartSessionResponse(
 
     unlock.synced = true;
     if (!m_repository.createOrUpdate(unlock)) {
-      spdlog::error("Failed to update user unlock: {} for user {}",
-                    unlock.achievementId, username);
+      spdlog::error("Failed to update user unlock: {} for user {}", unlock.achievementId, username);
     }
   }
 
-  auto newUnlock = UserUnlock{
-      .username = username,
-      .achievementId = UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID,
-      .earned = foundUnsupportedEmu,
-      .earnedHardcore = foundUnsupportedEmu,
-      .unlockTimestamp =
-          foundUnsupportedEmu ? static_cast<uint64_t>(time(nullptr)) : 0,
-      .unlockTimestampHardcore =
-          foundUnsupportedEmu ? static_cast<uint64_t>(time(nullptr)) : 0,
-      .synced = true};
+  auto newUnlock = UserUnlock{.username = username,
+                              .achievementId = UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID,
+                              .earned = foundUnsupportedEmu,
+                              .earnedHardcore = foundUnsupportedEmu,
+                              .unlockTimestamp = foundUnsupportedEmu ? static_cast<uint64_t>(time(nullptr)) : 0,
+                              .unlockTimestampHardcore = foundUnsupportedEmu ? static_cast<uint64_t>(time(nullptr)) : 0,
+                              .synced = true};
 
   if (!m_repository.createOrUpdate(newUnlock)) {
     spdlog::error("Failed to create unsupported achievement user "
@@ -241,12 +214,10 @@ void AchievementService::syncOfflineAchievements() {
   // sending offline award request
 
   const auto headers =
-      cpr::Header{{"User-Agent", OFFLINE_USER_AGENT},
-                  {"Content-Type", "application/x-www-form-urlencoded"}};
+      cpr::Header{{"User-Agent", OFFLINE_USER_AGENT}, {"Content-Type", "application/x-www-form-urlencoded"}};
 
   for (auto &user : m_repository.listUsers()) {
-    auto unsyncedUnlocks =
-        m_repository.getAllUnsyncedUserUnlocks(user.username);
+    auto unsyncedUnlocks = m_repository.getAllUnsyncedUserUnlocks(user.username);
     if (unsyncedUnlocks.empty()) {
       continue;
     }
@@ -254,26 +225,22 @@ void AchievementService::syncOfflineAchievements() {
     // Try logging in for current user
     auto postBody = "r=login2&u=" + user.username + "&t=" + user.token;
 
-    const auto response =
-        Post(cpr::Url{RA_DOREQUEST_URL}, headers, cpr::Body{postBody});
+    const auto response = Post(cpr::Url{RA_DOREQUEST_URL}, headers, cpr::Body{postBody});
 
     if (response.error) {
-      spdlog::warn("Failed to log in user: {} ({})", user.username,
-                   response.error.message);
+      spdlog::warn("Failed to log in user: {} ({})", user.username, response.error.message);
       continue;
     }
 
     auto json = nlohmann::json::parse(response.text);
-    if (json.contains("Success") && json["Success"].is_boolean() &&
-        json["Success"].get<bool>()) {
+    if (json.contains("Success") && json["Success"].is_boolean() && json["Success"].get<bool>()) {
       spdlog::info("Logged in for user {}", user.username);
     } else {
       spdlog::error("Login was not successful for user {}", user.username);
       continue;
     }
 
-    spdlog::info("[AchievementService] Syncing {} achievements for user {}",
-                 unsyncedUnlocks.size(), user.username);
+    spdlog::info("[AchievementService] Syncing {} achievements for user {}", unsyncedUnlocks.size(), user.username);
     // Go through their unlocks
     for (auto &unlock : unsyncedUnlocks) {
       if (unlock.earnedHardcore) {
@@ -294,61 +261,47 @@ void AchievementService::syncOfflineAchievements() {
         }
       }
 
-      auto achieveTimestamp = unlock.earnedHardcore
-                                  ? unlock.unlockTimestampHardcore
-                                  : unlock.unlockTimestamp;
-      auto now = std::chrono::duration_cast<std::chrono::seconds>(
-                     std::chrono::system_clock::now().time_since_epoch())
-                     .count();
+      auto achieveTimestamp = unlock.earnedHardcore ? unlock.unlockTimestampHardcore : unlock.unlockTimestamp;
+      auto now =
+          std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
       // Calculate hash to send on payload
       auto secondsSinceUnlock = now - achieveTimestamp;
       auto hashContent = std::to_string(unlock.achievementId) + user.username +
-                         std::to_string(unlock.earnedHardcore ? 1 : 0) +
-                         std::to_string(unlock.achievementId) +
+                         std::to_string(unlock.earnedHardcore ? 1 : 0) + std::to_string(unlock.achievementId) +
                          std::to_string(secondsSinceUnlock);
 
       // TODO: Remove qt dependency
-      hashContent =
-          QCryptographicHash::hash(hashContent, QCryptographicHash::Md5)
-              .toHex()
-              .toStdString();
+      hashContent = QCryptographicHash::hash(hashContent, QCryptographicHash::Md5).toHex().toStdString();
 
       auto achievement = m_repository.getAchievement(unlock.achievementId);
       if (!achievement.has_value()) {
-        spdlog::warn("Could not find achievement with ID: {}",
-                     unlock.achievementId);
+        spdlog::warn("Could not find achievement with ID: {}", unlock.achievementId);
         continue;
       }
 
       auto gameHash = m_repository.getGameHash(achievement->achievementSetId);
       if (!gameHash.has_value()) {
-        spdlog::warn("Could not find game hash for achievement set ID: {}",
-                     achievement->achievementSetId);
+        spdlog::warn("Could not find game hash for achievement set ID: {}", achievement->achievementSetId);
         continue;
       }
 
-      auto unlockPostBody =
-          "r=awardachievement&u=" + user.username + "&t=" + user.token +
-          "&a=" + std::to_string(unlock.achievementId) +
-          "&h=" + std::to_string(unlock.earnedHardcore ? 1 : 0) +
-          "&m=" + gameHash.value() +
-          "&o=" + std::to_string(secondsSinceUnlock) + "&v=" + hashContent;
+      auto unlockPostBody = "r=awardachievement&u=" + user.username + "&t=" + user.token +
+                            "&a=" + std::to_string(unlock.achievementId) +
+                            "&h=" + std::to_string(unlock.earnedHardcore ? 1 : 0) + "&m=" + gameHash.value() +
+                            "&o=" + std::to_string(secondsSinceUnlock) + "&v=" + hashContent;
 
-      const auto unlockResponse =
-          Post(cpr::Url{RA_DOREQUEST_URL}, headers, cpr::Body{unlockPostBody});
+      const auto unlockResponse = Post(cpr::Url{RA_DOREQUEST_URL}, headers, cpr::Body{unlockPostBody});
 
       if (unlockResponse.error) {
-        spdlog::warn("Failed to award achievement; will try later: {}",
-                     unlockResponse.error.message);
+        spdlog::warn("Failed to award achievement; will try later: {}", unlockResponse.error.message);
         continue;
       }
 
       auto unlockJson = nlohmann::json::parse(unlockResponse.text);
 
       // If not successful, check error
-      if (!unlockJson.contains("Success") ||
-          !unlockJson["Success"].is_boolean() ||
+      if (!unlockJson.contains("Success") || !unlockJson["Success"].is_boolean() ||
           !unlockJson["Success"].get<bool>()) {
         if (unlockJson.contains("Error") && unlockJson["Error"].is_string()) {
           auto errorString = unlockJson["Error"].get<std::string>();
@@ -359,8 +312,7 @@ void AchievementService::syncOfflineAchievements() {
             unlock.unlockTimestamp = 0;
             unlock.unlockTimestampHardcore = 0;
           } else {
-            spdlog::info("Server already knows user {} has achievement {}",
-                         user.username, unlock.achievementId);
+            spdlog::info("Server already knows user {} has achievement {}", user.username, unlock.achievementId);
           }
 
         } else {
@@ -375,14 +327,12 @@ void AchievementService::syncOfflineAchievements() {
         user.score = unlockJson["Score"];
       }
 
-      if (unlockJson.contains("SoftcoreScore") &&
-          unlockJson["SoftcoreScore"].is_number()) {
+      if (unlockJson.contains("SoftcoreScore") && unlockJson["SoftcoreScore"].is_number()) {
         user.softcoreScore = unlockJson["SoftcoreScore"];
       }
 
       m_repository.createOrUpdate(unlock);
-      spdlog::info("[AchievementService] Synced achievement {} for user {}",
-                   unlock.achievementId, user.username);
+      spdlog::info("[AchievementService] Synced achievement {} for user {}", unlock.achievementId, user.username);
     }
 
     m_repository.createOrUpdateUser(user);
@@ -391,9 +341,7 @@ void AchievementService::syncOfflineAchievements() {
   m_currentSessionHardcoreUnlocks.clear();
 }
 
-void AchievementService::startSession(const std::string &username,
-                                      const unsigned gameId,
-                                      const bool hardcore) {
+void AchievementService::startSession(const std::string &username, const unsigned gameId, const bool hardcore) {
   m_inActiveSession = true;
   m_currentSessionUsername = username;
   m_currentSessionGameId = gameId;
@@ -423,9 +371,7 @@ void AchievementService::endSession() {
   EventDispatcher::instance().publish(event);
 }
 
-bool AchievementService::inHardcoreSession() const {
-  return m_inActiveSession && m_currentSessionHardcore;
-}
+bool AchievementService::inHardcoreSession() const { return m_inActiveSession && m_currentSessionHardcore; }
 
 unsigned AchievementService::getNumCurrentSessionHardcoreUnlocks() const {
   return static_cast<unsigned>(m_currentSessionHardcoreUnlocks.size());
@@ -439,7 +385,5 @@ void AchievementService::setLoggedInUsername(const std::string &username) {
   EventDispatcher::instance().publish(UserLoggedInEvent{.username = username});
 }
 
-std::string AchievementService::getLoggedInUsername() const {
-  return m_loggedInUsername;
-}
+std::string AchievementService::getLoggedInUsername() const { return m_loggedInUsername; }
 } // namespace firelight::achievements

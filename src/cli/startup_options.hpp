@@ -5,7 +5,6 @@
 
 namespace firelight::cli {
 
-// TODO
 // Startup values derived from the command line, exposed to QML as a context
 // property ("StartupOptions") so the root window can act on them once loaded
 // Values are fixed at construction (set before the QML engine loads)
@@ -37,16 +36,14 @@ public:
     QString raToken;
   };
 
-  explicit StartupOptions(Data data, QObject *parent = nullptr)
-      : QObject(parent), m_data(std::move(data)) {}
+  explicit StartupOptions(Data data, QObject *parent = nullptr) : QObject(parent), m_data(std::move(data)) {}
 
   [[nodiscard]] int launchEntryId() const { return m_data.launchEntryId; }
-  [[nodiscard]] int fullscreenOverride() const {
-    return m_data.fullscreenOverride;
-  }
+
+  [[nodiscard]] int fullscreenOverride() const { return m_data.fullscreenOverride; }
+
   [[nodiscard]] bool exitOnClose() const { return m_data.exitOnClose; }
 
-  // TODO
   // One-shot getters for the per-game start knobs: they return the requested
   // value the first time and false afterwards, so only the CLI-launched game
   // (the first NewEmulatorPage created) picks them up
@@ -55,14 +52,19 @@ public:
     m_data.startMuted = false;
     return v;
   }
+
   Q_INVOKABLE bool consumeStartPaused() {
     const bool v = m_data.startPaused;
     m_data.startPaused = false;
     return v;
   }
+
   [[nodiscard]] bool raPendingLogin() const { return m_data.raPendingLogin; }
+
   [[nodiscard]] QString raUsername() const { return m_data.raUsername; }
+
   [[nodiscard]] QString raPassword() const { return m_data.raPassword; }
+
   [[nodiscard]] QString raToken() const { return m_data.raToken; }
 
 private:

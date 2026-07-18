@@ -18,9 +18,7 @@ void SettingsSearchModel::setQuery(const QString &query) {
   emit queryChanged();
 }
 
-int SettingsSearchModel::count() const {
-  return static_cast<int>(m_results.size());
-}
+int SettingsSearchModel::count() const { return static_cast<int>(m_results.size()); }
 
 void SettingsSearchModel::refresh() {
   beginResetModel();
@@ -30,23 +28,19 @@ void SettingsSearchModel::refresh() {
 }
 
 QString SettingsSearchModel::topRoute() const {
-  return m_results.empty() ? QString()
-                           : QString::fromStdString(m_results.front().route);
+  return m_results.empty() ? QString() : QString::fromStdString(m_results.front().route);
 }
 
 QString SettingsSearchModel::topKey() const {
-  return m_results.empty() ? QString()
-                           : QString::fromStdString(m_results.front().key);
+  return m_results.empty() ? QString() : QString::fromStdString(m_results.front().key);
 }
 
 int SettingsSearchModel::rowCount(const QModelIndex &parent) const {
   return parent.isValid() ? 0 : static_cast<int>(m_results.size());
 }
 
-QVariant SettingsSearchModel::data(const QModelIndex &index,
-                                   const int role) const {
-  if (!index.isValid() || index.row() < 0 ||
-      index.row() >= static_cast<int>(m_results.size())) {
+QVariant SettingsSearchModel::data(const QModelIndex &index, const int role) const {
+  if (!index.isValid() || index.row() < 0 || index.row() >= static_cast<int>(m_results.size())) {
     return {};
   }
   const auto &result = m_results[index.row()];

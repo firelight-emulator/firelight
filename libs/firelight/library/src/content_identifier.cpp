@@ -1,8 +1,7 @@
+#include <firelight/library/content_extensions.hpp>
 #include <firelight/library/content_identifier.hpp>
-
 #include <firelight/library/file_bytes.hpp>
 #include <firelight/platforms/platform_service.hpp>
-#include <firelight/library/content_extensions.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -10,8 +9,7 @@
 
 namespace firelight::library {
 
-ContentIdentifier::ContentIdentifier(
-    platforms::IPlatformService &platformService)
+ContentIdentifier::ContentIdentifier(platforms::IPlatformService &platformService)
     : m_platformService(platformService), m_discInspector(platformService) {}
 
 std::string ContentIdentifier::suffixOf(const std::string &name) {
@@ -20,8 +18,7 @@ std::string ContentIdentifier::suffixOf(const std::string &name) {
     return {};
   }
   std::string ext = name.substr(dot + 1);
-  std::transform(ext.begin(), ext.end(), ext.begin(),
-                 [](unsigned char c) { return std::tolower(c); });
+  std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
   return ext;
 }
 
@@ -37,8 +34,7 @@ IdentifiedContent ContentIdentifier::identify(const std::string &path) const {
     const auto size = std::filesystem::file_size(path, ec);
     content.fileSizeBytes = ec ? 0 : static_cast<size_t>(size);
 
-    const DiscIdentity identity =
-        m_discInspector.inspectFile(path, content.discMembers);
+    const DiscIdentity identity = m_discInspector.inspectFile(path, content.discMembers);
     content.valid = identity.valid;
     content.platformId = identity.platformId;
     content.contentHash = identity.contentHash;
@@ -62,9 +58,8 @@ IdentifiedContent ContentIdentifier::identify(const std::string &path) const {
   return content;
 }
 
-IdentifiedContent ContentIdentifier::identifyInArchive(
-    const std::string &entryName, const std::vector<uint8_t> &data,
-    const size_t sizeBytes, const std::string &archivePath) const {
+IdentifiedContent ContentIdentifier::identifyInArchive(const std::string &entryName, const std::vector<uint8_t> &data,
+                                                       const size_t sizeBytes, const std::string &archivePath) const {
   IdentifiedContent content;
   const std::string suffix = suffixOf(entryName);
 
@@ -73,10 +68,8 @@ IdentifiedContent ContentIdentifier::identifyInArchive(
     content.fileSizeBytes = sizeBytes;
 
     const DiscIdentity identity =
-        archivePath.empty()
-            ? m_discInspector.inspectFile(entryName, content.discMembers)
-            : m_discInspector.inspectArchiveEntry(archivePath, entryName,
-                                                  content.discMembers);
+        archivePath.empty() ? m_discInspector.inspectFile(entryName, content.discMembers)
+                            : m_discInspector.inspectArchiveEntry(archivePath, entryName, content.discMembers);
     content.valid = identity.valid;
     content.platformId = identity.platformId;
     content.contentHash = identity.contentHash;

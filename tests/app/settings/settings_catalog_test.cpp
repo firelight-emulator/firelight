@@ -1,10 +1,9 @@
-#include <firelight/settings/settings_catalog.hpp>
-
 #include "audio/audio_manager.hpp"
 
-#include <gtest/gtest.h>
+#include <firelight/settings/settings_catalog.hpp>
 
 #include <algorithm>
+#include <gtest/gtest.h>
 
 namespace firelight::settings {
 
@@ -44,10 +43,8 @@ const char *SAMPLE_JSON = R"JSON(
 }
 )JSON";
 
-const SettingDefinition *find(const std::vector<SettingDefinition> &v,
-                             const std::string &key) {
-  const auto it = std::find_if(v.begin(), v.end(),
-                               [&](const auto &s) { return s.key == key; });
+const SettingDefinition *find(const std::vector<SettingDefinition> &v, const std::string &key) {
+  const auto it = std::find_if(v.begin(), v.end(), [&](const auto &s) { return s.key == key; });
   return it != v.end() ? &*it : nullptr;
 }
 } // namespace
@@ -55,6 +52,7 @@ const SettingDefinition *find(const std::vector<SettingDefinition> &v,
 class SettingsCatalogTest : public testing::Test {
 protected:
   SettingsCatalog catalog;
+
   void SetUp() override { ASSERT_TRUE(catalog.loadFromJson(SAMPLE_JSON)); }
 };
 
@@ -97,8 +95,7 @@ TEST_F(SettingsCatalogTest, ParsesMappingWithValueTranslation) {
 }
 
 TEST_F(SettingsCatalogTest, ParsesVisibilityDependency) {
-  const auto *solarLevel =
-      find(catalog.coreSpecificSettings("mgba_libretro"), "solar-level");
+  const auto *solarLevel = find(catalog.coreSpecificSettings("mgba_libretro"), "solar-level");
   ASSERT_NE(solarLevel, nullptr);
   ASSERT_EQ(solarLevel->visibleWhen.size(), 1u);
 
@@ -225,8 +222,7 @@ TEST(SettingsCatalogGamePickerTest, ParsesLibraryGamePicker) {
   }
   )JSON"));
 
-  const auto *picker = find(
-      c.coreSpecificSettings("mupen64plus_next_libretro"), "transfer-pak-game");
+  const auto *picker = find(c.coreSpecificSettings("mupen64plus_next_libretro"), "transfer-pak-game");
   ASSERT_NE(picker, nullptr);
   // Value semantics are OPTIONS, rendered by the dropdown widget
   EXPECT_EQ(picker->type, SettingType::OPTIONS);
@@ -533,14 +529,12 @@ TEST(SettingsCatalogValidationTest, ParsesTypeAliasesForEveryDelegate) {
   EXPECT_EQ(find(s, "bind")->widget, "key-binding");
 }
 
-// TODO
 // The catalog we actually ship. Every other test here feeds the parser inline
 // JSON, so nothing caught a typo in the real file — and page/group ids are
 // load-bearing, so a typo silently orphans a setting rather than erroring
 TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
   SettingsCatalog c;
-  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE))
-      << "could not read " << FL_SETTINGS_CATALOG_FILE;
+  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE)) << "could not read " << FL_SETTINGS_CATALOG_FILE;
 
   const auto problems = c.validate();
   for (const auto &problem : problems) {
@@ -554,19 +548,15 @@ TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
   // Every group lands on a page, and every setting lands in a group — that's
   // what lets a page auto-render and search say where a result lives
   for (const auto &group : c.groups()) {
-    EXPECT_FALSE(group.pageId.empty())
-        << "group '" << group.id << "' names no page";
+    EXPECT_FALSE(group.pageId.empty()) << "group '" << group.id << "' names no page";
     EXPECT_FALSE(group.label.empty()) << "group '" << group.id << "' has no label";
   }
   for (const auto *setting : c.allSettings()) {
-    EXPECT_FALSE(setting->groupId.empty())
-        << "setting '" << setting->key << "' names no group";
-    EXPECT_FALSE(setting->label.empty())
-        << "setting '" << setting->key << "' has no label";
+    EXPECT_FALSE(setting->groupId.empty()) << "setting '" << setting->key << "' names no group";
+    EXPECT_FALSE(setting->label.empty()) << "setting '" << setting->key << "' has no label";
   }
 }
 
-// TODO
 // AudioManager reads this key to pick an output. If it stopped existing, audio
 // would quietly fall back to the system default with no error anywhere — so the
 // key and its declaration are pinned together
@@ -575,11 +565,9 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheAudioOutputKeyAudioManagerReads) {
   ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
 
   const auto *setting = c.findByKey(AudioManager::OUTPUT_DEVICE_KEY);
-  ASSERT_NE(setting, nullptr)
-      << "AudioManager reads '" << AudioManager::OUTPUT_DEVICE_KEY
-      << "', which the catalog doesn't declare";
-  EXPECT_TRUE(c.isAppSetting(AudioManager::OUTPUT_DEVICE_KEY))
-      << "the output device is read from the global tier";
+  ASSERT_NE(setting, nullptr) << "AudioManager reads '" << AudioManager::OUTPUT_DEVICE_KEY
+                              << "', which the catalog doesn't declare";
+  EXPECT_TRUE(c.isAppSetting(AudioManager::OUTPUT_DEVICE_KEY)) << "the output device is read from the global tier";
   // Its options come from the machine, so authoring any here would be a lie —
   // and the runtime flag is what tells the model to go and find them
   EXPECT_TRUE(setting->audioDeviceSource);
@@ -588,7 +576,6 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheAudioOutputKeyAudioManagerReads) {
   EXPECT_TRUE(setting->defaultValue.empty());
 }
 
-// TODO
 // Mute lives in the catalog rather than on the emulator so it outlives a game:
 // AudioManager is rebuilt on every load and re-reads this key, which is the only
 // reason muting one game leaves the next one muted too
@@ -597,11 +584,9 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheMuteKeyAudioManagerReads) {
   ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
 
   const auto *setting = c.findByKey(AudioManager::MUTED_KEY);
-  ASSERT_NE(setting, nullptr)
-      << "AudioManager reads '" << AudioManager::MUTED_KEY
-      << "', which the catalog doesn't declare";
-  EXPECT_TRUE(c.isAppSetting(AudioManager::MUTED_KEY))
-      << "mute is read from the global tier";
+  ASSERT_NE(setting, nullptr) << "AudioManager reads '" << AudioManager::MUTED_KEY
+                              << "', which the catalog doesn't declare";
+  EXPECT_TRUE(c.isAppSetting(AudioManager::MUTED_KEY)) << "mute is read from the global tier";
   EXPECT_EQ(setting->type, SettingType::BOOLEAN);
   // AudioManager compares against "true"/"false", so the declared default has to
   // be one of them
@@ -615,11 +600,9 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheVolumeKeyAudioManagerReads) {
   ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
 
   const auto *setting = c.findByKey(AudioManager::VOLUME_KEY);
-  ASSERT_NE(setting, nullptr)
-      << "AudioManager reads '" << AudioManager::VOLUME_KEY
-      << "', which the catalog doesn't declare";
-  EXPECT_TRUE(c.isAppSetting(AudioManager::VOLUME_KEY))
-      << "volume is read from the global tier";
+  ASSERT_NE(setting, nullptr) << "AudioManager reads '" << AudioManager::VOLUME_KEY
+                              << "', which the catalog doesn't declare";
+  EXPECT_TRUE(c.isAppSetting(AudioManager::VOLUME_KEY)) << "volume is read from the global tier";
   EXPECT_EQ(setting->type, SettingType::INTEGER);
   EXPECT_EQ(setting->widget, "slider");
   // The hotkeys step within 0-100 and parse the default as a number; a range
@@ -629,7 +612,6 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheVolumeKeyAudioManagerReads) {
   EXPECT_EQ(setting->defaultValue, "100");
 }
 
-// TODO
 // AppearanceSettings.qml is a typed facade: one SettingBinding per key, so the
 // rest of the app can bind to names instead of strings. Nothing in QML fails
 // loudly when a key stops existing — the binding just reports "" forever — so
@@ -638,28 +620,22 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
 
-  const std::vector<std::string> facadeKeys = {
-      "accent-color",   "background-mode", "background-color",
-      "background-color-2", "background-file", "background-blur",
-      "background-dim", "theme-intensity",  "glass-opacity",
-      "library-tile-size", "interface-scale", "interface-density"};
+  const std::vector<std::string> facadeKeys = {"accent-color",       "background-mode", "background-color",
+                                               "background-color-2", "background-file", "background-blur",
+                                               "background-dim",     "theme-intensity", "glass-opacity",
+                                               "library-tile-size",  "interface-scale", "interface-density"};
 
   for (const auto &key : facadeKeys) {
     const auto *setting = c.findByKey(key);
-    EXPECT_NE(setting, nullptr)
-        << "AppearanceSettings.qml binds '" << key
-        << "', which the catalog no longer declares";
+    EXPECT_NE(setting, nullptr) << "AppearanceSettings.qml binds '" << key << "', which the catalog no longer declares";
     if (setting == nullptr) {
       continue;
     }
-    EXPECT_TRUE(c.isAppSetting(key))
-        << "'" << key
-        << "' must be an app setting: the facade reads the global tier only";
+    EXPECT_TRUE(c.isAppSetting(key)) << "'" << key << "' must be an app setting: the facade reads the global tier only";
     // An empty file path means "no image chosen"; every other facade key needs
     // a default or the property starts empty and the theme renders wrong
     if (key != "background-file") {
-      EXPECT_FALSE(setting->defaultValue.empty())
-          << "'" << key << "' has no default, so the facade would start empty";
+      EXPECT_FALSE(setting->defaultValue.empty()) << "'" << key << "' has no default, so the facade would start empty";
     }
   }
 }

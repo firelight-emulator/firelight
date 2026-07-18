@@ -27,7 +27,6 @@
 
 /* Opaque file handle
  * Introduced in VFS API v1 */
-// TODO
 // struct retro_vfs_file_handle;
 //
 // /* Opaque directory handle
@@ -194,127 +193,124 @@
 //
 
 namespace libretro::vfs {
-  static const char *get_path(retro_vfs_file_handle *stream) {
-    printf("Called get_path\n");
-    return nullptr;
-    // throw std::runtime_error("Not implemented");
-  }
+static const char *get_path(retro_vfs_file_handle *stream) {
+  printf("Called get_path\n");
+  return nullptr;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static retro_vfs_file_handle *open(const char *path, unsigned mode,
-                                     unsigned hints) {
-    printf("Called open\n");
-    return nullptr;
-    // throw std::runtime_error("Not implemented");
-  }
+static retro_vfs_file_handle *open(const char *path, unsigned mode, unsigned hints) {
+  printf("Called open\n");
+  return nullptr;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int close(retro_vfs_file_handle *stream) {
-    printf("Called close\n");
+static int close(retro_vfs_file_handle *stream) {
+  printf("Called close\n");
 
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int64_t size(retro_vfs_file_handle *stream) {
-    printf("Called size\n");
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+static int64_t size(retro_vfs_file_handle *stream) {
+  printf("Called size\n");
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int64_t tell(retro_vfs_file_handle *stream) {
-    printf("Called tell\n");
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+static int64_t tell(retro_vfs_file_handle *stream) {
+  printf("Called tell\n");
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int64_t seek(retro_vfs_file_handle *stream, int64_t offset,
-                      int seek_position) {
-    printf("Called seek\n");
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+static int64_t seek(retro_vfs_file_handle *stream, int64_t offset, int seek_position) {
+  printf("Called seek\n");
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int64_t read(retro_vfs_file_handle *stream, void *s, uint64_t len) {
-    printf("Called read\n");
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+static int64_t read(retro_vfs_file_handle *stream, void *s, uint64_t len) {
+  printf("Called read\n");
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int64_t write(retro_vfs_file_handle *stream, const void *s,
-                       uint64_t len) {
-    printf("Called write\n");
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+static int64_t write(retro_vfs_file_handle *stream, const void *s, uint64_t len) {
+  printf("Called write\n");
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int flush(retro_vfs_file_handle *stream) {
-    printf("Called flush\n");
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+static int flush(retro_vfs_file_handle *stream) {
+  printf("Called flush\n");
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int remove(const char *path) {
-    printf("Called remove\n");
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+static int remove(const char *path) {
+  printf("Called remove\n");
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int rename(const char *old_path, const char *new_path) {
-    printf("Called rename\n");
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+static int rename(const char *old_path, const char *new_path) {
+  printf("Called rename\n");
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  /** V2 */
+/** V2 */
 
-  static int64_t truncate(retro_vfs_file_handle *stream, int64_t length) {
-    printf("Called truncate\n");
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+static int64_t truncate(retro_vfs_file_handle *stream, int64_t length) {
+  printf("Called truncate\n");
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  /** Below here is V3, not needed by any cores yet */
+/** Below here is V3, not needed by any cores yet */
 
-  static int stat(const char *path, int32_t *size) {
-    printf("Called stat\n");
+static int stat(const char *path, int32_t *size) {
+  printf("Called stat\n");
 
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int mkdir(const char *dir) {
-    printf("Called mkdir\n");
+static int mkdir(const char *dir) {
+  printf("Called mkdir\n");
 
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static retro_vfs_dir_handle *opendir(const char *dir, bool include_hidden) {
-    printf("Called opendir\n");
-    return nullptr;
-    // throw std::runtime_error("Not implemented");
-  }
+static retro_vfs_dir_handle *opendir(const char *dir, bool include_hidden) {
+  printf("Called opendir\n");
+  return nullptr;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static bool readdir(retro_vfs_dir_handle *dirstream) {
-    printf("Called readdir\n");
-    return false;
-    // throw std::runtime_error("Not implemented");
-  }
+static bool readdir(retro_vfs_dir_handle *dirstream) {
+  printf("Called readdir\n");
+  return false;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static const char *dirent_get_name(retro_vfs_dir_handle *dirstream) {
-    printf("Called dirent_get_name\n");
-    return "";
-    // throw std::runtime_error("Not implemented");
-  }
+static const char *dirent_get_name(retro_vfs_dir_handle *dirstream) {
+  printf("Called dirent_get_name\n");
+  return "";
+  // throw std::runtime_error("Not implemented");
+}
 
-  static bool dirent_is_dir(retro_vfs_dir_handle *dirstream) {
-    printf("Called dirent_is_dir\n");
-    return false;
-    // throw std::runtime_error("Not implemented");
-  }
+static bool dirent_is_dir(retro_vfs_dir_handle *dirstream) {
+  printf("Called dirent_is_dir\n");
+  return false;
+  // throw std::runtime_error("Not implemented");
+}
 
-  static int closedir(retro_vfs_dir_handle *dirstream) {
-    printf("Called closedir\n");
-    return -1;
-    // throw std::runtime_error("Not implemented");
-  }
+static int closedir(retro_vfs_dir_handle *dirstream) {
+  printf("Called closedir\n");
+  return -1;
+  // throw std::runtime_error("Not implemented");
+}
 } // namespace libretro::vfs

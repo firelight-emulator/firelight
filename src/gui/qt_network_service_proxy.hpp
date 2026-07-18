@@ -9,7 +9,6 @@
 
 namespace firelight::gui {
 
-// TODO
 // QML bridge for online play. Provider-agnostic on purpose: the UI renders
 // "Sign in with <providerName>" from data and never names Discord. Session
 // events can arrive on network threads; everything is marshaled to the GUI
@@ -33,8 +32,7 @@ class QtNetworkServiceProxy final : public QObject {
   Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
 
 public:
-  explicit QtNetworkServiceProxy(netplay::NetplayService &service,
-                                 QObject *parent = nullptr);
+  explicit QtNetworkServiceProxy(netplay::NetplayService &service, QObject *parent = nullptr);
 
   [[nodiscard]] QString signInState() const;
   [[nodiscard]] QString providerName() const;
@@ -50,6 +48,7 @@ public:
   [[nodiscard]] int memberCount() const;
   [[nodiscard]] int readySlotCount() const;
   [[nodiscard]] int occupiedSlotCount() const;
+
   [[nodiscard]] bool busy() const { return m_busy; }
 
   Q_INVOKABLE void setPlayerName(const QString &name);
@@ -57,13 +56,11 @@ public:
   Q_INVOKABLE void hostLobby();
   Q_INVOKABLE void joinLobby(const QString &joinCode);
   Q_INVOKABLE void leaveLobby();
-  Q_INVOKABLE void assignSlot(int slot, const QString &memberId,
-                              int localPadIndex);
+  Q_INVOKABLE void assignSlot(int slot, const QString &memberId, int localPadIndex);
   Q_INVOKABLE void clearSlot(int slot);
   Q_INVOKABLE void setReady(bool ready);
   Q_INVOKABLE void selectGame(int entryId);
   Q_INVOKABLE void sendChat(const QString &text);
-  // TODO
   // Ready check: startSession announces the game (host only), confirmLaunch
   // marks the game live once the host actually launches, endSession returns
   // the lobby to idle
@@ -72,7 +69,6 @@ public:
   Q_INVOKABLE void endSession();
   Q_INVOKABLE [[nodiscard]] int selectedGameEntryId() const;
   Q_INVOKABLE void copyJoinCode();
-  // TODO
   // The stream view registers itself to receive decoded frames. Detach only
   // releases if `item` is still the attached view — a page being torn down
   // must not detach its replacement
@@ -95,10 +91,10 @@ signals:
 
 private:
   void setBusy(bool busy);
+
   // Queues a signal emission onto the GUI thread
   template <typename Fn> void onGuiThread(Fn &&fn) {
-    QMetaObject::invokeMethod(this, std::forward<Fn>(fn),
-                              Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, std::forward<Fn>(fn), Qt::QueuedConnection);
   }
 
   netplay::NetplayService &m_service;

@@ -14,12 +14,9 @@ namespace {
 constexpr auto API_KEY_SETTING = "steamgriddb/apiKey";
 } // namespace
 
-QtGameArtProxy::QtGameArtProxy(metadata::MetadataService &service,
-                               metadata::SteamGridDbArtProvider &provider,
-                               metadata::IMediaAssetRepository &mediaAssets,
-                               QObject *parent)
-    : QObject(parent), m_service(service), m_provider(provider),
-      m_mediaAssets(mediaAssets) {
+QtGameArtProxy::QtGameArtProxy(metadata::MetadataService &service, metadata::SteamGridDbArtProvider &provider,
+                               metadata::IMediaAssetRepository &mediaAssets, QObject *parent)
+    : QObject(parent), m_service(service), m_provider(provider), m_mediaAssets(mediaAssets) {
   // One worker: SteamGridDB requests are serialized so overlapping searches
   // can't interleave state, and we never hammer the API
   m_pool.setMaxThreadCount(1);
@@ -27,8 +24,7 @@ QtGameArtProxy::QtGameArtProxy(metadata::MetadataService &service,
   // Seed the provider with the persisted key (the user can also paste one at
   // runtime via setApiKey)
   const QSettings settings;
-  m_provider.setApiKey(
-      settings.value(API_KEY_SETTING).toString().toStdString());
+  m_provider.setApiKey(settings.value(API_KEY_SETTING).toString().toStdString());
 }
 
 QtGameArtProxy::~QtGameArtProxy() {
@@ -40,13 +36,9 @@ QString QtGameArtProxy::cacheKey(const QString &contentHash, int mediaType) {
   return contentHash + QStringLiteral(":") + QString::number(mediaType);
 }
 
-bool QtGameArtProxy::providerConfigured() const {
-  return m_provider.isConfigured();
-}
+bool QtGameArtProxy::providerConfigured() const { return m_provider.isConfigured(); }
 
-QString QtGameArtProxy::providerName() const {
-  return QString::fromStdString(m_provider.name());
-}
+QString QtGameArtProxy::providerName() const { return QString::fromStdString(m_provider.name()); }
 
 QString QtGameArtProxy::apiKey() const {
   const QSettings settings;
@@ -60,11 +52,10 @@ void QtGameArtProxy::setApiKey(const QString &key) {
   emit providerConfiguredChanged();
 }
 
-QVariantList QtGameArtProxy::storedAssets(const QString &contentHash,
-                                          int mediaType) {
+QVariantList QtGameArtProxy::storedAssets(const QString &contentHash, int mediaType) {
   QVariantList list;
-  const auto assets = m_mediaAssets.listForContentAndType(
-      contentHash.toStdString(), static_cast<metadata::MediaType>(mediaType));
+  const auto assets =
+      m_mediaAssets.listForContentAndType(contentHash.toStdString(), static_cast<metadata::MediaType>(mediaType));
   for (const auto &asset : assets) {
     QVariantMap map;
     map["assetId"] = asset.id;
@@ -80,8 +71,7 @@ QVariantList QtGameArtProxy::storedAssets(const QString &contentHash,
   return list;
 }
 
-void QtGameArtProxy::search(const QString &contentHash, const QString &gameName,
-                            int platformId, int mediaType) {
+void QtGameArtProxy::search(const QString &contentHash, const QString &gameName, int platformId, int mediaType) {
   if (m_shuttingDown || !m_provider.isConfigured()) {
     // Nothing to search: still notify so the picker can drop any spinner
     emit searchResultsReady(contentHash, mediaType);
@@ -103,10 +93,8 @@ void QtGameArtProxy::search(const QString &contentHash, const QString &gameName,
     // `this` means it's silently dropped if the proxy is destroyed first
     QMetaObject::invokeMethod(
         this,
-        [this, contentHash, mediaType,
-         results = std::move(results)]() mutable {
-          m_results[cacheKey(contentHash, mediaType)] =
-              QVector<metadata::ArtCandidate>(results.begin(), results.end());
+        [this, contentHash, mediaType, results = std::move(results)]() mutable {
+          m_results[cacheKey(contentHash, mediaType)] = QVector<metadata::ArtCandidate>(results.begin(), results.end());
           if (m_pendingSearches > 0) {
             --m_pendingSearches;
           }
@@ -117,8 +105,7 @@ void QtGameArtProxy::search(const QString &contentHash, const QString &gameName,
   });
 }
 
-QVariantList QtGameArtProxy::searchResults(const QString &contentHash,
-                                           int mediaType) {
+QVariantList QtGameArtProxy::searchResults(const QString &contentHash, int mediaType) {
   QVariantList list;
   const auto it = m_results.constFind(cacheKey(contentHash, mediaType));
   if (it == m_results.constEnd()) {
@@ -128,8 +115,7 @@ QVariantList QtGameArtProxy::searchResults(const QString &contentHash,
   for (const auto &candidate : *it) {
     QVariantMap map;
     map["url"] = QString::fromStdString(candidate.url);
-    map["thumbUrl"] = QString::fromStdString(
-        candidate.thumbUrl.empty() ? candidate.url : candidate.thumbUrl);
+    map["thumbUrl"] = QString::fromStdString(candidate.thumbUrl.empty() ? candidate.url : candidate.thumbUrl);
     map["externalId"] = QString::fromStdString(candidate.externalId);
     map["width"] = candidate.width;
     map["height"] = candidate.height;
@@ -147,8 +133,7 @@ void QtGameArtProxy::selectStored(const QString &contentHash, int assetId) {
   emit assetsChanged(contentHash, -1);
 }
 
-void QtGameArtProxy::applyOnline(const QString &contentHash, int mediaType,
-                                 int index) {
+void QtGameArtProxy::applyOnline(const QString &contentHash, int mediaType, int index) {
   const auto it = m_results.constFind(cacheKey(contentHash, mediaType));
   if (it == m_results.constEnd() || index < 0 || index >= it->size()) {
     return;
@@ -157,16 +142,13 @@ void QtGameArtProxy::applyOnline(const QString &contentHash, int mediaType,
   emit assetsChanged(contentHash, mediaType);
 }
 
-bool QtGameArtProxy::importImage(const QString &contentHash, int mediaType,
-                                 const QUrl &fileUrl) {
-  const QString localPath =
-      fileUrl.isLocalFile() ? fileUrl.toLocalFile() : fileUrl.toString();
+bool QtGameArtProxy::importImage(const QString &contentHash, int mediaType, const QUrl &fileUrl) {
+  const QString localPath = fileUrl.isLocalFile() ? fileUrl.toLocalFile() : fileUrl.toString();
   if (localPath.isEmpty()) {
     return false;
   }
-  const bool ok = m_service.importLocalImage(
-      contentHash.toStdString(), static_cast<metadata::MediaType>(mediaType),
-      localPath.toStdString());
+  const bool ok = m_service.importLocalImage(contentHash.toStdString(), static_cast<metadata::MediaType>(mediaType),
+                                             localPath.toStdString());
   if (ok) {
     emit assetsChanged(contentHash, mediaType);
   }

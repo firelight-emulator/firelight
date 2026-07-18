@@ -23,10 +23,10 @@ InputSource btn(const int code, std::vector<int> modifiers = {}) {
 class ShortcutTest : public testing::Test {
 protected:
   void SetUp() override { ShortcutRegistry::instance().clear(); }
+
   void TearDown() override { ShortcutRegistry::instance().clear(); }
 
-  static void addAction(const char *id, const ActivationType activation,
-                        const int scope) {
+  static void addAction(const char *id, const ActivationType activation, const int scope) {
     ShortcutAction action;
     action.id = id;
     action.activation = activation;
@@ -67,8 +67,8 @@ TEST_F(ShortcutTest, PressFiresOnRisingEdgeOnly) {
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   engine.onInput(0, &pad, GamepadInput::Select, true);
   engine.onInput(0, &pad, GamepadInput::Select, false);
@@ -88,8 +88,8 @@ TEST_F(ShortcutTest, HoldFiresStartedAndEnded) {
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   engine.onInput(0, &pad, GamepadInput::Start, true);
   engine.onInput(0, &pad, GamepadInput::Start, false);
@@ -99,7 +99,6 @@ TEST_F(ShortcutTest, HoldFiresStartedAndEnded) {
   EXPECT_EQ(events[1].phase, ShortcutPhase::Ended);
 }
 
-// TODO
 // An action that flips something global (mute, pause) reports an edge and lets
 // the consumer own the value. The engine must not track that value itself: it
 // only ever sees one device, so two devices sharing a profile would each keep
@@ -118,8 +117,8 @@ TEST_F(ShortcutTest, EveryPressFiresOnEveryDevice) {
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   engine.onInput(0, &padOne, GamepadInput::Home, true);
   engine.onInput(0, &padOne, GamepadInput::Home, false);
@@ -136,16 +135,13 @@ TEST_F(ShortcutTest, EveryPressFiresOnEveryDevice) {
   }
 }
 
-// TODO
 // A bare press still reaches the game; the same button as part of a combo does
 // not. That conditional is only possible because the modifier disambiguates the
 // two intents at the trigger's rising edge — with no lookahead needed
 TEST_F(ShortcutTest, ComboWithholdsItsTriggerButABarePressStillReachesTheGame) {
   addAction("save_state", ActivationType::Press, ScopeInGame);
   auto profile = makeProfile();
-  profile->getShortcutMapping()->setBindings(
-      "save_state",
-      {btn(GamepadInput::EastFace, {GamepadInput::Select})});
+  profile->getShortcutMapping()->setBindings("save_state", {btn(GamepadInput::EastFace, {GamepadInput::Select})});
   TestGamepad pad;
   pad.setProfile(profile);
 
@@ -178,8 +174,7 @@ TEST_F(ShortcutTest, ComboWithholdsItsTriggerButABarePressStillReachesTheGame) {
 TEST_F(ShortcutTest, LeavingGameplayDropsEveryMask) {
   addAction("screenshot", ActivationType::Press, ScopeAlways);
   auto profile = makeProfile();
-  profile->getShortcutMapping()->setBindings(
-      "screenshot", {btn(GamepadInput::WestFace, {GamepadInput::Select})});
+  profile->getShortcutMapping()->setBindings("screenshot", {btn(GamepadInput::WestFace, {GamepadInput::Select})});
   TestGamepad pad;
   pad.setProfile(profile);
 
@@ -198,8 +193,7 @@ TEST_F(ShortcutTest, LeavingGameplayDropsEveryMask) {
 TEST_F(ShortcutTest, ForgettingADeviceDropsItsMasks) {
   addAction("pause", ActivationType::Press, ScopeInGame);
   auto profile = makeProfile();
-  profile->getShortcutMapping()->setBindings(
-      "pause", {btn(GamepadInput::SouthFace, {GamepadInput::Select})});
+  profile->getShortcutMapping()->setBindings("pause", {btn(GamepadInput::SouthFace, {GamepadInput::Select})});
   TestGamepad pad;
   pad.setProfile(profile);
 
@@ -215,7 +209,6 @@ TEST_F(ShortcutTest, ForgettingADeviceDropsItsMasks) {
   EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::SouthFace));
 }
 
-// TODO
 // Turning hotkeys off hands the whole device to the game — which is what a core
 // that wants the entire keyboard (DOS, Amiga, MSX) needs, and what no amount of
 // per-binding cleverness can give it
@@ -223,18 +216,16 @@ TEST_F(ShortcutTest, HotkeysOffSilencesEverythingButTheWayBack) {
   addAction("save_state", ActivationType::Press, ScopeInGame);
   addAction(TOGGLE_HOTKEYS_ID, ActivationType::Press, ScopeAlways);
   auto profile = makeProfile();
-  profile->getShortcutMapping()->setBindings("save_state",
-                                            {btn(GamepadInput::EastFace)});
-  profile->getShortcutMapping()->setBindings(TOGGLE_HOTKEYS_ID,
-                                            {btn(GamepadInput::Home)});
+  profile->getShortcutMapping()->setBindings("save_state", {btn(GamepadInput::EastFace)});
+  profile->getShortcutMapping()->setBindings(TOGGLE_HOTKEYS_ID, {btn(GamepadInput::Home)});
   TestGamepad pad;
   pad.setProfile(profile);
 
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   EXPECT_TRUE(engine.hotkeysEnabled(&pad));
   engine.onInput(0, &pad, GamepadInput::EastFace, true);
@@ -265,8 +256,7 @@ TEST_F(ShortcutTest, HotkeysOffSilencesEverythingButTheWayBack) {
 TEST_F(ShortcutTest, HotkeysOffAppliesOnlyToTheDeviceThatDidIt) {
   addAction("save_state", ActivationType::Press, ScopeInGame);
   auto profile = makeProfile();
-  profile->getShortcutMapping()->setBindings("save_state",
-                                            {btn(GamepadInput::EastFace)});
+  profile->getShortcutMapping()->setBindings("save_state", {btn(GamepadInput::EastFace)});
   // One profile, two pads: turning them off on one must not touch the other
   TestGamepad padOne;
   TestGamepad padTwo;
@@ -276,8 +266,8 @@ TEST_F(ShortcutTest, HotkeysOffAppliesOnlyToTheDeviceThatDidIt) {
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   engine.setHotkeysEnabled(&padOne, false);
   EXPECT_FALSE(engine.hotkeysEnabled(&padOne));
@@ -294,8 +284,7 @@ TEST_F(ShortcutTest, HotkeysOffAppliesOnlyToTheDeviceThatDidIt) {
 TEST_F(ShortcutTest, TurningHotkeysOffHandsBackAnythingWithheld) {
   addAction("save_state", ActivationType::Press, ScopeInGame);
   auto profile = makeProfile();
-  profile->getShortcutMapping()->setBindings(
-      "save_state", {btn(GamepadInput::EastFace, {GamepadInput::Select})});
+  profile->getShortcutMapping()->setBindings("save_state", {btn(GamepadInput::EastFace, {GamepadInput::Select})});
   TestGamepad pad;
   pad.setProfile(profile);
 
@@ -314,16 +303,15 @@ TEST_F(ShortcutTest, TurningHotkeysOffHandsBackAnythingWithheld) {
 TEST_F(ShortcutTest, ScopeGatesActivation) {
   addAction("menu_only", ActivationType::Press, ScopeInMenu);
   auto profile = makeProfile();
-  profile->getShortcutMapping()->setBindings("menu_only",
-                                             {btn(GamepadInput::WestFace)});
+  profile->getShortcutMapping()->setBindings("menu_only", {btn(GamepadInput::WestFace)});
   TestGamepad pad;
   pad.setProfile(profile);
 
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   // Out of scope: nothing fires
   engine.onInput(0, &pad, GamepadInput::WestFace, true);
@@ -340,16 +328,15 @@ TEST_F(ShortcutTest, ScopeGatesActivation) {
 TEST_F(ShortcutTest, ComboRequiresModifierHeld) {
   addAction("ff", ActivationType::Press, ScopeInGame);
   auto profile = makeProfile();
-  profile->getShortcutMapping()->setBindings(
-      "ff", {btn(GamepadInput::Start, {GamepadInput::LeftTrigger})});
+  profile->getShortcutMapping()->setBindings("ff", {btn(GamepadInput::Start, {GamepadInput::LeftTrigger})});
   TestGamepad pad;
   pad.setProfile(profile);
 
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   // Start alone (no modifier) does nothing
   engine.onInput(0, &pad, GamepadInput::Start, true);
@@ -381,16 +368,15 @@ TEST_F(ShortcutTest, ShortcutMappingAddRemoveSet) {
 TEST_F(ShortcutTest, AlternateSourcesEitherFires) {
   addAction("ss", ActivationType::Press, ScopeInGame);
   auto profile = makeProfile();
-  profile->getShortcutMapping()->setBindings(
-      "ss", {btn(GamepadInput::Select), btn(GamepadInput::Start)});
+  profile->getShortcutMapping()->setBindings("ss", {btn(GamepadInput::Select), btn(GamepadInput::Start)});
   TestGamepad pad;
   pad.setProfile(profile);
 
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   // Either alternate fires the same action
   engine.onInput(0, &pad, GamepadInput::Start, true);
@@ -408,8 +394,8 @@ TEST_F(ShortcutTest, HoldEndsEvenAfterScopeChange) {
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   engine.onInput(0, &pad, GamepadInput::Start, true); // Started (in scope)
   engine.setContext(ScopeInMenu);                     // leave the scope
@@ -430,8 +416,8 @@ TEST_F(ShortcutTest, ForgetDeviceResetsHoldState) {
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   engine.onInput(0, &pad, GamepadInput::Start, true); // Started
   engine.forgetDevice(&pad);
@@ -448,8 +434,8 @@ TEST_F(ShortcutTest, NullProfileIsSafe) {
   ShortcutEngine engine;
   engine.setContext(ScopeInGame);
   std::vector<ShortcutEvent> events;
-  const auto conn = EventDispatcher::instance().subscribe<ShortcutEvent>(
-      [&events](const ShortcutEvent &e) { events.push_back(e); });
+  const auto conn =
+      EventDispatcher::instance().subscribe<ShortcutEvent>([&events](const ShortcutEvent &e) { events.push_back(e); });
 
   EXPECT_NO_THROW(engine.onInput(0, &pad, GamepadInput::Select, true));
   EXPECT_TRUE(events.empty());

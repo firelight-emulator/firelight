@@ -6,7 +6,6 @@
 
 namespace firelight::cheats {
 
-// TODO
 // How a cheat's code is interpreted. This picks the decoder and, indirectly,
 // how it's applied: most formats resolve to RAM writes Firelight owns, while
 // Game Genie is ROM read-substitution that only the core can do (retro_cheat_set)
@@ -25,7 +24,6 @@ struct CheatPoke {
   bool bigEndian = false;
 };
 
-// TODO
 // A cheat as Firelight models it, uniformly across formats: user-facing metadata
 // plus a resolved application. `pokes` are the RAM writes Firelight replays each
 // frame; a cheat with no pokes but a `rawCode` is handed to the core (Game
@@ -38,14 +36,12 @@ struct Cheat {
   std::string rawCode;          // original text (display / re-decode / core code)
   std::vector<CheatPoke> pokes; // resolved RAM writes (empty for core-applied)
   bool enabled = false;
-  bool affectsHardcore = true;  // blocked while RA hardcore mode is active
+  bool affectsHardcore = true; // blocked while RA hardcore mode is active
   int ordinal = 0;
 
   // True when Firelight can't apply this itself and must hand the raw code to
   // the core (Game Genie / an emu-handler .cht entry): no pokes, but a code
-  [[nodiscard]] bool isCoreApplied() const {
-    return pokes.empty() && !rawCode.empty();
-  }
+  [[nodiscard]] bool isCoreApplied() const { return pokes.empty() && !rawCode.empty(); }
 };
 
 } // namespace firelight::cheats

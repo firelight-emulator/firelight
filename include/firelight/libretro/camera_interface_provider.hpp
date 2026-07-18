@@ -6,5 +6,5 @@ namespace firelight::libretro {
 class ICameraInterfaceProvider {
 public:
   virtual ~ICameraInterfaceProvider() = default;
-  };
-  }
+};
+} // namespace firelight::libretro

@@ -1,11 +1,9 @@
-#include <sqlite_achievement_repository.hpp>
-
 #include <gtest/gtest.h>
 #include <rcheevos/award_achievement_response.hpp>
 #include <rcheevos/gameid_response.hpp>
 #include <rcheevos/login2_response.hpp>
-
 #include <rcheevos/rcheevos_offline_client.hpp>
+#include <sqlite_achievement_repository.hpp>
 
 namespace firelight::achievements {
 
@@ -18,8 +16,7 @@ TEST_F(RetroAchievementsOfflineClientTest, PingCheckReturnsSuccess) {
   RetroAchievementsOfflineClient offlineClient(service);
 
   const auto response =
-      offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
-                                  "r=ping", "application/json");
+      offlineClient.handleRequest("https://retroachievements.com/dorequest.php", "r=ping", "application/json");
 
   ASSERT_EQ(response.body_length, 16);
   ASSERT_EQ(response.http_status_code, 200);
@@ -27,7 +24,6 @@ TEST_F(RetroAchievementsOfflineClientTest, PingCheckReturnsSuccess) {
   ASSERT_EQ("{\"Success\":true}", std::string(response.body));
 }
 
-// TODO
 // Test awarding achievement we already have
 // Test awarding achievement in mode we dont have when we have the other mode
 // Test awarding achievement we dont have
@@ -38,9 +34,8 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginWithPasswordOffline) {
 
   RetroAchievementsOfflineClient offlineClient(service);
 
-  const auto response = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=login2&u=testuser&p=testpassword", "application/json");
+  const auto response = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                                    "r=login2&u=testuser&p=testpassword", "application/json");
 
   ASSERT_EQ(response.body_length, 0);
   ASSERT_EQ(response.http_status_code, 500);
@@ -54,9 +49,8 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginWithTokenOffline) {
 
   RetroAchievementsOfflineClient offlineClient(service);
 
-  const auto response = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=login2&u=testuser&t=testtoken", "application/json");
+  const auto response = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                                    "r=login2&u=testuser&t=testtoken", "application/json");
 
   ASSERT_NE(nullptr, response.body);
   auto body = std::string(response.body);
@@ -81,14 +75,10 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
 
   RetroAchievementsOfflineClient offlineClient(service);
 
-  service.create(User{.username = "testuser",
-                      .token = "testtoken",
-                      .softcoreScore = 1000,
-                      .score = 2000});
+  service.create(User{.username = "testuser", .token = "testtoken", .softcoreScore = 1000, .score = 2000});
 
-  const auto response = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=login2&u=testuser&t=testtoken", "application/json");
+  const auto response = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                                    "r=login2&u=testuser&t=testtoken", "application/json");
 
   ASSERT_NE(nullptr, response.body);
   auto body = std::string(response.body);
@@ -107,7 +97,6 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
   ASSERT_EQ(parsedResponse.SoftcoreScore, 1000);
 }
 
-// TODO
 // TEST_F(RetroAchievementsOfflineClientTest,
 //        StartSessionWorksAfterOfflineAchievementUnlocks) {
 //   auto repo = SqliteAchievementRepository(":memory:");
@@ -215,7 +204,6 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
 //   // TODO: VERIFY THAT SYNCING WORKS
 // }
 
-// TODO
 // TEST_F(RetroAchievementsOfflineClientTest,
 //        StartSessionWhenNoAchievementsUnlocked) {
 //   auto repo = SqliteAchievementRepository(":memory:");
@@ -237,18 +225,14 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
 //   ASSERT_TRUE(startSession.ServerNow > 0);
 // }
 
-TEST_F(RetroAchievementsOfflineClientTest,
-       AwardAchievementFirstTimeNonHardcore) {
+TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeNonHardcore) {
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
 
   RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
-  User user{.username = "testuser",
-            .token = "token",
-            .softcoreScore = 100,
-            .score = 50};
+  User user{.username = "testuser", .token = "token", .softcoreScore = 100, .score = 50};
   service.create(user);
 
   Achievement achievement{.id = 1,
@@ -263,9 +247,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   repo.create(achievement);
 
   // Award achievement in non-hardcore mode
-  auto response = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=awardachievement&u=testuser&t=token&a=1&h=0", "application/json");
+  auto response = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                              "r=awardachievement&u=testuser&t=token&a=1&h=0", "application/json");
 
   EXPECT_EQ(response.http_status_code, 200);
 
@@ -283,10 +266,7 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeHardcore) {
   RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
-  User user{.username = "testuser",
-            .token = "token",
-            .softcoreScore = 100,
-            .score = 50};
+  User user{.username = "testuser", .token = "token", .softcoreScore = 100, .score = 50};
   service.create(user);
 
   Achievement achievement{.id = 1,
@@ -301,9 +281,8 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeHardcore) {
   repo.create(achievement);
 
   // Award achievement in hardcore mode
-  auto response = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=awardachievement&u=testuser&t=token&a=1&h=1", "application/json");
+  auto response = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                              "r=awardachievement&u=testuser&t=token&a=1&h=1", "application/json");
 
   EXPECT_EQ(response.http_status_code, 200);
 
@@ -314,18 +293,14 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeHardcore) {
   EXPECT_EQ(updatedUser->score, 75);          // 50 + 25
 }
 
-TEST_F(RetroAchievementsOfflineClientTest,
-       AwardAchievementHardcoreAfterNonHardcore) {
+TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementHardcoreAfterNonHardcore) {
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
 
   RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
-  User user{.username = "testuser",
-            .token = "token",
-            .softcoreScore = 100,
-            .score = 50};
+  User user{.username = "testuser", .token = "token", .softcoreScore = 100, .score = 50};
   service.create(user);
 
   Achievement achievement{.id = 1,
@@ -340,9 +315,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   repo.create(achievement);
 
   // First, award in non-hardcore mode
-  auto response1 = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=awardachievement&u=testuser&t=token&a=1&h=0", "application/json");
+  auto response1 = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                               "r=awardachievement&u=testuser&t=token&a=1&h=0", "application/json");
   EXPECT_EQ(response1.http_status_code, 200);
 
   // Verify initial state
@@ -352,9 +326,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   EXPECT_EQ(userAfterFirst->score, 50);          // Unchanged
 
   // Then, award in hardcore mode (should move points)
-  auto response2 = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=awardachievement&u=testuser&t=token&a=1&h=1", "application/json");
+  auto response2 = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                               "r=awardachievement&u=testuser&t=token&a=1&h=1", "application/json");
   EXPECT_EQ(response2.http_status_code, 200);
 
   // Verify points moved from non-hardcore to hardcore
@@ -371,18 +344,14 @@ TEST_F(RetroAchievementsOfflineClientTest,
   EXPECT_TRUE(unlock->earnedHardcore);
 }
 
-TEST_F(RetroAchievementsOfflineClientTest,
-       AwardAchievementNonHardcoreAfterHardcore) {
+TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementNonHardcoreAfterHardcore) {
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
 
   RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
-  User user{.username = "testuser",
-            .token = "token",
-            .softcoreScore = 100,
-            .score = 50};
+  User user{.username = "testuser", .token = "token", .softcoreScore = 100, .score = 50};
   service.create(user);
 
   Achievement achievement{.id = 1,
@@ -397,9 +366,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
   repo.create(achievement);
 
   // First, award in hardcore mode
-  auto response1 = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=awardachievement&u=testuser&t=token&a=1&h=1", "application/json");
+  auto response1 = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                               "r=awardachievement&u=testuser&t=token&a=1&h=1", "application/json");
   EXPECT_EQ(response1.http_status_code, 200);
 
   // Verify initial state
@@ -410,9 +378,8 @@ TEST_F(RetroAchievementsOfflineClientTest,
 
   // Then, try to award in non-hardcore mode (should be ignored - no points
   // change)
-  auto response2 = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=awardachievement&u=testuser&t=token&a=1&h=0", "application/json");
+  auto response2 = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                               "r=awardachievement&u=testuser&t=token&a=1&h=0", "application/json");
   EXPECT_EQ(response2.http_status_code, 200);
 
   // Verify points unchanged (hardcore takes precedence)
@@ -428,18 +395,14 @@ TEST_F(RetroAchievementsOfflineClientTest,
   EXPECT_TRUE(unlock->earnedHardcore);
 }
 
-TEST_F(RetroAchievementsOfflineClientTest,
-       AwardAchievementAlreadyEarnedInSameMode) {
+TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementAlreadyEarnedInSameMode) {
   auto repo = SqliteAchievementRepository(":memory:");
   auto service = AchievementService(repo);
 
   RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
-  User user{.username = "testuser",
-            .token = "token",
-            .softcoreScore = 100,
-            .score = 50};
+  User user{.username = "testuser", .token = "token", .softcoreScore = 100, .score = 50};
   service.create(user);
 
   Achievement achievement{.id = 1,
@@ -454,14 +417,12 @@ TEST_F(RetroAchievementsOfflineClientTest,
   repo.create(achievement);
 
   // Award achievement twice in non-hardcore mode
-  auto response1 = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=awardachievement&u=testuser&t=token&a=1&h=0", "application/json");
+  auto response1 = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                               "r=awardachievement&u=testuser&t=token&a=1&h=0", "application/json");
   EXPECT_EQ(response1.http_status_code, 200);
 
-  auto response2 = offlineClient.handleRequest(
-      "https://retroachievements.com/dorequest.php",
-      "r=awardachievement&u=testuser&t=token&a=1&h=0", "application/json");
+  auto response2 = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
+                                               "r=awardachievement&u=testuser&t=token&a=1&h=0", "application/json");
   EXPECT_EQ(response2.http_status_code, 200);
 
   // Verify points only added once

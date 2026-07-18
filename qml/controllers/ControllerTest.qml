@@ -55,7 +55,5 @@ ApplicationWindow {
                 font.family: Constants.regularFontFamily
             }
         }
-
     }
-
 }

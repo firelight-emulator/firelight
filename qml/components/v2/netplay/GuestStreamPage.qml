@@ -12,9 +12,9 @@ Rectangle {
 
     onVisibleChanged: {
         if (visible) {
-            NetworkService.attachStreamItem(streamItem)
+            NetworkService.attachStreamItem(streamItem);
         } else {
-            NetworkService.detachStreamItem(streamItem)
+            NetworkService.detachStreamItem(streamItem);
         }
     }
     Component.onDestruction: NetworkService.detachStreamItem(streamItem)
@@ -22,8 +22,7 @@ Rectangle {
     NetplayStreamItem {
         id: streamItem
 
-        readonly property real sourceAspect: frameWidth > 0 && frameHeight > 0
-                                             ? frameWidth / frameHeight : 4 / 3
+        readonly property real sourceAspect: frameWidth > 0 && frameHeight > 0 ? frameWidth / frameHeight : 4 / 3
 
         anchors.centerIn: parent
         width: Math.min(parent.width, parent.height * sourceAspect)

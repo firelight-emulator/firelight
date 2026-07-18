@@ -5,9 +5,9 @@ import QtQuick.Layouts
 FocusScope {
     id: myDelegate
 
-    signal doTheThing()
+    signal doTheThing
 
-    signal click()
+    signal click
 
     required property var index
     required property var model
@@ -28,7 +28,7 @@ FocusScope {
         focus: true
 
         onClicked: function () {
-            myDelegate.doTheThing()
+            myDelegate.doTheThing();
         }
 
         hoverEnabled: false
@@ -48,7 +48,6 @@ FocusScope {
                 fillMode: Image.Stretch
 
                 source: myDelegate.model.capsule_image_url
-
             }
             Text {
                 text: myDelegate.model.title

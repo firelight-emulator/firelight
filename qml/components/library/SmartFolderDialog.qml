@@ -5,7 +5,6 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
 
-// TODO
 // Editor for a smart folder's name + criteria. Produces the SmartFolderCriteria
 // JSON consumed by the C++ evaluator (keys must match smart_folder.cpp's parse)
 // Create: leave editFolderId at -1, open(). Edit: set editFolderId + call
@@ -30,17 +29,31 @@ FirelightDialog {
     property bool selectedSortAscending: true
 
     // The available folder accent colors ("" = none)
-    readonly property var swatchColors: ["", "#e5484d", "#f76b15", "#f5d90a",
-        "#46a758", "#0091ff", "#8e4ec6", "#e93d82"]
+    readonly property var swatchColors: ["", "#e5484d", "#f76b15", "#f5d90a", "#46a758", "#0091ff", "#8e4ec6", "#e93d82"]
 
     // Game-sort options for the folder's remembered sort (role names must match
     // EntryListModel's roles)
     readonly property var sortOptions: [
-        { label: "Default (name)", role: "" },
-        { label: "Name", role: "displayName" },
-        { label: "Recently played", role: "lastPlayedAt" },
-        { label: "Most played", role: "numSecondsPlayed" },
-        { label: "Release year", role: "releaseYear" }
+        {
+            label: "Default (name)",
+            role: ""
+        },
+        {
+            label: "Name",
+            role: "displayName"
+        },
+        {
+            label: "Recently played",
+            role: "lastPlayedAt"
+        },
+        {
+            label: "Most played",
+            role: "numSecondsPlayed"
+        },
+        {
+            label: "Release year",
+            role: "releaseYear"
+        }
     ]
 
     // Lets a future edit entry point prefill the appearance controls
@@ -50,7 +63,7 @@ FirelightDialog {
         selectedSortAscending = ascending !== false;
     }
 
-    signal saved()
+    signal saved
 
     function toggleId(arr, id) {
         var copy = arr.slice();
@@ -117,16 +130,20 @@ FirelightDialog {
         nameInput.text = priorName;
         if (kind === "recent") {
             lastDaysInput.text = "14";
-            if (!priorName.trim()) nameInput.text = "Recently played";
+            if (!priorName.trim())
+                nameInput.text = "Recently played";
         } else if (kind === "never") {
             unplayedOnly.checked = true;
-            if (!priorName.trim()) nameInput.text = "Never played";
+            if (!priorName.trim())
+                nameInput.text = "Never played";
         } else if (kind === "favorites") {
             favoriteOnly.checked = true;
-            if (!priorName.trim()) nameInput.text = "Favorites";
+            if (!priorName.trim())
+                nameInput.text = "Favorites";
         } else if (kind === "played") {
             minMinutesInput.text = "60";
-            if (!priorName.trim()) nameInput.text = "Sunk hours in";
+            if (!priorName.trim())
+                nameInput.text = "Sunk hours in";
         }
     }
 
@@ -245,7 +262,9 @@ FirelightDialog {
             width: control.availableWidth - 16
             spacing: 8
 
-            FieldLabel { text: "Name" }
+            FieldLabel {
+                text: "Name"
+            }
             ThemedField {
                 id: nameInput
                 placeholder: "Smart folder name"
@@ -261,10 +280,22 @@ FirelightDialog {
                 spacing: 6
                 Repeater {
                     model: [
-                        { label: "Recently played", kind: "recent" },
-                        { label: "Never played", kind: "never" },
-                        { label: "Favorites", kind: "favorites" },
-                        { label: "Sunk hours in", kind: "played" }
+                        {
+                            label: "Recently played",
+                            kind: "recent"
+                        },
+                        {
+                            label: "Never played",
+                            kind: "never"
+                        },
+                        {
+                            label: "Favorites",
+                            kind: "favorites"
+                        },
+                        {
+                            label: "Sunk hours in",
+                            kind: "played"
+                        }
                     ]
                     delegate: FLButton {
                         required property var modelData
@@ -277,14 +308,18 @@ FirelightDialog {
             }
 
             // --- Source ---
-            SectionLabel { text: "Source" }
+            SectionLabel {
+                text: "Source"
+            }
             FieldLabel {
                 text: "Leave everything below empty to draw from the whole library."
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
             }
 
-            FieldLabel { text: "Path contains" }
+            FieldLabel {
+                text: "Path contains"
+            }
             ThemedField {
                 id: pathContainsInput
                 placeholder: "e.g. snes"
@@ -320,7 +355,9 @@ FirelightDialog {
             }
 
             // --- Filters ---
-            SectionLabel { text: "Filters" }
+            SectionLabel {
+                text: "Filters"
+            }
 
             CheckDelegate {
                 id: favoriteOnly
@@ -378,7 +415,9 @@ FirelightDialog {
                 }
             }
 
-            FieldLabel { text: "Genre contains" }
+            FieldLabel {
+                text: "Genre contains"
+            }
             ThemedField {
                 id: genreInput
                 placeholder: "e.g. RPG"
@@ -389,13 +428,21 @@ FirelightDialog {
                 spacing: 8
                 ColumnLayout {
                     Layout.fillWidth: true
-                    FieldLabel { text: "Developer contains" }
-                    ThemedField { id: developerInput }
+                    FieldLabel {
+                        text: "Developer contains"
+                    }
+                    ThemedField {
+                        id: developerInput
+                    }
                 }
                 ColumnLayout {
                     Layout.fillWidth: true
-                    FieldLabel { text: "Publisher contains" }
-                    ThemedField { id: publisherInput }
+                    FieldLabel {
+                        text: "Publisher contains"
+                    }
+                    ThemedField {
+                        id: publisherInput
+                    }
                 }
             }
 
@@ -404,7 +451,9 @@ FirelightDialog {
                 spacing: 8
                 ColumnLayout {
                     Layout.fillWidth: true
-                    FieldLabel { text: "Year from" }
+                    FieldLabel {
+                        text: "Year from"
+                    }
                     ThemedField {
                         id: yearMinInput
                         placeholder: "1990"
@@ -413,7 +462,9 @@ FirelightDialog {
                 }
                 ColumnLayout {
                     Layout.fillWidth: true
-                    FieldLabel { text: "Year to" }
+                    FieldLabel {
+                        text: "Year to"
+                    }
                     ThemedField {
                         id: yearMaxInput
                         placeholder: "1999"
@@ -427,7 +478,9 @@ FirelightDialog {
                 spacing: 8
                 ColumnLayout {
                     Layout.fillWidth: true
-                    FieldLabel { text: "Min. minutes played" }
+                    FieldLabel {
+                        text: "Min. minutes played"
+                    }
                     ThemedField {
                         id: minMinutesInput
                         placeholder: "60"
@@ -436,7 +489,9 @@ FirelightDialog {
                 }
                 ColumnLayout {
                     Layout.fillWidth: true
-                    FieldLabel { text: "Played in last N days" }
+                    FieldLabel {
+                        text: "Played in last N days"
+                    }
                     ThemedField {
                         id: lastDaysInput
                         placeholder: "30"
@@ -446,9 +501,13 @@ FirelightDialog {
             }
 
             // --- Appearance ---
-            SectionLabel { text: "Appearance" }
+            SectionLabel {
+                text: "Appearance"
+            }
 
-            FieldLabel { text: "Accent color" }
+            FieldLabel {
+                text: "Accent color"
+            }
             Flow {
                 Layout.fillWidth: true
                 spacing: 8
@@ -461,9 +520,7 @@ FirelightDialog {
                         radius: 13
                         color: modelData === "" ? "transparent" : modelData
                         border.width: control.selectedColor === modelData ? 3 : 1
-                        border.color: control.selectedColor === modelData
-                            ? "white"
-                            : (modelData === "" ? ColorPalette.neutral500 : "#00000040")
+                        border.color: control.selectedColor === modelData ? "white" : (modelData === "" ? ColorPalette.neutral500 : "#00000040")
 
                         // "None" swatch shows a slash
                         Rectangle {
@@ -483,7 +540,9 @@ FirelightDialog {
                 }
             }
 
-            FieldLabel { text: "Default game sort" }
+            FieldLabel {
+                text: "Default game sort"
+            }
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8

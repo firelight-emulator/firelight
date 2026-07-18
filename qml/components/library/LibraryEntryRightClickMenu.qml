@@ -19,7 +19,7 @@ RightClickMenu {
         text: "Play"
 
         onTriggered: {
-            startGameClicked(root.entryId)
+            startGameClicked(root.entryId);
         }
     }
 
@@ -27,7 +27,7 @@ RightClickMenu {
         text: "Edit"
 
         onTriggered: {
-            editEntryClicked(root.entryId)
+            editEntryClicked(root.entryId);
         }
     }
 
@@ -44,16 +44,16 @@ RightClickMenu {
             delegate: RightClickMenuItem {
                 text: model.display_name
                 onTriggered: {
-                    LibraryEntryModel.addEntryToFolder(root.entryId, model.playlist_id)
+                    LibraryEntryModel.addEntryToFolder(root.entryId, model.playlist_id);
                     // Add your action here
                 }
             }
 
             onObjectAdded: function (index, object) {
-                addToFolderRightClick.insertItem(index, object)
+                addToFolderRightClick.insertItem(index, object);
             }
             onObjectRemoved: function (index, object) {
-                addToFolderRightClick.removeItem(object)
+                addToFolderRightClick.removeItem(object);
             }
         }
     }
@@ -63,7 +63,7 @@ RightClickMenu {
         enabled: root.showRemoveFromFolder
 
         onTriggered: {
-            removeFromFolderClicked(root.entryId)
+            removeFromFolderClicked(root.entryId);
         }
     }
 
@@ -76,8 +76,7 @@ RightClickMenu {
         enabled: root.showManageSaveData
 
         onTriggered: {
-            manageSaveDataClicked(root.entryId)
+            manageSaveDataClicked(root.entryId);
         }
     }
-
 }

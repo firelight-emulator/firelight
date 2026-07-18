@@ -1,48 +1,45 @@
 #include "emulator_item_renderer.hpp"
-#include <firelight/saves/isave_manager.hpp>
-#include <rcheevos/ra_client.hpp>
-#include <QJsonObject>
 
 #include "../gui/game_image_provider.hpp"
 #include "../gui/image_qt.hpp"
+
 #include <firelight/media/clip_recorder.hpp>
 #include <firelight/media/media_service.hpp>
+#include <firelight/saves/isave_manager.hpp>
 
+#include <QJsonObject>
 #include <QOpenGLPaintDevice>
 #include <QQuickWindow>
 #include <QVulkanDeviceFunctions>
-#include <QVulkanInstance>
 #include <QVulkanFunctions>
+#include <QVulkanInstance>
 #include <libretro/libretro_vulkan.h>
+#include <rcheevos/ra_client.hpp>
 #include <rhi/qrhi.h>
 #ifdef _WIN32
-#  include <vulkan/vulkan_win32.h>
+#include <vulkan/vulkan_win32.h>
 #endif
-#include <spdlog/spdlog.h>
-
 #include "emulator_item.hpp"
+
+#include <spdlog/spdlog.h>
 
 static EmulatorItemRenderer *globalRenderer = nullptr;
 static QRhi *globalRhi = nullptr;
 
-// TODO
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Construction / destruction
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-EmulatorItemRenderer::EmulatorItemRenderer(
-  const QSGRendererInterface::GraphicsApi api, QWindow *window,
-  firelight::emulation::EmulatorInstance *emulatorInstance,
-  firelight::activity::IActivityLog *activityLog,
-  firelight::achievements::RAClient *achievementManager,
-  firelight::gui::GameImageProvider *gameImageProvider,
-  firelight::saves::ISaveManager *saveManager,
-  firelight::media::MediaService *mediaService)
-  : m_window(window), m_graphicsApi(api),
-    m_emulatorInstance(emulatorInstance), m_activityLog(activityLog),
-    m_achievementManager(achievementManager),
-    m_gameImageProvider(gameImageProvider), m_saveManager(saveManager),
-    m_mediaService(mediaService) {
+EmulatorItemRenderer::EmulatorItemRenderer(const QSGRendererInterface::GraphicsApi api, QWindow *window,
+                                           firelight::emulation::EmulatorInstance *emulatorInstance,
+                                           firelight::activity::IActivityLog *activityLog,
+                                           firelight::achievements::RAClient *achievementManager,
+                                           firelight::gui::GameImageProvider *gameImageProvider,
+                                           firelight::saves::ISaveManager *saveManager,
+                                           firelight::media::MediaService *mediaService)
+    : m_window(window), m_graphicsApi(api), m_emulatorInstance(emulatorInstance), m_activityLog(activityLog),
+      m_achievementManager(achievementManager), m_gameImageProvider(gameImageProvider), m_saveManager(saveManager),
+      m_mediaService(mediaService) {
   globalRenderer = this;
   m_clipRecorder = std::make_unique<firelight::media::ClipRecorder>();
 }
@@ -50,19 +47,22 @@ EmulatorItemRenderer::EmulatorItemRenderer(
 EmulatorItemRenderer::~EmulatorItemRenderer() {
   m_quitting = true;
 
-  if (m_clipRecorder)
+  if (m_clipRecorder) {
     m_clipRecorder->stop();
+  }
 
-  if (!m_paused && m_playSessionTimer.isValid())
+  if (!m_paused && m_playSessionTimer.isValid()) {
     m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
+  }
 
   m_playSession.endTime = QDateTime::currentMSecsSinceEpoch();
   m_activityLog->createPlaySession(m_playSession);
 
   m_achievementManager->unloadGame();
 
-  for (auto &url: m_rewindImageUrls)
+  for (auto &url : m_rewindImageUrls) {
     m_gameImageProvider->removeImageWithUrl(url);
+  }
   m_rewindImageUrls.clear();
 
   if (m_vulkanRenderer) {
@@ -70,7 +70,6 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
   }
 }
 
-// TODO
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // IVideoDataReceiver â€” general
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -83,59 +82,58 @@ retro_hw_context_type EmulatorItemRenderer::getPreferredHwRender() {
 }
 
 proc_address_t EmulatorItemRenderer::getProcAddress(const char *sym) {
-  if (m_graphicsApi == QSGRendererInterface::OpenGL)
+  if (m_graphicsApi == QSGRendererInterface::OpenGL) {
     return QOpenGLContext::currentContext()->getProcAddress(sym);
+  }
   return nullptr;
 }
 
-uintptr_t EmulatorItemRenderer::getCurrentFramebufferId() {
-  return m_currentFramebufferId;
-}
+uintptr_t EmulatorItemRenderer::getCurrentFramebufferId() { return m_currentFramebufferId; }
 
 void EmulatorItemRenderer::setSystemAVInfo(retro_system_av_info *info) {
-  if (!info)
+  if (!info) {
     return;
+  }
   m_coreBaseWidth = info->geometry.base_width;
   m_coreBaseHeight = info->geometry.base_height;
   m_coreMaxWidth = info->geometry.max_width;
   m_coreMaxHeight = info->geometry.max_height;
   m_coreAspectRatio = info->geometry.aspect_ratio;
-  m_calculatedAspectRatio =
-      static_cast<float>(m_coreBaseWidth) / static_cast<float>(m_coreBaseHeight);
-  if (info->timing.fps > 0)
+  m_calculatedAspectRatio = static_cast<float>(m_coreBaseWidth) / static_cast<float>(m_coreBaseHeight);
+  if (info->timing.fps > 0) {
     m_clipFps = info->timing.fps;
+  }
 
-  if (m_geometryChangedCallback)
-    m_geometryChangedCallback(m_coreBaseWidth, m_coreBaseHeight,
-                              m_coreAspectRatio, info->timing.fps);
+  if (m_geometryChangedCallback) {
+    m_geometryChangedCallback(m_coreBaseWidth, m_coreBaseHeight, m_coreAspectRatio, info->timing.fps);
+  }
 }
 
 void EmulatorItemRenderer::setPixelFormat(retro_pixel_format *format) {
   switch (*format) {
-    case RETRO_PIXEL_FORMAT_XRGB8888: m_pixelFormat = QImage::Format_RGB32;
-      break;
-    case RETRO_PIXEL_FORMAT_RGB565: m_pixelFormat = QImage::Format_RGB16;
-      break;
-    default: break;
+  case RETRO_PIXEL_FORMAT_XRGB8888:
+    m_pixelFormat = QImage::Format_RGB32;
+    break;
+  case RETRO_PIXEL_FORMAT_RGB565:
+    m_pixelFormat = QImage::Format_RGB16;
+    break;
+  default:
+    break;
   }
 }
 
-void EmulatorItemRenderer::setScreenRotation(unsigned rotation) {
-  m_screenRotation = rotation;
-}
+void EmulatorItemRenderer::setScreenRotation(unsigned rotation) { m_screenRotation = rotation; }
 
-// TODO
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // IVideoDataReceiver â€” HW render setup
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 void EmulatorItemRenderer::setHwRenderContextNegotiationInterface(
-  retro_hw_render_context_negotiation_interface *iface) {
+    retro_hw_render_context_negotiation_interface *iface) {
   // Libretro API only defines Vulkan and Unknown, and Unknown is an error, so just check for Vulkan
   if (iface->interface_type != RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN) {
-    spdlog::warn(
-      "Received non-Vulkan context negotiation interface (type {})",
-      static_cast<int>(iface->interface_type));
+    spdlog::warn("Received non-Vulkan context negotiation interface (type {})",
+                 static_cast<int>(iface->interface_type));
     return;
   }
 
@@ -149,16 +147,12 @@ void EmulatorItemRenderer::setHwRenderContextNegotiationInterface(
 
   // Store the interface for the Vulkan renderer to use later when initializing the context
   // This pointer is owned by the core and should not be freed by us
-  m_negotiation =
-      reinterpret_cast<const retro_hw_render_context_negotiation_interface_vulkan *>(
-        iface);
+  m_negotiation = reinterpret_cast<const retro_hw_render_context_negotiation_interface_vulkan *>(iface);
 
-  spdlog::info("Stored Vulkan context negotiation interface (version {})",
-               m_negotiation->interface_version);
+  spdlog::info("Stored Vulkan context negotiation interface (version {})", m_negotiation->interface_version);
 }
 
-void EmulatorItemRenderer::setHwRenderInterface(
-  retro_hw_render_callback *iface) {
+void EmulatorItemRenderer::setHwRenderInterface(retro_hw_render_callback *iface) {
   // I believe this is only used for OpenGL... need to confirm. Vulkan uses the negotiation interface instead
 
   spdlog::info("IS THIS ACTUALLY BEING CALLED? EmulatorItemRenderer::getHwRenderInterface");
@@ -172,9 +166,7 @@ void EmulatorItemRenderer::setHwRenderInterface(
     iface->get_proc_address = [](const char *sym) -> retro_proc_address_t {
       return globalRenderer->getProcAddress(sym);
     };
-    iface->get_current_framebuffer = [] {
-      return globalRenderer->getCurrentFramebufferId();
-    };
+    iface->get_current_framebuffer = [] { return globalRenderer->getCurrentFramebufferId(); };
   } else if (m_graphicsApi == QSGRendererInterface::Vulkan) {
     // Vulkan cores must not call these; provide safe stubs
     iface->get_current_framebuffer = []() -> uintptr_t { return 0; };
@@ -182,8 +174,7 @@ void EmulatorItemRenderer::setHwRenderInterface(
   }
 }
 
-void EmulatorItemRenderer::getHwRenderInterface(
-  retro_hw_render_interface **iface) {
+void EmulatorItemRenderer::getHwRenderInterface(retro_hw_render_interface **iface) {
   // We expect this to be called after the core sets the context negotiation interface
   if (m_graphicsApi != QSGRendererInterface::Vulkan || !m_vulkanRenderer) {
     spdlog::error("Vulkan renderer not initialized; cannot set HW render interface");
@@ -195,8 +186,7 @@ void EmulatorItemRenderer::getHwRenderInterface(
 
 // IVideoDataReceiver - per-frame video
 
-void EmulatorItemRenderer::receive(const void *data, const unsigned width,
-                                   const unsigned height, const size_t pitch) {
+void EmulatorItemRenderer::receive(const void *data, const unsigned width, const unsigned height, const size_t pitch) {
   if (data == RETRO_HW_FRAME_BUFFER_VALID) {
     // Vulkan: m_coreImage already set by set_image() earlier this frame
     // Record the actual render dimensions so synchronize() can resize colorTexture to match
@@ -208,20 +198,20 @@ void EmulatorItemRenderer::receive(const void *data, const unsigned width,
   }
 
   if (data && width > 0 && height > 0 && pitch > 0) {
-    QImage image(static_cast<const uchar *>(data), width, height, pitch,
-                 m_pixelFormat);
-    if (m_graphicsApi == QSGRendererInterface::OpenGL)
+    QImage image(static_cast<const uchar *>(data), width, height, pitch, m_pixelFormat);
+    if (m_graphicsApi == QSGRendererInterface::OpenGL) {
       image.flip(Qt::Vertical);
+    }
 
     auto newImage = image.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
-    if (m_screenRotation != 0)
+    if (m_screenRotation != 0) {
       newImage = newImage.transformed(QTransform().rotate(m_screenRotation * 90.0));
+    }
 
     m_currentUpdateBatch->uploadTexture(colorTexture(), newImage);
   }
 }
 
-// TODO
 // Reads the composited frame back off the GPU and fans it out to every CPU-side
 // capture consumer. colorTexture() is filled by both the software path
 // (uploadTexture) and the hardware path (copyTexture), so this is the one place
@@ -230,16 +220,15 @@ void EmulatorItemRenderer::scheduleFrameReadback(QRhiResourceUpdateBatch *batch)
   auto *rbResult = new QRhiReadbackResult;
   rbResult->completed = [this, rbResult] {
     if (!rbResult->data.isEmpty()) {
-      const auto *pixels =
-          reinterpret_cast<const uchar *>(rbResult->data.constData());
+      const auto *pixels = reinterpret_cast<const uchar *>(rbResult->data.constData());
       // Own the pixels: the readback buffer is freed when this callback returns
-      QImage frame = QImage(pixels, rbResult->pixelSize.width(),
-                            rbResult->pixelSize.height(),
+      QImage frame = QImage(pixels, rbResult->pixelSize.width(), rbResult->pixelSize.height(),
                             QImage::Format_RGBA8888_Premultiplied)
                          .copy();
       // OpenGL's default framebuffer is bottom-up
-      if (m_graphicsApi == QSGRendererInterface::OpenGL)
+      if (m_graphicsApi == QSGRendererInterface::OpenGL) {
         frame.flip(Qt::Vertical);
+      }
       m_currentImage = frame;
       feedClipRecorder(m_currentImage);
       feedNetplayStream(m_currentImage);
@@ -251,26 +240,28 @@ void EmulatorItemRenderer::scheduleFrameReadback(QRhiResourceUpdateBatch *batch)
 }
 
 bool EmulatorItemRenderer::anyFrameConsumerActive() const {
-  if (m_captureNextFrame)
+  if (m_captureNextFrame) {
     return true;
-  if (!m_emulatorInstance)
+  }
+  if (!m_emulatorInstance) {
     return false;
-  if (m_emulatorInstance->getInstantReplayEnabled())
+  }
+  if (m_emulatorInstance->getInstantReplayEnabled()) {
     return true;
-  if (auto *sink = m_emulatorInstance->getNetplayStreamSink())
+  }
+  if (auto *sink = m_emulatorInstance->getNetplayStreamSink()) {
     return sink->wantsFrames();
+  }
   return false;
 }
 
-bool EmulatorItemRenderer::deferCaptureUntilFrameReady(
-    const EmulatorCommand &command) {
-  // TODO
+bool EmulatorItemRenderer::deferCaptureUntilFrameReady(const EmulatorCommand &command) {
   // Only HW cores idle enough to skip readback need this; software cores and
   // active HW cores already have a fresh m_currentImage. Paused cores never run
   // a frame, so deferring would never resolve — capture the pause image instead
-  if (!m_usingHardwareRenderer || m_paused || command.deferred ||
-      anyFrameConsumerActive())
+  if (!m_usingHardwareRenderer || m_paused || command.deferred || anyFrameConsumerActive()) {
     return false;
+  }
   m_captureNextFrame = true;
   EmulatorCommand deferred = command;
   deferred.deferred = true;
@@ -293,14 +284,14 @@ void EmulatorItemRenderer::feedNetplayStream(const QImage &frame) {
   m_streamFrameIndex++;
 }
 
-// TODO
 // Keeps the rolling instant-replay window fed with the latest frame. newImage is
 // a deep copy (from convertToFormat), so ClipRecorder can hand it to its encoder
 // worker safely. The pts is core-frame-based (not wall clock), so the window is
 // N seconds of gameplay regardless of fast-forward
 void EmulatorItemRenderer::feedClipRecorder(const QImage &frame) {
-  if (!m_clipRecorder)
+  if (!m_clipRecorder) {
     return;
+  }
 
   // Gated by the "instant-replay-enabled" setting (resolved on the instance)
   // When off, tear down the recorder so it isn't burning CPU encoding
@@ -314,17 +305,16 @@ void EmulatorItemRenderer::feedClipRecorder(const QImage &frame) {
 
   const int width = frame.width();
   const int height = frame.height();
-  if (width <= 0 || height <= 0)
+  if (width <= 0 || height <= 0) {
     return;
+  }
 
   const int fps = m_clipFps >= 1.0 ? static_cast<int>(m_clipFps + 0.5) : 60;
 
   // (Re)start when the source geometry changes (some cores switch resolution)
-  if (!m_clipRecorder->isRecording() || width != m_clipWidth ||
-      height != m_clipHeight) {
+  if (!m_clipRecorder->isRecording() || width != m_clipWidth || height != m_clipHeight) {
     if (!m_clipRecorder->start(width, height, fps, 48000, 2)) {
-      spdlog::warn("Clip recorder failed to start ({}x{}@{}fps)", width, height,
-                   fps);
+      spdlog::warn("Clip recorder failed to start ({}x{}@{}fps)", width, height, fps);
       return;
     }
     spdlog::info("Clip recorder started ({}x{}@{}fps)", width, height, fps);
@@ -354,8 +344,7 @@ void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
     // which the QRhi render thread provides here
     if (m_resetContextFunction) {
       QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
-      cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch,
-                    QRhiCommandBuffer::ExternalContent);
+      cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch, QRhiCommandBuffer::ExternalContent);
       cb->beginExternal();
       glGetIntegerv(GL_FRAMEBUFFER_BINDING, &m_currentFramebufferId);
       m_resetContextFunction();
@@ -368,25 +357,30 @@ void EmulatorItemRenderer::initialize(QRhiCommandBuffer *cb) {
 
 void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   const auto emulatorItem = dynamic_cast<EmulatorItem *>(item);
-  if (!emulatorItem)
+  if (!emulatorItem) {
     return;
+  }
 
   m_emulatorItem = emulatorItem;
 
   if (m_paused && !emulatorItem->paused()) {
     // Resumed: bring audio back
-    if (m_emulatorInstance)
+    if (m_emulatorInstance) {
       m_emulatorInstance->setPaused(false);
-    if (m_playSessionTimer.isValid())
+    }
+    if (m_playSessionTimer.isValid()) {
       m_playSessionTimer.restart();
-    else
+    } else {
       m_playSessionTimer.start();
+    }
   } else if (!m_paused && emulatorItem->paused()) {
     // Paused: suspend audio so the queued buffer doesn't keep playing
-    if (m_emulatorInstance)
+    if (m_emulatorInstance) {
       m_emulatorInstance->setPaused(true);
-    if (m_playSessionTimer.isValid())
+    }
+    if (m_playSessionTimer.isValid()) {
       m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
+    }
   }
 
   m_paused = emulatorItem->paused();
@@ -401,15 +395,13 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     if (pendingW >= 2 && pendingH >= 2 &&
         (static_cast<int>(pendingW) != emulatorItem->fixedColorBufferWidth() ||
          static_cast<int>(pendingH) != emulatorItem->fixedColorBufferHeight())) {
-      spdlog::info("synchronize: resizing colorBuffer {}x{} -> {}x{}",
-                   emulatorItem->fixedColorBufferWidth(), emulatorItem->fixedColorBufferHeight(),
-                   pendingW, pendingH);
+      spdlog::info("synchronize: resizing colorBuffer {}x{} -> {}x{}", emulatorItem->fixedColorBufferWidth(),
+                   emulatorItem->fixedColorBufferHeight(), pendingW, pendingH);
       emulatorItem->setFixedColorBufferWidth(pendingW);
       emulatorItem->setFixedColorBufferHeight(pendingH);
     }
   }
 
-  // TODO
   // Take the cross-thread queue into a local under the lock, then process it
   // without holding the lock: command handling is heavy (state serialize, GPU
   // work) and must not block the GUI/pacing threads enqueueing, and some
@@ -419,203 +411,198 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     std::lock_guard lock(m_commandQueueMutex);
     // Capture commands held back a frame (waiting for a fresh HW readback) run
     // now that m_currentImage has been refreshed
-    while (!m_deferredCommands.isEmpty())
+    while (!m_deferredCommands.isEmpty()) {
       m_commandQueue.enqueue(m_deferredCommands.dequeue());
+    }
     pending.swap(m_commandQueue);
   }
 
   while (!pending.isEmpty()) {
     const auto command = pending.dequeue();
     switch (command.type) {
-      case RunFrame:
-        m_shouldRunFrame = true;
-        break;
-
-      case WriteRewindPoint: {
-        if (m_paused)
-          break;
-        // TODO
-        // Rolling snapshots take whatever frame is already on hand rather than
-        // forcing a per-interval GPU readback, which stalled HW-rendered cores
-        // every few seconds. The serialized state — the part rewind needs — is
-        // always current; on a HW core the thumbnail may be stale or blank
-        SuspendPoint sp;
-        sp.state = m_emulatorInstance->serializeState();
-        QImage thumb = m_currentImage;
-        if (thumb.width() > 640)
-          thumb = thumb.scaledToWidth(640, Qt::FastTransformation);
-        sp.image = firelight::gui::toImage(thumb);
-        sp.timestamp = QDateTime::currentMSecsSinceEpoch();
-        sp.retroachievementsState = m_achievementManager->serializeState();
-        m_rewindPoints.push_front(sp);
-        if (m_rewindPoints.length() > 10)
-          m_rewindPoints.pop_back();
-      }
+    case RunFrame:
+      m_shouldRunFrame = true;
       break;
 
-      case EmitRewindPoints: {
-        for (auto &url: m_rewindImageUrls)
-          m_gameImageProvider->removeImageWithUrl(url);
-        m_rewindImageUrls.clear();
+    case WriteRewindPoint: {
+      if (m_paused) {
+        break;
+      }
+      // Rolling snapshots take whatever frame is already on hand rather than
+      // forcing a per-interval GPU readback, which stalled HW-rendered cores
+      // every few seconds. The serialized state — the part rewind needs — is
+      // always current; on a HW core the thumbnail may be stale or blank
+      SuspendPoint sp;
+      sp.state = m_emulatorInstance->serializeState();
+      QImage thumb = m_currentImage;
+      if (thumb.width() > 640) {
+        thumb = thumb.scaledToWidth(640, Qt::FastTransformation);
+      }
+      sp.image = firelight::gui::toImage(thumb);
+      sp.timestamp = QDateTime::currentMSecsSinceEpoch();
+      sp.retroachievementsState = m_achievementManager->serializeState();
+      m_rewindPoints.push_front(sp);
+      if (m_rewindPoints.length() > 10) {
+        m_rewindPoints.pop_back();
+      }
+    } break;
 
-        QList<QJsonObject> points;
-        auto now = QDateTime::currentMSecsSinceEpoch();
-        for (const auto &point: m_rewindPoints) {
-          auto t = QDateTime::fromMSecsSinceEpoch(point.timestamp).time();
-          auto diff = t.secsTo(QDateTime::fromMSecsSinceEpoch(now).time());
-          QJsonObject obj;
-          auto url = m_gameImageProvider->setImage(firelight::gui::toQImage(point.image));
-          m_rewindImageUrls.append(url);
-          obj["image_url"] = url;
-          obj["time"] = t.toString();
-          obj["ago"] = QString::number(diff) + " seconds ago";
-          points.append(obj);
-        }
+    case EmitRewindPoints: {
+      for (auto &url : m_rewindImageUrls) {
+        m_gameImageProvider->removeImageWithUrl(url);
+      }
+      m_rewindImageUrls.clear();
 
+      QList<QJsonObject> points;
+      auto now = QDateTime::currentMSecsSinceEpoch();
+      for (const auto &point : m_rewindPoints) {
+        auto t = QDateTime::fromMSecsSinceEpoch(point.timestamp).time();
+        auto diff = t.secsTo(QDateTime::fromMSecsSinceEpoch(now).time());
         QJsonObject obj;
-        auto url = m_gameImageProvider->setImage(m_currentImage);
+        auto url = m_gameImageProvider->setImage(firelight::gui::toQImage(point.image));
         m_rewindImageUrls.append(url);
         obj["image_url"] = url;
-        obj["time"] = QDateTime::fromMSecsSinceEpoch(now).time().toString();
-        obj["ago"] = "Just now";
-        points.prepend(obj);
-
-        emulatorItem->rewindPointsReady(points);
+        obj["time"] = t.toString();
+        obj["ago"] = QString::number(diff) + " seconds ago";
+        points.append(obj);
       }
-      break;
 
-      case LoadRewindPoint: {
-        const auto &point = m_rewindPoints.at(command.rewindPointIndex - 1);
-        m_emulatorInstance->deserializeState(point.state);
-        if (!point.retroachievementsState.empty())
-          m_achievementManager->deserializeState(point.retroachievementsState);
-        if (m_paused) {
-          m_overlayImage = firelight::gui::toQImage(point.image);
-          m_overlayImage.flip(Qt::Vertical);
-          m_overlayImage =
-              m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
-          m_currentImage = m_overlayImage;
-          if (m_graphicsApi == QSGRendererInterface::OpenGL)
-            m_currentImage.flip(Qt::Vertical);
+      QJsonObject obj;
+      auto url = m_gameImageProvider->setImage(m_currentImage);
+      m_rewindImageUrls.append(url);
+      obj["image_url"] = url;
+      obj["time"] = QDateTime::fromMSecsSinceEpoch(now).time().toString();
+      obj["ago"] = "Just now";
+      points.prepend(obj);
+
+      emulatorItem->rewindPointsReady(points);
+    } break;
+
+    case LoadRewindPoint: {
+      const auto &point = m_rewindPoints.at(command.rewindPointIndex - 1);
+      m_emulatorInstance->deserializeState(point.state);
+      if (!point.retroachievementsState.empty()) {
+        m_achievementManager->deserializeState(point.retroachievementsState);
+      }
+      if (m_paused) {
+        m_overlayImage = firelight::gui::toQImage(point.image);
+        m_overlayImage.flip(Qt::Vertical);
+        m_overlayImage = m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
+        m_currentImage = m_overlayImage;
+        if (m_graphicsApi == QSGRendererInterface::OpenGL) {
+          m_currentImage.flip(Qt::Vertical);
         }
       }
-      break;
+    } break;
 
-      case WriteSuspendPoint: {
-        if (deferCaptureUntilFrameReady(command))
-          break;
-        SuspendPoint sp;
-        sp.state = m_emulatorInstance->serializeState();
-        sp.retroachievementsState = m_achievementManager->serializeState();
-        sp.image = firelight::gui::toImage(m_currentImage);
-        sp.timestamp = QDateTime::currentMSecsSinceEpoch();
-        sp.saveSlotNumber = m_saveSlotNumber;
-        m_saveManager->writeSuspendPoint(m_contentHash.toStdString(),
-                                         m_saveSlotNumber,
-                                         command.suspendPointIndex, sp);
-      }
-      break;
-
-      case CaptureScreenshot: {
-        if (deferCaptureUntilFrameReady(command))
-          break;
-        // Reuse the current frame image the suspend-point path captures. Copy so
-        // the PNG write doesn't race the next frame's readback
-        if (const auto mediaService = m_mediaService;
-          mediaService && !m_currentImage.isNull()) {
-          mediaService->saveScreenshot(m_contentHash, m_currentImage.copy());
-        }
-      }
-      break;
-
-      case CaptureVideoClip: {
-        // Flush the encoder so the snapshot includes the most recent gameplay,
-        // then mux the rolling window to an mp4.
-        if (const auto mediaService = m_mediaService;
-          mediaService && m_clipRecorder) {
-          m_clipRecorder->flush();
-          const auto snapshot = m_clipRecorder->snapshot();
-          spdlog::info("Clip capture requested: recording={}, {} packets, {}x{}",
-                       m_clipRecorder->isRecording(), snapshot.video.size(),
-                       snapshot.width, snapshot.height);
-          if (!snapshot.empty()) {
-            mediaService->saveClip(m_contentHash, snapshot);
-          } else {
-            spdlog::warn("Clip capture: empty window — is instant replay turned "
-              "on, and is this a software-rendered core?");
-          }
-        } else {
-          spdlog::warn("Clip capture: media service or recorder missing");
-        }
-      }
-      break;
-
-      case LoadSuspendPoint: {
-        const auto point = m_saveManager->readSuspendPoint(
-          m_contentHash.toStdString(), m_saveSlotNumber,
-          command.suspendPointIndex);
-        if (point.has_value()) {
-          SuspendPoint before;
-          before.state = m_emulatorInstance->serializeState();
-          before.retroachievementsState = m_achievementManager->serializeState();
-          before.image = firelight::gui::toImage(m_currentImage);
-          before.timestamp = QDateTime::currentMSecsSinceEpoch();
-          before.saveSlotNumber = m_saveSlotNumber;
-          m_beforeLastLoadSuspendPoint = before;
-          emulatorItem->m_canUndoLoadSuspendPoint = true;
-          emulatorItem->canUndoLoadSuspendPointChanged();
-
-          m_emulatorInstance->deserializeState(point->state);
-          if (!point->retroachievementsState.empty())
-            m_achievementManager->deserializeState(point->retroachievementsState);
-
-          if (m_paused) {
-            m_overlayImage = firelight::gui::toQImage(point->image);
-            m_overlayImage.flip(Qt::Vertical);
-            m_overlayImage =
-                m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
-            m_currentImage = m_overlayImage;
-            if (m_graphicsApi == QSGRendererInterface::OpenGL)
-              m_currentImage.flip(Qt::Vertical);
-          }
-        }
-      }
-      break;
-
-      case UndoLoadSuspendPoint: {
-        emulatorItem->m_canUndoLoadSuspendPoint = false;
-        emulatorItem->canUndoLoadSuspendPointChanged();
-        if (m_beforeLastLoadSuspendPoint.state.empty())
-          break;
-
-        m_emulatorInstance->deserializeState(m_beforeLastLoadSuspendPoint.state);
-        if (!m_beforeLastLoadSuspendPoint.retroachievementsState.empty())
-          m_achievementManager->deserializeState(
-            m_beforeLastLoadSuspendPoint.retroachievementsState);
-
-        if (m_paused) {
-          m_overlayImage = firelight::gui::toQImage(m_beforeLastLoadSuspendPoint.image);
-          m_overlayImage.flip(Qt::Vertical);
-          m_overlayImage =
-              m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
-          m_currentImage = m_overlayImage;
-          if (m_graphicsApi == QSGRendererInterface::OpenGL)
-            m_currentImage.flip(Qt::Vertical);
-        }
-        m_beforeLastLoadSuspendPoint = SuspendPoint();
-      }
-      break;
-
-      case SetPlaybackMultiplier:
-        m_playbackMultiplier = command.playbackMultiplier;
-        if (m_playbackMultiplier < 1) {
-          m_waitFrames = static_cast<int>(1.0 / m_playbackMultiplier);
-          m_currentWaitFrames = m_waitFrames;
-        } else if (m_playbackMultiplier == 1) {
-          m_waitFrames = 0;
-          m_currentWaitFrames = 0;
-        }
+    case WriteSuspendPoint: {
+      if (deferCaptureUntilFrameReady(command)) {
         break;
+      }
+      SuspendPoint sp;
+      sp.state = m_emulatorInstance->serializeState();
+      sp.retroachievementsState = m_achievementManager->serializeState();
+      sp.image = firelight::gui::toImage(m_currentImage);
+      sp.timestamp = QDateTime::currentMSecsSinceEpoch();
+      sp.saveSlotNumber = m_saveSlotNumber;
+      m_saveManager->writeSuspendPoint(m_contentHash.toStdString(), m_saveSlotNumber, command.suspendPointIndex, sp);
+    } break;
+
+    case CaptureScreenshot: {
+      if (deferCaptureUntilFrameReady(command)) {
+        break;
+      }
+      // Reuse the current frame image the suspend-point path captures. Copy so
+      // the PNG write doesn't race the next frame's readback
+      if (const auto mediaService = m_mediaService; mediaService && !m_currentImage.isNull()) {
+        mediaService->saveScreenshot(m_contentHash, m_currentImage.copy());
+      }
+    } break;
+
+    case CaptureVideoClip: {
+      // Flush the encoder so the snapshot includes the most recent gameplay,
+      // then mux the rolling window to an mp4.
+      if (const auto mediaService = m_mediaService; mediaService && m_clipRecorder) {
+        m_clipRecorder->flush();
+        const auto snapshot = m_clipRecorder->snapshot();
+        spdlog::info("Clip capture requested: recording={}, {} packets, {}x{}", m_clipRecorder->isRecording(),
+                     snapshot.video.size(), snapshot.width, snapshot.height);
+        if (!snapshot.empty()) {
+          mediaService->saveClip(m_contentHash, snapshot);
+        } else {
+          spdlog::warn("Clip capture: empty window — is instant replay turned "
+                       "on, and is this a software-rendered core?");
+        }
+      } else {
+        spdlog::warn("Clip capture: media service or recorder missing");
+      }
+    } break;
+
+    case LoadSuspendPoint: {
+      const auto point =
+          m_saveManager->readSuspendPoint(m_contentHash.toStdString(), m_saveSlotNumber, command.suspendPointIndex);
+      if (point.has_value()) {
+        SuspendPoint before;
+        before.state = m_emulatorInstance->serializeState();
+        before.retroachievementsState = m_achievementManager->serializeState();
+        before.image = firelight::gui::toImage(m_currentImage);
+        before.timestamp = QDateTime::currentMSecsSinceEpoch();
+        before.saveSlotNumber = m_saveSlotNumber;
+        m_beforeLastLoadSuspendPoint = before;
+        emulatorItem->m_canUndoLoadSuspendPoint = true;
+        emulatorItem->canUndoLoadSuspendPointChanged();
+
+        m_emulatorInstance->deserializeState(point->state);
+        if (!point->retroachievementsState.empty()) {
+          m_achievementManager->deserializeState(point->retroachievementsState);
+        }
+
+        if (m_paused) {
+          m_overlayImage = firelight::gui::toQImage(point->image);
+          m_overlayImage.flip(Qt::Vertical);
+          m_overlayImage = m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
+          m_currentImage = m_overlayImage;
+          if (m_graphicsApi == QSGRendererInterface::OpenGL) {
+            m_currentImage.flip(Qt::Vertical);
+          }
+        }
+      }
+    } break;
+
+    case UndoLoadSuspendPoint: {
+      emulatorItem->m_canUndoLoadSuspendPoint = false;
+      emulatorItem->canUndoLoadSuspendPointChanged();
+      if (m_beforeLastLoadSuspendPoint.state.empty()) {
+        break;
+      }
+
+      m_emulatorInstance->deserializeState(m_beforeLastLoadSuspendPoint.state);
+      if (!m_beforeLastLoadSuspendPoint.retroachievementsState.empty()) {
+        m_achievementManager->deserializeState(m_beforeLastLoadSuspendPoint.retroachievementsState);
+      }
+
+      if (m_paused) {
+        m_overlayImage = firelight::gui::toQImage(m_beforeLastLoadSuspendPoint.image);
+        m_overlayImage.flip(Qt::Vertical);
+        m_overlayImage = m_overlayImage.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
+        m_currentImage = m_overlayImage;
+        if (m_graphicsApi == QSGRendererInterface::OpenGL) {
+          m_currentImage.flip(Qt::Vertical);
+        }
+      }
+      m_beforeLastLoadSuspendPoint = SuspendPoint();
+    } break;
+
+    case SetPlaybackMultiplier:
+      m_playbackMultiplier = command.playbackMultiplier;
+      if (m_playbackMultiplier < 1) {
+        m_waitFrames = static_cast<int>(1.0 / m_playbackMultiplier);
+        m_currentWaitFrames = m_waitFrames;
+      } else if (m_playbackMultiplier == 1) {
+        m_waitFrames = 0;
+        m_currentWaitFrames = 0;
+      }
+      break;
     }
   }
 }
@@ -635,7 +622,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
-  // If we're using Vulkan and the first frame isn't ready yet, clear to opaque black so colorTexture always has valid content
+  // If we're using Vulkan and the first frame isn't ready yet, clear to opaque black so colorTexture always has valid
+  // content
   if (m_vulkanRenderer && !m_vulkanRenderer->isFirstFrameReady()) {
     cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);
     cb->endPass();
@@ -645,7 +633,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   // m_negotiation is available. Runs on the first frame after load
   if (m_vulkanRenderer && !m_vulkanRenderer->isInitialized()) {
     if (m_negotiation) {
-      // TODO
       // Some HW cores (PPSSPP) require a real VkSurfaceKHR passed to
       // create_device — they query swapchain capabilities from it and crash on
       // VK_NULL_HANDLE. Others (parallel-RDP) render offscreen and ignore it
@@ -654,8 +641,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
       if (auto *inst = m_window ? m_window->vulkanInstance() : nullptr) {
         surface = inst->surfaceForWindow(m_window);
       }
-      if (!m_vulkanRenderer->initialize(rhi(), m_negotiation, surface,
-                                        m_resetContextFunction)) {
+      if (!m_vulkanRenderer->initialize(rhi(), m_negotiation, surface, m_resetContextFunction)) {
         spdlog::error("EmulatorItemRenderer: Vulkan initialization failed");
         return;
       }
@@ -684,7 +670,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   m_currentWaitFrames = m_waitFrames;
   m_shouldRunFrame = false;
 
-  // TODO
   // ------------------------------------------------------------
   // If we made it here, we're going to run at least one frame
   // ------------------------------------------------------------
@@ -692,13 +677,13 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
   if (!m_usingHardwareRenderer) {
     QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
-    cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch,
-                  QRhiCommandBuffer::ExternalContent);
+    cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch, QRhiCommandBuffer::ExternalContent);
     m_currentUpdateBatch = batch;
     cb->beginExternal();
     if (m_playbackMultiplier > 1) {
-      for (int i = 0; i < static_cast<int>(m_playbackMultiplier); i++)
+      for (int i = 0; i < static_cast<int>(m_playbackMultiplier); i++) {
         m_emulatorInstance->runFrame();
+      }
     } else {
       m_emulatorInstance->runFrame();
     }
@@ -711,27 +696,23 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_currentUpdateBatch = nullptr;
     cb->endPass(batch);
   } else if (m_vulkanRenderer) {
-    m_vulkanRenderer->renderFrame(m_emulatorInstance, m_playbackMultiplier,
-                                  colorTexture()->pixelSize(), rhi());
+    m_vulkanRenderer->renderFrame(m_emulatorInstance, m_playbackMultiplier, colorTexture()->pixelSize(), rhi());
 
-    if (m_vulkanRenderer->isFirstFrameReady() &&
-        m_vulkanRenderer->sharedTexture() &&
+    if (m_vulkanRenderer->isFirstFrameReady() && m_vulkanRenderer->sharedTexture() &&
         m_vulkanRenderer->sharedSemValue() > 0) {
-      // TODO
       // Composite the shared image into colorTexture() via a GPU copy
       // renderFrame() already CPU-waited on the blit fence, so m_sharedImage
       // is guaranteed complete â€” no GPU-side semaphore needed here
-      m_vulkanRenderer->sharedTexture()->createFrom({
-        reinterpret_cast<quint64>(m_vulkanRenderer->qtSharedImage()),
-        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-      });
+      m_vulkanRenderer->sharedTexture()->createFrom(
+          {reinterpret_cast<quint64>(m_vulkanRenderer->qtSharedImage()), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
 
       QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
       batch->copyTexture(colorTexture(), m_vulkanRenderer->sharedTexture());
       // Read the composited frame back only when something needs it, so an
       // idle HW core doesn't pay for a per-frame GPU->CPU copy
-      if (anyFrameConsumerActive())
+      if (anyFrameConsumerActive()) {
         scheduleFrameReadback(batch);
+      }
       cb->beginPass(renderTarget(), {0, 0, 0, 1}, {1.0f, 0}, nullptr);
       cb->endPass(batch);
     } else {
@@ -746,8 +727,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
 void EmulatorItemRenderer::initializeEmulatorInstance(QRhiCommandBuffer *cb) {
   QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
-  cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch,
-                QRhiCommandBuffer::ExternalContent);
+  cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch, QRhiCommandBuffer::ExternalContent);
   cb->beginExternal();
   m_emulatorInstance->initialize(this);
   cb->endExternal();
@@ -764,8 +744,7 @@ void EmulatorItemRenderer::initializeEmulatorInstance(QRhiCommandBuffer *cb) {
 void EmulatorItemRenderer::displayPauseImage(QRhiCommandBuffer *cb) {
   if (!m_overlayImage.isNull()) {
     QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
-    cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch,
-                  QRhiCommandBuffer::ExternalContent);
+    cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch, QRhiCommandBuffer::ExternalContent);
     batch->uploadTexture(colorTexture(), m_overlayImage.copy());
     cb->endPass(batch);
     m_overlayImage = QImage();
@@ -773,8 +752,9 @@ void EmulatorItemRenderer::displayPauseImage(QRhiCommandBuffer *cb) {
 }
 
 void EmulatorItemRenderer::submitCommand(const EmulatorCommand command) {
-  if (!m_emulatorInstance || m_quitting)
+  if (!m_emulatorInstance || m_quitting) {
     return;
+  }
   std::lock_guard lock(m_commandQueueMutex);
   m_commandQueue.enqueue(command);
 }

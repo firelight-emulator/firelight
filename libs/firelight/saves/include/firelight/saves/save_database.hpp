@@ -16,24 +16,21 @@ public:
 
   virtual bool createSavefileMetadata(SavefileMetadata &metadata) = 0;
 
-  virtual std::optional<SavefileMetadata>
-  getSavefileMetadata(std::string contentId, int slotNumber) = 0;
+  virtual std::optional<SavefileMetadata> getSavefileMetadata(std::string contentId, int slotNumber) = 0;
 
   virtual bool updateSavefileMetadata(SavefileMetadata metadata) = 0;
 
-  virtual std::vector<SavefileMetadata>
-  getSavefileMetadataForContent(std::string contentId) = 0;
+  virtual std::vector<SavefileMetadata> getSavefileMetadataForContent(std::string contentId) = 0;
 
   virtual bool createSuspendPointMetadata(SuspendPointMetadata &metadata) = 0;
 
-  virtual std::optional<SuspendPointMetadata>
-  getSuspendPointMetadata(std::string contentId, int saveSlotNumber,
-                          int slotNumber) = 0;
+  virtual std::optional<SuspendPointMetadata> getSuspendPointMetadata(std::string contentId, int saveSlotNumber,
+                                                                      int slotNumber) = 0;
 
   virtual bool updateSuspendPointMetadata(const SuspendPointMetadata &metadata) = 0;
 
-  virtual std::vector<SuspendPointMetadata>
-  getSuspendPointMetadataForContent(std::string contentId, int saveSlotNumber) = 0;
+  virtual std::vector<SuspendPointMetadata> getSuspendPointMetadataForContent(std::string contentId,
+                                                                              int saveSlotNumber) = 0;
 
   virtual bool deleteSuspendPointMetadata(int id) = 0;
 };

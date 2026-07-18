@@ -9,15 +9,13 @@ namespace firelight::library {
 
 namespace {
 // Case-insensitive ASCII substring test. An empty needle matches anything
-bool containsCaseInsensitive(const std::string &haystack,
-                             const std::string &needle) {
+bool containsCaseInsensitive(const std::string &haystack, const std::string &needle) {
   if (needle.empty()) {
     return true;
   }
   const auto toLower = [](const std::string &s) {
     std::string out = s;
-    std::transform(out.begin(), out.end(), out.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
+    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::tolower(c); });
     return out;
   };
   return toLower(haystack).find(toLower(needle)) != std::string::npos;
@@ -71,16 +69,13 @@ SmartFolderCriteria SmartFolderCriteria::parse(const std::string &json) {
   if (parsed.contains("yearMax") && parsed["yearMax"].is_number_integer()) {
     c.yearMax = parsed["yearMax"].get<int>();
   }
-  if (parsed.contains("playedAfterMillis") &&
-      parsed["playedAfterMillis"].is_number_integer()) {
+  if (parsed.contains("playedAfterMillis") && parsed["playedAfterMillis"].is_number_integer()) {
     c.playedAfterMillis = parsed["playedAfterMillis"].get<int64_t>();
   }
-  if (parsed.contains("minSecondsPlayed") &&
-      parsed["minSecondsPlayed"].is_number_integer()) {
+  if (parsed.contains("minSecondsPlayed") && parsed["minSecondsPlayed"].is_number_integer()) {
     c.minSecondsPlayed = parsed["minSecondsPlayed"].get<int64_t>();
   }
-  if (parsed.contains("playedWithinDays") &&
-      parsed["playedWithinDays"].is_number_integer()) {
+  if (parsed.contains("playedWithinDays") && parsed["playedWithinDays"].is_number_integer()) {
     c.playedWithinDays = parsed["playedWithinDays"].get<int>();
   }
   if (parsed.contains("unplayed") && parsed["unplayed"].is_boolean()) {
@@ -137,33 +132,28 @@ std::string SmartFolderCriteria::toJson() const {
 }
 
 bool SmartFolderCriteria::isEmpty() const {
-  return contentDirectoryIds.empty() && pathContains.empty() &&
-         platformIds.empty() && !favorite.has_value() && genres.empty() &&
-         developer.empty() && publisher.empty() && !yearMin.has_value() &&
-         !yearMax.has_value() && !playedAfterMillis.has_value() &&
-         !minSecondsPlayed.has_value() && !playedWithinDays.has_value() &&
+  return contentDirectoryIds.empty() && pathContains.empty() && platformIds.empty() && !favorite.has_value() &&
+         genres.empty() && developer.empty() && publisher.empty() && !yearMin.has_value() && !yearMax.has_value() &&
+         !playedAfterMillis.has_value() && !minSecondsPlayed.has_value() && !playedWithinDays.has_value() &&
          !unplayed.has_value();
 }
 
 bool SmartFolderCriteria::matches(const EntryFields &entry) const {
-  const auto nowMillis = std::chrono::duration_cast<std::chrono::milliseconds>(
-                             std::chrono::system_clock::now().time_since_epoch())
-                             .count();
+  const auto nowMillis =
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
+          .count();
   return matches(entry, nowMillis);
 }
 
-bool SmartFolderCriteria::matches(const EntryFields &entry,
-                                  const int64_t nowMillis) const {
+bool SmartFolderCriteria::matches(const EntryFields &entry, const int64_t nowMillis) const {
   const auto &criteria = *this;
   // --- Source: which pool of games this folder draws from ---
   if (!criteria.contentDirectoryIds.empty()) {
     const bool intersects =
-        std::any_of(entry.contentDirectoryIds.begin(),
-                    entry.contentDirectoryIds.end(), [&](int id) {
-                      return std::find(criteria.contentDirectoryIds.begin(),
-                                       criteria.contentDirectoryIds.end(),
-                                       id) != criteria.contentDirectoryIds.end();
-                    });
+        std::any_of(entry.contentDirectoryIds.begin(), entry.contentDirectoryIds.end(), [&](int id) {
+          return std::find(criteria.contentDirectoryIds.begin(), criteria.contentDirectoryIds.end(), id) !=
+                 criteria.contentDirectoryIds.end();
+        });
     if (!intersects) {
       return false;
     }
@@ -171,39 +161,31 @@ bool SmartFolderCriteria::matches(const EntryFields &entry,
   if (!criteria.pathContains.empty()) {
     const bool anyPathMatches =
         std::any_of(entry.contentPaths.begin(), entry.contentPaths.end(),
-                    [&](const std::string &p) {
-                      return containsCaseInsensitive(p, criteria.pathContains);
-                    });
+                    [&](const std::string &p) { return containsCaseInsensitive(p, criteria.pathContains); });
     if (!anyPathMatches) {
       return false;
     }
   }
 
   // --- Filters: attribute predicates (AND across, OR within a list) ---
-  if (!criteria.platformIds.empty() &&
-      std::find(criteria.platformIds.begin(), criteria.platformIds.end(),
-                entry.platformId) == criteria.platformIds.end()) {
+  if (!criteria.platformIds.empty() && std::find(criteria.platformIds.begin(), criteria.platformIds.end(),
+                                                 entry.platformId) == criteria.platformIds.end()) {
     return false;
   }
   if (criteria.favorite.has_value() && entry.favorite != *criteria.favorite) {
     return false;
   }
   if (!criteria.genres.empty()) {
-    const bool anyGenre =
-        std::any_of(criteria.genres.begin(), criteria.genres.end(),
-                    [&](const std::string &g) {
-                      return containsCaseInsensitive(entry.genres, g);
-                    });
+    const bool anyGenre = std::any_of(criteria.genres.begin(), criteria.genres.end(),
+                                      [&](const std::string &g) { return containsCaseInsensitive(entry.genres, g); });
     if (!anyGenre) {
       return false;
     }
   }
-  if (!criteria.developer.empty() &&
-      !containsCaseInsensitive(entry.developer, criteria.developer)) {
+  if (!criteria.developer.empty() && !containsCaseInsensitive(entry.developer, criteria.developer)) {
     return false;
   }
-  if (!criteria.publisher.empty() &&
-      !containsCaseInsensitive(entry.publisher, criteria.publisher)) {
+  if (!criteria.publisher.empty() && !containsCaseInsensitive(entry.publisher, criteria.publisher)) {
     return false;
   }
   // An unknown release year (0) satisfies no year bound, so a year-range folder
@@ -211,20 +193,16 @@ bool SmartFolderCriteria::matches(const EntryFields &entry,
   if (criteria.yearMin.has_value() && entry.releaseYear < *criteria.yearMin) {
     return false;
   }
-  if (criteria.yearMax.has_value() &&
-      (entry.releaseYear == 0 || entry.releaseYear > *criteria.yearMax)) {
+  if (criteria.yearMax.has_value() && (entry.releaseYear == 0 || entry.releaseYear > *criteria.yearMax)) {
     return false;
   }
-  if (criteria.playedAfterMillis.has_value() &&
-      entry.lastPlayedMillis < *criteria.playedAfterMillis) {
+  if (criteria.playedAfterMillis.has_value() && entry.lastPlayedMillis < *criteria.playedAfterMillis) {
     return false;
   }
-  if (criteria.minSecondsPlayed.has_value() &&
-      entry.secondsPlayed < *criteria.minSecondsPlayed) {
+  if (criteria.minSecondsPlayed.has_value() && entry.secondsPlayed < *criteria.minSecondsPlayed) {
     return false;
   }
-  if (criteria.unplayed.has_value() &&
-      (entry.lastPlayedMillis == 0) != *criteria.unplayed) {
+  if (criteria.unplayed.has_value() && (entry.lastPlayedMillis == 0) != *criteria.unplayed) {
     return false;
   }
   if (criteria.playedWithinDays.has_value()) {
@@ -232,8 +210,7 @@ bool SmartFolderCriteria::matches(const EntryFields &entry,
     if (entry.lastPlayedMillis == 0) {
       return false;
     }
-    const int64_t windowMillis =
-        static_cast<int64_t>(*criteria.playedWithinDays) * 86400000LL;
+    const int64_t windowMillis = static_cast<int64_t>(*criteria.playedWithinDays) * 86400000LL;
     if (entry.lastPlayedMillis < nowMillis - windowMillis) {
       return false;
     }

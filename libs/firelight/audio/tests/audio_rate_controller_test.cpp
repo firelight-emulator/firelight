@@ -3,16 +3,16 @@
 #include <gtest/gtest.h>
 
 namespace {
-  constexpr int CAPACITY = 16384;
+constexpr int CAPACITY = 16384;
 
-  // Feed the same occupancy enough times to fill the rolling average window
-  int settle(AudioRateController &controller, int usedBytes) {
-    int delta = 0;
-    for (int i = 0; i < 15; ++i) {
-      delta = controller.computeCompensation(usedBytes, CAPACITY);
-    }
-    return delta;
+// Feed the same occupancy enough times to fill the rolling average window
+int settle(AudioRateController &controller, int usedBytes) {
+  int delta = 0;
+  for (int i = 0; i < 15; ++i) {
+    delta = controller.computeCompensation(usedBytes, CAPACITY);
   }
+  return delta;
+}
 } // namespace
 
 TEST(AudioRateControllerTest, DropsSamplesWhenBufferFull) {

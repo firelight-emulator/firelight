@@ -1,17 +1,15 @@
-#include <firelight/saves/save_manager_impl.hpp>
+#include "firelight/saves/detail/md5.hpp"
 
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/saves/save_events.hpp>
-
-#include "firelight/saves/detail/md5.hpp"
-
-#include <spdlog/spdlog.h>
+#include <firelight/saves/save_manager_impl.hpp>
 
 #include <chrono>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <future>
+#include <spdlog/spdlog.h>
 #include <system_error>
 
 namespace fs = std::filesystem;
@@ -20,22 +18,21 @@ namespace firelight::saves {
 namespace {
 int64_t nowMs() {
   using namespace std::chrono;
-  return duration_cast<milliseconds>(system_clock::now().time_since_epoch())
-      .count();
+  return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
-// TODO
 // Last-modified time of a file as int64 milliseconds since the Unix epoch
 // Portable conversion from filesystem clock to system clock (C++20 clock_cast
 // support is uneven across the toolchains we build on)
 int64_t fileMtimeMs(const fs::path &p) {
   std::error_code ec;
   const auto ftime = fs::last_write_time(p, ec);
-  if (ec)
+  if (ec) {
     return 0;
+  }
   using namespace std::chrono;
-  const auto sctp = time_point_cast<system_clock::duration>(
-      ftime - fs::file_time_type::clock::now() + system_clock::now());
+  const auto sctp =
+      time_point_cast<system_clock::duration>(ftime - fs::file_time_type::clock::now() + system_clock::now());
   return duration_cast<milliseconds>(sctp.time_since_epoch()).count();
 }
 
@@ -63,31 +60,28 @@ bool writeAtomic(const fs::path &path, const void *data, size_t size) {
   return true;
 }
 
-// TODO
 // Convert a possibly-file:// URL into a filesystem path. Strips the scheme but,
 // unlike the old code, does NOT strip the leading '/' of a POSIX absolute path
 // (that turned /Users/x into Users/x). Only a Windows drive path (/C:/...) has
 // its leading slash removed
 std::string stripFileUrl(std::string s) {
   constexpr std::string_view SCHEME = "file://";
-  if (s.rfind(SCHEME, 0) == 0)
+  if (s.rfind(SCHEME, 0) == 0) {
     s.erase(0, SCHEME.size());
-  if (s.size() >= 3 && s[0] == '/' &&
-      ((s[1] >= 'A' && s[1] <= 'Z') || (s[1] >= 'a' && s[1] <= 'z')) &&
-      s[2] == ':')
+  }
+  if (s.size() >= 3 && s[0] == '/' && ((s[1] >= 'A' && s[1] <= 'Z') || (s[1] >= 'a' && s[1] <= 'z')) && s[2] == ':') {
     s.erase(0, 1);
+  }
   return s;
 }
 
-std::string slotDir(const std::string &root, const std::string &contentHash,
-                    int slot) {
+std::string slotDir(const std::string &root, const std::string &contentHash, int slot) {
   return root + "/" + contentHash + "/slot" + std::to_string(slot);
 }
 
-std::string suspendDir(const std::string &root, const std::string &contentHash,
-                       int saveSlot, unsigned int slotNumber) {
-  return root + "/" + contentHash + "/slot" + std::to_string(saveSlot) +
-         "/suspendpoints/slot" + std::to_string(slotNumber);
+std::string suspendDir(const std::string &root, const std::string &contentHash, int saveSlot, unsigned int slotNumber) {
+  return root + "/" + contentHash + "/slot" + std::to_string(saveSlot) + "/suspendpoints/slot" +
+         std::to_string(slotNumber);
 }
 } // namespace
 
@@ -96,13 +90,11 @@ SaveManager::SaveManager(const std::string &saveDir, ISaveDatabase &saveDatabase
 
 SaveManager::~SaveManager() = default;
 
-std::vector<SavefileInfo>
-SaveManager::getSaveFileInfoList(const std::string &contentHash) const {
+std::vector<SavefileInfo> SaveManager::getSaveFileInfoList(const std::string &contentHash) const {
   std::vector<SavefileInfo> result;
 
   for (auto i = 0; i < 8; ++i) {
-    const fs::path saveFile =
-        fs::path(slotDir(m_saveDirectory, contentHash, i + 1)) / "savefile.srm";
+    const fs::path saveFile = fs::path(slotDir(m_saveDirectory, contentHash, i + 1)) / "savefile.srm";
 
     if (std::error_code ec; !fs::exists(saveFile, ec)) {
       result.emplace_back(SavefileInfo{.hasData = false, .slotNumber = i + 1});
@@ -122,16 +114,13 @@ SaveManager::getSaveFileInfoList(const std::string &contentHash) const {
   return result;
 }
 
-std::future<bool> SaveManager::writeSaveData(const std::string &contentHash,
-                                             int saveSlotNumber,
+std::future<bool> SaveManager::writeSaveData(const std::string &contentHash, int saveSlotNumber,
                                              const Savefile &saveData) {
-  return std::async(std::launch::async, [this, contentHash, saveSlotNumber,
-                                         saveData] {
+  return std::async(std::launch::async, [this, contentHash, saveSlotNumber, saveData] {
     auto exists = false;
     SavefileMetadata metadata;
 
-    auto metadataOpt =
-        m_saveDatabase.getSavefileMetadata(contentHash, saveSlotNumber);
+    auto metadataOpt = m_saveDatabase.getSavefileMetadata(contentHash, saveSlotNumber);
 
     if (metadataOpt.has_value()) {
       metadata = metadataOpt.value();
@@ -149,54 +138,44 @@ std::future<bool> SaveManager::writeSaveData(const std::string &contentHash,
       return true;
     }
 
-    spdlog::info("Writing updated savefile for {} slot {}", contentHash,
-                 saveSlotNumber);
+    spdlog::info("Writing updated savefile for {} slot {}", contentHash, saveSlotNumber);
     metadata.savefileMd5 = savefileMd5;
 
     const auto dir = slotDir(m_saveDirectory, contentHash, saveSlotNumber);
     std::error_code mkEc;
     fs::create_directories(dir, mkEc);
     if (mkEc) {
-      spdlog::error("Failed to create save directory for {} slot {}: {}",
-                    contentHash, saveSlotNumber, mkEc.message());
+      spdlog::error("Failed to create save directory for {} slot {}: {}", contentHash, saveSlotNumber, mkEc.message());
       return false;
     }
 
     const fs::path saveFile = fs::path(dir) / "savefile.srm";
     if (!writeAtomic(saveFile, bytes.data(), bytes.size())) {
-      spdlog::error("Failed to write savefile for {} slot {}", contentHash,
-                    saveSlotNumber);
+      spdlog::error("Failed to write savefile for {} slot {}", contentHash, saveSlotNumber);
       return false;
     }
 
     metadata.lastModifiedAt = nowMs();
 
     const bool metadataOk =
-        exists ? m_saveDatabase.updateSavefileMetadata(metadata)
-               : m_saveDatabase.createSavefileMetadata(metadata);
+        exists ? m_saveDatabase.updateSavefileMetadata(metadata) : m_saveDatabase.createSavefileMetadata(metadata);
     if (!metadataOk) {
       // The save data is safely on disk; only the metadata index failed
-      spdlog::warn(
-          "Savefile written but metadata persistence failed for {} slot {}",
-          contentHash, saveSlotNumber);
+      spdlog::warn("Savefile written but metadata persistence failed for {} slot {}", contentHash, saveSlotNumber);
     }
 
     return true;
   });
 }
 
-std::optional<Savefile> SaveManager::readSaveData(const std::string &contentHash,
-                                                  int saveSlotNumber) const {
-  const fs::path saveFile =
-      fs::path(slotDir(m_saveDirectory, contentHash, saveSlotNumber)) /
-      "savefile.srm";
+std::optional<Savefile> SaveManager::readSaveData(const std::string &contentHash, int saveSlotNumber) const {
+  const fs::path saveFile = fs::path(slotDir(m_saveDirectory, contentHash, saveSlotNumber)) / "savefile.srm";
 
   if (std::error_code ec; !fs::exists(saveFile, ec)) {
     return std::nullopt;
   }
 
-  spdlog::info("[SaveDataService] Reading from save file: {}",
-               saveFile.string());
+  spdlog::info("[SaveDataService] Reading from save file: {}", saveFile.string());
 
   std::ifstream saveFileStream(saveFile, std::ios::binary);
   const auto size = fs::file_size(saveFile);
@@ -207,26 +186,20 @@ std::optional<Savefile> SaveManager::readSaveData(const std::string &contentHash
   return Savefile(data);
 }
 
-void SaveManager::writeSuspendPoint(const std::string &contentHash,
-                                    int saveSlotNumber, int index,
+void SaveManager::writeSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index,
                                     const SuspendPoint &suspendPoint) {
   writeSuspendPointToDisk(contentHash, index, suspendPoint);
-  EventDispatcher::instance().publish(
-      SuspendPointUpdatedEvent{contentHash, saveSlotNumber, index});
+  EventDispatcher::instance().publish(SuspendPointUpdatedEvent{contentHash, saveSlotNumber, index});
 }
 
-std::optional<SuspendPoint>
-SaveManager::readSuspendPoint(const std::string &contentHash, int saveSlotNumber,
-                              int index) {
+std::optional<SuspendPoint> SaveManager::readSuspendPoint(const std::string &contentHash, int saveSlotNumber,
+                                                          int index) {
   return readSuspendPointFromDisk(contentHash, saveSlotNumber, index);
 }
 
-void SaveManager::deleteSuspendPoint(const std::string &contentHash,
-                                     const int saveSlotNumber,
-                                     const int index) {
+void SaveManager::deleteSuspendPoint(const std::string &contentHash, const int saveSlotNumber, const int index) {
   deleteSuspendPointFromDisk(contentHash, saveSlotNumber, index);
-  EventDispatcher::instance().publish(
-      SuspendPointDeletedEvent{contentHash, saveSlotNumber, index});
+  EventDispatcher::instance().publish(SuspendPointDeletedEvent{contentHash, saveSlotNumber, index});
 }
 
 std::string SaveManager::getSaveDirectory() const { return m_saveDirectory; }
@@ -239,9 +212,7 @@ void SaveManager::setSaveDirectory(const std::string &saveDirectory) {
   m_saveDirectory = stripped;
 }
 
-void SaveManager::writeSuspendPointToDisk(const std::string &contentHash,
-                                          int index,
-                                          const SuspendPoint &suspendPoint) {
+void SaveManager::writeSuspendPointToDisk(const std::string &contentHash, int index, const SuspendPoint &suspendPoint) {
   const unsigned int slotNumber = index + 1;
   if (suspendPoint.locked) {
     spdlog::warn("Trying to write locked suspend point for entry with content "
@@ -250,63 +221,55 @@ void SaveManager::writeSuspendPointToDisk(const std::string &contentHash,
     return;
   }
 
-  const auto dir = suspendDir(m_saveDirectory, contentHash,
-                              suspendPoint.saveSlotNumber, slotNumber);
+  const auto dir = suspendDir(m_saveDirectory, contentHash, suspendPoint.saveSlotNumber, slotNumber);
   std::error_code mkEc;
   fs::create_directories(dir, mkEc);
   if (mkEc) {
     return;
   }
 
-  if (!writeAtomic(fs::path(dir) / "suspendpoint.state",
-                   suspendPoint.state.data(), suspendPoint.state.size())) {
+  if (!writeAtomic(fs::path(dir) / "suspendpoint.state", suspendPoint.state.data(), suspendPoint.state.size())) {
     spdlog::error("Could not write suspend point to disk");
     return;
   }
 
   if (!suspendPoint.image.isNull()) {
-    if (!writeAtomic(fs::path(dir) / "screenshot.png",
-                     suspendPoint.image.pngData.data(),
+    if (!writeAtomic(fs::path(dir) / "screenshot.png", suspendPoint.image.pngData.data(),
                      suspendPoint.image.pngData.size())) {
       spdlog::warn("Could not save suspend point image");
     }
   }
 
   if (!suspendPoint.retroachievementsState.empty()) {
-    if (!writeAtomic(fs::path(dir) / "rcheevos.state",
-                     suspendPoint.retroachievementsState.data(),
+    if (!writeAtomic(fs::path(dir) / "rcheevos.state", suspendPoint.retroachievementsState.data(),
                      suspendPoint.retroachievementsState.size())) {
       spdlog::error("Could not write rcheevos state to disk");
       return;
     }
   }
 
-  auto metadata = m_saveDatabase.getSuspendPointMetadata(
-      contentHash, suspendPoint.saveSlotNumber, slotNumber);
+  auto metadata = m_saveDatabase.getSuspendPointMetadata(contentHash, suspendPoint.saveSlotNumber, slotNumber);
   if (metadata.has_value()) {
     metadata->lastModifiedAt = nowMs();
     metadata->locked = suspendPoint.locked;
     m_saveDatabase.updateSuspendPointMetadata(*metadata);
   } else {
     const auto ms = nowMs();
-    SuspendPointMetadata newMetadata{
-        .contentId = contentHash,
-        .saveSlotNumber = suspendPoint.saveSlotNumber,
-        .slotNumber = slotNumber,
-        .lastModifiedAt = ms,
-        .createdAt = ms,
-        .locked = suspendPoint.locked};
+    SuspendPointMetadata newMetadata{.contentId = contentHash,
+                                     .saveSlotNumber = suspendPoint.saveSlotNumber,
+                                     .slotNumber = slotNumber,
+                                     .lastModifiedAt = ms,
+                                     .createdAt = ms,
+                                     .locked = suspendPoint.locked};
 
     m_saveDatabase.createSuspendPointMetadata(newMetadata);
   }
 }
 
-std::optional<SuspendPoint>
-SaveManager::readSuspendPointFromDisk(const std::string &contentHash,
-                                      int saveSlotNumber, int index) const {
+std::optional<SuspendPoint> SaveManager::readSuspendPointFromDisk(const std::string &contentHash, int saveSlotNumber,
+                                                                  int index) const {
   const unsigned int slotNumber = index + 1;
-  const auto dir =
-      suspendDir(m_saveDirectory, contentHash, saveSlotNumber, slotNumber);
+  const auto dir = suspendDir(m_saveDirectory, contentHash, saveSlotNumber, slotNumber);
 
   const fs::path stateFile = fs::path(dir) / "suspendpoint.state";
   if (std::error_code ec; !fs::exists(stateFile, ec)) {
@@ -320,33 +283,27 @@ SaveManager::readSuspendPointFromDisk(const std::string &contentHash,
     std::ifstream in(stateFile, std::ios::binary);
     const auto size = fs::file_size(stateFile);
     data.resize(size);
-    in.read(reinterpret_cast<char *>(data.data()),
-            static_cast<std::streamsize>(size));
+    in.read(reinterpret_cast<char *>(data.data()), static_cast<std::streamsize>(size));
   }
 
   firelight::Image image;
-  if (const fs::path imagePath = fs::path(dir) / "screenshot.png";
-      fs::exists(imagePath)) {
+  if (const fs::path imagePath = fs::path(dir) / "screenshot.png"; fs::exists(imagePath)) {
     std::ifstream in(imagePath, std::ios::binary);
     const auto size = fs::file_size(imagePath);
     image.pngData.resize(size);
-    in.read(reinterpret_cast<char *>(image.pngData.data()),
-            static_cast<std::streamsize>(size));
+    in.read(reinterpret_cast<char *>(image.pngData.data()), static_cast<std::streamsize>(size));
   }
 
   std::vector<uint8_t> rcheevosData;
-  if (const fs::path rcheevosPath = fs::path(dir) / "rcheevos.state";
-      fs::exists(rcheevosPath)) {
+  if (const fs::path rcheevosPath = fs::path(dir) / "rcheevos.state"; fs::exists(rcheevosPath)) {
     std::ifstream in(rcheevosPath, std::ios::binary);
     const auto size = fs::file_size(rcheevosPath);
     rcheevosData.resize(size);
-    in.read(reinterpret_cast<char *>(rcheevosData.data()),
-            static_cast<std::streamsize>(size));
+    in.read(reinterpret_cast<char *>(rcheevosData.data()), static_cast<std::streamsize>(size));
   }
 
   bool locked = false;
-  auto metadata = m_saveDatabase.getSuspendPointMetadata(contentHash,
-                                                         saveSlotNumber, slotNumber);
+  auto metadata = m_saveDatabase.getSuspendPointMetadata(contentHash, saveSlotNumber, slotNumber);
   if (metadata.has_value()) {
     locked = metadata->locked;
   }
@@ -360,18 +317,15 @@ SaveManager::readSuspendPointFromDisk(const std::string &contentHash,
   };
 }
 
-void SaveManager::deleteSuspendPointFromDisk(const std::string &contentHash,
-                                             int saveSlotNumber, int index) {
+void SaveManager::deleteSuspendPointFromDisk(const std::string &contentHash, int saveSlotNumber, int index) {
   const unsigned int slotNumber = index + 1;
-  const auto dir =
-      suspendDir(m_saveDirectory, contentHash, saveSlotNumber, slotNumber);
+  const auto dir = suspendDir(m_saveDirectory, contentHash, saveSlotNumber, slotNumber);
 
   if (std::error_code ec; !fs::exists(dir, ec)) {
     return;
   }
 
-  auto metadata = m_saveDatabase.getSuspendPointMetadata(contentHash,
-                                                         saveSlotNumber, slotNumber);
+  auto metadata = m_saveDatabase.getSuspendPointMetadata(contentHash, saveSlotNumber, slotNumber);
   if (metadata.has_value()) {
     m_saveDatabase.deleteSuspendPointMetadata(metadata->id);
   }

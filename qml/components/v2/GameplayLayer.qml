@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
 
-// TODO
 // The running game as a full-window layer above the router (not a route). It is
 // bottom-anchored and changes HEIGHT by state, so the game render itself shrinks
 // down into a bottom bar when backgrounded (it becomes the "now playing" bar)
@@ -38,37 +37,57 @@ Item {
 
     // Height is driven by state; only the shrink/grow between full and bar (and
     // the close-away) animate — launch snaps to full and lets the black cover fade
-    state: mode === "none" ? "none"
-         : mode === "backgrounded" ? "docked"
-         : "full"
+    state: mode === "none" ? "none" : mode === "backgrounded" ? "docked" : "full"
 
     states: [
         State {
             name: "none"
-            PropertyChanges { target: gameplay; height: 0 }
+            PropertyChanges {
+                target: gameplay
+                height: 0
+            }
         },
         State {
             name: "docked"
-            PropertyChanges { target: gameplay; height: gameplay.barHeight }
+            PropertyChanges {
+                target: gameplay
+                height: gameplay.barHeight
+            }
         },
         State {
             name: "full"
-            PropertyChanges { target: gameplay; height: gameplay.parent.height }
+            PropertyChanges {
+                target: gameplay
+                height: gameplay.parent.height
+            }
         }
     ]
 
     transitions: [
         Transition {
             to: "docked"
-            NumberAnimation { property: "height"; duration: 300; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                property: "height"
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
         },
         Transition {
-            from: "docked"; to: "full"
-            NumberAnimation { property: "height"; duration: 300; easing.type: Easing.OutCubic }
+            from: "docked"
+            to: "full"
+            NumberAnimation {
+                property: "height"
+                duration: 300
+                easing.type: Easing.OutCubic
+            }
         },
         Transition {
             to: "none"
-            NumberAnimation { property: "height"; duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                property: "height"
+                duration: 250
+                easing.type: Easing.OutCubic
+            }
         }
     ]
 
@@ -76,9 +95,13 @@ Item {
     // notably Esc → quick menu — reach the emulator when it's foregrounded
     onModeChanged: {
         if (mode === "playing") {
-            Qt.callLater(function () { emulatorLoader.forceActiveFocus(); });
+            Qt.callLater(function () {
+                emulatorLoader.forceActiveFocus();
+            });
         } else if (mode === "quickMenu") {
-            Qt.callLater(function () { quickMenu.forceActiveFocus(); });
+            Qt.callLater(function () {
+                quickMenu.forceActiveFocus();
+            });
         }
     }
 
@@ -123,7 +146,10 @@ Item {
         opacity: gameplay.mode === "quickMenu" ? 1 : 0
         visible: opacity > 0
         Behavior on opacity {
-            NumberAnimation { duration: 160; easing.type: Easing.InOutQuad }
+            NumberAnimation {
+                duration: 160
+                easing.type: Easing.InOutQuad
+            }
         }
 
         onResumeGame: gameplay.foreground()
@@ -177,7 +203,10 @@ Item {
         opacity: gameplay.launching ? 1 : 0
         visible: opacity > 0
         Behavior on opacity {
-            NumberAnimation { duration: 260; easing.type: Easing.InOutQuad }
+            NumberAnimation {
+                duration: 260
+                easing.type: Easing.InOutQuad
+            }
         }
         onOpacityChanged: {
             if (opacity >= 1.0) {

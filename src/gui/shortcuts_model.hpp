@@ -1,8 +1,9 @@
 #pragma once
+#include "service_accessor.hpp"
+
 #include <firelight/input/gamepad_type.hpp>
 #include <firelight/input/input_source.hpp>
 #include <firelight/input/shortcut_mapping.hpp>
-#include "service_accessor.hpp"
 
 #include <QAbstractListModel>
 #include <memory>
@@ -17,8 +18,7 @@ class ShortcutsModel : public QAbstractListModel, public ServiceAccessor {
   Q_PROPERTY(QString presetId READ presetId NOTIFY presetIdChanged)
 
 public:
-  ShortcutsModel(int profileId, bool isKeyboard,
-                 std::shared_ptr<input::ShortcutMapping> shortcutMapping,
+  ShortcutsModel(int profileId, bool isKeyboard, std::shared_ptr<input::ShortcutMapping> shortcutMapping,
                  std::string presetId);
 
   int rowCount(const QModelIndex &parent) const override;
@@ -27,8 +27,7 @@ public:
 
   // Appends a binding to a shortcut. `modifiers`/`input` are GamepadInput codes
   // for a controller profile, or Qt::Key codes for a keyboard profile
-  Q_INVOKABLE void addBinding(const QString &shortcutId, QList<int> modifiers,
-                              int input);
+  Q_INVOKABLE void addBinding(const QString &shortcutId, QList<int> modifiers, int input);
   // Unbinds a shortcut, which is how a shortcut is turned off — there is no
   // separate disabled state
   Q_INVOKABLE void clearBindings(const QString &shortcutId);
@@ -47,7 +46,6 @@ public:
   // picker: a keyboard is never offered a gamepad preset
   Q_INVOKABLE QVariantList presetOptions() const;
 
-  // TODO
   // The input codes the assign prompt should watch for being held, so it can
   // record a combo. Empty for a keyboard profile — Qt reports those modifiers
   // on the key event itself
@@ -84,8 +82,7 @@ private:
   [[nodiscard]] DeviceType deviceType() const;
   // What the profile's preset ships for an action; empty when it ships nothing
   // or the preset is gone
-  [[nodiscard]] std::vector<input::InputSource>
-  presetSourcesFor(const input::ShortcutId &id) const;
+  [[nodiscard]] std::vector<input::InputSource> presetSourcesFor(const input::ShortcutId &id) const;
   [[nodiscard]] bool differsFromPreset(const input::ShortcutId &id) const;
 
   int m_profileId = -1;

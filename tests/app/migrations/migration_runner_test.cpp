@@ -1,7 +1,6 @@
 #include <firelight/migrations/migration_runner.hpp>
 
 #include <gtest/gtest.h>
-
 #include <string>
 #include <vector>
 
@@ -16,8 +15,7 @@ TEST(MigrationRunnerTest, FreshDatabaseRunsAllInOrder) {
       {3, [&] { log.emplace_back("v3"); }},
   };
   int stamped = -1;
-  const int result =
-      applyMigrations(0, migrations, [&](int v) { stamped = v; });
+  const int result = applyMigrations(0, migrations, [&](int v) { stamped = v; });
 
   EXPECT_EQ(result, 3);
   EXPECT_EQ(stamped, 3);
@@ -31,8 +29,7 @@ TEST(MigrationRunnerTest, ReopenAtLatestRunsNothing) {
       {2, [&] { log.emplace_back("v2"); }},
   };
   int stampCount = 0;
-  const int result =
-      applyMigrations(2, migrations, [&](int) { stampCount++; });
+  const int result = applyMigrations(2, migrations, [&](int) { stampCount++; });
 
   EXPECT_EQ(result, 2);
   EXPECT_TRUE(log.empty());
@@ -47,8 +44,7 @@ TEST(MigrationRunnerTest, PartialUpgradeRunsOnlyNewer) {
       {3, [&] { log.emplace_back("v3"); }},
   };
   int stamped = -1;
-  const int result =
-      applyMigrations(1, migrations, [&](int v) { stamped = v; });
+  const int result = applyMigrations(1, migrations, [&](int v) { stamped = v; });
 
   EXPECT_EQ(result, 3);
   EXPECT_EQ(stamped, 3);

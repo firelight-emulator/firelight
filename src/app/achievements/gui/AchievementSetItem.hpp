@@ -1,8 +1,9 @@
 #pragma once
 #include "achievement_list_model.hpp"
 #include "achievement_list_sort_filter_model.hpp"
-#include <firelight/achievement_set.hpp>
 #include "service_accessor.hpp"
+
+#include <firelight/achievement_set.hpp>
 
 #include <QObject>
 
@@ -10,24 +11,21 @@ namespace firelight::achievements {
 class AchievementSetItem : public QObject, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int setId MEMBER m_setId NOTIFY setIdChanged)
-  Q_PROPERTY(
-      bool hardcore READ isHardcore WRITE setHardcore NOTIFY hardcoreChanged)
+  Q_PROPERTY(bool hardcore READ isHardcore WRITE setHardcore NOTIFY hardcoreChanged)
   Q_PROPERTY(QString iconUrl MEMBER m_iconUrl NOTIFY setIdChanged)
   Q_PROPERTY(bool hasAchievements MEMBER m_hasAchievements NOTIFY setIdChanged)
   Q_PROPERTY(QString name MEMBER m_setName NOTIFY setIdChanged)
   Q_PROPERTY(int numEarned MEMBER m_numEarned NOTIFY setIdChanged)
-  Q_PROPERTY(
-      int numEarnedHardcore MEMBER m_numEarnedHardcore NOTIFY setIdChanged)
+  Q_PROPERTY(int numEarnedHardcore MEMBER m_numEarnedHardcore NOTIFY setIdChanged)
   Q_PROPERTY(int numAchievements MEMBER m_numAchievements NOTIFY setIdChanged)
   Q_PROPERTY(int totalNumPoints MEMBER m_totalNumPoints NOTIFY setIdChanged)
-  Q_PROPERTY(QSortFilterProxyModel *achievements READ getAchievements NOTIFY
-                 setIdChanged)
+  Q_PROPERTY(QSortFilterProxyModel *achievements READ getAchievements NOTIFY setIdChanged)
 
 public:
-  explicit AchievementSetItem(const AchievementSet &set,
-                              QObject *parent = nullptr);
+  explicit AchievementSetItem(const AchievementSet &set, QObject *parent = nullptr);
 
   bool isHardcore() const { return m_hardcore; }
+
   void setHardcore(const bool hardcore) {
     if (m_hardcore == hardcore) {
       return;

@@ -5,7 +5,6 @@
 
 namespace firelight::input {
 
-// TODO
 // The inputs a device is currently withholding from the running game
 //
 // When a shortcut fires, the input that triggered it is suppressed until it is

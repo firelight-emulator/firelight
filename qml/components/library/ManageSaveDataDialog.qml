@@ -28,8 +28,7 @@ FirelightDialog {
         boundsBehavior: Flickable.StopAtBounds
         currentIndex: 0
 
-        ScrollBar.vertical: ScrollBar {
-        }
+        ScrollBar.vertical: ScrollBar {}
 
         model: saveDataInfo.saveFiles
         delegate: Button {
@@ -40,9 +39,9 @@ FirelightDialog {
 
             TapHandler {
                 acceptedButtons: Qt.RightButton
-                onSingleTapped: function(event, button) {
+                onSingleTapped: function (event, button) {
                     if (button === 2) {
-                        saveFileRightClickMenu.popupNormal()
+                        saveFileRightClickMenu.popupNormal();
                     }
                 }
             }
@@ -53,14 +52,14 @@ FirelightDialog {
                     text: "Make active"
                     enabled: delegateButton.model.slotNumber !== saveDataInfo.activeSaveSlotNumber
                     onClicked: {
-                        saveDataInfo.activeSaveSlotNumber = delegateButton.model.slotNumber
+                        saveDataInfo.activeSaveSlotNumber = delegateButton.model.slotNumber;
                     }
                 }
                 RightClickMenuItem {
                     text: "Show in File Explorer"
-                    enabled:  delegateButton.model.hasData
+                    enabled: delegateButton.model.hasData
                     onClicked: {
-                        FilesystemUtils.showInFilesystem(delegateButton.model.filePath)
+                        FilesystemUtils.showInFilesystem(delegateButton.model.filePath);
                     }
                 }
             }
@@ -70,10 +69,10 @@ FirelightDialog {
                 // cursorShape: Qt.PointingHandCursor
             }
             background: Rectangle {
-                  color: "white"
-                  radius: 2
-                  opacity: hoverHandler.hovered ? 0.1 : 0
-              }
+                color: "white"
+                radius: 2
+                opacity: hoverHandler.hovered ? 0.1 : 0
+            }
             contentItem: RowLayout {
                 spacing: 16
 
@@ -125,7 +124,6 @@ FirelightDialog {
                         horizontalAlignment: Text.AlignHCenter
                     }
                 }
-
             }
         }
     }

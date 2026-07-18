@@ -5,20 +5,19 @@
 #include <firelight/input/input_mapping.hpp>
 #include <firelight/input/input_suppressor.hpp>
 #include <firelight/libretro/retropad.hpp>
+
 #include <string>
 
 namespace firelight::input {
 class IGamepad : public libretro::IRetroPad {
 public:
-  // TODO
   // The inputs this device is withholding from the game because a shortcut is
   // using them. Concrete state on the interface so every device shares one
   // implementation and the shortcut engine, which already holds an IGamepad*,
   // can reach it without a lookup
   InputSuppressor &suppressor() { return m_suppressor; }
-  [[nodiscard]] const InputSuppressor &suppressor() const {
-    return m_suppressor;
-  }
+
+  [[nodiscard]] const InputSuppressor &suppressor() const { return m_suppressor; }
 
   virtual std::shared_ptr<GamepadProfile> getProfile() const = 0;
 

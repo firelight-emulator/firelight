@@ -7,35 +7,31 @@
 #include <firelight/metadata/game_metadata_source.hpp>
 #include <firelight/metadata/media_asset_repository.hpp>
 
-#include <spdlog/spdlog.h>
-
 #include <filesystem>
+#include <spdlog/spdlog.h>
 #include <utility>
 
 namespace firelight::metadata {
 
-MetadataService::MetadataService(library::IUserLibraryRepository &library,
-                                 IGameMetadataSource &metadataSource,
-                                 IMediaAssetRepository &mediaAssets,
-                                 std::string mediaDir)
-    : m_library(library), m_metadataSource(metadataSource),
-      m_mediaAssets(mediaAssets), m_mediaDir(std::move(mediaDir)) {
+MetadataService::MetadataService(library::IUserLibraryRepository &library, IGameMetadataSource &metadataSource,
+                                 IMediaAssetRepository &mediaAssets, std::string mediaDir)
+    : m_library(library), m_metadataSource(metadataSource), m_mediaAssets(mediaAssets),
+      m_mediaDir(std::move(mediaDir)) {
   // One worker thread: metadata.db and media.db are single-connection, so all
   // access is serialized here regardless of which thread created the entry
   m_pool.setMaxThreadCount(1);
-  m_entryCreatedConnection =
-      EventDispatcher::instance().subscribe<library::EntryCreatedEvent>(
-          [this](const library::EntryCreatedEvent &event) {
-            const int id = event.entryId;
-            if (m_shuttingDown) {
-              return;
-            }
-            m_pool.start([this, id] {
-              if (!m_shuttingDown) {
-                populate(id);
-              }
-            });
-          });
+  m_entryCreatedConnection = EventDispatcher::instance().subscribe<library::EntryCreatedEvent>(
+      [this](const library::EntryCreatedEvent &event) {
+        const int id = event.entryId;
+        if (m_shuttingDown) {
+          return;
+        }
+        m_pool.start([this, id] {
+          if (!m_shuttingDown) {
+            populate(id);
+          }
+        });
+      });
 }
 
 MetadataService::~MetadataService() {
@@ -79,8 +75,7 @@ void MetadataService::populate(int entryId) {
     asset.type = def.type;
     asset.source = MediaSource::RetroAchievements;
     asset.remoteUrl = def.url;
-    asset.selected =
-        !m_mediaAssets.selectedFor(entry.contentHash, def.type).has_value();
+    asset.selected = !m_mediaAssets.selectedFor(entry.contentHash, def.type).has_value();
     m_mediaAssets.add(asset);
   }
 
@@ -91,20 +86,16 @@ void MetadataService::populate(int entryId) {
 }
 
 void MetadataService::reprojectSelectedMedia(library::Entry &entry) {
-  // TODO
   // These columns feed the small library-grid surfaces, so use the provider
   // thumbnail when available (the full original can be low-res, especially for
   // icons). The full URL stays in the media store for future high-res uses
-  if (const auto icon =
-          m_mediaAssets.selectedFor(entry.contentHash, MediaType::Icon)) {
+  if (const auto icon = m_mediaAssets.selectedFor(entry.contentHash, MediaType::Icon)) {
     entry.icon1x1SourceUrl = icon->displayThumb();
   }
-  if (const auto boxFront =
-          m_mediaAssets.selectedFor(entry.contentHash, MediaType::BoxartFront)) {
+  if (const auto boxFront = m_mediaAssets.selectedFor(entry.contentHash, MediaType::BoxartFront)) {
     entry.boxartFrontSourceUrl = boxFront->displayThumb();
   }
-  if (const auto boxBack =
-          m_mediaAssets.selectedFor(entry.contentHash, MediaType::BoxartBack)) {
+  if (const auto boxBack = m_mediaAssets.selectedFor(entry.contentHash, MediaType::BoxartBack)) {
     entry.boxartBackSourceUrl = boxBack->displayThumb();
   }
 }
@@ -124,8 +115,7 @@ void MetadataService::selectAsset(const std::string &contentHash, int assetId) {
   }
 }
 
-void MetadataService::applyCandidate(const std::string &contentHash,
-                                     const ArtCandidate &candidate) {
+void MetadataService::applyCandidate(const std::string &contentHash, const ArtCandidate &candidate) {
   MediaAsset asset;
   asset.contentHash = contentHash;
   asset.type = candidate.type;
@@ -141,20 +131,16 @@ void MetadataService::applyCandidate(const std::string &contentHash,
   }
 }
 
-bool MetadataService::importLocalImage(const std::string &contentHash,
-                                       const MediaType type,
+bool MetadataService::importLocalImage(const std::string &contentHash, const MediaType type,
                                        const std::string &sourcePath) {
   std::error_code ec;
   std::filesystem::create_directories(m_mediaDir, ec);
   const auto ext = std::filesystem::path(sourcePath).extension().string();
   // Stable per (game, type) name: re-importing replaces the user's custom art
   const auto dest =
-      (std::filesystem::path(m_mediaDir) /
-       (contentHash + "_" + std::to_string(static_cast<int>(type)) + "_user" +
-        ext))
+      (std::filesystem::path(m_mediaDir) / (contentHash + "_" + std::to_string(static_cast<int>(type)) + "_user" + ext))
           .string();
-  std::filesystem::copy_file(
-      sourcePath, dest, std::filesystem::copy_options::overwrite_existing, ec);
+  std::filesystem::copy_file(sourcePath, dest, std::filesystem::copy_options::overwrite_existing, ec);
   if (ec) {
     spdlog::error("Failed to import image {}: {}", sourcePath, ec.message());
     return false;

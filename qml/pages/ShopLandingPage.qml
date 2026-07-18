@@ -81,17 +81,14 @@ FocusScope {
             cellSpacing: gridView.cellSpacing
 
             onDoTheThing: {
-                Router.navigateTo("/shop/mods/" + delegate.model.id)
+                Router.navigateTo("/shop/mods/" + delegate.model.id);
                 // page.StackView.view.push(shopItemPage, {model: delegate.model})
             }
-
         }
     }
 
     Component {
         id: shopItemPage
-        ShopItemPage {
-        }
+        ShopItemPage {}
     }
 }
-

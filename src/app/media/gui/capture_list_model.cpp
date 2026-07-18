@@ -5,8 +5,7 @@
 
 namespace firelight::gui {
 
-CaptureListModel::CaptureListModel(media::IGameCaptureRepository &captures,
-                                   library::UserLibraryService &library,
+CaptureListModel::CaptureListModel(media::IGameCaptureRepository &captures, library::UserLibraryService &library,
                                    QObject *parent)
     : QAbstractListModel(parent), m_captures(captures), m_library(library) {
   refresh();
@@ -14,15 +13,9 @@ CaptureListModel::CaptureListModel(media::IGameCaptureRepository &captures,
 
 QHash<int, QByteArray> CaptureListModel::roleNames() const {
   return {
-      {CaptureId, "captureId"},
-      {GameContentHash, "gameContentHash"},
-      {GameName, "gameName"},
-      {GameIconUrl, "gameIconUrl"},
-      {CaptureTypeName, "captureType"},
-      {FilePath, "filePath"},
-      {FileUrl, "fileUrl"},
-      {ThumbnailUrl, "thumbnailUrl"},
-      {Timestamp, "timestamp"},
+      {CaptureId, "captureId"},     {GameContentHash, "gameContentHash"}, {GameName, "gameName"},
+      {GameIconUrl, "gameIconUrl"}, {CaptureTypeName, "captureType"},     {FilePath, "filePath"},
+      {FileUrl, "fileUrl"},         {ThumbnailUrl, "thumbnailUrl"},       {Timestamp, "timestamp"},
       {Favorite, "favorite"},
   };
 }
@@ -46,8 +39,7 @@ QVariant CaptureListModel::data(const QModelIndex &index, int role) const {
   case GameIconUrl:
     return gameInfoFor(c.contentHash).iconUrl;
   case CaptureTypeName:
-    return c.type == media::CaptureType::Clip ? QStringLiteral("clip")
-                                              : QStringLiteral("screenshot");
+    return c.type == media::CaptureType::Clip ? QStringLiteral("clip") : QStringLiteral("screenshot");
   case FilePath:
     return QString::fromStdString(c.filePath);
   case FileUrl:
@@ -65,8 +57,7 @@ QVariant CaptureListModel::data(const QModelIndex &index, int role) const {
   }
 }
 
-bool CaptureListModel::setData(const QModelIndex &index, const QVariant &value,
-                               int role) {
+bool CaptureListModel::setData(const QModelIndex &index, const QVariant &value, int role) {
   if (!index.isValid() || index.row() >= m_items.size() || role != Favorite) {
     return false;
   }
@@ -116,10 +107,8 @@ void CaptureListModel::removeCapture(int captureId) {
   }
 }
 
-const CaptureListModel::GameInfo &
-CaptureListModel::gameInfoFor(const std::string &contentHash) const {
-  if (const auto it = m_gameInfoCache.find(contentHash);
-      it != m_gameInfoCache.end()) {
+const CaptureListModel::GameInfo &CaptureListModel::gameInfoFor(const std::string &contentHash) const {
+  if (const auto it = m_gameInfoCache.find(contentHash); it != m_gameInfoCache.end()) {
     return it->second;
   }
   GameInfo info;

@@ -27,15 +27,15 @@ Dialog {
 
     Component.onCompleted: {
         if (contentItem) {
-            contentItem.clip = true
+            contentItem.clip = true;
         }
     }
 
     property var doOnAccepted
 
     function openAndDoOnAccepted(doOnAccepted) {
-        control.doOnAccepted = doOnAccepted
-        control.open()
+        control.doOnAccepted = doOnAccepted;
+        control.open();
     }
 
     implicitWidth: Math.min(parent.width, 560)
@@ -115,12 +115,12 @@ Dialog {
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
                 focus: !control.showCancel
                 label: control.acceptText
-                onClicked: function() {
+                onClicked: function () {
                     if (control.doOnAccepted) {
-                        control.doOnAccepted()
-                        control.doOnAccepted = null
+                        control.doOnAccepted();
+                        control.doOnAccepted = null;
                     }
-                    control.accept()
+                    control.accept();
                 }
             }
 
@@ -145,14 +145,14 @@ Dialog {
 
     enter: Transition {
         NumberAnimation {
-            property: "opacity";
-            from: 0.0;
+            property: "opacity"
+            from: 0.0
             to: 1.0
             duration: 200
         }
         NumberAnimation {
-            property: "scale";
-            from: 0.9;
+            property: "scale"
+            from: 0.9
             to: 1.0
             duration: 200
         }
@@ -160,14 +160,14 @@ Dialog {
 
     exit: Transition {
         NumberAnimation {
-            property: "opacity";
-            from: 1.0;
-            to: 0.0;
+            property: "opacity"
+            from: 1.0
+            to: 0.0
             duration: 200
         }
         NumberAnimation {
-            property: "scale";
-            from: 1.0;
+            property: "scale"
+            from: 1.0
             to: 0.9
             duration: 200
         }

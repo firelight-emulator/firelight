@@ -14,8 +14,7 @@ public:
   virtual ~ICheatRepository() = default;
 
   // All cheats for a game, ordered by `ordinal`
-  [[nodiscard]] virtual std::vector<Cheat>
-  getCheats(const std::string &contentHash) = 0;
+  [[nodiscard]] virtual std::vector<Cheat> getCheats(const std::string &contentHash) = 0;
 
   // Inserts `cheat` (appending after the game's existing cheats) and fills in
   // its assigned `id`/`ordinal`. Returns false on failure

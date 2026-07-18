@@ -9,8 +9,7 @@
 
 namespace firelight::gui {
 namespace {
-media::GameCapture makeCapture(const std::string &hash, media::CaptureType type,
-                               const std::string &path) {
+media::GameCapture makeCapture(const std::string &hash, media::CaptureType type, const std::string &path) {
   media::GameCapture c;
   c.contentHash = hash;
   c.type = type;
@@ -25,8 +24,7 @@ class CaptureListModelTest : public testing::Test {
 protected:
   media::SqliteGameCaptureRepository m_captures{":memory:"};
   library::SqliteUserLibraryRepository m_libRepo{":memory:"};
-  library::UserLibraryService m_library{
-      m_libRepo, (QDir::tempPath() + "/fl_clm_test").toStdString()};
+  library::UserLibraryService m_library{m_libRepo, (QDir::tempPath() + "/fl_clm_test").toStdString()};
 };
 
 TEST_F(CaptureListModelTest, ExposesRolesAndResolvesGameName) {
@@ -45,14 +43,10 @@ TEST_F(CaptureListModelTest, ExposesRolesAndResolvesGameName) {
   ASSERT_EQ(model.rowCount(QModelIndex()), 2);
 
   const auto idx = model.index(0, 0);
-  EXPECT_EQ(model.data(idx, CaptureListModel::GameName).toString(),
-            QStringLiteral("Cool Game"));
-  const auto type =
-      model.data(idx, CaptureListModel::CaptureTypeName).toString();
+  EXPECT_EQ(model.data(idx, CaptureListModel::GameName).toString(), QStringLiteral("Cool Game"));
+  const auto type = model.data(idx, CaptureListModel::CaptureTypeName).toString();
   EXPECT_TRUE(type == "clip" || type == "screenshot");
-  EXPECT_TRUE(model.data(idx, CaptureListModel::ThumbnailUrl)
-                  .toString()
-                  .startsWith("file:"));
+  EXPECT_TRUE(model.data(idx, CaptureListModel::ThumbnailUrl).toString().startsWith("file:"));
 }
 
 TEST_F(CaptureListModelTest, FavoriteSetDataPersists) {

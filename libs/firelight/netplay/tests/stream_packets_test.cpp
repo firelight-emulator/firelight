@@ -5,11 +5,7 @@
 namespace firelight::netplay {
 
 TEST(StreamPacketsTest, VideoRoundTrips) {
-  VideoPacket packet{.seq = 7,
-                     .ptsMs = 1234,
-                     .keyframe = true,
-                     .configChanged = true,
-                     .payload = {1, 2, 3, 4, 5}};
+  VideoPacket packet{.seq = 7, .ptsMs = 1234, .keyframe = true, .configChanged = true, .payload = {1, 2, 3, 4, 5}};
   const auto bytes = encodePacket(packet);
   const auto decoded = decodeVideoPacket(bytes);
   ASSERT_TRUE(decoded.has_value());

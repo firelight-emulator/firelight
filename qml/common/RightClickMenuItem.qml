@@ -12,15 +12,16 @@ MenuItem {
     property real maxWidth: -1
 
     implicitHeight: AppStyle.controlHeight
-    // TODO
     // Derive from the content's *implicit* width (intrinsic), not contentItem.width
     // — the Menu drives item width from its own implicitWidth, so reading the
     // laid-out width here closes a binding loop that a scale change re-triggers
     implicitWidth: {
-        var cw = contentItem.implicitWidth
-        if (control.maxWidth > 0 && cw > control.maxWidth) cw = control.maxWidth
-        if (cw < control.minWidth) cw = control.minWidth
-        return cw + leftPadding + rightPadding
+        var cw = contentItem.implicitWidth;
+        if (control.maxWidth > 0 && cw > control.maxWidth)
+            cw = control.maxWidth;
+        if (cw < control.minWidth)
+            cw = control.minWidth;
+        return cw + leftPadding + rightPadding;
     }
     padding: AppStyle.spacingXs
     horizontalPadding: AppStyle.spacingSm
@@ -45,21 +46,21 @@ MenuItem {
         // Coords are fractions of the (scaled) canvas so the triangle grows with
         // the UI; beginPath keeps repaints from accumulating stale segments
         onPaint: {
-            var ctx = getContext("2d")
-            ctx.clearRect(0, 0, width, height)
-            ctx.beginPath()
-            ctx.fillStyle = enabled ? Constants.rightClickMenuItem_TextColor : "grey"
-            ctx.moveTo(width * 0.35, height * 0.35)
-            ctx.lineTo(width * 0.63, height / 2)
-            ctx.lineTo(width * 0.35, height * 0.65)
-            ctx.closePath()
-            ctx.fill()
+            var ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            ctx.beginPath();
+            ctx.fillStyle = enabled ? Constants.rightClickMenuItem_TextColor : "grey";
+            ctx.moveTo(width * 0.35, height * 0.35);
+            ctx.lineTo(width * 0.63, height / 2);
+            ctx.lineTo(width * 0.35, height * 0.65);
+            ctx.closePath();
+            ctx.fill();
         }
     }
 
     Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Back) {
-            control.menu.close()
+            control.menu.close();
         }
     }
 
@@ -101,5 +102,4 @@ MenuItem {
             verticalAlignment: Text.AlignVCenter
         }
     }
-
 }

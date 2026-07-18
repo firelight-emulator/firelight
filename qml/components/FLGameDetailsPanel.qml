@@ -26,5 +26,4 @@ ColumnLayout {
         Layout.fillHeight: true
         activity: gameActivity
     }
-
 }

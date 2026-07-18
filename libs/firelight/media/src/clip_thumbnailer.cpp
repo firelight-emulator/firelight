@@ -12,11 +12,9 @@ extern "C" {
 
 namespace firelight::media {
 
-bool ClipThumbnailer::writePoster(const QString &mp4Path,
-                                  const QString &pngPath) {
+bool ClipThumbnailer::writePoster(const QString &mp4Path, const QString &pngPath) {
   AVFormatContext *fmt = nullptr;
-  if (avformat_open_input(&fmt, mp4Path.toUtf8().constData(), nullptr,
-                          nullptr) < 0) {
+  if (avformat_open_input(&fmt, mp4Path.toUtf8().constData(), nullptr, nullptr) < 0) {
     spdlog::warn("Clip poster: could not open {}", mp4Path.toStdString());
     return false;
   }
@@ -64,8 +62,7 @@ bool ClipThumbnailer::writePoster(const QString &mp4Path,
     // Read + decode until the first video frame emerges
     bool gotFrame = false;
     while (!gotFrame && av_read_frame(fmt, packet) >= 0) {
-      if (packet->stream_index == videoStream &&
-          avcodec_send_packet(codecCtx, packet) >= 0 &&
+      if (packet->stream_index == videoStream && avcodec_send_packet(codecCtx, packet) >= 0 &&
           avcodec_receive_frame(codecCtx, frame) >= 0) {
         gotFrame = true;
       }
@@ -81,9 +78,8 @@ bool ClipThumbnailer::writePoster(const QString &mp4Path,
     uint8_t *dst[1] = {image.bits()};
     int dstStride[1] = {static_cast<int>(image.bytesPerLine())};
 
-    sws = sws_getContext(w, h, static_cast<AVPixelFormat>(frame->format), w, h,
-                         AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr,
-                         nullptr);
+    sws = sws_getContext(w, h, static_cast<AVPixelFormat>(frame->format), w, h, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr,
+                         nullptr, nullptr);
     if (!sws) {
       break;
     }

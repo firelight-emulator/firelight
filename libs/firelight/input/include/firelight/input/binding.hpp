@@ -9,9 +9,7 @@ struct TurboOptions {
   bool enabled = false;
   float rateHz = 10.0f; // presses per second while the source is held
 
-  bool operator==(const TurboOptions &o) const {
-    return enabled == o.enabled && rateHz == o.rateHz;
-  }
+  bool operator==(const TurboOptions &o) const { return enabled == o.enabled && rateHz == o.rateHz; }
 };
 
 inline void to_json(nlohmann::json &j, const TurboOptions &t) {
@@ -23,7 +21,6 @@ inline void from_json(const nlohmann::json &j, TurboOptions &t) {
   t.rateHz = j.value("rateHz", 10.0f);
 }
 
-// TODO
 // A single physical source bound to an emulated input, plus how it behaves
 // Multiple Bindings may target the same emulated input; their evaluated results
 // are OR'd together (digital) or summed/maxed (analog)
@@ -36,8 +33,8 @@ struct Binding {
   float scale = 1.0f;     // axis source -> axis target sensitivity
 
   bool operator==(const Binding &o) const {
-    return source == o.source && toggle == o.toggle && turbo == o.turbo &&
-           threshold == o.threshold && invert == o.invert && scale == o.scale;
+    return source == o.source && toggle == o.toggle && turbo == o.turbo && threshold == o.threshold &&
+           invert == o.invert && scale == o.scale;
   }
 };
 

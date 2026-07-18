@@ -8,7 +8,6 @@
 
 namespace firelight::input {
 
-// TODO
 // QML-facing list of controller profiles with create/clone/rename/delete and
 // JSON import/export. All operations delegate to the InputService/repository
 // and refresh the model

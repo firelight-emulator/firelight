@@ -1,7 +1,7 @@
 #include "core_environment.hpp"
 
-#include "libretro/libretro_vulkan.h"
 #include "SDL2/SDL.h"
+#include "libretro/libretro_vulkan.h"
 
 #include <cstring>
 #include <filesystem>
@@ -9,114 +9,104 @@
 #include <spdlog/spdlog.h>
 
 namespace libretro {
-  static retro_microphone_t *RETRO_CALLCONV
-  micOpen(const retro_microphone_params_t * /*params*/) {
-    auto *p = (g_ctx ? g_ctx->audioInput : nullptr);
-    return p ? p->openMicrophone() : nullptr;
+static retro_microphone_t *RETRO_CALLCONV micOpen(const retro_microphone_params_t * /*params*/) {
+  auto *p = (g_ctx ? g_ctx->audioInput : nullptr);
+  return p ? p->openMicrophone() : nullptr;
+}
+
+static void RETRO_CALLCONV micClose(retro_microphone_t *mic) {
+  if (auto *p = (g_ctx ? g_ctx->audioInput : nullptr)) {
+    p->closeMicrophone(mic);
   }
+}
 
-  static void RETRO_CALLCONV micClose(retro_microphone_t *mic) {
-    if (auto *p = (g_ctx ? g_ctx->audioInput : nullptr)) {
-      p->closeMicrophone(mic);
-    }
+static bool RETRO_CALLCONV micGetParams(const retro_microphone_t *mic, retro_microphone_params_t *params) {
+  auto *p = (g_ctx ? g_ctx->audioInput : nullptr);
+  return p && p->getMicrophoneParameters(mic, params);
+}
+
+static bool RETRO_CALLCONV micSetState(retro_microphone_t *mic, bool state) {
+  auto *p = (g_ctx ? g_ctx->audioInput : nullptr);
+  return p && p->setMicrophoneState(mic, state);
+}
+
+static bool RETRO_CALLCONV micGetState(const retro_microphone_t *mic) {
+  auto *p = (g_ctx ? g_ctx->audioInput : nullptr);
+  return p && p->getMicrophoneState(mic);
+}
+
+static int RETRO_CALLCONV micRead(retro_microphone_t *mic, int16_t *samples, size_t num_samples) {
+  auto *p = (g_ctx ? g_ctx->audioInput : nullptr);
+  return p ? p->readMicrophone(mic, samples, num_samples) : 0;
+}
+
+bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
+  if (m_envHandlers.empty()) {
+    buildEnvironmentHandlers();
   }
-
-  static bool RETRO_CALLCONV micGetParams(const retro_microphone_t *mic,
-                                          retro_microphone_params_t *params) {
-    auto *p = (g_ctx ? g_ctx->audioInput : nullptr);
-    return p && p->getMicrophoneParameters(mic, params);
+  const auto it = m_envHandlers.find(cmd);
+  if (it == m_envHandlers.end()) {
+    // Intentionally unhandled libretro env commands (camera, location, MIDI,
+    // JIT, device-power, throttle, playlist dirs, proc-address, …): declining
+    // is correct — the core falls back to its defaults
+    spdlog::debug("Unhandled libretro env command: {}", cmd);
+    environmentCalls.emplace_back("UNIMPLEMENTED");
+    return false;
   }
+  environmentCalls.emplace_back(it->second.name);
+  return it->second.handler(data);
+}
 
-  static bool RETRO_CALLCONV micSetState(retro_microphone_t *mic, bool state) {
-    auto *p = (g_ctx ? g_ctx->audioInput : nullptr);
-    return p && p->setMicrophoneState(mic, state);
-  }
+void Core::buildEnvironmentHandlers() {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_ROTATION] = {"RETRO_ENVIRONMENT_SET_ROTATION", [this](void *data) -> bool {
+                                                     auto rotation = *static_cast<unsigned *>(data);
+                                                     videoReceiver->setScreenRotation(rotation);
+                                                     return true;
+                                                   }};
+  m_envHandlers[(3 | 0x800000)] = {"RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB", [this](void *data) -> bool {
+                                     auto ptr = static_cast<retro_environment_t *>(data);
+                                     *ptr = [](unsigned int cmd, void *data) {
+                                       printf("Calling weirdo callback");
+                                       return true;
+                                     };
+                                     return true;
+                                   }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_OVERSCAN] = {"RETRO_ENVIRONMENT_GET_OVERSCAN", [this](void *data) -> bool {
+                                                     recordPotentialAPIViolation(
+                                                         "Using deprecated environment call GET_OVERSCAN");
+                                                     *static_cast<bool *>(data) = false;
+                                                     return true;
+                                                   }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_CAN_DUPE] = {"RETRO_ENVIRONMENT_GET_CAN_DUPE", [this](void *data) -> bool {
+                                                     *static_cast<bool *>(data) = true;
+                                                     return true;
+                                                   }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_MESSAGE] = {"RETRO_ENVIRONMENT_SET_MESSAGE", [this](void *data) -> bool {
+                                                    auto ptr = static_cast<retro_message *>(data);
+                                                    // TODO: Do something to queue message
+                                                    printf("Got message for %d frames: %s\n", ptr->frames, ptr->msg);
+                                                    return true;
+                                                  }};
+  m_envHandlers[RETRO_ENVIRONMENT_SHUTDOWN] = {"RETRO_ENVIRONMENT_SHUTDOWN", [this](void *data) -> bool {
+                                                 shutdown = *static_cast<bool *>(data);
+                                                 return true;
+                                               }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL] = {"RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL",
+                                                            [this](void *data) -> bool {
+                                                              performanceLevel = *static_cast<unsigned *>(data);
+                                                              return true;
+                                                            }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY] = {"RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY",
+                                                           [this](void *data) -> bool {
+                                                             if (systemDirectory.empty()) {
+                                                               return false;
+                                                             }
 
-  static bool RETRO_CALLCONV micGetState(const retro_microphone_t *mic) {
-    auto *p = (g_ctx ? g_ctx->audioInput : nullptr);
-    return p && p->getMicrophoneState(mic);
-  }
-
-  static int RETRO_CALLCONV micRead(retro_microphone_t *mic, int16_t *samples,
-                                    size_t num_samples) {
-    auto *p = (g_ctx ? g_ctx->audioInput : nullptr);
-    return p ? p->readMicrophone(mic, samples, num_samples) : 0;
-  }
-
-  bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
-    if (m_envHandlers.empty()) {
-      buildEnvironmentHandlers();
-    }
-    const auto it = m_envHandlers.find(cmd);
-    if (it == m_envHandlers.end()) {
-      // TODO
-      // Intentionally unhandled libretro env commands (camera, location, MIDI,
-      // JIT, device-power, throttle, playlist dirs, proc-address, …): declining
-      // is correct — the core falls back to its defaults
-      spdlog::debug("Unhandled libretro env command: {}", cmd);
-      environmentCalls.emplace_back("UNIMPLEMENTED");
-      return false;
-    }
-    environmentCalls.emplace_back(it->second.name);
-    return it->second.handler(data);
-  }
-
-  void Core::buildEnvironmentHandlers() {
-    m_envHandlers[RETRO_ENVIRONMENT_SET_ROTATION] = {
-      "RETRO_ENVIRONMENT_SET_ROTATION", [this](void *data) -> bool {
-        auto rotation = *static_cast<unsigned *>(data);
-        videoReceiver->setScreenRotation(rotation);
-        return true;
-      }};
-    m_envHandlers[(3 | 0x800000)] = {
-      "RETRO_ENVIRONMENT_GET_CLEAR_ALL_THREAD_WAITS_CB", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_environment_t *>(data);
-        *ptr = [](unsigned int cmd, void *data) {
-          printf("Calling weirdo callback");
-          return true;
-        };
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_OVERSCAN] = {
-      "RETRO_ENVIRONMENT_GET_OVERSCAN", [this](void *data) -> bool {
-        recordPotentialAPIViolation(
-          "Using deprecated environment call GET_OVERSCAN");
-        *static_cast<bool *>(data) = false;
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_CAN_DUPE] = {
-      "RETRO_ENVIRONMENT_GET_CAN_DUPE", [this](void *data) -> bool {
-        *static_cast<bool *>(data) = true;
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_MESSAGE] = {
-      "RETRO_ENVIRONMENT_SET_MESSAGE", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_message *>(data);
-        // TODO: Do something to queue message
-        printf("Got message for %d frames: %s\n", ptr->frames, ptr->msg);
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SHUTDOWN] = {
-      "RETRO_ENVIRONMENT_SHUTDOWN", [this](void *data) -> bool {
-        shutdown = *static_cast<bool *>(data);
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL] = {
-      "RETRO_ENVIRONMENT_SET_PERFORMANCE_LEVEL", [this](void *data) -> bool {
-        performanceLevel = *static_cast<unsigned *>(data);
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY] = {
-      "RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY", [this](void *data) -> bool {
-        if (systemDirectory.empty()) {
-          return false;
-        }
-
-        auto ptr = static_cast<const char **>(data);
-        *ptr = strdup(systemDirectory.c_str());
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_PIXEL_FORMAT] = {
+                                                             auto ptr = static_cast<const char **>(data);
+                                                             *ptr = strdup(systemDirectory.c_str());
+                                                             return true;
+                                                           }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_PIXEL_FORMAT] = {
       "RETRO_ENVIRONMENT_SET_PIXEL_FORMAT", [this](void *data) -> bool {
         if (!videoReceiver) {
           spdlog::warn("No video receiver set; cannot set pixel format");
@@ -126,7 +116,7 @@ namespace libretro {
         videoReceiver->setPixelFormat(ptr);
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS] = {
       "RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS", [this](void *data) -> bool {
         auto ptr = static_cast<retro_input_descriptor *>(data);
         // TODO sane default
@@ -136,9 +126,8 @@ namespace libretro {
             break;
           }
 
-          spdlog::info("Got input descriptor: port {}, device {}, index {}, id {}",
-                       descriptor.port, descriptor.device, descriptor.index,
-                       descriptor.id);
+          spdlog::info("Got input descriptor: port {}, device {}, index {}, id {}", descriptor.port, descriptor.device,
+                       descriptor.index, descriptor.id);
 
           inputDescriptors.emplace_back(descriptor);
 
@@ -148,9 +137,8 @@ namespace libretro {
         }
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK] = {
       "RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK", [this](void *data) -> bool {
-        // TODO
         // The core hands us a function to call on every key; keep it. (This
         // used to assign *into* ptr->callback, overwriting the core's own
         // pointer with a stub — so cores that drive themselves from the
@@ -159,18 +147,17 @@ namespace libretro {
         keyboardCallback = ptr->callback;
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE] = {
       "RETRO_ENVIRONMENT_SET_DISK_CONTROL_INTERFACE", [this](void *data) -> bool {
         // The core hands us its disk-control callbacks; copy them by value (the
         // pointed-to struct may not persist) so we can drive disc swaps later
-        if (const auto *cb =
-            static_cast<const retro_disk_control_callback *>(data)) {
+        if (const auto *cb = static_cast<const retro_disk_control_callback *>(data)) {
           m_diskControl = *cb;
           m_hasDiskControl = true;
         }
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_HW_RENDER] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_HW_RENDER] = {
       "RETRO_ENVIRONMENT_SET_HW_RENDER", [this](void *data) -> bool {
         if (!videoReceiver) {
           spdlog::warn("No video receiver set; cannot set HW render interface");
@@ -182,47 +169,45 @@ namespace libretro {
 
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_VARIABLE] = {
-      "RETRO_ENVIRONMENT_GET_VARIABLE", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_variable *>(data);
+  m_envHandlers[RETRO_ENVIRONMENT_GET_VARIABLE] = {"RETRO_ENVIRONMENT_GET_VARIABLE", [this](void *data) -> bool {
+                                                     auto ptr = static_cast<retro_variable *>(data);
 
-        auto configProvider = m_configurationProvider;
-        if (!configProvider) {
-          return false;
-        }
+                                                     auto configProvider = m_configurationProvider;
+                                                     if (!configProvider) {
+                                                       return false;
+                                                     }
 
-        auto val = configProvider->getOptionValue(ptr->key);
-        if (!val.has_value()) {
-          return false;
-        }
+                                                     auto val = configProvider->getOptionValue(ptr->key);
+                                                     if (!val.has_value()) {
+                                                       return false;
+                                                     }
 
-        ptr->value = strdup(val->c_str());
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_VARIABLES] = {
-      "RETRO_ENVIRONMENT_SET_VARIABLES", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_variable *>(data);
+                                                     ptr->value = strdup(val->c_str());
+                                                     return true;
+                                                   }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_VARIABLES] = {"RETRO_ENVIRONMENT_SET_VARIABLES", [this](void *data) -> bool {
+                                                      auto ptr = static_cast<retro_variable *>(data);
 
-        auto configProvider = m_configurationProvider;
-        if (!configProvider) {
-          return false;
-        }
+                                                      auto configProvider = m_configurationProvider;
+                                                      if (!configProvider) {
+                                                        return false;
+                                                      }
 
-        for (int i = 0; i < 200; ++i) {
-          auto opt = ptr[i];
-          if (opt.key == nullptr) {
-            break;
-          }
+                                                      for (int i = 0; i < 200; ++i) {
+                                                        auto opt = ptr[i];
+                                                        if (opt.key == nullptr) {
+                                                          break;
+                                                        }
 
-          firelight::libretro::IConfigurationProvider::Option option;
-          option.key = opt.key;
-          option.label = opt.value;
+                                                        firelight::libretro::IConfigurationProvider::Option option;
+                                                        option.key = opt.key;
+                                                        option.label = opt.value;
 
-          configProvider->registerOption(option);
-        }
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE] = {
+                                                        configProvider->registerOption(option);
+                                                      }
+                                                      return true;
+                                                    }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE] = {
       "RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE", [this](void *data) -> bool {
         const auto configProvider = m_configurationProvider;
         if (configProvider) {
@@ -232,42 +217,38 @@ namespace libretro {
         }
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME] = {
-      "RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME", [this](void *data) -> bool {
-        canRunWithNoGame = *static_cast<bool *>(data);
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_LIBRETRO_PATH] = {
-      "RETRO_ENVIRONMENT_GET_LIBRETRO_PATH", [this](void *data) -> bool {
-        if (libretroPath.empty()) {
-          return false;
-        }
-        *static_cast<const char **>(data) = &libretroPath[0];
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK] = {
-      "RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK", [this](void *data) -> bool {
-        //    video->setFrameTimeCallback((retro_frame_time_callback
-        //    *)data);
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK] = {
-      "RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_audio_callback *>(data);
-        ptr->callback = nullptr;
-        ptr->set_state = nullptr;
-        return false;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME] = {"RETRO_ENVIRONMENT_SET_SUPPORT_NO_GAME",
+                                                          [this](void *data) -> bool {
+                                                            canRunWithNoGame = *static_cast<bool *>(data);
+                                                            return true;
+                                                          }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_LIBRETRO_PATH] = {"RETRO_ENVIRONMENT_GET_LIBRETRO_PATH",
+                                                        [this](void *data) -> bool {
+                                                          if (libretroPath.empty()) {
+                                                            return false;
+                                                          }
+                                                          *static_cast<const char **>(data) = &libretroPath[0];
+                                                          return true;
+                                                        }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK] = {"RETRO_ENVIRONMENT_SET_FRAME_TIME_CALLBACK",
+                                                              [this](void *data) -> bool {
+                                                                //    video->setFrameTimeCallback((retro_frame_time_callback
+                                                                //    *)data);
+                                                                return true;
+                                                              }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK] = {"RETRO_ENVIRONMENT_SET_AUDIO_CALLBACK",
+                                                         [this](void *data) -> bool {
+                                                           auto ptr = static_cast<retro_audio_callback *>(data);
+                                                           ptr->callback = nullptr;
+                                                           ptr->set_state = nullptr;
+                                                           return false;
+                                                         }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE] = {
       "RETRO_ENVIRONMENT_GET_RUMBLE_INTERFACE", [this](void *data) -> bool {
         auto ptr = static_cast<retro_rumble_interface *>(data);
-        ptr->set_rumble_state = [](unsigned port, enum retro_rumble_effect effect,
-                                   uint16_t strength) {
-          const auto retropad = g_ctx && g_ctx->input
-                                  ? g_ctx->input->getRetropadProvider()
-                                  : nullptr;
-          const auto controller =
-              retropad ? retropad->getRetropadForPlayerIndex(port) : nullptr;
+        ptr->set_rumble_state = [](unsigned port, enum retro_rumble_effect effect, uint16_t strength) {
+          const auto retropad = g_ctx && g_ctx->input ? g_ctx->input->getRetropadProvider() : nullptr;
+          const auto controller = retropad ? retropad->getRetropadForPlayerIndex(port) : nullptr;
           if (!controller) {
             return true;
           }
@@ -282,10 +263,9 @@ namespace libretro {
         };
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES] = {
+  m_envHandlers[RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES] = {
       "RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES", [this](void *data) -> bool {
         auto ptr = static_cast<uint64_t *>(data);
-        // TODO
         //* Gets a bitmask telling which device type are expected to be
         // * handled properly in a call to retro_input_state_t
         // * Devices which are not handled or recognized always return
@@ -295,35 +275,34 @@ namespace libretro {
 
         // Advertise the device types inputStateCallback actually services
         // (pointer for DS touch; mouse + light gun for WS2 device support)
-        *ptr = (1 << RETRO_DEVICE_JOYPAD) | (1 << RETRO_DEVICE_ANALOG) |
-               (1 << RETRO_DEVICE_POINTER) | (1 << RETRO_DEVICE_MOUSE) |
-               (1 << RETRO_DEVICE_LIGHTGUN);
+        *ptr = (1 << RETRO_DEVICE_JOYPAD) | (1 << RETRO_DEVICE_ANALOG) | (1 << RETRO_DEVICE_POINTER) |
+               (1 << RETRO_DEVICE_MOUSE) | (1 << RETRO_DEVICE_LIGHTGUN);
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE] = {
-      "RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_sensor_interface *>(data);
-        ptr->set_sensor_state = nullptr;
-        ptr->get_sensor_input = nullptr;
-        return false;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE] = {
-      "RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE", [this](void *data) -> bool {
-        // Camera not supported; hand back no-op callbacks and decline
-        auto ptr = static_cast<retro_camera_callback *>(data);
-        ptr->start = [] { return false; };
-        ptr->stop = [] {
-        };
-        return false;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_LOG_INTERFACE] = {
-      "RETRO_ENVIRONMENT_GET_LOG_INTERFACE", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_log_callback *>(data);
-        ptr->log = log;
-        // return false;
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_PERF_INTERFACE] = {
+  m_envHandlers[RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE] = {"RETRO_ENVIRONMENT_GET_SENSOR_INTERFACE",
+                                                           [this](void *data) -> bool {
+                                                             auto ptr = static_cast<retro_sensor_interface *>(data);
+                                                             ptr->set_sensor_state = nullptr;
+                                                             ptr->get_sensor_input = nullptr;
+                                                             return false;
+                                                           }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE] = {"RETRO_ENVIRONMENT_GET_CAMERA_INTERFACE",
+                                                           [this](void *data) -> bool {
+                                                             // Camera not supported; hand back no-op callbacks and
+                                                             // decline
+                                                             auto ptr = static_cast<retro_camera_callback *>(data);
+                                                             ptr->start = [] { return false; };
+                                                             ptr->stop = [] {};
+                                                             return false;
+                                                           }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_LOG_INTERFACE] = {"RETRO_ENVIRONMENT_GET_LOG_INTERFACE",
+                                                        [this](void *data) -> bool {
+                                                          auto ptr = static_cast<retro_log_callback *>(data);
+                                                          ptr->log = log;
+                                                          // return false;
+                                                          return true;
+                                                        }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_PERF_INTERFACE] = {
       "RETRO_ENVIRONMENT_GET_PERF_INTERFACE", [this](void *data) -> bool {
         auto ptr = static_cast<retro_perf_callback *>(data);
         // Return current time microseconds (unix epoch?)
@@ -366,61 +345,55 @@ namespace libretro {
          * */
         ptr->get_perf_counter = [] { return static_cast<retro_perf_tick_t>(0); };
 
-        ptr->perf_register = [](retro_perf_counter *counter) {
-          printf("Registering counter: %s\n", counter->ident);
-        };
+        ptr->perf_register = [](retro_perf_counter *counter) { printf("Registering counter: %s\n", counter->ident); };
 
-        ptr->perf_start = [](retro_perf_counter *counter) {
-          printf("Starting counter: %s\n", counter->ident);
-        };
+        ptr->perf_start = [](retro_perf_counter *counter) { printf("Starting counter: %s\n", counter->ident); };
 
-        ptr->perf_stop = [](retro_perf_counter *counter) {
-          printf("Stopping counter: %s\n", counter->ident);
-        };
+        ptr->perf_stop = [](retro_perf_counter *counter) { printf("Stopping counter: %s\n", counter->ident); };
 
         /* Asks frontend to log and/or display the state of performance
          * counters. Performance counters can always be poked into manually as
          * well
          */
-        ptr->perf_log = [] {
-        };
+        ptr->perf_log = [] {};
 
         return false;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE] = {
-      "RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_location_callback *>(data);
-        ptr->start = nullptr;
-        ptr->stop = nullptr;
-        ptr->get_position = nullptr;
-        ptr->set_interval = nullptr;
-        ptr->initialized = nullptr;
-        ptr->deinitialized = nullptr;
-        return false;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY] = {
-      "RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY", [this](void *data) -> bool {
-        if (systemDirectory.empty()) {
-          return false;
-        }
+  m_envHandlers[RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE] = {"RETRO_ENVIRONMENT_GET_LOCATION_INTERFACE",
+                                                             [this](void *data) -> bool {
+                                                               auto ptr = static_cast<retro_location_callback *>(data);
+                                                               ptr->start = nullptr;
+                                                               ptr->stop = nullptr;
+                                                               ptr->get_position = nullptr;
+                                                               ptr->set_interval = nullptr;
+                                                               ptr->initialized = nullptr;
+                                                               ptr->deinitialized = nullptr;
+                                                               return false;
+                                                             }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY] = {"RETRO_ENVIRONMENT_GET_CORE_ASSETS_DIRECTORY",
+                                                                [this](void *data) -> bool {
+                                                                  if (systemDirectory.empty()) {
+                                                                    return false;
+                                                                  }
 
-        auto ptr = static_cast<const char **>(data);
-        *ptr = strdup(systemDirectory.c_str());
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY] = {
-      "RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY", [this](void *data) -> bool {
-        // Hand back the Firelight-managed per-game/per-slot save directory (set
-        // in EmulatorInstance::initialize), NOT the system dir
-        if (m_saveDirectory.empty()) {
-          return false;
-        }
+                                                                  auto ptr = static_cast<const char **>(data);
+                                                                  *ptr = strdup(systemDirectory.c_str());
+                                                                  return true;
+                                                                }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY] = {"RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY",
+                                                         [this](void *data) -> bool {
+                                                           // Hand back the Firelight-managed per-game/per-slot save
+                                                           // directory (set in EmulatorInstance::initialize), NOT the
+                                                           // system dir
+                                                           if (m_saveDirectory.empty()) {
+                                                             return false;
+                                                           }
 
-        auto ptr = static_cast<const char **>(data);
-        *ptr = strdup(m_saveDirectory.c_str());
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO] = {
+                                                           auto ptr = static_cast<const char **>(data);
+                                                           *ptr = strdup(m_saveDirectory.c_str());
+                                                           return true;
+                                                         }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO] = {
       "RETRO_ENVIRONMENT_SET_SYSTEM_AV_INFO", [this](void *data) -> bool {
         if (!videoReceiver) {
           spdlog::warn("No video receiver set; cannot set system AV info");
@@ -429,25 +402,24 @@ namespace libretro {
         videoReceiver->setSystemAVInfo(static_cast<retro_system_av_info *>(data));
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO] = {
-      "RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_subsystem_info *>(data);
-        for (int i = 0; i < 100; ++i) {
-          auto ssInfo = ptr[i];
-          if (ssInfo.desc == nullptr) {
-            break;
-          }
+  m_envHandlers[RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO] = {"RETRO_ENVIRONMENT_SET_SUBSYSTEM_INFO",
+                                                         [this](void *data) -> bool {
+                                                           auto ptr = static_cast<retro_subsystem_info *>(data);
+                                                           for (int i = 0; i < 100; ++i) {
+                                                             auto ssInfo = ptr[i];
+                                                             if (ssInfo.desc == nullptr) {
+                                                               break;
+                                                             }
 
-          subsystemInfo.emplace_back(ssInfo);
-          if (i == 99) {
-            recordPotentialAPIViolation("Over 100 subsystems");
-          }
-        }
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_CONTROLLER_INFO] = {
+                                                             subsystemInfo.emplace_back(ssInfo);
+                                                             if (i == 99) {
+                                                               recordPotentialAPIViolation("Over 100 subsystems");
+                                                             }
+                                                           }
+                                                           return true;
+                                                         }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_CONTROLLER_INFO] = {
       "RETRO_ENVIRONMENT_SET_CONTROLLER_INFO", [this](void *data) -> bool {
-        // TODO
         // The core advertises the device types it accepts on each port; store a
         // copy (strings may be transient) so the UI can offer a per-port device
         // choice and we can call retro_set_controller_port_device
@@ -462,14 +434,13 @@ namespace libretro {
           devices.reserve(info.num_types);
           for (unsigned j = 0; j < info.num_types; ++j) {
             const auto &type = info.types[j];
-            devices.push_back(
-              {type.id, type.desc != nullptr ? type.desc : std::string{}});
+            devices.push_back({type.id, type.desc != nullptr ? type.desc : std::string{}});
           }
           m_controllerDevices.push_back(std::move(devices));
         }
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_MEMORY_MAPS] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_MEMORY_MAPS] = {
       "RETRO_ENVIRONMENT_SET_MEMORY_MAPS", [this](void *data) -> bool {
         auto ptr = static_cast<retro_memory_map *>(data);
         for (unsigned i = 0; i < ptr->num_descriptors; ++i) {
@@ -477,11 +448,9 @@ namespace libretro {
             break;
           }
           memoryDescriptors.emplace_back(retro_memory_descriptor{
-            ptr->descriptors[i].flags, ptr->descriptors[i].ptr,
-            ptr->descriptors[i].offset, ptr->descriptors[i].start,
-            ptr->descriptors[i].select, ptr->descriptors[i].disconnect,
-            ptr->descriptors[i].len, ptr->descriptors[i].addrspace
-          });
+              ptr->descriptors[i].flags, ptr->descriptors[i].ptr, ptr->descriptors[i].offset, ptr->descriptors[i].start,
+              ptr->descriptors[i].select, ptr->descriptors[i].disconnect, ptr->descriptors[i].len,
+              ptr->descriptors[i].addrspace});
         }
 
         memoryMap.descriptors = &memoryDescriptors[0];
@@ -489,34 +458,30 @@ namespace libretro {
 
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_GEOMETRY] = {
-      "RETRO_ENVIRONMENT_SET_GEOMETRY", [this](void *data) -> bool {
-        if (!videoReceiver) {
-          spdlog::warn("No video receiver set; cannot set geometry");
-          return false;
-        }
-        retroSystemAVInfo->geometry = *static_cast<retro_game_geometry *>(data);
-        videoReceiver->setSystemAVInfo(retroSystemAVInfo);
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_USERNAME] = {
-      "RETRO_ENVIRONMENT_GET_USERNAME", [this](void *data) -> bool {
-        auto ptr = static_cast<const char **>(data);
-        *ptr = &username[0];
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_LANGUAGE] = {
-      "RETRO_ENVIRONMENT_GET_LANGUAGE", [this](void *data) -> bool {
-        // TODO: Set by user
-        auto ptr = static_cast<retro_language *>(data);
-        *ptr = RETRO_LANGUAGE_ENGLISH;
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER] = {
-      "RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER", [this](void *data) -> bool {
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_GEOMETRY] = {"RETRO_ENVIRONMENT_SET_GEOMETRY", [this](void *data) -> bool {
+                                                     if (!videoReceiver) {
+                                                       spdlog::warn("No video receiver set; cannot set geometry");
+                                                       return false;
+                                                     }
+                                                     retroSystemAVInfo->geometry =
+                                                         *static_cast<retro_game_geometry *>(data);
+                                                     videoReceiver->setSystemAVInfo(retroSystemAVInfo);
+                                                     return true;
+                                                   }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_USERNAME] = {"RETRO_ENVIRONMENT_GET_USERNAME", [this](void *data) -> bool {
+                                                     auto ptr = static_cast<const char **>(data);
+                                                     *ptr = &username[0];
+                                                     return true;
+                                                   }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_LANGUAGE] = {"RETRO_ENVIRONMENT_GET_LANGUAGE", [this](void *data) -> bool {
+                                                     // TODO: Set by user
+                                                     auto ptr = static_cast<retro_language *>(data);
+                                                     *ptr = RETRO_LANGUAGE_ENGLISH;
+                                                     return true;
+                                                   }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER] = {
+      "RETRO_ENVIRONMENT_GET_CURRENT_SOFTWARE_FRAMEBUFFER", [this](void *data) -> bool { return true; }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE] = {
       "RETRO_ENVIRONMENT_GET_HW_RENDER_INTERFACE", [this](void *data) -> bool {
         if (!videoReceiver) {
           spdlog::warn("No video receiver set; cannot get HW render interface");
@@ -527,25 +492,23 @@ namespace libretro {
         videoReceiver->getHwRenderInterface(ptr);
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS] = {
-      "RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS", [this](void *data) -> bool {
-        supportsAchievements = *static_cast<bool *>(data);
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE] = {
-      "RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE",
-      [this](void *data) -> bool {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS] = {"RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS",
+                                                               [this](void *data) -> bool {
+                                                                 supportsAchievements = *static_cast<bool *>(data);
+                                                                 return true;
+                                                               }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE] = {
+      "RETRO_ENVIRONMENT_SET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE", [this](void *data) -> bool {
         if (!videoReceiver) {
           spdlog::warn("No video receiver set; cannot set HW render context "
-            "negotiation interface");
+                       "negotiation interface");
           return false;
         }
-        auto ptr =
-            static_cast<retro_hw_render_context_negotiation_interface *>(data);
+        auto ptr = static_cast<retro_hw_render_context_negotiation_interface *>(data);
         videoReceiver->setHwRenderContextNegotiationInterface(ptr);
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS] = {
       "RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS", [this](void *data) -> bool {
         // Record the quirks the core reports for its savestate format (consulted
         // when we harden rewind/savestate; we accept the core's set as-is)
@@ -554,60 +517,52 @@ namespace libretro {
         }
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT] = {
-      "RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT", [this](void *data) -> bool {
-        // TODO: ?
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_VFS_INTERFACE] = {
-      "RETRO_ENVIRONMENT_GET_VFS_INTERFACE", [this](void *data) -> bool {
-        // TODO
-        // Intentionally declined: Firelight does not virtualize core file I/O
-        // Cores fall back to stdio, which is correct given the managed system +
-        // per-slot save directories we hand them. (A vfs:: impl exists in the
-        // codebase if we ever want to intercept I/O.)
-        return false;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_LED_INTERFACE] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT] = {"RETRO_ENVIRONMENT_SET_HW_SHARED_CONTEXT",
+                                                            [this](void *data) -> bool {
+                                                              // TODO: ?
+                                                              return true;
+                                                            }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_VFS_INTERFACE] = {"RETRO_ENVIRONMENT_GET_VFS_INTERFACE",
+                                                        [this](void *data) -> bool {
+                                                          // Intentionally declined: Firelight does not virtualize core
+                                                          // file I/O Cores fall back to stdio, which is correct given
+                                                          // the managed system + per-slot save directories we hand
+                                                          // them. (A vfs:: impl exists in the codebase if we ever want
+                                                          // to intercept I/O.)
+                                                          return false;
+                                                        }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_LED_INTERFACE] = {
       "RETRO_ENVIRONMENT_GET_LED_INTERFACE", [this](void *data) -> bool {
         auto ptr = static_cast<retro_led_interface *>(data);
-        ptr->set_led_state = [](int led, int state) {
-          spdlog::trace("Core set LED {} to state {}", led, state);
-        };
+        ptr->set_led_state = [](int led, int state) { spdlog::trace("Core set LED {} to state {}", led, state); };
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE] = {
-      "RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE", [this](void *data) -> bool {
-        auto value = static_cast<int *>(data);
-        *value = 1 << 0 | 1 << 1;
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_MIDI_INTERFACE] = {
-      "RETRO_ENVIRONMENT_GET_MIDI_INTERFACE", [this](void *data) -> bool {
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_FASTFORWARDING] = {
-      "RETRO_ENVIRONMENT_GET_FASTFORWARDING", [this](void *data) -> bool {
-        // TODO: Get from video provider?
-        auto ptr = static_cast<bool *>(data);
-        *ptr = fastforwarding;
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE] = {
-      "RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE", [this](void *data) -> bool {
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_INPUT_BITMASKS] = {
-      "RETRO_ENVIRONMENT_GET_INPUT_BITMASKS", [this](void *data) -> bool {
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION] = {
-      "RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION", [this](void *data) -> bool {
-        auto ptr = static_cast<unsigned *>(data);
-        *ptr = 2;
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS] = {
+  m_envHandlers[RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE] = {"RETRO_ENVIRONMENT_GET_AUDIO_VIDEO_ENABLE",
+                                                             [this](void *data) -> bool {
+                                                               auto value = static_cast<int *>(data);
+                                                               *value = 1 << 0 | 1 << 1;
+                                                               return true;
+                                                             }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_MIDI_INTERFACE] = {"RETRO_ENVIRONMENT_GET_MIDI_INTERFACE",
+                                                         [this](void *data) -> bool { return true; }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_FASTFORWARDING] = {"RETRO_ENVIRONMENT_GET_FASTFORWARDING",
+                                                         [this](void *data) -> bool {
+                                                           // TODO: Get from video provider?
+                                                           auto ptr = static_cast<bool *>(data);
+                                                           *ptr = fastforwarding;
+                                                           return true;
+                                                         }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE] = {"RETRO_ENVIRONMENT_GET_TARGET_REFRESH_RATE",
+                                                              [this](void *data) -> bool { return true; }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_INPUT_BITMASKS] = {"RETRO_ENVIRONMENT_GET_INPUT_BITMASKS",
+                                                         [this](void *data) -> bool { return true; }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION] = {"RETRO_ENVIRONMENT_GET_CORE_OPTIONS_VERSION",
+                                                               [this](void *data) -> bool {
+                                                                 auto ptr = static_cast<unsigned *>(data);
+                                                                 *ptr = 2;
+                                                                 return true;
+                                                               }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS] = {
       "RETRO_ENVIRONMENT_SET_CORE_OPTIONS", [this](void *data) -> bool {
         auto ptr = static_cast<retro_core_option_definition **>(data);
 
@@ -654,7 +609,7 @@ namespace libretro {
         }
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL] = {
       "RETRO_ENVIRONMENT_SET_CORE_OPTIONS_INTL", [this](void *data) -> bool {
         auto ptr = static_cast<retro_core_options_intl *>(data);
 
@@ -702,7 +657,7 @@ namespace libretro {
 
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY] = {
       "RETRO_ENVIRONMENT_SET_CORE_OPTIONS_DISPLAY", [this](void *data) -> bool {
         auto ptr = static_cast<retro_core_option_display *>(data);
 
@@ -714,57 +669,54 @@ namespace libretro {
         configProvider->setOptionVisibility(ptr->key, ptr->visible);
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER] = {
+  m_envHandlers[RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER] = {
       "RETRO_ENVIRONMENT_GET_PREFERRED_HW_RENDER", [this](void *data) -> bool {
         if (!videoReceiver) {
           spdlog::warn("No video receiver set; cannot get preferred HW render");
           return false;
         }
-        *static_cast<unsigned *>(data) =
-            videoReceiver->getPreferredHwRender();
+        *static_cast<unsigned *>(data) = videoReceiver->getPreferredHwRender();
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION] = {
+  m_envHandlers[RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION] = {
       "RETRO_ENVIRONMENT_GET_DISK_CONTROL_INTERFACE_VERSION", [this](void *data) -> bool {
         *static_cast<unsigned *>(data) = 1;
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE] = {
       "RETRO_ENVIRONMENT_SET_DISK_CONTROL_EXT_INTERFACE", [this](void *data) -> bool {
         // Extended interface (adds disc labels/paths); we use its shared base
         // functions for index-based swapping. Stored by value like the plain one
-        if (const auto *cb =
-            static_cast<const retro_disk_control_ext_callback *>(data)) {
+        if (const auto *cb = static_cast<const retro_disk_control_ext_callback *>(data)) {
           m_diskControlExt = *cb;
           m_hasDiskControlExt = true;
         }
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION] = {
-      "RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION", [this](void *data) -> bool {
-        auto ptr = static_cast<unsigned *>(data);
-        *ptr = 1;
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_MESSAGE_EXT] = {
-      "RETRO_ENVIRONMENT_SET_MESSAGE_EXT", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_message_ext *>(data);
+  m_envHandlers[RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION] = {"RETRO_ENVIRONMENT_GET_MESSAGE_INTERFACE_VERSION",
+                                                                    [this](void *data) -> bool {
+                                                                      auto ptr = static_cast<unsigned *>(data);
+                                                                      *ptr = 1;
+                                                                      return true;
+                                                                    }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_MESSAGE_EXT] = {"RETRO_ENVIRONMENT_SET_MESSAGE_EXT", [this](void *data) -> bool {
+                                                        auto ptr = static_cast<retro_message_ext *>(data);
 
-        // TODO
-        // printf("Msg: %s\n", ptr->msg);
-        return false;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK] = {
+                                                        // TODO
+                                                        // printf("Msg: %s\n", ptr->msg);
+                                                        return false;
+                                                      }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK] = {
       "RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK", [this](void *data) -> bool {
         spdlog::info("Intentionally declining SET_AUDIO_BUFFER_STATUS_CALLBACK since Firelight implements DRC");
         return false;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY] = {
-      "RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY", [this](void *data) -> bool {
-        // Not needed as we implement dynamic rate control
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY] = {"RETRO_ENVIRONMENT_SET_MINIMUM_AUDIO_LATENCY",
+                                                                [this](void *data) -> bool {
+                                                                  // Not needed as we implement dynamic rate control
+                                                                  return true;
+                                                                }};
+  m_envHandlers[RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE] = {
       "RETRO_ENVIRONMENT_SET_CONTENT_INFO_OVERRIDE", [this](void *data) -> bool {
         auto ptr = static_cast<retro_system_content_info_override *>(data);
         for (int i = 0; i < 100; ++i) {
@@ -776,7 +728,7 @@ namespace libretro {
         return true;
         // break;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_GAME_INFO_EXT] = {
+  m_envHandlers[RETRO_ENVIRONMENT_GET_GAME_INFO_EXT] = {
       "RETRO_ENVIRONMENT_GET_GAME_INFO_EXT", [this](void *data) -> bool {
         auto ptr = static_cast<retro_game_info_ext **>(data);
         *ptr = new retro_game_info_ext();
@@ -797,7 +749,7 @@ namespace libretro {
 
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2] = {
       "RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2", [this](void *data) -> bool {
         auto ptr = static_cast<retro_core_options_v2 *>(data);
 
@@ -827,8 +779,7 @@ namespace libretro {
           if (opt.category_key != nullptr) {
             option.category = opt.category_key;
             const auto it = categoryLabels.find(opt.category_key);
-            option.categoryLabel =
-                it != categoryLabels.end() ? it->second : opt.category_key;
+            option.categoryLabel = it != categoryLabels.end() ? it->second : opt.category_key;
           }
 
           if (opt.default_value != nullptr) {
@@ -872,7 +823,7 @@ namespace libretro {
         }
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL] = {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL] = {
       "RETRO_ENVIRONMENT_SET_CORE_OPTIONS_V2_INTL", [this](void *data) -> bool {
         // TODO
         auto ptr = static_cast<retro_core_options_v2_intl *>(data);
@@ -905,8 +856,7 @@ namespace libretro {
           if (opt.category_key != nullptr) {
             option.category = opt.category_key;
             const auto it = categoryLabels.find(opt.category_key);
-            option.categoryLabel =
-                it != categoryLabels.end() ? it->second : opt.category_key;
+            option.categoryLabel = it != categoryLabels.end() ? it->second : opt.category_key;
           }
 
           if (opt.default_value != nullptr) {
@@ -950,9 +900,8 @@ namespace libretro {
         }
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK] = {
-      "RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK",
-      [this](void *data) -> bool {
+  m_envHandlers[RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK] = {
+      "RETRO_ENVIRONMENT_SET_CORE_OPTIONS_UPDATE_DISPLAY_CALLBACK", [this](void *data) -> bool {
         auto ptr = static_cast<retro_core_options_update_display_callback *>(data);
         ptr->callback = []() {
           return true; // TODO I think I actually need to store the callback
@@ -960,38 +909,34 @@ namespace libretro {
         };
         return false;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_VARIABLE] = {
-      "RETRO_ENVIRONMENT_SET_VARIABLE", [this](void *data) -> bool {
-        // TODO: Implement
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_THROTTLE_STATE] = {
-      "RETRO_ENVIRONMENT_GET_THROTTLE_STATE", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_throttle_state *>(data);
-        // Not needed as far as I'm aware
-        return false;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT] = {
-      "RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT", [this](void *data) -> bool {
-        auto ptr = static_cast<retro_savestate_context *>(data);
-        *ptr = RETRO_SAVESTATE_CONTEXT_NORMAL;
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT] = {
-      "RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT",
-      [this](void *data) -> bool {
-        auto ptr =
-            static_cast<retro_hw_render_context_negotiation_interface_type *>(data);
+  m_envHandlers[RETRO_ENVIRONMENT_SET_VARIABLE] = {"RETRO_ENVIRONMENT_SET_VARIABLE", [this](void *data) -> bool {
+                                                     // TODO: Implement
+                                                     return true;
+                                                   }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_THROTTLE_STATE] = {"RETRO_ENVIRONMENT_GET_THROTTLE_STATE",
+                                                         [this](void *data) -> bool {
+                                                           auto ptr = static_cast<retro_throttle_state *>(data);
+                                                           // Not needed as far as I'm aware
+                                                           return false;
+                                                         }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT] = {"RETRO_ENVIRONMENT_GET_SAVESTATE_CONTEXT",
+                                                            [this](void *data) -> bool {
+                                                              auto ptr = static_cast<retro_savestate_context *>(data);
+                                                              *ptr = RETRO_SAVESTATE_CONTEXT_NORMAL;
+                                                              return true;
+                                                            }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT] = {
+      "RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT", [this](void *data) -> bool {
+        auto ptr = static_cast<retro_hw_render_context_negotiation_interface_type *>(data);
         *ptr = RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN;
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_JIT_CAPABLE] = {
-      "RETRO_ENVIRONMENT_GET_JIT_CAPABLE", [this](void *data) -> bool {
-        auto ptr = (bool *) data;
-        *ptr = false; // TODO
-        return false;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE] = {
+  m_envHandlers[RETRO_ENVIRONMENT_GET_JIT_CAPABLE] = {"RETRO_ENVIRONMENT_GET_JIT_CAPABLE", [this](void *data) -> bool {
+                                                        auto ptr = (bool *)data;
+                                                        *ptr = false; // TODO
+                                                        return false;
+                                                      }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE] = {
       "RETRO_ENVIRONMENT_GET_MICROPHONE_INTERFACE", [this](void *data) -> bool {
         auto *iface = static_cast<retro_microphone_interface *>(data);
         if (!m_audioInputProvider || !iface) {
@@ -1006,14 +951,13 @@ namespace libretro {
         iface->read_mic = micRead;
         return true;
       }};
-    m_envHandlers[RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE] = {
-      "RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE", [this](void *data) -> bool {
-        return true;
-      }};
-    m_envHandlers[RETRO_ENVIRONMENT_GET_DEVICE_POWER] = {
-      "RETRO_ENVIRONMENT_GET_DEVICE_POWER", [this](void *data) -> bool {
-        //                auto ptr = (retro_device_power *) softwareBufData;
-        return false;
-      }};
-  }
+  m_envHandlers[RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE] = {"RETRO_ENVIRONMENT_SET_NETPACKET_INTERFACE",
+                                                              [this](void *data) -> bool { return true; }};
+  m_envHandlers[RETRO_ENVIRONMENT_GET_DEVICE_POWER] = {"RETRO_ENVIRONMENT_GET_DEVICE_POWER",
+                                                       [this](void *data) -> bool {
+                                                         //                auto ptr = (retro_device_power *)
+                                                         //                softwareBufData;
+                                                         return false;
+                                                       }};
+}
 } // namespace libretro

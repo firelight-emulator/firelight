@@ -3,22 +3,18 @@
 #include <nlohmann/json.hpp>
 
 namespace firelight::input {
-InputMapping::InputMapping(const int id, const int profileId, int platformId,
-                           const int controllerType,
+InputMapping::InputMapping(const int id, const int profileId, int platformId, const int controllerType,
                            std::function<void(InputMapping &)> syncCallback)
-    : m_syncCallback(std::move(syncCallback)), m_id(id),
-      m_controllerProfileId(profileId), m_platformId(platformId),
+    : m_syncCallback(std::move(syncCallback)), m_id(id), m_controllerProfileId(profileId), m_platformId(platformId),
       m_controllerType(controllerType) {}
 
-const std::vector<Binding> &
-InputMapping::getBindings(const GamepadInput input) const {
+const std::vector<Binding> &InputMapping::getBindings(const GamepadInput input) const {
   static const std::vector<Binding> EMPTY;
   const auto it = m_bindings.find(input);
   return it == m_bindings.end() ? EMPTY : it->second;
 }
 
-void InputMapping::setBindings(const GamepadInput input,
-                               std::vector<Binding> bindings) {
+void InputMapping::setBindings(const GamepadInput input, std::vector<Binding> bindings) {
   if (bindings.empty()) {
     m_bindings.erase(input);
   } else {
@@ -30,8 +26,7 @@ void InputMapping::addBinding(const GamepadInput input, const Binding &binding) 
   m_bindings[input].push_back(binding);
 }
 
-void InputMapping::removeBinding(const GamepadInput input,
-                                 const std::size_t index) {
+void InputMapping::removeBinding(const GamepadInput input, const std::size_t index) {
   const auto it = m_bindings.find(input);
   if (it == m_bindings.end() || index >= it->second.size()) {
     return;
@@ -42,18 +37,11 @@ void InputMapping::removeBinding(const GamepadInput input,
   }
 }
 
-const std::map<GamepadInput, std::vector<Binding>> &
-InputMapping::getAllBindings() const {
-  return m_bindings;
-}
+const std::map<GamepadInput, std::vector<Binding>> &InputMapping::getAllBindings() const { return m_bindings; }
 
-const std::optional<AnalogSettings> &InputMapping::getAnalogOverride() const {
-  return m_analogOverride;
-}
+const std::optional<AnalogSettings> &InputMapping::getAnalogOverride() const { return m_analogOverride; }
 
-void InputMapping::setAnalogOverride(std::optional<AnalogSettings> settings) {
-  m_analogOverride = std::move(settings);
-}
+void InputMapping::setAnalogOverride(std::optional<AnalogSettings> settings) { m_analogOverride = std::move(settings); }
 
 void InputMapping::addMapping(const GamepadInput input, const int mappedInput) {
   Binding binding;
@@ -70,9 +58,7 @@ std::optional<int> InputMapping::getMappedInput(const GamepadInput input) {
   return it->second.front().source.code;
 }
 
-void InputMapping::removeMapping(const GamepadInput input) {
-  m_bindings.erase(input);
-}
+void InputMapping::removeMapping(const GamepadInput input) { m_bindings.erase(input); }
 
 std::string InputMapping::serialize() {
   nlohmann::json bindings = nlohmann::json::object();
@@ -104,8 +90,7 @@ void InputMapping::deserialize(const std::string &data) {
   }
 
   for (const auto &[key, value] : j.at("bindings").items()) {
-    m_bindings[static_cast<GamepadInput>(std::stoi(key))] =
-        value.get<std::vector<Binding>>();
+    m_bindings[static_cast<GamepadInput>(std::stoi(key))] = value.get<std::vector<Binding>>();
   }
   if (j.contains("analog")) {
     m_analogOverride = j.at("analog").get<AnalogSettings>();
@@ -120,11 +105,10 @@ void InputMapping::sync() {
 
 unsigned InputMapping::getId() const { return m_id; }
 
-unsigned InputMapping::getControllerProfileId() const {
-  return m_controllerProfileId;
-}
+unsigned InputMapping::getControllerProfileId() const { return m_controllerProfileId; }
 
 unsigned InputMapping::getPlatformId() const { return m_platformId; }
+
 unsigned InputMapping::getControllerType() const { return m_controllerType; }
 
 void InputMapping::setId(const unsigned id) { m_id = id; }
@@ -133,10 +117,7 @@ void InputMapping::setControllerProfileId(const unsigned controllerProfileId) {
   m_controllerProfileId = controllerProfileId;
 }
 
-void InputMapping::setPlatformId(const unsigned platformId) {
-  m_platformId = platformId;
-}
-void InputMapping::setControllerType(const int controllerType) {
-  m_controllerType = controllerType;
-}
+void InputMapping::setPlatformId(const unsigned platformId) { m_platformId = platformId; }
+
+void InputMapping::setControllerType(const int controllerType) { m_controllerType = controllerType; }
 } // namespace firelight::input

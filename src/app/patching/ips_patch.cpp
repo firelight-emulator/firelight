@@ -20,6 +20,7 @@ IPSPatch::IPSPatch(const std::string &path) {
 
   *this = IPSPatch(data);
 }
+
 IPSPatch::IPSPatch(const std::vector<uint8_t> &data) {
   auto cursor = data.data();
   // Skip PATCH header
@@ -66,8 +67,7 @@ IPSPatch::IPSPatch(const std::vector<uint8_t> &data) {
   }
 }
 
-std::vector<uint8_t>
-IPSPatch::patchRom(const std::vector<uint8_t> &data) const {
+std::vector<uint8_t> IPSPatch::patchRom(const std::vector<uint8_t> &data) const {
   const auto last = records[records.size() - 1];
 
   const auto totalLen = last.offset + (last.data.size() * last.numTimesToWrite);
@@ -88,8 +88,7 @@ IPSPatch::patchRom(const std::vector<uint8_t> &data) const {
     std::vector<uint8_t> dataToWrite;
 
     for (int i = 0; i < record.numTimesToWrite; ++i) {
-      dataToWrite.insert(dataToWrite.end(), record.data.begin(),
-                         record.data.end());
+      dataToWrite.insert(dataToWrite.end(), record.data.begin(), record.data.end());
     }
     memcpy(cursor, dataToWrite.data(), dataToWrite.size());
 

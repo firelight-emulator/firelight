@@ -24,7 +24,7 @@ FocusScope {
                 property var doOnAccepted: null
                 onAccepted: {
                     if (folderDialog.doOnAccepted) {
-                        folderDialog.doOnAccepted(folderDialog.folder)
+                        folderDialog.doOnAccepted(folderDialog.folder);
                     }
                     // console.log("found it")
                 }
@@ -40,11 +40,11 @@ FocusScope {
                         text: "Edit"
 
                         onTriggered: {
-                          folderDialog.currentFolder = FilesystemUtils.prependFileURI(model.path)
-                          folderDialog.doOnAccepted = function (folder) {
-                              folderDelegate.model.path = FilesystemUtils.removeFileURI(folder.toString())
-                          }
-                          folderDialog.open()
+                            folderDialog.currentFolder = FilesystemUtils.prependFileURI(model.path);
+                            folderDialog.doOnAccepted = function (folder) {
+                                folderDelegate.model.path = FilesystemUtils.removeFileURI(folder.toString());
+                            };
+                            folderDialog.open();
                         }
                     }
 
@@ -53,8 +53,8 @@ FocusScope {
                         dangerous: true
 
                         onTriggered: {
-                              console.log("Deleting directory: " + folderDelegate.model.directory_id)
-                              ContentDirectoryModel.deleteItem(folderDelegate.model.directory_id)
+                            console.log("Deleting directory: " + folderDelegate.model.directory_id);
+                            ContentDirectoryModel.deleteItem(folderDelegate.model.directory_id);
                         }
                     }
                 }
@@ -96,11 +96,11 @@ FocusScope {
         FirelightButton {
             label: "Add directory"
             onClicked: {
-              folderDialog.currentFolder = ""
-              folderDialog.doOnAccepted = function (folder) {
-                  ContentDirectoryModel.addItem(FilesystemUtils.removeFileURI(folder.toString()))
-              }
-              folderDialog.open()
+                folderDialog.currentFolder = "";
+                folderDialog.doOnAccepted = function (folder) {
+                    ContentDirectoryModel.addItem(FilesystemUtils.removeFileURI(folder.toString()));
+                };
+                folderDialog.open();
             }
             // Layout.alignment: Qt.AlignRight
         }
@@ -129,11 +129,10 @@ FocusScope {
                         easing.type: Easing.InOutQuad
                     }
                 }
-
             }
 
             onValueChanged: function () {
-                SaveManager.saveDirectory = value
+                SaveManager.saveDirectory = value;
             }
         }
 
@@ -150,7 +149,6 @@ FocusScope {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-
         }
     }
 }

@@ -9,8 +9,7 @@
 namespace firelight::netplay {
 
 inline std::string base64Encode(std::span<const uint8_t> data) {
-  static constexpr char ALPHABET[] =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  static constexpr char ALPHABET[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   std::string out;
   out.reserve((data.size() + 2) / 3 * 4);
   size_t i = 0;
@@ -80,8 +79,7 @@ inline std::optional<std::vector<uint8_t>> base64Decode(const std::string &text)
 }
 
 inline std::string base64EncodeText(const std::string &text) {
-  return base64Encode(std::span(
-      reinterpret_cast<const uint8_t *>(text.data()), text.size()));
+  return base64Encode(std::span(reinterpret_cast<const uint8_t *>(text.data()), text.size()));
 }
 
 inline std::optional<std::string> base64DecodeText(const std::string &text) {

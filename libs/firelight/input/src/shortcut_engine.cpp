@@ -1,11 +1,10 @@
-#include <firelight/input/shortcut_engine.hpp>
+#include "firelight/event_dispatcher.hpp"
 
 #include <firelight/input/gamepad_profile.hpp>
 #include <firelight/input/igamepad.hpp>
+#include <firelight/input/shortcut_engine.hpp>
 #include <firelight/input/shortcut_mapping.hpp>
 #include <firelight/input/shortcut_registry.hpp>
-
-#include "firelight/event_dispatcher.hpp"
 
 #include <vector>
 
@@ -15,7 +14,6 @@ void ShortcutEngine::setContext(const int scope) {
   std::lock_guard lock(m_mutex);
   m_context = scope;
 
-  // TODO
   // Entering or leaving gameplay drops every mask. A ScopeAlways action firing
   // in a menu suppresses an input nothing is reading, and that mask would
   // otherwise still be there when the game came back
@@ -23,6 +21,7 @@ void ShortcutEngine::setContext(const int scope) {
     device->suppressor().clear();
   }
 }
+
 int ShortcutEngine::context() const {
   std::lock_guard lock(m_mutex);
   return m_context;
@@ -52,8 +51,7 @@ void ShortcutEngine::forgetDevice(IGamepad *device) {
   m_holdActive.erase(device);
 }
 
-bool ShortcutEngine::isSourceSatisfied(IGamepad *device,
-                                       const InputSource &source) const {
+bool ShortcutEngine::isSourceSatisfied(IGamepad *device, const InputSource &source) const {
   if (source.type == SourceType::None) {
     return false;
   }
@@ -78,8 +76,7 @@ bool ShortcutEngine::isSourceSatisfied(IGamepad *device,
   return true;
 }
 
-void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
-                             const int code, const bool pressed) {
+void ShortcutEngine::onInput(const int playerIndex, IGamepad *device, const int code, const bool pressed) {
   if (!device) {
     return;
   }
@@ -141,7 +138,6 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
 
       const bool inScope = (action->scope & m_context) != 0;
 
-      // TODO
       // Withhold the input that fired this from the game, until it is physically
       // released. Done here, under the lock and before the event is published,
       // because a subscriber runs a queued hop later — by which time the core
@@ -165,12 +161,9 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
             if (!disabled) {
               device->suppressor().clear();
             }
-            toggles.push_back(HotkeysToggledEvent{.playerIndex = playerIndex,
-                                                  .enabled = disabled});
+            toggles.push_back(HotkeysToggledEvent{.playerIndex = playerIndex, .enabled = disabled});
           }
-          events.push_back(ShortcutEvent{.playerIndex = playerIndex,
-                                         .id = id,
-                                         .phase = ShortcutPhase::Started});
+          events.push_back(ShortcutEvent{.playerIndex = playerIndex, .id = id, .phase = ShortcutPhase::Started});
         }
         break;
 
@@ -178,15 +171,11 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
         bool &active = m_holdActive[device][id];
         if (rising && inScope) {
           active = true;
-          events.push_back(ShortcutEvent{.playerIndex = playerIndex,
-                                         .id = id,
-                                         .phase = ShortcutPhase::Started});
+          events.push_back(ShortcutEvent{.playerIndex = playerIndex, .id = id, .phase = ShortcutPhase::Started});
         } else if (!satisfied && active) {
           // Release a hold that we started, even if we've left its scope
           active = false;
-          events.push_back(ShortcutEvent{.playerIndex = playerIndex,
-                                         .id = id,
-                                         .phase = ShortcutPhase::Ended});
+          events.push_back(ShortcutEvent{.playerIndex = playerIndex, .id = id, .phase = ShortcutPhase::Ended});
         }
         break;
       }

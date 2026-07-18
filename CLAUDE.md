@@ -38,8 +38,9 @@ naming rules. Run the formatters rather than hand-aligning. Line endings are LF 
 
 ### Comments
 
-- Javadoc (`/** */`) on classes and methods. Otherwise `//`, unless it runs past 2 lines — then Javadoc
-- **Required** on every public/interface class and every public/interface method
+- Javadoc (`/** */`) on classes and methods. Otherwise `//`
+- **Required** on every interface, every class (public *and* private) and every method (public *and*
+  private)
 - Everywhere else, comment only when the code is not clear on its own
 - **Never explain the reason.** A comment says *what* unclear code does, not *why* a choice was made,
   what it replaced, or what was tried before
@@ -51,6 +52,16 @@ naming rules. Run the formatters rather than hand-aligning. Line endings are LF 
   // thing
   //****************
   ```
+
+**Assistant-written comments carry a review marker.** Every comment an assistant adds gets a bare
+`// TODO` on its own line directly above it, so the author knows to reword it or drop it. Remove the
+marker once the comment is in the author's own words. A bare `// TODO` means exactly this; a real
+task is `// TODO: <what to do>`, so the two stay greppable apart:
+
+```
+grep -rn '// TODO$'    # comments awaiting a rewrite
+grep -rn '// TODO:'    # actual outstanding work
+```
 
 ### C++
 

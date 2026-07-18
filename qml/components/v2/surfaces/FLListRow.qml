@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // A standard selectable row: optional leading icon, a label, and an optional
 // trailing item (placed as a child). Height derives from content and is floored
 // at rowHeight, so it reflows when text grows
@@ -23,7 +22,10 @@ ItemDelegate {
     implicitHeight: Math.max(AppStyle.rowHeight, rowLayout.implicitHeight + topPadding + bottomPadding)
     implicitWidth: rowLayout.implicitWidth + leftPadding + rightPadding
 
-    HoverHandler { id: rowHover; cursorShape: Qt.PointingHandCursor }
+    HoverHandler {
+        id: rowHover
+        cursorShape: Qt.PointingHandCursor
+    }
 
     contentItem: RowLayout {
         id: rowLayout
@@ -55,7 +57,6 @@ ItemDelegate {
 
     background: Rectangle {
         radius: AppStyle.radiusMd
-        color: control.highlighted ? Theme.surfaceHover
-             : rowHover.hovered ? Theme.surfaceElevated : "transparent"
+        color: control.highlighted ? Theme.surfaceHover : rowHover.hovered ? Theme.surfaceElevated : "transparent"
     }
 }

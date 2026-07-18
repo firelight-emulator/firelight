@@ -15,10 +15,8 @@ platforms::PlatformService platformService;
 
 // A UserLibraryService over an in-memory library (empty), so every resolution
 // misses and returns -1 regardless of which branch it takes
-library::UserLibraryService makeService(
-    library::SqliteUserLibraryRepository &repo) {
-  return library::UserLibraryService(
-      repo, (QDir::tempPath() + "/fl_romlaunch_test").toStdString());
+library::UserLibraryService makeService(library::SqliteUserLibraryRepository &repo) {
+  return library::UserLibraryService(repo, (QDir::tempPath() + "/fl_romlaunch_test").toStdString());
 }
 
 TEST(RomLaunchTest, EmptyPathReturnsMinusOne) {

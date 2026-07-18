@@ -1,11 +1,12 @@
 #pragma once
 #include "emulation_context.hpp"
 #include "emulator_instance.hpp"
-#include <firelight/platforms/platform.hpp>
 
 #include <firelight/library/entry.hpp>
 #include <firelight/libretro/configuration_provider.hpp>
 #include <firelight/libretro/core_run_config.hpp>
+#include <firelight/platforms/platform.hpp>
+
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -27,15 +28,15 @@ namespace firelight::emulation {
 
 class GameLoader;
 
-// TODO
 // Builds the ICore for a loaded entry. Injectable so tests can supply a fake
 // core instead of dlopen'ing a real libretro DLL. A null factory uses the
 // default (real Core)
-using CoreFactory = std::function<std::unique_ptr<::libretro::ICore>(
-    const firelight::libretro::CoreRunConfig &config)>;
+using CoreFactory = std::function<std::unique_ptr<::libretro::ICore>(const firelight::libretro::CoreRunConfig &config)>;
 
 struct GameLoadStarted {};
+
 struct GameLoadedEvent {};
+
 struct GameLoadFailedEvent {};
 
 struct GamePausedChangedEvent {
@@ -57,7 +58,6 @@ struct DiscChangedEvent {
   unsigned count;
 };
 
-// TODO
 // Published once on load when the core advertises selectable port devices, so
 // the input UI can offer a per-port device choice. Query the current instance's
 // getControllerDevices() for the details
@@ -65,27 +65,23 @@ struct ControllerDevicesEvent {
   std::string contentHash;
 };
 
-// TODO
 // One-shot, per-launch knobs applied to the next loadEntry and then consumed
 // (so later launches use their own defaults). These are transient launch
 // parameters, distinct from the stable service dependencies in EmulationContext
 // Populated by main.cpp from the CLI; not persisted
 struct LaunchOverrides {
-  int saveSlot = -1;   // >= 0 replaces the entry's stored active slot
-  bool muted = false;  // start the instance muted (born muted in initialize())
+  int saveSlot = -1;  // >= 0 replaces the entry's stored active slot
+  bool muted = false; // start the instance muted (born muted in initialize())
 };
 
 class EmulationService {
 public:
   static EmulationService *getInstance() { return s_emuServiceInstance; }
-  static void setInstance(EmulationService *service) {
-    s_emuServiceInstance = service;
-  }
 
-  EmulationService(library::UserLibraryService &library,
-                   library::EntryResolver &entryResolver,
-                   settings::SettingsService &settingsService,
-                   EmulationContext context,
+  static void setInstance(EmulationService *service) { s_emuServiceInstance = service; }
+
+  EmulationService(library::UserLibraryService &library, library::EntryResolver &entryResolver,
+                   settings::SettingsService &settingsService, EmulationContext context,
                    CoreFactory coreFactory = nullptr);
   ~EmulationService();
 
@@ -96,14 +92,12 @@ public:
   void resetGame();
   EmulatorInstance *getCurrentEmulatorInstance();
 
-  // TODO
   // Audio-buffer level of the running instance, or -1 if none. Safe to call from
   // the frame-pacing thread: the instance can be destroyed on the GUI thread by
   // loadEntry/stopEmulation, so this reads it under m_instanceMutex rather than
   // handing out a raw pointer the caller might dereference after a reset()
   float currentAudioBufferLevel();
 
-  // TODO
   // Transient silencing of the running instance (pause, fast-forward) — not the
   // user's audio-muted setting, which the audio output reads for itself. Guarded
   // like currentAudioBufferLevel, and for the same reason

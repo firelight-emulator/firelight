@@ -1,16 +1,17 @@
 #pragma once
-#include <firelight/cheats/cheat.hpp>
-#include <firelight/cheats/cheat_engine.hpp>
 #include "emulation_context.hpp"
 #include "libretro/core_registry.hpp"
 
+#include <firelight/cheats/cheat.hpp>
+#include <firelight/cheats/cheat_engine.hpp>
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/libretro/audio_input_provider.hpp>
 #include <firelight/libretro/audio_output.hpp>
 #include <firelight/libretro/icore.hpp>
+#include <firelight/saves/suspend_point.hpp>
+
 #include <future>
 #include <memory>
-#include <firelight/saves/suspend_point.hpp>
 #include <string>
 #include <vector>
 
@@ -18,15 +19,13 @@ namespace firelight::emulation {
 
 class CoreSettingsApplier;
 
-// TODO
 // Threading: owned by EmulatorItemRenderer and confined to the render thread —
 // initialize()/runFrame()/state calls all run there. getAudioBufferLevel() is
 // the exception: it's read from the pacing thread (backed by an atomic)
 class EmulatorInstance {
 public:
-  EmulatorInstance(std::unique_ptr<::libretro::ICore>, std::string contentPath,
-                   std::string contentHash, int platformId, int saveSlotNumber,
-                   std::vector<uint8_t> gameData, std::vector<uint8_t> saveData,
+  EmulatorInstance(std::unique_ptr<::libretro::ICore>, std::string contentPath, std::string contentHash, int platformId,
+                   int saveSlotNumber, std::vector<uint8_t> gameData, std::vector<uint8_t> saveData,
                    EmulationContext context);
   ~EmulatorInstance();
 
@@ -46,7 +45,6 @@ public:
   void setMuted(bool muted);
   bool isMuted() const;
 
-  // TODO
   // The mute state the AudioManager is born with in initialize(). Lets a CLI
   // `--muted` launch start muted from the first frame, before the render thread
   // creates the AudioManager (a QML muted binding fires too early to catch it)
@@ -79,7 +77,6 @@ public:
   void setTargetFramerate(int targetFramerate);
   int getTargetFramerate() const;
 
-  // TODO
   // Audio buffer fill ratio (0.0-1.0), or -1.0 when there is no audio device
   // (used by the "audio" sync method to pace frames). Safe to call from the
   // emulation pacing thread
@@ -89,14 +86,12 @@ public:
   // resample audio to the display refresh rate
   void setAudioPlaybackRateRatio(double ratio);
 
-  // TODO
   // Enables/disables audio Dynamic Rate Control (the "dynamic-rate-control"
   // advanced setting). Stored so it can be applied when the AudioManager is
   // (re)created, and forwarded live when it already exists
   void setDynamicRateControlEnabled(bool enabled);
   bool getDynamicRateControlEnabled() const;
 
-  // TODO
   // Whether the instant-replay recorder should keep a rolling window while this
   // game runs (the "instant-replay-enabled" advanced setting). Stored here as the
   // resolved value; the renderer reads it to gate its ClipRecorder
@@ -105,9 +100,7 @@ public:
 
   // Sink for the host game stream (null when netplay isn't wired); the
   // renderer pushes each frame into it
-  [[nodiscard]] media::IClipSink *getNetplayStreamSink() const {
-    return m_context.netplayStreamSink;
-  }
+  [[nodiscard]] media::IClipSink *getNetplayStreamSink() const { return m_context.netplayStreamSink; }
 
   // Forward the two core-side input settings (glide speed for stick-driven
   // pointer devices; whether the physical mouse drives mouse/light-gun devices)
@@ -125,12 +118,10 @@ public:
 
   // Raw per-port device options the running core advertises via
   // SET_CONTROLLER_INFO (empty when there's no choice)
-  [[nodiscard]] std::vector<std::vector<::libretro::ICore::ControllerDeviceOption>>
-  getControllerDevices() const;
+  [[nodiscard]] std::vector<std::vector<::libretro::ICore::ControllerDeviceOption>> getControllerDevices() const;
   // Curated, console-native controller variants selectable for `port` on the
   // loaded core (default first), cross-referenced with the core's advertisement
-  [[nodiscard]] std::vector<CoreDeviceVariant>
-  getAvailableControllerVariants(unsigned port) const;
+  [[nodiscard]] std::vector<CoreDeviceVariant> getAvailableControllerVariants(unsigned port) const;
   // Number of controller ports the running core exposes (SET_CONTROLLER_INFO)
   [[nodiscard]] unsigned getControllerPortCount() const;
   // The coreDeviceId currently selected for `port` (the per-game override if
@@ -161,7 +152,6 @@ private:
   // picks them up (e.g. FCEUmm Zapper -> fceumm_zapper_mode=clightgun)
   void applyCompanionOptions(const CoreDeviceVariant &variant);
 
-  // TODO
   // Rebuilds the active cheat set from the repository: RAM cheats go to the
   // per-frame engine, Game Genie codes to the core, and any cheat that affects
   // gameplay is skipped while RA hardcore mode is active. No-op without a repo
@@ -174,7 +164,6 @@ private:
   EmulationContext m_context;
   std::unique_ptr<::libretro::ICore> m_core;
 
-  // TODO
   // Keys on their way to a core that asked for the keyboard. They arrive on the
   // GUI thread and the core only runs on the render thread, so they queue here
   // and are handed over at the top of a frame rather than mid-run
@@ -183,6 +172,7 @@ private:
     unsigned key;
     uint16_t modifiers;
   };
+
   std::vector<PendingKey> m_pendingKeys;
   std::mutex m_pendingKeysMutex;
   ScopedConnection m_keyboardKeyConnection;
@@ -200,7 +190,6 @@ private:
   std::vector<SuspendPoint> m_rewindSuspendPoints;
   std::chrono::time_point<std::chrono::steady_clock> m_lastSaveTime;
   int m_saveIntervalSeconds = 10;
-  // TODO
   // Holds the in-flight autosave. Discarding the future std::async returns would
   // block the render thread in its destructor until the write finished (a hitch
   // every save interval); keeping it here lets the write run in the background

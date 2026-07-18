@@ -1,6 +1,5 @@
 import QtQuick
 
-// TODO
 // Backwards-compatible wrapper around Icon. FLIcon historically took an icon `name` via its
 // `icon` property and rendered a raster SVG (blurry/choppy on HiDPI); it now renders the crisp
 // Material Symbols glyph through Icon. `icon` aliases Icon's `name`; `size`/`filled`/`color`

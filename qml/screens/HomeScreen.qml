@@ -13,7 +13,7 @@ FocusScope {
     required property Component libraryPage
     required property Component modShopPage
 
-    signal menuButtonClicked()
+    signal menuButtonClicked
 
     Popup {
         id: scannerPopup
@@ -35,7 +35,6 @@ FocusScope {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
-
     }
 
     Pane {
@@ -48,8 +47,7 @@ FocusScope {
 
         KeyNavigation.down: contentStack
 
-        background: Item {
-        }
+        background: Item {}
 
         contentItem: RowLayout {
             spacing: 24
@@ -67,7 +65,7 @@ FocusScope {
                 iconCode: "\ue5d2"
 
                 onClicked: {
-                    root.menuButtonClicked()
+                    root.menuButtonClicked();
                     // drawer2.open()
                 }
             }
@@ -101,7 +99,7 @@ FocusScope {
                     verticalAlignment: Text.AlignVCenter
                 }
                 onToggled: function () {
-                    contentStack.replaceCurrentItem(root.libraryPage, {}, StackView.ReplaceTransition)
+                    contentStack.replaceCurrentItem(root.libraryPage, {}, StackView.ReplaceTransition);
                 }
             }
 
@@ -130,7 +128,7 @@ FocusScope {
                     verticalAlignment: Text.AlignVCenter
                 }
                 onToggled: function () {
-                    contentStack.replaceCurrentItem(root.modShopPage, {}, StackView.ReplaceTransition)
+                    contentStack.replaceCurrentItem(root.modShopPage, {}, StackView.ReplaceTransition);
                 }
             }
 
@@ -167,12 +165,12 @@ FocusScope {
                     running: true
                     repeat: true
                     onTriggered: {
-                        parent.text = new Date().toLocaleTimeString(Qt.locale("en_US"), Locale.ShortFormat)
+                        parent.text = new Date().toLocaleTimeString(Qt.locale("en_US"), Locale.ShortFormat);
                         if (!parent.drawColon) {
-                            parent.text = parent.text.replace(":", " ")
-                            parent.drawColon = true
+                            parent.text = parent.text.replace(":", " ");
+                            parent.drawColon = true;
                         } else {
-                            parent.drawColon = false
+                            parent.drawColon = false;
                         }
                     }
                     // console.log("tick")
@@ -201,8 +199,7 @@ FocusScope {
         anchors.leftMargin: 40
         anchors.rightMargin: 40
 
-        background: Item {
-        }
+        background: Item {}
 
         focus: true
 
@@ -213,8 +210,8 @@ FocusScope {
         property alias currentPageName: contentStack.topLevelName
 
         function goTo(page) {
-            contentStack.replace(null, page)
-            forceActiveFocus()
+            contentStack.replace(null, page);
+            forceActiveFocus();
         }
 
         property string topLevelName: ""
@@ -222,23 +219,19 @@ FocusScope {
         onCurrentItemChanged: {
             if (currentItem) {
                 let top = contentStack.find(function (item, index) {
-                    return item.topLevel === true
-                })
+                    return item.topLevel === true;
+                });
 
-                contentStack.topLevelName = top ? top.topLevelName : ""
+                contentStack.topLevelName = top ? top.topLevelName : "";
             }
         }
 
         initialItem: root.libraryPage
 
-        pushEnter: Transition {
-        }
-        pushExit: Transition {
-        }
-        popEnter: Transition {
-        }
-        popExit: Transition {
-        }
+        pushEnter: Transition {}
+        pushExit: Transition {}
+        popEnter: Transition {}
+        popExit: Transition {}
         replaceEnter: Transition {
             NumberAnimation {
                 property: "opacity"
@@ -258,5 +251,4 @@ FocusScope {
             }
         }
     }
-
 }

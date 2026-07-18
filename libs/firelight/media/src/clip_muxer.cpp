@@ -1,8 +1,7 @@
 #include <firelight/media/clip_muxer.hpp>
 
-#include <spdlog/spdlog.h>
-
 #include <cstring>
+#include <spdlog/spdlog.h>
 #include <string>
 
 extern "C" {
@@ -20,8 +19,7 @@ bool ClipMuxer::writeMp4(const ClipSnapshot &snap, const QString &path) {
   const std::string p = path.toStdString();
 
   AVFormatContext *oc = nullptr;
-  if (avformat_alloc_output_context2(&oc, nullptr, "mp4", p.c_str()) < 0 ||
-      !oc) {
+  if (avformat_alloc_output_context2(&oc, nullptr, "mp4", p.c_str()) < 0 || !oc) {
     spdlog::warn("[ClipMuxer] could not allocate mp4 output for {}", p);
     return false;
   }
@@ -40,8 +38,7 @@ bool ClipMuxer::writeMp4(const ClipSnapshot &snap, const QString &path) {
     par->height = snap.height;
     par->format = AV_PIX_FMT_YUV420P;
     if (!snap.extradata.empty()) {
-      par->extradata = static_cast<uint8_t *>(
-          av_mallocz(snap.extradata.size() + AV_INPUT_BUFFER_PADDING_SIZE));
+      par->extradata = static_cast<uint8_t *>(av_mallocz(snap.extradata.size() + AV_INPUT_BUFFER_PADDING_SIZE));
       if (!par->extradata) {
         break;
       }

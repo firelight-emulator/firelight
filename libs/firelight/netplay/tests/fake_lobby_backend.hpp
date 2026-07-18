@@ -30,12 +30,11 @@ public:
       done(true);
     }
   }
-  [[nodiscard]] SignInState signInState() const override {
-    return SignInState::Ready;
-  }
-  [[nodiscard]] PlayerIdentity localIdentity() const override {
-    return m_identity;
-  }
+
+  [[nodiscard]] SignInState signInState() const override { return SignInState::Ready; }
+
+  [[nodiscard]] PlayerIdentity localIdentity() const override { return m_identity; }
+
   [[nodiscard]] std::string providerName() const override { return "Fake"; }
 
   void setPreferredDisplayName(const std::string &name) override {
@@ -71,8 +70,7 @@ public:
     m_joined = true;
     for (auto *other : m_hub->members) {
       if (other != this && other->m_events.memberJoined) {
-        other->m_events.memberJoined(
-            LobbyMember{m_identity.id, m_identity.displayName});
+        other->m_events.memberJoined(LobbyMember{m_identity.id, m_identity.displayName});
       }
     }
     if (done) {
@@ -104,8 +102,7 @@ public:
   void sendChat(const std::string &text) override {
     for (auto *other : m_hub->members) {
       if (other != this && other->m_events.chatReceived) {
-        other->m_events.chatReceived(m_identity.id, m_identity.displayName,
-                                     text);
+        other->m_events.chatReceived(m_identity.id, m_identity.displayName, text);
       }
     }
   }
@@ -128,8 +125,7 @@ public:
     info.joinCode = m_hub->joinCode;
     info.hostId = m_hub->hostId;
     for (const auto *member : m_hub->members) {
-      info.members.push_back(
-          LobbyMember{member->m_identity.id, member->m_identity.displayName});
+      info.members.push_back(LobbyMember{member->m_identity.id, member->m_identity.displayName});
     }
     return info;
   }

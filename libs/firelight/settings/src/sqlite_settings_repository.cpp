@@ -5,10 +5,8 @@
 
 namespace firelight::settings {
 
-SqliteSettingsRepository::SqliteSettingsRepository(std::string databaseFile)
-    : m_databaseFile(std::move(databaseFile)) {
-  m_database = std::make_unique<SQLite::Database>(
-      m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+SqliteSettingsRepository::SqliteSettingsRepository(std::string databaseFile) : m_databaseFile(std::move(databaseFile)) {
+  m_database = std::make_unique<SQLite::Database>(m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
   m_database->exec(R"(
     CREATE TABLE IF NOT EXISTS global_settings (
@@ -34,11 +32,9 @@ SqliteSettingsRepository::SqliteSettingsRepository(std::string databaseFile)
 
 SqliteSettingsRepository::~SqliteSettingsRepository() = default;
 
-std::optional<std::string>
-SqliteSettingsRepository::getGlobalValue(const std::string &key) {
+std::optional<std::string> SqliteSettingsRepository::getGlobalValue(const std::string &key) {
   try {
-    SQLite::Statement query(
-        *m_database, "SELECT value FROM global_settings WHERE key = :key");
+    SQLite::Statement query(*m_database, "SELECT value FROM global_settings WHERE key = :key");
     query.bind(":key", key);
     if (query.executeStep()) {
       return std::string(query.getColumn(0));
@@ -50,12 +46,10 @@ SqliteSettingsRepository::getGlobalValue(const std::string &key) {
   }
 }
 
-bool SqliteSettingsRepository::setGlobalValue(const std::string &key,
-                                              const std::string &value) {
+bool SqliteSettingsRepository::setGlobalValue(const std::string &key, const std::string &value) {
   try {
-    SQLite::Statement query(*m_database,
-                            "INSERT OR REPLACE INTO global_settings "
-                            "(key, value) VALUES (:key, :value)");
+    SQLite::Statement query(*m_database, "INSERT OR REPLACE INTO global_settings "
+                                         "(key, value) VALUES (:key, :value)");
     query.bind(":key", key);
     query.bind(":value", value);
     query.exec();
@@ -68,8 +62,7 @@ bool SqliteSettingsRepository::setGlobalValue(const std::string &key,
 
 bool SqliteSettingsRepository::resetGlobalValue(const std::string &key) {
   try {
-    SQLite::Statement query(*m_database,
-                            "DELETE FROM global_settings WHERE key = :key");
+    SQLite::Statement query(*m_database, "DELETE FROM global_settings WHERE key = :key");
     query.bind(":key", key);
     query.exec();
     return true;
@@ -79,12 +72,10 @@ bool SqliteSettingsRepository::resetGlobalValue(const std::string &key) {
   }
 }
 
-std::optional<std::string> SqliteSettingsRepository::getPlatformValue(
-    int platformId, const std::string &key) {
+std::optional<std::string> SqliteSettingsRepository::getPlatformValue(int platformId, const std::string &key) {
   try {
-    SQLite::Statement query(*m_database,
-                            "SELECT value FROM platform_settings WHERE "
-                            "platform_id = :platformId AND key = :key");
+    SQLite::Statement query(*m_database, "SELECT value FROM platform_settings WHERE "
+                                         "platform_id = :platformId AND key = :key");
     query.bind(":platformId", platformId);
     query.bind(":key", key);
     if (query.executeStep()) {
@@ -97,14 +88,10 @@ std::optional<std::string> SqliteSettingsRepository::getPlatformValue(
   }
 }
 
-bool SqliteSettingsRepository::setPlatformValue(int platformId,
-                                                const std::string &key,
-                                                const std::string &value) {
+bool SqliteSettingsRepository::setPlatformValue(int platformId, const std::string &key, const std::string &value) {
   try {
-    SQLite::Statement query(
-        *m_database,
-        "INSERT OR REPLACE INTO platform_settings "
-        "(platform_id, key, value) VALUES (:platformId, :key, :value)");
+    SQLite::Statement query(*m_database, "INSERT OR REPLACE INTO platform_settings "
+                                         "(platform_id, key, value) VALUES (:platformId, :key, :value)");
     query.bind(":platformId", platformId);
     query.bind(":key", key);
     query.bind(":value", value);
@@ -116,12 +103,10 @@ bool SqliteSettingsRepository::setPlatformValue(int platformId,
   }
 }
 
-bool SqliteSettingsRepository::resetPlatformValue(int platformId,
-                                                  const std::string &key) {
+bool SqliteSettingsRepository::resetPlatformValue(int platformId, const std::string &key) {
   try {
-    SQLite::Statement query(*m_database,
-                            "DELETE FROM platform_settings WHERE platform_id = "
-                            ":platformId AND key = :key");
+    SQLite::Statement query(*m_database, "DELETE FROM platform_settings WHERE platform_id = "
+                                         ":platformId AND key = :key");
     query.bind(":platformId", platformId);
     query.bind(":key", key);
     query.exec();
@@ -132,13 +117,11 @@ bool SqliteSettingsRepository::resetPlatformValue(int platformId,
   }
 }
 
-std::optional<std::string> SqliteSettingsRepository::getGameValue(
-    const std::string &contentHash, const std::string &key) {
+std::optional<std::string> SqliteSettingsRepository::getGameValue(const std::string &contentHash,
+                                                                  const std::string &key) {
   try {
-    SQLite::Statement query(
-        *m_database,
-        "SELECT value FROM game_settings WHERE content_hash = :contentHash AND "
-        "platform_id = :platformId AND key = :key");
+    SQLite::Statement query(*m_database, "SELECT value FROM game_settings WHERE content_hash = :contentHash AND "
+                                         "platform_id = :platformId AND key = :key");
     query.bind(":contentHash", contentHash);
     query.bind(":platformId", -1);
     query.bind(":key", key);
@@ -152,14 +135,12 @@ std::optional<std::string> SqliteSettingsRepository::getGameValue(
   }
 }
 
-bool SqliteSettingsRepository::setGameValue(const std::string &contentHash,
-                                            const std::string &key,
+bool SqliteSettingsRepository::setGameValue(const std::string &contentHash, const std::string &key,
                                             const std::string &value) {
   try {
-    SQLite::Statement query(*m_database,
-                            "INSERT OR REPLACE INTO game_settings "
-                            "(content_hash, platform_id, key, value) VALUES "
-                            "(:contentHash, :platformId, :key, :value)");
+    SQLite::Statement query(*m_database, "INSERT OR REPLACE INTO game_settings "
+                                         "(content_hash, platform_id, key, value) VALUES "
+                                         "(:contentHash, :platformId, :key, :value)");
     query.bind(":contentHash", contentHash);
     query.bind(":platformId", -1);
     query.bind(":key", key);
@@ -172,13 +153,10 @@ bool SqliteSettingsRepository::setGameValue(const std::string &contentHash,
   }
 }
 
-bool SqliteSettingsRepository::resetGameValue(const std::string &contentHash,
-                                              const std::string &key) {
+bool SqliteSettingsRepository::resetGameValue(const std::string &contentHash, const std::string &key) {
   try {
-    SQLite::Statement query(
-        *m_database,
-        "DELETE FROM game_settings WHERE content_hash = :contentHash AND "
-        "platform_id = :platformId AND key = :key");
+    SQLite::Statement query(*m_database, "DELETE FROM game_settings WHERE content_hash = :contentHash AND "
+                                         "platform_id = :platformId AND key = :key");
     query.bind(":contentHash", contentHash);
     query.bind(":platformId", -1);
     query.bind(":key", key);

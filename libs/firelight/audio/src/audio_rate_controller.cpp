@@ -3,7 +3,7 @@
 #include <cmath>
 
 void AudioRateController::reset() {
-  for (int &bytes: m_usageBytes) {
+  for (int &bytes : m_usageBytes) {
     bytes = 0;
   }
 
@@ -12,8 +12,7 @@ void AudioRateController::reset() {
   m_previousAvgFillRatio = -1.0;
 }
 
-int AudioRateController::computeCompensation(const int usedBytes,
-                                             const int bufferCapacityBytes) {
+int AudioRateController::computeCompensation(const int usedBytes, const int bufferCapacityBytes) {
   if (bufferCapacityBytes <= 0) {
     return 0;
   }
@@ -45,7 +44,7 @@ int AudioRateController::computeCompensation(const int usedBytes,
     const double previousError = m_previousAvgFillRatio - TARGET_FILL_RATIO;
 
     constexpr double WITHIN_TARGET_TOLERANCE = 0.05; // ~45%-55% fill
-    constexpr double EXTREME_DEVIATION = 0.25; // <25% or >75% fill
+    constexpr double EXTREME_DEVIATION = 0.25;       // <25% or >75% fill
 
     const bool trendingWell = std::abs(currentError) < std::abs(previousError);
     const bool nearTarget = std::abs(currentError) <= WITHIN_TARGET_TOLERANCE;

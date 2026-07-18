@@ -4,7 +4,6 @@
 #include <firelight/metadata/game_metadata.hpp>
 
 #include <QThreadPool>
-
 #include <atomic>
 #include <string>
 
@@ -18,7 +17,6 @@ class IGameMetadataSource;
 class IMediaAssetRepository;
 struct ArtCandidate;
 
-// TODO
 // Auto-populates a library entry's name, filterable metadata, and default art
 // when it's first created, from the shipped offline metadata source, and owns
 // the user's art choices (select/import/apply). Auto-population runs on a
@@ -28,8 +26,7 @@ struct ArtCandidate;
 // library view refreshes the affected row in place
 class MetadataService {
 public:
-  MetadataService(library::IUserLibraryRepository &library,
-                  IGameMetadataSource &metadataSource,
+  MetadataService(library::IUserLibraryRepository &library, IGameMetadataSource &metadataSource,
                   IMediaAssetRepository &mediaAssets, std::string mediaDir);
   ~MetadataService();
 
@@ -45,11 +42,9 @@ public:
   // Makes an existing stored asset the selection for its (game, type)
   void selectAsset(const std::string &contentHash, int assetId);
   // Adds an online candidate to the store, selected
-  void applyCandidate(const std::string &contentHash,
-                      const ArtCandidate &candidate);
+  void applyCandidate(const std::string &contentHash, const ArtCandidate &candidate);
   // Copies a local image into the managed media dir and selects it
-  bool importLocalImage(const std::string &contentHash, MediaType type,
-                        const std::string &sourcePath);
+  bool importLocalImage(const std::string &contentHash, MediaType type, const std::string &sourcePath);
 
 private:
   // Writes the currently-selected asset per projected type onto the entry's

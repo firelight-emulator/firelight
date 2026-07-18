@@ -12,13 +12,13 @@ Popup {
     property bool hardcoreMode
 
     function openWith(imageUrl, title, numEarnedAchievements, totalAchievements, hardcoreMode) {
-        this.imageUrl = imageUrl
-        this.title = title
-        this.numEarnedAchievements = numEarnedAchievements
-        this.totalAchievements = totalAchievements
-        this.hardcoreMode = hardcoreMode
+        this.imageUrl = imageUrl;
+        this.title = title;
+        this.numEarnedAchievements = numEarnedAchievements;
+        this.totalAchievements = totalAchievements;
+        this.hardcoreMode = hardcoreMode;
 
-        open()
+        open();
     }
 
     parent: Overlay.overlay
@@ -29,12 +29,12 @@ Popup {
 
     onOpened: {
         if (!timer.running) {
-            timer.start()
+            timer.start();
         }
     }
 
     onClosed: {
-        timer.stop()
+        timer.stop();
     }
 
     Timer {
@@ -43,7 +43,7 @@ Popup {
         running: false
         repeat: false
         onTriggered: {
-            root.close()
+            root.close();
         }
     }
 
@@ -90,7 +90,6 @@ Popup {
                 // font.weight: Font.Light
                 color: "#bbbbbb"
             }
-
         }
     }
 

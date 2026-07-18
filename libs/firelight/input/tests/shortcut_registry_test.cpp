@@ -8,10 +8,10 @@ namespace firelight::input {
 class ShortcutRegistryTest : public testing::Test {
 protected:
   void SetUp() override { ShortcutRegistry::instance().clear(); }
+
   void TearDown() override { ShortcutRegistry::instance().clear(); }
 
-  static ShortcutAction make(const char *id, const char *name,
-                             const char *category) {
+  static ShortcutAction make(const char *id, const char *name, const char *category) {
     ShortcutAction action;
     action.id = id;
     action.displayName = name;
@@ -112,8 +112,7 @@ TEST_F(ShortcutRegistryTest, LoadsActionsAndPresets) {
 
   // Several sources per action, in preference order: seeding keeps the ones the
   // controller actually has
-  const auto &sources =
-      preset->sourcesFor(DeviceType::Gamepad, "fast_forward");
+  const auto &sources = preset->sourcesFor(DeviceType::Gamepad, "fast_forward");
   ASSERT_EQ(sources.size(), 2u);
   EXPECT_EQ(sources[0].code, GamepadInput::RightTrigger);
   EXPECT_EQ(sources[1].code, GamepadInput::R3);
@@ -125,10 +124,8 @@ TEST_F(ShortcutRegistryTest, LoadsActionsAndPresets) {
 TEST_F(ShortcutRegistryTest, RefusesAFileItCannotHonor) {
   auto &registry = ShortcutRegistry::instance();
   EXPECT_FALSE(registry.loadFromString("not json"));
-  EXPECT_FALSE(registry.loadFromString(
-      R"({"actions": [{"id": "a", "activation": "wat"}]})"));
-  EXPECT_FALSE(
-      registry.loadFromString(R"({"actions": [{"id": "a", "scope": "wat"}]})"));
+  EXPECT_FALSE(registry.loadFromString(R"({"actions": [{"id": "a", "activation": "wat"}]})"));
+  EXPECT_FALSE(registry.loadFromString(R"({"actions": [{"id": "a", "scope": "wat"}]})"));
   EXPECT_FALSE(registry.loadFromString(R"({"actions": [{"label": "no id"}]})"));
   // A binding naming an input the device hasn't got is a mistake in the file,
   // not something to quietly skip
@@ -197,8 +194,7 @@ TEST_F(ShortcutRegistryTest, ShippedCatalogIsGood) {
   for (const auto &[device, byId] : preset->bindings) {
     for (const auto &[id, sources] : byId) {
       for (const auto &source : sources) {
-        EXPECT_NE(source.code, GamepadInput::Home)
-            << id << " binds Guide/Home, which Steam takes over";
+        EXPECT_NE(source.code, GamepadInput::Home) << id << " binds Guide/Home, which Steam takes over";
       }
     }
   }

@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import Firelight 1.0
 
-// TODO
 // Standalone controller-profile manager: create, clone, rename, delete, and
 // import/export profiles. Self-contained; bind nothing — it loads all profiles
 // from the input service
@@ -131,8 +130,7 @@ FocusScope {
         id: nameDialog
         anchors.centerIn: parent
         modal: true
-        title: root.nameMode === "rename" ? "Rename Profile"
-             : root.nameMode === "clone" ? "Clone Profile" : "New Profile"
+        title: root.nameMode === "rename" ? "Rename Profile" : root.nameMode === "clone" ? "Clone Profile" : "New Profile"
         standardButtons: Dialog.Ok | Dialog.Cancel
 
         FLTextField {

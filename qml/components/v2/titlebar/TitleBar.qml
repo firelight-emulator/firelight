@@ -6,13 +6,13 @@ import Firelight 1.0
 
 FocusScope {
     id: root
-    signal closeClicked()
-    signal maximizeClicked()
-    signal minimizeClicked()
-    signal menuButtonClicked()
+    signal closeClicked
+    signal maximizeClicked
+    signal minimizeClicked
+    signal menuButtonClicked
 
     function activateSearch() {
-        searchBar.forceActiveFocus()
+        searchBar.forceActiveFocus();
     }
 
     Item {
@@ -23,7 +23,8 @@ FocusScope {
         DragHandler {
             target: null
             grabPermissions: DragHandler.ApprovesTakeOverByAnything
-            onActiveChanged: if (active) root.Window.window.startSystemMove()
+            onActiveChanged: if (active)
+                root.Window.window.startSystemMove()
             margin: 8
         }
 
@@ -130,7 +131,7 @@ FocusScope {
                 }
 
                 onClicked: {
-                    contextMenu.open()
+                    contextMenu.open();
                 }
             }
 
@@ -161,8 +162,7 @@ FocusScope {
             anchors.horizontalCenter: parent.horizontalCenter
             // Shrinks as the window narrows. The wider panel sets the mirrored
             // margin on the shorter side so the bar stays exactly centred
-            width: Math.min(600, Math.max(0,
-                parent.width - Math.max(leftContentArea.width, rightContentArea.width) * 2 - 32))
+            width: Math.min(600, Math.max(0, parent.width - Math.max(leftContentArea.width, rightContentArea.width) * 2 - 32))
         }
 
         RowLayout {
@@ -189,6 +189,5 @@ FocusScope {
                 onCloseClicked: root.closeClicked()
             }
         }
-
     }
 }

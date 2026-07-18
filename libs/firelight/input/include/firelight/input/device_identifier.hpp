@@ -6,7 +6,6 @@
 namespace firelight::input {
 
 struct DeviceIdentifier {
-  // TODO
   // Devices are identified by their stable USB-style ids (vendor, product,
   // version). Two identical models share one identity/profile; the keyboard
   // uses the sentinel (-1, -1, -1)

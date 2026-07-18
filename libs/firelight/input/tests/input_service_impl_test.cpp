@@ -1,43 +1,33 @@
-#include <firelight/event_dispatcher.hpp>
 #include "test_gamepad.hpp"
 
-#include <gtest/gtest.h>
+#include <firelight/event_dispatcher.hpp>
 #include <firelight/input/gamepad_profile.hpp>
+#include <firelight/input/sdl_input_service.hpp>
 #include <firelight/input/shortcut_mapping.hpp>
 #include <firelight/input/shortcut_registry.hpp>
 #include <firelight/input/sqlite_controller_repository.hpp>
-#include <firelight/input/sdl_input_service.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
 #include <atomic>
+#include <gtest/gtest.h>
 #include <thread>
 
 namespace firelight::db {
 class InputServiceImplTest : public testing::Test {
 protected:
   InputServiceImplTest() {
-    m_connectedHandler =
-        EventDispatcher::instance().subscribe<input::GamepadConnectedEvent>(
-            [this](const input::GamepadConnectedEvent &event) {
-              m_connectedEvents.push_back(event);
-            });
+    m_connectedHandler = EventDispatcher::instance().subscribe<input::GamepadConnectedEvent>(
+        [this](const input::GamepadConnectedEvent &event) { m_connectedEvents.push_back(event); });
 
-    m_disconnectedHandler =
-        EventDispatcher::instance().subscribe<input::GamepadDisconnectedEvent>(
-            [this](const input::GamepadDisconnectedEvent &event) {
-              m_disconnectedEvents.push_back(event);
-            });
+    m_disconnectedHandler = EventDispatcher::instance().subscribe<input::GamepadDisconnectedEvent>(
+        [this](const input::GamepadDisconnectedEvent &event) { m_disconnectedEvents.push_back(event); });
 
-    m_orderChangedHandler =
-        EventDispatcher::instance().subscribe<input::GamepadOrderChangedEvent>(
-            [this](const input::GamepadOrderChangedEvent &event) {
-              m_orderChangedEvents.push_back(event);
-            });
+    m_orderChangedHandler = EventDispatcher::instance().subscribe<input::GamepadOrderChangedEvent>(
+        [this](const input::GamepadOrderChangedEvent &event) { m_orderChangedEvents.push_back(event); });
   }
 
   platforms::PlatformService m_platformService;
-  input::SqliteControllerRepository m_repo =
-      input::SqliteControllerRepository(":memory:", m_platformService);
+  input::SqliteControllerRepository m_repo = input::SqliteControllerRepository(":memory:", m_platformService);
 
   ScopedConnection m_connectedHandler;
   ScopedConnection m_disconnectedHandler;
@@ -251,7 +241,6 @@ TEST_F(InputServiceImplTest, GameContextOverrideSwapsProfileAndRestores) {
   EXPECT_EQ(pad->getProfile()->getId(), deviceDefaultId);
 }
 
-// TODO
 // ---------------------------------------------------------------------------
 // Device connect/disconnect lifecycle + emitted events. These exercise the
 // public API that the SDL event loop drives on CONTROLLERDEVICEADDED/REMOVED
@@ -374,8 +363,8 @@ TEST_F(InputServiceImplTest, ExtraDeviceBeyondMaxPlayersGetsNoSlotButConnects) {
   auto overflow = std::make_shared<input::TestGamepad>(17);
   inputService.addGamepad(overflow);
 
-  EXPECT_EQ(overflow->getPlayerIndex(), -1);       // no free slot
-  EXPECT_EQ(m_connectedEvents.size(), 17u);        // still announced
+  EXPECT_EQ(overflow->getPlayerIndex(), -1); // no free slot
+  EXPECT_EQ(m_connectedEvents.size(), 17u);  // still announced
   EXPECT_EQ(inputService.listGamepads().size(), 17u);
 }
 
@@ -418,7 +407,6 @@ TEST_F(InputServiceImplTest, UnpluggingGamepadLeavesKeyboardConnected) {
   EXPECT_TRUE(keyboardStillListed);
 }
 
-// TODO
 // ---------------------------------------------------------------------------
 // Concurrency: the SDL event loop drives connect/disconnect on its own thread
 // (QtConcurrent::run in the app) while the render/UI threads read player slots
@@ -506,23 +494,19 @@ TEST_F(InputServiceImplTest, ConcurrentReadsDuringOrderChangesAreSafe) {
 TEST_F(InputServiceImplTest, AxisDecodeSetsBothStickDirections) {
   using input::SDLInputService;
 
-  const auto centered =
-      SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_LEFTX, 0);
+  const auto centered = SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_LEFTX, 0);
   ASSERT_EQ(centered.size(), 2u);
   EXPECT_EQ(centered[0], std::make_pair(input::LeftStickLeft, false));
   EXPECT_EQ(centered[1], std::make_pair(input::LeftStickRight, false));
 
-  const auto right =
-      SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_LEFTX, 20000);
+  const auto right = SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_LEFTX, 20000);
   EXPECT_EQ(right[0], std::make_pair(input::LeftStickLeft, false));
   EXPECT_EQ(right[1], std::make_pair(input::LeftStickRight, true));
 
-  // TODO
   // The opposite direction is reported as released rather than left alone, so
   // flicking extreme-to-extreme without passing through the deadzone doesn't
   // leave it stuck on
-  const auto left =
-      SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_LEFTX, -20000);
+  const auto left = SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_LEFTX, -20000);
   EXPECT_EQ(left[0], std::make_pair(input::LeftStickLeft, true));
   EXPECT_EQ(left[1], std::make_pair(input::LeftStickRight, false));
 }
@@ -530,18 +514,15 @@ TEST_F(InputServiceImplTest, AxisDecodeSetsBothStickDirections) {
 TEST_F(InputServiceImplTest, AxisDecodeTreatsTriggersAsOneDirection) {
   using input::SDLInputService;
 
-  const auto released =
-      SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0);
+  const auto released = SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 0);
   ASSERT_EQ(released.size(), 1u);
   EXPECT_EQ(released[0], std::make_pair(input::RightTrigger, false));
 
-  const auto pulled = SDLInputService::decodeAxisMotion(
-      SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 20000);
+  const auto pulled = SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_TRIGGERRIGHT, 20000);
   ASSERT_EQ(pulled.size(), 1u);
   EXPECT_EQ(pulled[0], std::make_pair(input::RightTrigger, true));
 
-  EXPECT_TRUE(SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_MAX, 20000)
-                  .empty());
+  EXPECT_TRUE(SDLInputService::decodeAxisMotion(SDL_CONTROLLER_AXIS_MAX, 20000).empty());
 }
 
 // Triggers are axes, not buttons, so a shortcut bound to one only fires if the

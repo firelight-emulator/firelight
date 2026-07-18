@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
 
-// TODO
 // Tab strip with an underline indicator. Feed `tabs` a list of labels; the
 // selected index is `currentIndex`. Metrics from AppStyle, colors from Theme
 //
@@ -26,7 +25,9 @@ TabBar {
             padding: AppStyle.spacingSm
             property bool showGlobalCursor: true
 
-            HoverHandler { cursorShape: Qt.PointingHandCursor }
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
 
             contentItem: Text {
                 id: label
@@ -49,7 +50,11 @@ TabBar {
                     radius: height / 2
                     color: Theme.accent
                     opacity: tab.checked ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: 100 } }
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 100
+                        }
+                    }
                 }
             }
         }

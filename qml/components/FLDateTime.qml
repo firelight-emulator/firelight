@@ -17,15 +17,15 @@ Item {
         height: parent.height / 2
 
         text: {
-              let date = new Date(epochSeconds)
-              return date.toLocaleTimeString()
-          }
-          font.pixelSize: AppStyle.fontSizeMedium
-          font.weight: Font.DemiBold
-          font.family: Constants.regularFontFamily
-          color: "white"
-          verticalAlignment: Text.AlignBottom
-          horizontalAlignment: Text.AlignLeft
+            let date = new Date(epochSeconds);
+            return date.toLocaleTimeString();
+        }
+        font.pixelSize: AppStyle.fontSizeMedium
+        font.weight: Font.DemiBold
+        font.family: Constants.regularFontFamily
+        color: "white"
+        verticalAlignment: Text.AlignBottom
+        horizontalAlignment: Text.AlignLeft
     }
 
     Text {
@@ -36,16 +36,14 @@ Item {
         height: parent.height / 2
 
         text: {
-              let date = new Date(epochSeconds)
-              return date.toLocaleDateString()
-          }
-          font.pixelSize: AppStyle.fontSizeMedium
-          font.weight: Font.DemiBold
-          font.family: Constants.regularFontFamily
-          color: "#7e7e7e"
-          verticalAlignment: Text.AlignTop
-          horizontalAlignment: Text.AlignLeft
+            let date = new Date(epochSeconds);
+            return date.toLocaleDateString();
+        }
+        font.pixelSize: AppStyle.fontSizeMedium
+        font.weight: Font.DemiBold
+        font.family: Constants.regularFontFamily
+        color: "#7e7e7e"
+        verticalAlignment: Text.AlignTop
+        horizontalAlignment: Text.AlignLeft
     }
-
-
 }

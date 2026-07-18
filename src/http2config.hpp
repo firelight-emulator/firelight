@@ -12,7 +12,6 @@ protected:
   QNetworkReply *createRequest(Operation op,
                                const QNetworkRequest &originalReq,
                                QIODevice *outgoingData) override;
-  // TODO
   //    inline QNetworkAccessManager *create(QObject *parent) override
   //    {
   //        QNetworkAccessManager *networkAccessManager = new

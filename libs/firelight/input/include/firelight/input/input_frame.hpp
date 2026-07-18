@@ -8,7 +8,6 @@
 
 namespace firelight::input {
 
-// TODO
 // One port's joypad input for a single frame. Captured once per frame (see
 // Core::pollInput) so the libretro core reads stable input during retro_run(),
 // and so a frame's input is a self-contained, serializable value — the record a
@@ -23,21 +22,17 @@ struct InputFrame {
   int16_t rightStickX = 0;
   int16_t rightStickY = 0;
 
-  [[nodiscard]] bool button(unsigned id) const {
-    return id < 16 && ((buttons >> id) & 1u) != 0;
-  }
+  [[nodiscard]] bool button(unsigned id) const { return id < 16 && ((buttons >> id) & 1u) != 0; }
 
   // Value for a RETRO_DEVICE_ID_JOYPAD_MASK read
-  [[nodiscard]] int16_t buttonMask() const {
-    return static_cast<int16_t>(buttons);
-  }
+  [[nodiscard]] int16_t buttonMask() const { return static_cast<int16_t>(buttons); }
+
   void setButton(unsigned id, bool pressed) {
     if (id >= 16) {
       return;
     }
     const auto bit = static_cast<uint16_t>(1u << id);
-    buttons = pressed ? static_cast<uint16_t>(buttons | bit)
-                      : static_cast<uint16_t>(buttons & ~bit);
+    buttons = pressed ? static_cast<uint16_t>(buttons | bit) : static_cast<uint16_t>(buttons & ~bit);
   }
 
   bool operator==(const InputFrame &) const = default;
@@ -59,11 +54,9 @@ struct InputFrame {
     return out;
   }
 
-  [[nodiscard]] static InputFrame
-  deserialize(const std::array<uint8_t, SERIALIZED_SIZE> &data) {
+  [[nodiscard]] static InputFrame deserialize(const std::array<uint8_t, SERIALIZED_SIZE> &data) {
     const auto get16 = [&](std::size_t off) -> uint16_t {
-      return static_cast<uint16_t>(
-          data[off] | (static_cast<uint16_t>(data[off + 1]) << 8));
+      return static_cast<uint16_t>(data[off] | (static_cast<uint16_t>(data[off + 1]) << 8));
     };
     InputFrame f;
     f.buttons = get16(0);
@@ -75,19 +68,13 @@ struct InputFrame {
   }
 };
 
-// TODO
 // Samples a controller's joypad state (all 16 buttons + both analog sticks) into
 // an InputFrame — the once-per-frame snapshot. `platformId`/`controllerTypeId`
 // match the values the libretro input callback queries the pad with
-[[nodiscard]] inline InputFrame captureJoypadFrame(libretro::IRetroPad &pad,
-                                                   int platformId,
-                                                   int controllerTypeId) {
+[[nodiscard]] inline InputFrame captureJoypadFrame(libretro::IRetroPad &pad, int platformId, int controllerTypeId) {
   InputFrame f;
   for (unsigned id = 0; id < 16; ++id) {
-    f.setButton(id,
-                pad.isButtonPressed(
-                    platformId, controllerTypeId,
-                    static_cast<libretro::IRetroPad::Input>(id)));
+    f.setButton(id, pad.isButtonPressed(platformId, controllerTypeId, static_cast<libretro::IRetroPad::Input>(id)));
   }
   f.leftStickX = pad.getLeftStickXPosition(platformId, controllerTypeId);
   f.leftStickY = pad.getLeftStickYPosition(platformId, controllerTypeId);

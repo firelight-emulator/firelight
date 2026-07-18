@@ -7,7 +7,6 @@ class FilesystemUtils : public QObject {
 
 public:
   Q_INVOKABLE static QString getFileURI();
-  // TODO
   // Reads a text file into a UTF-8 string. Accepts a plain path, a file:// URL,
   // or a qrc:/ resource URL; returns "" on failure. Used to load bundled help
   // articles for Markdown rendering

@@ -92,16 +92,16 @@ FocusScope {
                 visible: !contentContainer.collapsed
                 focus: true
 
-                Keys.onPressed: (event) => {
+                Keys.onPressed: event => {
                     if (event.key === Qt.Key_Up) {
                         if (list.currentIndex > 0) {
-                            list.currentIndex -= 1
-                            event.accepted = true
+                            list.currentIndex -= 1;
+                            event.accepted = true;
                         }
                     } else if (event.key === Qt.Key_Down) {
                         if (list.currentIndex < list.count - 1) {
-                            list.currentIndex += 1
-                            event.accepted = true
+                            list.currentIndex += 1;
+                            event.accepted = true;
                         }
                     }
                 }

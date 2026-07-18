@@ -2,7 +2,6 @@
 
 namespace firelight::netplay {
 
-// TODO
 // How gameplay is kept in sync across the lobby. HostStream = the host runs
 // the game and streams audio/video; guests send inputs. Lockstep = every
 // machine runs the same content and exchanges per-frame inputs (later)

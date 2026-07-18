@@ -1,19 +1,18 @@
 #pragma once
 #include "service_accessor.hpp"
 
-#include <QAbstractListModel>
-#include <QAudioDevice>
-#include <QMediaDevices>
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/settings/setting_definition.hpp>
 #include <firelight/settings/settings_service.hpp>
 
+#include <QAbstractListModel>
+#include <QAudioDevice>
+#include <QMediaDevices>
 #include <optional>
 #include <vector>
 
 namespace firelight::settings {
 
-// TODO
 // The rows of one declared settings group. Definitions come from the
 // SettingsCatalog; values come from SettingsService and are shown as the
 // *effective* value (this tier's override, else the inherited one), with
@@ -22,14 +21,11 @@ namespace firelight::settings {
 //
 // A group can mix app and emulation settings. App settings are single-valued:
 // they always read and write the global tier and ignore `level` entirely
-class SettingsModel : public QAbstractListModel,
-                               public ServiceAccessor {
+class SettingsModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
-  Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY
-                 platformIdChanged)
+  Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY platformIdChanged)
   Q_PROPERTY(int level READ getLevel WRITE setLevel NOTIFY levelChanged)
-  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
-                 contentHashChanged)
+  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY contentHashChanged)
   // Which declared group to show. Required — every settings surface renders one
   // group at a time
   Q_PROPERTY(QString group READ getGroup WRITE setGroup NOTIFY groupChanged)
@@ -37,8 +33,7 @@ class SettingsModel : public QAbstractListModel,
   Q_PROPERTY(QString groupLabel READ getGroupLabel NOTIFY groupChanged)
   // When false, settings marked `advanced` in the catalog are hidden. Bound in
   // QML to the global "Show advanced settings" preference
-  Q_PROPERTY(bool showAdvanced READ getShowAdvanced WRITE setShowAdvanced NOTIFY
-                 showAdvancedChanged)
+  Q_PROPERTY(bool showAdvanced READ getShowAdvanced WRITE setShowAdvanced NOTIFY showAdvancedChanged)
 public:
   explicit SettingsModel(QObject *parent = nullptr);
 
@@ -63,8 +58,7 @@ public:
   QVariant data(const QModelIndex &index, int role) const override;
   QHash<int, QByteArray> roleNames() const override;
   Qt::ItemFlags flags(const QModelIndex &index) const override;
-  bool setData(const QModelIndex &index, const QVariant &value,
-               int role) override;
+  bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
   // Clears this tier's override for the row so it falls back to the inherited
   // value (lower tier -> catalog default)
@@ -98,13 +92,14 @@ private:
     FileExtensionsRole, // file-picker filter (QStringList)
     DirectoryModeRole   // file/folder picker: pick a directory
   };
+
   struct Item {
     QString label;
     QString key;
     QString description;
     QString widget; // UI control id: toggle / dropdown / slider / spinbox / ...
 
-    QString stringValue; // effective value (string form)
+    QString stringValue;   // effective value (string form)
     bool boolValue = true; // effective value (for toggle widgets)
     QString trueValue = "true";
     QString falseValue = "false";
@@ -116,11 +111,10 @@ private:
     double stepValue = 1;
     bool requiresRestart = false;
 
-    QString placeholder;          // text widget hint
-    QStringList fileExtensions;   // file-picker filter
-    bool directoryMode = false;   // file/folder picker: pick a directory
+    QString placeholder;        // text widget hint
+    QStringList fileExtensions; // file-picker filter
+    bool directoryMode = false; // file/folder picker: pick a directory
 
-    // TODO
     // Reset clears this tier's override so the row falls back to what it
     // inherits. Only meaningful at a tier with something beneath it — the
     // global tier and app settings are the base, so there's nothing to fall
@@ -141,7 +135,6 @@ private:
   void rebuildItems();
   // Flags rows that depend on another row in the same view
   void markSubItems();
-  // TODO
   // Builds a library-game-picker's options from the user's library (a leading
   // "None" plus each eligible entry as {label: display name, value: content
   // hash}). Returns just "None" when no library is wired
@@ -151,15 +144,13 @@ private:
   void refreshValues();
   void recomputeConditions();
   void setItemValue(int itemIndex, Item &item, const std::string &value);
-  // TODO
   // Whether this row has an override at the current tier that actually differs
   // from what it would otherwise inherit — the only case where Reset does
   // anything visible
   [[nodiscard]] bool overridesInheritedValue(const Item &item) const;
   // The value this row would resolve to starting at `level`, ignoring anything
   // above it
-  [[nodiscard]] std::optional<std::string>
-  resolveValueFrom(const std::string &key, SettingsLevel level) const;
+  [[nodiscard]] std::optional<std::string> resolveValueFrom(const std::string &key, SettingsLevel level) const;
   // The tier this row reads and writes: `level`, except app settings which are
   // always Global.
   [[nodiscard]] SettingsLevel levelFor(const Item &item) const;
@@ -167,8 +158,7 @@ private:
   // content hash, a Platform-tier row needs a platform)
   [[nodiscard]] bool canResolve(const Item &item) const;
   // First override at `level` or a lower tier (toward Global); nullopt if none
-  std::optional<std::string> resolveValue(const std::string &key,
-                                          SettingsLevel level);
+  std::optional<std::string> resolveValue(const std::string &key, SettingsLevel level);
   // Current effective value of a sibling setting (for condition evaluation)
   std::string currentValueOf(const std::string &key) const;
 

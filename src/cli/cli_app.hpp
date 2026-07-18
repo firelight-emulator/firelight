@@ -26,16 +26,16 @@ struct CliOptions {
   bool windowed = false; // --windowed (overrides a saved fullscreen)
   bool verbose = false;
   bool portable = false;
-  bool muted = false;  // --muted (start with audio muted)
-  bool paused = false; // --paused (start the game paused)
+  bool muted = false;          // --muted (start with audio muted)
+  bool paused = false;         // --paused (start the game paused)
   bool exitOnClose = false;    // --exit-on-close (quit when the game closes)
   bool singleInstance = false; // --single-instance (forward to a running app)
-  int saveSlot = -1;  // --save-slot N; -1 = use the entry's active slot
-  std::string configDir; // --config-dir; empty = platform default
-  std::string romPath;   // positional content path; empty = none
-  std::string settingsFile; // --settings-file; bulk emulation overrides
-  std::string controller;   // --controller NAME; per-launch preferred type
-  std::string core;         // --core NAME; per-launch core override
+  int saveSlot = -1;           // --save-slot N; -1 = use the entry's active slot
+  std::string configDir;       // --config-dir; empty = platform default
+  std::string romPath;         // positional content path; empty = none
+  std::string settingsFile;    // --settings-file; bulk emulation overrides
+  std::string controller;      // --controller NAME; per-launch preferred type
+  std::string core;            // --core NAME; per-launch core override
 
   // Inline `--set key=value` emulation overrides (already split on the first
   // '='), applied for this launch only

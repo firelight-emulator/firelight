@@ -12,18 +12,17 @@
 
 namespace firelight::netplay {
 
-// TODO
 // Maps libretro ports to lobby slots while the host runs an online game:
 // slot N's occupant answers port N — the host through their local pads,
 // remote members through their RemoteRetroPads. Inactive (or with no inner
 // provider change needed), it's a pure pass-through
 class SlotMappedRetropadProvider final : public libretro::IRetropadProvider {
 public:
-  SlotMappedRetropadProvider(libretro::IRetropadProvider *localPads,
-                             NetplaySession &session)
+  SlotMappedRetropadProvider(libretro::IRetropadProvider *localPads, NetplaySession &session)
       : m_localPads(localPads), m_session(session) {}
 
   void setActive(const bool active) { m_active = active; }
+
   [[nodiscard]] bool active() const { return m_active.load(); }
 
   std::shared_ptr<RemoteRetroPad> padForMember(const PlayerId memberId) {
@@ -35,11 +34,9 @@ public:
     return pad;
   }
 
-  std::shared_ptr<libretro::IRetroPad>
-  getRetropadForPlayerIndex(const int port) override {
+  std::shared_ptr<libretro::IRetroPad> getRetropadForPlayerIndex(const int port) override {
     if (!m_active.load()) {
-      return m_localPads ? m_localPads->getRetropadForPlayerIndex(port)
-                         : nullptr;
+      return m_localPads ? m_localPads->getRetropadForPlayerIndex(port) : nullptr;
     }
     const auto table = m_session.slotTable();
     const auto &slot = table.slot(port);
@@ -47,9 +44,7 @@ public:
       return nullptr;
     }
     if (slot->memberId == m_session.lobby().hostId) {
-      return m_localPads
-                 ? m_localPads->getRetropadForPlayerIndex(slot->localPadIndex)
-                 : nullptr;
+      return m_localPads ? m_localPads->getRetropadForPlayerIndex(slot->localPadIndex) : nullptr;
     }
     return padForMember(slot->memberId);
   }

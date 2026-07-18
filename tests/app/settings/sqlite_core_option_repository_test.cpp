@@ -1,14 +1,13 @@
 #include <firelight/settings/sqlite_core_option_repository.hpp>
 
-#include <SQLiteCpp/Database.h>
 #include <QTemporaryDir>
+#include <SQLiteCpp/Database.h>
 #include <gtest/gtest.h>
 
 namespace firelight::settings {
 
 namespace {
-CoreOption option(std::string key, std::string defaultValue,
-                  std::vector<CoreOptionValue> values) {
+CoreOption option(std::string key, std::string defaultValue, std::vector<CoreOptionValue> values) {
   CoreOption o;
   o.key = std::move(key);
   o.label = "label-" + o.key;
@@ -27,8 +26,7 @@ TEST(SqliteCoreOptionRepositoryTest, MigratesLegacyTableMissingCategoryColumns) 
   const auto path = (dir.path() + "/legacy.db").toStdString();
 
   {
-    SQLite::Database db(path,
-                        SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+    SQLite::Database db(path, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
     db.exec("CREATE TABLE core_options (core_name TEXT NOT NULL, key TEXT NOT "
             "NULL, label TEXT NOT NULL, description TEXT NOT NULL, "
             "default_value TEXT NOT NULL, values_json TEXT NOT NULL, position "
@@ -57,10 +55,8 @@ TEST(SqliteCoreOptionRepositoryTest, MigratesLegacyTableMissingCategoryColumns) 
 
 TEST(SqliteCoreOptionRepositoryTest, RoundTripsOptionsInOrder) {
   SqliteCoreOptionRepository repo(":memory:");
-  repo.upsertCoreOptions(
-      "mgba_libretro",
-      {option("opt_a", "on", {{"on", "On"}, {"off", "Off"}}),
-       option("opt_b", "1", {{"1", "One"}})});
+  repo.upsertCoreOptions("mgba_libretro",
+                         {option("opt_a", "on", {{"on", "On"}, {"off", "Off"}}), option("opt_b", "1", {{"1", "One"}})});
 
   const auto read = repo.getCoreOptions("mgba_libretro");
   ASSERT_EQ(read.size(), 2u);

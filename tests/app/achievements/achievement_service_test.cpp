@@ -1,10 +1,11 @@
 #include <firelight/achievement_service.hpp>
-#include <sqlite_achievement_repository.hpp>
+
 #include <gtest/gtest.h>
 #include <optional>
 #include <rcheevos/patch_response.hpp>
 #include <rcheevos/ra_constants.h>
 #include <rcheevos/startsession_response.hpp>
+#include <sqlite_achievement_repository.hpp>
 
 namespace firelight::achievements {
 
@@ -32,8 +33,7 @@ protected:
 
   // Helper functions for creating test data
 
-  PatchAchievement createTestPatchAchievement(unsigned id = 1, int flags = 3,
-                                              int points = 50) {
+  PatchAchievement createTestPatchAchievement(unsigned id = 1, int flags = 3, int points = 50) {
     PatchAchievement achievement;
     achievement.ID = id;
     achievement.Title = "Test Achievement " + std::to_string(id);
@@ -64,29 +64,24 @@ protected:
     return patchData;
   }
 
-  PatchResponse createTestPatchResponse(
-      unsigned setId = 1,
-      std::optional<std::vector<PatchAchievement>> achievements =
-          std::nullopt) {
+  PatchResponse createTestPatchResponse(unsigned setId = 1,
+                                        std::optional<std::vector<PatchAchievement>> achievements = std::nullopt) {
     PatchResponse response;
     response.Success = true;
     response.PatchData = createTestPatchData(setId);
     if (!achievements.has_value()) {
-      achievements = {createTestPatchAchievement(1),
-                      createTestPatchAchievement(2)};
+      achievements = {createTestPatchAchievement(1), createTestPatchAchievement(2)};
     }
     response.PatchData.Achievements = achievements.value();
     return response;
   }
 
-  Unlock createTestUnlock(unsigned achievementId = 1,
-                          unsigned long long when = 1609459200) {
+  Unlock createTestUnlock(unsigned achievementId = 1, unsigned long long when = 1609459200) {
     return Unlock{.ID = achievementId, .When = when};
   }
 
-  StartSessionResponse
-  createTestStartSessionResponse(std::vector<Unlock> unlocks = {},
-                                 std::vector<Unlock> hardcoreUnlocks = {}) {
+  StartSessionResponse createTestStartSessionResponse(std::vector<Unlock> unlocks = {},
+                                                      std::vector<Unlock> hardcoreUnlocks = {}) {
     StartSessionResponse response;
     response.Success = true;
     response.Unlocks = unlocks;
@@ -95,9 +90,7 @@ protected:
     return response;
   }
 
-  AchievementProgress
-  createTestProgress(const std::string &username = "testuser",
-                     unsigned achievementId = 1) {
+  AchievementProgress createTestProgress(const std::string &username = "testuser", unsigned achievementId = 1) {
     AchievementProgress progress;
     progress.username = username;
     progress.achievementId = achievementId;
@@ -106,8 +99,7 @@ protected:
     return progress;
   }
 
-  User createTestUser(const std::string &username = "testuser",
-                      const std::string &token = "test_token_123",
+  User createTestUser(const std::string &username = "testuser", const std::string &token = "test_token_123",
                       int points = 1500, int hardcorePoints = 750) {
     User user;
     user.username = username;
@@ -128,8 +120,7 @@ protected:
     return game;
   }
 
-  AchievementSet createTestAchievementSet(unsigned id = 10,
-                                          unsigned gameId = 1) {
+  AchievementSet createTestAchievementSet(unsigned id = 10, unsigned gameId = 1) {
     AchievementSet set;
     set.id = id;
     set.gameId = gameId;
@@ -141,8 +132,7 @@ protected:
     return set;
   }
 
-  Achievement createTestAchievement(unsigned id, unsigned achievementSetId,
-                                    int displayOrder = 0) {
+  Achievement createTestAchievement(unsigned id, unsigned achievementSetId, int displayOrder = 0) {
     Achievement achievement;
     achievement.id = id;
     achievement.achievementSetId = achievementSetId;
@@ -166,20 +156,17 @@ protected:
 
   // Sets up the game -> achievement_set -> achievement chain required for
   // getAllUserUnlocks to find records via its 3-way JOIN
-  void setupAchievementHierarchy(unsigned gameId, unsigned setId,
-                                 std::vector<unsigned> achievementIds) {
+  void setupAchievementHierarchy(unsigned gameId, unsigned setId, std::vector<unsigned> achievementIds) {
     ASSERT_TRUE(service->create(createTestGame(gameId)));
     ASSERT_TRUE(service->create(createTestAchievementSet(setId, gameId)));
     for (unsigned i = 0; i < achievementIds.size(); ++i) {
-      ASSERT_TRUE(service->create(createTestAchievement(
-          achievementIds[i], setId, static_cast<int>(i))));
+      ASSERT_TRUE(service->create(createTestAchievement(achievementIds[i], setId, static_cast<int>(i))));
     }
   }
 
   // Pre-seeds a user_unlock row directly, bypassing the auto-create path
-  void seedUserUnlock(const std::string &username, unsigned achievementId,
-                      bool earned, bool earnedHardcore, uint64_t ts,
-                      uint64_t tsHardcore, bool synced = true) {
+  void seedUserUnlock(const std::string &username, unsigned achievementId, bool earned, bool earnedHardcore,
+                      uint64_t ts, uint64_t tsHardcore, bool synced = true) {
     UserUnlock unlock{.username = username,
                       .achievementId = achievementId,
                       .earned = earned,
@@ -193,9 +180,7 @@ protected:
 
 // Basic Service Operations Tests
 
-TEST_F(AchievementServiceTest, Constructor_Success) {
-  EXPECT_NO_THROW(AchievementService(*repository));
-}
+TEST_F(AchievementServiceTest, Constructor_Success) { EXPECT_NO_THROW(AchievementService(*repository)); }
 
 // User Management Tests
 
@@ -370,7 +355,6 @@ TEST_F(AchievementServiceTest, GetGameId_MultipleMappings) {
   EXPECT_EQ(result2.value(), setId2);
 }
 
-// TODO
 // TEST_F(AchievementServiceTest, GetGameId_IntegrationWithSetGameId) {
 //   // This test verifies the complete round-trip functionality
 //   const std::string contentHash = "integration_test_hash";
@@ -407,7 +391,6 @@ TEST_F(AchievementServiceTest, GetGameId_EmptyContentHash) {
   EXPECT_EQ(result.value(), setId);
 }
 
-// TODO
 // TEST_F(AchievementServiceTest, GetAchievementSetByContentHash_Delegates) {
 //   const std::string contentHash = "test_hash";
 //
@@ -446,7 +429,6 @@ TEST_F(AchievementServiceTest, UpdateAchievementProgress_Success) {
   EXPECT_TRUE(result);
 }
 
-// TODO
 // TEST_F(AchievementServiceTest, GetUserUnlock_ExistingUnlock) {
 //   // Set up achievement data first
 //   auto patchResponse = createTestPatchResponse(1);
@@ -469,7 +451,6 @@ TEST_F(AchievementServiceTest, GetUserUnlock_NotFound) {
   EXPECT_TRUE(result->synced);
 }
 
-// TODO
 // TEST_F(AchievementServiceTest, GetPatchResponse_ExistingResponse) {
 //   auto patchResponse = createTestPatchResponse(1);
 //   EXPECT_TRUE(service->processPatchResponse("testuser", patchResponse));
@@ -483,7 +464,6 @@ TEST_F(AchievementServiceTest, GetUserUnlock_NotFound) {
 
 // ProcessStartSessionResponse Tests
 
-// TODO
 // TEST_F(AchievementServiceTest, ProcessStartSessionResponse_Success) {
 //   // Set up achievements first
 //   auto patchResponse = createTestPatchResponse(1);
@@ -519,8 +499,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_CreatesNewUnlocks) {
   std::vector<Unlock> unlocks = {createTestUnlock(999, 1609459200)};
   auto startSessionResponse = createTestStartSessionResponse(unlocks, {});
 
-  bool result =
-      service->processStartSessionResponse("testuser", 1, startSessionResponse);
+  bool result = service->processStartSessionResponse("testuser", 1, startSessionResponse);
 
   EXPECT_TRUE(result);
 
@@ -532,16 +511,13 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_CreatesNewUnlocks) {
   EXPECT_TRUE(unlock->synced);
 }
 
-TEST_F(AchievementServiceTest,
-       ProcessStartSessionResponse_HandlesUnsupportedEmulatorId) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_HandlesUnsupportedEmulatorId) {
   setupAchievementHierarchy(1, 10, {1});
-  std::vector<Unlock> unlocks = {
-      createTestUnlock(1, 1609459200),
-      createTestUnlock(UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID, 1609459200)};
+  std::vector<Unlock> unlocks = {createTestUnlock(1, 1609459200),
+                                 createTestUnlock(UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID, 1609459200)};
   auto startSessionResponse = createTestStartSessionResponse(unlocks, {});
 
-  bool result =
-      service->processStartSessionResponse("testuser", 1, startSessionResponse);
+  bool result = service->processStartSessionResponse("testuser", 1, startSessionResponse);
 
   EXPECT_TRUE(result);
 
@@ -550,33 +526,28 @@ TEST_F(AchievementServiceTest,
   ASSERT_TRUE(regularUnlock.has_value());
   EXPECT_TRUE(regularUnlock->earned);
 
-  auto unsupportedUnlock =
-      service->getUserUnlock("testuser", UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID);
+  auto unsupportedUnlock = service->getUserUnlock("testuser", UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID);
   ASSERT_TRUE(unsupportedUnlock.has_value());
   EXPECT_TRUE(unsupportedUnlock->earned);
 }
 
-TEST_F(AchievementServiceTest,
-       ProcessStartSessionResponse_CreatesUnsupportedEmulatorUnlock) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_CreatesUnsupportedEmulatorUnlock) {
   // Process without unsupported emulator achievement in the response
   std::vector<Unlock> unlocks = {createTestUnlock(1, 1609459200)};
   auto startSessionResponse = createTestStartSessionResponse(unlocks, {});
 
-  bool result =
-      service->processStartSessionResponse("testuser", 1, startSessionResponse);
+  bool result = service->processStartSessionResponse("testuser", 1, startSessionResponse);
 
   EXPECT_TRUE(result);
 
   // Should create unsupported emulator unlock as unearned
-  auto unsupportedUnlock =
-      service->getUserUnlock("testuser", UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID);
+  auto unsupportedUnlock = service->getUserUnlock("testuser", UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID);
   ASSERT_TRUE(unsupportedUnlock.has_value());
   EXPECT_FALSE(unsupportedUnlock->earned);
   EXPECT_FALSE(unsupportedUnlock->earnedHardcore);
   EXPECT_TRUE(unsupportedUnlock->synced);
 }
 
-// TODO
 // TEST_F(AchievementServiceTest,
 //        ProcessStartSessionResponse_RelocksRemovedAchievements) {
 //   // Set up achievements first
@@ -618,7 +589,6 @@ TEST_F(AchievementServiceTest,
 //   EXPECT_EQ(updatedUnlock2->unlockTimestamp, 0);
 // }
 
-// TODO
 // TEST_F(AchievementServiceTest,
 //        ProcessStartSessionResponse_RelocksRemovedHardcoreAchievements) {
 //   // Set up achievements first
@@ -664,19 +634,16 @@ TEST_F(AchievementServiceTest,
 TEST_F(AchievementServiceTest, ProcessStartSessionResponse_EmptyResponse) {
   auto startSessionResponse = createTestStartSessionResponse({}, {});
 
-  bool result =
-      service->processStartSessionResponse("testuser", 1, startSessionResponse);
+  bool result = service->processStartSessionResponse("testuser", 1, startSessionResponse);
 
   EXPECT_TRUE(result);
 
   // Should still create unsupported emulator unlock
-  auto unsupportedUnlock =
-      service->getUserUnlock("testuser", UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID);
+  auto unsupportedUnlock = service->getUserUnlock("testuser", UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID);
   ASSERT_TRUE(unsupportedUnlock.has_value());
   EXPECT_FALSE(unsupportedUnlock->earned);
 }
 
-// TODO
 // TEST_F(AchievementServiceTest,
 //        ProcessStartSessionResponse_MixedNormalAndHardcore) {
 //   // Set up achievements first
@@ -714,7 +681,6 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_EmptyResponse) {
 //   EXPECT_TRUE(unlock2->synced);
 // }
 
-// TODO
 // TEST_F(AchievementServiceTest,
 //        ProcessStartSessionResponse_HardcoreUnlockSetsEarnedTrue) {
 //   // Set up achievements first
@@ -745,7 +711,6 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_EmptyResponse) {
 //   EXPECT_TRUE(unlock->synced);
 // }
 
-// TODO
 // TEST_F(AchievementServiceTest,
 //        ProcessStartSessionResponse_HardcoreWithExistingNonHardcore) {
 //   // Set up achievements first
@@ -790,8 +755,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_NonExistentSetId) {
   std::vector<Unlock> unlocks = {createTestUnlock(1, 1609459200)};
   auto startSessionResponse = createTestStartSessionResponse(unlocks, {});
 
-  bool result = service->processStartSessionResponse("testuser", 999,
-                                                     startSessionResponse);
+  bool result = service->processStartSessionResponse("testuser", 999, startSessionResponse);
 
   // Should still succeed even if set doesn't exist
   EXPECT_TRUE(result);
@@ -808,8 +772,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_ZeroTimestamps) {
   std::vector<Unlock> unlocks = {createTestUnlock(1, 0)};
   auto startSessionResponse = createTestStartSessionResponse(unlocks, {});
 
-  bool result =
-      service->processStartSessionResponse("testuser", 1, startSessionResponse);
+  bool result = service->processStartSessionResponse("testuser", 1, startSessionResponse);
 
   EXPECT_TRUE(result);
 
@@ -819,7 +782,6 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_ZeroTimestamps) {
   EXPECT_EQ(unlock->unlockTimestamp, 0);
 }
 
-// TODO
 // ============================================================
 // ProcessStartSessionResponse - update loop tests
 //
@@ -830,13 +792,11 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_ZeroTimestamps) {
 // row via seedUserUnlock() so the row is visible to that JOIN
 // ============================================================
 
-TEST_F(AchievementServiceTest,
-       ProcessStartSessionResponse_NonHardcoreUnlock_UpdatesToEarned) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_NonHardcoreUnlock_UpdatesToEarned) {
   setupAchievementHierarchy(1, 10, {100});
   seedUserUnlock("testuser", 100, false, false, 0, 0);
 
-  auto response =
-      createTestStartSessionResponse({createTestUnlock(100, 1609459200)}, {});
+  auto response = createTestStartSessionResponse({createTestUnlock(100, 1609459200)}, {});
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
 
   auto unlock = service->getUserUnlock("testuser", 100);
@@ -848,13 +808,11 @@ TEST_F(AchievementServiceTest,
   EXPECT_TRUE(unlock->synced);
 }
 
-TEST_F(AchievementServiceTest,
-       ProcessStartSessionResponse_HardcoreUnlock_SetsBothFlags) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_HardcoreUnlock_SetsBothFlags) {
   setupAchievementHierarchy(1, 10, {100});
   seedUserUnlock("testuser", 100, false, false, 0, 0);
 
-  auto response =
-      createTestStartSessionResponse({}, {createTestUnlock(100, 1609459200)});
+  auto response = createTestStartSessionResponse({}, {createTestUnlock(100, 1609459200)});
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
 
   auto unlock = service->getUserUnlock("testuser", 100);
@@ -866,14 +824,13 @@ TEST_F(AchievementServiceTest,
   EXPECT_TRUE(unlock->synced);
 }
 
-TEST_F(AchievementServiceTest,
-       ProcessStartSessionResponse_BothUnlocks_UsesCorrectTimestamps) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_BothUnlocks_UsesCorrectTimestamps) {
   setupAchievementHierarchy(1, 10, {100});
   seedUserUnlock("testuser", 100, false, false, 0, 0);
 
   // Non-hardcore and hardcore timestamps differ — both should be preserved
-  auto response = createTestStartSessionResponse(
-      {createTestUnlock(100, 1609459200)}, {createTestUnlock(100, 1609545600)});
+  auto response =
+      createTestStartSessionResponse({createTestUnlock(100, 1609459200)}, {createTestUnlock(100, 1609545600)});
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
 
   auto unlock = service->getUserUnlock("testuser", 100);
@@ -884,14 +841,11 @@ TEST_F(AchievementServiceTest,
   EXPECT_EQ(unlock->unlockTimestampHardcore, 1609545600u);
 }
 
-TEST_F(
-    AchievementServiceTest,
-    ProcessStartSessionResponse_HardcoreOnlyUnlock_NoExistingTimestamp_UsesHardcoreForBoth) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_HardcoreOnlyUnlock_NoExistingTimestamp_UsesHardcoreForBoth) {
   setupAchievementHierarchy(1, 10, {100});
   seedUserUnlock("testuser", 100, false, false, 0, 0); // unlockTimestamp = 0
 
-  auto response =
-      createTestStartSessionResponse({}, {createTestUnlock(100, 1609545600)});
+  auto response = createTestStartSessionResponse({}, {createTestUnlock(100, 1609545600)});
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
 
   auto unlock = service->getUserUnlock("testuser", 100);
@@ -904,15 +858,12 @@ TEST_F(
   EXPECT_EQ(unlock->unlockTimestampHardcore, 1609545600u);
 }
 
-TEST_F(
-    AchievementServiceTest,
-    ProcessStartSessionResponse_HardcoreOnlyUnlock_ExistingNonHardcoreTimestampPreserved) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_HardcoreOnlyUnlock_ExistingNonHardcoreTimestampPreserved) {
   setupAchievementHierarchy(1, 10, {100});
   // Already earned non-hardcore; now getting the hardcore unlock
   seedUserUnlock("testuser", 100, true, false, 1609459200, 0);
 
-  auto response =
-      createTestStartSessionResponse({}, {createTestUnlock(100, 1609545600)});
+  auto response = createTestStartSessionResponse({}, {createTestUnlock(100, 1609545600)});
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
 
   auto unlock = service->getUserUnlock("testuser", 100);
@@ -923,8 +874,7 @@ TEST_F(
   EXPECT_EQ(unlock->unlockTimestampHardcore, 1609545600u);
 }
 
-TEST_F(AchievementServiceTest,
-       ProcessStartSessionResponse_AchievementNotInResponse_GetsRelocked) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_AchievementNotInResponse_GetsRelocked) {
   setupAchievementHierarchy(1, 10, {100});
   seedUserUnlock("testuser", 100, true, false, 1609459200, 0);
 
@@ -940,9 +890,7 @@ TEST_F(AchievementServiceTest,
   EXPECT_TRUE(unlock->synced);
 }
 
-TEST_F(
-    AchievementServiceTest,
-    ProcessStartSessionResponse_HardcoreAchievementNotInResponse_GetsRelocked) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_HardcoreAchievementNotInResponse_GetsRelocked) {
   setupAchievementHierarchy(1, 10, {100});
   seedUserUnlock("testuser", 100, true, true, 1609459200, 1609545600);
 
@@ -957,16 +905,15 @@ TEST_F(
   EXPECT_EQ(unlock->unlockTimestampHardcore, 0u);
 }
 
-TEST_F(AchievementServiceTest,
-       ProcessStartSessionResponse_MultipleAchievements_MixedStates) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_MultipleAchievements_MixedStates) {
   setupAchievementHierarchy(1, 10, {100, 101, 102});
   seedUserUnlock("testuser", 100, false, false, 0, 0);
   seedUserUnlock("testuser", 101, false, false, 0, 0);
   seedUserUnlock("testuser", 102, true, true, 1000, 2000);
 
   // 100 → non-hardcore, 101 → hardcore, 102 → absent (relocked)
-  auto response = createTestStartSessionResponse(
-      {createTestUnlock(100, 1609459200)}, {createTestUnlock(101, 1609545600)});
+  auto response =
+      createTestStartSessionResponse({createTestUnlock(100, 1609459200)}, {createTestUnlock(101, 1609545600)});
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
 
   auto unlock100 = service->getUserUnlock("testuser", 100);
@@ -988,25 +935,20 @@ TEST_F(AchievementServiceTest,
   EXPECT_EQ(unlock102->unlockTimestamp, 0u);
 }
 
-TEST_F(
-    AchievementServiceTest,
-    ProcessStartSessionResponse_UnsupportedEmulatorInHardcoreList_SetsEarned) {
-  std::vector<Unlock> hardcoreUnlocks = {
-      createTestUnlock(UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID, 1609459200)};
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_UnsupportedEmulatorInHardcoreList_SetsEarned) {
+  std::vector<Unlock> hardcoreUnlocks = {createTestUnlock(UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID, 1609459200)};
   auto response = createTestStartSessionResponse({}, hardcoreUnlocks);
 
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
 
-  auto unlock =
-      service->getUserUnlock("testuser", UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID);
+  auto unlock = service->getUserUnlock("testuser", UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID);
   ASSERT_TRUE(unlock.has_value());
   EXPECT_TRUE(unlock->earned);
   EXPECT_TRUE(unlock->earnedHardcore);
 }
 
 // User isolation: only the specified user's records are modified
-TEST_F(AchievementServiceTest,
-       ProcessStartSessionResponse_MultipleUsers_OnlySpecifiedUserAffected) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_MultipleUsers_OnlySpecifiedUserAffected) {
   setupAchievementHierarchy(1, 10, {100});
   seedUserUnlock("user1", 100, true, false, 1609459200, 0);
   seedUserUnlock("user2", 100, true, false, 1609459200, 0);
@@ -1028,8 +970,7 @@ TEST_F(AchievementServiceTest,
 
 // Game isolation: getAllUserUnlocks is filtered by gameId, so processing
 // game 1's session must not touch achievements belonging to game 2.
-TEST_F(AchievementServiceTest,
-       ProcessStartSessionResponse_OtherGameUnlocks_NotAffected) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_OtherGameUnlocks_NotAffected) {
   setupAchievementHierarchy(1, 10, {100});
   setupAchievementHierarchy(2, 20, {200});
   seedUserUnlock("testuser", 100, true, false, 1609459200, 0);
@@ -1052,13 +993,11 @@ TEST_F(AchievementServiceTest,
 
 // Idempotency: an already-earned achievement that is still in the response
 // remains earned with its timestamp intact
-TEST_F(AchievementServiceTest,
-       ProcessStartSessionResponse_AlreadyEarned_StillInResponse_RemainsEarned) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_AlreadyEarned_StillInResponse_RemainsEarned) {
   setupAchievementHierarchy(1, 10, {100});
   seedUserUnlock("testuser", 100, true, false, 1609459200, 0);
 
-  auto response =
-      createTestStartSessionResponse({createTestUnlock(100, 1609459200)}, {});
+  auto response = createTestStartSessionResponse({createTestUnlock(100, 1609459200)}, {});
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
 
   auto unlock = service->getUserUnlock("testuser", 100);
@@ -1068,25 +1007,20 @@ TEST_F(AchievementServiceTest,
   EXPECT_EQ(unlock->unlockTimestamp, 1609459200u);
 }
 
-// TODO
 // The break triggered by UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID in the Unlocks
 // list stops the auto-creation loop early, but the update loop's find_if
 // scans the full list, so an existing record for an achievement that appears
 // after the unsupported ID is still updated correctly
-TEST_F(
-    AchievementServiceTest,
-    ProcessStartSessionResponse_UnsupportedEmulatorMidList_UpdateLoopScansFullList) {
+TEST_F(AchievementServiceTest, ProcessStartSessionResponse_UnsupportedEmulatorMidList_UpdateLoopScansFullList) {
   setupAchievementHierarchy(1, 10, {100});
   seedUserUnlock("testuser", 100, false, false, 0, 0);
 
-  std::vector<Unlock> unlocks = {
-      createTestUnlock(UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID, 1609459200),
-      createTestUnlock(100, 1609459200)};
+  std::vector<Unlock> unlocks = {createTestUnlock(UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID, 1609459200),
+                                 createTestUnlock(100, 1609459200)};
   auto response = createTestStartSessionResponse(unlocks, {});
   EXPECT_TRUE(service->processStartSessionResponse("testuser", 1, response));
 
-  auto unsupportedUnlock =
-      service->getUserUnlock("testuser", UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID);
+  auto unsupportedUnlock = service->getUserUnlock("testuser", UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID);
   ASSERT_TRUE(unsupportedUnlock.has_value());
   EXPECT_TRUE(unsupportedUnlock->earned);
 

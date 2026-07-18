@@ -21,7 +21,7 @@ FocusScope {
             currentIndex: root.level
             onCurrentIndexChanged: {
                 if (root.level !== currentIndex) {
-                    root.level = currentIndex
+                    root.level = currentIndex;
                 }
             }
 

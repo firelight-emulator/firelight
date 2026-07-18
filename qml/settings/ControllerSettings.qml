@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // The one home for keybinds. Every profile's shortcuts are edited here, picked
 // from the dropdown at the top — the Controllers page's "Edit profile" button
 // deep-links in with a profileId rather than mounting a second editor
@@ -28,7 +27,6 @@ FocusScope {
         playerNumber: 1
     }
 
-    // TODO
     // "Edit profile" deep-links here as /settings/controllers?profileId=N. The
     // route only carries the section, so the id rides in the query — resolve()
     // drops params for a subtree-owning route, but leaves the query alone
@@ -41,8 +39,7 @@ FocusScope {
         } else if (gamepadStatus.profileId > 0) {
             root.profileId = gamepadStatus.profileId;
         } else if (profiles.rowCount() > 0) {
-            root.profileId = profiles.data(profiles.index(0, 0),
-                                           Qt.UserRole + 1); // profileId
+            root.profileId = profiles.data(profiles.index(0, 0), Qt.UserRole + 1); // profileId
         }
     }
 
@@ -52,8 +49,7 @@ FocusScope {
         shortcut: ""
         gamepad: gamepadStatus
         isKeyboard: profile.isKeyboardProfile
-        modifierCandidates: profile.shortcutsModel
-            ? profile.shortcutsModel.modifierCandidates() : []
+        modifierCandidates: profile.shortcutsModel ? profile.shortcutsModel.modifierCandidates() : []
 
         onMappingAdded: function (shortcut, modifiers, input) {
             profile.shortcutsModel.addBinding(shortcut, modifiers, input);
@@ -66,8 +62,7 @@ FocusScope {
         property string presetId: ""
         property string presetLabel: ""
 
-        text: "Replace every shortcut in this profile with the " + presetLabel
-            + " defaults? Anything you've changed will be overwritten."
+        text: "Replace every shortcut in this profile with the " + presetLabel + " defaults? Anything you've changed will be overwritten."
 
         onAccepted: profile.shortcutsModel.applyPreset(presetId)
     }
@@ -152,8 +147,7 @@ FocusScope {
                             textRole: "label"
                             valueRole: "value"
                             model: platformPrefs.controllerTypeOptions()
-                            Component.onCompleted: currentIndex =
-                                indexOfValue(platformPrefs.preferredType(platformId))
+                            Component.onCompleted: currentIndex = indexOfValue(platformPrefs.preferredType(platformId))
                             onActivated: platformPrefs.setPreferredType(platformId, currentValue)
                         }
                     }
@@ -210,11 +204,9 @@ FocusScope {
                 textRole: "label"
                 valueRole: "id"
                 // Only the presets that fit this profile's device
-                model: profile.shortcutsModel
-                    ? profile.shortcutsModel.presetOptions() : []
+                model: profile.shortcutsModel ? profile.shortcutsModel.presetOptions() : []
 
-                Component.onCompleted: currentIndex = indexOfValue(
-                    profile.shortcutsModel ? profile.shortcutsModel.presetId : "")
+                Component.onCompleted: currentIndex = indexOfValue(profile.shortcutsModel ? profile.shortcutsModel.presetId : "")
 
                 onActivated: {
                     confirmPresetDialog.presetId = currentValue;
@@ -226,9 +218,7 @@ FocusScope {
 
         Text {
             Layout.fillWidth: true
-            text: profile.isKeyboardProfile
-                ? "Press a key with Shift, Control or Alt to make a combo."
-                : "Hold a button like Select and press another to make a combo. A combo only reaches the hotkey — a bare button still reaches the game."
+            text: profile.isKeyboardProfile ? "Press a key with Shift, Control or Alt to make a combo." : "Hold a button like Select and press another to make a combo. A combo only reaches the hotkey — a bare button still reaches the game."
             color: Theme.textMuted
             font.pixelSize: AppStyle.fontSizeSmall
             font.family: Constants.regularFontFamily
@@ -273,8 +263,7 @@ FocusScope {
                 background: Rectangle {
                     color: ColorPalette.neutral300
                     radius: 8
-                    opacity: shortcutRow.hovered
-                        || (!InputMethodManager.usingMouse && shortcutRow.activeFocus) ? 0.14 : 0
+                    opacity: shortcutRow.hovered || (!InputMethodManager.usingMouse && shortcutRow.activeFocus) ? 0.14 : 0
                 }
 
                 onClicked: {

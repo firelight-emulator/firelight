@@ -1,13 +1,8 @@
-#include <firelight/library/disc_inspector.hpp>
-
 #include <firelight/library/archive_reader.hpp>
-#include <firelight/library/file_bytes.hpp>
-
-#include <rcheevos/rc_hash.h>
-
-#include <firelight/platforms/platform_service.hpp>
 #include <firelight/library/content_extensions.hpp>
-#include <spdlog/spdlog.h>
+#include <firelight/library/disc_inspector.hpp>
+#include <firelight/library/file_bytes.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -15,31 +10,28 @@
 #include <filesystem>
 #include <fstream>
 #include <random>
+#include <rcheevos/rc_hash.h>
 #include <set>
+#include <spdlog/spdlog.h>
 #include <unordered_map>
 
 namespace firelight::library {
 
-DiscInspector::DiscInspector(platforms::IPlatformService &platformService)
-    : m_platformService(platformService) {}
+DiscInspector::DiscInspector(platforms::IPlatformService &platformService) : m_platformService(platformService) {}
 
 namespace {
 
-// TODO
 // Upper bound on how much we'll extract from an archive to identify a disc
 // CD-based systems all fit well under this; oversized DVD images zipped up are
 // skipped rather than risk filling the user's temp drive
 constexpr int64_t MAX_IN_ARCHIVE_DISC_EXTRACT_BYTES = 2LL * 1024 * 1024 * 1024;
 
 std::string toLower(std::string s) {
-  std::transform(s.begin(), s.end(), s.begin(),
-                 [](unsigned char c) { return std::tolower(c); });
+  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
   return s;
 }
 
-std::string baseNameOf(const std::string &path) {
-  return std::filesystem::path(path).filename().string();
-}
+std::string baseNameOf(const std::string &path) { return std::filesystem::path(path).filename().string(); }
 
 std::string suffixOf(const std::string &name) {
   const auto dot = name.find_last_of('.');
@@ -68,16 +60,19 @@ public:
       }
     }
   }
+
   ~TempDir() {
     if (m_valid) {
       std::error_code ec;
       std::filesystem::remove_all(m_path, ec);
     }
   }
+
   TempDir(const TempDir &) = delete;
   TempDir &operator=(const TempDir &) = delete;
 
   [[nodiscard]] bool valid() const { return m_valid; }
+
   [[nodiscard]] const std::filesystem::path &path() const { return m_path; }
 
 private:
@@ -106,11 +101,9 @@ bool DiscInspector::isSaturn(rc_hash_iterator &iterator) {
   return std::memcmp(buffer, "SEGA SEGASATURN ", 16) == 0;
 }
 
-std::vector<std::string>
-DiscInspector::sheetFilenameCandidates(const std::vector<uint8_t> &sheetBytes) {
+std::vector<std::string> DiscInspector::sheetFilenameCandidates(const std::vector<uint8_t> &sheetBytes) {
   std::vector<std::string> candidates;
-  const std::string text(reinterpret_cast<const char *>(sheetBytes.data()),
-                         sheetBytes.size());
+  const std::string text(reinterpret_cast<const char *>(sheetBytes.data()), sheetBytes.size());
 
   size_t start = 0;
   while (start <= text.size()) {
@@ -173,8 +166,7 @@ DiscInspector::sheetFilenameCandidates(const std::vector<uint8_t> &sheetBytes) {
 }
 
 std::string DiscInspector::roleForBaseName(const std::string &baseNameLower) {
-  return firelight::library::isDiscSheetExtension(suffixOf(baseNameLower)) ? "disc"
-                                                                        : "track";
+  return firelight::library::isDiscSheetExtension(suffixOf(baseNameLower)) ? "disc" : "track";
 }
 
 DiscIdentity DiscInspector::detect(const std::string &discFilePath) const {
@@ -184,7 +176,6 @@ DiscIdentity DiscInspector::detect(const std::string &discFilePath) const {
   std::memset(&iterator, 0, sizeof(iterator));
   rc_hash_initialize_iterator(&iterator, discFilePath.c_str(), nullptr, 0);
 
-  // TODO
   // rcheevos tries each candidate console (chosen by extension) in order,
   // running that console's content fingerprint. The first one that matches is
   // the real platform, and the hash it produces is the canonical RA hash
@@ -202,8 +193,8 @@ DiscIdentity DiscInspector::detect(const std::string &discFilePath) const {
       identity.valid = true;
       identity.platformId = platformId;
       identity.contentHash = std::string(hash);
-      spdlog::debug("Detected disc {} as platform {} (rc console {}), hash {}",
-                    discFilePath, platformId, rcConsole, hash);
+      spdlog::debug("Detected disc {} as platform {} (rc console {}), hash {}", discFilePath, platformId, rcConsole,
+                    hash);
       break;
     }
   }
@@ -216,8 +207,7 @@ DiscIdentity DiscInspector::detect(const std::string &discFilePath) const {
   return identity;
 }
 
-std::vector<IdentifiedDiscMember>
-DiscInspector::collectLooseMembers(const std::string &sheetPath) const {
+std::vector<IdentifiedDiscMember> DiscInspector::collectLooseMembers(const std::string &sheetPath) const {
   std::vector<IdentifiedDiscMember> members;
 
   const std::vector<uint8_t> bytes = readAllBytes(sheetPath);
@@ -234,8 +224,8 @@ DiscInspector::collectLooseMembers(const std::string &sheetPath) const {
     const std::string base = baseNameOf(token);
     const std::string baseLower = toLower(base);
     std::error_code ec;
-    if (baseLower.empty() || baseLower == sheetNameLower ||
-        seen.contains(baseLower) || !std::filesystem::exists(dir / base, ec)) {
+    if (baseLower.empty() || baseLower == sheetNameLower || seen.contains(baseLower) ||
+        !std::filesystem::exists(dir / base, ec)) {
       continue;
     }
     seen.insert(baseLower);
@@ -245,9 +235,7 @@ DiscInspector::collectLooseMembers(const std::string &sheetPath) const {
   return members;
 }
 
-DiscIdentity
-DiscInspector::inspectFile(const std::string &path,
-                           std::vector<IdentifiedDiscMember> &outMembers) const {
+DiscIdentity DiscInspector::inspectFile(const std::string &path, std::vector<IdentifiedDiscMember> &outMembers) const {
   const DiscIdentity identity = detect(path);
   if (identity.valid && firelight::library::isDiscSheetExtension(suffixOf(path))) {
     outMembers = collectLooseMembers(path);
@@ -255,9 +243,8 @@ DiscInspector::inspectFile(const std::string &path,
   return identity;
 }
 
-DiscIdentity DiscInspector::inspectArchiveEntry(
-    const std::string &archivePath, const std::string &entryName,
-    std::vector<IdentifiedDiscMember> &outMembers) const {
+DiscIdentity DiscInspector::inspectArchiveEntry(const std::string &archivePath, const std::string &entryName,
+                                                std::vector<IdentifiedDiscMember> &outMembers) const {
   const ArchiveReader reader(archivePath);
   const std::string targetBaseLower = toLower(baseNameOf(entryName));
 
@@ -282,8 +269,7 @@ DiscIdentity DiscInspector::inspectArchiveEntry(
     wanted.insert(name);
 
     if (firelight::library::isDiscSheetExtension(suffixOf(name))) {
-      for (const auto &token :
-           sheetFilenameCandidates(reader.readEntryByBaseName(name))) {
+      for (const auto &token : sheetFilenameCandidates(reader.readEntryByBaseName(name))) {
         const std::string candidate = toLower(baseNameOf(token));
         if (!candidate.empty() && sizeByBase.contains(candidate)) {
           worklist.push_back(candidate);
@@ -311,8 +297,7 @@ DiscIdentity DiscInspector::inspectArchiveEntry(
 
   TempDir temp;
   if (!temp.valid()) {
-    spdlog::error("Could not create temp dir for in-archive disc: {}",
-                  archivePath);
+    spdlog::error("Could not create temp dir for in-archive disc: {}", archivePath);
     return {};
   }
   if (!reader.extractEntries(wanted, temp.path())) {

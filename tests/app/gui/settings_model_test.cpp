@@ -1,4 +1,5 @@
 #include "gui/models/settings_model.hpp"
+
 #include "service_accessor.hpp"
 
 #include <firelight/library/sqlite_user_library.hpp>
@@ -81,8 +82,7 @@ protected:
     ServiceAccessor::setLibraryService(nullptr);
   }
 
-  QVariant value(const SettingsModel &model, int row,
-                 const QByteArray &role) {
+  QVariant value(const SettingsModel &model, int row, const QByteArray &role) {
     return model.data(model.index(row), roleFor(model, role));
   }
 };
@@ -142,10 +142,7 @@ TEST_F(SettingsModelTest, ShowsInheritedValueThenGameOverride) {
   ASSERT_TRUE(model.setData(model.index(row), "corrected", valueRole));
   EXPECT_EQ(value(model, row, "value").toString(), "corrected");
   EXPECT_TRUE(value(model, row, "resettable").toBool());
-  EXPECT_EQ(m_service.getValueAtLevel(Game, "hash1", GBA_PLATFORM_ID,
-                                      "aspect-ratio")
-                .value_or(""),
-            "corrected");
+  EXPECT_EQ(m_service.getValueAtLevel(Game, "hash1", GBA_PLATFORM_ID, "aspect-ratio").value_or(""), "corrected");
 }
 
 TEST_F(SettingsModelTest, NotResettableAtTheGlobalTier) {
@@ -267,7 +264,6 @@ TEST_F(SettingsModelTest, AdvancedHiddenUnlessShowAdvanced) {
   EXPECT_FALSE(value(model, adv, "visible").toBool());
 }
 
-// TODO
 // A game-picker setting sourced from the library: platform 3's core is
 // mgba_libretro (see CoreRegistry), so a game-picker declared there surfaces
 // when the model is scoped to platform 3.
@@ -291,12 +287,9 @@ TEST_F(SettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatform) {
   // Seed a library with one eligible (Game Boy, platform 1) and one ineligible
   // (SNES, platform 4) entry
   library::SqliteUserLibraryRepository repo(":memory:");
-  library::UserLibraryService lib(
-      repo, (QDir::tempPath() + "/fl_tpak_test").toStdString());
-  library::Entry gb{.displayName = "Tetris", .contentHash = "gbhash",
-                    .platformId = 1};
-  library::Entry snes{.displayName = "Zelda", .contentHash = "sneshash",
-                      .platformId = 4};
+  library::UserLibraryService lib(repo, (QDir::tempPath() + "/fl_tpak_test").toStdString());
+  library::Entry gb{.displayName = "Tetris", .contentHash = "gbhash", .platformId = 1};
+  library::Entry snes{.displayName = "Zelda", .contentHash = "sneshash", .platformId = 4};
   ASSERT_TRUE(repo.createEntry(gb));
   ASSERT_TRUE(repo.createEntry(snes));
   ServiceAccessor::setLibraryService(&lib);
@@ -311,8 +304,7 @@ TEST_F(SettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatform) {
   ASSERT_NE(row, -1);
   EXPECT_EQ(value(model, row, "widget").toString(), "dropdown");
 
-  const auto options =
-      value(model, row, "options").value<QVector<QVariantHash>>();
+  const auto options = value(model, row, "options").value<QVector<QVariantHash>>();
   // "None" plus only the eligible Game Boy game (SNES filtered out)
   ASSERT_EQ(options.size(), 2);
   EXPECT_EQ(options[0].value("label").toString(), "None");
@@ -363,8 +355,7 @@ TEST_F(SettingsModelTest, ExposesNewWidgetRolesAndStringValues) {
   ASSERT_NE(bios, -1);
   EXPECT_EQ(value(model, bios, "widget").toString(), "file-picker");
   EXPECT_FALSE(value(model, bios, "directoryMode").toBool());
-  EXPECT_EQ(value(model, bios, "fileExtensions").toStringList(),
-            (QStringList{"bin", "bios"}));
+  EXPECT_EQ(value(model, bios, "fileExtensions").toStringList(), (QStringList{"bin", "bios"}));
 
   const int romdir = findRow(model, "romdir");
   ASSERT_NE(romdir, -1);
@@ -378,9 +369,7 @@ TEST_F(SettingsModelTest, ExposesNewWidgetRolesAndStringValues) {
   const int valueRole = roleFor(model, "value");
   ASSERT_TRUE(model.setData(model.index(cheats), R"(["a","b"])", valueRole));
   EXPECT_EQ(value(model, cheats, "value").toString(), R"(["a","b"])");
-  EXPECT_EQ(m_service.getValueAtLevel(Game, "hash1", GBA_PLATFORM_ID, "cheats")
-                .value_or(""),
-            R"(["a","b"])");
+  EXPECT_EQ(m_service.getValueAtLevel(Game, "hash1", GBA_PLATFORM_ID, "cheats").value_or(""), R"(["a","b"])");
 }
 
 namespace {
@@ -451,15 +440,12 @@ TEST_F(SettingsModelGroupTest, AppSettingReadsAndWritesGlobalWithoutALevel) {
   ASSERT_NE(row, -1);
   EXPECT_EQ(value(model, row, "value").toString(), "#f76b15");
 
-  ASSERT_TRUE(model.setData(model.index(row), "#00ff00",
-                            roleFor(model, "value")));
+  ASSERT_TRUE(model.setData(model.index(row), "#00ff00", roleFor(model, "value")));
   EXPECT_EQ(m_service.getGlobalValue("accent-color").value_or(""), "#00ff00");
   EXPECT_EQ(value(model, row, "value").toString(), "#00ff00");
 }
 
-
 TEST_F(SettingsModelGroupTest, AppSettingIsNeverResettable) {
-  // TODO
   // Reset means "fall back to what I inherit", and an app setting inherits
   // from nothing — so changing one is just changing it, with no Reset to
   // clutter the row
@@ -471,8 +457,7 @@ TEST_F(SettingsModelGroupTest, AppSettingIsNeverResettable) {
   ASSERT_NE(row, -1);
   EXPECT_FALSE(value(model, row, "resettable").toBool());
 
-  ASSERT_TRUE(model.setData(model.index(row), "#00ff00",
-                            roleFor(model, "value")));
+  ASSERT_TRUE(model.setData(model.index(row), "#00ff00", roleFor(model, "value")));
   EXPECT_FALSE(value(model, row, "resettable").toBool());
 }
 
@@ -487,12 +472,10 @@ TEST_F(SettingsModelGroupTest, AppSettingIgnoresTheModelLevel) {
 
   const int row = findRow(model, "accent-color");
   ASSERT_NE(row, -1);
-  ASSERT_TRUE(model.setData(model.index(row), "#123456",
-                            roleFor(model, "value")));
+  ASSERT_TRUE(model.setData(model.index(row), "#123456", roleFor(model, "value")));
 
   EXPECT_EQ(m_service.getGlobalValue("accent-color").value_or(""), "#123456");
-  EXPECT_FALSE(m_service.getValueAtLevel(Game, "abc", -1, "accent-color")
-                   .has_value());
+  EXPECT_FALSE(m_service.getValueAtLevel(Game, "abc", -1, "accent-color").has_value());
 }
 
 TEST_F(SettingsModelGroupTest, AppSettingResetFallsBackToCatalogDefault) {
@@ -502,8 +485,7 @@ TEST_F(SettingsModelGroupTest, AppSettingResetFallsBackToCatalogDefault) {
 
   const int row = findRow(model, "accent-color");
   ASSERT_NE(row, -1);
-  ASSERT_TRUE(model.setData(model.index(row), "#00ff00",
-                            roleFor(model, "value")));
+  ASSERT_TRUE(model.setData(model.index(row), "#00ff00", roleFor(model, "value")));
 
   // No Reset row affordance, but resetValue still works — the CLI and any
   // future "restore defaults" both go through it
@@ -540,8 +522,7 @@ TEST_F(SettingsModelTest, GamePickerWithoutLibraryHasOnlyNone) {
 
   const int row = findRow(model, "tpak");
   ASSERT_NE(row, -1);
-  const auto options =
-      value(model, row, "options").value<QVector<QVariantHash>>();
+  const auto options = value(model, row, "options").value<QVector<QVariantHash>>();
   ASSERT_EQ(options.size(), 1);
   EXPECT_EQ(options[0].value("label").toString(), "None");
 }

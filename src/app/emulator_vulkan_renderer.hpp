@@ -2,14 +2,15 @@
 
 #include <QSize>
 #include <functional>
-#include <mutex>
-#include <vector>
-
 #include <libretro/libretro_vulkan.h>
+#include <mutex>
 #include <rhi/qrhi.h>
+#include <vector>
 #ifdef _WIN32
-#  include <windows.h>
-#  include <vulkan/vulkan_win32.h>
+// clang-format off
+#include <windows.h>
+#include <vulkan/vulkan_win32.h>
+// clang-format on
 #endif
 
 #include "emulation/emulator_instance.hpp"
@@ -21,29 +22,34 @@ public:
 
   // Called from render() on first Vulkan frame after the emulator is loaded
   // negotiation must be non-null. resetCallback is called at the end of init
-  bool initialize(QRhi *rhi,
-                  const retro_hw_render_context_negotiation_interface_vulkan *negotiation,
-                  VkSurfaceKHR surface,
-                  std::function<void()> resetCallback);
+  bool initialize(QRhi *rhi, const retro_hw_render_context_negotiation_interface_vulkan *negotiation,
+                  VkSurfaceKHR surface, std::function<void()> resetCallback);
 
   // Safe to call multiple times; no-op if already destroyed
   void destroy();
 
   // Runs the emulator frame(s), blits core → shared image
   // targetSize must be colorTexture()->pixelSize() so the shared image matches
-  void renderFrame(firelight::emulation::EmulatorInstance *emulator,
-                   float playbackMultiplier, QSize targetSize, QRhi *rhi);
+  void renderFrame(firelight::emulation::EmulatorInstance *emulator, float playbackMultiplier, QSize targetSize,
+                   QRhi *rhi);
 
   // Called from receive() when data == RETRO_HW_FRAME_BUFFER_VALID
   void setRenderDimensions(uint32_t w, uint32_t h);
 
   bool isInitialized() const { return m_vulkanInitialized; }
+
   bool isFirstFrameReady() const { return m_firstFrameReady; }
+
   uint32_t pendingWidth() const { return m_pendingColorBufferW; }
+
   uint32_t pendingHeight() const { return m_pendingColorBufferH; }
+
   QRhiTexture *sharedTexture() { return m_sharedTex; }
+
   VkImage qtSharedImage() const { return m_qtSharedImage; }
+
   uint64_t sharedSemValue() const { return m_sharedSemValue; }
+
   retro_hw_render_interface_vulkan *hwRenderInterface() { return &m_vkInterface; }
 
 private:
@@ -167,8 +173,7 @@ private:
 #endif
 
   void createVulkanPerFrameResources();
-  void buildVulkanHwInterface(VkInstance instance, VkPhysicalDevice physDev,
-                              PFN_vkGetInstanceProcAddr procAddr);
+  void buildVulkanHwInterface(VkInstance instance, VkPhysicalDevice physDev, PFN_vkGetInstanceProcAddr procAddr);
   bool ensureStagingBuffer();
   bool ensureSharedImage(QSize targetSize, QRhi *rhi);
   void destroySharedImage();

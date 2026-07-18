@@ -77,7 +77,6 @@ Item {
                         Layout.fillHeight: true
                         Layout.preferredWidth: 100
 
-                        // TODO
                         // onHeightChanged: function() {
                         //     width = height
                         // }
@@ -96,19 +95,18 @@ Item {
                         }
 
                         onClicked: function () {
-                            folderDialog.open()
+                            folderDialog.open();
                         }
 
                         FolderDialog {
                             id: folderDialog
                             currentFolder: model.local_filename
                             onAccepted: {
-                                model.path = folder
+                                model.path = folder;
                                 // console.log("found it")
                             }
                         }
                     }
-
                 }
 
                 Rectangle {
@@ -123,7 +121,6 @@ Item {
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
-
         }
     }
 }

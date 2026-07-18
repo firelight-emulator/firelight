@@ -46,8 +46,6 @@ FocusScope {
 
         contentItem: ColumnLayout {
             id: stuffCol
-
         }
     }
 }
-

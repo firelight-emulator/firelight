@@ -3,22 +3,20 @@
 #include <firelight/libretro/configuration_provider.hpp>
 #include <firelight/settings/setting_definition.hpp>
 #include <firelight/settings/settings_service.hpp>
+
 #include <map>
 #include <string>
 #include <vector>
 
-class CoreConfiguration final
-    : public firelight::libretro::IConfigurationProvider {
+class CoreConfiguration final : public firelight::libretro::IConfigurationProvider {
 public:
-  // TODO
   // Friendly settings + Firelight core-option default overrides are resolved
   // from the settings catalog (by core) and injected here, so this class is
   // decoupled from Platform / the catalog itself
-  CoreConfiguration(
-      std::string contentHash, int platformId,
-      std::vector<firelight::settings::SettingDefinition> friendlySettings,
-      std::map<std::string, std::string> coreDefaults,
-      firelight::settings::SettingsService &settingsService);
+  CoreConfiguration(std::string contentHash, int platformId,
+                    std::vector<firelight::settings::SettingDefinition> friendlySettings,
+                    std::map<std::string, std::string> coreDefaults,
+                    firelight::settings::SettingsService &settingsService);
 
   ~CoreConfiguration() = default;
 
@@ -28,8 +26,7 @@ public:
 
   bool anyOptionValueHasChanged() override;
 
-  void setDefaultValue(const std::string &key,
-                       const std::string &value) override;
+  void setDefaultValue(const std::string &key, const std::string &value) override;
 
   std::optional<std::string> getOptionValue(const std::string &key) override;
 

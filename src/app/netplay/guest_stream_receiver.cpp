@@ -11,39 +11,34 @@ namespace firelight::netplay {
 static_assert(RETROPAD_FRAME_BYTES == input::InputFrame::SERIALIZED_SIZE,
               "netplay wire format must match InputFrame's encoding");
 
-GuestStreamReceiver::GuestStreamReceiver(
-    NetplaySession &session,
-    std::function<std::shared_ptr<IAudioOutput>()> audioFactory,
-    libretro::IRetropadProvider *localPads)
-    : m_session(session), m_audioFactory(std::move(audioFactory)),
-      m_localPads(localPads) {
-  m_decoder.setVideoFrameCallback(
-      [this](media::StreamVideoFrame frame, const int64_t ptsMs) {
-        m_lastVideoPtsMs = static_cast<uint32_t>(ptsMs);
-        std::lock_guard lock(m_sinkMutex);
-        if (m_frameSink) {
-          m_frameSink(std::move(frame));
-        }
-      });
-  m_decoder.setAudioCallback(
-      [this](const std::vector<int16_t> &interleaved, int64_t) {
-        std::lock_guard lock(m_audioMutex);
-        if (!m_audioOutput && m_audioFactory) {
-          m_audioOutput = m_audioFactory();
-          if (m_audioOutput) {
-            m_audioOutput->initialize(48000);
-          }
-        }
-        if (m_audioOutput) {
-          m_audioOutput->receive(interleaved.data(), interleaved.size() / 2);
-        }
-      });
+GuestStreamReceiver::GuestStreamReceiver(NetplaySession &session,
+                                         std::function<std::shared_ptr<IAudioOutput>()> audioFactory,
+                                         libretro::IRetropadProvider *localPads)
+    : m_session(session), m_audioFactory(std::move(audioFactory)), m_localPads(localPads) {
+  m_decoder.setVideoFrameCallback([this](media::StreamVideoFrame frame, const int64_t ptsMs) {
+    m_lastVideoPtsMs = static_cast<uint32_t>(ptsMs);
+    std::lock_guard lock(m_sinkMutex);
+    if (m_frameSink) {
+      m_frameSink(std::move(frame));
+    }
+  });
+  m_decoder.setAudioCallback([this](const std::vector<int16_t> &interleaved, int64_t) {
+    std::lock_guard lock(m_audioMutex);
+    if (!m_audioOutput && m_audioFactory) {
+      m_audioOutput = m_audioFactory();
+      if (m_audioOutput) {
+        m_audioOutput->initialize(48000);
+      }
+    }
+    if (m_audioOutput) {
+      m_audioOutput->receive(interleaved.data(), interleaved.size() / 2);
+    }
+  });
 }
 
 GuestStreamReceiver::~GuestStreamReceiver() { stopPlaying(); }
 
-void GuestStreamReceiver::setFrameSink(
-    std::function<void(media::StreamVideoFrame)> sink) {
+void GuestStreamReceiver::setFrameSink(std::function<void(media::StreamVideoFrame)> sink) {
   std::lock_guard lock(m_sinkMutex);
   m_frameSink = std::move(sink);
 }
@@ -110,8 +105,7 @@ void GuestStreamReceiver::inputTickLoop() {
     if (!pad) {
       continue;
     }
-    const auto frame =
-        input::captureJoypadFrame(*pad, m_platformId.load(), 1);
+    const auto frame = input::captureJoypadFrame(*pad, m_platformId.load(), 1);
 
     recent.push_front(frame.serialize());
     while (recent.size() > 3) {

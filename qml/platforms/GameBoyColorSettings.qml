@@ -21,7 +21,6 @@ FocusScope {
                     background: Rectangle {
                         color: enabled ? (backButton.hovered ? "#404143" : "transparent") : "transparent"
                         radius: height / 2
-
                     }
 
                     Layout.fillHeight: true
@@ -39,7 +38,7 @@ FocusScope {
                     checkable: false
 
                     onClicked: {
-                        root.StackView.view.pop()
+                        root.StackView.view.pop();
                     }
                 }
 
@@ -77,21 +76,18 @@ FocusScope {
                         // description: "Enables simulation of LCD ghosting effects by blending the current and previous frames."
                         checked: emulator_config_manager.getOptionValueForPlatform(2, "gambatte_mix_frames") === "accurate"
 
-                        // TODO
                         // Component.onCompleted: {
                         //     checked = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
                         // }
 
                         onCheckedChanged: {
                             if (checked) {
-                                emulator_config_manager.setOptionValueForPlatform(2, "gambatte_mix_frames", "accurate")
+                                emulator_config_manager.setOptionValueForPlatform(2, "gambatte_mix_frames", "accurate");
                             } else {
-                                emulator_config_manager.setOptionValueForPlatform(2, "gambatte_mix_frames", "disabled")
+                                emulator_config_manager.setOptionValueForPlatform(2, "gambatte_mix_frames", "disabled");
                             }
                         }
-
                     },
-
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
@@ -106,13 +102,12 @@ FocusScope {
 
                         onCheckedChanged: function () {
                             if (checked) {
-                                emulator_config_manager.setOptionValueForPlatform(2, "gambatte_gbc_color_correction", "GBC only")
+                                emulator_config_manager.setOptionValueForPlatform(2, "gambatte_gbc_color_correction", "GBC only");
                             } else {
-                                emulator_config_manager.setOptionValueForPlatform(2, "gambatte_gbc_color_correction", "disabled")
+                                emulator_config_manager.setOptionValueForPlatform(2, "gambatte_gbc_color_correction", "disabled");
                             }
                         }
                     },
-
                     Option {
                         Layout.fillWidth: true
                         // Layout.leftMargin: 36
@@ -123,45 +118,46 @@ FocusScope {
                         control: MyComboBox {
                             id: frontlightPositionComboBox
                             enabled: colorCorrectionOption.checked
-                            model: [{
-                                text: "Center of screen",
-                                value: "central"
-                            }, {
-                                text: "Above screen",
-                                value: "above screen"
-                            }, {
-                                text: "Below screen",
-                                value: "below screen"
-                            }]
+                            model: [
+                                {
+                                    text: "Center of screen",
+                                    value: "central"
+                                },
+                                {
+                                    text: "Above screen",
+                                    value: "above screen"
+                                },
+                                {
+                                    text: "Below screen",
+                                    value: "below screen"
+                                }
+                            ]
                             textRole: "text"
                             valueRole: "value"
 
                             Component.onCompleted: {
-                                const val = frontlightPositionComboBox.indexOfValue(emulator_config_manager.getOptionValueForPlatform(2, "gambatte_gbc_frontlight_position"))
-                                console.log("VALUE: " + val)
-                                frontlightPositionComboBox.currentIndex = val
+                                const val = frontlightPositionComboBox.indexOfValue(emulator_config_manager.getOptionValueForPlatform(2, "gambatte_gbc_frontlight_position"));
+                                console.log("VALUE: " + val);
+                                frontlightPositionComboBox.currentIndex = val;
                             }
 
                             onActivated: function (index) {
                                 if (!currentValue) {
-                                    return
+                                    return;
                                 }
-                                emulator_config_manager.setOptionValueForPlatform(2, "gambatte_gbc_frontlight_position", currentValue)
+                                emulator_config_manager.setOptionValueForPlatform(2, "gambatte_gbc_frontlight_position", currentValue);
                             }
                         }
                     },
-
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
                         color: "#333333"
                     },
-
                     Option {
                         Layout.fillWidth: true
                         label: "Darken screen to reduce harshness"
                     },
-
                     MySlider {
                         Layout.fillWidth: true
                         // Layout.preferredHeight: 48
@@ -174,13 +170,11 @@ FocusScope {
                         value: emulator_config_manager.getOptionValueForPlatform(2, "gambatte_dark_filter_level")
 
                         onValueChanged: function () {
-                            emulator_config_manager.setOptionValueForPlatform(2, "gambatte_dark_filter_level", value)
+                            emulator_config_manager.setOptionValueForPlatform(2, "gambatte_dark_filter_level", value);
                         }
                     }
-
                 ]
             }
-
         }
     }
 }

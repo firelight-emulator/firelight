@@ -18,8 +18,7 @@ public:
   virtual bool add(GameCapture &capture) = 0;
 
   virtual std::vector<GameCapture> listAll() = 0;
-  virtual std::vector<GameCapture>
-  listForGame(const std::string &contentHash) = 0;
+  virtual std::vector<GameCapture> listForGame(const std::string &contentHash) = 0;
   virtual std::optional<GameCapture> getById(int id) = 0;
 
   virtual bool setFavorite(int id, bool favorite) = 0;

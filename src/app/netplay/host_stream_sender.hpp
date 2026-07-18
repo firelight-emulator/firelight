@@ -12,7 +12,6 @@
 
 namespace firelight::netplay {
 
-// TODO
 // The host side of the game stream: permanently installed as the emulator's
 // netplay sink, it does nothing until armed. Armed, it encodes each frame +
 // the audio tap (H.264/Opus) and fans the packets out to every connected
@@ -29,6 +28,7 @@ public:
 
   void arm();
   void disarm();
+
   [[nodiscard]] bool armed() const { return m_armed.load(); }
 
   // The core's audio rate, from the audio tee (varies per game)
@@ -39,6 +39,7 @@ public:
 
   void pushVideoFrame(const QImage &frame, int64_t ptsMs) override;
   void pushAudio(const int16_t *data, std::size_t numFrames) override;
+
   [[nodiscard]] bool wantsFrames() const override { return m_armed.load(); }
 
 private:
@@ -63,6 +64,7 @@ private:
     IPeerLink *link = nullptr;
     bool droppingVideo = false;
   };
+
   std::mutex m_peersMutex;
   std::map<PlayerId, PeerState> m_peers;
 };

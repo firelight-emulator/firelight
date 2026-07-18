@@ -1,16 +1,12 @@
 #include "ModInfoItem.hpp"
-#include <firelight/mods/mod_repository.hpp>
 
+#include <firelight/mods/mod_repository.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
 namespace firelight::mods {
-ModInfoItem::ModInfoItem(const QObject *parent) {
-  Q_UNUSED(parent);
-}
+ModInfoItem::ModInfoItem(const QObject *parent) { Q_UNUSED(parent); }
 
-int ModInfoItem::modId() const {
-  return m_modId;
-}
+int ModInfoItem::modId() const { return m_modId; }
 
 void ModInfoItem::setModId(int modId) {
   if (m_modId == modId) {
@@ -36,10 +32,8 @@ void ModInfoItem::setModId(int modId) {
   m_targetContentHash = QString::fromStdString(mod->targetContentHash);
   emit targetContentHashChanged(m_targetContentHash);
 
-  const auto platform =
-      getPlatformService()->getPlatform(mod->platformId);
-  m_platformName =
-      QString::fromStdString(platform ? platform->name : "Unknown");
+  const auto platform = getPlatformService()->getPlatform(mod->platformId);
+  m_platformName = QString::fromStdString(platform ? platform->name : "Unknown");
   emit platformNameChanged(m_platformName);
 
   m_tagline = QString::fromStdString(mod->tagline);
@@ -60,43 +54,23 @@ void ModInfoItem::setModId(int modId) {
   emit modIdChanged(modId);
 }
 
-QString ModInfoItem::modName() const {
-  return m_modName;
-}
+QString ModInfoItem::modName() const { return m_modName; }
 
-QString ModInfoItem::version() const {
-  return m_version;
-}
+QString ModInfoItem::version() const { return m_version; }
 
-QString ModInfoItem::authorName() const {
-  return m_authorName;
-}
+QString ModInfoItem::authorName() const { return m_authorName; }
 
-QString ModInfoItem::targetGameName() const {
-  return m_targetGameName;
-}
+QString ModInfoItem::targetGameName() const { return m_targetGameName; }
 
-QString ModInfoItem::targetContentHash() const {
-  return m_targetContentHash;
-}
+QString ModInfoItem::targetContentHash() const { return m_targetContentHash; }
 
-QString ModInfoItem::platformName() const {
-  return m_platformName;
-}
+QString ModInfoItem::platformName() const { return m_platformName; }
 
-QString ModInfoItem::tagline() const {
-  return m_tagline;
-}
+QString ModInfoItem::tagline() const { return m_tagline; }
 
-QString ModInfoItem::description() const {
-  return m_description;
-}
+QString ModInfoItem::description() const { return m_description; }
 
-QString ModInfoItem::clearLogoUrl() const {
-  return m_clearLogoUrl;
-}
+QString ModInfoItem::clearLogoUrl() const { return m_clearLogoUrl; }
 
-QVariant ModInfoItem::mediaUrls() const {
-  return m_mediaUrls;
-}
-} // firelight::mods
+QVariant ModInfoItem::mediaUrls() const { return m_mediaUrls; }
+} // namespace firelight::mods

@@ -11,8 +11,7 @@ public:
 
   bool createPlaySession(PlaySession &session) override;
 
-  std::optional<PlaySession>
-  getLatestPlaySession(std::string contentHash) override;
+  std::optional<PlaySession> getLatestPlaySession(std::string contentHash) override;
 
   [[nodiscard]] QSqlDatabase getDatabase() const;
 

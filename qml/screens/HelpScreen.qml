@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // Two-column Help browser: a topic list on the left, the rendered Markdown
 // article on the right. Mirrors the Settings screen's layout. Topics are
 // declared inline; each points at a bundled qrc:/help/*.md file
@@ -13,16 +12,46 @@ Pane {
     property int currentIndex: 0
 
     readonly property var articles: [
-        {title: "Getting Started", source: "qrc:/help/getting-started.md"},
-        {title: "The Library", source: "qrc:/help/the-library.md"},
-        {title: "Playing Games", source: "qrc:/help/playing-games.md"},
-        {title: "Controllers", source: "qrc:/help/controllers.md"},
-        {title: "Achievements", source: "qrc:/help/achievements.md"},
-        {title: "Artwork & Metadata", source: "qrc:/help/artwork-and-metadata.md"},
-        {title: "Cheats", source: "qrc:/help/cheats.md"},
-        {title: "Screenshots & Clips", source: "qrc:/help/captures.md"},
-        {title: "Settings", source: "qrc:/help/settings.md"},
-        {title: "Troubleshooting", source: "qrc:/help/troubleshooting.md"}
+        {
+            title: "Getting Started",
+            source: "qrc:/help/getting-started.md"
+        },
+        {
+            title: "The Library",
+            source: "qrc:/help/the-library.md"
+        },
+        {
+            title: "Playing Games",
+            source: "qrc:/help/playing-games.md"
+        },
+        {
+            title: "Controllers",
+            source: "qrc:/help/controllers.md"
+        },
+        {
+            title: "Achievements",
+            source: "qrc:/help/achievements.md"
+        },
+        {
+            title: "Artwork & Metadata",
+            source: "qrc:/help/artwork-and-metadata.md"
+        },
+        {
+            title: "Cheats",
+            source: "qrc:/help/cheats.md"
+        },
+        {
+            title: "Screenshots & Clips",
+            source: "qrc:/help/captures.md"
+        },
+        {
+            title: "Settings",
+            source: "qrc:/help/settings.md"
+        },
+        {
+            title: "Troubleshooting",
+            source: "qrc:/help/troubleshooting.md"
+        }
     ]
 
     background: Item {}

@@ -1,20 +1,17 @@
 #include "core_configuration.hpp"
 
+#include "platform_core_defaults.hpp"
+
 #include <algorithm>
 #include <spdlog/spdlog.h>
 #include <utility>
 
-#include "platform_core_defaults.hpp"
-
-CoreConfiguration::CoreConfiguration(
-    std::string contentHash, const int platformId,
-    std::vector<firelight::settings::SettingDefinition> friendlySettings,
-    std::map<std::string, std::string> coreDefaults,
-    firelight::settings::SettingsService &settingsService)
-    : m_contentHash(std::move(contentHash)), m_platformId(platformId),
-      m_friendlySettings(std::move(friendlySettings)),
-      m_coreDefaults(std::move(coreDefaults)),
-      m_settingsService(settingsService) {}
+CoreConfiguration::CoreConfiguration(std::string contentHash, const int platformId,
+                                     std::vector<firelight::settings::SettingDefinition> friendlySettings,
+                                     std::map<std::string, std::string> coreDefaults,
+                                     firelight::settings::SettingsService &settingsService)
+    : m_contentHash(std::move(contentHash)), m_platformId(platformId), m_friendlySettings(std::move(friendlySettings)),
+      m_coreDefaults(std::move(coreDefaults)), m_settingsService(settingsService) {}
 
 void CoreConfiguration::registerOption(Option option) {
   m_options.emplace(option.key, option);
@@ -40,8 +37,7 @@ bool CoreConfiguration::anyOptionValueHasChanged() {
   return val;
 }
 
-void CoreConfiguration::setDefaultValue(const std::string &key,
-                                        const std::string &value) {
+void CoreConfiguration::setDefaultValue(const std::string &key, const std::string &value) {
   const auto opt = m_options.find(key);
   if (opt == m_options.end()) {
     return;
@@ -56,9 +52,7 @@ void CoreConfiguration::setDefaultValue(const std::string &key,
   }
 }
 
-std::optional<std::string>
-CoreConfiguration::getOptionValue(const std::string &key) {
-  // TODO
+std::optional<std::string> CoreConfiguration::getOptionValue(const std::string &key) {
   // Resolution for a core option `key` (higher wins):
   //  1. cache (currently never populated; kept as a cheap short-circuit);
   //  2. a raw user override of this exact core option (the "advanced" editor),
@@ -73,8 +67,7 @@ CoreConfiguration::getOptionValue(const std::string &key) {
   }
 
   // 2. Raw override of the exact core key ("advanced" beats "friendly")
-  if (auto raw = m_settingsService.getEffectiveValue(m_contentHash,
-                                                     m_platformId, key)) {
+  if (auto raw = m_settingsService.getEffectiveValue(m_contentHash, m_platformId, key)) {
     return raw;
   }
 
@@ -85,9 +78,7 @@ CoreConfiguration::getOptionValue(const std::string &key) {
         continue;
       }
       const auto friendlyValue =
-          m_settingsService
-              .getEffectiveValue(m_contentHash, m_platformId, setting.key)
-              .value_or(setting.defaultValue);
+          m_settingsService.getEffectiveValue(m_contentHash, m_platformId, setting.key).value_or(setting.defaultValue);
       const auto it = mapping.valueMap.find(friendlyValue);
       return it != mapping.valueMap.end() ? it->second : friendlyValue;
     }
@@ -118,17 +109,14 @@ CoreConfiguration::getOptionValue(const std::string &key) {
   return std::nullopt;
 }
 
-void CoreConfiguration::setOptionVisibility(const std::string &key,
-                                            bool visible) {}
+void CoreConfiguration::setOptionVisibility(const std::string &key, bool visible) {}
 
-void CoreConfiguration::setPlatformValue(const std::string &key,
-                                         const std::string &value) {
+void CoreConfiguration::setPlatformValue(const std::string &key, const std::string &value) {
   m_platformValues[key] = value;
   m_changedSinceLastChecked = true;
 }
 
-void CoreConfiguration::setGameValue(const std::string &key,
-                                     const std::string &value) {
+void CoreConfiguration::setGameValue(const std::string &key, const std::string &value) {
   m_gameValues[key] = value;
   m_changedSinceLastChecked = true;
 }

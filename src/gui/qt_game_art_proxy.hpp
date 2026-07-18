@@ -9,7 +9,6 @@
 #include <QUrl>
 #include <QVariantList>
 #include <QVector>
-
 #include <atomic>
 
 namespace firelight::metadata {
@@ -20,7 +19,6 @@ class SteamGridDbArtProvider;
 
 namespace firelight::gui {
 
-// TODO
 // QML bridge backing the "Change artwork" picker. Exposes, per (contentHash,
 // mediaType): the stored candidates + current selection (from the media store),
 // an async SteamGridDB search, and actions to select a stored asset, apply an
@@ -29,55 +27,46 @@ namespace firelight::gui {
 // EntryUpdatedEvent so the library tile refreshes in place
 class QtGameArtProxy final : public QObject {
   Q_OBJECT
-  Q_PROPERTY(bool providerConfigured READ providerConfigured NOTIFY
-                 providerConfiguredChanged)
+  Q_PROPERTY(bool providerConfigured READ providerConfigured NOTIFY providerConfiguredChanged)
   Q_PROPERTY(QString providerName READ providerName CONSTANT)
   Q_PROPERTY(bool searching READ searching NOTIFY searchingChanged)
-  Q_PROPERTY(QString apiKey READ apiKey WRITE setApiKey NOTIFY
-                 providerConfiguredChanged)
+  Q_PROPERTY(QString apiKey READ apiKey WRITE setApiKey NOTIFY providerConfiguredChanged)
 
 public:
-  QtGameArtProxy(metadata::MetadataService &service,
-                 metadata::SteamGridDbArtProvider &provider,
-                 metadata::IMediaAssetRepository &mediaAssets,
-                 QObject *parent = nullptr);
+  QtGameArtProxy(metadata::MetadataService &service, metadata::SteamGridDbArtProvider &provider,
+                 metadata::IMediaAssetRepository &mediaAssets, QObject *parent = nullptr);
   ~QtGameArtProxy() override;
 
   [[nodiscard]] bool providerConfigured() const;
   [[nodiscard]] QString providerName() const;
+
   [[nodiscard]] bool searching() const { return m_pendingSearches > 0; }
+
   [[nodiscard]] QString apiKey() const;
   void setApiKey(const QString &key);
 
-  // TODO
   // The stored candidates for a (game, type), newest first:
   // [{assetId, source, url, selected, width, height}]. Read on the GUI thread;
   // the media store is internally synchronized
-  Q_INVOKABLE QVariantList storedAssets(const QString &contentHash,
-                                        int mediaType);
+  Q_INVOKABLE QVariantList storedAssets(const QString &contentHash, int mediaType);
 
-  // TODO
   // Kicks off an async provider search on a worker thread. Emits
   // searchResultsReady(contentHash, mediaType) when it finishes (also on
   // failure, with an empty result set); the picker then reads searchResults()
-  Q_INVOKABLE void search(const QString &contentHash, const QString &gameName,
-                          int platformId, int mediaType);
+  Q_INVOKABLE void search(const QString &contentHash, const QString &gameName, int platformId, int mediaType);
 
   // The most-recent search results for a (game, type), index-addressable:
   // [{url, thumbUrl, externalId, width, height}]
-  Q_INVOKABLE QVariantList searchResults(const QString &contentHash,
-                                         int mediaType);
+  Q_INVOKABLE QVariantList searchResults(const QString &contentHash, int mediaType);
 
   // Makes an already-stored asset the selection for its (game, type)
   Q_INVOKABLE void selectStored(const QString &contentHash, int assetId);
 
   // Applies search-result [index] for (game, type) as a new, selected asset
-  Q_INVOKABLE void applyOnline(const QString &contentHash, int mediaType,
-                               int index);
+  Q_INVOKABLE void applyOnline(const QString &contentHash, int mediaType, int index);
 
   // Copies a local image file into the managed media dir and selects it
-  Q_INVOKABLE bool importImage(const QString &contentHash, int mediaType,
-                               const QUrl &fileUrl);
+  Q_INVOKABLE bool importImage(const QString &contentHash, int mediaType, const QUrl &fileUrl);
 
 signals:
   void providerConfiguredChanged();

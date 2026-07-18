@@ -1,6 +1,7 @@
 #pragma once
 
 #include <firelight/saves/savefile_info.hpp>
+
 #include <QAbstractListModel>
 
 namespace firelight::saves {
@@ -21,8 +22,7 @@ public:
 
   SavefileListModel();
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
-  [[nodiscard]] QVariant data(const QModelIndex &index,
-                              int role) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
   Qt::ItemFlags flags(const QModelIndex &index) const override;
   QHash<int, QByteArray> roleNames() const override;
 

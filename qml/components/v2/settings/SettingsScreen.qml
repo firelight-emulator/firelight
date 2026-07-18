@@ -10,7 +10,6 @@ FocusScope {
     // Slide direction for the content transition (down = later item selected)
     property bool movingDown: true
 
-    // TODO
     // Single source of truth for the nav taxonomy. Each item's `page` references
     // a Component id defined at the bottom of this file. Grouped equivalent of
     // FLTwoColumnMenu's parallel menuItems/routeNames/pages
@@ -21,37 +20,76 @@ FocusScope {
         {
             "title": "",
             "items": [
-                { "displayName": "Appearance", "iconName": "palette", "route": "appearance", "page": appearanceSettings },
-                { "displayName": "System", "iconName": "display", "route": "system", "page": systemSettings },
-                { "displayName": "Emulation", "iconName": "controller", "route": "emulation", "page": emulationSettings },
-                { "displayName": "Controllers", "iconName": "controller", "route": "controllers", "page": controllerSettings },
-                { "displayName": "Notifications", "iconName": "bell", "route": "notifications", "page": notificationSettings },
-                { "displayName": "Captures", "iconName": "photo-library", "route": "captures", "page": placeholderSettings },
-                { "displayName": "Achievements", "iconName": "trophy", "route": "retroachievements", "page": retroAchievementSettings },
-                { "displayName": "About", "iconName": "info", "route": "about", "page": about }
+                {
+                    "displayName": "Appearance",
+                    "iconName": "palette",
+                    "route": "appearance",
+                    "page": appearanceSettings
+                },
+                {
+                    "displayName": "System",
+                    "iconName": "display",
+                    "route": "system",
+                    "page": systemSettings
+                },
+                {
+                    "displayName": "Emulation",
+                    "iconName": "controller",
+                    "route": "emulation",
+                    "page": emulationSettings
+                },
+                {
+                    "displayName": "Controllers",
+                    "iconName": "controller",
+                    "route": "controllers",
+                    "page": controllerSettings
+                },
+                {
+                    "displayName": "Notifications",
+                    "iconName": "bell",
+                    "route": "notifications",
+                    "page": notificationSettings
+                },
+                {
+                    "displayName": "Captures",
+                    "iconName": "photo-library",
+                    "route": "captures",
+                    "page": placeholderSettings
+                },
+                {
+                    "displayName": "Achievements",
+                    "iconName": "trophy",
+                    "route": "retroachievements",
+                    "page": retroAchievementSettings
+                },
+                {
+                    "displayName": "About",
+                    "iconName": "info",
+                    "route": "about",
+                    "page": about
+                }
             ]
         }
-        // TODO
-        // {
-        //     "title": "Library",
-        //     "items": [
-        //     ]
-        // },
-        // {
-        //     "title": "Emulation",
-        //     "items": [
-        //     ]
-        // },
-        // {
-        //     "title": "RetroAchievements",
-        //     "items": [
-        //     ]
-        // },
-        // {
-        //     "title": "",
-        //     "items": [
-        //     ]
-        // }
+    // {
+    //     "title": "Library",
+    //     "items": [
+    //     ]
+    // },
+    // {
+    //     "title": "Emulation",
+    //     "items": [
+    //     ]
+    // },
+    // {
+    //     "title": "RetroAchievements",
+    //     "items": [
+    //     ]
+    // },
+    // {
+    //     "title": "",
+    //     "items": [
+    //     ]
+    // }
     ]
 
     // The currently selected item, driven by clicks and by the URL
@@ -109,7 +147,10 @@ FocusScope {
         for (var s = 0; s < sections.length; s++) {
             for (var i = 0; i < sections[s].items.length; i++) {
                 if (sections[s].items[i].route === route) {
-                    return { "item": sections[s].items[i], "flatIndex": flat };
+                    return {
+                        "item": sections[s].items[i],
+                        "flatIndex": flat
+                    };
                 }
                 flat++;
             }
@@ -223,7 +264,9 @@ FocusScope {
                     height: Math.max(AppStyle.rowHeight, resultContent.implicitHeight + topPadding + bottomPadding)
                     hoverEnabled: true
 
-                    HoverHandler { cursorShape: Qt.PointingHandCursor }
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
 
                     onClicked: root.openResult(model.route, model.key)
 
@@ -252,9 +295,7 @@ FocusScope {
                         Text {
                             Layout.fillWidth: true
                             visible: !resultDelegate.model.isPage
-                            text: resultDelegate.model.groupLabel === ""
-                                  ? resultDelegate.model.pageLabel
-                                  : resultDelegate.model.pageLabel + " › " + resultDelegate.model.groupLabel
+                            text: resultDelegate.model.groupLabel === "" ? resultDelegate.model.pageLabel : resultDelegate.model.pageLabel + " › " + resultDelegate.model.groupLabel
                             color: Theme.textMuted
                             font.family: Constants.regularFontFamily
                             font.pixelSize: AppStyle.fontSizeSmall - 2
@@ -322,7 +363,6 @@ FocusScope {
                                 delegate: LibraryNavigationMenuItem {
                                     required property var model
 
-                                    // TODO
                                     // Highlight is driven by the active route, not
                                     // by the list's own selection, so make it
                                     // non-checkable
@@ -364,11 +404,10 @@ FocusScope {
             iconName: "close"
             tooltipText: "Close"
             onClicked: {
-                Router.back()
+                Router.back();
             }
         }
 
-        // TODO
         // Settings read as a single column, capped and centred. Letting them span
         // the whole pane flings each label and its control to opposite edges with
         // dead space between. The cap scales with the UI so enlarged controls get
@@ -426,8 +465,7 @@ FocusScope {
     Component {
         id: emulationSettings
 
-        GlobalEmulationSettings {
-        }
+        GlobalEmulationSettings {}
     }
 
     Component {
@@ -439,44 +477,37 @@ FocusScope {
     Component {
         id: appearanceSettings
 
-        AppearanceSettingsPage {
-        }
+        AppearanceSettingsPage {}
     }
     Component {
         id: platformSettings
 
-        PlatformSettingsPage {
-        }
+        PlatformSettingsPage {}
     }
     Component {
         id: directorySettings
 
-        DirectorySettings {
-        }
+        DirectorySettings {}
     }
     Component {
         id: systemSettings
 
-        SystemSettingsPage {
-        }
+        SystemSettingsPage {}
     }
     Component {
         id: controllerSettings
 
-        ControllerSettings {
-        }
+        ControllerSettings {}
     }
     Component {
         id: librarySettings
 
-        LibrarySettings {
-        }
+        LibrarySettings {}
     }
     Component {
         id: notificationSettings
 
-        NotificationSettings {
-        }
+        NotificationSettings {}
     }
     Component {
         id: retroAchievementSettings
@@ -489,8 +520,7 @@ FocusScope {
     Component {
         id: debugSettings
 
-        DebugPage {
-        }
+        DebugPage {}
     }
 
     // Stand-in for nav items whose real page doesn't exist yet

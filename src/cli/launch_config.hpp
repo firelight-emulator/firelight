@@ -1,6 +1,7 @@
 #pragma once
 
 #include <firelight/input/gamepad_type.hpp>
+
 #include <optional>
 #include <string>
 #include <utility>
@@ -11,7 +12,6 @@ namespace firelight::cli {
 // A single key=value emulation-setting override parsed from the command line
 using OverridePair = std::pair<std::string, std::string>;
 
-// TODO
 // Loads bulk emulation overrides from a file for `--settings-file`. The format
 // is auto-detected from the contents: if they begin with `{` the file is parsed
 // as a JSON object (`{"key": value, ...}`; string/bool/number values are
@@ -21,7 +21,6 @@ using OverridePair = std::pair<std::string, std::string>;
 // read or is malformed
 std::vector<OverridePair> loadOverrideFile(const std::string &path);
 
-// TODO
 // Maps a friendly controller name from `--controller` (case-insensitive, e.g.
 // "xbox360", "dualshock4", "switch-pro") to a GamepadType, or nullopt if the
 // name is not recognized

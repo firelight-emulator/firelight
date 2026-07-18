@@ -1,27 +1,25 @@
-// TODO
 //
 // Created by alexs on 9/5/2025.
 //
 
 #include "game_activity_list_model.hpp"
-#include <firelight/activity/activity_log.hpp>
-#include <spdlog/spdlog.h>
-#include <firelight/library/user_library_service.hpp>
 
+#include <firelight/activity/activity_log.hpp>
+#include <firelight/library/user_library_service.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
+#include <spdlog/spdlog.h>
+
 namespace firelight::activity {
-GameActivityListModel::GameActivityListModel(QObject *parent)
-    : QAbstractListModel(parent) {
+GameActivityListModel::GameActivityListModel(QObject *parent) : QAbstractListModel(parent) {
   const auto activityLog = getActivityService();
   if (activityLog == nullptr) {
     return;
   }
 
   for (const auto &session : activityLog->getPlaySessions()) {
-    auto it = std::ranges::find_if(m_items, [&session](const Item &item) {
-      return item.contentHash == session.contentHash;
-    });
+    auto it =
+        std::ranges::find_if(m_items, [&session](const Item &item) { return item.contentHash == session.contentHash; });
 
     if (it != m_items.end()) {
       it->numSecondsPlayed += session.unpausedDurationMillis / 1000;
@@ -30,11 +28,9 @@ GameActivityListModel::GameActivityListModel(QObject *parent)
       newItem.contentHash = QString::fromStdString(session.contentHash);
       newItem.numSecondsPlayed = session.unpausedDurationMillis / 1000;
 
-      auto entry =
-          getLibraryService()->getEntryWithContentHash(session.contentHash);
+      auto entry = getLibraryService()->getEntryWithContentHash(session.contentHash);
       if (entry) {
-        auto platform = getPlatformService()->getPlatform(
-            entry->platformId);
+        auto platform = getPlatformService()->getPlatform(entry->platformId);
         if (platform) {
           newItem.platformName = QString::fromStdString(platform->name);
           newItem.platformSlug = QString::fromStdString(platform->slug);
@@ -46,8 +42,7 @@ GameActivityListModel::GameActivityListModel(QObject *parent)
         newItem.displayName = QString::fromStdString(entry->displayName);
         newItem.iconUrl1x1 = QString::fromStdString(entry->icon1x1SourceUrl);
       } else {
-        spdlog::info("Didn't find entry for content hash {}",
-                     session.contentHash);
+        spdlog::info("Didn't find entry for content hash {}", session.contentHash);
         newItem.displayName = "Unknown Game";
         newItem.platformSlug = "unknown";
         newItem.platformName = "Unknown Platform";
@@ -57,13 +52,11 @@ GameActivityListModel::GameActivityListModel(QObject *parent)
     }
   }
 
-  std::ranges::sort(m_items, [](const Item &a, const Item &b) {
-    return a.numSecondsPlayed > b.numSecondsPlayed;
-  });
+  std::ranges::sort(m_items, [](const Item &a, const Item &b) { return a.numSecondsPlayed > b.numSecondsPlayed; });
 }
-int GameActivityListModel::rowCount(const QModelIndex &parent) const {
-  return m_items.size();
-}
+
+int GameActivityListModel::rowCount(const QModelIndex &parent) const { return m_items.size(); }
+
 QVariant GameActivityListModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
     return QVariant{};
@@ -88,6 +81,7 @@ QVariant GameActivityListModel::data(const QModelIndex &index, int role) const {
     return QVariant{};
   }
 }
+
 QHash<int, QByteArray> GameActivityListModel::roleNames() const {
   QHash<int, QByteArray> roles;
   roles[DisplayName] = "displayName";

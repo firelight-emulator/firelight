@@ -23,41 +23,40 @@ FocusScope {
     signal rewindPointSelected(var index)
 
     function close() {
-        exitAnimationWithoutBackToZero.start()
+        exitAnimationWithoutBackToZero.start();
     }
 
     Keys.onEscapePressed: function (event) {
         // root.StackView.view.popCurrentItem(StackView.Immediate)
-        exitAnimation.start()
+        exitAnimation.start();
     }
 
-    Keys.onBackPressed: function(event) {
-        exitAnimation.start()
+    Keys.onBackPressed: function (event) {
+        exitAnimation.start();
     }
 
     Keys.onSpacePressed: function (event) {
         if (theList.currentIndex === 0) {
-            exitAnimation.start()
+            exitAnimation.start();
         } else {
-            rewindPointSelected(theList.currentIndex)
+            rewindPointSelected(theList.currentIndex);
         }
     }
 
     Keys.onSelectPressed: function (event) {
         if (theList.currentIndex === 0) {
-            exitAnimation.start()
+            exitAnimation.start();
         } else {
-            rewindPointSelected(theList.currentIndex)
+            rewindPointSelected(theList.currentIndex);
         }
     }
 
     StackView.onActivated: function () {
-        // TODO
         // root.openSfx.stop()
         // root.openSfx.play()
         // console.log(root.openSfx.mediaStatus)
-        sfx_player.play("rewindopen")
-        enterAnimation.start()
+        sfx_player.play("rewindopen");
+        enterAnimation.start();
     }
 
     ParallelAnimation {
@@ -105,7 +104,7 @@ FocusScope {
         }
         ScriptAction {
             script: {
-                root.StackView.view.popCurrentItem(StackView.Immediate)
+                root.StackView.view.popCurrentItem(StackView.Immediate);
             }
         }
     }
@@ -142,7 +141,7 @@ FocusScope {
         }
         ScriptAction {
             script: {
-                root.StackView.view.popCurrentItem(StackView.Immediate)
+                root.StackView.view.popCurrentItem(StackView.Immediate);
             }
         }
     }
@@ -179,13 +178,11 @@ FocusScope {
 
             onItemSelected: function (index) {
                 if (index === 0) {
-                    exitAnimation.start()
+                    exitAnimation.start();
                 } else {
-                    root.rewindPointSelected(index)
+                    root.rewindPointSelected(index);
                 }
             }
         }
-
     }
-
 }

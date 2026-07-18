@@ -1,8 +1,9 @@
 #pragma once
 
 #include "firelight/event_dispatcher.hpp"
-#include <firelight/input/input_service.hpp>
 #include "service_accessor.hpp"
+
+#include <firelight/input/input_service.hpp>
 
 #include <QAbstractListModel>
 
@@ -15,8 +16,7 @@ public:
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
 
-  [[nodiscard]] QVariant data(const QModelIndex &index,
-                              int role) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
 
   QHash<int, QByteArray> roleNames() const override;
 
@@ -37,15 +37,7 @@ private:
     QString imageUrl;
   };
 
-  enum Roles {
-    PlayerIndex = Qt::UserRole + 1,
-    Connected,
-    ProfileId,
-    ModelName,
-    ManufacturerName,
-    Wired,
-    ImageUrl
-  };
+  enum Roles { PlayerIndex = Qt::UserRole + 1, Connected, ProfileId, ModelName, ManufacturerName, Wired, ImageUrl };
 
   input::InputService *m_inputService;
   std::vector<Item> m_items;

@@ -2,18 +2,15 @@
 
 namespace firelight::gui {
 
-NetplayChatModel::NetplayChatModel(netplay::NetplayService &service,
-                                   QObject *parent)
+NetplayChatModel::NetplayChatModel(netplay::NetplayService &service, QObject *parent)
     : QAbstractListModel(parent), m_service(service) {}
 
 int NetplayChatModel::rowCount(const QModelIndex &parent) const {
   return parent.isValid() ? 0 : static_cast<int>(m_messages.size());
 }
 
-QVariant NetplayChatModel::data(const QModelIndex &index,
-                                const int role) const {
-  if (!index.isValid() || index.row() < 0 ||
-      index.row() >= static_cast<int>(m_messages.size())) {
+QVariant NetplayChatModel::data(const QModelIndex &index, const int role) const {
+  if (!index.isValid() || index.row() < 0 || index.row() >= static_cast<int>(m_messages.size())) {
     return {};
   }
   const auto &message = m_messages[index.row()];
@@ -33,10 +30,7 @@ QVariant NetplayChatModel::data(const QModelIndex &index,
 }
 
 QHash<int, QByteArray> NetplayChatModel::roleNames() const {
-  return {{SenderName, "senderName"},
-          {Text, "text"},
-          {IsSelf, "isSelf"},
-          {TimestampMs, "timestampMs"}};
+  return {{SenderName, "senderName"}, {Text, "text"}, {IsSelf, "isSelf"}, {TimestampMs, "timestampMs"}};
 }
 
 void NetplayChatModel::refresh() {

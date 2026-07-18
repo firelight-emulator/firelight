@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
 // Shows the current binding as a pill and requests a rebind when clicked. The
 // owner sets `listening` while capturing and updates `binding` when done; this
 // component is purely presentational.
@@ -12,7 +11,7 @@ BaseSettingItem {
 
     property string binding: ""
     property bool listening: false
-    signal rebindRequested()
+    signal rebindRequested
 
     onClicked: function () {
         root.rebindRequested();
@@ -29,11 +28,8 @@ BaseSettingItem {
         Text {
             id: keyText
             anchors.centerIn: parent
-            text: root.listening
-                  ? qsTr("Press a key…")
-                  : (root.binding === "" ? qsTr("Unbound") : root.binding)
-            color: root.listening ? Theme.accent
-                                   : (root.binding === "" ? Theme.textMuted : Theme.textPrimary)
+            text: root.listening ? qsTr("Press a key…") : (root.binding === "" ? qsTr("Unbound") : root.binding)
+            color: root.listening ? Theme.accent : (root.binding === "" ? Theme.textMuted : Theme.textPrimary)
             font.family: Constants.regularFontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             font.weight: Font.DemiBold

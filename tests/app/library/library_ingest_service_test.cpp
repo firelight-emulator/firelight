@@ -7,7 +7,6 @@
 
 namespace firelight::library {
 
-// TODO
 // Exercises the scan-time orchestration end to end: the ingest service subscribes
 // to the repository's domain events (published through the global EventDispatcher)
 // and turns discovered content into visible/hidden library entries. Each test gets
@@ -18,8 +17,7 @@ protected:
   SqliteUserLibraryRepository m_repo{":memory:"};
   LibraryIngestService m_ingest{m_repo};
 
-  static ContentFile makeContentFile(const std::string &path, int platformId,
-                                     const std::string &hash) {
+  static ContentFile makeContentFile(const std::string &path, int platformId, const std::string &hash) {
     ContentFile cf;
     cf.m_type = ContentType::Cartridge;
     cf.m_filePath = path;
@@ -30,8 +28,7 @@ protected:
     return cf;
   }
 
-  static int countEntriesWithHash(const std::vector<Entry> &entries,
-                                   const std::string &hash) {
+  static int countEntriesWithHash(const std::vector<Entry> &entries, const std::string &hash) {
     int n = 0;
     for (const auto &e : entries) {
       if (e.contentHash == hash) {
@@ -42,7 +39,6 @@ protected:
   }
 };
 
-// TODO
 // The realistic chain: adding a content file publishes ContentFileAddedEvent,
 // which the ingest service turns into a run configuration and, in turn, a
 // visible entry whose display name is the file's basename
@@ -71,10 +67,7 @@ TEST_F(LibraryIngestServiceTest, RunConfigForHiddenEntryUnhidesWithoutDuplicatin
 
   // A second run configuration for the same content hash arrives
   EventDispatcher::instance().publish(
-      RunConfigurationCreatedEvent{.id = 999,
-                                   .filePath = "/roms/Game.gba",
-                                   .platformId = 3,
-                                   .contentHash = "hashB"});
+      RunConfigurationCreatedEvent{.id = 999, .filePath = "/roms/Game.gba", .platformId = 3, .contentHash = "hashB"});
 
   const auto refreshed = m_repo.getEntryWithContentHash("hashB");
   ASSERT_TRUE(refreshed.has_value());
@@ -89,16 +82,12 @@ TEST_F(LibraryIngestServiceTest, RemovingLastRunConfigHidesEntry) {
   // Create an entry via a run-config event without a backing run_configurations
   // row, so getRunConfigurations() is empty for this hash
   EventDispatcher::instance().publish(
-      RunConfigurationCreatedEvent{.id = 1,
-                                   .filePath = "/roms/Solo.gba",
-                                   .platformId = 3,
-                                   .contentHash = "hashC"});
+      RunConfigurationCreatedEvent{.id = 1, .filePath = "/roms/Solo.gba", .platformId = 3, .contentHash = "hashC"});
   auto entry = m_repo.getEntryWithContentHash("hashC");
   ASSERT_TRUE(entry.has_value());
   ASSERT_FALSE(entry->hidden);
 
-  EventDispatcher::instance().publish(
-      RunConfigurationDeletedEvent{.contentHash = "hashC"});
+  EventDispatcher::instance().publish(RunConfigurationDeletedEvent{.contentHash = "hashC"});
 
   entry = m_repo.getEntryWithContentHash("hashC");
   ASSERT_TRUE(entry.has_value());
@@ -112,8 +101,7 @@ TEST_F(LibraryIngestServiceTest, DeleteEventKeepsEntryVisibleWhileRunConfigsRema
   ASSERT_TRUE(m_repo.create(cf));
   ASSERT_FALSE(m_repo.getRunConfigurations("hashD").empty());
 
-  EventDispatcher::instance().publish(
-      RunConfigurationDeletedEvent{.contentHash = "hashD"});
+  EventDispatcher::instance().publish(RunConfigurationDeletedEvent{.contentHash = "hashD"});
 
   const auto entry = m_repo.getEntryWithContentHash("hashD");
   ASSERT_TRUE(entry.has_value());
@@ -124,10 +112,7 @@ TEST_F(LibraryIngestServiceTest, DeleteEventKeepsEntryVisibleWhileRunConfigsRema
 // (guards the basename extraction's npos branch)
 TEST_F(LibraryIngestServiceTest, DisplayNameFallsBackToWholePathWithoutSlash) {
   EventDispatcher::instance().publish(
-      RunConfigurationCreatedEvent{.id = 1,
-                                   .filePath = "Game.gba",
-                                   .platformId = 3,
-                                   .contentHash = "hashE"});
+      RunConfigurationCreatedEvent{.id = 1, .filePath = "Game.gba", .platformId = 3, .contentHash = "hashE"});
   const auto entry = m_repo.getEntryWithContentHash("hashE");
   ASSERT_TRUE(entry.has_value());
   EXPECT_EQ(entry->displayName, "Game.gba");

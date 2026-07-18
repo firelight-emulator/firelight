@@ -4,6 +4,4 @@ import Firelight 1.0
 
 FocusScope {
     id: root
-
-
 }
