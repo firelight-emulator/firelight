@@ -77,9 +77,6 @@ namespace firelight::gui {
             item.category = "Platforms";
             // item.iconSourceUrl = QString::fromStdString(platform.slug);
             item.itemType = "Platform";
-            // item.platformName = QString::fromStdString(platform.name);
-            // item.platformShortName = QString::fromStdString(platform.slug);
-            // item.platformIconSourceUrl = QString::fromStdString(platform.slug);
             m_allItems.append(item);
         }
 

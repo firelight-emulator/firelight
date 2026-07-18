@@ -14,17 +14,6 @@ FocusScope {
     property alias collapsed: contentContainer.collapsed
     property bool collapsible: true
 
-    // onActiveFocusChanged: {
-    //     console.log("Called active focus changed for section " + root.title + ", activeFocus: " + activeFocus + ", contentContainer.collapsed: " + contentContainer.collapsed)
-    //     if (activeFocus && contentContainer.collapsed) {
-    //         var next = root.KeyNavigation.down
-    //         var prev = root.KeyNavigation.up
-    //         if (next) next.forceActiveFocus(Qt.TabFocusReason)
-    //         else if (prev) prev.forceActiveFocus(Qt.BacktabFocusReason)
-    //         else focus = false
-    //     }
-    // }
-
     implicitWidth: container.implicitWidth
     implicitHeight: container.implicitHeight
 

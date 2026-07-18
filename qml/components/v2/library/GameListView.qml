@@ -78,11 +78,6 @@ ListView {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 8
-        // contentItem: Rectangle {
-        //     color: "#ffffff"
-        //     radius: 4
-        //     opacity: 0.12
-        // }
 
     }
      boundsBehavior: Flickable.StopAtBounds

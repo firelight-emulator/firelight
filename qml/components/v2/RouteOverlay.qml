@@ -34,13 +34,9 @@ Popup {
         radius: 8
         border.color: Theme.border
         border.width: 1
-        // bottomRightRadius: 8
-        // bottomLeftRadius: 8
 
         layer.enabled: true
         layer.effect: MultiEffect {
-            // autoPaddingEnabled: false
-            // paddingRect: Qt.rect(-16, -16, 32, 32)
             shadowEnabled: true
             shadowColor: Theme.background
             shadowBlur: 1.0

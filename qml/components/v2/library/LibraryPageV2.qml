@@ -223,11 +223,6 @@ SplitView {
         bottomPadding: 0
         leftPadding: 0
         rightPadding: 0
-        // topPadding: 8
-        // clip: true
-
-        // padding: 0
-        //
 
         ButtonGroup {
             id: libraryButtonGroup
@@ -318,34 +313,6 @@ SplitView {
                         opacity: 0.2
                     }
                 }
-                // Rectangle {
-                //     anchors.left: folderList.left
-                //     anchors.top: folderList.top
-                //     anchors.right: folderList.right
-                //     height: 40
-                //     gradient: Gradient {
-                //         orientation: Gradient.Vertical
-                //         GradientStop {
-                //             position: 0.0; color: Theme.surface
-                //         }
-                //         GradientStop {
-                //             position: 1.0; color: "transparent"
-                //         }
-                //     }
-                //     z: 5
-                //     opacity: folderList.contentY > 16 ? 1 : 0
-                //     Behavior on opacity {
-                //         NumberAnimation {
-                //             duration: 160
-                //             easing.type: Easing.InOutQuad
-                //         }
-                //     }
-                //     // contentItem: Rectangle {
-                //     //     color: "#ffffff"
-                //     //     radius: 4
-                //     //     opacity: 0.12
-                //     // }
-                // }
 
                 Flickable {
                     id: folderList
@@ -676,8 +643,6 @@ SplitView {
             color: Theme.glassElevated
             topRightRadius: 8
             bottomRightRadius: 8
-            // topRightRadius: detailsPanel.width > 0 ? 0 : 8
-            // bottomRightRadius: detailsPanel.width > 0 ? 0 : 8
         }
 
         contentItem: GameView {
@@ -685,23 +650,4 @@ SplitView {
         }
     }
 
-    // Pane {
-    //     id: detailsPanel
-    //
-    //     SplitView.fillHeight: true
-    //     SplitView.fillWidth: true
-    //
-    //     onWidthChanged: {
-    //         console.log("Details panel width: " + width)
-    //     }
-    //
-    //     padding: 8
-    //     clip: true
-    //
-    //     background: Rectangle {
-    //         color: Theme.glassElevated
-    //         topRightRadius: 8
-    //         bottomRightRadius: 8
-    //     }
-    // }
 }

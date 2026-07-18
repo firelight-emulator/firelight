@@ -125,17 +125,6 @@ Button {
             size: Math.round(20 * AppStyle.scale)
             color: control.iconColor
         }
-        // VectorImage {
-        //     Layout.preferredWidth: height
-        //     Layout.fillHeight: true
-        //     visible: !parent.iconIsGlyph
-        //     source: control.iconSource
-        //     fillMode: Image.PreserveAspectFit
-        //     smooth: true
-        //     preferredRendererType: VectorImage.CurveRenderer
-        // }
-        // Fills the row and elides: a long platform name ("Genesis/Mega Drive")
-        // shrinks with "…" instead of shoving the count off the clipped edge.
         Text {
             Layout.leftMargin: AppStyle.spacingSm
             Layout.fillWidth: true

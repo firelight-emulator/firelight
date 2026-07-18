@@ -58,15 +58,6 @@ Button {
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
         }
-        // RowLayout {
-        //     Layout.fillWidth: true
-        //
-        //     Item {
-        //         Layout.fillWidth: true
-        //         Layout.fillHeight: true
-        //     }
-        //
-        // }
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true

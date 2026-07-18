@@ -41,14 +41,6 @@ Slider {
                 y: parent.height / 2 - (height / 2)
                 color: Theme.border
 
-                // Rectangle {
-                //     height: 24
-                //     color: "grey"
-                //     width: 2
-                //     x: -(width / 2)
-                //     y: -height / 2 + (parent.height / 2)
-                // }
-
                 Repeater {
                     model: control.numIntervals + 1
                     delegate: Rectangle {
@@ -63,15 +55,6 @@ Slider {
                     }
                 }
 
-
-                // Rectangle {
-                //     height: 24
-                //     color: "grey"
-                //     width: 2
-                //     x: control.availableWidth / 3 - (width / 2)
-                //     y: -height / 2 + (parent.height / 2)
-                // }
-
                 Rectangle {
                     color: Theme.accent
                     height: parent.height
@@ -80,22 +63,11 @@ Slider {
             }
         }
 
-        // Rectangle {
-        //     height: 24
-        //     color: "grey"
-        //     width: 2
-        //     x: control.widthDiff / 2 - (width / 2)
-        //     y: -height / 2 + (parent.height / 2)
-        // }
-
         Item {
             anchors.top: bar.bottom
             anchors.right: parent.right
             anchors.left: parent.left
             anchors.bottom: parent.bottom
-            // height: parent.height / 3
-            // y: parent.height * 2 / 3
-            // x: control.widthDiff / 2
 
             Repeater {
                 model: control.numIntervals + 1
@@ -110,60 +82,8 @@ Slider {
                     x: (control.widthDiff / 2) + (index) * (control.availableWidth / control.numIntervals) - (width / 2)
                 }
 
-                //     Rectangle {
-                //     required property var index
-                //     // required property var model
-                //
-                //     height: control.intervalMarkerHeight
-                //     color: "grey"
-                //     width: control.intervalMarkerWidth
-                //     x: (index + 1) * (control.availableWidth / control.numIntervals) - (width / 2)
-                //     y: -height / 2 + (parent.height / 2)
-                // }
             }
         }
 
-
-        // Rectangle {
-        //     height: 24
-        //     color: "grey"
-        //     width: 2
-        //     x: control.availableWidth / 3 - (width / 2)
-        //     y: -height / 2 + (parent.height / 2)
-        // }
-
-        // Item {
-        //     width: parent.width
-        //     height: parent.height / 3
-        //     y: parent.height * 2 / 3
-        //
-        //     Text {
-        //         text: "None"
-        //         font.pointSize: 8
-        //         color: "white"
-        //         x: -(width / 2)
-        //     }
-        //
-        //     Text {
-        //         text: "Light"
-        //         font.pointSize: 8
-        //         color: "white"
-        //         x: control.availableWidth / 3 - (width / 2)
-        //     }
-        //
-        //     Text {
-        //         text: "Compatible"
-        //         font.pointSize: 8
-        //         color: "white"
-        //         x: control.availableWidth * 2 / 3 - (width / 2)
-        //     }
-        //
-        //     Text {
-        //         text: "Max"
-        //         font.pointSize: 8
-        //         color: "white"
-        //         x: control.availableWidth - (width / 2)
-        //     }
-        // }
     }
 }

@@ -28,17 +28,6 @@ FocusScope {
             font.weight: Font.DemiBold
             verticalAlignment: Text.AlignVCenter
         }
-        // Text {
-        //     Layout.fillWidth: true
-        //     // visible: root.description !== ""
-        //     text: root.description
-        //     font.pixelSize: 13
-        //     Layout.alignment: Qt.AlignLeft
-        //     font.family: Constants.regularFontFamily
-        //     // font.weight: Font.
-        //     wrapMode: Text.WordWrap
-        //     color: ColorPalette.neutral300
-        // }
 
         Repeater {
             model: root.model
@@ -50,9 +39,6 @@ FocusScope {
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 60
-                // checked: true
-                // Layout.fillWidth: true
-                // Layout.preferredHeight: 60
 
                 background: Rectangle {
                     radius: 8
@@ -108,6 +94,5 @@ FocusScope {
             }
         }
     }
-
 
 }

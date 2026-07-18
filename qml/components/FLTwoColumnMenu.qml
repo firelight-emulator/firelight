@@ -37,10 +37,6 @@ FocusScope {
             property bool movingDown: true
 
             visible: SwipeView.isCurrentItem
-            // KeyNavigation.right: stack
-            // anchors.bottom: parent.bottom
-            // anchors.left: parent.left
-            // anchors.top: parent.top
             currentIndex: root.currentIndex
             focus: true
             interactive: false
@@ -88,18 +84,6 @@ FocusScope {
             }
             //
 
-            // Keys.onBackPressed: {
-            //     menu.forceActiveFocus();
-            // }
-            // Keys.onEscapePressed: {
-            //     menu.forceActiveFocus();
-            // }
-
-            //
-            // anchors.bottom: parent.bottom
-            // anchors.left: menu.right
-            // anchors.right: parent.right
-            // anchors.top: parent.top
             Keys.onEscapePressed: {
                 portraitContent.decrementCurrentIndex();
             }

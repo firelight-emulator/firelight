@@ -7,11 +7,6 @@ Item {
     ColumnLayout {
         spacing: 8
         anchors.fill: parent
-        // ComboBoxOption {
-        //     Layout.fillWidth: true
-        //     Layout.preferredHeight: 60
-        //     label: "Window Mode?"
-        // }
 
         Text {
             // Layout.topMargin: 30
@@ -71,18 +66,6 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    // Text {
-                    //     Layout.fillHeight: true
-                    //     Layout.fillWidth: true
-                    //     // height: parent.height / 2
-                    //     text: "Contains 0 games"
-                    //     color: "#c1c1c1"
-                    //     wrapMode: Text.WordWrap
-                    //     font.pointSize: 10
-                    //     font.family: Constants.regularFontFamily
-                    //     verticalAlignment: Text.AlignTop
-                    //     horizontalAlignment: Text.AlignLeft
-                    // }
 
                     Item {
                         Layout.fillHeight: true
@@ -125,29 +108,6 @@ Item {
                         }
                     }
 
-                    // Button {
-                    //     id: but
-                    //     Layout.fillHeight: true
-                    //     Layout.preferredWidth: 100
-                    //
-                    //     // onHeightChanged: function() {
-                    //     //     width = height
-                    //     // }
-                    //
-                    //     contentItem: Text {
-                    //         text: "Remove"
-                    //         font.family: Constants.regularFontFamily
-                    //         font.pointSize: 10
-                    //         font.weight: Font.DemiBold
-                    //         horizontalAlignment: Text.AlignHCenter
-                    //         verticalAlignment: Text.AlignVCenter
-                    //         color: "white"
-                    //     }
-                    //     background: Rectangle {
-                    //         color: "#c60e0e"
-                    //         radius: 4
-                    //     }
-                    // }
                 }
 
                 Rectangle {

@@ -35,8 +35,6 @@ Pane {
             maskSource: theMask3
             maskThresholdMin: 0.5
                 maskSpreadAtMin: 1.0
-            // maskInverted: true
-            // paddingRect: Qt.rect(-2, -2, -2, -2)
             autoPaddingEnabled: false
             anchors.fill: parent
             blurEnabled: true
@@ -56,7 +54,6 @@ Pane {
             anchors.fill: parent
             color: "transparent"
             opacity: 0.14
-
 
             border.width: 1
             border.color: "white"

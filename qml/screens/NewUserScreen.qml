@@ -354,17 +354,6 @@ FocusScope {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-                // Text {
-                //     text: "Thanks for using Firelight. It means a lot to me! - BiscuitCakes"
-                //     Layout.topMargin: 36
-                //     Layout.alignment: Qt.AlignHCenter
-                //     color: ColorPalette.neutral400
-                //     font.pixelSize: 18
-                //     font.weight: Font.Normal
-                //     font.family: Constants.regularFontFamily
-                //     horizontalAlignment: Text.AlignHCenter
-                //     verticalAlignment: Text.AlignVCenter
-                // }
 
                 FirelightButton {
                     Layout.topMargin: 48
@@ -385,7 +374,6 @@ FocusScope {
         }
     }
 
-
     StackView {
         id: contentStack
         anchors.top: headerBar.bottom
@@ -393,9 +381,6 @@ FocusScope {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.left: parent.left
-        // width: Math.max(1200, width)
-        // anchors.horizontalCenter: parent.horizontalCenter
-        // width: 1200
         anchors.topMargin: 12
         anchors.leftMargin: Math.max(Math.max(parent.width - 1200, 0) / 2, 60)
         anchors.rightMargin: Math.max(Math.max(parent.width - 1200, 0) / 2, 60)
@@ -409,7 +394,6 @@ FocusScope {
         //
         objectName: "Home Content Stack View"
         // anchors.fill: parent
-
 
         initialItem: welcomePage
 
@@ -457,13 +441,6 @@ FocusScope {
                 duration: 250
                 easing.type: Easing.InOutQuad
             }
-            // NumberAnimation {
-            //     property: "x"
-            //     from: 30 * (root.movingRight ? 1 : -1)
-            //     to: 0
-            //     duration: 200
-            //     easing.type: Easing.InOutQuad
-            // }
         }
         replaceExit: Transition {
             NumberAnimation {
@@ -473,13 +450,6 @@ FocusScope {
                 duration: 100
                 easing.type: Easing.InOutQuad
             }
-            // NumberAnimation {
-            //     property: "x"
-            //     from: 0;
-            //     to: 30 * (root.movingRight ? -1 : 1)
-            //     duration: 200
-            //     easing.type: Easing.InOutQuad
-            // }
         }
     }
 

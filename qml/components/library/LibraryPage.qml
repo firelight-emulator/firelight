@@ -262,21 +262,6 @@ Pane {
                    textRole: "text"
                    valueRole: "sortRole"
                }
-                // BusyIndicator {
-                //     Layout.preferredHeight: 40
-                //     running: LibraryScanner.scanning
-                //     palette.dark: "white"
-                // }
-                // Text {
-                //     text: LibraryScanner.scanning ? "Scanning..." : ""
-                //     font.pixelSize: 18
-                //     font.family: Constants.regularFontFamily
-                //     font.weight: Font.Medium
-                //     color: "white"
-                //     Layout.rightMargin: 16
-                //     horizontalAlignment: Text.AlignRight
-                //     verticalAlignment: Text.AlignVCenter
-                // }
             }
 
             Rectangle {
@@ -285,7 +270,6 @@ Pane {
                 color: "#4B4B4B"
             }
         }
-
 
         ListView {
             id: theList

@@ -9,8 +9,6 @@ struct AwardAchievementResponse {
   unsigned SoftcoreScore;
   unsigned AchievementID;
   unsigned AchievementsRemaining;
-  // const char* server_response =
-  // "{\"Success\":true,\"Score\":119102,\"SoftcoreScore\":777,\"AchievementID\":56481,\"AchievementsRemaining\":11}";
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AwardAchievementResponse, Success, Score,

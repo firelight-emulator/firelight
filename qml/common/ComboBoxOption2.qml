@@ -14,9 +14,6 @@ Button {
     horizontalPadding: 12
     verticalPadding: 12
 
-    // implicitHeight: Math.max(72, theColumn.)
-    // hoverEnabled: true
-
     background: Rectangle {
         color: "white"
         radius: 2

@@ -76,11 +76,6 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: 8
-            // contentItem: Rectangle {
-            //     color: "#ffffff"
-            //     radius: 4
-            //     opacity: 0.12
-            // }
 
         }
          boundsBehavior: Flickable.StopAtBounds
@@ -258,29 +253,6 @@ Item {
                 }
             }
         }
-
-
-        // Column {
-        //     width: root.cellWidth
-        //     height: root.cellHeight
-        //
-        //     Rectangle {
-        //         color: "red"
-        //         width: parent.width - 20
-        //         height: parent.height - 20
-        //         anchors.horizontalCenter: parent.horizontalCenter
-        //     }
-        //     Text {
-        //         text: model.displayName
-        //         font.pixelSize: 14
-        //         horizontalAlignment: Text.AlignHCenter
-        //         verticalAlignment: Text.AlignVCenter
-        //         width: parent.width - 20
-        //         anchors.horizontalCenter: parent.horizontalCenter
-        //         height: 20
-        //     }
-        // }
-
 
      }
  }

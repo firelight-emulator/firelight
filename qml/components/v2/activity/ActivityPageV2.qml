@@ -64,7 +64,6 @@ Pane {
 
                             }
 
-
                         }
 
                         Item {
@@ -256,13 +255,9 @@ Pane {
                                                 radius: 4
                                                 border.color: Theme.border
                                                 border.width: 1
-                                                // bottomRightRadius: 8
-                                                // bottomLeftRadius: 8
 
                                                 layer.enabled: true
                                                 layer.effect: MultiEffect {
-                                                    // autoPaddingEnabled: false
-                                                    // paddingRect: Qt.rect(-16, -16, 32, 32)
                                                     shadowEnabled: true
                                                     shadowColor: Theme.background
                                                     shadowBlur: 1.0
@@ -402,38 +397,6 @@ Pane {
                                                     // height: modelData.percentPlayed * hourItem.barHeight
                                                     color: Qt.hsla(index * 0.3, 0.7, 0.5, 1)
 
-                                                    //
-                                                    // Pane {
-                                                    //     x: gameHoverHandler.point.position.x + 20
-                                                    //     y: gameHoverHandler.point.position.y
-                                                    //     z: 1000
-                                                    //     height: 50
-                                                    //     visible: gameHoverHandler.hovered
-                                                    //     padding: 6
-                                                    //
-                                                    //     background: Rectangle {
-                                                    //         color: Qt.lighter("#12131A", 1.4)
-                                                    //         radius: 4
-                                                    //         border.color: Qt.lighter("#12131A", 2)
-                                                    //         border.width: 1
-                                                    //         // bottomRightRadius: 8
-                                                    //         // bottomLeftRadius: 8
-                                                    //
-                                                    //         layer.enabled: true
-                                                    //         layer.effect: MultiEffect {
-                                                    //             // autoPaddingEnabled: false
-                                                    //             // paddingRect: Qt.rect(-16, -16, 32, 32)
-                                                    //             shadowEnabled: true
-                                                    //             shadowColor: Qt.darker("#12131A", 2)
-                                                    //             shadowBlur: 1.0
-                                                    //             shadowVerticalOffset: 4.0
-                                                    //             shadowHorizontalOffset: 4.0
-                                                    //         }
-                                                    //     }
-                                                    //
-                                                    //
-                                                    // }
-
                                                     HoverHandler {
                                                         id: gameHoverHandler
                                                         blocking: true
@@ -447,9 +410,6 @@ Pane {
                         }
 
                     }
-
-
-
 
                 }
                 Pane {
@@ -526,10 +486,5 @@ Pane {
 
         }
     }
-
-
-
-
-
 
 }

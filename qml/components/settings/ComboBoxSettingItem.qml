@@ -14,12 +14,5 @@ BaseSettingItem {
     control: MyComboBox {
           id: comboBox
           focusPolicy: Qt.NoFocus
-          // Component.onCompleted: {
-          //     baseItem.onActiveFocusChanged.connect(function() {
-          //         if (comboBox.popup.visible && !comboBox.popup.activeFocus) {
-          //                comboBox.popup.close()
-          //         }
-          //     })
-          // }
       }
 }

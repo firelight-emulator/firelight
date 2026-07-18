@@ -105,33 +105,6 @@ FirelightDialog {
             mappingAdded(root.shortcut, modifiers, event.key);
             root.accept()
 
-            // if (input === 12 || input === 13) { // GamepadInput enum
-            //     // Ignore Left Trigger and Right Trigger
-            //     return;
-            // }
-            // if (activated) {
-            //     let modifiers = [];
-            //     if (gamepad.isButtonPressed(12)) {
-            //         modifiers.push(12);
-            //     }
-            //     if (gamepad.isButtonPressed(13)) {
-            //         modifiers.push(13);
-            //     }
-            //
-            //     console.log("Modifiers: " + modifiers)
-            //     mappingAdded(root.shortcut, modifiers, input);
-            //     root.accept()
-            //     // root.mappingAdded(root.buttons[root.currentIndex].retropad_button, input)
-            //     // if (root.buttons.length > root.currentIndex + 1) {
-            //     //     root.currentIndex++
-            //     //     timer.stop()
-            //     //     frameAnimation.reset()
-            //     //     timer.restart()
-            //     // } else {
-            //     //     root.accept()
-            //     // }
-            // }
-
             // root.mappingAdded(root.buttons[root.currentIndex].retropad_button, event.key)
         }
 
@@ -193,7 +166,6 @@ FirelightDialog {
             Layout.preferredHeight: 10
             color: "green"
         }
-
 
     }
 

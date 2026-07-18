@@ -65,25 +65,12 @@ Pane {
             Layout.horizontalStretchFactor: 1
         }
 
-        // Label {
-        //     Layout.fillHeight: true
-        //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-        //
-        //     text: label
-        //     font.pointSize: 12
-        //     color: Constants.colorTestTextActive
-        //     font.family: Constants.regularFontFamily
-        //     horizontalAlignment: Text.AlignLeft
-        //     verticalAlignment: Text.AlignVCenter
-        // }
-
         Loader {
             // Layout.fillHeight: true
             Layout.alignment: Qt.AlignRight | Qt.AlignTop
 
             sourceComponent: control
         }
-
 
     }
 }

@@ -100,8 +100,6 @@ FocusScope {
                         id: colorCorrectionOption
                         Layout.fillWidth: true
                         label: "Adjust output colors to match original hardware"
-                        // label: "Color correction"
-                        // description: "Make the screen colors more accurate to the original hardware."
 
                         checked: emulator_config_manager.getOptionValueForPlatform(2, "gambatte_gbc_color_correction") === "GBC only"
 
@@ -179,10 +177,8 @@ FocusScope {
                         }
                     }
 
-
                 ]
             }
-
 
         }
     }

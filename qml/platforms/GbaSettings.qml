@@ -70,17 +70,6 @@ FocusScope {
                 label: "General"
 
                 content: [
-                    // ToggleOption {
-                    //     Layout.fillWidth: true
-                    //     label: "Allow opposing D-Pad directions"
-                    //     description: "Enabling this will allow pressing / quickly alternating / holding both left and right (or up and down) directions at the same time. This may cause movement-based glitches."
-                    // },
-                    //
-                    // Rectangle {
-                    //     Layout.fillWidth: true
-                    //     Layout.preferredHeight: 1
-                    //     color: "#333333"
-                    // },
 
                     ToggleOption {
                         Layout.fillWidth: true
@@ -126,30 +115,6 @@ FocusScope {
                         color: "#333333"
                     },
 
-                    // ToggleOption {
-                    //     Layout.fillWidth: true
-                    //     label: "Game Boy Player Rumble (Restart)"
-                    //     description: "Enabling this will allow compatible games with the Game Boy Player boot logo to make the controller rumble. Due to how Nintendo decided this feature should work, it may cause glitches such as flickering or lag in some of these games."
-                    // },
-                    //
-                    // Rectangle {
-                    //     Layout.fillWidth: true
-                    //     Layout.preferredHeight: 1
-                    //     color: "#333333"
-                    // },
-
-                    // ToggleOption {
-                    //     Layout.fillWidth: true
-                    //     label: "Idle Loop Optimization"
-                    //     description: "Reduce system load by optimizing so-called 'idle-loops' - sections in the code where nothing happens, but the CPU runs at full speed (like a car revving in neutral). Improves performance, and should be enabled on low-end hardware."
-                    // },
-                    //
-                    // Rectangle {
-                    //     Layout.fillWidth: true
-                    //     Layout.preferredHeight: 1
-                    //     color: "#333333"
-                    // },
-
                     ToggleOption {
                         Layout.fillWidth: true
                         label: "Simulate LCD ghosting effects"
@@ -194,17 +159,6 @@ FocusScope {
                         }
                     }
 
-                    // Rectangle {
-                    //     Layout.fillWidth: true
-                    //     Layout.preferredHeight: 1
-                    //     color: "#333333"
-                    // },
-                    //
-                    // ToggleOption {
-                    //     Layout.fillWidth: true
-                    //     label: "Use BIOS"
-                    //     description: "Use official BIOS/bootloader for emulated hardware, if present in RetroArch's system directory."
-                    // }
                 ]
             }
         }

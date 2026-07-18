@@ -20,40 +20,6 @@ void ModInfoItem::setModId(int modId) {
   m_modId = modId;
 
   auto mod = getModRepository()->getModInfo(modId);
-  // if (!mod) {
-  //   m_modName = "";
-  //   emit modNameChanged(m_modName);
-  //
-  //   m_version = "";
-  //   emit versionChanged(m_version);
-  //
-  //   m_authorName = "";
-  //   emit authorNameChanged(m_authorName);
-  //
-  //   m_targetGameName = "";
-  //   emit targetGameNameChanged(m_targetGameName);
-  //
-  //   m_targetContentHash = "";
-  //   emit targetContentHashChanged(m_targetContentHash);
-  //
-  //   m_platformName = "";
-  //   emit platformNameChanged(m_platformName);
-  //
-  //   m_tagline = "";
-  //   emit taglineChanged(m_tagline);
-  //
-  //   m_description = "";
-  //   emit descriptionChanged(m_description);
-  //
-  //   m_clearLogoUrl = "";
-  //   emit clearLogoUrlChanged(m_clearLogoUrl);
-  //
-  //   m_mediaUrls = QVariant();
-  //   emit mediaUrlsChanged(m_mediaUrls);
-  //
-  //   emit modIdChanged(modId);
-  //   return;
-  // }
 
   m_modName = QString::fromStdString(mod->name);
   emit modNameChanged(m_modName);

@@ -89,8 +89,6 @@ protected:
     waitForScanIdle(scanner);
   }
 
-  // Registers the temp dir as a content directory and returns a scanner over it,
-  // for tests that need to drive the scanner across multiple scans.
   std::unique_ptr<LibraryScanner2> makeScanner() {
     ContentDirectory dir;
     dir.path = tempDir.path().toStdString();

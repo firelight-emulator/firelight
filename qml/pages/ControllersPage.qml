@@ -29,7 +29,6 @@ FocusScope {
                 anchors.fill: parent
                 KeyNavigation.down: root.keyboardDragging ? myButton : editProfileButton.visible ? editProfileButton : null
 
-
                 z: -1
                 focus: true
                 property bool showGlobalCursor: true
@@ -108,8 +107,6 @@ FocusScope {
                 }
             }
 
-
-
             Shape {
                 id: rightArrow
                 visible: root.keyboardDragging && listThing.currentIndex < 3 && content.ListView.isCurrentItem
@@ -147,11 +144,6 @@ FocusScope {
             Drag.hotSpot.x: width / 2
             Drag.hotSpot.y: height / 2
             Drag.keys: ["controller-reorder"]
-
-            // GamepadStatus {
-            //     id: status
-            //     playerNumber: index + 1
-            // }
 
             Image {
                 id: controllerIcon
@@ -207,10 +199,6 @@ FocusScope {
                 height: 16
             }
 
-            // Text {
-            //     text: model.model_name
-            // }
-
             NumberAnimation {
                 id: moveAnimation
                 target: content
@@ -251,45 +239,11 @@ FocusScope {
                     }
                 }
             }
-            // SequentialAnimation {
-            //     id: theAnimation
-            //
-            //     property var thingy
-            //
-            //     ParallelAnimation {
-            //         NumberAnimation {
-            //             id: xAnim
-            //             target: content
-            //             property: "x"
-            //             to: content.dragEnd.x
-            //             duration: 200
-            //             easing.type: Easing.InOutQuad
-            //         }
-            //         NumberAnimation {
-            //             id: yAnim
-            //             target: content
-            //             property: "y"
-            //             to: content.dragEnd.y
-            //             duration: 200
-            //             easing.type: Easing.InOutQuad
-            //         }
-            //     }
-            //     ScriptAction {
-            //         script: function () {
-            //             controller_manager.updateControllerOrder(thingy)
-            //         }
-            //     }
-            // }
-
 
             DropArea {
                 width: parent.width / 2 - 2
                 height: parent.height
                 anchors.left: parent.left
-                // anchors {
-                //     fill: parent
-                //     margins: 30
-                // }
 
                 onEntered: (drag) => {
                     drag.source.dragEnd = Qt.point(content.x, content.y)
@@ -306,10 +260,6 @@ FocusScope {
                 width: parent.width / 2 - 2
                 height: parent.height
                 anchors.right: parent.right
-                // anchors {
-                //     fill: parent
-                //     margins: 30
-                // }
 
                 onEntered: (drag) => {
                     drag.source.dragEnd = Qt.point(content.x, content.y)
@@ -323,39 +273,6 @@ FocusScope {
             }
         }
 
-
-        // MouseArea {
-        //     id: dragArea
-        //
-        //     property bool held: false
-        //
-        //     drag.target: held ? content : undefined
-        //     drag.axis: Drag.YAxis
-        //
-        //     onPressAndHold: held = true
-        //     onReleased: held = false
-        //
-        //     Rectangle {
-        //         id: content
-        //         anchors.fill: parent
-        //         Drag.active: dragArea.held
-        //         Drag.source: dragArea
-        //         Drag.hotSpot.x: width / 2
-        //         Drag.hotSpot.y: height / 2
-        //     }
-        //     DropArea {
-        //         anchors {
-        //             fill: parent
-        //             margins: 10
-        //         }
-        //
-        //         onEntered: (drag) => {
-        //             visualModel.items.move(
-        //                 drag.source.DelegateModel.itemsIndex,
-        //                 dragArea.DelegateModel.itemsIndex)
-        //         }
-        //     }
-        // }
     }
 
     DelegateModel {
@@ -381,15 +298,6 @@ FocusScope {
             Layout.maximumWidth: 1200
             Layout.preferredWidth: parent.width * 3 / 4
             Layout.fillHeight: true
-
-            // Text {
-            //     text: "Controllers"
-            //     color: "white"
-            //     font.pointSize: 24
-            //     font.family: Constants.regularFontFamily
-            //     horizontalAlignment: Text.AlignLeft
-            //     verticalAlignment: Text.AlignVCenter
-            // }
 
             RowLayout {
                 Layout.fillWidth: true
@@ -491,39 +399,11 @@ FocusScope {
             }
         }
 
-
         Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.horizontalStretchFactor: 1
         }
     }
-
-    // FirelightDialog {
-    //     id: profileDialog
-    //
-    //     width: Overlay.overlay.width * 0.9
-    //     height: Overlay.overlay.height * 0.9
-    //
-    //     headerText: "Edit controller profile"
-    //     acceptText: "Done"
-    //     showCancel: false
-    //     centerButtons: false
-    //
-    //     onAboutToShow: function() {
-    //         loader.active = true
-    //     }
-    //
-    //     onClosed: function() {
-    //         loader.active = false
-    //     }
-    //
-    //     contentItem: Loader {
-    //         id: loader
-    //         active: false
-    //         sourceComponent: profilePage
-    //     }
-    // }
-
 
 }

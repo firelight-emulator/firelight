@@ -129,9 +129,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     static int64_t rollingSumOfSignedDifferencesNs = 0;
     static int64_t rollingSumOfAbsoluteDifferencesNs = 0;
 
-    // auto osTimerWakeupTimeNs =
-    // std::chrono::high_resolution_clock::now().time_since_epoch().count();
-
     if (previousFrameActualEndTimeNs == 0) {
       // First call, or after a reset. Perform work and set the baseline.
       // CALL YOUR FRAME UPDATE/WORK FUNCTION HERE (e.g.,
@@ -183,11 +180,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
     if (achievedFrameDurationNs <= 0 ||
         achievedFrameDurationNs > (actualTargetNs * 5)) {
-      // spdlog::warn(
-      //     "Anomalous achieved frame duration: {} ns. Skipping this sample.",
-      //     achievedFrameDurationNs);
-      // TODO: Consider resetting timingCorrectionNs if this happens often, or
-      // if the pause was very long timingCorrectionNs = 0;
       return;
     }
 
@@ -221,13 +213,6 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
           currentSamplesInWindow;
       double averageSignedDifferenceFraction =
           averageSignedDifferenceNs / static_cast<double>(actualTargetNs);
-
-      // spdlog::info("Rolling Perf (last {} samples, Target: {:.1f}ms): "
-      //              "SignedDev: {:.0f}ns ({:.2f}%), AbsDev: {:.0f}ns",
-      //              currentSamplesInWindow, actualTargetNs / 1.0e6,
-      //              averageSignedDifferenceNs,
-      //              averageSignedDifferenceFraction * 100.0,
-      //              averageAbsoluteDifferenceNs);
 
       if (currentSamplesInWindow >
           windowSize / 2) { // Wait for some stability in average

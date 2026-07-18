@@ -458,10 +458,6 @@ namespace firelight::emulation {
       return std::async(std::launch::deferred, [] { return false; });
     }
     saves::Savefile saveData(m_core->getMemoryData(::libretro::SAVE_RAM));
-    // if (!m_currentImage.isNull() && m_currentImage.width() > 0 &&
-    //     m_currentImage.height() > 0) {
-    //   saveData.setImage(m_currentImage.copy());
-    // }
     return m_context.saveManager->writeSaveData(m_contentHash.data(),
                                                 m_saveSlotNumber, saveData);
   }

@@ -30,11 +30,6 @@ namespace libretro {
     msg[std::remove(msg, msg + strlen(msg), '\n') - msg] = 0;
     msg[std::remove(msg, msg + strlen(msg), '\r') - msg] = 0;
 
-    // mGBA likes to spam the logs... though I could probably check the level.
-    // if (strncmp(msg, "GBA DMA", 7) == 0) {
-    //   return;
-    // }
-
     if (level == RETRO_LOG_INFO) {
       spdlog::info("[Core] {}", msg);
     } else if (level == RETRO_LOG_DEBUG) {
@@ -72,7 +67,6 @@ namespace libretro {
     }
     return g_ctx->core->handleEnvironmentCall(cmd, data);
   }
-
 
   template<typename T>
   static T loadRetroFunc(void *dll, const char *name) {
@@ -161,9 +155,6 @@ namespace libretro {
     info.size = game->getSize();
     info.meta = "";
 
-    // spdlog::warn("Path before c_str: {}", game->getPath());
-    // spdlog::warn("Path after c_str: {}", string(info.path));
-    // TODO: meta?
     auto result = m_dll->loadGame(&info);
 
     m_dll->getSystemAVInfo(retroSystemAVInfo);

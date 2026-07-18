@@ -64,17 +64,6 @@ Dialog {
         border.width: 1
     }
 
-    // header: Text {
-    //     text: "Closing game"
-    //     font.family: Constants.regularFontFamily
-    //     font.pixelSize: 20
-    //     padding: 24
-    //     font.weight: Font.ExtraLight
-    //     color: "white"
-    //     horizontalAlignment: Text.AlignLeft
-    //     verticalAlignment: Text.AlignVCenter
-    // }
-
     contentItem: Text {
         // anchors.centerIn: parent
         color: "white"

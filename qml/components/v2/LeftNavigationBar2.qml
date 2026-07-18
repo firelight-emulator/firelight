@@ -8,16 +8,6 @@ FocusScope {
         anchors.fill: parent
         spacing: 0
 
-        // Image {
-        //     source: "qrc:/images/firelight-logo-white"
-        //     Layout.preferredWidth: 28
-        //     sourceSize.width: width
-        //     sourceSize.height: width
-        //     Layout.alignment: Qt.AlignHCenter
-        //     Layout.bottomMargin: 12
-        //     Layout.topMargin: 8
-        // }
-
         LibraryNavigationMenuItem {
             iconSource: "qrc:/icons/home"
             displayText: "Home"

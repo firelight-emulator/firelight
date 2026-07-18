@@ -52,9 +52,6 @@ FocusScope {
 
         clip: true
         orientation: ListView.Horizontal
-        // Layout.fillWidth: true
-        // Layout.preferredHeight: 80
-        // model: 10
         delegate: Rectangle {
             required property var model
             required property var index
@@ -80,13 +77,5 @@ FocusScope {
         model: ListModel {
             id: listModel
         }
-        // delegate: Image {
-        //     required property var model
-        //     height: 70
-        //     width: 93
-        //     mipmap: true
-        //     source: model.source
-        //     fillMode: Image.PreserveAspectFit
-        // }
     }
 }

@@ -30,25 +30,5 @@ Flickable {
         width: Math.min(parent.width, 1200)
     }
 
-    // Pane {
-    //     id: contentPane
-    //
-    //     horizontalPadding: 20
-    //     // height: parent.height
-    //     width: Math.min(parent.width, 1600)
-    //
-    //
-    //     background: Item {
-    //     }
-    //
-    //     contentItem: FLModShopItemPanel {
-    //         id: contentColumn
-    //
-    //         // width: parent.width
-    //         anchors.horizontalCenter: parent.horizontalCenter
-    //         modId: 0
-    //         // width: Math.min(parent.width, 1600)
-    //     }
-    // }
 }
 

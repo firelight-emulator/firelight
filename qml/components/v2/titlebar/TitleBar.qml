@@ -173,16 +173,6 @@ FocusScope {
 
             spacing: AppStyle.spacingXl
 
-            // IconButton {
-            //     Layout.preferredHeight: 36
-            //     Layout.preferredWidth: 36
-            //     iconName: "settings"
-            //     Layout.alignment: Qt.AlignVCenter
-            //     Layout.topMargin: 2
-            //     // tooltipText: "Open menu"
-            //     onClicked: Router.navigate("/settings")
-            // }
-
             TitleBarProfileButton {
                 Layout.fillHeight: true
                 Layout.preferredWidth: height
@@ -199,9 +189,6 @@ FocusScope {
                 onCloseClicked: root.closeClicked()
             }
         }
-
-
-
 
     }
 }

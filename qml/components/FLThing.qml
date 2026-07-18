@@ -304,76 +304,12 @@ FocusScope {
 
                         contentItem: Item {
 
-                            // Image {
-                            //     id: imageClone
-                            //     visible: false
-                            //     anchors.fill: parent
-                            //     source: model.cover
-                            // }
-
-                            // Rectangle {
-                            //     id: maskShape
-                            //     width: 256
-                            //     height: 256
-                            //     radius: 16
-                            //     color: "black" // Color determines opacity for the mask
-                            //     visible: false // Don't need to see the mask itself
-                            //
-                            //     // *** Crucial Part for MultiEffect ***
-                            //     layer.enabled: true // Rasterize the rectangle into a texture
-                            //     layer.smooth: true  // Improve edge quality
-                            //     layer.samples: 16
-                            //     // Optional: layer.samples helps with anti-aliasing, especially for curves
-                            //     // layer.samples: 4
-                            // }
-
                             Image {
                                 id: sourceImage
                                 anchors.fill: parent
                                 source: model.cover
-                                // layer.enabled: true
-                                // layer.effect: MultiEffect {
-                                //     id: rounded
-                                //     source: sourceImage
-                                //     height: 256
-                                //     width: 256
-                                //     maskEnabled: true
-                                //     maskSource: maskShape
-                                //     // maskSpreadAtMax: 0.02 // Adjust for smoother fade
-                                //     // maskSpreadAtMin: 0.02 // Adjust for smoother fade
-                                //     // maskThresholdMax: 1.0 // Usually leave at 1.0
-                                //     // maskThresholdMin: 0 // Usually leave at 0.0
-                                // }
                             }
 
-                            // MultiEffect {
-                            //     id: imageClone
-                            //     visible: false
-                            //     source: sourceImage
-                            //     anchors.fill: parent
-                            //     maskEnabled: true
-                            //
-                            //     // maskInverted: true
-                            //     // maskSource: ShaderEffectSource {
-                            //     //     anchors.fill: parent
-                            //     //     sourceItem: Rectangle {
-                            //     //         anchors.fill: parent
-                            //     //         radius: height / 4
-                            //     //         color: "#000000ff"
-                            //     //     }
-                            //     // }
-                            //     // maskSource: Image {
-                            //     //     source: "file:rectangle17.png"
-                            //     //     anchors.fill: parent
-                            //     // }
-                            //     maskSpreadAtMax: 1.0 // Adjust for smoother fade
-                            //     maskSpreadAtMin: 1.0 // Adjust for smoother fade
-                            //     maskThresholdMax: 1.0 // Usually leave at 1.0
-                            //     maskThresholdMin: 0.4 // Usually leave at 0.0
-                            //     // blurEnabled: true
-                            //     // blurMax: 64
-                            //     // blur: 1.0
-                            // }
                         }
                     }
 
@@ -459,9 +395,6 @@ FocusScope {
                             root.StackView.view.pushItem(libraryPage, {}, StackView.PushTransition)
                         }
 
-                        // contentItem: Image {
-                        //     source: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRfeXY-nKQCcXveINmPT6HWZAdF2ohWc_wvog&s"
-                        // }
                     }
 
                     Text {

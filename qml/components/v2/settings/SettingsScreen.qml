@@ -25,9 +25,6 @@ FocusScope {
                 { "displayName": "Emulation", "iconName": "controller", "route": "emulation", "page": emulationSettings },
                 { "displayName": "Controllers", "iconName": "controller", "route": "controllers", "page": controllerSettings },
                 { "displayName": "Notifications", "iconName": "bell", "route": "notifications", "page": notificationSettings },
-                // { "displayName": "Game Folders", "iconName": "add", "route": "game-folders", "page": directorySettings },
-                // { "displayName": "Scanning", "iconName": "add", "route": "scanning", "page": librarySettings },
-                // { "displayName": "Metadata Scraping", "iconName": "add", "route": "metadata", "page": placeholderSettings },
                 { "displayName": "Captures", "iconName": "photo-library", "route": "captures", "page": placeholderSettings },
                 { "displayName": "Achievements", "iconName": "trophy", "route": "retroachievements", "page": retroAchievementSettings },
                 { "displayName": "About", "iconName": "info", "route": "about", "page": about }

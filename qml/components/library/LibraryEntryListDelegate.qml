@@ -53,24 +53,6 @@ Button {
 
     contentItem: RowLayout {
         spacing: 16
-        // FLIcon {
-        //     icon: "star"
-        //     color: "grey"
-        //     Layout.preferredHeight: 32
-        //     Layout.preferredWidth: 32
-        //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-        //     size: height
-        // }
-        // Image {
-        //     source: tttt.index < theList.icons.length ? theList.icons[tttt.index] : "https://cdn2.steamgriddb.com/thumb/2c323abe873b4f9fa8a72f45785df5f0.jpg"
-        //     Layout.preferredHeight: parent.height
-        //     Layout.preferredWidth: parent.height
-        //     Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-        //     sourceSize.width: parent.height
-        //     sourceSize.height: parent.height
-        //     smooth: false
-        //     fillMode: Image.PreserveAspectFit
-        // }
         Rectangle {
             color: "#292929"
             visible: root.model.icon1x1SourceUrl === ""

@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-
 Option {
     id: root
 
@@ -11,10 +10,6 @@ Option {
     property string currentValue
     property string textRole: "text"
     property string valueRole: "value"
-    // property alias model: control.model
-    // property alias currentIndex: control.currentIndex
-    // property alias textRole: control.textRole
-    // property alias valueRole: control.valueRole
 
     control: MyComboBox {
         id: control
@@ -36,5 +31,4 @@ Option {
         }
     }
 }
-
 

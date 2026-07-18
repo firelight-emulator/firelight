@@ -14,7 +14,6 @@ Rectangle {
     height: 40
     radius: 50
 
-
     Rectangle {
         id: icon
 
@@ -57,8 +56,6 @@ Rectangle {
         anchors.right: parent.right
         anchors.top: topLabel.bottom
         anchors.bottom: parent.bottom
-        // radius: parent.radius
-        // color: "green"
         Text {
             anchors.fill: parent
             // anchors.leftMargin: 10
@@ -72,26 +69,4 @@ Rectangle {
         }
     }
 
-    // BusyIndicator {
-    //     id: spinner
-    //     width: 40
-    //     height: 40
-    //     anchors.verticalCenter: parent.verticalCenter
-    //     anchors.left: parent.left
-    //     anchors.leftMargin: 10
-    //     // running: library_manager.scanning
-    //     running: true
-    // }
-    //
-    // Text {
-    //     id: label
-    //     text: "Updating your Library..."
-    //     font.pointSize: 12
-    //     color: "red"
-    //     anchors.left: spinner.right
-    //     anchors.leftMargin: 15
-    //     anchors.verticalCenter: parent.verticalCenter
-    //     horizontalAlignment: Text.AlignHCenter
-    //     verticalAlignment: Text.AlignVCenter
-    // }
 }

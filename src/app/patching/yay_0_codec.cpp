@@ -33,11 +33,6 @@ std::vector<uint8_t> Yay0Codec::decompress(const uint8_t *data) {
   header.opsAddr = data[8] << 24 | data[9] << 16 | data[10] << 8 | data[11];
   header.dataAddr = data[12] << 24 | data[13] << 16 | data[14] << 8 | data[15];
 
-  // printf("magic: %0x\n", header.magic);
-  // printf("uncompressed: %u\n", header.uncompressedLength);
-  // printf("opPtr: %0x\n", header.opsAddr);
-  // printf("dataPtr: %0x\n", header.dataAddr);
-
   const auto dest = new uint8_t[header.uncompressedLength];
   auto dstPtr = dest;
 

@@ -76,15 +76,6 @@ ColumnLayout {
                 wrapMode: Text.WordWrap
             }
         }
-        // FirelightButton {
-        //     Layout.alignment: Qt.AlignHCenter
-        //     focus: true
-        //     label: "Install"
-        //
-        //     onClicked: {
-        //         console.log("Install button clicked");
-        //     }
-        // }
         Text {
             Layout.fillWidth: true
             bottomPadding: 24
@@ -167,15 +158,6 @@ ColumnLayout {
                 fillMode: Image.PreserveAspectFit
                 source: modInfo.clearLogoUrl
             }
-            // FirelightButton {
-            //     Layout.alignment: Qt.AlignHCenter
-            //     label: "Install"
-            //     focus: true
-            //
-            //     onClicked: {
-            //         console.log("Install button clicked");
-            //     }
-            // }
             Text {
                 Layout.fillWidth: true
                 Layout.topMargin: 16

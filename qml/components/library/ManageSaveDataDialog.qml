@@ -76,26 +76,6 @@ FirelightDialog {
               }
             contentItem: RowLayout {
                 spacing: 16
-                // Text {
-                //     text: model.name
-                //     font.pixelSize: 16
-                //     color: ColorPalette.neutral400
-                //     Layout.alignment: Qt.AlignVCenter
-                // }
-                // Rectangle {
-                //     implicitWidth: height * 16 / 9
-                //     Layout.fillHeight: true
-                //     Layout.alignment: Qt.AlignVCenter
-                //     color: "#272727"
-                //
-                //     Text {
-                //         text: "No save data"
-                //         color: ColorPalette.neutral400
-                //         font.pixelSize: 14
-                //         anchors.centerIn: parent
-                //         visible: !model.hasData
-                //     }
-                // }
 
                 ColumnLayout {
                     Layout.alignment: Qt.AlignVCenter
@@ -146,11 +126,6 @@ FirelightDialog {
                     }
                 }
 
-                // FLIcon {
-                //     Layout.alignment: Qt.AlignVCenter
-                //     size: 28
-                //     icon: "arrow-forward"
-                // }
             }
         }
     }

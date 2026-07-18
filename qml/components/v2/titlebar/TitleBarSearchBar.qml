@@ -199,13 +199,9 @@ FocusScope {
             radius: 8
             border.color: Theme.border
             border.width: 1
-            // bottomRightRadius: 8
-            // bottomLeftRadius: 8
 
             layer.enabled: true
             layer.effect: MultiEffect {
-                // autoPaddingEnabled: false
-                // paddingRect: Qt.rect(-16, -16, 32, 32)
                 shadowEnabled: true
                 shadowColor: Theme.background
                 shadowBlur: 1.0
@@ -299,7 +295,6 @@ FocusScope {
                             }
                         }
 
-
                     }
                 }
                 footer: Item {
@@ -332,16 +327,6 @@ FocusScope {
                             anchors.leftMargin: 12
                         }
 
-                        // Text {
-                        //     text: "See all"
-                        //     font.pointSize: 10
-                        //     font.family: Constants.regularFontFamily
-                        //     font.weight: Font.Medium
-                        //     color: "#bdbdbd"
-                        //     anchors.verticalCenter: parent.verticalCenter
-                        //     anchors.right: parent.right
-                        //     anchors.rightMargin: 12
-                        // }
                     }
                 }
 
@@ -447,13 +432,6 @@ FocusScope {
             }
         }
 
-        // enter: Transition {
-        //     NumberAnimation { properties: "height"; from: 0; to: 500; duration: 120 }
-        // }
-        //
-        // exit: Transition {
-        //     NumberAnimation { properties: "height"; from: height; to: 0; duration: 120 }
-        // }
     }
 
     component RoleData: QtObject {

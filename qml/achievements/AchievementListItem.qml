@@ -14,8 +14,6 @@ Pane {
             anchors.fill: parent
             color: paneHover.hovered ? "#323232" : "#292929"
             radius: 8
-            // border.color: model.earned ? "#cfa912" : "transparent"
-            // border.width: 2
         }
         Rectangle {
             anchors.fill: parent

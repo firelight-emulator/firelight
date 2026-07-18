@@ -30,11 +30,6 @@ Pane {
         if (target === null) {
             return
         }
-        // target.onFocusChanged.connect(function() {
-        //     if (target.focus) {
-        //         root.close()
-        //     }
-        // })
 
         if (target.hasOwnProperty('inputHints')) {
             for (var i = 0; i < target.inputHints.length; i++) {

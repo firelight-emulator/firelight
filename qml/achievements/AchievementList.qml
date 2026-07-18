@@ -20,13 +20,6 @@ FocusScope {
         anchors.fill: parent
         focus: true
 
-        // section.property: root.achievements.sortType === "title" ? "name" : "earned"
-        // section.criteria: ViewSection.FirstCharacter
-        // section.delegate: ListViewSectionDelegate {
-        //     required property string section
-        //     text: section === "t" || section === "f" ? (section === "t" ? "Earned" : "Not earned") : section
-        // }
-
         header: Pane {
             width: parent.width
             background: Item {
@@ -60,15 +53,6 @@ FocusScope {
                         {text: "Earned date", value: "earned_date"},
                         {text: "Points", value: "points"}
                     ]
-
-                    // Connections {
-                    //     target: root
-                    //
-                    //     function onAchievementsChanged() {
-                    //         console.log("current sort type: " + root.achievements.sortType)
-                    //         sortBox.currentIndex = sortBox.indexOfValue(root.achievements.sortType)
-                    //     }
-                    // }
 
                     // onActivated: function () {
                     //     root.achievements.sortType = currentValue

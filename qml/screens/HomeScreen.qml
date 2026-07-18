@@ -139,34 +139,6 @@ FocusScope {
                 Layout.fillWidth: true
             }
 
-            // FirelightButton {
-            //     id: searchButton
-            //
-            //     enabled: false
-            //     tooltipLabel: "Search"
-            //     flat: true
-            //
-            //     Layout.fillHeight: true
-            //     Layout.preferredWidth: height
-            //     KeyNavigation.left: hamburger
-            //
-            //     iconCode: "\ue8b6"
-            // }
-            //
-            // FirelightButton {
-            //     id: notificationButton
-            //
-            //     enabled: false
-            //     tooltipLabel: "Notifications"
-            //     flat: true
-            //
-            //     Layout.fillHeight: true
-            //     Layout.preferredWidth: height
-            //     KeyNavigation.left: searchButton
-            //
-            //     iconCode: "\ue7f4"
-            // }
-
             Icon {
                 name: "wifi"
                 visible: NetworkInformation.reachability === NetworkInformation.Reachability.Online
@@ -275,13 +247,6 @@ FocusScope {
                 duration: 250
                 easing.type: Easing.InOutQuad
             }
-            // NumberAnimation {
-            //     property: "x"
-            //     from: 30 * (root.movingRight ? 1 : -1)
-            //     to: 0
-            //     duration: 200
-            //     easing.type: Easing.InOutQuad
-            // }
         }
         replaceExit: Transition {
             NumberAnimation {
@@ -291,13 +256,6 @@ FocusScope {
                 duration: 100
                 easing.type: Easing.InOutQuad
             }
-            // NumberAnimation {
-            //     property: "x"
-            //     from: 0;
-            //     to: 30 * (root.movingRight ? -1 : 1)
-            //     duration: 200
-            //     easing.type: Easing.InOutQuad
-            // }
         }
     }
 

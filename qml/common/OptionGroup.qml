@@ -47,24 +47,6 @@ FocusScope {
         contentItem: ColumnLayout {
             id: stuffCol
 
-            // ToggleOption {
-            //     Layout.fillWidth: true
-            //     label: "Simulate LCD ghosting"
-            //     // description: "Enables simulation of LCD ghosting effects by blending the current and previous frames."
-            //
-            //     Component.onCompleted: {
-            //         checked = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
-            //     }
-            //
-            //     onCheckedChanged: {
-            //         if (checked) {
-            //             emulator_config_manager.setOptionValueForPlatform(1, "gambatte_mix_frames", "accurate")
-            //         } else {
-            //             emulator_config_manager.setOptionValueForPlatform(1, "gambatte_mix_frames", "disabled")
-            //         }
-            //     }
-            //
-            // }
         }
     }
 }

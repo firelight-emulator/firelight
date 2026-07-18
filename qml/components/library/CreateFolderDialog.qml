@@ -68,11 +68,6 @@ FirelightDialog {
                   color: "white"
                   verticalAlignment: Text.AlignVCenter
 
-                  // onAccepted: {
-                  //     if (submitButton.enabled) {
-                  //         submitButton.clicked()
-                  //     }
-                  // }
               }
           }
       }

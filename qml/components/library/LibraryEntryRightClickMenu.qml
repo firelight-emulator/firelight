@@ -31,13 +31,6 @@ RightClickMenu {
         }
     }
 
-    // RightClickMenuItem {
-    //     text: "View details"
-    //     onTriggered: {
-    //         Router.navigateTo("/library/entries/" + tttt.model.entryId)
-    //     }
-    // }
-
     RightClickMenu {
         id: addToFolderRightClick
         title: "Add to folder"

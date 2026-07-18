@@ -39,17 +39,6 @@ Button {
         radius: control.radius !== 0 ? control.radius : control.rounded ? width / 2 : 0
     }
 
-    // background: Rectangle {
-    //     color: control.flat ? "white" : !enabled ? AppStyle.buttonBackgroundColorDisabled : control.activeFocus && !InputMethodManager.usingMouse ? AppStyle.buttonBackgroundColorFocused : control.pressed ? AppStyle.buttonBackgroundColorPressed : control.hovered ? AppStyle.buttonBackgroundColorHovered : AppStyle.buttonBackgroundColorInactive
-    //     opacity: !control.flat ? 1 : !enabled ? 0 : parent.activeFocus && !InputMethodManager.usingMouse ? 1 : parent.pressed ? 0.1 : parent.hovered ? 0.2 : 0
-    //     Behavior on opacity {
-    //         NumberAnimation {
-    //             duration: 32
-    //         }
-    //     }
-    //     radius: control.radius !== 0 ? control.radius : control.rounded ? width / 2 : 0
-    // }
-
     HoverHandler {
         id: hover
         cursorShape: Qt.PointingHandCursor

@@ -171,9 +171,6 @@ bool AchievementService::processStartSessionResponse(
     }
   }
 
-  // TODO: This could cause issues if achievements aren't synced beforehand
-  // TODO: Could check to only update those that are synced
-
   // TODO: Update user score
   for (auto &unlock : m_repository.getAllUserUnlocks(username, gameId)) {
     auto foundInUnlocks = std::ranges::find_if(

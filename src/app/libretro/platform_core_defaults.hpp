@@ -155,8 +155,6 @@ namespace firelight {
     {
       7,
       {
-        // {"mupen64plus-169screensize", "960x540"},
-        // {"mupen64plus-43screensize", "1280x960"},
         {"mupen64plus-BackgroundMode", "OnePiece"},
         {"mupen64plus-BilinearMode", "standard"},
         {"mupen64plus-CorrectTexrectCoords", "Off"},

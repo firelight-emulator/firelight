@@ -135,7 +135,6 @@ Pane {
             initialItem: emulationView
             clip: true
 
-
             replaceEnter: Transition {
                 NumberAnimation {
                     duration: 100
@@ -166,7 +165,6 @@ Pane {
                     to: 30 * (quickMenuStack.movingRight ? -1 : 1)
                 }
             }
-
 
         }
 
@@ -221,13 +219,6 @@ Pane {
                 anchors.left: parent.left
                 KeyNavigation.right: achievementListContainer
                 width: (parent.width - 700) > 280 ? 280 : 108
-                // width: Math.max(80, Math.min(300, parent.width - 1000))
-                // Behavior on width {
-                //     NumberAnimation {
-                //         duration: 50
-                //         easing.type: Easing.InOutQuad
-                //     }
-                // }
                 background: Item {}
                 contentItem: ListView {
                         id: actualList
@@ -294,8 +285,6 @@ Pane {
                                       }
                                   }
 
-
-
                                   RowLayout {
                                       Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
                                       Layout.fillWidth: true
@@ -333,31 +322,6 @@ Pane {
                               }
                           }
                       }
-                        // delegate: Row {
-                        //     TapHandler {
-                        //         onTapped: {
-                        //             actualList.currentIndex = index
-                        //         }
-                        //     }
-                        //     Image {
-                        //         source: model.iconUrl
-                        //         sourceSize.width: 60
-                        //         sourceSize.height: 60
-                        //         fillMode: Image.PreserveAspectFit
-                        //         smooth: true
-                        //         anchors.verticalCenter: parent.verticalCenter
-                        //     }
-                        //     Text {
-                        //         text: model.name
-                        //         color: "white"
-                        //         font.family: Constants.mainFontFamily
-                        //         font.pixelSize: 16
-                        //         horizontalAlignment: Text.AlignLeft
-                        //         verticalAlignment: Text.AlignVCenter
-                        //         anchors.verticalCenter: parent.verticalCenter
-                        //         padding: 8
-                        //     }
-                        // }
                     }
             }
             Pane {
@@ -372,13 +336,6 @@ Pane {
                 background: Item {}
                 contentItem: ColumnLayout {
                     spacing: 16
-                    // Text {
-                    //     text: "Achievements"
-                    //     color: ColorPalette.neutral200
-                    //     font.family: Constants.mainFontFamily
-                    //     font.pixelSize: 16
-                    //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                    // }
                     ListView {
                          id: achievementList
                          Layout.fillWidth: true
@@ -403,142 +360,6 @@ Pane {
                              anchors.bottom: achievementList.bottom
                           }
 
-                         // header: Pane {
-                         //     width: Math.min(ListView.view.width, 1000)
-                         //     anchors.horizontalCenter: parent.horizontalCenter
-                         //     background: Item {}
-                         //     leftPadding: 0
-                         //     rightPadding: 0
-                         //     topPadding: 8
-                         //     bottomPadding: 24
-                         //     contentItem: ColumnLayout {
-                         //         spacing: 16
-                         //         // Pane {
-                         //         //     Layout.fillWidth: true
-                         //         //     background: Rectangle {
-                         //         //         color: "transparent"
-                         //         //         border.color: "#FFD700"
-                         //         //         radius: 6
-                         //         //     }
-                         //         //     contentItem: Text {
-                         //         //         text: "Hardcore mode is active"
-                         //         //         color: "white"
-                         //         //         font.family: Constants.mainFontFamily
-                         //         //         font.pixelSize: 16
-                         //         //         horizontalAlignment: Text.AlignHCenter
-                         //         //         verticalAlignment: Text.AlignVCenter
-                         //         //     }
-                         //         // }
-                         //         RowLayout {
-                         //             Layout.fillWidth: true
-                         //             spacing: 24
-                         //             Image {
-                         //                 id: gameIcon
-                         //                 source: rcheevosGame.achievementSets[actualList.currentIndex].iconUrl
-                         //                 sourceSize.width: 80
-                         //                 fillMode: Image.PreserveAspectFit
-                         //                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                         //                 smooth: true
-                         //             }
-                         //
-                         //             ColumnLayout {
-                         //                 Layout.fillWidth: true
-                         //                 Layout.fillHeight: true
-                         //
-                         //                 RowLayout {
-                         //                     Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                         //                     Layout.fillWidth: true
-                         //                     spacing: 16
-                         //
-                         //                     Text {
-                         //                         text: rcheevosGame.achievementSets[actualList.currentIndex].name
-                         //                         color: ColorPalette.neutral100
-                         //                         font.family: Constants.mainFontFamily
-                         //                         font.pixelSize: 18
-                         //                         horizontalAlignment: Text.AlignLeft
-                         //                         verticalAlignment: Text.AlignVCenter
-                         //                     }
-                         //
-                         //                     Pane {
-                         //                         visible: AchievementService.inHardcoreSession
-                         //                         verticalPadding: 4
-                         //                         background: Rectangle {
-                         //                             color: "transparent"
-                         //                             border.color: "#FFD700"
-                         //                             radius: 6
-                         //                         }
-                         //                         contentItem: Text {
-                         //                             text: "Hardcore mode active"
-                         //                             color: "white"
-                         //                             font.family: Constants.mainFontFamily
-                         //                             font.pixelSize: 16
-                         //                             horizontalAlignment: Text.AlignHCenter
-                         //                             verticalAlignment: Text.AlignVCenter
-                         //                         }
-                         //                     }
-                         //
-                         //                     Item {
-                         //                         Layout.fillWidth: true
-                         //                         Layout.fillHeight: true
-                         //                     }
-                         //                 }
-                         //
-                         //
-                         //
-                         //                 RowLayout {
-                         //                     Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-                         //                     Layout.fillWidth: true
-                         //
-                         //                     Text {
-                         //                         text: rcheevosGame.achievementSets[actualList.currentIndex].platformName
-                         //                         color: ColorPalette.neutral300
-                         //                         font.family: Constants.mainFontFamily
-                         //                         font.pixelSize: 17
-                         //                         horizontalAlignment: Text.AlignLeft
-                         //                         verticalAlignment: Text.AlignVCenter
-                         //                     }
-                         //
-                         //                     Item {
-                         //                         Layout.fillWidth: true
-                         //                         Layout.fillHeight: true
-                         //                     }
-                         //
-                         //                     Text {
-                         //                         text: (AchievementService.inHardcoreSession ? rcheevosGame.achievementSets[actualList.currentIndex].numEarnedHardcore : rcheevosGame.achievementSets[actualList.currentIndex].numEarned) + "/" + rcheevosGame.achievementSets[actualList.currentIndex].numAchievements + " earned"
-                         //                         color: ColorPalette.neutral300
-                         //                         font.family: Constants.mainFontFamily
-                         //                         font.pixelSize: 16
-                         //                         horizontalAlignment: Text.AlignLeft
-                         //                         verticalAlignment: Text.AlignVCenter
-                         //                     }
-                         //                 }
-                         //                 Item {
-                         //                     Layout.fillWidth: true
-                         //                     Layout.fillHeight: true
-                         //                 }
-                         //
-                         //                 Rectangle {
-                         //                     color: "#1e1e1e"
-                         //                     implicitHeight: 14
-                         //                     Layout.fillWidth: true
-                         //                     Layout.alignment: Qt.AlignBottom | Qt.AlignLeft
-                         //                     Layout.bottomMargin: 4
-                         //                     radius: 4
-                         //
-                         //                     Rectangle {
-                         //                         color: "#FFD700"
-                         //                         anchors.left: parent.left
-                         //                         anchors.top: parent.top
-                         //                         anchors.bottom: parent.bottom
-                         //                         width: parent.width * ((AchievementService.inHardcoreSession ? rcheevosGame.achievementSets[actualList.currentIndex].numEarnedHardcore : rcheevosGame.achievementSets[actualList.currentIndex].numEarned) / rcheevosGame.achievementSets[actualList.currentIndex].numAchievements)
-                         //                         radius: 4
-                         //                     }
-                         //                 }
-                         //             }
-                         //         }
-                         //     }
-                         // }
-
                          spacing: 12
 
                          delegate: AchievementListButton {
@@ -554,17 +375,6 @@ Pane {
                              achievementId: model.achievementId
                          }
 
-                         // delegate: Text {
-                         //     required property var model
-                         //     required property var index
-                         //     text: model.name
-                         //     color: "white"
-                         //     font.family: Constants.mainFontFamily
-                         //     font.pixelSize: 16
-                         //     horizontalAlignment: Text.AlignLeft
-                         //     verticalAlignment: Text.AlignVCenter
-                         //     padding: 8
-                         // }
                      }
                  }
             }
@@ -584,9 +394,6 @@ Pane {
                          Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
                          focus: true
                          iconName: "sort"
-                          // icon.height: 42
-                          // icon.width: 42
-                          // KeyNavigation.right: mainArea
                           model: [
                                 { label: "Default order", value: "default" },
                                 { label: "A-Z", value: "a-z" },
@@ -605,397 +412,6 @@ Pane {
                 }
             }
 
-            // Pane {
-            //         id: setList
-            //     anchors.left: parent.left
-            //     anchors.top: parent.top
-            //     anchors.bottom: parent.bottom
-            //     width: 400
-            //     background: Item {}
-            //     contentItem: ListView {
-            //         id: actualList
-            //         model: rcheevosGame.achievementSets
-            //         spacing: 16
-            //         delegate: Pane {
-            //             TapHandler {
-            //                 onTapped: {
-            //                     actualList.currentIndex = index
-            //                 }
-            //             }
-            //             padding: 0
-            //           background: Item {}
-            //           contentItem: ColumnLayout {
-            //               spacing: 16
-            //               // Pane {
-            //               //     Layout.fillWidth: true
-            //               //     background: Rectangle {
-            //               //         color: "transparent"
-            //               //         border.color: "#FFD700"
-            //               //         radius: 6
-            //               //     }
-            //               //     contentItem: Text {
-            //               //         text: "Hardcore mode is active"
-            //               //         color: "white"
-            //               //         font.family: Constants.mainFontFamily
-            //               //         font.pixelSize: 16
-            //               //         horizontalAlignment: Text.AlignHCenter
-            //               //         verticalAlignment: Text.AlignVCenter
-            //               //     }
-            //               // }
-            //               RowLayout {
-            //                   Layout.fillWidth: true
-            //                   spacing: 12
-            //                   Image {
-            //                       id: gameIcon
-            //                       source: model.iconUrl
-            //                       sourceSize.width: 64
-            //                       fillMode: Image.PreserveAspectFit
-            //                       Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            //                       smooth: true
-            //                   }
-            //
-            //                   ColumnLayout {
-            //                       Layout.fillWidth: true
-            //                       Layout.fillHeight: true
-            //
-            //                       RowLayout {
-            //                           Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            //                           Layout.fillWidth: true
-            //                           spacing: 16
-            //
-            //                           Text {
-            //                               text: model.name
-            //                               color: ColorPalette.neutral100
-            //                               font.family: Constants.mainFontFamily
-            //                               font.pixelSize: 16
-            //                               horizontalAlignment: Text.AlignLeft
-            //                               verticalAlignment: Text.AlignVCenter
-            //                           }
-            //
-            //                           Item {
-            //                               Layout.fillWidth: true
-            //                               Layout.fillHeight: true
-            //                           }
-            //                       }
-            //
-            //
-            //
-            //                       RowLayout {
-            //                           Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            //                           Layout.fillWidth: true
-            //
-            //                           Text {
-            //                               text: (AchievementService.inHardcoreSession ? model.numEarnedHardcore : model.numEarned) + "/" + model.numAchievements + " earned"
-            //                               color: ColorPalette.neutral400
-            //                               font.family: Constants.mainFontFamily
-            //                               font.pixelSize: 14
-            //                               horizontalAlignment: Text.AlignLeft
-            //                               verticalAlignment: Text.AlignVCenter
-            //                           }
-            //                       }
-            //
-            //                       Item {
-            //                           Layout.fillWidth: true
-            //                           Layout.fillHeight: true
-            //                       }
-            //
-            //                       Rectangle {
-            //                           color: "#1e1e1e"
-            //                           implicitHeight: 14
-            //                           Layout.fillWidth: true
-            //                           radius: 4
-            //
-            //                           Rectangle {
-            //                               color: "#FFD700"
-            //                               anchors.left: parent.left
-            //                               anchors.top: parent.top
-            //                               anchors.bottom: parent.bottom
-            //                               width: parent.width * ((AchievementService.inHardcoreSession ? model.numEarnedHardcore : model.numEarned) / model.numAchievements)
-            //                               radius: 4
-            //                           }
-            //                       }
-            //                   }
-            //               }
-            //           }
-            //       }
-            //         // delegate: Row {
-            //         //     TapHandler {
-            //         //         onTapped: {
-            //         //             actualList.currentIndex = index
-            //         //         }
-            //         //     }
-            //         //     Image {
-            //         //         source: model.iconUrl
-            //         //         sourceSize.width: 60
-            //         //         sourceSize.height: 60
-            //         //         fillMode: Image.PreserveAspectFit
-            //         //         smooth: true
-            //         //         anchors.verticalCenter: parent.verticalCenter
-            //         //     }
-            //         //     Text {
-            //         //         text: model.name
-            //         //         color: "white"
-            //         //         font.family: Constants.mainFontFamily
-            //         //         font.pixelSize: 16
-            //         //         horizontalAlignment: Text.AlignLeft
-            //         //         verticalAlignment: Text.AlignVCenter
-            //         //         anchors.verticalCenter: parent.verticalCenter
-            //         //         padding: 8
-            //         //     }
-            //         // }
-            //     }
-            // }
-            //
-            //
-            //
-            // // Text {
-            // //     visible: AchievementService.loggedIn && !rcheevosGame.achievementSets[0].hasAchievements
-            // //     anchors.centerIn: parent
-            // //     text: "No achievements found for this game."
-            // //     color: ColorPalette.neutral100
-            // //     font.family: Constants.mainFontFamily
-            // //     font.pixelSize: 18
-            // //     horizontalAlignment: Text.AlignHCenter
-            // //     verticalAlignment: Text.AlignVCenter
-            // // }
-            // //
-            // // Text {
-            // //     visible: !AchievementService.loggedIn
-            // //     anchors.centerIn: parent
-            // //     text: "Not logged in to RetroAchievements. You can login from the Settings menu.\n\nAfter you log in, restart the game to load achievements."
-            // //     color: ColorPalette.neutral100
-            // //     font.family: Constants.mainFontFamily
-            // //     font.pixelSize: 18
-            // //     horizontalAlignment: Text.AlignHCenter
-            // //     verticalAlignment: Text.AlignVCenter
-            // // }
-            // //
-            // // Column {
-            // //     visible: AchievementService.loggedIn && rcheevosGame.achievementSets[0].hasAchievements
-            // //     anchors.right: mainArea.left
-            // //     anchors.rightMargin: 16
-            // //     anchors.topMargin: 24
-            // //     anchors.top: parent.top
-            // //
-            // //     RadioIconButton {
-            // //         icon.source: "qrc:/icons/sort"
-            // //         icon.width: 60
-            // //         icon.height: 60
-            // //         KeyNavigation.right: mainArea
-            // //         model: [
-            // //               { label: "Default order", value: "default" },
-            // //               { label: "A-Z", value: "a-z" },
-            // //               { label: "Z-A", value: "z-a" },
-            // //               { label: "Points (most first)", value: "points_most" },
-            // //               { label: "Points (least first)", value: "points_least" },
-            // //               { label: "Earned date", value: "earned_date" },
-            // //               { label: "Type", value: "type" }
-            // //           ]
-            // //
-            // //           onSelectionChanged: function(index, value, text) {
-            // //               rcheevosGame.achievementSets[0].achievements.sortMethod = value
-            // //           }
-            // //
-            // //     }
-            // // }
-            // //
-            // //
-            // Pane {
-            //     id: mainArea
-            //     visible: AchievementService.loggedIn && rcheevosGame.achievementSets[actualList.currentIndex].hasAchievements
-            //     anchors.top: parent.top
-            //     anchors.left: setList.right
-            //     anchors.right: parent.right
-            //     // anchors.bottom: parent.bottom
-            //     // width: Math.min(parent.width, 1000)
-            //     // anchors.horizontalCenter: parent.horizontalCenter
-            //     anchors.bottom: parent.bottom
-            //     clip: true
-            //     focus: true
-            //     leftPadding: 16
-            //     rightPadding: 16
-            //     topPadding: 16
-            //     bottomPadding: 32
-            //     background: Item{}
-            //     contentItem: ListView {
-            //         id: achievementList
-            //         model: rcheevosGame.achievementSets[actualList.currentIndex].achievements
-            //         highlightMoveDuration: 80
-            //         highlightMoveVelocity: -1
-            //         highlightRangeMode: InputMethodManager.usingMouse ? ListView.NoHighlightRange : ListView.ApplyRange
-            //         preferredHighlightBegin: 200
-            //         preferredHighlightEnd: height - 200
-            //         boundsBehavior: Flickable.StopAtBounds
-            //         contentY: 0
-            //         focus: true
-            //         cacheBuffer: 1000
-            //
-            //         ScrollBar.vertical: ScrollBar { }
-            //
-            //         // header: Pane {
-            //         //     width: Math.min(ListView.view.width, 1000)
-            //         //     anchors.horizontalCenter: parent.horizontalCenter
-            //         //     background: Item {}
-            //         //     leftPadding: 0
-            //         //     rightPadding: 0
-            //         //     topPadding: 8
-            //         //     bottomPadding: 24
-            //         //     contentItem: ColumnLayout {
-            //         //         spacing: 16
-            //         //         // Pane {
-            //         //         //     Layout.fillWidth: true
-            //         //         //     background: Rectangle {
-            //         //         //         color: "transparent"
-            //         //         //         border.color: "#FFD700"
-            //         //         //         radius: 6
-            //         //         //     }
-            //         //         //     contentItem: Text {
-            //         //         //         text: "Hardcore mode is active"
-            //         //         //         color: "white"
-            //         //         //         font.family: Constants.mainFontFamily
-            //         //         //         font.pixelSize: 16
-            //         //         //         horizontalAlignment: Text.AlignHCenter
-            //         //         //         verticalAlignment: Text.AlignVCenter
-            //         //         //     }
-            //         //         // }
-            //         //         RowLayout {
-            //         //             Layout.fillWidth: true
-            //         //             spacing: 24
-            //         //             Image {
-            //         //                 id: gameIcon
-            //         //                 source: rcheevosGame.achievementSets[actualList.currentIndex].iconUrl
-            //         //                 sourceSize.width: 80
-            //         //                 fillMode: Image.PreserveAspectFit
-            //         //                 Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            //         //                 smooth: true
-            //         //             }
-            //         //
-            //         //             ColumnLayout {
-            //         //                 Layout.fillWidth: true
-            //         //                 Layout.fillHeight: true
-            //         //
-            //         //                 RowLayout {
-            //         //                     Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            //         //                     Layout.fillWidth: true
-            //         //                     spacing: 16
-            //         //
-            //         //                     Text {
-            //         //                         text: rcheevosGame.achievementSets[actualList.currentIndex].name
-            //         //                         color: ColorPalette.neutral100
-            //         //                         font.family: Constants.mainFontFamily
-            //         //                         font.pixelSize: 18
-            //         //                         horizontalAlignment: Text.AlignLeft
-            //         //                         verticalAlignment: Text.AlignVCenter
-            //         //                     }
-            //         //
-            //         //                     Pane {
-            //         //                         visible: AchievementService.inHardcoreSession
-            //         //                         verticalPadding: 4
-            //         //                         background: Rectangle {
-            //         //                             color: "transparent"
-            //         //                             border.color: "#FFD700"
-            //         //                             radius: 6
-            //         //                         }
-            //         //                         contentItem: Text {
-            //         //                             text: "Hardcore mode active"
-            //         //                             color: "white"
-            //         //                             font.family: Constants.mainFontFamily
-            //         //                             font.pixelSize: 16
-            //         //                             horizontalAlignment: Text.AlignHCenter
-            //         //                             verticalAlignment: Text.AlignVCenter
-            //         //                         }
-            //         //                     }
-            //         //
-            //         //                     Item {
-            //         //                         Layout.fillWidth: true
-            //         //                         Layout.fillHeight: true
-            //         //                     }
-            //         //                 }
-            //         //
-            //         //
-            //         //
-            //         //                 RowLayout {
-            //         //                     Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
-            //         //                     Layout.fillWidth: true
-            //         //
-            //         //                     Text {
-            //         //                         text: rcheevosGame.achievementSets[actualList.currentIndex].platformName
-            //         //                         color: ColorPalette.neutral300
-            //         //                         font.family: Constants.mainFontFamily
-            //         //                         font.pixelSize: 17
-            //         //                         horizontalAlignment: Text.AlignLeft
-            //         //                         verticalAlignment: Text.AlignVCenter
-            //         //                     }
-            //         //
-            //         //                     Item {
-            //         //                         Layout.fillWidth: true
-            //         //                         Layout.fillHeight: true
-            //         //                     }
-            //         //
-            //         //                     Text {
-            //         //                         text: (AchievementService.inHardcoreSession ? rcheevosGame.achievementSets[actualList.currentIndex].numEarnedHardcore : rcheevosGame.achievementSets[actualList.currentIndex].numEarned) + "/" + rcheevosGame.achievementSets[actualList.currentIndex].numAchievements + " earned"
-            //         //                         color: ColorPalette.neutral300
-            //         //                         font.family: Constants.mainFontFamily
-            //         //                         font.pixelSize: 16
-            //         //                         horizontalAlignment: Text.AlignLeft
-            //         //                         verticalAlignment: Text.AlignVCenter
-            //         //                     }
-            //         //                 }
-            //         //                 Item {
-            //         //                     Layout.fillWidth: true
-            //         //                     Layout.fillHeight: true
-            //         //                 }
-            //         //
-            //         //                 Rectangle {
-            //         //                     color: "#1e1e1e"
-            //         //                     implicitHeight: 14
-            //         //                     Layout.fillWidth: true
-            //         //                     Layout.alignment: Qt.AlignBottom | Qt.AlignLeft
-            //         //                     Layout.bottomMargin: 4
-            //         //                     radius: 4
-            //         //
-            //         //                     Rectangle {
-            //         //                         color: "#FFD700"
-            //         //                         anchors.left: parent.left
-            //         //                         anchors.top: parent.top
-            //         //                         anchors.bottom: parent.bottom
-            //         //                         width: parent.width * ((AchievementService.inHardcoreSession ? rcheevosGame.achievementSets[actualList.currentIndex].numEarnedHardcore : rcheevosGame.achievementSets[actualList.currentIndex].numEarned) / rcheevosGame.achievementSets[actualList.currentIndex].numAchievements)
-            //         //                         radius: 4
-            //         //                     }
-            //         //                 }
-            //         //             }
-            //         //         }
-            //         //     }
-            //         // }
-            //
-            //         spacing: 12
-            //
-            //         delegate: AchievementListButton {
-            //             required property var model
-            //             required property var index
-            //
-            //             name: model.name
-            //             description: model.description
-            //             type: model.type
-            //             points: model.points
-            //             iconUrl: model.iconUrl
-            //             earned: model.earned
-            //             achievementId: model.achievementId
-            //         }
-            //
-            //         // delegate: Text {
-            //         //     required property var model
-            //         //     required property var index
-            //         //     text: model.name
-            //         //     color: "white"
-            //         //     font.family: Constants.mainFontFamily
-            //         //     font.pixelSize: 16
-            //         //     horizontalAlignment: Text.AlignLeft
-            //         //     verticalAlignment: Text.AlignVCenter
-            //         //     padding: 8
-            //         // }
-            //     }
-            // }
         }
     }
 
@@ -1079,14 +495,6 @@ Pane {
                              root.rewindPressed()
                          }
                      }
-                     // Rectangle {
-                     //     Layout.fillWidth: true
-                     //     // Layout.preferredWidth: parent.width / 2
-                     //     Layout.preferredHeight: 1
-                     //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                     //     opacity: 0.3
-                     //     color: "#dadada"
-                     // }
                      FirelightMenuItem {
                          id: suspendPointButton
                          labelText: "Suspend Points"
@@ -1432,55 +840,6 @@ Pane {
                             }
 
                         }
-                        // RowLayout {
-                        //     spacing: 12
-                        //     Layout.preferredHeight: 40
-                        //     Layout.fillWidth: true
-                        //     Button {
-                        //         Layout.fillHeight: true
-                        //         horizontalPadding: 12
-                        //         background: Rectangle {
-                        //             color: "white"
-                        //             opacity: parent.pressed ? 0.16 : 0.1
-                        //             radius: 4
-                        //             visible: createHoverHandler.hovered && parent.enabled
-                        //         }
-                        //         HoverHandler {
-                        //             id: createHoverHandler
-                        //             cursorShape: Qt.PointingHandCursor
-                        //         }
-                        //         contentItem: RowLayout {
-                        //             spacing: 8
-                        //             FLIcon {
-                        //                 id: createIcon
-                        //                 icon: "undo"
-                        //                 Layout.fillHeight: true
-                        //                 size: height
-                        //                 color: "white"
-                        //             }
-                        //             Text {
-                        //                 Layout.fillHeight: true
-                        //                 Layout.fillWidth: true
-                        //                  text: "Undo last load"
-                        //                  color: "white"
-                        //                  font.family: Constants.regularFontFamily
-                        //                  font.pixelSize: 16
-                        //                  font.weight: Font.Medium
-                        //                  verticalAlignment: Text.AlignVCenter
-                        //                     horizontalAlignment: Text.AlignHCenter
-                        //              }
-                        //          }
-                        //
-                        //          // onClicked: {
-                        //          //    emulatorLoader.item.writeSuspendPoint(suspendPointGrid.count)
-                        //          // }
-                        //     }
-                        //     Item {
-                        //         Layout.fillHeight: true
-                        //         Layout.fillWidth: true
-                        //     }
-                        //
-                        // }
                     }
                 }
 

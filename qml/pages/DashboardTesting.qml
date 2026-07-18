@@ -204,18 +204,6 @@ FocusScope {
                 id: dropArea
                 property var index: dele.index
                 anchors.fill: parent
-                // onEntered: function(event) {
-                //     let theirs = event.source.index
-                //     let mine = dele.index
-                //     if (theirs === mine) {
-                //         return
-                //     }
-                //     dele.GridView.view.model.move(event.source.index, index, 1)
-                //     console.log("entered")
-                // }
-                // onExited: {
-                //     console.log("exited")
-                // }
             }
             Rectangle {
                 width: parent.width
@@ -249,17 +237,6 @@ FocusScope {
                         }
                     }
                 ]
-                // transitions: [
-                //     Transition {
-                //         AnchorAnimation {
-                //             duration: 300
-                //             easing.type: Easing.OutElastic
-                //             // easing.amplitude: 3
-                //             easing.period: 0.5
-                //         }
-                //     }
-                //
-                // ]
                 focus: true
                 width: parent.width - 8
                 height: parent.height - 8

@@ -30,7 +30,7 @@ Menu {
             height += itemAt(i).implicitHeight
         }
         return height + verticalPadding * 2
-        
+
     }
 
     currentIndex: 0
@@ -62,26 +62,14 @@ Menu {
         }
     }
 
-    // contentWidth: 260
-    // contentHeight: Constants.rightClickMenuItem_DefaultHeight
-
-    // implicitContentWidth: 260
-    // // implicitContentHeight: control.count * Constants.rightClickMenuItem_DefaultHeight
-
-
-
     background: Rectangle {
         color: Theme.surfaceElevated
         radius: 8
         border.color: Theme.border
         border.width: 1
-        // bottomRightRadius: 8
-        // bottomLeftRadius: 8
 
         layer.enabled: true
         layer.effect: MultiEffect {
-            // autoPaddingEnabled: false
-            // paddingRect: Qt.rect(-16, -16, 32, 32)
             shadowEnabled: true
             shadowColor: Theme.background
             shadowBlur: 1.0
@@ -89,13 +77,6 @@ Menu {
             shadowHorizontalOffset: 4.0
         }
     }
-
-    // background: Rectangle {
-    //     color: ColorPalette.neutral900
-    //     radius: 8
-    //     border.color: ColorPalette.neutral700
-    //     border.width: 1
-    // }
 
     delegate: RightClickMenuItem {
         id: delegate

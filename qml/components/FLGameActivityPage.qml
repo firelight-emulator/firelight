@@ -154,8 +154,6 @@ Pane {
                           }
                       }
 
-
-
                      Item {
                          Layout.fillHeight: true
                         Layout.fillWidth: true
@@ -211,38 +209,6 @@ Pane {
                      }
                  }
             }
-
-            // Rectangle {
-            //     id: summary
-            //     color: "#1E1E1E"
-            //     radius: 8
-            //     Layout.fillWidth: true
-            //     Layout.preferredHeight: 160
-            //     border.color: "#2A2A2A"
-            //     border.width: 1
-            //
-            //     RowLayout {
-            //         anchors.fill: parent
-            //         anchors.margins: 16
-            //         spacing: 16
-            //
-            //         Text {
-            //             text: activity.numUnpausedSeconds + " seconds"
-            //             font.pixelSize: 16
-            //             font.family: Constants.regularFontFamily
-            //             color: "white"
-            //             verticalAlignment: Text.AlignVCenter
-            //         }
-            //
-            //         Text {
-            //             text: activity.numSessions + " sessions"
-            //             font.pixelSize: 16
-            //             font.family: Constants.regularFontFamily
-            //             color: "white"
-            //             verticalAlignment: Text.AlignVCenter
-            //         }
-            //     }
-            // }
 
             Text {
                 id: title

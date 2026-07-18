@@ -282,7 +282,6 @@ ApplicationWindow {
             gameRunning: EmulationService.isGameRunning
         }
 
-
         LibraryPage {
             id: allGamesPage
             currentEntryId: EmulationService.currentEntryId
@@ -496,7 +495,6 @@ ApplicationWindow {
         }
     }
 
-
     Component {
         id: quickMenuPage
         QuickMenu {
@@ -620,10 +618,6 @@ ApplicationWindow {
             target: Router
 
             function onRouteChanged(route) {
-                // if (!content.visible) {
-                //     console.log("NOT VISIBLE")
-                //     return
-                // }
 
                 if (route === "/shop") {
                     content.goToContent("Mod Shop", shopPage, {}, StackView.ReplaceTransition)

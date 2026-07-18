@@ -50,65 +50,7 @@ FocusScope {
                 background: Item {}
                 contentItem: modelData
             }
-            // delegate: Row {
-            //     Layout.maximumHeight: 26
-            //     Layout.minimumHeight: 26
-            //
-            //     spacing: 20
-            //
-            //     FLIcon {
-            //         width: 26
-            //         height: 26
-            //         size: 26
-            //         icon: "book"
-            //     }
-            //
-            //     // Image {
-            //     //     width: 26
-            //     //     height: 26
-            //     //     source: "file:book.svg"
-            //     //     sourceSize.width: 26
-            //     //     sourceSize.height: 26
-            //     // }
-            //
-            //     // Text {
-            //     //     width: 26
-            //     //     text: "\uf53e"
-            //     //     height: 26
-            //     //     horizontalAlignment: Text.AlignHCenter
-            //     //     verticalAlignment: Text.AlignVCenter
-            //     //     font.family: Constants.symbolFontFamily
-            //     //     padding: 0
-            //     //     // antialiasing: true
-            //     //     // smooth: true //Add this for smoother edges
-            //     //     font.pixelSize: 28
-            //     //     font.weight: Font.Light
-            //     //     font.variableAxes: { "FILL": 1.0, "opsz": 40}
-            //     //     renderType: Text.QtRendering
-            //     //     renderTypeQuality: Text.VeryHighRenderTypeQuality
-            //     //     color: "#DDDDDD"
-            //     // }
-            //
-            //     // Rectangle {
-            //     //     color: "white"
-            //     //     width: 26
-            //     //     height: 26
-            //     // }
-            //
-            //     Text {
-            //         text: modelData
-            //         font.pixelSize: 17
-            //         font.weight: Font.DemiBold
-            //         font.family: Constants.regularFontFamily
-            //         color: "#DDDDDD"
-            //         height: 26
-            //         horizontalAlignment: Text.AlignLeft
-            //         verticalAlignment: Text.AlignVCenter
-            //     }
-            // }
         }
     }
-
-
 
 }

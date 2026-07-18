@@ -31,9 +31,6 @@ FocusScope {
             Pane {
                 id: raAccountPane
                 Layout.topMargin: 16
-                // Layout.maximumWidth: 400
-                // Layout.preferredWidth: 600
-                // Layout.minimumWidth: 200
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 focus: true
                 background: Rectangle {
@@ -74,7 +71,6 @@ FocusScope {
                             horizontalAlignment: Text.AlignLeft
                             verticalAlignment: Text.AlignVCenter
                         }
-
 
                         Item {
                             Layout.fillWidth: true
@@ -342,28 +338,11 @@ FocusScope {
                         }
                     }
 
-
-
                 Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                 }
 
-                // RowLayout {
-                //     spacing: 12
-                //     Layout.fillHeight: false
-                //     Layout.fillWidth: true
-                //     Item {
-                //         Layout.fillWidth: true
-                //         Layout.fillHeight: true
-                //     }
-                //     FirelightButton {
-                //         label: "Next"
-                //         onClicked: function () {
-                //             nextClicked()
-                //         }
-                //     }
-                // }
             }
     }
 }

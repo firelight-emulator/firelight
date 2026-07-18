@@ -181,7 +181,6 @@ namespace firelight::gui {
                     bucket.label = hour < 10 ? QString("0%1:00").arg(hour) : QString("%1:00").arg(hour);
                     bucket.totalPlaytimeSeconds = static_cast<int>(hourTotalMs / 1000);
 
-
                     for (auto it = playtimeByGame.constBegin(); it != playtimeByGame.constEnd(); ++it) {
                         const auto entry = getLibraryService()->getEntryWithContentHash(it.key().toStdString());
                         const auto displayName = entry ? QString::fromStdString(entry->displayName) : it.key();
@@ -254,14 +253,6 @@ namespace firelight::gui {
                         range.yAxisValues.append(QString::fromStdString(std::to_string(hour) + ":00"));
                     }
                 }
-
-                // Round up max hour ms to nearest hour for better graph scaling
-                // const auto maxHoursRounded = (maxHourMs + 3599999) / 3600000 * 3600000;
-                // for (int hour = 0; hour < maxHoursRounded; ++hour) {
-                //     spdlog::info("Adding y-axis value {} for day {}, maxHourMs: {}, maxHoursRounded: {}",
-                //                  hour, day.toString().toStdString(), maxHourMs, maxHoursRounded);
-                //     range.yAxisValues.append(hour);
-                // }
 
                 m_bucketsByTimeframe.append(range);
             }

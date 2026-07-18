@@ -44,17 +44,6 @@ Pane {
     background: Rectangle {
         color: "transparent"
 
-        // Rectangle {
-        //     color: "white"
-        //     opacity: 0.14
-        //     width: 1
-        //     anchors.top: parent.top
-        //     anchors.bottom: parent.bottom
-        //     anchors.right: parent.right
-        //
-        //     anchors.topMargin: 16
-        //     anchors.bottomMargin: 16
-        // }
     }
 
     contentItem: ColumnLayout {
@@ -67,21 +56,6 @@ Pane {
             sourceSize.height: 30
             fillMode: Image.PreserveAspectFit
         }
-
-        // LeftNavigationItem {
-        //     id: expandButton
-        //     label: root.expanded ? "Collapse menu" : "Expand menu"
-        //     iconName: root.expanded ? "left-panel-close" : "left-panel-open"
-        //     checkable: false
-        //
-        //     KeyNavigation.down: quickMenuButton
-        //
-        //     Layout.fillWidth: true
-        //
-        //     onClicked: {
-        //         root.expanded = !root.expanded
-        //     }
-        // }
 
         Item {
             implicitWidth: 6

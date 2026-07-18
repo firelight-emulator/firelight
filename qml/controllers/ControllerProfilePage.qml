@@ -37,9 +37,6 @@ Pane {
             anchors.bottom: parent.bottom
             width: 300
 
-            // background: Rectangle {
-            //     color: ColorPalette.neutral800
-            // }
             background: Item {}
 
             contentItem: ColumnLayout {
@@ -85,11 +82,6 @@ Pane {
                      spacing: 0
                      Layout.fillHeight: true
                      Layout.fillWidth: true
-                     // Layout.maximumWidth: 300
-                     // Layout.preferredWidth: 300
-                     // Layout.minimumWidth: 200
-                     // Layout.fillHeight: true
-                     // Layout.alignment: Qt.AlignRight
                      focus: true
                      clip: true
 
@@ -237,14 +229,6 @@ Pane {
                           }
                       }
 
-                      // RightClickMenuItem {
-                      //     text: "Reset to default"
-                      //
-                      //     // onTriggered: {
-                      //     //   inputMappingsModel.resetToDefault(model.originalInput)
-                      //     // }
-                      // }
-
                       RightClickMenuItem {
                           text: "Clear mapping"
                           onTriggered: {
@@ -295,7 +279,6 @@ Pane {
               }
             }
         }
-
 
     }
 }

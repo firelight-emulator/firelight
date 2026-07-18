@@ -6,7 +6,6 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
 
-
 Dialog {
     id: control
 
@@ -155,24 +154,6 @@ Dialog {
                     }
                 }
 
-
-                // ColumnLayout {
-                //     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-                //
-                //     Text {
-                //         text: "Date: 2021-01-01"
-                //         color: Constants.colorTestTextActive
-                //         font.family: Constants.regularFontFamily
-                //         font.pointSize: 11
-                //     }
-                //
-                //     Text {
-                //         text: "Time: 12:00"
-                //         color: Constants.colorTestTextActive
-                //         font.family: Constants.regularFontFamily
-                //         font.pointSize: 11
-                //     }
-                // }
             }
         }
     }
@@ -206,11 +187,6 @@ Dialog {
             }
         }
     }
-
-    // onAccepted: {
-    //     appRoot.state = "notPlayingGame"
-    //     // closeGameAnimation.startWith(outPage, inPage)
-    // }
 
     Overlay.modal: Rectangle {
         color: "black"

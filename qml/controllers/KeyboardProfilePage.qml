@@ -109,14 +109,6 @@ FocusScope {
                     }
                 }
 
-                // Rectangle {
-                //     color: "transparent"
-                //     anchors.fill: parent
-                //
-                //     radius: 4
-                //     border.color: "white"
-                //     border.width: 1
-                // }
             }
 
             RowLayout {
@@ -150,7 +142,6 @@ FocusScope {
                     }
                 }
             }
-
 
             RowLayout {
                 Layout.fillWidth: true
@@ -255,8 +246,6 @@ FocusScope {
                             Layout.fillHeight: true
                             text: inputMapping.inputMappings[modelData.retropad_button] === undefined ? (inputMapping.getDefaultKeyLabel(modelData.retropad_button) + " (default)") : inputMapping.getKeyLabel(inputMapping.inputMappings[modelData.retropad_button])
                             color: inputMapping.inputMappings[modelData.retropad_button] === undefined ? ColorPalette.neutral400 : "white"
-                            // text: "heya"
-                            // color: "white"
                             font.pixelSize: AppStyle.fontSizeMedium
                             font.family: Constants.regularFontFamily
                             font.weight: Font.DemiBold
@@ -369,8 +358,6 @@ FocusScope {
         property variant buttons: []
         property var currentIndex: 0
         property bool canAcceptAxisInput: true
-        // title: "Assign all buttons"
-        // message: "Are you sure you want to assign all buttons to the default mappings?"
         showButtons: false
         closePolicy: Popup.NoAutoClose
 
@@ -505,11 +492,7 @@ FocusScope {
                 color: "green"
             }
 
-
         }
     }
-
-
-
 
 }

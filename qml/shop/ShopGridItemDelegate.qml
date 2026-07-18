@@ -4,12 +4,6 @@ import QtQuick.Layouts
 
 FocusScope {
     id: myDelegate
-    //
-    // signal startGame(entryId: int)
-    //
-    // signal openDetails(entryId: int)
-    //
-    // signal manageSaveData(entryId: int)
 
     signal doTheThing()
 
@@ -93,16 +87,6 @@ FocusScope {
                 // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
             }
 
-            // Text {
-            //     text: "Mario Kart 64 (Nintendo 64)"
-            //     font.pointSize: 10
-            //     font.weight: Font.Medium
-            //     font.family: Constants.regularFontFamily
-            //     leftPadding: 4
-            //     color: "#C2BBBB"
-            //     Layout.fillWidth: true
-            //     // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-            // }
             Item {
                 Layout.fillHeight: true
                 Layout.fillWidth: true

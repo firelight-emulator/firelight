@@ -3,13 +3,9 @@
 #include <QNetworkAccessManager>
 #include <QHttp2Configuration>
 
-
 class NetAccessManager : public QNetworkAccessManager {
 public:
   NetAccessManager(QObject *parent = nullptr) : QNetworkAccessManager(parent) {
-    // m_config.setHuffmanCompressionEnabled(false);
-    // m_config.setServerPushEnabled(true);
-    // m_config.setMaxFrameSize(100000);
 
   }
 protected:
@@ -41,6 +37,5 @@ NetAccessManager::createRequest(Operation op,
   request.setHttp2Configuration(m_config);
   request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
   return QNetworkAccessManager::createRequest(op, request, outgoingData);
-
 
 }

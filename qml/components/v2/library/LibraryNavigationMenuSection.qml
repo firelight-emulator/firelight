@@ -15,17 +15,6 @@ FocusScope {
     property alias collapsed: contentContainer.collapsed
     property bool collapsible: true
 
-    // onActiveFocusChanged: {
-    //     console.log("Called active focus changed for section " + root.title + ", activeFocus: " + activeFocus + ", contentContainer.collapsed: " + contentContainer.collapsed)
-    //     if (activeFocus && contentContainer.collapsed) {
-    //         var next = root.KeyNavigation.down
-    //         var prev = root.KeyNavigation.up
-    //         if (next) next.forceActiveFocus(Qt.TabFocusReason)
-    //         else if (prev) prev.forceActiveFocus(Qt.BacktabFocusReason)
-    //         else focus = false
-    //     }
-    // }
-
     implicitWidth: container.implicitWidth
     implicitHeight: container.implicitHeight
 
@@ -38,9 +27,6 @@ FocusScope {
             Layout.fillWidth: true
             Layout.preferredHeight: 32
             horizontalPadding: 0
-            // background: Rectangle {
-            //     color: Theme.surfaceHover
-            // }
             background: Item {}
             // Hidden in the collapsed rail (too narrow for a section label).
             visible: root.title !== "" && root.width > Math.round(64 * AppStyle.scale)
@@ -87,22 +73,6 @@ FocusScope {
                     implicitHeight: 1
                 }
 
-                // FLIcon {
-                //     Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                //     size: 22
-                //     icon: "arrow-down"
-                //     color: "#a1a1a1"
-                //     rotation: contentContainer.collapsed ? 360 : 180
-                //
-                //     Behavior on rotation {
-                //         NumberAnimation {
-                //             duration: 160
-                //             easing.type: Easing.InOutQuad
-                //         }
-                //     }
-                //     visible: root.collapsible
-                // }
-
                 TapHandler {
                     enabled: root.collapsible
                     onTapped: contentContainer.collapsed = !contentContainer.collapsed
@@ -123,8 +93,6 @@ FocusScope {
 
             Layout.fillWidth: true
             Layout.topMargin: 0
-            // Layout.leftMargin: 8
-            // Layout.rightMargin: 8
             Layout.bottomMargin: collapsed ? 0 : 8
             Layout.preferredHeight: collapsed ? 0 : list.implicitHeight
             // clip: true

@@ -530,18 +530,6 @@ int main(int argc, char *argv[]) {
     // QObject and not exposed to QML — the GUI reads settings through
     // SettingsService, not this repository.
 
-    // Per-game cheats (Game Genie / Action Replay), applied on load.
-    //   QObject::connect(
-    //     &libraryDatabase,
-    //     &firelight::db::SqliteLibraryDatabase::contentDirectoriesUpdated,
-    //     &libraryManager, &LibraryScanner::startScan);
-    //
-    //   QObject::connect(&libraryManager, &LibraryScanner::scanFinished,
-    //   &libModel,
-    //                    &firelight::gui::LibraryItemModel::refresh);
-    //
-    //   libraryManager.startScan();
-
     //   qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 
     // Friendly emulation settings + per-core option defaults. Loaded once into
@@ -844,7 +832,6 @@ int main(int argc, char *argv[]) {
         userLibraryService, platformService);
     engine.rootContext()->setContextProperty("SearchResultsModel", searchResultsModel);
 
-
     engine.rootContext()->setContextProperty("InputService", &inputServiceProxy);
     engine.rootContext()->setContextProperty(
         "EmulationService", new firelight::gui::QtEmulationServiceProxy());
@@ -990,9 +977,6 @@ int main(int argc, char *argv[]) {
 
     inputService.stop();
     inputLoopFuture.waitForFinished();
-
-    // engine.removeImageProvider("gameImages");
-    // TODO: Let daemons finish
 
     return exitCode;
 }
