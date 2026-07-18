@@ -20,6 +20,7 @@
 
 namespace firelight::emulation {
 
+// TODO
 // End-to-end flow driven entirely through EmulationService/EmulatorInstance with
 // a FakeCore injected via the core factory: load -> initialize -> run frames ->
 // save -> rewind (serialize/deserialize) -> reset -> teardown, with NO real

@@ -6,6 +6,7 @@
 
 namespace firelight {
   namespace {
+    // TODO
     // RETRO_DEVICE_* base classes + the SUBCLASS macro, mirrored here so the
     // catalog reads like the core sources (libretro.h) without pulling that heavy
     // header into this TU. RETRO_DEVICE_SUBCLASS(base, id) = ((id+1) << 8) | base
@@ -53,6 +54,7 @@ namespace firelight {
   CoreRegistry::CoreRegistry() {
     using PM = platforms::PlatformService;
 
+    // TODO
     // Bundled cores + the platforms each can run. Where a core can run several
     // platforms, its default platforms are those it's listed as the default for
     // in m_platformDefaults below; the rest are selectable alternates
@@ -121,6 +123,7 @@ namespace firelight {
       {PM::PLATFORM_ID_PS1, "mednafen_psx_hw_libretro"}
     };
 
+    // TODO
     // Curated controller variants per core, verified against each core's source
     // (device subclass values + the input protocol they query). Cores absent
     // here expose only the standard joypad. The standard joypad is implicit (the

@@ -7,6 +7,7 @@
 namespace firelight::input {
 class IGamepad;
 
+// TODO
 // Detects shortcut triggers from raw device input and publishes ShortcutEvents
 // via the EventDispatcher. Fed by the input service (both gamepad and keyboard)
 // It reads each triggering device's own profile shortcut bindings and the
@@ -24,6 +25,7 @@ public:
   // Forget a device's held state (e.g. on disconnect)
   void forgetDevice(IGamepad *device);
 
+  // TODO
   // Whether a device's hotkeys fire at all. Off hands every input straight to
   // the game, for a core that wants the whole keyboard. Per device, so turning
   // them off on one pad leaves another's alone even on a shared profile
@@ -34,6 +36,7 @@ private:
   [[nodiscard]] bool isSourceSatisfied(IGamepad *device,
                                        const InputSource &source) const;
 
+  // TODO
   // Guards all state below. onInput runs on the SDL event thread (controller)
   // and the GUI thread (keyboard); setContext/forgetDevice come from other
   // threads too. ShortcutEvents are collected under the lock and published
@@ -43,6 +46,7 @@ private:
   std::map<IGamepad *, std::map<int, bool>> m_held;
   std::map<IGamepad *, std::map<ShortcutId, bool>> m_satisfied;
   std::map<IGamepad *, std::map<ShortcutId, bool>> m_holdActive;
+  // TODO
   // Absent means on. Keyed by device rather than profile because it answers
   // "is this controller driving the menus right now", which two pads sharing a
   // profile can answer differently. (Unlike the toggle latch deleted earlier,

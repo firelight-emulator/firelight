@@ -91,6 +91,7 @@ void MetadataService::populate(int entryId) {
 }
 
 void MetadataService::reprojectSelectedMedia(library::Entry &entry) {
+  // TODO
   // These columns feed the small library-grid surfaces, so use the provider
   // thumbnail when available (the full original can be low-res, especially for
   // icons). The full URL stays in the media store for future high-res uses

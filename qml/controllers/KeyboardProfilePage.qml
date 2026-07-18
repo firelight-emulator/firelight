@@ -44,6 +44,7 @@ FocusScope {
 
             currentIndex: 0
 
+            // TODO
             // onCurrentItemChanged: {
             //     gamepadProfile.currentPlatformId = platformList.currentItem.model.platform_id
             // }
@@ -289,6 +290,7 @@ FocusScope {
 
                             onClicked: {
                                 inputMapping.removeMapping(modelData.retropad_button)
+                                // TODO
                                 // dialog.buttons = []
                                 // dialog.buttons = [{
                                 //     display_name: modelData.display_name,

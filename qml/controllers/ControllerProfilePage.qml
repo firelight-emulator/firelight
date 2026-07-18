@@ -97,6 +97,7 @@ Pane {
 
                      currentIndex: 0
 
+                     // TODO
                      // onCurrentItemChanged: {
                      //     gamepadProfile.currentPlatformId = platformList.currentItem.model.platform_id
                      // }
@@ -220,6 +221,7 @@ Pane {
                               shortcutDialog.shortcut = model.shortcutId
                               shortcutDialog.shortcutName = model.name
                               shortcutDialog.open()
+                            // TODO
                             // dialog.buttons = []
                             // dialog.buttons = [{
                             //     display_name: model.originalInputName,

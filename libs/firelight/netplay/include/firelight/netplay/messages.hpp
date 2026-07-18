@@ -35,6 +35,7 @@ struct StreamConfig {
   bool operator==(const StreamConfig &) const = default;
 };
 
+// TODO
 // Full state snapshot sent to any member whose control channel opens — a fresh
 // join, a mid-game join, or a reconnect all recover from this one message
 // (Fields avoid the name `slots`: Qt defines it as a macro and these headers

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // Standalone editor for the bindings attached to a single emulated button
 // Lets the user add alternate physical bindings and toggle turbo/autofire and
 // press-to-latch (toggle) per binding. Bind profileId/platformId/

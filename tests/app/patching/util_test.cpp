@@ -40,6 +40,7 @@ TEST_F(UtilTest, readVLV_SingleByte) {
  * (high bit set) handled properly
  */
 TEST_F(UtilTest, readVLV_MultiByte) {
+    // TODO
     // Test multi-byte value: 0x00 (continue), 0x81 (stop, value=1)
     // First: result += 0*1 = 0, shift = 128, result += 128 = 128
     // Second: result += 1*128 = 128, total = 256
@@ -59,6 +60,7 @@ TEST_F(UtilTest, readVLV_MultiByte) {
  * decoded with proper accumulation and bit shifting operations
  */
 TEST_F(UtilTest, readVLV_LargerMultiByte) {
+    // TODO
     // Test: 0x00 (continue), 0x00 (continue), 0x81 (stop, value=1)
     // First byte: 0*1 = 0, shift becomes 128, result += 128 = 128
     // Second byte: 0*128 = 0, shift becomes 16384, result += 16384 = 16512  

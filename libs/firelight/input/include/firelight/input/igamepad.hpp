@@ -10,6 +10,7 @@
 namespace firelight::input {
 class IGamepad : public libretro::IRetroPad {
 public:
+  // TODO
   // The inputs this device is withholding from the game because a shortcut is
   // using them. Concrete state on the interface so every device shares one
   // implementation and the shortcut engine, which already holds an IGamepad*,

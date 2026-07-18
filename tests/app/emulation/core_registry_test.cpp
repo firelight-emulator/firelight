@@ -97,6 +97,7 @@ TEST(CoreRegistryTest, DeviceCatalogClassifiesVariants) {
 TEST(CoreRegistryTest, AvailableVariantsCrossReferencesAdvertisement) {
   const auto &registry = CoreRegistry::instance();
 
+  // TODO
   // snes9x catalog = Mouse(2), Super Scope(260), Justifier(516). The core here
   // advertises only the pad, mouse, and Super Scope -> Justifier is filtered
   // out, and a standard joypad is synthesized as the default (first)

@@ -34,6 +34,7 @@ public:
   // Switches shortcut scope between in-game and menu contexts (driven by the UI)
   Q_INVOKABLE void setShortcutsInGame(bool inGame);
 
+  // TODO
   // Whether the Steam client is running. Steam reads gamepads globally through
   // its own filter driver, and its "Guide button focuses Steam" option fires
   // even for games it didn't launch — nothing in this process can pre-empt it,

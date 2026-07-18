@@ -96,6 +96,7 @@ bool ClipRecorder::Impl::start(const int w, const int h, const int f,
   if (w <= 0 || h <= 0) {
     return false;
   }
+  // TODO
   // Retro frames are tiny; a raw native-res encode looks soft once a player
   // upscales it. Integer-upscale (nearest-neighbor, done in encodeFrame) to
   // roughly 720 lines so the clip stays pixel-sharp on playback

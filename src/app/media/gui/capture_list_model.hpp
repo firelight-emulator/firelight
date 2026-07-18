@@ -11,6 +11,7 @@
 
 namespace firelight::gui {
 
+// TODO
 // Exposes the capture index (screenshots + clips) to the QML gallery. A flat
 // list; filtering/sorting/grouping-by-game is done in QML with a
 // SortFilterProxyModel over these roles

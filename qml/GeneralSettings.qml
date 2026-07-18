@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Firelight 1.0
 
+// TODO
 // Typed read path for the general app settings declared in the settings
 // catalog, mirroring AppearanceSettings. The settings page writes these through
 // SettingsModel; the rest of the app binds to the names here

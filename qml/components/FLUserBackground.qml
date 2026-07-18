@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 
+// TODO
 // App background. Renders a solid color, a two-color gradient, or an image
 // (animated ok), with an optional blur and dim. Driven by AppearanceSettings via
 // its host (see Main4)

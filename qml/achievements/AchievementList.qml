@@ -54,6 +54,7 @@ FocusScope {
                         {text: "Points", value: "points"}
                     ]
 
+                    // TODO
                     // onActivated: function () {
                     //     root.achievements.sortType = currentValue
                     // }

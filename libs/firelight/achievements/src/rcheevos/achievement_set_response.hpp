@@ -61,6 +61,7 @@ namespace firelight::achievements {
         };
     }
 
+    // TODO
     // NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PatchAchievement, ID, MemAddr, Title, Description, Points, Author, Modified, Created,
     //                                    BadgeName, Flags, Type, Rarity, RarityHardcore, BadgeURL, BadgeLockedURL)
     // NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PatchDataStruct, ID, Title, ImageIcon, RichPresencePatch, ConsoleID,

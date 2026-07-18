@@ -114,6 +114,7 @@ struct RtcTransport::Impl {
   mutable std::recursive_mutex mutex;
   std::map<PlayerId, Peer> peers;
 
+  // TODO
   // libdatachannel fires callbacks while holding connection-internal locks
   // (with host-only candidates, even synchronously inside setRemoteDescription)
   // — calling back into the connection from a callback can deadlock. Work that

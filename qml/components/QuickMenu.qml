@@ -423,6 +423,7 @@ Pane {
             // Bumped whenever the running game's device selection changes, to
             // re-evaluate the invokable-backed properties below
             property int deviceRefreshTick: 0
+            // TODO
             // Ports that actually offer a device choice (e.g. Gamepad / Zapper);
             // empty for standard-controller-only games, so the Controls entry
             // stays hidden and nothing extra clutters the menu
@@ -511,6 +512,7 @@ Pane {
                              quickMenuStack.forceActiveFocus()
                          }
                      }
+                     // TODO
                      // These route through the dispatcher rather than doing the
                      // work here, so the menu and the hotkey can't drift: same
                      // save slot, same hardcore gate, same toast

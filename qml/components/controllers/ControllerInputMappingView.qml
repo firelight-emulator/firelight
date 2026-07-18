@@ -21,6 +21,7 @@ FocusScope {
         controllerTypeId: root.controllerType
     }
 
+    // TODO
     // Image for the currently-selected controller type. controllerImages is
     // aligned 1:1 with controllerTypeIds, so look up by the type's position
     // rather than assuming contiguous 1-based ids (e.g. NES = 1, 3)
@@ -136,6 +137,7 @@ FocusScope {
             spacing: 16
             // height: 200
 
+            // TODO
             // Device-class selector (e.g. Gamepad / Mouse / Light Gun): switches
             // which controller type's bindings this view edits. Hidden when the
             // platform only has one type. Uses the actual controller-type ids

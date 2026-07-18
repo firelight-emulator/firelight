@@ -6,6 +6,7 @@
 namespace firelight::input {
 
 std::optional<GamepadInput> gamepadInputFromName(const std::string_view name) {
+  // TODO
   // The names are the enum identifiers verbatim, so a data file and this header
   // read the same. Mouse and light-gun inputs are left out on purpose: they are
   // inputs of an emulated device, not buttons a physical pad has, so a shortcut

@@ -251,6 +251,7 @@ TEST_F(InputServiceImplTest, GameContextOverrideSwapsProfileAndRestores) {
   EXPECT_EQ(pad->getProfile()->getId(), deviceDefaultId);
 }
 
+// TODO
 // ---------------------------------------------------------------------------
 // Device connect/disconnect lifecycle + emitted events. These exercise the
 // public API that the SDL event loop drives on CONTROLLERDEVICEADDED/REMOVED
@@ -417,6 +418,7 @@ TEST_F(InputServiceImplTest, UnpluggingGamepadLeavesKeyboardConnected) {
   EXPECT_TRUE(keyboardStillListed);
 }
 
+// TODO
 // ---------------------------------------------------------------------------
 // Concurrency: the SDL event loop drives connect/disconnect on its own thread
 // (QtConcurrent::run in the app) while the render/UI threads read player slots
@@ -515,6 +517,7 @@ TEST_F(InputServiceImplTest, AxisDecodeSetsBothStickDirections) {
   EXPECT_EQ(right[0], std::make_pair(input::LeftStickLeft, false));
   EXPECT_EQ(right[1], std::make_pair(input::LeftStickRight, true));
 
+  // TODO
   // The opposite direction is reported as released rather than left alone, so
   // flicking extreme-to-extreme without passing through the deadzone doesn't
   // leave it stuck on

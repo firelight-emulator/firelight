@@ -8,6 +8,7 @@
 
 namespace firelight::library {
 
+// TODO
 // Reads an entire file into memory with a single sized read. This is markedly
 // faster than the std::istreambuf_iterator idiom for large files (e.g. DS ROMs,
 // which run to hundreds of MB), which reads a byte at a time and repeatedly

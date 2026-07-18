@@ -28,6 +28,7 @@ Button {
     property bool showGlobalCursor: true
     property real globalCursorSpacing: 2
 
+    // TODO
     // Tree rendering (folders only): indent by depth and show a disclosure
     // chevron for rows that have children. Off by default so flat sections
     // (platforms, settings nav) are untouched
@@ -42,6 +43,7 @@ Button {
     implicitHeight: AppStyle.controlHeight
     width: ListView.view.width
 
+    // TODO
     // onClicked: {
     //     ListView.view.currentIndex = index
     // }
@@ -83,6 +85,7 @@ Button {
         }
     }
     contentItem: RowLayout {
+        // TODO
         // iconSource may be a Material icon (qrc:/icons/<name>), a console logo, or folder
         // art. Render known Material names as crisp font glyphs; everything else as a crisp
         // (GPU curve-rendered) vector image

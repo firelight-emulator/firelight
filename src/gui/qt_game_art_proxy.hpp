@@ -20,6 +20,7 @@ class SteamGridDbArtProvider;
 
 namespace firelight::gui {
 
+// TODO
 // QML bridge backing the "Change artwork" picker. Exposes, per (contentHash,
 // mediaType): the stored candidates + current selection (from the media store),
 // an async SteamGridDB search, and actions to select a stored asset, apply an
@@ -48,12 +49,14 @@ public:
   [[nodiscard]] QString apiKey() const;
   void setApiKey(const QString &key);
 
+  // TODO
   // The stored candidates for a (game, type), newest first:
   // [{assetId, source, url, selected, width, height}]. Read on the GUI thread;
   // the media store is internally synchronized
   Q_INVOKABLE QVariantList storedAssets(const QString &contentHash,
                                         int mediaType);
 
+  // TODO
   // Kicks off an async provider search on a worker thread. Emits
   // searchResultsReady(contentHash, mediaType) when it finishes (also on
   // failure, with an empty result set); the picker then reads searchResults()

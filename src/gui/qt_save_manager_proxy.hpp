@@ -7,6 +7,7 @@
 
 namespace firelight::gui {
 
+// TODO
 // Thin QML adapter over the (Qt-notification-free) saves::ISaveManager. Its only
 // job is to expose the save directory as a bindable Q_PROPERTY for the settings
 // UI; the domain interface itself carries no QObject/signal concerns

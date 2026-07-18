@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 
+// TODO
 // Legacy Firelight-recommended per-platform core-option defaults. Fallback for
 // cores whose defaults are not yet in settings_catalog.json (the preferred
 // source). Consumed only by CoreConfiguration; slated for removal as cores move

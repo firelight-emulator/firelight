@@ -54,6 +54,7 @@ VideoEncoder::VideoEncoder(int width, int height, int fps) : m_width(width), m_h
   }
 }
 std::vector<uint8_t> VideoEncoder::encode(const uint8_t *rawData) {
+  // TODO
   // Convert raw data to YUV420P (assuming rawData is in RGB)
   // Use libswscale or a custom conversion
   // Here we assume rawData is already in YUV420P

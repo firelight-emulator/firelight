@@ -27,6 +27,7 @@
 
 /* Opaque file handle
  * Introduced in VFS API v1 */
+// TODO
 // struct retro_vfs_file_handle;
 //
 // /* Opaque directory handle

@@ -20,6 +20,7 @@ struct StreamEncoderConfig {
   int bitrateKbps = 4000;
 };
 
+// TODO
 // Live game-stream encoder: H.264 (bitrate-capped, self-contained IDRs) +
 // Opus, emitting packets continuously through callbacks — no ring, no file
 // Video encodes on a worker thread (bounded hand-off queue, drop-oldest);

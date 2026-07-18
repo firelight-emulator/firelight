@@ -6,6 +6,7 @@
 
 namespace firelight::media {
 
+// TODO
 // Writes a buffered clip to an mp4. The video is **stream-copied** (the H.264
 // was already produced incrementally by ClipRecorder — no re-encode here) with
 // PTS/DTS rebased so playback starts at zero. A pure function of the snapshot,

@@ -54,6 +54,7 @@ public:
   // --- per-game controller device selection (Mouse / Light Gun / Gamepad) ---
   // Number of controller ports the running game's core exposes
   Q_INVOKABLE int controllerPortCount() const;
+  // TODO
   // For `port`, the selectable device variants as a list of maps:
   // { coreDeviceId:int, name:string, deviceClass:int (1=Joypad,2=Mouse,
   // 3=LightGun), isCurrent:bool }. Empty (or a single entry) means no real

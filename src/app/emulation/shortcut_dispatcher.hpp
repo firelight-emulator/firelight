@@ -9,6 +9,7 @@
 
 namespace firelight::emulation {
 
+// TODO
 // Turns shortcut events into actions, and is the only place that has to know
 // where they came from
 //
@@ -20,6 +21,7 @@ namespace firelight::emulation {
 class ShortcutDispatcher final : public QObject {
   Q_OBJECT
 public:
+  // TODO
   // `playerAllowed` decides whether a player's shortcuts are honoured at all
   // Here rather than in ShortcutActions because who pressed it is a routing
   // question — the actions themselves are the same whoever fires them
@@ -27,6 +29,7 @@ public:
                               std::function<bool(int)> playerAllowed = {},
                               QObject *parent = nullptr);
 
+  // TODO
   // Runs an action as if a hotkey had fired it, for menus that offer the same
   // thing. The point is that they route here rather than reimplementing it: a
   // second copy of "which slot, and does hardcore allow it" is how the menu and

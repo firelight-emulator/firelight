@@ -12,6 +12,7 @@
 
 namespace firelight::netplay {
 
+// TODO
 // Maps libretro ports to lobby slots while the host runs an online game:
 // slot N's occupant answers port N — the host through their local pads,
 // remote members through their RemoteRetroPads. Inactive (or with no inner

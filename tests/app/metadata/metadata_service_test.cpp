@@ -13,6 +13,7 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
+// TODO
 // Verifies MetadataService auto-population: the shipped-source name/metadata/art
 // is written onto the entry and seeded into the media store, a user-renamed
 // entry keeps its name, and the EntryCreatedEvent path triggers population

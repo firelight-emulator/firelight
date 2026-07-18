@@ -96,6 +96,7 @@ TEST_F(CoreConfigurationTest, OverridesResolveGameOverPlatformOverGlobal) {
   EXPECT_EQ(config.getOptionValue("core_x").value_or(""), "gameval");
 }
 
+// TODO
 // A CLI --set targeting a raw core option key flows through getEffectiveValue,
 // so it wins over every stored tier here too (proving one session-override
 // mechanism covers both common settings and per-core options)

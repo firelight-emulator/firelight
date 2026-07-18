@@ -8,6 +8,7 @@
 
 namespace firelight::input {
 
+// TODO
 // QML-facing helper for the "preferred controller per platform" setting: when a
 // controller of the chosen GamepadType is connected, it is promoted to player
 // one whenever a game for that platform launches

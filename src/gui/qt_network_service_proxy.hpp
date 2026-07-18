@@ -9,6 +9,7 @@
 
 namespace firelight::gui {
 
+// TODO
 // QML bridge for online play. Provider-agnostic on purpose: the UI renders
 // "Sign in with <providerName>" from data and never names Discord. Session
 // events can arrive on network threads; everything is marshaled to the GUI
@@ -62,6 +63,7 @@ public:
   Q_INVOKABLE void setReady(bool ready);
   Q_INVOKABLE void selectGame(int entryId);
   Q_INVOKABLE void sendChat(const QString &text);
+  // TODO
   // Ready check: startSession announces the game (host only), confirmLaunch
   // marks the game live once the host actually launches, endSession returns
   // the lobby to idle
@@ -70,6 +72,7 @@ public:
   Q_INVOKABLE void endSession();
   Q_INVOKABLE [[nodiscard]] int selectedGameEntryId() const;
   Q_INVOKABLE void copyJoinCode();
+  // TODO
   // The stream view registers itself to receive decoded frames. Detach only
   // releases if `item` is still the attached view — a page being torn down
   // must not detach its replacement

@@ -23,6 +23,7 @@ inline void from_json(const nlohmann::json &j, TurboOptions &t) {
   t.rateHz = j.value("rateHz", 10.0f);
 }
 
+// TODO
 // A single physical source bound to an emulated input, plus how it behaves
 // Multiple Bindings may target the same emulated input; their evaluated results
 // are OR'd together (digital) or summed/maxed (analog)

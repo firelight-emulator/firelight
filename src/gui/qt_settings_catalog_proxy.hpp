@@ -5,6 +5,7 @@
 
 namespace firelight::gui {
 
+// TODO
 // Read-only view of the settings catalog's layout, for QML. The rows themselves
 // come from SettingsModel; this answers the structural question SettingsPage
 // asks: "which groups does this page have, and in what order?"

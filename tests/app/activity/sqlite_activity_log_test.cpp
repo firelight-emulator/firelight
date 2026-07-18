@@ -20,6 +20,7 @@ PlaySession makeSession(const std::string &hash, uint64_t start, uint64_t end,
 }
 } // namespace
 
+// TODO
 // NOTE: getDatabase() caches the :memory: connection per-thread and there is no
 // teardown, so instances on this thread share one database. Each test therefore
 // uses a unique content hash and only queries by that hash to stay isolated

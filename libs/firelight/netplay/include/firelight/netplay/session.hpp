@@ -17,6 +17,7 @@
 
 namespace firelight::netplay {
 
+// TODO
 // Everything the session reports outward. Callbacks fire on backend/transport
 // threads with no session lock held; the app layer marshals to the GUI thread
 // packetReceived is the hot path (video/audio/input bytes for the stream
@@ -38,6 +39,7 @@ struct SessionEvents {
       packetReceived;
 };
 
+// TODO
 // The persistent lobby: membership, slots, chat, and peer links live here from
 // lobby creation until the host closes it. Games start and end inside it
 // (GamePhase); ending a game returns the lobby to Idle with everything intact
@@ -59,6 +61,7 @@ public:
   void selectGame(SessionDescriptor game);
   // Starting -> broadcast SessionStarting (+ StreamConfig when provided)
   void startGame(std::optional<StreamConfig> streamConfig);
+  // TODO
   // The encoder's parameters are only known once frames flow; the host
   // announces them as soon as the stream is live (late joiners get them via
   // Welcome)

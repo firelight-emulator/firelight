@@ -9,6 +9,7 @@
 
 namespace firelight::netplay {
 
+// TODO
 // Signaling payloads (SDP blobs) can exceed a lobby provider's message size
 // cap, so they're base64-encoded and split into chunks that ride individual
 // lobby messages; the receiver reassembles by (sender, signalId)

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // The emulation settings for a single tier. Callers set `level` plus the scope
 // (`platformId`, `contentHash`). Each row shows the effective value; a row that
 // overrides an inherited one gets a Reset
@@ -54,6 +55,7 @@ FocusScope {
                 contentHash: root.contentHash
             }
 
+            // TODO
             // Advanced (raw core options) — only for a specific console, and
             // only when advanced settings are on. Not catalog settings: these
             // are whatever the core declared at runtime

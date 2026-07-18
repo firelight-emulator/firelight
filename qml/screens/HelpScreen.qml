@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // Two-column Help browser: a topic list on the left, the rendered Markdown
 // article on the right. Mirrors the Settings screen's layout. Topics are
 // declared inline; each points at a bundled qrc:/help/*.md file

@@ -143,6 +143,7 @@ FocusScope {
             // sound.stop()
             // sound.play()
             sfx.play();
+            // TODO
             // if (sound.playbackState === SoundEffect.PlayingState) {
             //     volumeFadeOut.start()
             // } else {

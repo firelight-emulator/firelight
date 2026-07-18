@@ -9,6 +9,7 @@
 
 namespace firelight::gui {
 
+// TODO
 // Displays the incoming game stream: frames are handed in from decode
 // threads and uploaded as scene-graph textures on the render thread
 // (Not final: qmlRegisterType subclasses it.)

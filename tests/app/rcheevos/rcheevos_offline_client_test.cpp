@@ -27,6 +27,7 @@ TEST_F(RetroAchievementsOfflineClientTest, PingCheckReturnsSuccess) {
   ASSERT_EQ("{\"Success\":true}", std::string(response.body));
 }
 
+// TODO
 // Test awarding achievement we already have
 // Test awarding achievement in mode we dont have when we have the other mode
 // Test awarding achievement we dont have
@@ -106,6 +107,7 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
   ASSERT_EQ(parsedResponse.SoftcoreScore, 1000);
 }
 
+// TODO
 // TEST_F(RetroAchievementsOfflineClientTest,
 //        StartSessionWorksAfterOfflineAchievementUnlocks) {
 //   auto repo = SqliteAchievementRepository(":memory:");
@@ -213,6 +215,7 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
 //   // TODO: VERIFY THAT SYNCING WORKS
 // }
 
+// TODO
 // TEST_F(RetroAchievementsOfflineClientTest,
 //        StartSessionWhenNoAchievementsUnlocked) {
 //   auto repo = SqliteAchievementRepository(":memory:");

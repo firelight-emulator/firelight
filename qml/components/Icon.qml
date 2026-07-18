@@ -1,5 +1,6 @@
 import QtQuick
 
+// TODO
 // Reusable crisp icon backed by the Material Symbols Rounded variable font
 // Usage: Icon { name: "settings"; size: 22; color: Theme.textPrimary }
 // Renders a font glyph (not a raster/SVG), so it is sharp at any size and DPR and

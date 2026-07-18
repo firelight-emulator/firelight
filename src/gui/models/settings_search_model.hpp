@@ -6,6 +6,7 @@
 
 namespace firelight::settings {
 
+// TODO
 // Search over every declared page and setting, for the settings nav's search
 // field. Set `query`; the rows are the ranked hits. A hit carries the `route`
 // to navigate to and, for a setting, the `key` the page should reveal.

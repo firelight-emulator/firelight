@@ -8,6 +8,7 @@
 
 namespace firelight::input {
 
+// TODO
 // One port's joypad input for a single frame. Captured once per frame (see
 // Core::pollInput) so the libretro core reads stable input during retro_run(),
 // and so a frame's input is a self-contained, serializable value — the record a
@@ -74,6 +75,7 @@ struct InputFrame {
   }
 };
 
+// TODO
 // Samples a controller's joypad state (all 16 buttons + both analog sticks) into
 // an InputFrame — the once-per-frame snapshot. `platformId`/`controllerTypeId`
 // match the values the libretro input callback queries the pad with

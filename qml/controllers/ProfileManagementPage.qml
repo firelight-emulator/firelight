@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import Firelight 1.0
 
+// TODO
 // Standalone controller-profile manager: create, clone, rename, delete, and
 // import/export profiles. Self-contained; bind nothing — it loads all profiles
 // from the input service

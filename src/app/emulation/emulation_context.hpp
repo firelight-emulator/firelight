@@ -36,6 +36,7 @@ class IPlatformService;
 
 namespace firelight::emulation {
 
+// TODO
 // The app-layer services EmulationService/EmulatorInstance depend on, threaded
 // explicitly from main.cpp instead of reached through a global locator. Any
 // member may be null in tests that don't exercise that path — the consumers
@@ -50,6 +51,7 @@ struct EmulationContext {
   platforms::IPlatformService *platformService = nullptr;
   std::string coreSystemDirectory;
 
+  // TODO
   // Netplay seams. retropadProvider (when set) answers the core's per-port
   // reads instead of inputService directly, so remote players can occupy
   // ports. netplayStreamSink receives every rendered frame + audio while a
@@ -57,6 +59,7 @@ struct EmulationContext {
   libretro::IRetropadProvider *retropadProvider = nullptr;
   media::IClipSink *netplayStreamSink = nullptr;
 
+  // TODO
   // Audio output + microphone are created on the render thread inside
   // EmulatorInstance::initialize(); main.cpp injects the Qt-Multimedia impls
   // (AudioManager / QtMicrophone). Null in headless/tests -> no audio

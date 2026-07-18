@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // A precise number nudged up or down. `value` is the current number; emits
 // `changed` with the new value, clamped to [from, to]. `suffix` is an optional
 // unit (e.g. "s")

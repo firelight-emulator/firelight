@@ -67,6 +67,7 @@ namespace firelight::emulation {
 
     inputService->setHotkeysEnabled(true);
 
+    // TODO
     // Nothing turned them off by hand, so honour the core: one that asked for
     // the keyboard gets it, and only the keyboard — a controller keeps its
     // hotkeys. This is what makes it unnecessary to know in advance which
@@ -117,6 +118,7 @@ namespace firelight::emulation {
 
   bool EmulatorInstance::initialize(
     libretro::IVideoDataReceiver *videoDataReceiver) {
+    // TODO
     // Audio output + microphone are injected as factories (main.cpp supplies the
     // Qt-Multimedia impls); both are created here on the render thread for Qt
     // audio thread-affinity. Null in headless/tests -> no audio
@@ -185,6 +187,7 @@ namespace firelight::emulation {
         });
     }
 
+    // TODO
     // Resolve + apply the per-port controller variant (the game's default unless
     // overridden), driving the core device + any companion core options, and
     // announce availability so the input UI can offer a choice
@@ -265,6 +268,7 @@ namespace firelight::emulation {
     if (advertised > 0) {
       return advertised;
     }
+    // TODO
     // The core didn't advertise its ports via SET_CONTROLLER_INFO, but our catalog
     // may still define alternate devices for it (e.g. FCEUmm's Zapper). Expose a
     // small default port count so the player can still pick one; the picker hides
@@ -322,6 +326,7 @@ namespace firelight::emulation {
     if (!settings) {
       return;
     }
+    // TODO
     // Companion options take effect when the core reads its options (on init);
     // the current session already runs the core's default, and the selection
     // persists for the next launch
@@ -426,6 +431,7 @@ namespace firelight::emulation {
     drainKeyboardEvents();
 
     const auto now = std::chrono::steady_clock::now();
+    // TODO
     // spdlog::info("Comparing {} and {}: {}", now.time_since_epoch().count(),
     //              m_lastSaveTime.time_since_epoch().count(),
     //              (now - std::chrono::seconds(m_saveIntervalSeconds))

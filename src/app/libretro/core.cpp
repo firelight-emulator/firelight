@@ -15,6 +15,7 @@
 #include <spdlog/spdlog.h>
 
 namespace libretro {
+  // TODO
   // Only supports one core at a time for now, but, eh. The libretro C callbacks
   // reach the active core through this context (set on load, cleared on unload)
   // Declared in core_environment.hpp so the env-call handlers can read it too
@@ -118,6 +119,7 @@ namespace libretro {
 
   Core::~Core() {
     spdlog::info("[Core] Unloading core");
+    // TODO
     // Teardown order matters for HW-rendered cores (e.g. PPSSPP): the frontend
     // owns the VkDevice, but the core keeps using it through retro_unload_game /
     // retro_deinit — PPSSPP's Shutdown() calls vkDeviceWaitIdle, and its own

@@ -36,6 +36,7 @@ private:
   std::function<void()> m_disconnect;
 };
 
+// TODO
 // Threading: subscribe()/publish() are called from many threads (render, SDL
 // input, GUI) and are mutex-guarded. Callbacks run synchronously on the
 // publishing thread, so a subscriber must not assume its own thread affinity (a

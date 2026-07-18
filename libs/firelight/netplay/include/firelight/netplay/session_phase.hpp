@@ -2,6 +2,7 @@
 
 namespace firelight::netplay {
 
+// TODO
 // Sub-state of the game running inside a lobby. The lobby itself has no
 // phases — it exists from creation until the host closes it, and games start
 // and end within it

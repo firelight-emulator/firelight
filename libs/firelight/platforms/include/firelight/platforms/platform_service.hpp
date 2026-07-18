@@ -12,6 +12,7 @@ public:
   virtual ~IPlatformService() = default;
   [[nodiscard]] virtual std::optional<Platform> getPlatform(unsigned id) const = 0;
   [[nodiscard]] virtual std::vector<Platform> listPlatforms() const = 0;
+  // TODO
   // The platform whose file associations include `extension` (lowercase, no
   // dot), or PLATFORM_ID_UNKNOWN. Cartridge extensions only; ambiguous disc
   // extensions are identified by content, not extension

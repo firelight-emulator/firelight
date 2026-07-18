@@ -11,6 +11,7 @@ Item {
 
     // --- Scope (the base set — one at a time, chosen in the sidebar) ---
     property int filterPlatformId: -1
+    // TODO
     // A folder scope matches the folder AND all its descendants. The sidebar
     // supplies the descendant ids split by kind (manual = membership, smart =
     // computed), so selecting a parent shows everything nested under it
@@ -317,6 +318,7 @@ Item {
         ]
     }
 
+    // TODO
     // A lightweight, ordered mirror of the filtered/sorted rows. Qt's tech-preview
     // SortFilterProxyModel exposes neither get(row) nor count, so this Instantiator
     // is how QML reads the result set in order — it backs the live count and
@@ -666,6 +668,7 @@ Item {
         }
     }
 
+    // TODO
     // Right dock: details for the last-clicked game. Width animates 0 -> open so
     // the grid reflows to make room; the panel keeps a fixed content width and is
     // clipped, so it slides rather than reflowing while animating

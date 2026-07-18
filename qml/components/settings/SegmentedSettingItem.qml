@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // Pick one of a few options, all visible at once. `options` is [{label, value}];
 // `currentValue` is the selected value; emits `changed` on selection. Sits to
 // the side for 2 options, full-width below for 3+

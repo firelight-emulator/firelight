@@ -41,6 +41,7 @@ Button {
 
     background: Rectangle {
         color: control.enabled ? (mouse.containsMouse ? "#404143" : (control.checked ? "#58595b" : "transparent")) : "transparent"
+        // TODO
         // opacity: control.enabled ? (control.checked ? 1.0 : mouse.containsMouse ? 0.2 : 0.0) : 0.0
         // color: control.checked ?
         //     (mouse.pressed ?

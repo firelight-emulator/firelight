@@ -180,6 +180,7 @@ TEST_F(PlatformServiceTest, PlatformJsonRoundTrip) {
   EXPECT_EQ(restored.discordImage, original.discordImage);
 }
 
+// TODO
 // TEST_F(PlatformServiceTest, PlatformGameboyIsCorrect) {
 //   const auto expectedNes = firelight::platforms::Platform{
 //       .id = firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY,

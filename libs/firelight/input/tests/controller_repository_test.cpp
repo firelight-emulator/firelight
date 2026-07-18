@@ -89,6 +89,7 @@ TEST_F(ControllerRepositoryTest, KeyboardProfileIsSeededFromTheKeyboardTable) {
   EXPECT_TRUE(keyboard->getShortcutMapping()->getBindings("fast_forward").empty());
 }
 
+// TODO
 // Reads a profile back with none of the in-memory state that created it
 // Connections are keyed per thread, so a second repository here shares the same
 // live database while keeping its own empty profile cache — which is exactly the

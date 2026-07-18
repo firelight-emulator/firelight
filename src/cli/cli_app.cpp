@@ -9,6 +9,7 @@ CliOptions parseCli(int argc, char **argv) {
   CliOptions opts;
 
   CLI::App app{"Firelight - a libretro emulation frontend"};
+  // TODO
   // Only recognize --long / -short options; otherwise CLI11 treats a leading
   // "/" as a Windows-style option flag and mis-parses POSIX-style ROM paths
   // (e.g. "/roms/game.gba")

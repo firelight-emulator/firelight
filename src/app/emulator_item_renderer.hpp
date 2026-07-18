@@ -49,6 +49,7 @@ namespace firelight {
   }
 } // namespace firelight
 
+// TODO
 // Threading: created, used, and destroyed on the QML render thread — Qt drives
 // initialize()/synchronize()/render() there, which is also where the
 // EmulatorCommand queue (incl. RunFrame -> EmulatorInstance) is drained
@@ -140,6 +141,7 @@ private:
   const QSGRendererInterface::GraphicsApi m_graphicsApi;
   firelight::emulation::EmulatorInstance *m_emulatorInstance;
 
+  // TODO
   // Services, injected by EmulatorItem (which is the ServiceAccessor). The
   // renderer is one level removed from QML, so it takes its dependencies rather
   // than reaching into the locator itself
@@ -149,6 +151,7 @@ private:
   firelight::saves::ISaveManager *m_saveManager;
   firelight::media::MediaService *m_mediaService;
 
+  // TODO
   // Instant-replay recorder: fed the software-rendered frames in receive(); its
   // rolling window is snapshotted + muxed to mp4 on CaptureVideoClip. Software
   // cores only — HW (Vulkan) cores don't deliver pixels to receive()
@@ -231,11 +234,13 @@ private:
 
   void displayPauseImage(QRhiCommandBuffer *cb);
 
+  // TODO
   // Reads the composited colorTexture() back to a CPU QImage (m_currentImage)
   // and feeds it to the clip recorder and netplay stream. Works for software
   // and hardware cores alike, since both fill colorTexture()
   void scheduleFrameReadback(QRhiResourceUpdateBatch *batch);
 
+  // TODO
   // Whether anything needs a per-frame CPU copy right now (instant replay on,
   // host stream armed, or a one-shot capture pending). HW cores skip the
   // readback when nothing does
@@ -253,6 +258,7 @@ private:
   bool m_usingHardwareRenderer = false;
 
 
+  // TODO
   // ── Vulkan ───────────────────────────────────────────────────────────────
   // Stored here because setHwRenderContextNegotiationInterface() may be called
   // before the first render() where initialize() is invoked

@@ -46,6 +46,7 @@ namespace firelight::gui {
     // folder's id, or -1 on failure
     Q_INVOKABLE int createFolder(const QString &displayName, int parentId);
 
+    // TODO
     // Creates a smart folder whose membership is computed live from the given
     // SmartFolderCriteria JSON (see smart_folder.hpp). Returns the new folder's
     // id, or -1 on failure (so the caller can then set color/sort on it)
@@ -66,6 +67,7 @@ namespace firelight::gui {
     Q_INVOKABLE bool setFolderSort(int folderId, const QString &sortRole,
                                    bool ascending);
 
+    // TODO
     // Manual folder ordering. reorderFolders sets the order of the folders in
     // orderedIds within a parent scope (parentId -1 = root); setFolderParent
     // moves a folder under a new parent (appended at the end). The UI for these

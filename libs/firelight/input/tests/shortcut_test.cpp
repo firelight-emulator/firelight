@@ -99,6 +99,7 @@ TEST_F(ShortcutTest, HoldFiresStartedAndEnded) {
   EXPECT_EQ(events[1].phase, ShortcutPhase::Ended);
 }
 
+// TODO
 // An action that flips something global (mute, pause) reports an edge and lets
 // the consumer own the value. The engine must not track that value itself: it
 // only ever sees one device, so two devices sharing a profile would each keep
@@ -135,6 +136,7 @@ TEST_F(ShortcutTest, EveryPressFiresOnEveryDevice) {
   }
 }
 
+// TODO
 // A bare press still reaches the game; the same button as part of a combo does
 // not. That conditional is only possible because the modifier disambiguates the
 // two intents at the trigger's rising edge — with no lookahead needed
@@ -213,6 +215,7 @@ TEST_F(ShortcutTest, ForgettingADeviceDropsItsMasks) {
   EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::SouthFace));
 }
 
+// TODO
 // Turning hotkeys off hands the whole device to the game — which is what a core
 // that wants the entire keyboard (DOS, Amiga, MSX) needs, and what no amount of
 // per-binding cleverness can give it

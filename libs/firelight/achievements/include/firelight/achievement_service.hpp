@@ -22,6 +22,7 @@ struct AchievementSessionEndedEvent {
   bool hardcore;
 };
 
+// TODO
 // Published when the logged-in user changes (login sets a username, logout
 // clears it). Login completes asynchronously after startup, so consumers that
 // show per-user data (e.g. the library's achievement counts) refresh on this
@@ -99,6 +100,7 @@ public:
   [[nodiscard]] std::vector<UserUnlock>
   getAllUserUnlocks(const std::string &username, unsigned gameId) const;
 
+  // TODO
   // Offline {earned, total} achievement counts for a game by content hash
   // total is the achievement-set size; earned counts the user's unlocks
   // (softcore or hardcore). {0, 0} when the game has no achievement set;

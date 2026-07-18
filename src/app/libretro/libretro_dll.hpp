@@ -10,6 +10,7 @@ class QLibrary;
 
 namespace libretro {
 
+// TODO
 // Thin wrapper over a loaded libretro core DLL: owns the QLibrary + every
 // resolved retro_* entry point and forwards raw calls. No policy — Core drives
 // it. The constructor throws if the DLL won't load or a required symbol is

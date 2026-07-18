@@ -10,6 +10,7 @@
 
 namespace firelight::input {
 
+// TODO
 // A named set of shipped bindings, offered when a profile is created
 //
 // A preset is a *starting point*, not a tier: seeding copies it into the profile
@@ -25,6 +26,7 @@ struct ShortcutPreset {
 
   [[nodiscard]] bool appliesTo(DeviceType device) const;
 
+  // TODO
   // The shipped sources for one action, in preference order — seeding keeps the
   // ones the device actually has, so a pad missing R3 falls through to the next
   // Empty if this preset leaves the action unbound
@@ -32,6 +34,7 @@ struct ShortcutPreset {
   sourcesFor(DeviceType device, const ShortcutId &id) const;
 };
 
+// TODO
 // The shortcut actions the emulator supports and their shipped bindings, parsed
 // from data/shortcuts.json. The app supplies the path — this library doesn't
 // know where the file lives
@@ -45,6 +48,7 @@ public:
   bool loadFromFile(const std::string &path);
   bool loadFromString(const std::string &json);
 
+  // TODO
   // Problems that would otherwise be invisible at runtime — an action nobody
   // declared, a code the device can't produce, a keyboard shortcut sitting on a
   // gameplay key. Empty means the file is good
@@ -67,6 +71,7 @@ private:
   std::string m_defaultPresetId;
 };
 
+// TODO
 // Parses the form the data file uses for a trigger: "R3", or "Select+R3" where
 // everything before the last '+' must be held alongside it. Returns nullopt if
 // any name isn't an input this kind of device has

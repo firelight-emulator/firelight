@@ -2,6 +2,7 @@
 
 namespace firelight::emulation {
 
+// TODO
 // What a shortcut needs from the running emulator
 //
 // Implemented by EmulatorItem, which genuinely owns this state rather than

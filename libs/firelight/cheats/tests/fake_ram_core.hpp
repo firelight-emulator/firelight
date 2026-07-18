@@ -9,6 +9,7 @@
 
 namespace firelight::cheats {
 
+// TODO
 // A minimal ICore for exercising CheatEngine in isolation: a test-configurable,
 // writable SYSTEM_RAM buffer; every other ICore method is an inert stub. Keeps
 // the cheats module test independent of the app's emulation FakeCore

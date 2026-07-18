@@ -12,6 +12,7 @@ void WindowsFrameFilter::setWindow(QWindow *window) {
     m_hwnd = reinterpret_cast<HWND>(window->winId());
     m_dpr = window->devicePixelRatio();
 
+    // TODO
     // Qt's logical size is the true desired content size. GetWindowRect would
     // return an inflated outer rect (Qt added title bar + borders via
     // AdjustWindowRect), so we convert the logical size directly instead
@@ -25,6 +26,7 @@ void WindowsFrameFilter::setWindow(QWindow *window) {
     SetWindowPos(m_hwnd, nullptr, 0, 0, 0, 0,
                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
+    // TODO
     // Nudge forces WM_SIZE so Qt re-queries GetClientRect. Because
     // WM_NCCALCSIZE now returns client=window, Qt sees physW x physH and
     // resets contentItem to (0,0) with the correct dimensions
@@ -150,6 +152,7 @@ bool WindowsFrameFilter::nativeEventFilter(const QByteArray &eventType,
 
 #else // !_WIN32
 
+// TODO
 // Non-Windows platforms use the compositor's native title bar, so there's no
 // custom non-client hit-testing to do. We keep the class (and the WindowFrame
 // QML API) alive with Qt-based equivalents so MainWindow.qml still works: the

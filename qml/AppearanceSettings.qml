@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Firelight 1.0
 
+// TODO
 // Typed read path for the appearance settings declared in the settings catalog
 // The settings page writes them through SettingsModel; Theme and everything else
 // bind to the named properties here. Both go to the same store, so there's one
@@ -27,6 +28,7 @@ QtObject {
     property SettingBinding scaleBinding: SettingBinding { key: "interface-scale" }
     property SettingBinding densityBinding: SettingBinding { key: "interface-density" }
 
+    // TODO
     // Colors are "#rrggbb" strings, not `color`: that's what consumers were
     // built against, they coerce to `color` where used, and they round-trip the
     // picker unchanged
@@ -43,6 +45,7 @@ QtObject {
     // Gradient stop 2 (only used in "gradient" mode)
     readonly property string backgroundColor2: color2Binding.value
 
+    // TODO
     // The setting stores a plain path — that's what the file picker deals in —
     // but Image.source and samplePalette both need a URL. Convert once, here,
     // rather than at every use site
@@ -61,6 +64,7 @@ QtObject {
     // to this and GameTile decodes to match
     readonly property int libraryTileSize: parseInt(tileSizeBinding.value)
 
+    // TODO
     // Accessibility scaling. AppStyle multiplies its metric tokens by these:
     // uiScale enlarges everything (fonts + dimensions), uiDensity only affects
     // spacing/heights. The `|| ` guards a not-yet-loaded binding from poisoning
@@ -68,6 +72,7 @@ QtObject {
     readonly property real uiScale: parseFloat(scaleBinding.value) || 1.0
     readonly property real uiDensity: parseFloat(densityBinding.value) || 1.0
 
+    // TODO
     // In image mode the theme tints itself from the image rather than from
     // backgroundColor. Derived, not stored: it's a function of the chosen file,
     // so sampling it on demand can't fall out of sync the way a saved copy did

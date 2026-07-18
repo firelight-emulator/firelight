@@ -54,6 +54,7 @@ public:
   virtual void updateMouseState(double x, double y, bool mousePressed) = 0;
   virtual void updateMousePressed(bool mousePressed) = 0;
 
+  // TODO
   // Additional mouse feed for RETRO_DEVICE_MOUSE / light guns. Default no-ops so
   // non-SDL/test implementations need not care. `dx/dy` accumulate relative
   // motion (in mouse units) consumed once per frame by getRelativeMotion();
@@ -62,6 +63,7 @@ public:
   virtual void updateMouseMotion(int dx, int dy) {}
   virtual void updateMouseOffscreen(bool offscreen) {}
 
+  // TODO
   // Applies the input context for a launched game: any per-game profile
   // override (by content hash) and the platform's preferred controller type
   // (promoting a matching controller to player 1). Pass an empty hash to skip
@@ -72,6 +74,7 @@ public:
   // slot order is left as-is
   virtual void clearGameContext() = 0;
 
+  // TODO
   // Sets a one-shot, non-persisted preferred controller type for a platform
   // (CLI `--controller`), consulted by the next applyGameContext with higher
   // priority than the stored platform preference. Not persisted. Default no-op
@@ -82,6 +85,7 @@ public:
   // Sets which shortcuts are currently active (ScopeInGame / ScopeInMenu)
   virtual void setShortcutContext(int scope) = 0;
 
+  // TODO
   // Turns hotkeys off for every device, or only for one kind of device. Off
   // hands each input straight to the game, which a system that wants the whole
   // keyboard needs; `only` limits it to the keyboard so a controller keeps its

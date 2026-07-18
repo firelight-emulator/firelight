@@ -70,6 +70,7 @@ private:
   // Evaluates a single Binding to a digital pressed/not-pressed result,
   // honoring its modifiers (all must be held) and analog threshold
   [[nodiscard]] bool evaluateBindingDigital(const Binding &binding) const;
+  // TODO
   // Evaluates a Binding including toggle (latch on rising edge) and turbo
   // (autofire while active) behavior. Mutates per-binding state, so it must be
   // called once per frame per binding

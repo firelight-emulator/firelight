@@ -24,6 +24,7 @@ int64_t nowMs() {
       .count();
 }
 
+// TODO
 // Last-modified time of a file as int64 milliseconds since the Unix epoch
 // Portable conversion from filesystem clock to system clock (C++20 clock_cast
 // support is uneven across the toolchains we build on)
@@ -62,6 +63,7 @@ bool writeAtomic(const fs::path &path, const void *data, size_t size) {
   return true;
 }
 
+// TODO
 // Convert a possibly-file:// URL into a filesystem path. Strips the scheme but,
 // unlike the old code, does NOT strip the leading '/' of a POSIX absolute path
 // (that turned /Users/x into Users/x). Only a Windows drive path (/C:/...) has

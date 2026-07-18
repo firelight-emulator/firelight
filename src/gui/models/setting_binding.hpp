@@ -8,6 +8,7 @@
 
 namespace firelight::settings {
 
+// TODO
 // One declared setting, bound by key: its value plus the metadata the catalog
 // declares for it. Reads and writes the global tier, which is the whole of an
 // app setting's story — no core mapping, nothing overriding it per-platform or

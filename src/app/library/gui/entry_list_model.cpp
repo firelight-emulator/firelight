@@ -75,6 +75,7 @@ namespace firelight::library {
                   Qt::QueuedConnection);
               });
 
+    // TODO
     // Login completes asynchronously, after this constructor's reset() has
     // already computed counts with no user; recompute when the user arrives
     // (and on logout, which zeroes earned)

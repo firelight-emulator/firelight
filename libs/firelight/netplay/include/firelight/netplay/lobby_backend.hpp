@@ -28,6 +28,7 @@ struct LobbyInfo {
   std::vector<LobbyMember> members;
 };
 
+// TODO
 // Callbacks a backend fires as the lobby changes. chatReceived fires only for
 // REMOTE senders — the session appends the local user's messages itself
 // memberRenamed fires for every rename, the local user's included
@@ -42,6 +43,7 @@ struct LobbyEvents {
   std::function<void()> lobbyClosed;
 };
 
+// TODO
 // The only seam the rest of the app sees for lobbies, chat, connection
 // signaling, AND identity — implementations (Discord today, LAN or a custom
 // server later) keep their sign-in flows and tokens internal.

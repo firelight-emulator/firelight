@@ -49,6 +49,7 @@ namespace libretro {
     }
     const auto it = m_envHandlers.find(cmd);
     if (it == m_envHandlers.end()) {
+      // TODO
       // Intentionally unhandled libretro env commands (camera, location, MIDI,
       // JIT, device-power, throttle, playlist dirs, proc-address, …): declining
       // is correct — the core falls back to its defaults
@@ -149,6 +150,7 @@ namespace libretro {
       }};
     m_envHandlers[RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK] = {
       "RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK", [this](void *data) -> bool {
+        // TODO
         // The core hands us a function to call on every key; keep it. (This
         // used to assign *into* ptr->callback, overwriting the core's own
         // pointer with a stub — so cores that drive themselves from the
@@ -283,6 +285,7 @@ namespace libretro {
     m_envHandlers[RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES] = {
       "RETRO_ENVIRONMENT_GET_INPUT_DEVICE_CAPABILITIES", [this](void *data) -> bool {
         auto ptr = static_cast<uint64_t *>(data);
+        // TODO
         //* Gets a bitmask telling which device type are expected to be
         // * handled properly in a call to retro_input_state_t
         // * Devices which are not handled or recognized always return
@@ -444,6 +447,7 @@ namespace libretro {
       }};
     m_envHandlers[RETRO_ENVIRONMENT_SET_CONTROLLER_INFO] = {
       "RETRO_ENVIRONMENT_SET_CONTROLLER_INFO", [this](void *data) -> bool {
+        // TODO
         // The core advertises the device types it accepts on each port; store a
         // copy (strings may be transient) so the UI can offer a per-port device
         // choice and we can call retro_set_controller_port_device
@@ -557,6 +561,7 @@ namespace libretro {
       }};
     m_envHandlers[RETRO_ENVIRONMENT_GET_VFS_INTERFACE] = {
       "RETRO_ENVIRONMENT_GET_VFS_INTERFACE", [this](void *data) -> bool {
+        // TODO
         // Intentionally declined: Firelight does not virtualize core file I/O
         // Cores fall back to stdio, which is correct given the managed system +
         // per-slot save directories we hand them. (A vfs:: impl exists in the

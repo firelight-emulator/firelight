@@ -7,6 +7,7 @@
 
 namespace firelight::settings {
 
+// TODO
 // A search hit is either a whole page ("Appearance") or one setting within one
 // ("Sync method", under Emulation > Video). Pages answer "where do I go?";
 // settings answer "where does this specific knob live?"
@@ -27,6 +28,7 @@ struct SettingSearchResult {
   int score = 0;
 };
 
+// TODO
 // Flattens the catalog into something searchable: every page and every declared
 // setting, matched on label, key, keywords and description. This is the whole
 // point of declaring settings in one file — the hand-maintained keyword list

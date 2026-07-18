@@ -47,6 +47,7 @@ namespace firelight::gui {
         return controllerTypeIds;
       }
       case ControllerImages: {
+        // TODO
         // Aligned 1:1 with ControllerTypeIds / ControllerTypeNames: index i is
         // the image for controllerTypes[i]. Types without an image get an empty
         // placeholder so callers can index via controllerTypeIds.indexOf(type)

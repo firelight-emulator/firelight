@@ -17,6 +17,7 @@ class KeyboardInputHandler final : public QObject, public IGamepad {
 public:
   KeyboardInputHandler();
 
+  // TODO
   // The keys a console input falls back to when the profile has no binding
   // Built on first use rather than in the constructor, so callers that only want
   // to know the defaults (the shortcut catalog, validating that a shipped
@@ -69,6 +70,7 @@ private:
 
   QMap<Input, bool> m_buttonStates;
   QMap<Qt::Key, bool> m_keyStates;
+  // TODO
   // m_keyStates is written on the GUI thread (eventFilter) and read on the render
   // thread (input poll during core->run). QMap isn't thread-safe and operator[]
   // mutates the tree, so every access is serialized here

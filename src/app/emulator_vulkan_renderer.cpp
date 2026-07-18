@@ -8,6 +8,7 @@
 #include <spdlog/spdlog.h>
 #include <vector>
 
+// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Construction / destruction
 // ─────────────────────────────────────────────────────────────────────────────
@@ -16,6 +17,7 @@ EmulatorVulkanRenderer::~EmulatorVulkanRenderer() {
   destroy();
 }
 
+// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Public interface
 // ─────────────────────────────────────────────────────────────────────────────
@@ -177,6 +179,7 @@ void EmulatorVulkanRenderer::renderFrame(
   m_vkfWaitForFences(m_vkDevice, 1, &m_vkFrameFences[0], VK_TRUE, UINT64_MAX);
 }
 
+// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Initialization
 // ─────────────────────────────────────────────────────────────────────────────
@@ -189,6 +192,7 @@ bool EmulatorVulkanRenderer::initialize(
   const auto *vk =
       static_cast<const QRhiVulkanNativeHandles *>(rhi->nativeHandles());
 
+  // TODO
   // Get the raw vkGetInstanceProcAddr directly from the Vulkan loader DLL
   //
   // Qt's QVulkanInstance::getInstanceProcAddr("vkGetInstanceProcAddr") returns
@@ -218,6 +222,7 @@ bool EmulatorVulkanRenderer::initialize(
     return false;
   }
 
+  // TODO
   // ── Create the VkDevice ───────────────────────────────────────────────────
   //
   // Pass Qt's VkInstance so Granite uses it directly rather than creating its
@@ -230,6 +235,7 @@ bool EmulatorVulkanRenderer::initialize(
   retro_vulkan_context ctx{};
   VkPhysicalDeviceFeatures features{};
 
+  // TODO
   // Disable implicit Vulkan layers before Granite calls vkCreateInstance
   // Steam/OBS/Overwolf overlay layers crash or return null function pointers
   // when invoked for a second VkInstance in the same process (they already
@@ -241,6 +247,7 @@ bool EmulatorVulkanRenderer::initialize(
   }
   qputenv("VK_LOADER_LAYERS_DISABLE", "~implicit~");
 
+  // TODO
   // Device extensions the core must enable so the shared-image path works. The
   // core creates the VkDevice, and cores that only enable what they need (PPSSPP)
   // leave vkGetMemoryWin32HandleKHR / vkGetSemaphoreWin32HandleKHR null, crashing
@@ -279,6 +286,7 @@ bool EmulatorVulkanRenderer::initialize(
   }
 #endif
 
+  // TODO
   // Hand the core Qt's physical device (not VK_NULL_HANDLE): per the libretro
   // Vulkan spec the core must then use exactly this VkPhysicalDevice, which is
   // required for the shared-image path (core + Qt must be on the same GPU). The
@@ -300,6 +308,7 @@ bool EmulatorVulkanRenderer::initialize(
     return false;
   }
 
+  // TODO
   // Store destroy_device as a bare function pointer now, before the core DLL could
   // be unloaded. negotiation itself becomes a dangling pointer after coreLib->unload(),
   // so destroy() must call m_fnDestroyDevice directly
@@ -500,6 +509,7 @@ bool EmulatorVulkanRenderer::initialize(
   return true;
 }
 
+// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Per-frame resource setup
 // ─────────────────────────────────────────────────────────────────────────────
@@ -573,6 +583,7 @@ void EmulatorVulkanRenderer::buildVulkanHwInterface(
   m_vkInterfaceReady = true;
 }
 
+// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Staging buffer (CPU readback fallback)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -631,6 +642,7 @@ bool EmulatorVulkanRenderer::ensureStagingBuffer() {
   return true;
 }
 
+// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared image management
 // ─────────────────────────────────────────────────────────────────────────────
@@ -808,6 +820,7 @@ void EmulatorVulkanRenderer::destroySharedImage() {
   m_sharedImageFmt = VK_FORMAT_UNDEFINED;
 }
 
+// TODO
 // ─────────────────────────────────────────────────────────────────────────────
 // Teardown
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import QtQuick
 import Firelight 1.0
 
+// TODO
 // A brief message over everything else. Deliberately not interactive and never
 // focusable: it reports what just happened, and a hotkey firing must not steal
 // input from the game

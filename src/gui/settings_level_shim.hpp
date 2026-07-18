@@ -7,6 +7,7 @@
 
 namespace firelight::gui {
 
+// TODO
 // Names the settings tiers for QML, so pages read `level: SettingsLevel.Global`
 // rather than `level: 2`
 //

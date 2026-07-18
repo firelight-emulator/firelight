@@ -39,6 +39,7 @@ LibraryScanner2::LibraryScanner2(IUserLibraryRepository &library,
   m_scanTimer.setSingleShot(true);
   m_scanTimer.callOnTimeout([&] { startScan(); });
 
+  // TODO
   // Safety net: a low-frequency full rescan catches anything the watcher missed
   // (network/removable drives, watch-limit overflow, dropped events). Cheap
   // thanks to the per-directory mtime short-circuit, and skipped during gameplay
@@ -89,6 +90,7 @@ QStringList LibraryScanner2::watchedDirectories() const {
 bool LibraryScanner2::isScanning() const { return m_scanRunning; }
 
 void LibraryScanner2::scheduleWatch(const QString &path) {
+  // TODO
   // QFileSystemWatcher must only be touched on the thread the scanner lives on
   // (the main thread); scanDirectory runs on a worker, so hop back via the
   // event loop
@@ -188,6 +190,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
 
   const QFileInfo dirInfo(path);
   const int64_t dirMtime = dirInfo.lastModified().toMSecsSinceEpoch();
+  // TODO
   // If this directory is unchanged since we last scanned it, nothing was added,
   // removed, or renamed directly in it. We still re-descend into subdirectories
   // (their mtimes are checked independently), but skip the per-file DB lookups

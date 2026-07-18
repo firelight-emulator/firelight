@@ -214,6 +214,7 @@ Item {
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     height: Math.round(parent.height * 0.55)
+                    // TODO
                     // Uniform radius, not per-corner: a Rectangle ignores its
                     // gradient when per-corner radii are set. The top corners are
                     // transparent in the gradient, so rounding them is invisible

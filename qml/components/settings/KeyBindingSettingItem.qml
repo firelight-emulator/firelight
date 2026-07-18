@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // Shows the current binding as a pill and requests a rebind when clicked. The
 // owner sets `listening` while capturing and updates `binding` when done; this
 // component is purely presentational.

@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // A standard selectable row: optional leading icon, a label, and an optional
 // trailing item (placed as a child). Height derives from content and is floored
 // at rowHeight, so it reflows when text grows

@@ -5,6 +5,7 @@
 namespace firelight::library {
 namespace {
 
+// TODO
 // A fully-populated entry the tests narrow down from. platformId 3 (SNES-ish),
 // favorite, RPG, developer/publisher Squaresoft, 1997, in content dirs {1,2},
 // paths under .../roms/snes/, played recently for an hour

@@ -12,6 +12,7 @@
 
 namespace firelight::netplay {
 
+// TODO
 // Direct-connection lobby: the host listens on a TCP port and shares their
 // IP; guests join by entering it. That one socket carries lobby membership,
 // chat, and the WebRTC signaling — the game streams still flow over the peer

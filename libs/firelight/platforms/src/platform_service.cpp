@@ -8,6 +8,7 @@
 
 namespace firelight::platforms {
 namespace {
+// TODO
 // RA-supported consoles Firelight does not fully model (no controller/extension
 // data). Each becomes an identity-only Platform (id = 1000 + rcheevos console
 // id) so its name still renders in the library. Names mirror the previous

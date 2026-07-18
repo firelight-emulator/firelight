@@ -234,6 +234,7 @@ int main(int argc, char *argv[]) {
         spdlog::info("[Startup] Captures directory does not exist; creating: {}", capturesPath.toStdString());
     }
 
+    // TODO
     // ===== Check for single-instance mode =======================================================
     // If the user requested single-instance mode, check if another instance is already running
     // If so, forward the launch request to that instance and exit. Otherwise, continue launching
@@ -276,6 +277,7 @@ int main(int argc, char *argv[]) {
     firelight::saves::SqliteSaveDatabase saveDatabase(
         userdataDbPath.toStdString());
 
+    // TODO
     // Save data service. The persisted save-directory override lives in the app
     // layer now (the Qt-free SaveManager no longer owns QSettings); resolve it
     // here and pass the result in. QtSaveManagerProxy writes it back on change
@@ -308,6 +310,7 @@ int main(int argc, char *argv[]) {
     // repository's events. Must outlive scanning
     firelight::library::LibraryIngestService libIngestService(userLibrary);
 
+    // TODO
     // Auto-populates entry name/metadata/art from the shipped offline metadata
     // DB when a game is added (and backfills existing entries). Constructed
     // before scanning so it catches the initial scan's new entries; the read-only
@@ -321,6 +324,7 @@ int main(int argc, char *argv[]) {
         (defaultAppDataPathString + "/media").toStdString());
     metadataService.backfillMissing();
 
+    // TODO
     // Optional online art provider backing the "Change artwork" picker. The key
     // is a user setting (empty until supplied); the provider stays unconfigured
     // and no-ops until then. cpr lives here in the app so the metadata module
@@ -361,6 +365,7 @@ int main(int argc, char *argv[]) {
     firelight::ServiceAccessor::setControllerProfileRepository(
         &controllerRepository);
 
+    // TODO
     // Settings service. Constructed before anything that reads a setting —
     // AudioManager takes it by reference, and the netplay factory below builds
     // one on demand
@@ -371,6 +376,7 @@ int main(int argc, char *argv[]) {
         settingsRepository);
     firelight::settings::SettingsService::setInstance(&settingsService);
 
+    // TODO
     // Online play: direct-connection lobby (host shares their IP) + WebRTC
     // data plane + session. DiscordLobbyBackend can swap back in here once the
     // app's OAuth client is configured in the Discord developer portal.
@@ -400,6 +406,7 @@ int main(int argc, char *argv[]) {
     firelight::gui::QtGameArtProxy gameArtProxy(
         metadataService, steamGridDbArtProvider, mediaAssetRepository);
 
+    // TODO
     // PPSSPP loads a runtime asset tree (fonts, VFPU tables, texture atlases,
     // compat db) from <system>/PPSSPP. These aren't part of the core DLL, so the
     // app can't run PSP games without them. Seed the writable core-system copy
@@ -428,6 +435,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // TODO
     // Declared early so it outlives the QML engine and its EmulatorItem: those
     // are destroyed before the objects declared above them, and on exit while a
     // game is running the EmulatorItem's teardown calls back into the Discord
@@ -440,6 +448,7 @@ int main(int argc, char *argv[]) {
     auto gameImageProvider = new firelight::gui::GameImageProvider();
     firelight::ServiceAccessor::setGameImageProvider(gameImageProvider);
 
+    // TODO
     // Thin QML adapter over the (Qt-notification-free) save manager; exposes the
     // save directory as a bindable property for the settings UI. Declared here so
     // it outlives the QML engine registered below
@@ -492,6 +501,7 @@ int main(int argc, char *argv[]) {
             firelight::cli::resolveRomEntryId(cliOptions.romPath, userLibraryService,
                                               platformService);
 
+    // TODO
     // If we're the primary --single-instance process, start listening for
     // launches forwarded from secondary processes. Exposed to QML below so the
     // root window turns launchRequested into window.startGame(entryId)
@@ -512,6 +522,7 @@ int main(int argc, char *argv[]) {
     firelight::gui::CaptureListModel captureListModel(gameCaptureRepository,
                                                       userLibraryService);
 
+    // TODO
     // No scanFinished -> reset: the model keeps itself in sync incrementally via
     // EntryCreatedEvent/EntryUpdatedEvent (see EntryListModel), so scans update
     // the list in place without a full reset (no flicker / scroll loss)
@@ -526,12 +537,14 @@ int main(int argc, char *argv[]) {
     firelight::mods::SqliteModRepository modRepository;
     firelight::ServiceAccessor::setModRepository(&modRepository);
 
+    // TODO
     // Backs SettingsService (below) via the std-typed ISettingsRepository. Not a
     // QObject and not exposed to QML — the GUI reads settings through
     // SettingsService, not this repository
 
     //   qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 
+    // TODO
     // Friendly emulation settings + per-core option defaults. Loaded once into
     // the shared catalog; the emulation path and settings UI read from it
     // Resolve relative to the executable, not the working directory, so it loads
@@ -643,6 +656,7 @@ int main(int argc, char *argv[]) {
                                                       emulationContext);
     firelight::emulation::EmulationService::setInstance(&emuService);
 
+    // TODO
     // What the emulator hotkeys do, and the dispatcher that feeds them. Both
     // live as long as the app, so a shortcut arriving from the SDL thread can
     // never reach a half-destroyed subscriber. The three UI-bound actions come
@@ -651,6 +665,7 @@ int main(int argc, char *argv[]) {
         settingsService, [&raClient] { return raClient.hardcoreModeActive(); },
         firelight::emulation::ShortcutActions::Intents{});
     firelight::ServiceAccessor::setShortcutActions(&shortcutActions);
+    // TODO
     // Co-op: without this, any pad can exit the game or save over your slot
     // Off by default — a single-player setup is one player, and silently
     // ignoring a hotkey is worse than the thing it prevents
@@ -697,6 +712,7 @@ int main(int argc, char *argv[]) {
                          cliOptions.sets.end());
 
         if (!overrides.empty()) {
+            // TODO
             // Known friendly keys (common + every core's friendly settings) for a
             // typo warning. Raw core option keys can't be listed here, so unknown
             // keys are still applied (they may be valid advanced core options)
@@ -858,6 +874,7 @@ int main(int argc, char *argv[]) {
     app.installNativeEventFilter(frameFilter);
     engine.rootContext()->setContextProperty("WindowFrame", frameFilter);
 
+    // TODO
     // Startup values from the CLI (e.g. a ROM to auto-launch, per-launch window
     // knobs, a pending RetroAchievements login). Registered before loadFromModule
     // so the root window sees it in Component.onCompleted
@@ -891,6 +908,7 @@ int main(int argc, char *argv[]) {
     QObject *rootObject = engine.rootObjects().value(0);
     auto window = qobject_cast<QQuickWindow *>(rootObject);
 
+    // TODO
     // Give Qt's Vulkan renderer a shared instance that enables the external
     // memory/semaphore/fence *capabilities* extensions. HW-render cores that
     // request only Vulkan 1.0 (PPSSPP) resolve their shared-image negotiation
@@ -968,6 +986,7 @@ int main(int argc, char *argv[]) {
 
     spdlog::info("Exiting QApplication");
 
+    // TODO
     // Stop any running game before the QML engine (and its EmulatorItem, which
     // is the core's video receiver) is torn down, so the core is destroyed while
     // the receiver is still alive. This mirrors the in-app "stop game" path;

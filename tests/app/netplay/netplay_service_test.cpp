@@ -162,6 +162,7 @@ TEST_F(NetplayServiceTest, StreamConfigReachesGuestReceiver) {
   host.startGame();
   host.confirmLaunch();
 
+  // TODO
   // The host announces a config mid-game (as the encoder would); the guest's
   // receiver takes it without a valid extradata blob being decodable — the
   // decoder rejects garbage extradata gracefully

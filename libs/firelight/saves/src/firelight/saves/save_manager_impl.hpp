@@ -6,6 +6,7 @@
 #include <string>
 
 namespace firelight::saves {
+// TODO
 // Sqlite/filesystem-backed implementation of the ISaveManager domain contract
 // Announces suspend-point changes through the EventDispatcher (see
 // save_events.hpp) rather than Qt signals, so it is a plain, Qt-free class. The

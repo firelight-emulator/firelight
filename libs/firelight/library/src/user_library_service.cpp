@@ -8,6 +8,7 @@ namespace firelight::library {
 UserLibraryService::UserLibraryService(IUserLibraryRepository &repository,
                                        const std::string &defaultContentDirectory)
     : m_repository(repository) {
+  // TODO
   // Guarantee the default content directory: the user never picks or changes the
   // primary games folder, so make sure it exists on disk and is watched. Both
   // steps are idempotent, so this is safe on every startup (and re-seeds a reset

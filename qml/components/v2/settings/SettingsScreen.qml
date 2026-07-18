@@ -10,6 +10,7 @@ FocusScope {
     // Slide direction for the content transition (down = later item selected)
     property bool movingDown: true
 
+    // TODO
     // Single source of truth for the nav taxonomy. Each item's `page` references
     // a Component id defined at the bottom of this file. Grouped equivalent of
     // FLTwoColumnMenu's parallel menuItems/routeNames/pages
@@ -30,6 +31,7 @@ FocusScope {
                 { "displayName": "About", "iconName": "info", "route": "about", "page": about }
             ]
         }
+        // TODO
         // {
         //     "title": "Library",
         //     "items": [
@@ -320,6 +322,7 @@ FocusScope {
                                 delegate: LibraryNavigationMenuItem {
                                     required property var model
 
+                                    // TODO
                                     // Highlight is driven by the active route, not
                                     // by the list's own selection, so make it
                                     // non-checkable
@@ -365,6 +368,7 @@ FocusScope {
             }
         }
 
+        // TODO
         // Settings read as a single column, capped and centred. Letting them span
         // the whole pane flings each label and its control to opposite edges with
         // dead space between. The cap scales with the UI so enlarged controls get

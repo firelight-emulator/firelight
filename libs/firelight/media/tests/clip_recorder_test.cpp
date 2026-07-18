@@ -21,6 +21,7 @@ QImage makeFrame(int w, int h, int i) {
 }
 } // namespace
 
+// TODO
 // The core promise of the design: continuous encoding keeps only a bounded,
 // compressed, keyframe-aligned window — not a raw-frame backlog that grows with
 // play time

@@ -7,6 +7,7 @@
 
 namespace firelight::library {
 
+// TODO
 // The launch-ready content bytes and the canonical content hash derived from a
 // file's raw bytes. For cartridge systems the bytes may be header-stripped or
 // byte-swapped relative to the file on disk
@@ -15,6 +16,7 @@ struct HashedContent {
   std::string contentHash;
 };
 
+// TODO
 // Computes the content bytes and canonical (RetroAchievements-compatible)
 // content hash for a non-disc ROM, applying the platform-specific normalization:
 // iNES/SNES header stripping, N64 byte-order swap, and the rcheevos buffer hash

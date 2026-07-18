@@ -9,6 +9,7 @@
 
 namespace firelight::emulation {
 
+// TODO
 // A minimal in-memory ICore for tests: no DLL is opened, so there is no
 // process-exit on teardown and no real-hardware dependency. It models just
 // enough to exercise EmulatorInstance's flow: a SAVE_RAM buffer and a frame

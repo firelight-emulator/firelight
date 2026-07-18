@@ -32,6 +32,7 @@ struct TransportEvents {
       messageReceived;
 };
 
+// TODO
 // Peer-to-peer data plane. Connection handshakes ride the lobby backend's
 // signaling channel: the transport emits payloads via signalOut, and inbound
 // payloads are delivered to handleSignal.

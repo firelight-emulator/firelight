@@ -13,6 +13,7 @@ LibretroDll::LibretroDll(const std::string &path) {
                              "': " + m_lib->errorString().toStdString());
   }
 
+  // TODO
   // Resolve every libretro entry point up front. A compliant core exports all of
   // them (features it doesn't support are stubbed), so a missing symbol means a
   // broken/incompatible core; collect any misses and fail with a clear message

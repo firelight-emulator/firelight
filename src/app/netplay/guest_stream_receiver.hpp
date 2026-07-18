@@ -15,6 +15,7 @@
 
 namespace firelight::netplay {
 
+// TODO
 // The guest side of the game stream: decodes what the host sends (video
 // frames go to the attached view, audio to a local output) and ticks the
 // guest's own controller state back to the host. Packets arrive on network

@@ -370,6 +370,7 @@ TEST_F(AchievementServiceTest, GetGameId_MultipleMappings) {
   EXPECT_EQ(result2.value(), setId2);
 }
 
+// TODO
 // TEST_F(AchievementServiceTest, GetGameId_IntegrationWithSetGameId) {
 //   // This test verifies the complete round-trip functionality
 //   const std::string contentHash = "integration_test_hash";
@@ -406,6 +407,7 @@ TEST_F(AchievementServiceTest, GetGameId_EmptyContentHash) {
   EXPECT_EQ(result.value(), setId);
 }
 
+// TODO
 // TEST_F(AchievementServiceTest, GetAchievementSetByContentHash_Delegates) {
 //   const std::string contentHash = "test_hash";
 //
@@ -444,6 +446,7 @@ TEST_F(AchievementServiceTest, UpdateAchievementProgress_Success) {
   EXPECT_TRUE(result);
 }
 
+// TODO
 // TEST_F(AchievementServiceTest, GetUserUnlock_ExistingUnlock) {
 //   // Set up achievement data first
 //   auto patchResponse = createTestPatchResponse(1);
@@ -466,6 +469,7 @@ TEST_F(AchievementServiceTest, GetUserUnlock_NotFound) {
   EXPECT_TRUE(result->synced);
 }
 
+// TODO
 // TEST_F(AchievementServiceTest, GetPatchResponse_ExistingResponse) {
 //   auto patchResponse = createTestPatchResponse(1);
 //   EXPECT_TRUE(service->processPatchResponse("testuser", patchResponse));
@@ -479,6 +483,7 @@ TEST_F(AchievementServiceTest, GetUserUnlock_NotFound) {
 
 // ProcessStartSessionResponse Tests
 
+// TODO
 // TEST_F(AchievementServiceTest, ProcessStartSessionResponse_Success) {
 //   // Set up achievements first
 //   auto patchResponse = createTestPatchResponse(1);
@@ -571,6 +576,7 @@ TEST_F(AchievementServiceTest,
   EXPECT_TRUE(unsupportedUnlock->synced);
 }
 
+// TODO
 // TEST_F(AchievementServiceTest,
 //        ProcessStartSessionResponse_RelocksRemovedAchievements) {
 //   // Set up achievements first
@@ -612,6 +618,7 @@ TEST_F(AchievementServiceTest,
 //   EXPECT_EQ(updatedUnlock2->unlockTimestamp, 0);
 // }
 
+// TODO
 // TEST_F(AchievementServiceTest,
 //        ProcessStartSessionResponse_RelocksRemovedHardcoreAchievements) {
 //   // Set up achievements first
@@ -669,6 +676,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_EmptyResponse) {
   EXPECT_FALSE(unsupportedUnlock->earned);
 }
 
+// TODO
 // TEST_F(AchievementServiceTest,
 //        ProcessStartSessionResponse_MixedNormalAndHardcore) {
 //   // Set up achievements first
@@ -706,6 +714,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_EmptyResponse) {
 //   EXPECT_TRUE(unlock2->synced);
 // }
 
+// TODO
 // TEST_F(AchievementServiceTest,
 //        ProcessStartSessionResponse_HardcoreUnlockSetsEarnedTrue) {
 //   // Set up achievements first
@@ -736,6 +745,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_EmptyResponse) {
 //   EXPECT_TRUE(unlock->synced);
 // }
 
+// TODO
 // TEST_F(AchievementServiceTest,
 //        ProcessStartSessionResponse_HardcoreWithExistingNonHardcore) {
 //   // Set up achievements first
@@ -809,6 +819,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_ZeroTimestamps) {
   EXPECT_EQ(unlock->unlockTimestamp, 0);
 }
 
+// TODO
 // ============================================================
 // ProcessStartSessionResponse - update loop tests
 //
@@ -1057,6 +1068,7 @@ TEST_F(AchievementServiceTest,
   EXPECT_EQ(unlock->unlockTimestamp, 1609459200u);
 }
 
+// TODO
 // The break triggered by UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID in the Unlocks
 // list stops the auto-creation loop early, but the update loop's find_if
 // scans the full list, so an existing record for an achievement that appears

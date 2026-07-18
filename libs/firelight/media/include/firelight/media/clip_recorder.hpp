@@ -9,6 +9,7 @@ class QImage;
 
 namespace firelight::media {
 
+// TODO
 // Records the last N seconds of gameplay as a rolling window of *compressed*
 // H.264 — never raw frames. Video frames pushed from the render thread are
 // encoded on a private worker thread and appended to a bounded packet ring
@@ -25,6 +26,7 @@ public:
   ClipRecorder(const ClipRecorder &) = delete;
   ClipRecorder &operator=(const ClipRecorder &) = delete;
 
+  // TODO
   // Sets up the encoder + worker for a source of the given geometry/rate. May
   // be called again to restart for a new game. Returns false if no usable H.264
   // encoder is available. `fps`/`sampleRate` come from the core's AV info

@@ -3,6 +3,7 @@ import QtQuick
 pragma Singleton
 
 Item {
+    // TODO
     // The metrics half of the design system: sizes only (fonts, spacing,
     // dimensions). Color lives in Theme — read color from Theme, size from here,
     // and never a literal at a call site

@@ -5,6 +5,7 @@
 
 namespace firelight::library {
 
+// TODO
 // What kind of content a file holds. Cartridge content is a single self-
 // contained ROM; Disc content may be a single image or the primary file (a
 // cue/gdi/m3u sheet) of a multi-file disc set whose members live in disc_members
@@ -13,6 +14,7 @@ enum class ContentType {
   Disc = 1,
 };
 
+// TODO
 // A managed content file: a ROM or disc image that has been identified and
 // catalogued. The launchable identity is m_contentHash; m_filePath/m_inArchive
 // locate the bytes on disk
@@ -27,6 +29,7 @@ struct ContentFile {
   std::string m_archivePathName;
   int m_platformId = -1;
   std::string m_contentHash;
+  // TODO
   // The content directory (content_directoriesv1.id) this file was found under,
   // resolved by longest path-prefix match. -1 when it belongs to no known
   // directory (e.g. imported before source tracking, and unmatched by the

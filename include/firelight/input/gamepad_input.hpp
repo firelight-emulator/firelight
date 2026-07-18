@@ -5,6 +5,7 @@
 #include <string_view>
 
 namespace firelight::input {
+  // TODO
   // Namespacing masks for non-JOYPAD device inputs. The low byte of a masked
   // value is the raw RETRO_DEVICE_ID_* for that device, so the runtime can
   // recover it with `input & 0xFF` and detect the class with these masks
@@ -65,6 +66,7 @@ namespace firelight::input {
     LightgunReload = LIGHTGUN_INPUT_MASK | 16, // 1040
   };
 
+  // TODO
   // The device class a GamepadInput belongs to, derived from its namespace mask
   // Values double as the input-mapping key (controllerType): Joypad == 1 keeps
   // existing persisted joypad mappings valid
@@ -85,6 +87,7 @@ namespace firelight::input {
     return static_cast<unsigned>(input) & 0xFFu;
   }
 
+  // TODO
   // The default *physical* gamepad button a console input binds to when the user
   // hasn't set an explicit binding. For most inputs this is the identity (the
   // input's own value is already a physical button, e.g. NES A == EastFace); the
@@ -120,6 +123,7 @@ namespace firelight::input {
     }
   }
 
+  // TODO
   // The inputs a shortcut editor offers as a combo modifier — every digital
   // joypad button. A binding's modifiers can be any input, so this is only what
   // the UI watches for being held; it is not a restriction the engine enforces
@@ -134,6 +138,7 @@ namespace firelight::input {
     return CANDIDATES;
   }
 
+  // TODO
   // Resolves the name a shipped data file uses for an input (data/shortcuts.json
   // writes "R3", not 15). Deliberately separate from displayName(): that is prose
   // for the UI and free to be reworded, whereas these are identifiers that would
@@ -141,6 +146,7 @@ namespace firelight::input {
   // catalog can report it rather than silently resolving to some other button
   std::optional<GamepadInput> gamepadInputFromName(std::string_view name);
 
+  // TODO
   // Device-neutral display name for an input (e.g. "South Face", "D-Pad Up")
   // Platforms provide their own per-button labels ("A", "B", …) in their
   // controller definitions; this is the generic fallback used by input UIs

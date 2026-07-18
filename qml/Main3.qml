@@ -34,6 +34,7 @@ ApplicationWindow {
         WindowGeometry.mainWindowY = y
     }
 
+    // TODO
     // onActiveFocusItemChanged: {
     //     console.log("Active focus item changed to: " + window.activeFocusItem)
     //     let item = window.activeFocusItem
@@ -90,6 +91,7 @@ ApplicationWindow {
     }
 
     function startGame(entryId) {
+        // TODO
         // In a lobby, launching becomes a ready check: the host announces the
         // game (from anywhere in the app) and launches from the toast; guests
         // can't start games
@@ -150,6 +152,7 @@ ApplicationWindow {
         raLoginDialog.open()
     }
 
+    // TODO
     // Auto-launch a game passed on the command line (`firelight <rom>`), once
     // the window and its content stack have been set up. If a CLI login was
     // requested, do that first and gate the launch on its result
@@ -217,6 +220,7 @@ ApplicationWindow {
             event.accepted = false
         }
 
+         // TODO
          // onCurrentItemChanged: {
          //     currentItem.focus = true
          // }

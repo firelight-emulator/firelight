@@ -111,6 +111,7 @@ FocusScope {
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
+                    // TODO
                     // Without beginPath the path accumulates across repaints
                     // (e.g. the first paint at 0-size before the size binding
                     // resolves), leaving stray segments in the X

@@ -28,6 +28,7 @@ namespace firelight::emulation {
                                      CoreFactory coreFactory)
     : m_settingsService(settingsService), m_context(std::move(context)),
       m_coreFactory(std::move(coreFactory)) {
+    // TODO
     // The EmulatorInstance created below inherits this context; make sure it
     // carries the same settings service the service was constructed with,
     // regardless of whether the caller pre-populated the field
@@ -43,6 +44,7 @@ namespace firelight::emulation {
     m_loader = std::make_unique<GameLoader>(library, entryResolver,
                                             m_settingsService, m_context);
 
+    // TODO
     // Core options are only known once the core declares them during
     // EmulatorInstance::initialize (render thread). That publishes
     // EmulationStartedEvent, at which point we cache the declared options so the
@@ -90,6 +92,7 @@ namespace firelight::emulation {
   }
 
   std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
+    // TODO
     // Every failure path returns a *ready* future holding nullptr (never a
     // default-constructed, invalid future that would be UB to .get()) and
     // announces the failure so the UI can react

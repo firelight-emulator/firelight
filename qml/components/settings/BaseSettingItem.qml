@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // One settings row inside a section card: the label with its description beneath
 // it, the control to the right (or full-width below when `controlBelow`), and a
 // full-bleed hairline between rows. A subtle highlight appears on hover or
@@ -157,6 +158,7 @@ FocusScope {
                 id: sideSlot
                 visible: !root.controlBelow
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                // TODO
                 // A control that asks for more than it can have — a long file
                 // path, say — would otherwise squeeze the label to nothing and
                 // draw straight over it. Cap it and let the control shrink

@@ -87,6 +87,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     return numFrames;
   }
 
+  // TODO
   // Note: we run this path even when muted (writing silence below) so the audio
   // buffer keeps draining at the device rate — the "audio" sync method paces the
   // emulation off this buffer's occupancy and must not stall when muted
@@ -204,6 +205,7 @@ void AudioManager::setPaused(const bool paused) {
 }
 
 float AudioManager::getBufferLevel() const {
+  // TODO
   // Live read of the sink's occupancy. The "audio" sync method paces frames off
   // this value from another thread; a cached value only refreshed while we're
   // feeding the sink would freeze once the buffer fills and we stop feeding it,

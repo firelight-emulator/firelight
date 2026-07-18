@@ -14,6 +14,7 @@ class Client;
 
 namespace firelight::discord {
 
+// TODO
 // Maps ILobbyBackend onto the Discord Social SDK: the join code is the lobby
 // secret, chat rides SendLobbyMessage, and connection signaling rides
 // metadata-tagged lobby messages (chunked, filtered out of chat). Sign-in is

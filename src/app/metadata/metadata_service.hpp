@@ -18,6 +18,7 @@ class IGameMetadataSource;
 class IMediaAssetRepository;
 struct ArtCandidate;
 
+// TODO
 // Auto-populates a library entry's name, filterable metadata, and default art
 // when it's first created, from the shipped offline metadata source, and owns
 // the user's art choices (select/import/apply). Auto-population runs on a

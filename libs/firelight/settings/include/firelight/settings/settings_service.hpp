@@ -7,6 +7,7 @@
 
 namespace firelight::settings {
 
+// TODO
 // A setting override tier. Values resolve Game -> Platform -> Global -> default;
 // there is no stored "current level" per game — inheritance is the fallback
 // chain. `Unknown` is a sentinel for "not a real tier"
@@ -86,6 +87,7 @@ public:
   bool resetValueAtLevel(SettingsLevel level, const std::string &contentHash,
                          int platformId, const std::string &key);
 
+  // TODO
   // Canonical resolution: session override -> game override -> platform override
   // -> global. Returns nullopt if unset at every level (caller applies the
   // catalog default)
@@ -93,6 +95,7 @@ public:
                                                int platformId,
                                                const std::string &key);
 
+  // TODO
   // Sets an in-memory, non-persisted override that wins over every stored tier
   // in getEffectiveValue. Used by the CLI to apply per-launch config (`--set`)
   // without mutating the saved settings database. Intended to be populated once

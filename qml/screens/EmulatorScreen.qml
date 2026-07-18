@@ -302,6 +302,7 @@ FocusScope {
 
             onRestartGamePressed: function () {
                 resetGameAction.trigger()
+                // TODO
                 // const emu = emulatorStack.get(0)
                 // emu.resetGame()
                 // // emulator.resetGame()

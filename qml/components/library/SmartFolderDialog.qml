@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
 
+// TODO
 // Editor for a smart folder's name + criteria. Produces the SmartFolderCriteria
 // JSON consumed by the C++ evaluator (keys must match smart_folder.cpp's parse)
 // Create: leave editFolderId at -1, open(). Edit: set editFolderId + call

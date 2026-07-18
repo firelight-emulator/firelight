@@ -5,6 +5,7 @@
 
 namespace firelight::settings {
 
+// TODO
 // Persistence for the three settings tiers (global / platform / game). A plain
 // class implementing the std-typed ISettingsRepository — no Qt. The QML layer
 // goes through SettingsService, not this repository directly

@@ -52,6 +52,7 @@ FocusScope {
     }
 
     StackView.onActivated: function () {
+        // TODO
         // root.openSfx.stop()
         // root.openSfx.play()
         // console.log(root.openSfx.mediaStatus)

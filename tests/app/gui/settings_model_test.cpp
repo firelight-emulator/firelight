@@ -267,6 +267,7 @@ TEST_F(SettingsModelTest, AdvancedHiddenUnlessShowAdvanced) {
   EXPECT_FALSE(value(model, adv, "visible").toBool());
 }
 
+// TODO
 // A game-picker setting sourced from the library: platform 3's core is
 // mgba_libretro (see CoreRegistry), so a game-picker declared there surfaces
 // when the model is scoped to platform 3.
@@ -458,6 +459,7 @@ TEST_F(SettingsModelGroupTest, AppSettingReadsAndWritesGlobalWithoutALevel) {
 
 
 TEST_F(SettingsModelGroupTest, AppSettingIsNeverResettable) {
+  // TODO
   // Reset means "fall back to what I inherit", and an app setting inherits
   // from nothing — so changing one is just changing it, with no Reset to
   // clutter the row

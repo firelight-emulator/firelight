@@ -44,6 +44,7 @@ namespace libretro {
     class Core;
     class LibretroDll;
 
+    // TODO
     // What the libretro C callbacks (video/audio/input/env/mic/rumble) reach the
     // active core through, without exposing Core's members. Populated by Core as
     // receivers/providers are set; read by the callbacks via a file-scope pointer
@@ -250,6 +251,7 @@ namespace libretro {
         // Per-port device options the core advertised via SET_CONTROLLER_INFO
         std::vector<std::vector<ControllerDeviceOption> > m_controllerDevices;
         uint64_t inputDeviceCapabilitiesBitmask;
+        // TODO
         // What the core wants called on every key, or null if it doesn't read
         // the keyboard. Stored from SET_KEYBOARD_CALLBACK; the cores that need
         // it are the computer ones (DOS, Amiga, MSX, ScummVM)

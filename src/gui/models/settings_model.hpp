@@ -13,6 +13,7 @@
 
 namespace firelight::settings {
 
+// TODO
 // The rows of one declared settings group. Definitions come from the
 // SettingsCatalog; values come from SettingsService and are shown as the
 // *effective* value (this tier's override, else the inherited one), with
@@ -119,6 +120,7 @@ private:
     QStringList fileExtensions;   // file-picker filter
     bool directoryMode = false;   // file/folder picker: pick a directory
 
+    // TODO
     // Reset clears this tier's override so the row falls back to what it
     // inherits. Only meaningful at a tier with something beneath it — the
     // global tier and app settings are the base, so there's nothing to fall
@@ -139,6 +141,7 @@ private:
   void rebuildItems();
   // Flags rows that depend on another row in the same view
   void markSubItems();
+  // TODO
   // Builds a library-game-picker's options from the user's library (a leading
   // "None" plus each eligible entry as {label: display name, value: content
   // hash}). Returns just "None" when no library is wired
@@ -148,6 +151,7 @@ private:
   void refreshValues();
   void recomputeConditions();
   void setItemValue(int itemIndex, Item &item, const std::string &value);
+  // TODO
   // Whether this row has an override at the current tier that actually differs
   // from what it would otherwise inherit — the only case where Reset does
   // anything visible

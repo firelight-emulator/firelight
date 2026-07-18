@@ -47,6 +47,7 @@ public:
   // picker: a keyboard is never offered a gamepad preset
   Q_INVOKABLE QVariantList presetOptions() const;
 
+  // TODO
   // The input codes the assign prompt should watch for being held, so it can
   // record a combo. Empty for a keyboard profile — Qt reports those modifiers
   // on the key event itself

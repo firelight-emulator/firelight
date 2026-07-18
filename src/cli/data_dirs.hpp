@@ -16,6 +16,7 @@ namespace firelight::cli {
     QString coreSystemPath; // shared core-system directory (PPSSPP, etc.)
   };
 
+  // TODO
   // Resolves the data directories, honoring --config-dir / --portable (and the
   // legacy portable.txt marker next to the executable), else the platform
   // defaults. Requires a live QCoreApplication (uses applicationDirPath())

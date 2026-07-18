@@ -6,6 +6,7 @@
 
 namespace firelight::cheats {
 
+// TODO
 // How a cheat's code is interpreted. This picks the decoder and, indirectly,
 // how it's applied: most formats resolve to RAM writes Firelight owns, while
 // Game Genie is ROM read-substitution that only the core can do (retro_cheat_set)
@@ -24,6 +25,7 @@ struct CheatPoke {
   bool bigEndian = false;
 };
 
+// TODO
 // A cheat as Firelight models it, uniformly across formats: user-facing metadata
 // plus a resolved application. `pokes` are the RAM writes Firelight replays each
 // frame; a cheat with no pokes but a `rawCode` is handed to the core (Game

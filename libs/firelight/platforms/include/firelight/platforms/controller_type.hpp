@@ -8,6 +8,7 @@
 
 namespace firelight::platforms {
 
+// TODO
 // A per-platform, console-native *display* entry for one input device class
 // (a controller, a mouse, or a light gun). The mapping stack is keyed by the
 // device class, so `id` mirrors `deviceClass` (Joypad=1, Mouse=2, Lightgun=3)

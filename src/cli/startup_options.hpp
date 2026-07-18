@@ -5,6 +5,7 @@
 
 namespace firelight::cli {
 
+// TODO
 // Startup values derived from the command line, exposed to QML as a context
 // property ("StartupOptions") so the root window can act on them once loaded
 // Values are fixed at construction (set before the QML engine loads)
@@ -45,6 +46,7 @@ public:
   }
   [[nodiscard]] bool exitOnClose() const { return m_data.exitOnClose; }
 
+  // TODO
   // One-shot getters for the per-game start knobs: they return the requested
   // value the first time and false afterwards, so only the CLI-launched game
   // (the first NewEmulatorPage created) picks them up

@@ -194,6 +194,7 @@ namespace firelight::library {
       m_db->exec("CREATE UNIQUE INDEX IF NOT EXISTS pathIdx ON "
         "content_files(file_path);");
 
+      // TODO
       // folder_entries is looked up by entry_id (per-entry, in loops). The
       // UNIQUE(folder_id, entry_id) index can't serve entry_id-only lookups, so
       // add a dedicated index to avoid table scans
@@ -212,6 +213,7 @@ namespace firelight::library {
       spdlog::error("Failed to initialize user library schema: {}", e.what());
     }
 
+    // TODO
     // Migrate databases created before these columns existed. CREATE TABLE IF
     // NOT EXISTS won't add columns to an existing table, so add them here;
     // otherwise reads/writes referencing them fail on older databases
@@ -230,6 +232,7 @@ namespace firelight::library {
     // it stamped at insert time in create(ContentFile))
     backfillContentDirectoryIds();
 
+    // TODO
     // The default content directory is guaranteed by UserLibraryService, not
     // seeded here. The scan-time orchestration (content file -> run
     // configuration -> entry) lives in LibraryIngestService, which subscribes to

@@ -25,6 +25,7 @@
 static EmulatorItemRenderer *globalRenderer = nullptr;
 static QRhi *globalRhi = nullptr;
 
+// TODO
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Construction / destruction
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -69,6 +70,7 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
   }
 }
 
+// TODO
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // IVideoDataReceiver â€” general
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -122,6 +124,7 @@ void EmulatorItemRenderer::setScreenRotation(unsigned rotation) {
   m_screenRotation = rotation;
 }
 
+// TODO
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // IVideoDataReceiver â€” HW render setup
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -218,6 +221,7 @@ void EmulatorItemRenderer::receive(const void *data, const unsigned width,
   }
 }
 
+// TODO
 // Reads the composited frame back off the GPU and fans it out to every CPU-side
 // capture consumer. colorTexture() is filled by both the software path
 // (uploadTexture) and the hardware path (copyTexture), so this is the one place
@@ -260,6 +264,7 @@ bool EmulatorItemRenderer::anyFrameConsumerActive() const {
 
 bool EmulatorItemRenderer::deferCaptureUntilFrameReady(
     const EmulatorCommand &command) {
+  // TODO
   // Only HW cores idle enough to skip readback need this; software cores and
   // active HW cores already have a fresh m_currentImage. Paused cores never run
   // a frame, so deferring would never resolve — capture the pause image instead
@@ -288,6 +293,7 @@ void EmulatorItemRenderer::feedNetplayStream(const QImage &frame) {
   m_streamFrameIndex++;
 }
 
+// TODO
 // Keeps the rolling instant-replay window fed with the latest frame. newImage is
 // a deep copy (from convertToFormat), so ClipRecorder can hand it to its encoder
 // worker safely. The pts is core-frame-based (not wall clock), so the window is
@@ -403,6 +409,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     }
   }
 
+  // TODO
   // Take the cross-thread queue into a local under the lock, then process it
   // without holding the lock: command handling is heavy (state serialize, GPU
   // work) and must not block the GUI/pacing threads enqueueing, and some
@@ -427,6 +434,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       case WriteRewindPoint: {
         if (m_paused)
           break;
+        // TODO
         // Rolling snapshots take whatever frame is already on hand rather than
         // forcing a per-interval GPU readback, which stalled HW-rendered cores
         // every few seconds. The serialized state — the part rewind needs — is
@@ -637,6 +645,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   // m_negotiation is available. Runs on the first frame after load
   if (m_vulkanRenderer && !m_vulkanRenderer->isInitialized()) {
     if (m_negotiation) {
+      // TODO
       // Some HW cores (PPSSPP) require a real VkSurfaceKHR passed to
       // create_device — they query swapchain capabilities from it and crash on
       // VK_NULL_HANDLE. Others (parallel-RDP) render offscreen and ignore it
@@ -675,6 +684,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   m_currentWaitFrames = m_waitFrames;
   m_shouldRunFrame = false;
 
+  // TODO
   // ------------------------------------------------------------
   // If we made it here, we're going to run at least one frame
   // ------------------------------------------------------------
@@ -707,6 +717,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     if (m_vulkanRenderer->isFirstFrameReady() &&
         m_vulkanRenderer->sharedTexture() &&
         m_vulkanRenderer->sharedSemValue() > 0) {
+      // TODO
       // Composite the shared image into colorTexture() via a GPU copy
       // renderFrame() already CPU-waited on the blit fence, so m_sharedImage
       // is guaranteed complete â€” no GPU-side semaphore needed here

@@ -17,6 +17,7 @@ struct LoadedContent {
   std::string contentHash;
 };
 
+// TODO
 // Loads content for play: reads a ROM (on disk or from an archive) and produces
 // the normalized content bytes the core expects. The launch-time counterpart to
 // ContentIdentifier

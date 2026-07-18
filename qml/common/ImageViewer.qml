@@ -7,6 +7,7 @@ FocusScope {
 
     required property list<string> imageUrls
 
+    // TODO
     // onImageUrlsChanged: {
     //     listModel.clear()
     //     for (let i = 0; i < imageUrls.length; i++) {

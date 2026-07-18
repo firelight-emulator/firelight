@@ -23,6 +23,7 @@ public:
   // --- Profiles ---
   virtual std::shared_ptr<GamepadProfile> getProfile(int id) = 0;
 
+  // TODO
   // `device` decides which shipped preset seeds the new profile's shortcuts,
   // and is persisted so the keyboard's profile is still a keyboard profile
   // next launch

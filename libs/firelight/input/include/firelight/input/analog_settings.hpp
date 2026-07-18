@@ -15,6 +15,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ResponseCurve,
                                  {ResponseCurve::Exponential, "exponential"},
                              })
 
+// TODO
 // Tuning for one analog stick axis. Fractions are of full range (0..1). The
 // defaults reproduce the previous hardcoded behavior: an inner deadzone of
 // 8192/32767 (~0.25) with everything else identity
@@ -32,6 +33,7 @@ struct AxisSettings {
            curve == o.curve && curveExponent == o.curveExponent;
   }
 
+  // TODO
   // Maps a raw SDL axis value (-32768..32767) through these settings and returns
   // a processed value in the same range. Each axis is processed as an
   // independent scalar, matching the previous per-axis deadzone behavior

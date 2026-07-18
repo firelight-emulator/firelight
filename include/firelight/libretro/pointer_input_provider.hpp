@@ -5,6 +5,7 @@
 
 namespace firelight::libretro {
 
+// TODO
 // Per-frame cursor delta (in ±32767 pointer units) for an analog-stick
 // deflection under "velocity glide": the cursor moves each frame at a speed
 // proportional to how far the stick is pushed, and holds still when centered
@@ -15,6 +16,7 @@ namespace firelight::libretro {
                                              const double stepPerFrame) {
   return static_cast<int>(stickAxis * stepPerFrame);
 }
+  // TODO
   // Supplies pointer/mouse/light-gun input to a running core. The absolute
   // position + `isPressed` back the DS touch pointer and the light-gun aim +
   // fire; the mouse extensions back RETRO_DEVICE_MOUSE and the light-gun's
@@ -32,6 +34,7 @@ namespace firelight::libretro {
     // The primary button (left mouse) — DS touch / light-gun trigger
     [[nodiscard]] virtual bool isPressed() const = 0;
 
+    // TODO
     // Relative motion accumulated since the previous call, in mouse units
     // Consumed on read (implementations reset their accumulator); polled once
     // per frame so a single value serves both the X and Y queries
@@ -47,6 +50,7 @@ namespace firelight::libretro {
     // True when the pointer is outside the game viewport (light-gun off-screen)
     [[nodiscard]] virtual bool isPointerOffscreen() const { return false; }
 
+    // TODO
     // Moves the shared cursor by a delta (in ±32767 pointer units) and clears
     // the off-screen flag — used to drive the mouse/light-gun aim from a gamepad
     // analog stick. The mouse writes the same cursor absolutely, so whichever

@@ -204,6 +204,7 @@ void ShortcutActions::handle(const input::ShortcutId &id,
   } else if (id == "volume_down") {
     stepVolume(-VOLUME_STEP);
   } else if (id == "open_rewind_menu") {
+    // TODO
     // The intent, not the command: opening this menu means asking for the
     // rewind points and showing them when they arrive, and the UI already owns
     // both halves along with the rewind-enabled check

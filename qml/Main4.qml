@@ -173,6 +173,7 @@ MainWindow {
         z: 10
     }
 
+    // TODO
     // The running game + quick menu, layered above the router. It grows to full
     // screen when foregrounded and shrinks into a bottom bar when backgrounded —
     // the game render itself becomes the "now playing" bar

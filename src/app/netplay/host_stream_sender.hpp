@@ -12,6 +12,7 @@
 
 namespace firelight::netplay {
 
+// TODO
 // The host side of the game stream: permanently installed as the emulator's
 // netplay sink, it does nothing until armed. Armed, it encodes each frame +
 // the audio tap (H.264/Opus) and fans the packets out to every connected

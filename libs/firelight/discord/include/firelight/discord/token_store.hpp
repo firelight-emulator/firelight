@@ -10,6 +10,7 @@ struct StoredAuthToken {
   std::string refreshToken;
 };
 
+// TODO
 // Persists the OAuth tokens between runs so sign-in is a one-time browser
 // round-trip. An adapter-internal detail — nothing outside the Discord
 // adapter sees tokens

@@ -2,6 +2,7 @@ import QtQuick
 
 pragma Singleton
 
+// TODO
 // Material Symbols Rounded codepoint map. Keyed by the app's existing icon names
 // (the qrc:/icons/* aliases) plus canonical names for the button glyphs. Generated
 // from assets/fonts/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf via its cmap

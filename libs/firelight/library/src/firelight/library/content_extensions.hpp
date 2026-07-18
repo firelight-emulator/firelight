@@ -4,6 +4,7 @@
 
 namespace firelight::library {
 
+// TODO
 // Disc-image extensions are ambiguous: the same extension is used by many
 // consoles, so the platform can only be determined by inspecting the disc's
 // contents (rcheevos AUTO detection). These classifiers are platform-independent
@@ -18,6 +19,7 @@ namespace firelight::library {
          extension == "img" || extension == "mdf" || extension == "nrg";
 }
 
+// TODO
 // A raw track/data file normally referenced by a separate cue/playlist sheet
 // When such a sheet sits next to it we classify the sheet (not the raw track) to
 // avoid duplicate library entries. iso/chd/pbp are self-contained (not tracks)

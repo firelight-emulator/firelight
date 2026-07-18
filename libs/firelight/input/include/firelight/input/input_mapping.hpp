@@ -11,6 +11,7 @@
 #include <vector>
 
 namespace firelight::input {
+    // TODO
     // Holds the bindings for one (platform, controller type) within a profile. For
     // each emulated input (GamepadInput) it stores a list of physical Bindings
     // whose evaluated results are combined. It may also carry an analog-tuning

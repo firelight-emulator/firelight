@@ -39,6 +39,7 @@ FirelightDialog {
     Connections {
         target: gamepad
         enabled: root.visible && !root.isKeyboard
+        // TODO
         // The combo is read on release, not on press: any input can be a
         // modifier, so while a button is going down there is no way to know
         // whether it is the trigger or something being held for the next one
@@ -59,6 +60,7 @@ FirelightDialog {
                 return;
             }
 
+            // TODO
             // Last one down is the trigger; anything held alongside it modifies
             // it. Sticks are excluded as modifiers — they drift, and a drifting
             // axis would silently join the combo

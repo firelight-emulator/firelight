@@ -17,6 +17,7 @@ class RAClient;
 
 namespace firelight::netplay {
 
+// TODO
 // App-side orchestrator for online play: owns the NetplaySession over the
 // injected lobby backend + transport, resolves library entries into session
 // game descriptors, auto-seats members into player slots, and (in later
@@ -51,6 +52,7 @@ public:
   void selectGameByEntryId(int entryId);
   void sendChat(const std::string &text);
 
+  // TODO
   // Ready check: host announces the selected game (phase Starting); everyone
   // sees the check and readies up. confirmLaunch moves to InGame (the host
   // actually launches); endGame returns the lobby to Idle

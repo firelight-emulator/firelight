@@ -46,6 +46,7 @@ namespace firelight::input {
       }
     };
 
+    // TODO
     // Forward-only schema migrations, stamped into PRAGMA user_version. A future
     // schema change adds the next-numbered migration instead of renaming tables
     // (the old `_v3`-suffix approach)
@@ -202,6 +203,7 @@ namespace firelight::input {
   }
 
   namespace {
+    // TODO
     // Copies a preset's shipped bindings into a brand-new profile's mapping
     //
     // A preset is a starting point, not a tier the engine resolves through: from

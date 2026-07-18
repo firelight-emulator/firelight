@@ -4,6 +4,7 @@
 #include <string>
 
 namespace firelight::library {
+// TODO
 // How a folder gets its contents. Manual folders hold hand-picked members
 // (folder_entries rows); Smart folders compute membership live from filterJson
 // criteria and have no folder_entries rows
@@ -31,6 +32,7 @@ struct FolderInfo {
   std::string sortRole;
   bool sortAscending = true;
 
+  // TODO
   // --- Ordering / nesting ---
   // The containing folder's id, or -1 for a root-level folder. (The nested-tree
   // UI is a later phase; this column enables per-container ordering now.)

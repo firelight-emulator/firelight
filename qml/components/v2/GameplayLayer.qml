@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
 
+// TODO
 // The running game as a full-window layer above the router (not a route). It is
 // bottom-anchored and changes HEIGHT by state, so the game render itself shrinks
 // down into a bottom bar when backgrounded (it becomes the "now playing" bar)

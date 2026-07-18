@@ -31,6 +31,7 @@ const static std::map<int, GamepadInput> sdlToGamepadInputs = {
     {SDL_CONTROLLER_BUTTON_RIGHTSTICK, R3},
     {SDL_CONTROLLER_BUTTON_GUIDE, Home}};
 
+// TODO
 // Threading: run() is a blocking SDL event loop on its own thread (device
 // add/remove, button/axis updates). The emulation/render thread reads pad and
 // pointer state each frame, and the GUI thread pushes mouse updates — shared
@@ -68,6 +69,7 @@ public:
   // to digital directions and records each edge
   void handleAxisMotion(int instanceId, int sdlAxis, int value);
 
+  // TODO
   // The digital directions one SDL axis event implies, as (input, pressed)
   // pairs. Both directions of a stick axis are always returned, so a stick
   // flicked straight from one extreme to the other clears the direction it
@@ -97,6 +99,7 @@ private:
   static constexpr int MAX_PLAYERS = 16;
 
   void openSdlGamepad(int deviceIndex);
+  // TODO
   // Records a digital edge for one gamepad input: feeds the shortcut engine and
   // publishes the nav event. Repeats are dropped, so callers can pass the
   // current state unconditionally rather than edge-detecting themselves
@@ -125,6 +128,7 @@ private:
 
   IControllerRepository &m_gamepadRepository;
 
+  // TODO
   // Guards the device collections below. run() mutates them from the SDL event
   // thread while the render/UI threads read them; every access goes through
   // this. It is a read-write lock: the hot readers (getPlayerGamepad /
@@ -152,12 +156,14 @@ private:
 
   bool m_preferGamepadOverKeyboard = true;
 
+  // TODO
   // Cursor position (±32767). Written absolutely by the UI thread on mouse
   // events and incrementally by the emulation thread's analog-stick glide
   // (nudgeCursor), read from the render thread — atomic so no lock is needed
   std::atomic<int16_t> m_mouseX{0};
   std::atomic<int16_t> m_mouseY{0};
   std::atomic<bool> m_mousePressed{false};
+  // TODO
   // Right/middle buttons, relative motion, and off-screen state for
   // RETRO_DEVICE_MOUSE and the light gun. Written from the UI thread on mouse
   // events, read from the render thread via the pointer provider — atomic so

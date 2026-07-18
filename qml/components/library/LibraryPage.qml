@@ -235,6 +235,7 @@ Pane {
                         GeneralSettings.setLibrarySortMethod(val)
                    }
 
+                    // TODO
                     // Component.onCompleted: {
                     //     // Set the initial sort method
                     //     for (var i = 0; i < comboBox.count; i++) {

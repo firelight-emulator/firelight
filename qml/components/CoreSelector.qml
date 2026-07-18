@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // Advanced control to choose which libretro core runs a platform, at a given
 // tier (Game or Platform). Writes the reserved "core" override via
 // CoreRegistry; the settings/options below re-resolve automatically

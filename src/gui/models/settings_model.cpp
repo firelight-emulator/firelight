@@ -131,6 +131,7 @@ void SettingsModel::rebuildItems() {
 }
 
 void SettingsModel::markSubItems() {
+  // TODO
   // A row that depends on another row shown right here is a sub-setting of it,
   // and renders indented and welded beneath it. Derived from the dependency the
   // catalog already declares rather than a second thing to author — and scoped
@@ -192,6 +193,7 @@ SettingsModel::buildGameOptions(const SettingDefinition &setting) const {
 }
 
 bool SettingsModel::overridesInheritedValue(const Item &item) const {
+  // TODO
   // Reset means "clear this tier's override and go back to what I inherit", so
   // it only means something at a tier with one beneath it. The global tier and
   // app settings are the base: there's nothing below to fall back to, so no
@@ -357,6 +359,7 @@ void SettingsModel::setLevel(int level) {
   if (level == static_cast<int>(m_level)) {
     return;
   }
+  // TODO
   // `level` is just the tier this surface edits (Game / Platform / Global); it
   // is not a stored per-game "read level" — the running game resolves settings
   // by inheritance

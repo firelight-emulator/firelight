@@ -12,6 +12,7 @@ struct Migration {
   std::function<void()> apply;
 };
 
+// TODO
 // Applies every migration whose version exceeds currentVersion, in list order,
 // running apply() then setVersion(version) for each; returns the version the
 // database ends at. The caller reads currentVersion (from PRAGMA user_version),

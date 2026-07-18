@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
 
+// TODO
 // Icon-only button. Glyph size from AppStyle (sm/md/lg, or an explicit
 // iconSize), colors from Theme. The hit target is floored at minTarget
 // (WCAG 2.5.8) even when the glyph is small. Checkable for toolbar toggles

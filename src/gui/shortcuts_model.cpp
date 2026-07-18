@@ -210,6 +210,7 @@ void ShortcutsModel::applyPreset(const QString &presetId) {
     }
   }
 
+  // TODO
   // Every action, not just the ones the preset names: one it leaves out is one
   // it wants unbound, so a leftover binding from the previous preset would
   // survive as a phantom

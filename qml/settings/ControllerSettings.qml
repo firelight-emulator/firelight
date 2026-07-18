@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // The one home for keybinds. Every profile's shortcuts are edited here, picked
 // from the dropdown at the top — the Controllers page's "Edit profile" button
 // deep-links in with a profileId rather than mounting a second editor
@@ -27,6 +28,7 @@ FocusScope {
         playerNumber: 1
     }
 
+    // TODO
     // "Edit profile" deep-links here as /settings/controllers?profileId=N. The
     // route only carries the section, so the id rides in the query — resolve()
     // drops params for a subtree-owning route, but leaves the query alone

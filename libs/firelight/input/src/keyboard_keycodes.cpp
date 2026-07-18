@@ -3,6 +3,7 @@
 #include <QtCore/qnamespace.h>
 #include <map>
 
+// TODO
 // RETROK_* / RETROKMOD_* values, copied rather than pulled in: this library
 // doesn't otherwise depend on the libretro headers, and these are frozen ABI —
 // they can't change without breaking every core

@@ -37,6 +37,7 @@ bool waitFor(std::mutex &mutex, std::condition_variable &cv,
 }
 } // namespace
 
+// TODO
 // Disabled by default: two WebRTC endpoints in ONE process share usrsctp's
 // process-global state, and its synchronous loopback delivery can re-enter
 // libdatachannel on the same thread (read->write lock upgrade -> EDEADLK

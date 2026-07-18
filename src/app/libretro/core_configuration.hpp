@@ -10,6 +10,7 @@
 class CoreConfiguration final
     : public firelight::libretro::IConfigurationProvider {
 public:
+  // TODO
   // Friendly settings + Firelight core-option default overrides are resolved
   // from the settings catalog (by core) and injected here, so this class is
   // decoupled from Platform / the catalog itself

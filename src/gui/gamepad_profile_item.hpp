@@ -44,6 +44,7 @@ signals:
 private:
   int m_id = -1;
   std::shared_ptr<input::GamepadProfile> m_profile;
+  // TODO
   // One model per profile, rebuilt when the profile changes. Handing out a new
   // one per read would leave every caller mutating a copy the view isn't
   // showing, and let the JS engine own (and collect) it

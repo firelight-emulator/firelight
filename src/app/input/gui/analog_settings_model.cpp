@@ -38,6 +38,7 @@ void AnalogSettingsModel::persist() {
   service->setProfileAnalogSettings(m_profileId, m_settings);
 }
 
+// TODO
 // Helper macro to cut down on near-identical getter/setter boilerplate. Each
 // setter clamps reasonable ranges implicitly via the UI; here we only guard
 // against no-op writes and persist + notify on real changes

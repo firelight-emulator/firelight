@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQml.Models
 import Firelight 1.0
 
+// TODO
 // Renders every setting declared in one catalog group as a section card, title
 // and all. Adding a setting to the group is a catalog edit — nothing here
 // changes. When a control needs to be bespoke, declare the setting `custom` and

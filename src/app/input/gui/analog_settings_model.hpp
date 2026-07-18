@@ -11,6 +11,7 @@
 
 namespace firelight::input {
 
+// TODO
 // QML-facing editor for a profile's default analog tuning. Bind `profileId`,
 // then read/write the per-axis properties; every change is persisted to the
 // profile immediately. Curve is exposed as an int (0 = Linear, 1 = Exponential)

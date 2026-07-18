@@ -1,3 +1,4 @@
+// TODO
 //
 // Created by alexs on 8/9/2025.
 //
@@ -19,6 +20,7 @@
 namespace firelight::gui {
 
 namespace {
+// TODO
 // Looks for the Steam client by process name. Deliberately not the registry's
 // ActiveProcess/pid: that keeps a stale pid after a crash, and this warning is
 // only worth showing when Steam is actually there to interfere

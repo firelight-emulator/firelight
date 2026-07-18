@@ -4,6 +4,7 @@
 
 namespace firelight::metadata {
 
+// TODO
 // cpr-backed IHttpClient. Lives in the app layer so the firelight_metadata
 // module (and its art providers) stay free of a concrete HTTP dependency and
 // remain unit-testable with a fake client

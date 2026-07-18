@@ -9,6 +9,7 @@
 
 namespace firelight::settings {
 
+// TODO
 // Backs the "advanced" core-options editor: lists the raw libretro options a
 // core declared (cached by ICoreOptionRepository, populated after a core loads)
 // and lets the user override any of them at the current tier (Game / Platform /

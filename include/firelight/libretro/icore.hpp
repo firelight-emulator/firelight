@@ -24,6 +24,7 @@ enum MemoryType {
   VIDEO_RAM = RETRO_MEMORY_VIDEO_RAM
 };
 
+// TODO
 // Abstraction over a loaded libretro core. `Core` is the real (dlopen'd)
 // implementation; tests substitute a lightweight fake. Kept to exactly the
 // surface its consumers use: EmulatorInstance drives the lifecycle/state, and
@@ -59,10 +60,12 @@ public:
   [[nodiscard]] virtual std::vector<char>
   getMemoryData(MemoryType memType) const = 0;
   [[nodiscard]] virtual std::vector<uint8_t> serializeState() const = 0;
+  // TODO
   // The size of a serialized state for the loaded game (0 if the core has no
   // savestate support). Lets callers pre-size buffers and detect a state-size
   // change. Stable while a game is loaded
   [[nodiscard]] virtual std::size_t getSerializeSize() const = 0;
+  // TODO
   // Restores a previously serialized state. Returns false (without touching the
   // core) if the data doesn't match the current serialize size or the core
   // rejects it
@@ -73,6 +76,7 @@ public:
   [[nodiscard]] virtual std::size_t getMemorySize(unsigned id) const = 0;
   virtual retro_memory_map *getMemoryMap() = 0;
 
+  // TODO
   // --- disc control (multi-disc games) ---
   // Number of disc images the core exposes (0 when the core has no disk-control
   // interface, i.e. single-disc/cartridge content)
@@ -83,6 +87,7 @@ public:
   // has no disk control or the index is out of range
   virtual bool setDiskIndex(unsigned index) = 0;
 
+  // TODO
   // --- controller port devices ---
   // One device type a core advertises for a port (from SET_CONTROLLER_INFO),
   // e.g. {RETRO_DEVICE_JOYPAD, "N64 Controller"} or a lightgun/mouse subclass
@@ -97,6 +102,7 @@ public:
   // Tells the core which device (RETRO_DEVICE_*) is plugged into `port`
   virtual void setControllerPortDevice(unsigned port, unsigned device) = 0;
 
+  // TODO
   // Informs the core of the resolved input device *class* on a port (the
   // firelight::input::GamepadInputClass value: 1=Joypad, 2=Mouse, 3=Light Gun)
   // so it can drive the pointer cursor from a gamepad analog stick for Mouse /
@@ -105,12 +111,14 @@ public:
   // doubles and pointer-less cores ignore them
   virtual void setPortInputDeviceClass(unsigned /*port*/, int /*deviceClass*/) {}
   virtual void setAnalogPointerSpeed(double /*stepPerFrame*/) {}
+  // TODO
   // When enabled (default), the physical mouse drives any light-gun / mouse
   // device the core presents, regardless of the port's selected device type —
   // the mouse "just works" for these games. The gamepad still only drives them
   // when that device type is selected. Default no-op
   virtual void setMouseControlsPointerDevices(bool /*enabled*/) {}
 
+  // TODO
   // --- cheats (Game Genie / Action Replay) ---
   // Applies cheat `code` (passed to the core verbatim; the core decodes the
   // format) in slot `index`, toggled by `enabled`
@@ -118,6 +126,7 @@ public:
   // Clears all applied cheats
   virtual void clearCheats() = 0;
 
+  // TODO
   // Hands a key press/release to a core that asked for the keyboard. `key` is a
   // RETROK_* value and `character` its unicode codepoint (0 if none). A no-op
   // for the cores that never asked, which is most of them

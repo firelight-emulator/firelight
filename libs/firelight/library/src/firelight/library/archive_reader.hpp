@@ -38,6 +38,7 @@ public:
   bool extractEntries(const std::set<std::string> &wantedBaseNamesLower,
                       const std::filesystem::path &destDir) const;
 
+  // TODO
   // Single-pass iteration: invokes `fn` for each entry with a lazy reader that,
   // when called, returns the current entry's bytes. Entries whose reader is not
   // invoked are skipped without reading their payload

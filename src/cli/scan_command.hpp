@@ -4,6 +4,7 @@
 
 namespace firelight::cli {
 
+// TODO
 // Runs a one-shot library scan headlessly (no GUI / QML engine): resolves the
 // same data directories the GUI uses, opens the library store, scans the
 // content directories, prints a summary, and returns a process exit code

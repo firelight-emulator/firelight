@@ -4,6 +4,7 @@
 #include <QUrl>
 #include <gtest/gtest.h>
 
+// TODO
 // Covers FilesystemUtils::readTextFile, which loads bundled help articles for
 // the in-app Help section (and any other text resource). The qrc:/ path is
 // exercised by the app at runtime (the fl_test binary has no resources linked)

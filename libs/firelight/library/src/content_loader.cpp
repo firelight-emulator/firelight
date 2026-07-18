@@ -9,6 +9,7 @@
 namespace firelight::library {
 
 LoadedContent ContentLoader::load(const ContentFile &info) const {
+  // TODO
   // Disc images are opened by the core directly from their file path (the
   // libretro core sets need_fullpath). We don't read the (potentially multi-GB)
   // image into memory, and we reuse the canonical hash computed at scan time --

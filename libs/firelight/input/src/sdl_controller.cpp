@@ -99,6 +99,7 @@ bool SdlController::isButtonPressed(const int platformId, int controllerTypeId,
     }
   }
 
+  // TODO
   // No binding for this input, so it falls back to the physical button it
   // defaults to (the identity, for a joypad input). Reading it through
   // evaluateMapping rather than SDL directly keeps every physical read in one
@@ -131,6 +132,7 @@ int SdlController::digitalThreshold(const GamepadInput input,
 bool SdlController::isVirtualInputActive(const int platformId,
                                          int controllerTypeId,
                                          const int virtualInput) {
+  // TODO
   // Mouse/light-gun buttons are only ever driven by an explicit mapping (a
   // gamepad button bound to e.g. a light-gun trigger). Unmapped => not active;
   // the physical mouse is handled by the pointer provider in the core callback
@@ -153,6 +155,7 @@ bool SdlController::isVirtualInputActive(const int platformId,
     }
     return active;
   }
+  // TODO
   // No explicit binding: fall back to the default physical button so a gamepad
   // can fire a light-gun / mouse button out of the box (mirrors the joypad
   // identity default). Abstract inputs with no sensible default map to
@@ -377,6 +380,7 @@ bool SdlController::disconnect() {
 }
 
 int16_t SdlController::evaluateMapping(const GamepadInput input) const {
+  // TODO
   // A shortcut is using this input, so the game doesn't get to see it. Checked
   // here because every physical read goes through this one switch — including
   // the fall-through for inputs with no binding, and the light-gun/mouse path
@@ -433,6 +437,7 @@ int16_t SdlController::evaluateMapping(const GamepadInput input) const {
     return SDL_GameControllerGetButton(m_SDLController,
                                        SDL_CONTROLLER_BUTTON_RIGHTSHOULDER) *
            32767;
+  // TODO
   // Unlike the buttons above, a trigger axis already reports 0..32767, so it is
   // returned as-is. Scaling it would overflow the int16 this returns — a fully
   // pressed trigger came out as 1, so a binding on one fired around half travel

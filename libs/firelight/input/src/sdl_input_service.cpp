@@ -213,6 +213,7 @@ void SDLInputService::applyGameContext(std::optional<std::string> contentHash,
             : std::nullopt;
     reapplyDeviceProfiles();
 
+    // TODO
     // 2. Preferred controller type for this platform: if a connected controller
     //    matches, promote it to player one. A CLI `--controller` session
     //    override for this platform wins over the stored preference

@@ -25,6 +25,7 @@ DiscInspector::DiscInspector(platforms::IPlatformService &platformService)
 
 namespace {
 
+// TODO
 // Upper bound on how much we'll extract from an archive to identify a disc
 // CD-based systems all fit well under this; oversized DVD images zipped up are
 // skipped rather than risk filling the user's temp drive
@@ -183,6 +184,7 @@ DiscIdentity DiscInspector::detect(const std::string &discFilePath) const {
   std::memset(&iterator, 0, sizeof(iterator));
   rc_hash_initialize_iterator(&iterator, discFilePath.c_str(), nullptr, 0);
 
+  // TODO
   // rcheevos tries each candidate console (chosen by extension) in order,
   // running that console's content fingerprint. The first one that matches is
   // the real platform, and the hash it produces is the canonical RA hash

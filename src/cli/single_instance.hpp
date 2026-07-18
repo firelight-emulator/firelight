@@ -20,6 +20,7 @@ namespace firelight::cli {
 // distinct --config-dir / --portable instances don't collide
 QString singleInstanceServerName(const QString &appDataPath);
 
+// TODO
 // If another Firelight is already listening on `serverName`, forwards this
 // launch (the ROM path) to it and returns true (the caller should exit)
 // Returns false when no running instance was found (this process is primary)

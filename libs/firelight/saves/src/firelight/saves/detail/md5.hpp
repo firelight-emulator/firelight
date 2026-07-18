@@ -1,5 +1,6 @@
 #pragma once
 
+// TODO
 // Compact, dependency-free MD5 (replaces QCryptographicHash for the savefile
 // dedup fingerprint). MD5 is used only to detect unchanged save bytes and skip
 // a redundant write — not for security. Public-domain style implementation

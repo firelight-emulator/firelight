@@ -16,6 +16,7 @@ struct StreamVideoFrame {
   std::vector<uint8_t> rgba;
 };
 
+// TODO
 // Decodes a live game stream (H.264 + Opus 48 kHz stereo). Synchronous:
 // push* decodes on the calling thread and fires the callback before
 // returning. Set callbacks before start

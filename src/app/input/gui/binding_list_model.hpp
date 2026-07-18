@@ -12,6 +12,7 @@
 
 namespace firelight::input {
 
+// TODO
 // QML-facing list of the Bindings attached to a single emulated input (the
 // "target") within a profile's (platform, controller-type) mapping. Supports
 // multiple alternate bindings per target plus per-binding turbo/toggle options

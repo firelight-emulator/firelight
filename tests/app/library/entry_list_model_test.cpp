@@ -13,6 +13,7 @@
 #include <QTimer>
 #include <gtest/gtest.h>
 
+// TODO
 // Verifies that EntryListModel stays in sync with the library incrementally:
 // EntryCreatedEvent inserts a row, EntryUpdatedEvent removes a now-hidden entry
 // and re-inserts an unhidden one -- all without a full model reset. The events

@@ -7,6 +7,7 @@
 
 namespace firelight::library {
 
+// TODO
 // Exercises the scan-time orchestration end to end: the ingest service subscribes
 // to the repository's domain events (published through the global EventDispatcher)
 // and turns discovered content into visible/hidden library entries. Each test gets
@@ -41,6 +42,7 @@ protected:
   }
 };
 
+// TODO
 // The realistic chain: adding a content file publishes ContentFileAddedEvent,
 // which the ingest service turns into a run configuration and, in turn, a
 // visible entry whose display name is the file's basename

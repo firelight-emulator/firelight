@@ -4,6 +4,7 @@
 
 namespace firelight::library {
 
+// TODO
 // Domain events the user-library repository publishes through the global
 // EventDispatcher (replacing the old Qt signals). They are consumed by the
 // ingest service (content/run-config) and by the app's scanner wiring (watched

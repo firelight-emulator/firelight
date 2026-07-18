@@ -11,6 +11,7 @@
 
 namespace firelight::saves {
 
+// TODO
 // The save/suspend-point persistence contract. A plain domain interface: it
 // carries no Qt notification concerns (the QML save-directory binding lives in
 // QtSaveManagerProxy, and suspend-point changes are announced through the

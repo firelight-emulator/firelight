@@ -747,6 +747,7 @@ TEST_F(SqliteAchievementRepositoryTest,
   progress.denominator = 10;
   EXPECT_TRUE(repository->create(progress));
 
+  // TODO
   // The upsert should have updated the existing record
   // We can't directly verify this without a getter, but no exception should
   // occur
@@ -1432,6 +1433,7 @@ TEST_F(SqliteAchievementRepositoryTest, GetGameHash_AfterSetDeletion) {
   ASSERT_TRUE(beforeResult.has_value());
   EXPECT_EQ(beforeResult.value(), contentHash);
 
+  // TODO
   // Note: We don't actually delete the achievement set in this test since
   // there's no delete method, but this tests the case where we query
   // for a non-existent set ID

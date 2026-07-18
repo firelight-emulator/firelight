@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // Multi-select setting: a full-width wrap of toggleable chips over `options`
 // ({label, value}). `value` is a JSON array of the selected option values;
 // emits `changed` with the new JSON array string when the selection changes

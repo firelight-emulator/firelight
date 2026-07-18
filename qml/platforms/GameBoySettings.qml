@@ -342,6 +342,7 @@ FocusScope {
                         // description: "Enables simulation of LCD ghosting effects by blending the current and previous frames."
                         checked: emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
 
+                        // TODO
                         // Component.onCompleted: {
                         //     checked = emulator_config_manager.getOptionValueForPlatform(1, "gambatte_mix_frames") === "accurate"
                         // }

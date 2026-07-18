@@ -12,6 +12,7 @@ class IPlatformService;
 
 namespace firelight::cli {
 
+// TODO
 // Resolves a ROM file path to a library entry id: hashes the file with the same
 // identifier the scanner uses, then looks up the entry with that content hash
 // Returns -1 (and logs why) if the path is missing, unrecognized, or not yet in

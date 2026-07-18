@@ -55,6 +55,7 @@ namespace firelight {
     class MediaService;
   }
 
+  // TODO
   // The one app-wide service locator. Its contract: it exists only for objects
   // the QML engine default-constructs (qmlRegisterType models/items) which
   // cannot receive dependencies via a constructor. Everything we construct

@@ -28,6 +28,7 @@ public:
   [[nodiscard]] int getBasedOnType() const;
   void setBasedOnType(int type);
 
+  // TODO
   // The preset this profile's shortcuts were seeded from. Kept so the editor can
   // show which rows differ from it and reset them back — the bindings themselves
   // are the profile's own from the moment it's created, not resolved through it

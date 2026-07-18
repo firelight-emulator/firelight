@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // Text (+ optional leading icon) button. Colors from Theme, metrics from
 // AppStyle. Height is derived from content and floored at minTarget, so it
 // grows with the UI scale instead of clipping

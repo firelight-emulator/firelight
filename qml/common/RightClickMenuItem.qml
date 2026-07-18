@@ -12,6 +12,7 @@ MenuItem {
     property real maxWidth: -1
 
     implicitHeight: AppStyle.controlHeight
+    // TODO
     // Derive from the content's *implicit* width (intrinsic), not contentItem.width
     // — the Menu drives item width from its own implicitWidth, so reading the
     // laid-out width here closes a binding loop that a scale change re-triggers

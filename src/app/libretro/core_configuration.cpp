@@ -58,6 +58,7 @@ void CoreConfiguration::setDefaultValue(const std::string &key,
 
 std::optional<std::string>
 CoreConfiguration::getOptionValue(const std::string &key) {
+  // TODO
   // Resolution for a core option `key` (higher wins):
   //  1. cache (currently never populated; kept as a cheap short-circuit);
   //  2. a raw user override of this exact core option (the "advanced" editor),

@@ -18,6 +18,7 @@ namespace firelight::emulation {
 
 class CoreSettingsApplier;
 
+// TODO
 // Threading: owned by EmulatorItemRenderer and confined to the render thread —
 // initialize()/runFrame()/state calls all run there. getAudioBufferLevel() is
 // the exception: it's read from the pacing thread (backed by an atomic)
@@ -45,6 +46,7 @@ public:
   void setMuted(bool muted);
   bool isMuted() const;
 
+  // TODO
   // The mute state the AudioManager is born with in initialize(). Lets a CLI
   // `--muted` launch start muted from the first frame, before the render thread
   // creates the AudioManager (a QML muted binding fires too early to catch it)
@@ -77,6 +79,7 @@ public:
   void setTargetFramerate(int targetFramerate);
   int getTargetFramerate() const;
 
+  // TODO
   // Audio buffer fill ratio (0.0-1.0), or -1.0 when there is no audio device
   // (used by the "audio" sync method to pace frames). Safe to call from the
   // emulation pacing thread
@@ -86,12 +89,14 @@ public:
   // resample audio to the display refresh rate
   void setAudioPlaybackRateRatio(double ratio);
 
+  // TODO
   // Enables/disables audio Dynamic Rate Control (the "dynamic-rate-control"
   // advanced setting). Stored so it can be applied when the AudioManager is
   // (re)created, and forwarded live when it already exists
   void setDynamicRateControlEnabled(bool enabled);
   bool getDynamicRateControlEnabled() const;
 
+  // TODO
   // Whether the instant-replay recorder should keep a rolling window while this
   // game runs (the "instant-replay-enabled" advanced setting). Stored here as the
   // resolved value; the renderer reads it to gate its ClipRecorder
@@ -156,6 +161,7 @@ private:
   // picks them up (e.g. FCEUmm Zapper -> fceumm_zapper_mode=clightgun)
   void applyCompanionOptions(const CoreDeviceVariant &variant);
 
+  // TODO
   // Rebuilds the active cheat set from the repository: RAM cheats go to the
   // per-frame engine, Game Genie codes to the core, and any cheat that affects
   // gameplay is skipped while RA hardcore mode is active. No-op without a repo
@@ -168,6 +174,7 @@ private:
   EmulationContext m_context;
   std::unique_ptr<::libretro::ICore> m_core;
 
+  // TODO
   // Keys on their way to a core that asked for the keyboard. They arrive on the
   // GUI thread and the core only runs on the render thread, so they queue here
   // and are handed over at the top of a frame rather than mid-run
@@ -193,6 +200,7 @@ private:
   std::vector<SuspendPoint> m_rewindSuspendPoints;
   std::chrono::time_point<std::chrono::steady_clock> m_lastSaveTime;
   int m_saveIntervalSeconds = 10;
+  // TODO
   // Holds the in-flight autosave. Discarding the future std::async returns would
   // block the render thread in its destructor until the write finished (a hitch
   // every save interval); keeping it here lets the write run in the background

@@ -14,6 +14,7 @@
 #include <qchronotimer.h>
 #include <string>
 
+// TODO
 // Threading: a QML item — constructed and driven (properties/slots) on the GUI
 // thread. Owns the frame-pacing thread (m_emulationThread), whose timer fires
 // there and enqueues RunFrame onto the renderer (drained on the render thread)
@@ -155,6 +156,7 @@ protected:
 public slots:
   void startGame();
 
+  // TODO
   // Recomputes the frame-pacing target/mode from the current sync-method /
   // target-framerate settings, the core fps, and the display refresh rate
   // Must run on the GUI thread (reads window()/screen())
@@ -238,6 +240,7 @@ private:
   enum class SyncMethod { Native, Monitor, Fixed, Audio };
   static SyncMethod syncMethodFromString(const std::string &method);
 
+  // TODO
   // Wall-clock frame interval (ns) for native/fixed pacing:
   //   Native -> 1e9 / coreFps
   //   Fixed  -> 1e9 / targetFramerate
@@ -247,6 +250,7 @@ private:
   static int64_t computeTargetIntervalNs(SyncMethod method, double coreFps,
                                           int targetFramerate, double refreshHz);
 
+  // TODO
   // The rate to pace at for "sync to monitor", or 0 if the display doesn't line
   // up with the content rate (caller falls back to native). Divides the refresh
   // rate down to the nearest integer fraction and only matches when that lands

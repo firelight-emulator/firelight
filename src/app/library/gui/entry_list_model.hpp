@@ -88,11 +88,13 @@ namespace firelight::library {
 
     Q_INVOKABLE void removeEntryFromFolder(int entryId, int folderId);
 
+    // TODO
     // Sets an entry's favorite flag by entry id. Multi-select bulk actions and
     // the context menu act on ids, not a delegate, so they can't go through
     // setData like the per-row heart does
     Q_INVOKABLE void setEntryFavorite(int entryId, bool favorite);
 
+    // TODO
     // True if the entry satisfies the given smart folder's criteria. Used by
     // the client-side folder filter for smart folders (manual folders use
     // folderIds membership). Parsed criteria are cached per folder; call
@@ -124,6 +126,7 @@ namespace firelight::library {
     void countByFolderIdChanged();
 
   private:
+    // TODO
     // Reconciles a single entry with the model after a create/update event:
     // inserts a newly-visible entry, removes one that became hidden/deleted, or
     // updates one in place (the QML SortFilterProxyModel re-sorts/re-filters, so
@@ -133,11 +136,13 @@ namespace firelight::library {
     // Fills an item's play stats (total + last-played) from the activity log
     void applyPlayStats(Item &item) const;
 
+    // TODO
     // Fills an item's earned/total achievement counts from the achievement
     // service (offline, by content hash). Cheap indexed lookups; run on reset
     // and after a play session ends (a session may have unlocked achievements)
     void applyAchievementCounts(Item &item) const;
 
+    // TODO
     // Recomputes every row's achievement counts and notifies. Counts are
     // per-user, so this runs after login (which completes async, post-reset)
     // and after a session ends. Must run on the GUI thread
@@ -164,6 +169,7 @@ namespace firelight::library {
     const SmartFolderCriteria &criteriaForFolder(int folderId) const;
     mutable std::unordered_map<int, SmartFolderCriteria> m_smartFolderCache;
 
+    // TODO
     // entry id -> index into m_items, rebuilt on reset(); lets the per-entry
     // matchesSmartFolder lookup avoid an O(n) scan (so a filter pass is O(n),
     // not O(n^2))

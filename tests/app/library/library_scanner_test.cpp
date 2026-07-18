@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 
+// TODO
 // End-to-end scan of a real temp directory: constructs the scanner over an
 // in-memory repository, points it at a temp content directory, runs a full scan
 // through the QtConcurrent worker + event loop, then asserts on what was
@@ -48,6 +49,7 @@ bool endsWith(const std::string &s, const std::string &suffix) {
 
 class LibraryScannerTest : public testing::Test {
 protected:
+  // TODO
   // An in-memory DB is fine even though the scanner hashes/creates on a worker
   // thread: the repository holds a single SQLite connection shared across threads
   // (serialized by its internal recursive mutex), so the worker sees the same
@@ -63,6 +65,7 @@ protected:
 
   QString path(const QString &rel) { return tempDir.filePath(rel); }
 
+  // TODO
   // Runs a scan and blocks until the worker goes idle, whether or not it changed
   // anything. scanFinished only fires on changes, so wait on the scanning flag
   // returning to false instead (the worker's DB writes are complete by then)
@@ -206,6 +209,7 @@ TEST_F(LibraryScannerTest, IgnoresUnknownAndPatchFiles) {
   EXPECT_TRUE(m_repo->getContentFiles().empty());
 }
 
+// TODO
 // Nested folders that hold games are watched (so future adds/removes there are
 // caught instantly), along with the content root -- but folders with no games
 // are not, so the watch count scales with game folders, not the whole tree
@@ -236,6 +240,7 @@ TEST_F(LibraryScannerTest, WatchesGameFoldersAndRootButNotEmptyFolders) {
   EXPECT_FALSE(emptyWatched);
 }
 
+// TODO
 // A rescan with no filesystem change must not report a change: scanFinished
 // (which refreshes/resets the library UI) stays silent, and nothing is
 // duplicated. This is what keeps the periodic safety scan from flickering the UI

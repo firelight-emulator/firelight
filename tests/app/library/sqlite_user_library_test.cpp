@@ -7,6 +7,7 @@
 namespace firelight::db {
 class SqliteUserLibraryTest : public testing::Test {};
 
+// TODO
 // Counts the repository's content/run-configuration events (the EventDispatcher
 // replacement for the old Qt signals). Subscriptions are released when it goes
 // out of scope
@@ -699,6 +700,7 @@ TEST_F(SqliteUserLibraryTest, EntryFileLocationsUseArchivePathTest) {
   library::ContentDirectory dir{.path = "roms"};
   ASSERT_TRUE(library.create(dir));
 
+  // TODO
   // An archived entry's on-disk location is the archive path; the file location
   // resolves against that, and contentPaths reports it (so "path contains"
   // works for archived content too)

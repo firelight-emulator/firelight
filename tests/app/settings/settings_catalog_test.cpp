@@ -533,6 +533,7 @@ TEST(SettingsCatalogValidationTest, ParsesTypeAliasesForEveryDelegate) {
   EXPECT_EQ(find(s, "bind")->widget, "key-binding");
 }
 
+// TODO
 // The catalog we actually ship. Every other test here feeds the parser inline
 // JSON, so nothing caught a typo in the real file — and page/group ids are
 // load-bearing, so a typo silently orphans a setting rather than erroring
@@ -565,6 +566,7 @@ TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
   }
 }
 
+// TODO
 // AudioManager reads this key to pick an output. If it stopped existing, audio
 // would quietly fall back to the system default with no error anywhere — so the
 // key and its declaration are pinned together
@@ -586,6 +588,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheAudioOutputKeyAudioManagerReads) {
   EXPECT_TRUE(setting->defaultValue.empty());
 }
 
+// TODO
 // Mute lives in the catalog rather than on the emulator so it outlives a game:
 // AudioManager is rebuilt on every load and re-reads this key, which is the only
 // reason muting one game leaves the next one muted too
@@ -626,6 +629,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheVolumeKeyAudioManagerReads) {
   EXPECT_EQ(setting->defaultValue, "100");
 }
 
+// TODO
 // AppearanceSettings.qml is a typed facade: one SettingBinding per key, so the
 // rest of the app can bind to names instead of strings. Nothing in QML fails
 // loudly when a key stops existing — the binding just reports "" forever — so

@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import Firelight 1.0
 
+// TODO
 // Per-game "Change artwork" picker. Shows the stored candidates + current
 // selection for a media type, lets the user search SteamGridDB for more, and
 // import a local image. All actions go through GameArtService, which reprojects

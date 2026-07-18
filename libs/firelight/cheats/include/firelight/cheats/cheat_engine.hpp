@@ -10,6 +10,7 @@ class ICore;
 
 namespace firelight::cheats {
 
+// TODO
 // Firelight's own equivalent of RetroArch's "retro" cheat handler: it replays a
 // set of RAM writes into the core's live system memory every emulated frame, so
 // values the game overwrites are continuously re-applied (GameShark / Action

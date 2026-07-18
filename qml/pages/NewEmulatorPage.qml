@@ -36,6 +36,7 @@ FocusScope {
 
     focus: true
 
+    // TODO
     // In-game shortcut scope while this page is the active stack item; an
     // overlay pushed on top (or leaving) drops back to menu scope. Without this
     // the engine stays in menu scope and only ScopeAlways shortcuts (e.g.
@@ -75,6 +76,7 @@ FocusScope {
         emulator.decrementPlaybackMultiplier()
     }
 
+    // TODO
     // Keys.onPressed: function(event) {
     //     console.log("pressed: " + event.key)
     //     if (event.key === Qt.Key_Control) {

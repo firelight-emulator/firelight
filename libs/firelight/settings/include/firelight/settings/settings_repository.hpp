@@ -5,6 +5,7 @@
 
 namespace firelight::settings {
 
+// TODO
 // Storage only: one explicit method per tier, no tier parameter. The tier
 // vocabulary (SettingsLevel) and the resolution chain live in SettingsService,
 // which is what actually decides between them

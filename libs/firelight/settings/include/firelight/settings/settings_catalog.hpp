@@ -8,6 +8,7 @@
 
 namespace firelight::settings {
 
+// TODO
 // Declarative catalog of every setting Firelight has: what it is, where it
 // lives (page + group), and — for emulation settings — how it reaches the core
 // Authored as JSON (see the schema in data/settings_catalog.json)
@@ -26,11 +27,13 @@ namespace firelight::settings {
 // setting reference them the same way
 class SettingsCatalog {
 public:
+  // TODO
   // The one catalog shared across the app (loaded once at startup, read by the
   // emulation path and the settings UI). Starts empty; tests that don't load it
   // just see an empty catalog (callers fall back to core-declared defaults)
   static SettingsCatalog &instance();
 
+  // TODO
   // Replaces the catalog from a JSON document / file. Returns false (and logs)
   // on a parse error, leaving the previous catalog intact. Validation problems
   // are logged but do not fail the load — a bad entry shouldn't cost the user
@@ -38,6 +41,7 @@ public:
   bool loadFromJson(const std::string &json);
   bool loadFromFile(const std::string &path);
 
+  // TODO
   // Authoring mistakes the parser can't otherwise catch: duplicate keys, a
   // setting pointing at a group that doesn't exist, a group pointing at a
   // missing page, a CUSTOM setting with no widget. Empty => the catalog is
@@ -74,6 +78,7 @@ public:
   [[nodiscard]] std::vector<SettingDefinition>
   settingsForCore(const std::string &coreName) const;
 
+  // TODO
   // Every setting declared in the group, ordered by `order` then declaration
   // order. App and common settings always apply; core-specific ones only for
   // `coreName`, so an empty coreName means "no core in scope" (the global tier)
@@ -94,6 +99,7 @@ public:
   // Whether a key is an app setting (single-valued, global-tier-only)
   [[nodiscard]] bool isAppSetting(const std::string &key) const;
 
+  // TODO
   // The declared default for a common (frontend) setting, or "" if the catalog
   // doesn't define it. The single source of truth for these defaults — callers
   // resolve overrides first, then fall back to this

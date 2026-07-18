@@ -63,6 +63,7 @@ bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
   } else if (typeStr == "custom") {
     s.type = SettingType::CUSTOM;
   } else if (typeStr == "game-picker") {
+    // TODO
     // A dropdown whose options are the user's eligible library games (filled in
     // by the app layer at runtime); value semantics are OPTIONS (the chosen
     // game's content hash)
@@ -177,6 +178,7 @@ SettingDefinition parseSetting(const nlohmann::json &j,
   return s;
 }
 
+// TODO
 // App settings are single-valued and never reach a core, so the core-facing
 // fields are meaningless there. Strip them rather than let them look load-
 // bearing

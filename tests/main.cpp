@@ -23,6 +23,7 @@ int main(int argc, char **argv) {
       std::make_shared<firelight::settings::SettingsService>(settings);
   firelight::settings::SettingsService::setInstance(settingsService.get());
 
+  // TODO
   // Load the friendly-settings catalog so emulation-default resolution matches
   // the app (the catalog is the single source of truth for those defaults)
   // Resolve relative to the executable, not the cwd, so it works however the

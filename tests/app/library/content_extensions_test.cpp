@@ -4,6 +4,7 @@
 
 namespace firelight::library {
 
+// TODO
 // The scanner gates disc detection on isDiscExtension, so the full set of
 // container/sheet extensions must be recognized (a dropped entry silently stops
 // that format from ever being scanned as a disc)

@@ -7,6 +7,7 @@ namespace firelight::library {
 
 LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library)
     : m_library(library) {
+  // TODO
   // A newly added content file gets a run configuration. These events are
   // published on the scanner thread, so the handlers run synchronously there
   // (the per-thread database connection makes this safe)

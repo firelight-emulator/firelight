@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
 
+// TODO
 // Renders the current route as a screen and mirrors Router's history. Recently
 // visited screens are kept alive in an LRU cache so navigating back returns to a
 // page exactly as it was left (scroll position, selection, sub-tab). Router owns
@@ -30,6 +31,7 @@ StackView {
     // show a loading indicator
     property bool loading: false
 
+    // TODO
     // Route pattern -> screen Component. Params (Router.params) are passed as
     // initial properties, so a pattern's :name captures must match the screen's
     // property names (e.g. :entryId -> FLGameDetailsPanel.entryId)
@@ -168,6 +170,7 @@ StackView {
     // Builds currently in flight, keyed by mount key, so a route isn't built twice
     property var _incubators: ({})
 
+    // TODO
     // A route pattern that owns its subtree (e.g. /settings) keeps one instance
     // for all its sub-paths; everything else is keyed by full path so distinct
     // entries get distinct pages
@@ -237,6 +240,7 @@ StackView {
 
     function _show(item, transition) {
         stack.loading = false;
+        // TODO
         // Keep the depth-1 invariant: if a screen ever pushes onto our stack
         // directly (outside the router), drop those extras so nothing lingers
         // behind the next page

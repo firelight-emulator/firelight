@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Effects
 import Firelight 1.0
 
+// TODO
 // Hosts routes that present as a popup over the current view (e.g. /settings)
 // Driven entirely by Router: opens when the current route is an overlay, closes
 // otherwise. Dismissing the popup (Escape / click-away) calls Router.back() so

@@ -27,6 +27,7 @@ namespace firelight::emulation {
 
 class GameLoader;
 
+// TODO
 // Builds the ICore for a loaded entry. Injectable so tests can supply a fake
 // core instead of dlopen'ing a real libretro DLL. A null factory uses the
 // default (real Core)
@@ -56,6 +57,7 @@ struct DiscChangedEvent {
   unsigned count;
 };
 
+// TODO
 // Published once on load when the core advertises selectable port devices, so
 // the input UI can offer a per-port device choice. Query the current instance's
 // getControllerDevices() for the details
@@ -63,6 +65,7 @@ struct ControllerDevicesEvent {
   std::string contentHash;
 };
 
+// TODO
 // One-shot, per-launch knobs applied to the next loadEntry and then consumed
 // (so later launches use their own defaults). These are transient launch
 // parameters, distinct from the stable service dependencies in EmulationContext
@@ -93,12 +96,14 @@ public:
   void resetGame();
   EmulatorInstance *getCurrentEmulatorInstance();
 
+  // TODO
   // Audio-buffer level of the running instance, or -1 if none. Safe to call from
   // the frame-pacing thread: the instance can be destroyed on the GUI thread by
   // loadEntry/stopEmulation, so this reads it under m_instanceMutex rather than
   // handing out a raw pointer the caller might dereference after a reset()
   float currentAudioBufferLevel();
 
+  // TODO
   // Transient silencing of the running instance (pause, fast-forward) — not the
   // user's audio-muted setting, which the audio output reads for itself. Guarded
   // like currentAudioBufferLevel, and for the same reason

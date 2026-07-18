@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
+// TODO
 // A vertical list of mutually exclusive options, rendered full-width below the
 // label. `options` is [{label, value, note?}]; `currentValue` is the selected
 // value; emits `changed` on selection

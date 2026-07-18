@@ -77,6 +77,7 @@ Item {
                         Layout.fillHeight: true
                         Layout.preferredWidth: 100
 
+                        // TODO
                         // onHeightChanged: function() {
                         //     width = height
                         // }

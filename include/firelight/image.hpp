@@ -5,6 +5,7 @@
 
 namespace firelight {
 
+// TODO
 // A PNG-encoded image. Qt-free so domain types (e.g. SuspendPoint) don't force
 // Qt6::Gui on their consumers; the GUI layer converts to/from QImage at the
 // boundary (see src/gui/image_qt.hpp)

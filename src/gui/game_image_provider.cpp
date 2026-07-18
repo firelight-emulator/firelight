@@ -6,6 +6,7 @@ GameImageProvider::GameImageProvider() : QQuickImageProvider(Image) {}
 
 QImage GameImageProvider::requestImage(const QString &id, QSize *size,
                                        const QSize &requestedSize) {
+  // TODO
   // Copy the stored image out under the lock, then scale outside it: QImage is
   // copy-on-write, so the copy is cheap and stays valid even if another thread
   // replaces the map entry while we scale

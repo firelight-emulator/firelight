@@ -82,6 +82,7 @@ FocusScope {
                 onTriggered: {
                     myDelegate.manageSaveData(myDelegate.model.id)
                 }
+                // TODO
                 // onTriggered: {
                 //     addPlaylistRightClickMenu.entryId = libraryEntryRightClickMenu.entryId
                 //     addPlaylistRightClickMenu.popup()

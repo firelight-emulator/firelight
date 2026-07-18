@@ -20,6 +20,7 @@
 
 void EmulatorItem::feedPointer(const QPointF &pos) {
   const auto bounds = boundingRect();
+  // TODO
   // Off-screen is authoritatively derived from whether the cursor is actually
   // over the game surface (light guns read this; when off-screen some cores —
   // e.g. FCEUmm's Zapper — zero the aim). Clamp the normalized position to
@@ -93,16 +94,19 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   m_emulationTimer.setTimerType(Qt::PreciseTimer);
 
   connect(&m_emulationTimer, &QChronoTimer::timeout, [this] {
+    // TODO
     // Audio-driven pacing: submit a frame whenever the audio buffer has room to
     // accept another, instead of spinning to a wall-clock target. The audio
     // device's consumption rate becomes the master clock
     if (m_audioSyncActive.load()) {
+      // TODO
       // When paused, no audio is produced so the buffer would sit empty and we'd
       // submit a frame every tick — skip entirely (the renderer holds the pause
       // image)
       if (m_paused) {
         return;
       }
+      // TODO
       // Read the level through the service, which guards the instance's lifetime
       // Dereferencing a raw instance pointer here races loadEntry/stopEmulation
       // freeing it on the GUI thread (a use-after-free on game load/unload)
@@ -130,6 +134,7 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     static int64_t rollingSumOfAbsoluteDifferencesNs = 0;
 
     if (previousFrameActualEndTimeNs == 0) {
+      // TODO
       // First call, or after a reset. Perform work and set the baseline
       // CALL YOUR FRAME UPDATE/WORK FUNCTION HERE (e.g.,
       // your_main_update_function();)
@@ -154,6 +159,7 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
       while (
           std::chrono::high_resolution_clock::now().time_since_epoch().count() <
           intendedTargetFrameEndTimeNs) {
+        // TODO
         // This is a hard spin, consumes 100% CPU on one core
         // Optional: If there's significant time left (e.g., > 0.2-0.5 ms),
         // you could std::this_thread::yield(); or a platform-specific short
@@ -246,6 +252,7 @@ EmulatorItem::~EmulatorItem() {
   }
   getDiscordManager()->clearActivity();
 
+  // TODO
   // m_emulationTimer was moved to m_emulationThread (see the constructor). Stop
   // it *on that thread* and wait for the stop to complete before quitting the
   // thread, so the timer is inactive by the time it's destroyed as a member on
@@ -362,6 +369,7 @@ double EmulatorItem::monitorPacingRate(const double coreFps,
   if (coreFps <= 0.0 || refreshHz <= 0.0) {
     return 0.0;
   }
+  // TODO
   // Divide the refresh rate down to the integer fraction closest to the content
   // rate (e.g. 120 Hz / 2 = 60 for a 60 fps game; 144 Hz / 2 = 72, which won't
   // match below)
@@ -406,6 +414,7 @@ void EmulatorItem::reconfigurePacing() {
   int64_t targetNs = 0;
 
   if (method == SyncMethod::Monitor) {
+    // TODO
     // Match the display only when it divides down close to the content rate
     // (e.g. 60/120/240 Hz for a 60 fps game); otherwise fall back to native so we
     // never over/underspeed the game (e.g. on a 144 Hz display)
@@ -505,6 +514,7 @@ void EmulatorItem::hoverMoveEvent(QHoverEvent *event) {
 }
 
 void EmulatorItem::hoverLeaveEvent(QHoverEvent *event) {
+  // TODO
   // Pointer left the game surface: light guns read this as "off-screen" and
   // relative motion should not jump across the gap on re-entry. Ignore the
   // spurious leave Qt emits when a mouse-button grab begins (a button is held
@@ -599,6 +609,7 @@ void EmulatorItem::startGame() {
                                 Qt::QueuedConnection);
     });
 
+    // TODO
     // Setting these causes the item's geometry to be visible, and the renderer
     // is initialized. If an item is not visible, the renderer is not
     // initialized

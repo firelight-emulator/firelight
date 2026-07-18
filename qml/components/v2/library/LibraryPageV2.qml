@@ -42,6 +42,7 @@ SplitView {
         model: PlatformModel
         filters: FunctionFilter {
             enabled: !splitView.showAllPlatforms
+            // TODO
             // Counts populate after entries finish loading; binding the map here
             // re-invalidates the filter when it changes, so owned platforms
             // appear once the library is ready instead of staying empty
@@ -53,6 +54,7 @@ SplitView {
         }
     }
 
+    // TODO
     // Folder tree: the folder model is flat, so flatten its parentId/position
     // into a pre-ordered, depth-tagged list gated by an expanded set. Collapsed
     // folders (id present with value false) hide their descendants
@@ -504,6 +506,7 @@ SplitView {
                                 width: ListView.view.width
                                 ButtonGroup.group: libraryButtonGroup
 
+                                // TODO
                                 // Drag a folder onto another to re-nest it, or onto a
                                 // row's top/bottom edge to reorder. mimeData + active
                                 // are set imperatively in the grab callback (a
@@ -540,6 +543,7 @@ SplitView {
                                     }
                                 }
 
+                                // TODO
                                 // Folder drops: top/bottom edge reorders next to this row,
                                 // middle nests into it (cycle-guarded). Game drops add to
                                 // this folder (manual folders only). dropZone tracks the

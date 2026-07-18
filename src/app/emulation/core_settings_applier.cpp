@@ -50,6 +50,7 @@ void CoreSettingsApplier::refresh() {
   }
   const auto &catalog = settings::SettingsCatalog::instance();
 
+  // TODO
   // Effective value for a common setting: the resolved override
   // (game -> platform -> global), else the catalog-declared default. The catalog
   // JSON is the single source of truth for these defaults

@@ -5,6 +5,7 @@
 namespace firelight::library {
 class IUserLibraryRepository;
 
+// TODO
 // Owns the scan-time orchestration that turns discovered content files into
 // playable library entries: when a content file is added, create its run
 // configuration and ensure an entry exists; when the last run configuration for

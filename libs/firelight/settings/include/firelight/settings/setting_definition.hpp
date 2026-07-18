@@ -9,6 +9,7 @@
 
 namespace firelight::settings {
 
+// TODO
 // Value semantics of a setting. The concrete UI control is chosen separately
 // (see SettingDefinition::widget) so, e.g., an INTEGER can render as a slider or
 // a spinbox and a CUSTOM setting can use a bespoke delegate. STRING is a
@@ -41,6 +42,7 @@ inline bool conditionsHold(const std::vector<SettingCondition> &conditions,
   return true; // no conditions => always holds
 }
 
+// TODO
 // Maps a friendly emulation setting onto one libretro core option. A friendly
 // setting may carry several of these (composite: one friendly control drives
 // multiple core options)
@@ -51,6 +53,7 @@ struct CoreOptionMapping {
   std::map<std::string, std::string> valueMap;
 };
 
+// TODO
 // One declared setting: what it is and where it lives. App settings and
 // emulation settings share this shape — an app setting is simply one with no
 // core mapping, read only at the global tier. Which array a setting is authored
@@ -61,6 +64,7 @@ struct SettingDefinition {
   std::string description;
   std::string defaultValue;
   SettingType type = SettingType::OPTIONS;
+  // TODO
   // The SettingsGroup this row belongs to; the group in turn names the page
   // Empty => the setting still resolves and still indexes, but no group-filtered
   // view renders it
@@ -78,6 +82,7 @@ struct SettingDefinition {
   double minValue = 0.0;
   double maxValue = 0.0;
   double stepValue = 1.0;
+  // TODO
   // UI control. Empty => derived from `type` (toggle / dropdown / slider). Set
   // to a specific control ("spinbox") or, for CUSTOM, a bespoke QML delegate id
   // (e.g. "gbc-palette"). Keeps custom widgets open-ended without schema churn
@@ -85,10 +90,12 @@ struct SettingDefinition {
   // Hidden by default; only shown when the user enables "Show advanced settings"
   // Purely a UI concern — does not affect value resolution
   bool advanced = false;
+  // TODO
   // Empty => a frontend-only setting (consumed by EmulatorInstance) or a
   // setting whose `key` is itself the core option key (identity). Non-empty =>
   // an explicit friendly->core mapping applied when composing core values
   std::vector<CoreOptionMapping> mapping;
+  // TODO
   // When true, this setting's `options` are not authored here but built at
   // runtime from the user's library (the app layer fills them, since the
   // settings lib has no library dependency). The stored value is the chosen
@@ -97,6 +104,7 @@ struct SettingDefinition {
   // Eligible platform ids for a library-game-source setting (empty => any
   // platform). e.g. {1, 2} for Game Boy / Game Boy Color
   std::vector<int> gamePickerPlatformIds;
+  // TODO
   // Like libraryGameSource, but the options are the machine's audio output
   // devices, enumerated at runtime by the app layer. The stored value is the
   // device description, or "" for the system default

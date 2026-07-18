@@ -9,6 +9,7 @@ class ImageUtils : public QObject {
   Q_OBJECT
 
 public:
+  // TODO
   // Loads the image at `url` (plain path, file://, or qrc:/) and returns the
   // average color of its top band, bottom band, and whole, as "#rrggbb"
   // strings: { top, bottom, average, ok }. `ok` is false when the image can't

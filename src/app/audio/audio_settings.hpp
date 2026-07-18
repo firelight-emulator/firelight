@@ -2,6 +2,7 @@
 
 namespace firelight::audio {
 
+// TODO
 // The setting keys AudioManager reads, in their own header so that code which
 // only needs to *name* one — the mute hotkey — doesn't drag Qt Multimedia in
 // with it. Both are declared in data/settings_catalog.json, and a test pins

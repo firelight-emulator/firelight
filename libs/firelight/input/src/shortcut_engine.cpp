@@ -15,6 +15,7 @@ void ShortcutEngine::setContext(const int scope) {
   std::lock_guard lock(m_mutex);
   m_context = scope;
 
+  // TODO
   // Entering or leaving gameplay drops every mask. A ScopeAlways action firing
   // in a menu suppresses an input nothing is reading, and that mask would
   // otherwise still be there when the game came back
@@ -140,6 +141,7 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device,
 
       const bool inScope = (action->scope & m_context) != 0;
 
+      // TODO
       // Withhold the input that fired this from the game, until it is physically
       // released. Done here, under the lock and before the event is published,
       // because a subscriber runs a queued hop later — by which time the core

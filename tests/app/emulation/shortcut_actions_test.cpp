@@ -304,6 +304,7 @@ TEST_F(ShortcutActionsTest, EveryShippedActionActuallyDoesSomething) {
   ASSERT_FALSE(registry.listActions().empty());
 
   for (const auto &action : registry.listActions()) {
+    // TODO
     // The one action ShortcutActions is right to ignore: it turns off the
     // hotkeys of the device that pressed it, and only the engine knows which
     // device that was. ShortcutEngine tests cover it

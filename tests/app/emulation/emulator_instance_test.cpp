@@ -173,6 +173,7 @@ TEST_F(EmulatorInstanceTest, PlatformSettingChangeUpdatesInstance) {
   EXPECT_EQ("pixel-perfect", instance->getAspectRatioMode());
 }
 
+// TODO
 // TEST_F(EmulatorInstanceTest, RewindSettingChangeUpdatesInstance) {
 //   library::ContentFile info{.m_contentHash =
 //   "e26ee0d44e809351c8ce2d73c7400cdd",
@@ -502,6 +503,7 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   ASSERT_EQ(devices.size(), 1u);
   ASSERT_EQ(devices[0].size(), 3u);
 
+  // TODO
   // The curated variants are surfaced console-natively (the standard pad plus
   // the SNES Mouse / Super Scope the snes9x catalog knows, cross-referenced with
   // the core's advertisement), default first
@@ -530,6 +532,7 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
             "260");
 }
 
+// TODO
 // --- ICore state contract (exercised via FakeCore): getSerializeSize matches
 // the serialized length, a valid state round-trips, and a size mismatch is
 // refused without touching the core. Guards the deserializeState hardening that

@@ -12,6 +12,7 @@ class IPlatformService;
 
 namespace firelight::library {
 
+// TODO
 // A member file of a multi-file disc set: a cue/gdi track or an .m3u-listed
 // disc. `path` is the on-disk path (loose sets) or the entry name within the
 // archive (in-archive sets)
@@ -27,6 +28,7 @@ struct DiscIdentity {
   std::string contentHash;
 };
 
+// TODO
 // Identifies disc images (loose or inside an archive) via rcheevos AUTO
 // detection, and resolves a multi-file disc set's member files. This is the
 // disc-specific counterpart that ContentIdentifier delegates to

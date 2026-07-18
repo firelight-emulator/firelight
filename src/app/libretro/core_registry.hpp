@@ -13,6 +13,7 @@ namespace settings {
 class SettingsService;
 }
 
+// TODO
 // A libretro core Firelight knows about. `id` is the DLL base name (e.g.
 // "mupen64plus_libretro"), which is also the key the settings/core-options
 // catalogs use. Bundled cores ship in system/_cores; user-supplied cores
@@ -31,6 +32,7 @@ struct PlatformCore {
   bool isDefault = false;
 };
 
+// TODO
 // A concrete, selectable controller *variant* a specific core can expose on a
 // port (e.g. Genesis Plus GX "6-Button Pad", FCEUmm "Zapper"). This is the
 // curated, friendly catalog; it's cross-referenced at load against the core's
@@ -48,6 +50,7 @@ struct CoreDeviceVariant {
   bool isDefault = false; // the port's default device for this core
 };
 
+// TODO
 // The authority on which cores exist, which platforms each can run, and each
 // platform's default core. Decouples the core from the platform: the platform
 // is the stable identity, the core is a resolvable/overridable attribute
@@ -70,12 +73,14 @@ public:
 
   [[nodiscard]] const std::vector<CoreInfo> &cores() const { return m_cores; }
 
+  // TODO
   // The curated controller variants a core can expose (empty = joypad only)
   // Not filtered by platform/ROM — callers cross-reference the core's runtime
   // advertisement (ICore::getControllerDevices) to get the game's actual list
   [[nodiscard]] const std::vector<CoreDeviceVariant> &
   deviceCatalogForCore(const std::string &coreId) const;
 
+  // TODO
   // The controller variants actually selectable for a port: the curated catalog
   // filtered to what the core advertises (`advertisedDeviceIds`, from
   // getControllerDevices — pass empty to trust the catalog when the core gave no
@@ -85,6 +90,7 @@ public:
   availableControllerVariants(const std::string &coreId,
                               const std::vector<unsigned> &advertisedDeviceIds) const;
 
+  // TODO
   // Resolves the effective core for a scope: per-game override -> per-platform
   // override -> platform default. An override is honored only if that core
   // supports the platform (a stale/invalid override falls back). The override
@@ -94,6 +100,7 @@ public:
   resolveCoreName(int platformId, const std::string &contentHash,
                   settings::SettingsService *settings) const;
 
+  // TODO
   // Forces a specific core for this session (CLI `--core`), winning over the
   // stored per-game/per-platform overrides in resolveCoreName. Honored only
   // where the core actually supports the platform (a mismatched override falls

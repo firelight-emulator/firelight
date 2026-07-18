@@ -8,6 +8,7 @@
 
 namespace firelight::netplay {
 
+// TODO
 // A guest's controller as the host's core sees it: fed by InputPackets, read
 // once per frame by the input router. Goes neutral when packets stop so a
 // dropped guest never leaves a button stuck
