@@ -17,6 +17,53 @@ ListView {
     property string sortRole: "displayName"
     property bool sortAscending: true
 
+    // Multi-select state owned by GameView and bound in.
+    property var selectedIds: ({})
+
+    signal gameClicked(int entryId, int rowIndex, int modifiers)
+    signal gameFocused(var data)
+    signal requestAddToFolder(var entryIds)
+    signal requestChangeArt(string contentHash, string displayName, int platformId)
+
+    function focusSnapshot(m) {
+        return {
+            entryId: m.entryId, displayName: m.displayName, platformId: m.platformId,
+            platformIconName: m.platformIconName, contentHash: m.contentHash,
+            boxartFrontSourceUrl: m.boxartFrontSourceUrl, icon1x1SourceUrl: m.icon1x1SourceUrl,
+            description: m.description, developer: m.developer, releaseYear: m.releaseYear,
+            favorite: m.favorite, lastPlayedAt: m.lastPlayedAt, numSecondsPlayed: m.numSecondsPlayed,
+            achievementsEarned: m.achievementsEarned, achievementsTotal: m.achievementsTotal,
+            folderIds: m.folderIds, genres: m.genres
+        };
+    }
+
+    function targetsFor(entryId) {
+        if (root.selectedIds[entryId] === true) {
+            var out = [];
+            for (var k in root.selectedIds)
+                if (root.selectedIds[k]) out.push(parseInt(k));
+            if (out.length > 0) return out;
+        }
+        return [entryId];
+    }
+
+    function formatPlayTime(seconds) {
+        if (!seconds || seconds <= 0) return "—";
+        var h = Math.floor(seconds / 3600);
+        var m = Math.round((seconds % 3600) / 60);
+        if (h > 0) return h + "h " + m + "m";
+        if (m > 0) return m + "m";
+        return "<1m";
+    }
+    function formatLastPlayed(millis) {
+        if (!millis || millis <= 0) return "Never";
+        return Qt.formatDateTime(new Date(millis), "MMM d, yyyy");
+    }
+    function formatAchievements(earned, total) {
+        if (!total || total <= 0) return "—";
+        return earned + "/" + total;
+    }
+
     property real titleColumnWidth: 340
     property real timePlayedColumnWidth: 128
     property real lastPlayedColumnWidth: 128
@@ -224,15 +271,35 @@ ListView {
      delegate: Button {
         id: delegateButton
         required property var model
+        required property int index
          readonly property int _art: Math.round(48 * AppStyle.scale)
+         readonly property bool selected: root.selectedIds[delegateButton.model.entryId] === true
          height: Math.max(AppStyle.rowHeight, _art + AppStyle.spacingSm * 2)
          width: ListView.view.width
          padding: AppStyle.spacingSm
          hoverEnabled: true
 
          TapHandler {
+             id: rowTap
              acceptedButtons: Qt.LeftButton
+             // Default (DragThreshold) policy takes only a passive grab, so it
+             // cooperates with the row's folder-drag DragHandler.
+             onSingleTapped: {
+                 root.gameClicked(delegateButton.model.entryId, delegateButton.index, rowTap.point.modifiers)
+                 root.gameFocused(root.focusSnapshot(delegateButton.model))
+             }
              onDoubleTapped: EmulationService.loadEntry(delegateButton.model.entryId)
+         }
+
+         ContextMenu.menu: GameContextMenu {
+             primaryEntryId: delegateButton.model.entryId
+             primaryFavorite: delegateButton.model.favorite
+             contentHash: delegateButton.model.contentHash
+             displayName: delegateButton.model.displayName
+             platformId: delegateButton.model.platformId
+             targetIds: root.targetsFor(delegateButton.model.entryId)
+             onRequestAddToFolder: (entryIds) => root.requestAddToFolder(entryIds)
+             onRequestChangeArt: (h, n, p) => root.requestChangeArt(h, n, p)
          }
 
          Keys.onPressed: function (event) {
@@ -270,9 +337,11 @@ ListView {
          }
 
          background: Rectangle {
-             color: Theme.textPrimary
-             opacity: hovered ? 0.08 : 0
+             color: delegateButton.selected ? Theme.accent : Theme.textPrimary
+             opacity: delegateButton.selected ? 0.16 : (delegateButton.hovered ? 0.08 : 0)
              radius: AppStyle.radiusSm
+             border.color: Theme.accent
+             border.width: delegateButton.selected ? Math.max(1, Math.round(AppStyle.scale)) : 0
          }
          contentItem: RowLayout {
              spacing: AppStyle.spacingLg
@@ -336,7 +405,7 @@ ListView {
                  Layout.fillHeight: true
                  Layout.minimumWidth: root.timePlayedColumnWidth
                  Layout.maximumWidth: root.timePlayedColumnWidth
-                 text: "1000 hours"
+                 text: root.formatPlayTime(delegateButton.model.numSecondsPlayed)
                  font.pixelSize: AppStyle.fontSizeMedium
                  font.weight: Font.Medium
                  font.family: Constants.regularFontFamily
@@ -348,7 +417,7 @@ ListView {
                  Layout.fillHeight: true
                  Layout.minimumWidth: root.lastPlayedColumnWidth
                  Layout.maximumWidth: root.lastPlayedColumnWidth
-                 text: model.lastPlayedAt
+                 text: root.formatLastPlayed(delegateButton.model.lastPlayedAt)
                  font.pixelSize: AppStyle.fontSizeMedium
                  font.weight: Font.Medium
                  font.family: Constants.regularFontFamily
@@ -361,7 +430,7 @@ ListView {
                  Layout.fillHeight: true
                  Layout.minimumWidth: root.achievementColumnWidth
                  Layout.maximumWidth: root.achievementColumnWidth
-                 text: "19/55 achievements"
+                 text: root.formatAchievements(delegateButton.model.achievementsEarned, delegateButton.model.achievementsTotal)
                  font.pixelSize: AppStyle.fontSizeMedium
                  font.weight: Font.Medium
                  font.family: Constants.regularFontFamily

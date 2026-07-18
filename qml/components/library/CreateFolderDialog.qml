@@ -10,10 +10,12 @@ import Firelight 1.0
 FirelightDialog {
     id: control
     property alias folderName: usernameTextInput.text
+    // Pre-fills the field on show (used for rename); "" for a fresh create.
+    property string initialText: ""
     headerText: "Create folder"
 
     onAboutToShow: {
-        usernameTextInput.text = ""
+        usernameTextInput.text = control.initialText
     }
 
     contentItem: FocusScope {

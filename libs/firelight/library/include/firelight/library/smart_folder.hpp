@@ -54,6 +54,12 @@ struct SmartFolderCriteria {
   std::optional<int> yearMax;
   std::optional<int64_t> playedAfterMillis;
   std::optional<int64_t> minSecondsPlayed;
+  // Rolling window: the entry must have been played within the last N days,
+  // resolved against "now" at evaluation time so it never goes stale (unlike
+  // playedAfterMillis, which is a fixed timestamp).
+  std::optional<int> playedWithinDays;
+  // true = never played; false = has been played at least once.
+  std::optional<bool> unplayed;
 
   // Parses criteria from JSON. Malformed JSON yields empty (match-all) criteria
   // rather than throwing, so a corrupt folder degrades to "whole library".
@@ -63,8 +69,11 @@ struct SmartFolderCriteria {
   // True when no source and no filter is set — the folder matches everything.
   [[nodiscard]] bool isEmpty() const;
 
-  // Pure predicate: does the entry satisfy every specified criterion?
+  // Pure predicate: does the entry satisfy every specified criterion? The
+  // no-clock overload resolves the rolling playedWithinDays window against the
+  // system clock; pass nowMillis explicitly for deterministic tests.
   [[nodiscard]] bool matches(const EntryFields &entry) const;
+  [[nodiscard]] bool matches(const EntryFields &entry, int64_t nowMillis) const;
 };
 
 } // namespace firelight::library

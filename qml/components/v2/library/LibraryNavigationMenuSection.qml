@@ -42,7 +42,8 @@ FocusScope {
             //     color: Theme.surfaceHover
             // }
             background: Item {}
-            visible: root.title !== ""
+            // Hidden in the collapsed rail (too narrow for a section label).
+            visible: root.title !== "" && root.width > Math.round(64 * AppStyle.scale)
 
             RowLayout {
                 anchors.fill: parent

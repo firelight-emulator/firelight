@@ -1,5 +1,7 @@
 #include "app/library/gui/entry_list_model.hpp"
+#include "sqlite_achievement_repository.hpp"
 
+#include <firelight/achievement_service.hpp>
 #include <firelight/activity/sqlite_activity_log.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_repository.hpp>
@@ -42,7 +44,10 @@ protected:
       m_repo, (QDir::tempPath() + "/fl_elm_test").toStdString()};
   activity::SqliteActivityLog m_activityLog{":memory:"};
   platforms::PlatformService m_platformService;
-  EntryListModel m_model{m_service, m_activityLog, m_platformService};
+  achievements::SqliteAchievementRepository m_achievementRepo{":memory:"};
+  achievements::AchievementService m_achievementService{m_achievementRepo};
+  EntryListModel m_model{m_service, m_activityLog, m_platformService,
+                         m_achievementService};
 
   int rows() { return m_model.rowCount(QModelIndex()); }
 };

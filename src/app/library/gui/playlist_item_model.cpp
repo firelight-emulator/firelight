@@ -108,6 +108,22 @@ namespace firelight::gui {
     return false;
   }
 
+  int LibraryFolderListModel::createFolder(const QString &displayName,
+                                           const int parentId) {
+    auto folder = library::FolderInfo{.displayName = displayName.toStdString()};
+    if (!getLibraryService()->create(folder)) {
+      return -1;
+    }
+    if (parentId >= 0) {
+      getLibraryService()->setFolderParent(folder.id, parentId);
+    }
+    // Reordering under a parent changes positions; re-pull the ordered list.
+    beginResetModel();
+    m_items = getLibraryService()->listFolders();
+    endResetModel();
+    return folder.id;
+  }
+
   int LibraryFolderListModel::addSmartFolder(const QString &displayName,
                                              const QString &filterJson) {
     auto folder = library::FolderInfo{
@@ -161,6 +177,24 @@ namespace firelight::gui {
       }
       const auto idx = index(i, 0);
       emit dataChanged(idx, idx, {Color});
+      return true;
+    }
+    return false;
+  }
+
+  bool LibraryFolderListModel::setFolderName(const int folderId,
+                                             const QString &displayName) {
+    for (int i = 0; i < m_items.size(); ++i) {
+      if (m_items[i].id != folderId) {
+        continue;
+      }
+      m_items[i].displayName = displayName.toStdString();
+      if (!getLibraryService()->update(m_items[i])) {
+        spdlog::warn("Failed to rename folder {}", folderId);
+        return false;
+      }
+      const auto idx = index(i, 0);
+      emit dataChanged(idx, idx, {DisplayName});
       return true;
     }
     return false;

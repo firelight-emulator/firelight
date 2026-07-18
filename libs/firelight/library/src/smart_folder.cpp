@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <chrono>
 #include <nlohmann/json.hpp>
 
 namespace firelight::library {
@@ -78,6 +79,13 @@ SmartFolderCriteria SmartFolderCriteria::parse(const std::string &json) {
       parsed["minSecondsPlayed"].is_number_integer()) {
     c.minSecondsPlayed = parsed["minSecondsPlayed"].get<int64_t>();
   }
+  if (parsed.contains("playedWithinDays") &&
+      parsed["playedWithinDays"].is_number_integer()) {
+    c.playedWithinDays = parsed["playedWithinDays"].get<int>();
+  }
+  if (parsed.contains("unplayed") && parsed["unplayed"].is_boolean()) {
+    c.unplayed = parsed["unplayed"].get<bool>();
+  }
 
   return c;
 }
@@ -119,6 +127,12 @@ std::string SmartFolderCriteria::toJson() const {
   if (minSecondsPlayed.has_value()) {
     j["minSecondsPlayed"] = *minSecondsPlayed;
   }
+  if (playedWithinDays.has_value()) {
+    j["playedWithinDays"] = *playedWithinDays;
+  }
+  if (unplayed.has_value()) {
+    j["unplayed"] = *unplayed;
+  }
   return j.dump();
 }
 
@@ -127,10 +141,19 @@ bool SmartFolderCriteria::isEmpty() const {
          platformIds.empty() && !favorite.has_value() && genres.empty() &&
          developer.empty() && publisher.empty() && !yearMin.has_value() &&
          !yearMax.has_value() && !playedAfterMillis.has_value() &&
-         !minSecondsPlayed.has_value();
+         !minSecondsPlayed.has_value() && !playedWithinDays.has_value() &&
+         !unplayed.has_value();
 }
 
 bool SmartFolderCriteria::matches(const EntryFields &entry) const {
+  const auto nowMillis = std::chrono::duration_cast<std::chrono::milliseconds>(
+                             std::chrono::system_clock::now().time_since_epoch())
+                             .count();
+  return matches(entry, nowMillis);
+}
+
+bool SmartFolderCriteria::matches(const EntryFields &entry,
+                                  const int64_t nowMillis) const {
   const auto &criteria = *this;
   // --- Source: which pool of games this folder draws from ---
   if (!criteria.contentDirectoryIds.empty()) {
@@ -199,6 +222,21 @@ bool SmartFolderCriteria::matches(const EntryFields &entry) const {
   if (criteria.minSecondsPlayed.has_value() &&
       entry.secondsPlayed < *criteria.minSecondsPlayed) {
     return false;
+  }
+  if (criteria.unplayed.has_value() &&
+      (entry.lastPlayedMillis == 0) != *criteria.unplayed) {
+    return false;
+  }
+  if (criteria.playedWithinDays.has_value()) {
+    // Never-played entries fall outside any recency window.
+    if (entry.lastPlayedMillis == 0) {
+      return false;
+    }
+    const int64_t windowMillis =
+        static_cast<int64_t>(*criteria.playedWithinDays) * 86400000LL;
+    if (entry.lastPlayedMillis < nowMillis - windowMillis) {
+      return false;
+    }
   }
 
   return true;

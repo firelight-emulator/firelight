@@ -73,6 +73,7 @@ FirelightDialog {
         minMinutesInput.text = "";
         lastDaysInput.text = "";
         favoriteOnly.checked = false;
+        unplayedOnly.checked = false;
         selectedDirIds = [];
         selectedPlatformIds = [];
         selectedColor = "";
@@ -99,11 +100,33 @@ FirelightDialog {
         yearMaxInput.text = c.yearMax !== undefined ? String(c.yearMax) : "";
         minMinutesInput.text = c.minSecondsPlayed !== undefined ? String(Math.round(c.minSecondsPlayed / 60)) : "";
         favoriteOnly.checked = c.favorite === true;
+        unplayedOnly.checked = c.unplayed === true;
         selectedDirIds = c.contentDirectoryIds ? c.contentDirectoryIds.slice() : [];
         selectedPlatformIds = c.platformIds ? c.platformIds.slice() : [];
-        // "played since" is stored absolute; we can't recover the original
-        // "last N days", so leave it blank on edit.
-        lastDaysInput.text = "";
+        // The rolling "last N days" window round-trips now (it's stored as a day
+        // count, not an absolute timestamp).
+        lastDaysInput.text = c.playedWithinDays !== undefined ? String(c.playedWithinDays) : "";
+    }
+
+    // Prefill the fields for a common smart folder. Keeps a name the user has
+    // already typed; otherwise names the folder after the template.
+    function applyTemplate(kind) {
+        var priorName = nameInput.text;
+        resetFields();
+        nameInput.text = priorName;
+        if (kind === "recent") {
+            lastDaysInput.text = "14";
+            if (!priorName.trim()) nameInput.text = "Recently played";
+        } else if (kind === "never") {
+            unplayedOnly.checked = true;
+            if (!priorName.trim()) nameInput.text = "Never played";
+        } else if (kind === "favorites") {
+            favoriteOnly.checked = true;
+            if (!priorName.trim()) nameInput.text = "Favorites";
+        } else if (kind === "played") {
+            minMinutesInput.text = "60";
+            if (!priorName.trim()) nameInput.text = "Sunk hours in";
+        }
     }
 
     function buildFilterJson() {
@@ -129,7 +152,9 @@ FirelightDialog {
         if (minMinutesInput.text.trim().length > 0)
             c.minSecondsPlayed = parseInt(minMinutesInput.text) * 60;
         if (lastDaysInput.text.trim().length > 0)
-            c.playedAfterMillis = Date.now() - parseInt(lastDaysInput.text) * 86400000;
+            c.playedWithinDays = parseInt(lastDaysInput.text);
+        if (unplayedOnly.checked)
+            c.unplayed = true;
         return JSON.stringify(c);
     }
 
@@ -225,6 +250,31 @@ FirelightDialog {
                 placeholder: "Smart folder name"
             }
 
+            FieldLabel {
+                text: "Start from a template"
+                visible: control.editFolderId === -1
+            }
+            Flow {
+                Layout.fillWidth: true
+                visible: control.editFolderId === -1
+                spacing: 6
+                Repeater {
+                    model: [
+                        { label: "Recently played", kind: "recent" },
+                        { label: "Never played", kind: "never" },
+                        { label: "Favorites", kind: "favorites" },
+                        { label: "Sunk hours in", kind: "played" }
+                    ]
+                    delegate: FLButton {
+                        required property var modelData
+                        size: "sm"
+                        variant: "secondary"
+                        text: modelData.label
+                        onClicked: control.applyTemplate(modelData.kind)
+                    }
+                }
+            }
+
             // --- Source ---
             SectionLabel { text: "Source" }
             FieldLabel {
@@ -278,6 +328,20 @@ FirelightDialog {
                 contentItem: Text {
                     leftPadding: 28
                     text: "Only favorites"
+                    color: Theme.textPrimary
+                    font.family: Constants.regularFontFamily
+                    font.pixelSize: AppStyle.fontSizeSmall
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+
+            CheckDelegate {
+                id: unplayedOnly
+                Layout.fillWidth: true
+                padding: 4
+                contentItem: Text {
+                    leftPadding: 28
+                    text: "Only unplayed (never launched)"
                     color: Theme.textPrimary
                     font.family: Constants.regularFontFamily
                     font.pixelSize: AppStyle.fontSizeSmall

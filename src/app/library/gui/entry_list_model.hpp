@@ -13,6 +13,9 @@ namespace firelight::activity {
 namespace firelight::platforms {
   class IPlatformService;
 }
+namespace firelight::achievements {
+  class AchievementService;
+}
 
 namespace firelight::library {
   class EntryListModel : public QAbstractListModel {
@@ -50,18 +53,23 @@ namespace firelight::library {
       ContentPaths,
       CreatedAt,
       LastPlayedAt,
-      NumSecondsPlayed
+      NumSecondsPlayed,
+      AchievementsEarned,
+      AchievementsTotal
     };
 
     struct Item {
       Entry entry;
       uint64_t numSecondsPlayed{};
       uint64_t lastPlayedEpochMillis{};
+      int achievementsEarned{};
+      int achievementsTotal{};
     };
 
     EntryListModel(UserLibraryService &userLibrary,
                    activity::IActivityLog &activityLog,
                    platforms::IPlatformService &platformService,
+                   achievements::AchievementService &achievementService,
                    QObject *parent = nullptr);
 
     [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
@@ -79,6 +87,11 @@ namespace firelight::library {
     Q_INVOKABLE void addEntryToFolder(int entryId, int folderId);
 
     Q_INVOKABLE void removeEntryFromFolder(int entryId, int folderId);
+
+    // Sets an entry's favorite flag by entry id. Multi-select bulk actions and
+    // the context menu act on ids, not a delegate, so they can't go through
+    // setData like the per-row heart does.
+    Q_INVOKABLE void setEntryFavorite(int entryId, bool favorite);
 
     // True if the entry satisfies the given smart folder's criteria. Used by
     // the client-side folder filter for smart folders (manual folders use
@@ -120,6 +133,16 @@ namespace firelight::library {
     // Fills an item's play stats (total + last-played) from the activity log.
     void applyPlayStats(Item &item) const;
 
+    // Fills an item's earned/total achievement counts from the achievement
+    // service (offline, by content hash). Cheap indexed lookups; run on reset
+    // and after a play session ends (a session may have unlocked achievements).
+    void applyAchievementCounts(Item &item) const;
+
+    // Recomputes every row's achievement counts and notifies. Counts are
+    // per-user, so this runs after login (which completes async, post-reset)
+    // and after a session ends. Must run on the GUI thread.
+    void refreshAllAchievementCounts();
+
     // Rebuilds m_indexByEntryId to match m_items (after a structural change).
     void rebuildIndex();
 
@@ -130,6 +153,7 @@ namespace firelight::library {
     UserLibraryService &m_userLibrary;
     activity::IActivityLog &m_activityLog;
     platforms::IPlatformService &m_platformService;
+    achievements::AchievementService &m_achievementService;
     QList<Item> m_items{};
 
     // Flattens an item (entry attributes + joined play stats) into the Qt-free
@@ -148,6 +172,8 @@ namespace firelight::library {
     ScopedConnection m_gamePlayedConnection;
     ScopedConnection m_entryCreatedConnection;
     ScopedConnection m_entryUpdatedConnection;
+    ScopedConnection m_achievementSessionEndedConnection;
+    ScopedConnection m_userLoggedInConnection;
 
     // Fires once (single-shot, 0ms) after a burst of syncEntry calls to emit the
     // count-property change signals a single time.

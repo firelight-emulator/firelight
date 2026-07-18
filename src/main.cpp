@@ -506,7 +506,7 @@ int main(int argc, char *argv[]) {
     // Set up the models for QML
     // ***********************************************
     firelight::library::EntryListModel entryListModel(
-        userLibraryService, activityLog, platformService);
+        userLibraryService, activityLog, platformService, achievementService);
 
     // Gallery model over the capture index (screenshots + clips).
     firelight::gui::CaptureListModel captureListModel(gameCaptureRepository,

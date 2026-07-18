@@ -170,6 +170,8 @@ TEST(SmartFolderTest, JsonRoundTrip) {
   c.yearMax = 1999;
   c.playedAfterMillis = 123456789;
   c.minSecondsPlayed = 3600;
+  c.playedWithinDays = 14;
+  c.unplayed = false;
 
   const auto parsed = SmartFolderCriteria::parse(c.toJson());
   EXPECT_EQ(parsed.contentDirectoryIds, c.contentDirectoryIds);
@@ -183,6 +185,44 @@ TEST(SmartFolderTest, JsonRoundTrip) {
   EXPECT_EQ(parsed.yearMax, c.yearMax);
   EXPECT_EQ(parsed.playedAfterMillis, c.playedAfterMillis);
   EXPECT_EQ(parsed.minSecondsPlayed, c.minSecondsPlayed);
+  EXPECT_EQ(parsed.playedWithinDays, c.playedWithinDays);
+  EXPECT_EQ(parsed.unplayed, c.unplayed);
+}
+
+TEST(SmartFolderTest, UnplayedCriterion) {
+  auto played = sampleEntry(); // lastPlayedMillis = 2000
+  auto never = sampleEntry();
+  never.lastPlayedMillis = 0;
+
+  SmartFolderCriteria unplayedOnly;
+  unplayedOnly.unplayed = true;
+  EXPECT_TRUE(unplayedOnly.matches(never, 10000));
+  EXPECT_FALSE(unplayedOnly.matches(played, 10000));
+
+  SmartFolderCriteria playedOnly;
+  playedOnly.unplayed = false;
+  EXPECT_TRUE(playedOnly.matches(played, 10000));
+  EXPECT_FALSE(playedOnly.matches(never, 10000));
+}
+
+TEST(SmartFolderTest, PlayedWithinDaysRollingWindow) {
+  const int64_t day = 86400000LL;
+  const int64_t now = 100 * day;
+
+  SmartFolderCriteria c;
+  c.playedWithinDays = 7;
+
+  auto recent = sampleEntry();
+  recent.lastPlayedMillis = now - 3 * day; // within the window
+  EXPECT_TRUE(c.matches(recent, now));
+
+  auto stale = sampleEntry();
+  stale.lastPlayedMillis = now - 10 * day; // outside the window
+  EXPECT_FALSE(c.matches(stale, now));
+
+  auto never = sampleEntry();
+  never.lastPlayedMillis = 0; // never played is excluded from any window
+  EXPECT_FALSE(c.matches(never, now));
 }
 
 TEST(SmartFolderTest, EmptyJsonAndMalformedJsonAreMatchAll) {

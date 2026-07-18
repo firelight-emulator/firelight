@@ -6,6 +6,7 @@
 #include "rcheevos/startsession_response.hpp"
 #include "user_unlock.hpp"
 #include <optional>
+#include <utility>
 
 namespace firelight::achievements {
 
@@ -19,6 +20,13 @@ struct AchievementSessionEndedEvent {
   std::string username;
   unsigned gameId;
   bool hardcore;
+};
+
+// Published when the logged-in user changes (login sets a username, logout
+// clears it). Login completes asynchronously after startup, so consumers that
+// show per-user data (e.g. the library's achievement counts) refresh on this.
+struct UserLoggedInEvent {
+  std::string username; // empty on logout
 };
 
 class AchievementService {
@@ -90,6 +98,15 @@ public:
 
   [[nodiscard]] std::vector<UserUnlock>
   getAllUserUnlocks(const std::string &username, unsigned gameId) const;
+
+  // Offline {earned, total} achievement counts for a game by content hash.
+  // total is the achievement-set size; earned counts the user's unlocks
+  // (softcore or hardcore). {0, 0} when the game has no achievement set;
+  // earned stays 0 when username is empty. Used by the library model to show
+  // per-game progress.
+  [[nodiscard]] std::pair<int, int>
+  getAchievementCounts(const std::string &contentHash,
+                       const std::string &username) const;
 
   bool
   processStartSessionResponse(const std::string &username, unsigned gameId,

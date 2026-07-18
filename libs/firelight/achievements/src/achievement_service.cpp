@@ -92,6 +92,32 @@ AchievementService::getAllUserUnlocks(const std::string &username,
   return m_repository.getAllUserUnlocks(username, gameId);
 }
 
+std::pair<int, int>
+AchievementService::getAchievementCounts(const std::string &contentHash,
+                                         const std::string &username) const {
+  const auto set = m_repository.getAchievementSetByContentHash(contentHash);
+  if (!set.has_value()) {
+    return {0, 0};
+  }
+  int total = static_cast<int>(set->numAchievements);
+  if (total == 0) {
+    total = static_cast<int>(set->achievements.size());
+  }
+  if (username.empty() || total == 0) {
+    return {0, total};
+  }
+  // getAllUserUnlocks filters by achievement_sets.game_id (the RA game id),
+  // not the set's primary key — so pass gameId, not id.
+  int earned = 0;
+  for (const auto &unlock :
+       m_repository.getAllUserUnlocks(username, set->gameId)) {
+    if (unlock.earned || unlock.earnedHardcore) {
+      earned++;
+    }
+  }
+  return {earned, total};
+}
+
 bool AchievementService::processStartSessionResponse(
     const std::string &username, const unsigned gameId,
     const StartSessionResponse &startSessionResponse) {
@@ -409,7 +435,11 @@ unsigned AchievementService::getNumCurrentSessionHardcoreUnlocks() const {
 }
 
 void AchievementService::setLoggedInUsername(const std::string &username) {
+  if (m_loggedInUsername == username) {
+    return;
+  }
   m_loggedInUsername = username;
+  EventDispatcher::instance().publish(UserLoggedInEvent{.username = username});
 }
 
 std::string AchievementService::getLoggedInUsername() const {

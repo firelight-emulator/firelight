@@ -1,4 +1,5 @@
 #include "entry_list_model.hpp"
+#include <firelight/achievement_service.hpp>
 #include <firelight/activity/activity_log.hpp>
 #include <firelight/library/folder_info.hpp>
 
@@ -14,9 +15,11 @@ namespace firelight::library {
   EntryListModel::EntryListModel(UserLibraryService &userLibrary,
                                  activity::IActivityLog &activityLog,
                                  platforms::IPlatformService &platformService,
+                                 achievements::AchievementService &achievementService,
                                  QObject *parent)
     : QAbstractListModel(parent), m_userLibrary(userLibrary),
-      m_activityLog(activityLog), m_platformService(platformService) {
+      m_activityLog(activityLog), m_platformService(platformService),
+      m_achievementService(achievementService) {
     m_gamePlayedConnection =
         EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
           [this](const emulation::EmulationStartedEvent &event) {
@@ -61,6 +64,28 @@ namespace firelight::library {
               this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
           });
 
+    // A finished session may have unlocked achievements; refresh every row's
+    // counts (cheap indexed lookups) on the GUI thread.
+    m_achievementSessionEndedConnection =
+        EventDispatcher::instance()
+            .subscribe<achievements::AchievementSessionEndedEvent>(
+              [this](const achievements::AchievementSessionEndedEvent &) {
+                QMetaObject::invokeMethod(
+                  this, [this] { refreshAllAchievementCounts(); },
+                  Qt::QueuedConnection);
+              });
+
+    // Login completes asynchronously, after this constructor's reset() has
+    // already computed counts with no user; recompute when the user arrives
+    // (and on logout, which zeroes earned).
+    m_userLoggedInConnection =
+        EventDispatcher::instance().subscribe<achievements::UserLoggedInEvent>(
+          [this](const achievements::UserLoggedInEvent &) {
+            QMetaObject::invokeMethod(
+              this, [this] { refreshAllAchievementCounts(); },
+              Qt::QueuedConnection);
+          });
+
     reset();
   }
 
@@ -89,6 +114,8 @@ namespace firelight::library {
     roles[CreatedAt] = "createdAt";
     roles[LastPlayedAt] = "lastPlayedAt";
     roles[NumSecondsPlayed] = "numSecondsPlayed";
+    roles[AchievementsEarned] = "achievementsEarned";
+    roles[AchievementsTotal] = "achievementsTotal";
     return roles;
   }
 
@@ -162,6 +189,10 @@ namespace firelight::library {
         return QVariant::fromValue(item.lastPlayedEpochMillis);
       case NumSecondsPlayed:
         return QVariant::fromValue(item.numSecondsPlayed);
+      case AchievementsEarned:
+        return item.achievementsEarned;
+      case AchievementsTotal:
+        return item.achievementsTotal;
       default:
         return QVariant{};
     }
@@ -248,6 +279,25 @@ namespace firelight::library {
         break;
       }
     }
+  }
+
+  void EntryListModel::setEntryFavorite(int entryId, bool favorite) {
+    const auto it = m_indexByEntryId.find(entryId);
+    if (it == m_indexByEntryId.end()) {
+      return;
+    }
+    const int row = it->second;
+    if (row < 0 || row >= m_items.size()) {
+      return;
+    }
+    auto &item = m_items[row];
+    if (item.entry.favorite == favorite) {
+      return;
+    }
+    item.entry.favorite = favorite;
+    m_userLibrary.update(item.entry);
+    emit dataChanged(createIndex(row, 0), createIndex(row, 0), {Favorite});
+    emit numFavoritesChanged();
   }
 
   int EntryListModel::getCount() const {
@@ -375,6 +425,8 @@ namespace firelight::library {
           item.lastPlayedEpochMillis = it->second.lastEndMillis;
         }
 
+        applyAchievementCounts(item);
+
         m_indexByEntryId[item.entry.id] = static_cast<int>(m_items.size());
         m_items.emplace_back(item);
       }
@@ -409,6 +461,24 @@ namespace firelight::library {
     item.lastPlayedEpochMillis = lastEndMillis;
   }
 
+  void EntryListModel::applyAchievementCounts(Item &item) const {
+    const auto [earned, total] = m_achievementService.getAchievementCounts(
+      item.entry.contentHash, m_achievementService.getLoggedInUsername());
+    item.achievementsEarned = earned;
+    item.achievementsTotal = total;
+  }
+
+  void EntryListModel::refreshAllAchievementCounts() {
+    for (auto &item: m_items) {
+      applyAchievementCounts(item);
+    }
+    if (!m_items.empty()) {
+      emit dataChanged(createIndex(0, 0),
+                       createIndex(static_cast<int>(m_items.size()) - 1, 0),
+                       {AchievementsEarned, AchievementsTotal});
+    }
+  }
+
   void EntryListModel::rebuildIndex() {
     m_indexByEntryId.clear();
     for (int i = 0; i < m_items.size(); ++i) {
@@ -439,6 +509,7 @@ namespace firelight::library {
 
     Item item{.entry = *entry};
     applyPlayStats(item);
+    applyAchievementCounts(item);
 
     // Update the entry in place if it's already present in the model
     if (present) {

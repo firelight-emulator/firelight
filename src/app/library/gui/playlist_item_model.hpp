@@ -42,6 +42,10 @@ namespace firelight::gui {
 
     Q_INVOKABLE bool addFolder(const QString &displayName);
 
+    // Creates a manual folder under `parentId` (-1 = root). Returns the new
+    // folder's id, or -1 on failure.
+    Q_INVOKABLE int createFolder(const QString &displayName, int parentId);
+
     // Creates a smart folder whose membership is computed live from the given
     // SmartFolderCriteria JSON (see smart_folder.hpp). Returns the new folder's
     // id, or -1 on failure (so the caller can then set color/sort on it).
@@ -53,6 +57,9 @@ namespace firelight::gui {
 
     // Sets a folder's accent color (empty string clears it).
     Q_INVOKABLE bool setFolderColor(int folderId, const QString &color);
+
+    // Renames a folder.
+    Q_INVOKABLE bool setFolderName(int folderId, const QString &displayName);
 
     // Remembers a folder's game sort (role name + direction). An empty role
     // clears the override so the view falls back to its default.
