@@ -1,1 +1,21 @@
+# LLVM is the base; only the keys below are overridden, so everything not
+# listed keeps its LLVM value. Deliberately inherited: IndentWidth 2,
+# NamespaceIndentation None, PointerAlignment Right, BreakBeforeBraces Attach,
+# AllowShortIfStatementsOnASingleLine Never, AllowShortFunctionsOnASingleLine
+# All, ReflowComments Always, FixNamespaceComments true.
 BasedOnStyle: LLVM
+
+ColumnLimit: 120
+InsertBraces: true
+SeparateDefinitionBlocks: Always
+
+# Quotes for headers in the same target, angles for the include path
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^"'
+    Priority: 1
+  - Regex: '^<firelight/'
+    Priority: 2
+  - Regex: '^<'
+    Priority: 3

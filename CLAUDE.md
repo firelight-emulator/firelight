@@ -30,6 +30,60 @@ The build copies `_cores/windows/` into `build/system/_cores/` and `content.db` 
 
 Set `FL_DEBUG=1` in the environment to enable debug-level logging at runtime.
 
+## Code Style
+
+Formatting is enforced by `.clang-format` (C++) and `.qmlformat.ini` (QML); `.clang-tidy` carries the
+naming rules. Run the formatters rather than hand-aligning. Line endings are LF everywhere
+(`.gitattributes`).
+
+### Comments
+
+- Javadoc (`/** */`) on classes and methods. Otherwise `//`, unless it runs past 2 lines — then Javadoc
+- **Required** on every public/interface class and every public/interface method
+- Everywhere else, comment only when the code is not clear on its own
+- **Never explain the reason.** A comment says *what* unclear code does, not *why* a choice was made,
+  what it replaced, or what was tried before
+- No trailing period
+- No inline comments in QML unless needed to understand that specific part
+- Section headers look like:
+  ```
+  //****************
+  // thing
+  //****************
+  ```
+
+### C++
+
+- 120 columns, 2-space indent
+- Always braces, even for a one-line body
+- Blank line after every closing brace
+- Blank line before an `if`/`for`/`while`, unless the line above is a variable used by that block
+- `is`/`has`/`should` prefixes for boolean variables and methods
+- `m_` on member variables; `UPPER_SNAKE_CASE` for static const and constexpr; never a `k` prefix
+- Getters start with `get` (`getX()`); interfaces start with `I`
+- Member order: constructor, destructor, public methods, public members (there should almost never be
+  any), private methods, private members
+- Use `auto` liberally
+- Includes: angles for anything on the include path (our libs), quotes for the same target or source
+  directory
+- Return early; prefer fewer levels of nesting
+- Abbreviate only when the full word runs past 12 letters. Established short forms are exempt:
+  `id`, `num`, `min`, `max`, `ok`, `db`, `url`, `ui`
+- Prefer plain words. Do not use "provenance"
+
+### QML
+
+- 4-space indent; `id` is always the first line
+- `objectName` is the readable component name, a pipe, then the identifying variable —
+  e.g. `objectName: "LibraryNavigationMenuItem|" + displayText`
+- `id` is `root` for non-controls, `control` for controls, otherwise descriptive
+- Signal handlers on one line when they fit, otherwise multi-line; always braces where relevant
+- Move a component into its own file once a second file uses it
+- Reusable building blocks stay separate from full pages
+- **Always write property names explicitly**, even where a linter calls them redundant. `qmlformat`'s
+  `NormalizeOrder` and `GroupAttributesTogether` reorder attributes and drop comments, which is what
+  strips them — both are off in `.qmlformat.ini` and must stay off
+
 ## Repository Structure
 
 ```
