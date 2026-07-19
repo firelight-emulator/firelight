@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import Firelight 1.0
 
 // Centered placeholder for an empty view: optional icon, title, subtitle
 ColumnLayout {

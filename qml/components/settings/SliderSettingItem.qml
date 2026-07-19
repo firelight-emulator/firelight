@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Firelight 1.0
 
 BaseSettingItem {
     id: root
@@ -18,7 +17,7 @@ BaseSettingItem {
     control: RowLayout {
         spacing: AppStyle.spacingMd
 
-        Slider {
+        FLSlider {
             id: theControl
             Layout.fillWidth: true
             enabled: root.enabled
@@ -28,14 +27,7 @@ BaseSettingItem {
             stepSize: root.stepSize
             snapMode: Slider.SnapAlways
 
-            palette.midlight: Theme.textPrimary
-            palette.dark: Theme.accent
-
             onMoved: root.moved(value)
-
-            HoverHandler {
-                cursorShape: Qt.PointingHandCursor
-            }
         }
 
         Text {

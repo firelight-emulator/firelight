@@ -205,7 +205,7 @@ TEST(SettingsCatalogTypesTest, ParsesSliderAndCustomWidgets) {
   // Integer step other than 1 (e.g. increments of 5)
   EXPECT_DOUBLE_EQ(settings[4].stepValue, 5.0);
 
-  // Omitted step defaults to 1.
+  // Omitted step defaults to 1
   EXPECT_DOUBLE_EQ(settings[5].stepValue, 1.0);
 }
 

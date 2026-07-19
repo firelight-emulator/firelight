@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
-import Firelight 1.0
 
 ApplicationWindow {
     id: root
@@ -53,12 +52,14 @@ ApplicationWindow {
         WindowGeometry.mainWindowWidth = width;
     }
     onXChanged: {
-        if (frameReady)
+        if (frameReady) {
             WindowGeometry.mainWindowX = WindowFrame.nativeX();
+        }
     }
     onYChanged: {
-        if (frameReady)
+        if (frameReady) {
             WindowGeometry.mainWindowY = WindowFrame.nativeY();
+        }
     }
 
     FLFocusHighlight {

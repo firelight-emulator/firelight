@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
-import QtQml.Models
-import Firelight 1.0
 
 Button {
     id: root
@@ -59,8 +57,8 @@ Button {
             implicitWidth: 48
             implicitHeight: 48
 
-            FLIcon {
-                icon: root.model.platformIconName
+            Icon {
+                name: root.model.platformIconName
                 color: "#595959"
                 anchors.centerIn: parent
                 height: parent.height - 16

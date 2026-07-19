@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import Firelight 1.0
 
 // Themed single-line text input. Height derives from content (floored at
 // minTarget); colors from Theme, metrics from AppStyle

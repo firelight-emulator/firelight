@@ -15,7 +15,6 @@ struct Login2Response {
   std::string User{};
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Login2Response, AccountType, Messages,
-                                   Permissions, Score, SoftcoreScore, Success,
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Login2Response, AccountType, Messages, Permissions, Score, SoftcoreScore, Success,
                                    Token, User)
 } // namespace firelight::achievements

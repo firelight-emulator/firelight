@@ -168,7 +168,7 @@ void MetadataService::backfillMissing() {
       if (m_shuttingDown) {
         return;
       }
-      // Empty icon art is our "hasn't been populated yet" signal.
+      // Empty icon art is our "hasn't been populated yet" signal
       if (entry.icon1x1SourceUrl.empty()) {
         populate(entry.id);
       }

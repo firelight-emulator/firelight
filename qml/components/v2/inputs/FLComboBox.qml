@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import Firelight 1.0
 
 // Themed dropdown. Respects textRole via textAt(); metrics from AppStyle,
 // colors from Theme

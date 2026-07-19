@@ -8,7 +8,7 @@ namespace firelight::settings {
 
 // Search over every declared page and setting, for the settings nav's search
 // field. Set `query`; the rows are the ranked hits. A hit carries the `route`
-// to navigate to and, for a setting, the `key` the page should reveal.
+// to navigate to and, for a setting, the `key` the page should reveal
 class SettingsSearchModel : public QAbstractListModel {
   Q_OBJECT
   Q_PROPERTY(QString query READ query WRITE setQuery NOTIFY queryChanged)

@@ -11,12 +11,12 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 12
+        anchors.margins: AppStyle.spacingLg
+        spacing: AppStyle.spacingMd
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 12
+            spacing: AppStyle.spacingMd
 
             Text {
                 text: "Lobby"
@@ -24,16 +24,13 @@ Item {
                 font.pixelSize: AppStyle.fontSizeLarge
                 font.weight: Font.DemiBold
             }
-            Rectangle {
-                color: Theme.surface
-                radius: 6
-                implicitWidth: codeRow.implicitWidth + 20
-                implicitHeight: 32
+            FLPanel {
+                padding: AppStyle.spacingSm
 
                 RowLayout {
                     id: codeRow
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: AppStyle.spacingSm
                     Text {
                         text: NetworkService.joinCode
                         color: Theme.textPrimary
@@ -69,24 +66,21 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 16
+            spacing: AppStyle.spacingLg
 
             // Left: game + slots + controls
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: 12
+                spacing: AppStyle.spacingMd
 
-                Rectangle {
-                    color: Theme.surface
-                    radius: 8
+                FLPanel {
                     Layout.fillWidth: true
-                    implicitHeight: 96
+                    padding: AppStyle.spacingMd
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.margins: 12
-                        spacing: 12
+                        spacing: AppStyle.spacingMd
 
                         Image {
                             source: NetworkService.gameArtUrl
@@ -96,7 +90,7 @@ Item {
                             Layout.preferredHeight: 72
                         }
                         ColumnLayout {
-                            spacing: 4
+                            spacing: AppStyle.spacingXs
                             Layout.fillWidth: true
                             Text {
                                 text: NetworkService.hasGame ? NetworkService.gameName : "No game selected"
@@ -128,8 +122,8 @@ Item {
 
                 GridLayout {
                     columns: 4
-                    rowSpacing: 8
-                    columnSpacing: 8
+                    rowSpacing: AppStyle.spacingSm
+                    columnSpacing: AppStyle.spacingSm
                     Layout.fillWidth: true
 
                     Repeater {
@@ -154,7 +148,7 @@ Item {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 12
+                    spacing: AppStyle.spacingMd
 
                     FLButton {
                         id: readyButton
@@ -190,10 +184,10 @@ Item {
         modal: true
         anchors.centerIn: parent
         width: 280
-        padding: 12
+        padding: AppStyle.spacingMd
 
         contentItem: ColumnLayout {
-            spacing: 8
+            spacing: AppStyle.spacingSm
 
             Text {
                 text: "Player " + (root.pickingSlot + 1)

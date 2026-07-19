@@ -38,7 +38,7 @@ FocusScope {
         boundsBehavior: Flickable.StopAtBounds
         clip: true
 
-        ScrollBar.vertical: ScrollBar {}
+        ScrollBar.vertical: FLScrollBar {}
 
         ColumnLayout {
             id: column

@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 
 // Appears anywhere in the app when the host starts a game: guests ready up,
@@ -27,7 +26,7 @@ Rectangle {
         id: content
         anchors.centerIn: parent
         width: parent.width - 24
-        spacing: 8
+        spacing: AppStyle.spacingSm
 
         RowLayout {
             Layout.fillWidth: true
@@ -68,7 +67,7 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: AppStyle.spacingSm
 
             FLButton {
                 variant: "primary"

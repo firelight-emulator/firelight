@@ -9,11 +9,11 @@ Rectangle {
     color: model.occupied ? "#2d3542" : "#222222"
     border.color: model.isSelf ? "#5588dd" : "#333333"
     border.width: 1
-    radius: 8
+    radius: AppStyle.radiusMd
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 8
+        anchors.margins: AppStyle.spacingSm
         spacing: 2
 
         RowLayout {
@@ -31,7 +31,7 @@ Rectangle {
                 visible: model.occupied
                 width: 8
                 height: 8
-                radius: 4
+                radius: AppStyle.radiusSm
                 color: model.ready ? "#66cc66" : "#666666"
             }
         }

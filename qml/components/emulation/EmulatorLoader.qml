@@ -1,7 +1,5 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Effects
-import Firelight 1.0
 
 // Hosts the emulator page. Pause and blur are owned by the host (GameplayLayer):
 // it drives `blurAmount` when something is layered over the game and toggles the

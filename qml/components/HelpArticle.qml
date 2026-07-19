@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import Firelight 1.0
 
 // Renders a bundled Markdown help article. `source` is a qrc:/help/*.md URL;
 // the file is read into a string and shown with Qt's native Markdown rendering
@@ -16,7 +15,7 @@ Flickable {
     clip: true
     boundsBehavior: Flickable.StopAtBounds
 
-    ScrollBar.vertical: ScrollBar {
+    ScrollBar.vertical: FLScrollBar {
         width: 8
     }
 

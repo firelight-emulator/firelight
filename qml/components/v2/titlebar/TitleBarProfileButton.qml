@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
-import QtQuick.Layouts 1.0
-import Firelight 1.0
 
 Button {
     id: control

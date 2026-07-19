@@ -17,10 +17,12 @@ MenuItem {
     // laid-out width here closes a binding loop that a scale change re-triggers
     implicitWidth: {
         var cw = contentItem.implicitWidth;
-        if (control.maxWidth > 0 && cw > control.maxWidth)
+        if (control.maxWidth > 0 && cw > control.maxWidth) {
             cw = control.maxWidth;
-        if (cw < control.minWidth)
+        }
+        if (cw < control.minWidth) {
             cw = control.minWidth;
+        }
         return cw + leftPadding + rightPadding;
     }
     padding: AppStyle.spacingXs

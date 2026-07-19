@@ -1,7 +1,7 @@
 import QtQuick
 import QtTest
 // Absolute qrc path so the import resolves both when this file runs from the
-// compiled module and when QuickTest loads it directly from the source tree.
+// compiled module and when QuickTest loads it directly from the source tree
 import "qrc:/qt/qml/QMLFirelightTest/routing.js" as R
 
 TestCase {

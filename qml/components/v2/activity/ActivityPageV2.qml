@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
 import QtQuick.Layouts
-import Firelight 1.0
 
 Pane {
     id: root
@@ -12,7 +11,7 @@ Pane {
 
     background: Rectangle {
         color: Theme.glass
-        radius: 8
+        radius: AppStyle.radiusMd
     }
 
     Flickable {
@@ -33,7 +32,7 @@ Pane {
                     Layout.fillHeight: true
                     background: Rectangle {
                         color: Theme.surface
-                        radius: 8
+                        radius: AppStyle.radiusMd
                     }
 
                     ColumnLayout {
@@ -44,7 +43,7 @@ Pane {
                             Layout.preferredHeight: 36
 
                             Text {
-                                Layout.leftMargin: 8
+                                Layout.leftMargin: AppStyle.spacingSm
                                 Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
                                 text: "Activity"
                                 color: Theme.textPrimary
@@ -60,14 +59,18 @@ Pane {
                                 Layout.preferredHeight: 1
                             }
 
-                            ButtonBar {}
+                            // Nothing reads currentIndex yet — the range still
+                            // always renders as a day
+                            FLSegmentedControl {
+                                segments: ["Day", "Week", "Month", "Year"]
+                            }
                         }
 
                         Item {
                             id: buttonBar
                             Layout.fillWidth: true
                             Layout.preferredHeight: 48
-                            Layout.topMargin: 8
+                            Layout.topMargin: AppStyle.spacingSm
 
                             Button {
                                 anchors.right: bucketRangeLabelText.left
@@ -78,7 +81,7 @@ Pane {
 
                                 background: Rectangle {
                                     color: Theme.surfaceElevated
-                                    radius: 8
+                                    radius: AppStyle.radiusMd
                                     border.color: Theme.border
                                     border.width: 1
                                 }
@@ -125,7 +128,7 @@ Pane {
 
                                 background: Rectangle {
                                     color: Theme.surfaceElevated
-                                    radius: 8
+                                    radius: AppStyle.radiusMd
                                     border.color: Theme.border
                                     border.width: 1
                                 }
@@ -184,9 +187,9 @@ Pane {
 
                                         Text {
                                             anchors.left: parent.left
-                                            anchors.leftMargin: 4
+                                            anchors.leftMargin: AppStyle.spacingXs
                                             anchors.bottom: parent.top
-                                            anchors.bottomMargin: 4
+                                            anchors.bottomMargin: AppStyle.spacingXs
                                             color: Theme.textPrimary
                                             opacity: 0.5
                                             font.family: Constants.regularFontFamily
@@ -241,13 +244,13 @@ Pane {
                                             parent: Overlay.overlay
                                             visible: barHoverHandler.hovered
                                             height: hoverGameList.height + padding * 2
-                                            padding: 8
+                                            padding: AppStyle.spacingSm
                                             x: barHoverHandler.point.scenePosition.x + 16
                                             y: barHoverHandler.point.scenePosition.y + 16
 
                                             background: Rectangle {
                                                 color: Theme.surfaceElevated
-                                                radius: 4
+                                                radius: AppStyle.radiusSm
                                                 border.color: Theme.border
                                                 border.width: 1
 
@@ -264,7 +267,7 @@ Pane {
                                             ColumnLayout {
                                                 id: hoverGameList
                                                 width: parent.width
-                                                spacing: 8
+                                                spacing: AppStyle.spacingSm
 
                                                 Text {
                                                     text: "Games played during this hour:"
@@ -274,7 +277,7 @@ Pane {
                                                     verticalAlignment: Text.AlignVCenter
                                                     color: Theme.textPrimary
                                                     Layout.fillWidth: true
-                                                    Layout.bottomMargin: 8
+                                                    Layout.bottomMargin: AppStyle.spacingSm
                                                 }
 
                                                 Repeater {
@@ -283,7 +286,7 @@ Pane {
                                                         required property int index
                                                         required property var modelData
                                                         implicitHeight: 50
-                                                        spacing: 12
+                                                        spacing: AppStyle.spacingMd
                                                         Text {
                                                             text: "#" + (index + 1)
                                                             font.pixelSize: AppStyle.fontSizeMedium
@@ -410,7 +413,7 @@ Pane {
                     Layout.fillHeight: true
                     background: Rectangle {
                         color: Theme.surface
-                        radius: 8
+                        radius: AppStyle.radiusMd
                     }
 
                     ListView {
@@ -424,7 +427,7 @@ Pane {
 
                             RowLayout {
                                 anchors.fill: parent
-                                spacing: 8
+                                spacing: AppStyle.spacingSm
 
                                 Image {
                                     Layout.preferredWidth: 32

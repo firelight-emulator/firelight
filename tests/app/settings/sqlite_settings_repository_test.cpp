@@ -740,7 +740,7 @@ TEST_F(SqliteSettingsRepositoryTest, GetEffectiveValue_ResolutionOrder) {
   repository->setGlobalValue(key, "global");
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def), "global");
 
-  // Platform set -> platform wins over global.
+  // Platform set -> platform wins over global
   repository->setPlatformValue(platformId, key, "platform");
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def), "platform");
 
@@ -752,7 +752,7 @@ TEST_F(SqliteSettingsRepositoryTest, GetEffectiveValue_ResolutionOrder) {
   repository->resetGameValue(contentHash, key);
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def), "platform");
 
-  // Reset platform -> falls back to global.
+  // Reset platform -> falls back to global
   repository->resetPlatformValue(platformId, key);
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def), "global");
 

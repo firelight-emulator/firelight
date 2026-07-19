@@ -1,5 +1,5 @@
 //
-// Created by alexs on 9/5/2025.
+// Created by alexs on 9/5/2025
 //
 
 #include "game_activity_list_model.hpp"

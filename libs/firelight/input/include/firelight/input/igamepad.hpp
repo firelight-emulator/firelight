@@ -15,9 +15,13 @@ public:
   // using them. Concrete state on the interface so every device shares one
   // implementation and the shortcut engine, which already holds an IGamepad*,
   // can reach it without a lookup
-  InputSuppressor &suppressor() { return m_suppressor; }
+  void suppress(const int code) { m_suppressor.suppress(code); }
 
-  [[nodiscard]] const InputSuppressor &suppressor() const { return m_suppressor; }
+  void unsuppress(const int code) { m_suppressor.release(code); }
+
+  [[nodiscard]] bool isSuppressed(const int code) const { return m_suppressor.isSuppressed(code); }
+
+  void clearSuppressed() { m_suppressor.clear(); }
 
   virtual std::shared_ptr<GamepadProfile> getProfile() const = 0;
 

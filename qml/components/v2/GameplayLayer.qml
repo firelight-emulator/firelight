@@ -1,6 +1,4 @@
 import QtQuick
-import QtQuick.Controls
-import Firelight 1.0
 
 // The running game as a full-window layer above the router (not a route). It is
 // bottom-anchored and changes HEIGHT by state, so the game render itself shrinks
@@ -188,7 +186,7 @@ Item {
         FLIconButton {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            anchors.rightMargin: 12
+            anchors.rightMargin: AppStyle.spacingMd
             iconName: "cancel"
             onClicked: EmulationService.stopEmulation()
         }

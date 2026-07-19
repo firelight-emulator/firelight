@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import Firelight 1.0
 
 // Renders the current route as a screen and mirrors Router's history. Recently
 // visited screens are kept alive in an LRU cache so navigating back returns to a

@@ -16,7 +16,5 @@ struct StartSessionResponse {
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Unlock, ID, When)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(StartSessionResponse, Success,
-                                                HardcoreUnlocks, Unlocks,
-                                                ServerNow)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(StartSessionResponse, Success, HardcoreUnlocks, Unlocks, ServerNow)
 } // namespace firelight::achievements

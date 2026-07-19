@@ -48,6 +48,6 @@ Dialog {
             }
         }
 
-        ScrollBar.vertical: ScrollBar {}
+        ScrollBar.vertical: FLScrollBar {}
     }
 }

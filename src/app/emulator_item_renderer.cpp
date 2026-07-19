@@ -521,7 +521,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
 
     case CaptureVideoClip: {
       // Flush the encoder so the snapshot includes the most recent gameplay,
-      // then mux the rolling window to an mp4.
+      // then mux the rolling window to an mp4
       if (const auto mediaService = m_mediaService; mediaService && m_clipRecorder) {
         m_clipRecorder->flush();
         const auto snapshot = m_clipRecorder->snapshot();

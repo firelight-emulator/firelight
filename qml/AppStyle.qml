@@ -42,7 +42,7 @@ Item {
     readonly property int iconSizeMd: Math.round(24 * scale)
     readonly property int iconSizeLg: Math.round(32 * scale)
 
-    // Corner radii — scale only
+    // Corner radii
     readonly property int radiusSm: Math.round(4 * scale)
     readonly property int radiusMd: Math.round(8 * scale)
     readonly property int radiusLg: Math.round(12 * scale)
@@ -58,12 +58,20 @@ Item {
     readonly property var buttonIconWeight: Font.Normal
 
     //*************************************************************
-    // Top Bar (metrics only; color/opacity moved to Theme)
+    // Title Bar
     //*************************************************************
-    readonly property int titleBarHeight: Math.round(40 * scale)
+    readonly property int titleBarHeight: Math.round(48 * scale)
     readonly property int titleBarPadding: Math.round(4 * scale)
     readonly property int titleBarUtilityButtonWidth: Math.round(48 * scale)
     readonly property int titleBarUtilityButtonIconSize: Math.round(10 * scale)
+
+    //*************************************************************
+    // Navigation Rail
+    //*************************************************************
+    readonly property int navRailWidth: Math.round(48 * scale)
+    // readonly property int titleBarPadding: Math.round(4 * scale)
+    // readonly property int titleBarUtilityButtonWidth: Math.round(48 * scale)
+    // readonly property int titleBarUtilityButtonIconSize: Math.round(10 * scale)
 
     //*************************************************************
     // Something Else

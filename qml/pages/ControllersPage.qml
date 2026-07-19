@@ -12,8 +12,6 @@ FocusScope {
 
     property GamepadListModel gamepads: GamepadListModel {}
 
-    signal editProfileButtonClicked(var name, var playerNumber)
-
     Component {
         id: dragDelegate
 
@@ -233,8 +231,6 @@ FocusScope {
                             list[i] = visualModel.items.get(i).model.index;
                             // visualModel.items.get(i).model.itemsIndex = i
                         }
-
-                        console.log(list);
 
                         // theAnimation.thingy = list
                         // theAnimation.start()

@@ -14,9 +14,7 @@ Pane {
     contentItem: Flickable {
         contentHeight: overviewBanner.height + 16 + navigationTabs.height + 16 + content.height
 
-        onContentHeightChanged: {
-            console.log("Content height changed: " + contentHeight);
-        }
+        onContentHeightChanged: {}
 
         Rectangle {
             id: overviewBanner

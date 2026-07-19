@@ -1,10 +1,7 @@
 import QtQuick
 import QtQml
 import QtQuick.Controls
-import QtQuick.Window
 import QtQuick.Layouts 1.0
-import QtQuick.Effects
-import Firelight 1.0
 
 SplitView {
     id: splitView
@@ -68,8 +65,9 @@ SplitView {
         var all = [];
         for (var i = 0; i < folderCollector.count; i++) {
             var o = folderCollector.objectAt(i);
-            if (!o)
+            if (!o) {
                 continue;
+            }
             all.push({
                 folderId: o.folderId,
                 parentId: o.parentId,
@@ -97,14 +95,16 @@ SplitView {
                 var kids = byParent[f.folderId] || [];
                 var expanded = splitView.expandedFolders[f.folderId] !== false;
                 var row = {};
-                for (var key in f)
+                for (var key in f) {
                     row[key] = f[key];
+                }
                 row.depth = depth;
                 row.hasChildren = kids.length > 0;
                 row.expanded = expanded;
                 out.push(row);
-                if (expanded)
+                if (expanded) {
                     walk(f.folderId, depth + 1);
+                }
             });
         }
         walk(-1, 0);
@@ -118,16 +118,17 @@ SplitView {
         var typeOf = {};
         for (var i = 0; i < folderCollector.count; i++) {
             var o = folderCollector.objectAt(i);
-            if (!o)
+            if (!o) {
                 continue;
+            }
             (kids[o.parentId] = kids[o.parentId] || []).push(o.folderId);
             typeOf[o.folderId] = o.folderType;
         }
         var manual = [], smart = [];
         function walk(id) {
-            if (typeOf[id] === 1)
+            if (typeOf[id] === 1) {
                 smart.push(id);
-            else
+            } else
                 manual.push(id);
             (kids[id] || []).forEach(walk);
         }
@@ -145,8 +146,9 @@ SplitView {
         var byParent = {};
         for (var i = 0; i < folderCollector.count; i++) {
             var o = folderCollector.objectAt(i);
-            if (!o)
+            if (!o) {
                 continue;
+            }
             parentOf[o.folderId] = o.parentId;
             (byParent[o.parentId] = byParent[o.parentId] || []).push({
                 id: o.folderId,
@@ -154,8 +156,9 @@ SplitView {
             });
         }
         var targetParent = parentOf[targetFolderId];
-        if (targetParent === undefined)
+        if (targetParent === undefined) {
             return;
+        }
         if (parentOf[draggedId] !== targetParent) {
             LibraryFolderModel.setFolderParent(draggedId, targetParent);
         }
@@ -167,8 +170,9 @@ SplitView {
             return id !== draggedId;
         });
         var idx = sibs.indexOf(targetFolderId);
-        if (idx === -1)
+        if (idx === -1) {
             idx = sibs.length - 1;
+        }
         sibs.splice(before ? idx : idx + 1, 0, draggedId);
         LibraryFolderModel.reorderFolders(targetParent, sibs);
     }
@@ -287,9 +291,9 @@ SplitView {
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 48
-                        Layout.rightMargin: 12
-                        Layout.leftMargin: 12
-                        spacing: 12
+                        Layout.rightMargin: AppStyle.spacingMd
+                        Layout.leftMargin: AppStyle.spacingMd
+                        spacing: AppStyle.spacingMd
 
                         FLIconButton {
                             iconName: splitView.sidebarCollapsed ? "chevron-forward" : "chevron-back"
@@ -345,12 +349,7 @@ SplitView {
                         }
                     }
 
-                    Rectangle {
-                        Layout.fillWidth: true
-                        implicitHeight: 1
-                        color: "#ffffff"
-                        opacity: 0.2
-                    }
+                    FLDivider {}
                 }
 
                 Flickable {
@@ -645,11 +644,13 @@ SplitView {
                                         dropArea.dropZone = "none";
                                         if (event.formats.indexOf("application/x-fl-folder") !== -1) {
                                             var draggedId = parseInt(event.getDataAsString("application/x-fl-folder"));
-                                            if (draggedId === modelData.folderId)
+                                            if (draggedId === modelData.folderId) {
                                                 return;
+                                            }
                                             var sub = splitView.collectFolderSubtree(draggedId);
-                                            if (sub.manual.concat(sub.smart).indexOf(modelData.folderId) !== -1)
+                                            if (sub.manual.concat(sub.smart).indexOf(modelData.folderId) !== -1) {
                                                 return;
+                                            }
                                             if (zone === "top") {
                                                 splitView.reorderFolderTo(draggedId, modelData.folderId, true);
                                             } else if (zone === "bottom") {

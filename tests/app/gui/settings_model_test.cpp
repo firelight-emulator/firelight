@@ -266,7 +266,7 @@ TEST_F(SettingsModelTest, AdvancedHiddenUnlessShowAdvanced) {
 
 // A game-picker setting sourced from the library: platform 3's core is
 // mgba_libretro (see CoreRegistry), so a game-picker declared there surfaces
-// when the model is scoped to platform 3.
+// when the model is scoped to platform 3
 const char *GAME_PICKER_CATALOG = R"JSON(
 {
   "common": [],

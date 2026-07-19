@@ -28,7 +28,7 @@ public:
   Q_INVOKABLE bool deleteProfile(int id);
   // Writes a profile to a .json file (fileUrl may be a file:// URL or path)
   Q_INVOKABLE bool exportProfile(int id, const QUrl &fileUrl);
-  // Reads a profile from a .json file; returns the new profile id or -1.
+  // Reads a profile from a .json file; returns the new profile id or -1
   Q_INVOKABLE int importProfile(const QUrl &fileUrl);
 
 private:

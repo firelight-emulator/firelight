@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Firelight 1.0
 
 // A titled group of setting rows rendered as one card. Put the rows in as
 // children; they stack inside the card, separated by hairlines, with the section

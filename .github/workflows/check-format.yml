@@ -1,0 +1,28 @@
+name: Check formatting
+
+# Manual only, matching the other workflows in this repo. Add `pull_request:` here to enforce
+# formatting on every PR.
+on:
+  workflow_dispatch:
+
+jobs:
+  check-format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            clang-format \
+            qt6-declarative-dev-tools
+
+      - name: Put qmlformat on PATH
+        run: echo "/usr/lib/qt6/bin" >> "$GITHUB_PATH"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check formatting
+        run: ./scripts/check-format.sh --all

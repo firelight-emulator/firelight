@@ -80,7 +80,7 @@ TEST(RtcTransportTest, DISABLED_LoopbackConnectExchangeAndClose) {
   };
   loop.second->setEvents(std::move(secondEvents));
 
-  // Transport 1 offers toward member 2.
+  // Transport 1 offers toward member 2
   loop.first->connectToPeer(2, true);
 
   ASSERT_TRUE(waitFor(mutex, cv, [&] { return firstLink && secondLink; })) << "peers did not connect";

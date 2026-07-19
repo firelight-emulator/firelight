@@ -472,7 +472,7 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
   ASSERT_NE(instance, nullptr);
   ASSERT_NE(fake, nullptr);
 
-  // The core advertised three devices on port 0.
+  // The core advertised three devices on port 0
   const auto devices = instance->getControllerDevices();
   ASSERT_EQ(devices.size(), 1u);
   ASSERT_EQ(devices[0].size(), 3u);

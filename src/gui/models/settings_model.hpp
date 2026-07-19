@@ -152,7 +152,7 @@ private:
   // above it
   [[nodiscard]] std::optional<std::string> resolveValueFrom(const std::string &key, SettingsLevel level) const;
   // The tier this row reads and writes: `level`, except app settings which are
-  // always Global.
+  // always Global
   [[nodiscard]] SettingsLevel levelFor(const Item &item) const;
   // Whether the row's tier is actually addressable yet (a Game-tier row needs a
   // content hash, a Platform-tier row needs a platform)

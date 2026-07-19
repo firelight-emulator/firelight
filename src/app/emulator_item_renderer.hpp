@@ -112,7 +112,7 @@ public:
     int rewindPointIndex;
     float playbackMultiplier;
     // Set when a capture command was held back a frame to force a fresh
-    // framebuffer readback (HW cores that were idle). Prevents re-deferral.
+    // framebuffer readback (HW cores that were idle). Prevents re-deferral
     bool deferred = false;
   };
 

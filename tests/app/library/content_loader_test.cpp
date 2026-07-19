@@ -177,7 +177,7 @@ TEST_F(ContentLoaderTest, ApplyIpsPatchRewritesBytesAndHash) {
   const std::string romPath = tempDir.filePath("base.gb").toStdString();
   writeFile(romPath, rom);
 
-  // Minimal IPS: overwrite 3 bytes at offset 4.
+  // Minimal IPS: overwrite 3 bytes at offset 4
   const std::vector<uint8_t> newBytes = {0xAA, 0xBB, 0xCC};
   std::vector<uint8_t> ips = {'P', 'A', 'T', 'C', 'H'};
   ips.insert(ips.end(), {0x00, 0x00, 0x04}); // offset = 4

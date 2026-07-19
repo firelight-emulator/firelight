@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
 import QtQuick.Layouts 1.0
 import Firelight 1.0
 
@@ -351,7 +350,7 @@ Pane {
                             focus: true
                             cacheBuffer: 1000
 
-                            ScrollBar.vertical: ScrollBar {
+                            ScrollBar.vertical: FLScrollBar {
                                 // parent: achievementList.parent
                                 anchors.top: achievementList.top
                                 anchors.left: achievementList.right
@@ -448,8 +447,9 @@ Pane {
                     var list = [];
                     var count = EmulationService.controllerPortCount();
                     for (var p = 0; p < count; p++) {
-                        if (EmulationService.controllerVariantsForPort(p).length > 1)
+                        if (EmulationService.controllerVariantsForPort(p).length > 1) {
                             list.push(p);
+                        }
                     }
                     return list;
                 }
@@ -647,8 +647,9 @@ Pane {
                     var list = [];
                     var count = EmulationService.controllerPortCount();
                     for (var p = 0; p < count; p++) {
-                        if (EmulationService.controllerVariantsForPort(p).length > 1)
+                        if (EmulationService.controllerVariantsForPort(p).length > 1) {
                             list.push(p);
+                        }
                     }
                     return list;
                 }
@@ -831,9 +832,9 @@ Pane {
                                     }
                                     contentItem: RowLayout {
                                         spacing: 8
-                                        FLIcon {
+                                        Icon {
                                             id: createIcon
-                                            icon: "undo"
+                                            name: "undo"
                                             Layout.fillHeight: true
                                             size: height
                                             color: undoButton.enabled ? "white" : "#737373"
@@ -917,7 +918,6 @@ Pane {
                                     verticalAlignment: Text.AlignVCenter
                                 }
                                 onClicked: {
-                                    console.log("clicked create suspend point");
                                     emulatorLoader.item.writeSuspendPoint(theThing.index);
                                 }
                             }

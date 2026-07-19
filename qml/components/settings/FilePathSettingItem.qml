@@ -1,8 +1,6 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import Firelight 1.0
 
 // File / folder path setting. `value` is a filesystem path; `directoryMode`
 // picks a folder instead of a file; `extensions` (no dot) filters files. Emits
@@ -38,7 +36,7 @@ BaseSettingItem {
     }
 
     control: RowLayout {
-        spacing: 8
+        spacing: AppStyle.spacingSm
 
         Text {
             Layout.fillWidth: true

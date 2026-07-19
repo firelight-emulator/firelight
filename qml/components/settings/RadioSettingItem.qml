@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Firelight 1.0
 
 // A vertical list of mutually exclusive options, rendered full-width below the
 // label. `options` is [{label, value, note?}]; `currentValue` is the selected
@@ -41,7 +40,7 @@ BaseSettingItem {
                     spacing: 11
 
                     Rectangle {
-                        Layout.leftMargin: 4
+                        Layout.leftMargin: AppStyle.spacingXs
                         implicitWidth: 18
                         implicitHeight: 18
                         radius: 9

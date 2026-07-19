@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 import Firelight 1.0
 
 FirelightDialog {
@@ -100,7 +99,6 @@ FirelightDialog {
                 modifiers.push(Qt.Key_Alt);
             }
 
-            console.log("Modifiers: " + modifiers);
             mappingAdded(root.shortcut, modifiers, event.key);
             root.accept();
 

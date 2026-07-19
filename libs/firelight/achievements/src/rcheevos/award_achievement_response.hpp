@@ -11,7 +11,6 @@ struct AwardAchievementResponse {
   unsigned AchievementsRemaining;
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AwardAchievementResponse, Success, Score,
-                                   SoftcoreScore, AchievementID,
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(AwardAchievementResponse, Success, Score, SoftcoreScore, AchievementID,
                                    AchievementsRemaining)
 } // namespace firelight::achievements

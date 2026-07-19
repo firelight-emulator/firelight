@@ -36,6 +36,16 @@ Formatting is enforced by `.clang-format` (C++) and `.qmlformat.ini` (QML); `.cl
 naming rules. Run the formatters rather than hand-aligning. Line endings are LF everywhere
 (`.gitattributes`).
 
+```bash
+scripts/check-format.sh              # check files changed vs main
+scripts/check-format.sh --fix        # reformat them in place
+scripts/check-format.sh --all        # check the whole tree
+git config core.hooksPath scripts/hooks   # block unformatted commits (opt-in)
+```
+
+`qmlformat`'s `-n` is `--normalize`, not a dry run: it reorders attributes and drops
+explicitly-written property names. Never use it.
+
 ### Comments
 
 - Javadoc (`/** */`) on classes and methods. Otherwise `//`

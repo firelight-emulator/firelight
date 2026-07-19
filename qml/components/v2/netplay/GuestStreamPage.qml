@@ -40,8 +40,8 @@ Rectangle {
     RowLayout {
         anchors.top: parent.top
         anchors.right: parent.right
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: AppStyle.spacingMd
+        spacing: AppStyle.spacingSm
 
         Text {
             text: NetworkService.gameName

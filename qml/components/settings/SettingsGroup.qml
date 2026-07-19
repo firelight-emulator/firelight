@@ -1,7 +1,5 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
-import QtQml.Models
 import Firelight 1.0
 
 // Renders every setting declared in one catalog group as a section card, title

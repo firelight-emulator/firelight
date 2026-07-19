@@ -1,17 +1,14 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 
-Rectangle {
+FLPanel {
     id: root
 
-    color: Theme.surface
-    radius: 8
+    padding: AppStyle.spacingMd
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
-        spacing: 8
+        spacing: AppStyle.spacingSm
 
         Text {
             text: "Chat"
@@ -22,7 +19,7 @@ Rectangle {
         ListView {
             id: chatList
             clip: true
-            spacing: 6
+            spacing: AppStyle.spacingXs
             Layout.fillWidth: true
             Layout.fillHeight: true
             model: NetplayChatModel
@@ -33,7 +30,7 @@ Rectangle {
 
                 Text {
                     text: model.senderName
-                    color: model.isSelf ? "#5588dd" : "#cc8855"
+                    color: model.isSelf ? Theme.accent : Theme.warning
                     font.pixelSize: AppStyle.fontSizeSmall
                     font.weight: Font.DemiBold
                 }
@@ -51,7 +48,7 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 6
+            spacing: AppStyle.spacingXs
 
             FLTextField {
                 id: chatField

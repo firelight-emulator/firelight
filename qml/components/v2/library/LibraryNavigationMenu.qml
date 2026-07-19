@@ -41,10 +41,10 @@ FocusScope {
                 implicitHeight: 1
             }
 
-            FLIcon {
+            Icon {
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                 size: 22
-                icon: "arrow-down"
+                name: "arrow-down"
                 color: Theme.textMuted
                 rotation: contentContainer.collapsed ? 360 : 180
 
@@ -73,7 +73,7 @@ FocusScope {
             property bool collapsed: false
 
             Layout.fillWidth: true
-            Layout.topMargin: 8
+            Layout.topMargin: AppStyle.spacingSm
             Layout.preferredHeight: collapsed ? 0 : list.implicitHeight
             // clip: true
 

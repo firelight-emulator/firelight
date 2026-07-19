@@ -1,7 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Window
-import Firelight 1.0
 
 Item {
     id: gridRoot
@@ -44,11 +42,14 @@ Item {
     function targetsFor(entryId) {
         if (gridRoot.selectedIds[entryId] === true) {
             var out = [];
-            for (var k in gridRoot.selectedIds)
-                if (gridRoot.selectedIds[k])
+            for (var k in gridRoot.selectedIds) {
+                if (gridRoot.selectedIds[k]) {
                     out.push(parseInt(k));
-            if (out.length > 0)
+                }
+            }
+            if (out.length > 0) {
                 return out;
+            }
         }
         return [entryId];
     }
@@ -56,10 +57,12 @@ Item {
     // A remote URL passes through; a local file path (user-imported art) becomes
     // a file:// URL so Image can load it
     function iconSource(u) {
-        if (!u)
+        if (!u) {
             return "";
-        if (u.indexOf("://") >= 0)
+        }
+        if (u.indexOf("://") >= 0) {
             return u;
+        }
         return "file:///" + u.replace(/\\/g, "/");
     }
 
@@ -83,7 +86,7 @@ Item {
             initialContentY = contentY;
         }
 
-        ScrollBar.vertical: ScrollBar {
+        ScrollBar.vertical: FLScrollBar {
             anchors.left: parent.right
             anchors.top: parent.top
             anchors.bottom: parent.bottom
@@ -103,7 +106,7 @@ Item {
             Button {
                 id: control
                 anchors.fill: parent
-                anchors.margins: 4
+                anchors.margins: AppStyle.spacingXs
                 padding: 0
                 hoverEnabled: true
 
@@ -146,7 +149,7 @@ Item {
                 background: Rectangle {
                     color: control.down ? "#FFFFFF" : "transparent"
                     opacity: control.down ? 0.05 : 0
-                    radius: 4
+                    radius: AppStyle.radiusSm
                 }
                 contentItem: GameTile {
                     source: gridRoot.iconSource(gameDelegate.model.icon1x1SourceUrl)

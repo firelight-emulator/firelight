@@ -1,16 +1,15 @@
 #include "regular_http_client.hpp"
+
 #include "ra_constants.h"
+
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
 namespace firelight::achievements {
-rc_api_server_response_t
-RegularHttpClient::handleRequest(const std::string &url,
-                                 const std::string &postBody,
-                                 const std::string &contentType) {
-  const auto headers =
-      cpr::Header{{"User-Agent", USER_AGENT}, {"Content-Type", contentType}};
+rc_api_server_response_t RegularHttpClient::handleRequest(const std::string &url, const std::string &postBody,
+                                                          const std::string &contentType) {
+  const auto headers = cpr::Header{{"User-Agent", USER_AGENT}, {"Content-Type", contentType}};
 
   const auto response = Post(cpr::Url{url}, headers, cpr::Body{postBody});
 
@@ -29,7 +28,5 @@ RegularHttpClient::handleRequest(const std::string &url,
   return rcResponse;
 }
 
-void RegularHttpClient::setOnlineForTesting(const bool online) {
-  m_online = online;
-}
+void RegularHttpClient::setOnlineForTesting(const bool online) { m_online = online; }
 } // namespace firelight::achievements

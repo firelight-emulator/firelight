@@ -1,9 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Window
 import QtQuick.Layouts 1.0
-import QtQuick.Effects
-import Firelight 1.0
 
 MainWindow {
     id: window
@@ -66,10 +63,6 @@ MainWindow {
             id: actualTitleBar
             anchors.fill: parent
 
-            onMenuButtonClicked: {
-                navigationPane.open();
-            }
-
             onMaximizeClicked: {
                 window.maximize();
                 // emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: contentStack})
@@ -85,9 +78,7 @@ MainWindow {
         anchors.left: parent.left
         anchors.leftMargin: 2
         anchors.bottom: parent.bottom
-        // Scales with the UI so the icon buttons (which grow with scale) always
-        // fit instead of overflowing a fixed rail
-        width: Math.round(58 * AppStyle.scale)
+        width: Math.round(48 * AppStyle.scale)
 
         background: Item {}
 
@@ -203,6 +194,30 @@ MainWindow {
     GameplayLayer {
         id: gameplay
         z: 90
+    }
+
+    // Netplay status has to outlive the /netplay page: both of these sit above
+    // the gameplay layer so they stay visible wherever the user has navigated
+    LobbyChip {
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        anchors.margins: AppStyle.spacingLg
+        z: 900
+    }
+
+    ReadyCheckToast {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: AppStyle.spacingXl
+        z: 950
+
+        onHostLaunchRequested: {
+            const entryId = NetworkService.selectedGameEntryId();
+            if (entryId >= 0) {
+                NetworkService.confirmLaunch();
+                EmulationService.loadEntry(entryId);
+            }
+        }
     }
 
     component RoleData: QtObject {

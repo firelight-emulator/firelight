@@ -32,8 +32,8 @@ Pane {
                     implicitWidth: 48
                     implicitHeight: 48
 
-                    FLIcon {
-                        icon: model.platformSlug
+                    Icon {
+                        name: model.platformSlug
                         color: "#595959"
                         anchors.centerIn: parent
                         height: parent.height - 16

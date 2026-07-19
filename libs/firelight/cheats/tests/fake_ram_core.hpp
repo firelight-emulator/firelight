@@ -75,6 +75,10 @@ public:
 
   void clearCheats() override {}
 
+  void sendKeyboardEvent(bool, unsigned, uint32_t, uint16_t) override {}
+
+  [[nodiscard]] bool wantsKeyboard() const override { return false; }
+
 private:
   std::vector<uint8_t> m_ram;
 };

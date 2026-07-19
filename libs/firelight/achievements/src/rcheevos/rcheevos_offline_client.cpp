@@ -9,10 +9,9 @@
 #include <QDateTime>
 #include <cpr/api.h>
 #include <qcryptographichash.h>
+#include <spdlog/spdlog.h>
 #include <sstream>
 #include <unordered_map>
-
-#include <spdlog/spdlog.h>
 
 namespace firelight::achievements {
 static const std::string ACHIEVEMENT_SETS = "achievementsets";
@@ -24,11 +23,9 @@ static const std::string SUBMIT_LB_ENTRY = "submitlbentry";
 
 static constexpr rc_api_server_response_t GENERIC_SERVER_ERROR = {"", 0, 500};
 
-static constexpr rc_api_server_response_t GENERIC_SUCCESS = {
-    "{\"Success\":true}", 16, 200};
+static constexpr rc_api_server_response_t GENERIC_SUCCESS = {"{\"Success\":true}", 16, 200};
 
-std::unordered_map<std::string, std::string>
-parseQueryParams(const std::string &query) {
+std::unordered_map<std::string, std::string> parseQueryParams(const std::string &query) {
   std::unordered_map<std::string, std::string> params;
   std::istringstream stream(query);
   std::string param;
@@ -45,10 +42,9 @@ parseQueryParams(const std::string &query) {
   return params;
 }
 
-rc_api_server_response_t
-RetroAchievementsOfflineClient::handleRequest(const std::string &url,
-                                              const std::string &postBody,
-                                              const std::string &contentType) {
+rc_api_server_response_t RetroAchievementsOfflineClient::handleRequest(const std::string &url,
+                                                                       const std::string &postBody,
+                                                                       const std::string &contentType) {
   auto params = parseQueryParams(postBody);
 
   if (params["r"] == ACHIEVEMENT_SETS) {
@@ -87,8 +83,7 @@ RetroAchievementsOfflineClient::handleRequest(const std::string &url,
   return GENERIC_SERVER_ERROR;
 }
 
-void RetroAchievementsOfflineClient::processResponse(
-    const std::string &request, const std::string &response) const {
+void RetroAchievementsOfflineClient::processResponse(const std::string &request, const std::string &response) const {
   auto params = parseQueryParams(request);
   if (params["r"] == "login2") {
     processLogin2Response(params["u"], params["t"], response);
@@ -101,49 +96,38 @@ void RetroAchievementsOfflineClient::processResponse(
   }
 }
 
-void RetroAchievementsOfflineClient::clearSessionAchievements() {
-  m_inHardcoreSession = false;
-}
+void RetroAchievementsOfflineClient::clearSessionAchievements() { m_inHardcoreSession = false; }
 
-void RetroAchievementsOfflineClient::startOnlineHardcoreSession() {
-  m_inHardcoreSession = true;
-}
+void RetroAchievementsOfflineClient::startOnlineHardcoreSession() { m_inHardcoreSession = true; }
 
-rc_api_server_response_t
-RetroAchievementsOfflineClient::handleAchievementSetsRequest(
-    const std::string &username, const std::string &token,
-    const std::string &hash) const {
+rc_api_server_response_t RetroAchievementsOfflineClient::handleAchievementSetsRequest(const std::string &username,
+                                                                                      const std::string &token,
+                                                                                      const std::string &hash) const {
   return GENERIC_SUCCESS;
 }
 
-rc_api_server_response_t
-RetroAchievementsOfflineClient::handleStartSessionRequest(
-    const std::string &username, const int gameId, bool hardcore) const {
+rc_api_server_response_t RetroAchievementsOfflineClient::handleStartSessionRequest(const std::string &username,
+                                                                                   const int gameId,
+                                                                                   bool hardcore) const {
 
   // TODO: If hardcore.... disallow?
 
   // Simulate some latency...
   std::this_thread::sleep_for(std::chrono::milliseconds(300));
   const auto duration = std::chrono::system_clock::now().time_since_epoch();
-  const auto epochMillis =
-      std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+  const auto epochMillis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-  StartSessionResponse startSessionResponse{.Success = true,
-                                            .HardcoreUnlocks = {},
-                                            .Unlocks = {},
-                                            .ServerNow = epochMillis};
+  StartSessionResponse startSessionResponse{
+      .Success = true, .HardcoreUnlocks = {}, .Unlocks = {}, .ServerNow = epochMillis};
 
-  for (const auto &achieve :
-       m_achievementService.getAllUserUnlocks(username, gameId)) {
+  for (const auto &achieve : m_achievementService.getAllUserUnlocks(username, gameId)) {
     if (achieve.earned && !achieve.earnedHardcore) {
-      startSessionResponse.Unlocks.emplace_back(
-          Unlock{.ID = achieve.achievementId, .When = achieve.unlockTimestamp});
+      startSessionResponse.Unlocks.emplace_back(Unlock{.ID = achieve.achievementId, .When = achieve.unlockTimestamp});
     }
 
     if (achieve.earnedHardcore) {
       startSessionResponse.HardcoreUnlocks.emplace_back(
-          Unlock{.ID = achieve.achievementId,
-                 .When = achieve.unlockTimestampHardcore});
+          Unlock{.ID = achieve.achievementId, .When = achieve.unlockTimestampHardcore});
     }
   }
 
@@ -157,10 +141,10 @@ RetroAchievementsOfflineClient::handleStartSessionRequest(
 }
 
 // TODO: MAKE SURE ALL THIS LOGIC IS RIGHT - requires its own pass
-rc_api_server_response_t
-RetroAchievementsOfflineClient::handleAwardAchievementRequest(
-    const std::string &username, const std::string &token,
-    const unsigned achievementId, const bool hardcore) {
+rc_api_server_response_t RetroAchievementsOfflineClient::handleAwardAchievementRequest(const std::string &username,
+                                                                                       const std::string &token,
+                                                                                       const unsigned achievementId,
+                                                                                       const bool hardcore) {
 
   auto achievement = m_achievementService.getAchievement(achievementId);
   if (!achievement.has_value()) {
@@ -197,13 +181,11 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     m_achievementService.create(*user);
   } else {
     if (hardcore && unlock->earnedHardcore) {
-      spdlog::info("User {} already has achievement {} in hardcore mode",
-                   username, achievementId);
+      spdlog::info("User {} already has achievement {} in hardcore mode", username, achievementId);
       return GENERIC_SUCCESS; // TODO
     }
     if (!hardcore && unlock->earned) {
-      spdlog::info("User {} already has achievement {}", username,
-                   achievementId);
+      spdlog::info("User {} already has achievement {}", username, achievementId);
       return GENERIC_SUCCESS; // TODO
     }
 
@@ -241,8 +223,7 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
     m_achievementService.create(*user);
   }
 
-  auto unlocks = m_achievementService.getAllUserUnlocks(
-      username, achievement->achievementSetId);
+  auto unlocks = m_achievementService.getAllUserUnlocks(username, achievement->achievementSetId);
 
   unsigned numLocked = 0;
   for (const auto &u : unlocks) {
@@ -267,16 +248,15 @@ RetroAchievementsOfflineClient::handleAwardAchievementRequest(
   return rcResponse;
 }
 
-rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Request(
-    const std::string &username, const std::string &password,
-    const std::string &token) const {
+rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Request(const std::string &username,
+                                                                             const std::string &password,
+                                                                             const std::string &token) const {
   // TODO: How to handle unknown user.....
   if (!password.empty()) {
     return GENERIC_SERVER_ERROR;
   }
 
-  auto user = User{
-      .username = username, .token = token, .softcoreScore = 0, .score = 0};
+  auto user = User{.username = username, .token = token, .softcoreScore = 0, .score = 0};
   auto userOpt = m_achievementService.getUser(username);
   if (!userOpt.has_value()) {
     m_achievementService.create(user);
@@ -302,22 +282,15 @@ rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Request(
   return rcResponse;
 }
 
-rc_api_server_response_t RetroAchievementsOfflineClient::handlePingRequest() {
-  return GENERIC_SUCCESS;
-}
+rc_api_server_response_t RetroAchievementsOfflineClient::handlePingRequest() { return GENERIC_SUCCESS; }
 
-rc_api_server_response_t
-RetroAchievementsOfflineClient::handleSubmitLbEntryRequest() {
-  return GENERIC_SUCCESS;
-}
+rc_api_server_response_t RetroAchievementsOfflineClient::handleSubmitLbEntryRequest() { return GENERIC_SUCCESS; }
 
-void RetroAchievementsOfflineClient::processLogin2Response(
-    const std::string &username, const std::string &token,
-    const std::string &response) const {
+void RetroAchievementsOfflineClient::processLogin2Response(const std::string &username, const std::string &token,
+                                                           const std::string &response) const {
   auto json = nlohmann::json::parse(response);
 
-  if (!json.contains("Success") || !json["Success"].is_boolean() ||
-      !json["Success"].get<bool>()) {
+  if (!json.contains("Success") || !json["Success"].is_boolean() || !json["Success"].get<bool>()) {
     spdlog::error("Login response was not success");
     return;
   }
@@ -326,12 +299,11 @@ void RetroAchievementsOfflineClient::processLogin2Response(
   m_achievementService.create(user);
 }
 
-void RetroAchievementsOfflineClient::processAchievementSetsResponse(
-    const std::string &username, const std::string &hash,
-    const std::string &response) const {
+void RetroAchievementsOfflineClient::processAchievementSetsResponse(const std::string &username,
+                                                                    const std::string &hash,
+                                                                    const std::string &response) const {
   auto json = nlohmann::json::parse(response);
-  if (!json.contains("Success") || !json["Success"].is_boolean() ||
-      !json["Success"].get<bool>()) {
+  if (!json.contains("Success") || !json["Success"].is_boolean() || !json["Success"].get<bool>()) {
     spdlog::error("Achievement sets response was not success");
     return;
   }
@@ -349,11 +321,8 @@ void RetroAchievementsOfflineClient::processAchievementSetsResponse(
 
   auto i = 0;
   for (const auto &set : setResponse.Sets) {
-    AchievementSet achievementSet{.id = set.id,
-                                  .title = set.title,
-                                  .gameId = game.id,
-                                  .type = set.type,
-                                  .imageIconUrl = set.imageIconUrl};
+    AchievementSet achievementSet{
+        .id = set.id, .title = set.title, .gameId = game.id, .type = set.type, .imageIconUrl = set.imageIconUrl};
 
     m_achievementService.create(achievementSet);
     m_achievementService.setAchievementSetHash(achievementSet.id, hash);
@@ -398,9 +367,8 @@ void RetroAchievementsOfflineClient::processAchievementSetsResponse(
   }
 }
 
-void RetroAchievementsOfflineClient::processStartSessionResponse(
-    const std::string &username, const int gameId,
-    const std::string &response) const {
+void RetroAchievementsOfflineClient::processStartSessionResponse(const std::string &username, const int gameId,
+                                                                 const std::string &response) const {
   auto json = nlohmann::json::parse(response);
   // nlohmann lib doesn't support optional/nullable fields...
   if (!json.contains("Unlocks")) {
@@ -412,20 +380,17 @@ void RetroAchievementsOfflineClient::processStartSessionResponse(
   }
 
   auto startSessionResponse = json.get<StartSessionResponse>();
-  m_achievementService.processStartSessionResponse(username, gameId,
-                                                   startSessionResponse);
+  m_achievementService.processStartSessionResponse(username, gameId, startSessionResponse);
 
   // TODO: Go through all the user's unlocks and if it's synced but NOT in the
   // list above, mark it as NOT unlocked
 }
 
-void RetroAchievementsOfflineClient::processAwardAchievementResponse(
-    const std::string &username, const bool hardcore,
-    const std::string &response) const {
+void RetroAchievementsOfflineClient::processAwardAchievementResponse(const std::string &username, const bool hardcore,
+                                                                     const std::string &response) const {
   // TODO: CHECK FOR ATTEMPTING HARDCORE UNLOCK BUT GETTING SOFTCORE RESPONSE
   const auto duration = std::chrono::system_clock::now().time_since_epoch();
-  const auto epochSeconds =
-      std::chrono::duration_cast<std::chrono::seconds>(duration).count();
+  const auto epochSeconds = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
   auto json = nlohmann::json::parse(response);
 
   User user;
@@ -445,19 +410,16 @@ void RetroAchievementsOfflineClient::processAwardAchievementResponse(
   m_achievementService.create(user);
 
   if (json.contains("AchievementID") && json["AchievementID"].is_number()) {
-    if (auto id = json["AchievementID"];
-        id != UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID) {
+    if (auto id = json["AchievementID"]; id != UNSUPPORTED_EMULATOR_ACHIEVEMENT_ID) {
       auto unlock = m_achievementService.getUserUnlock(username, id);
       if (!unlock.has_value()) {
-        auto newUnlock =
-            UserUnlock{.username = username,
-                       .achievementId = id,
-                       .earned = true,
-                       .earnedHardcore = hardcore,
-                       .unlockTimestamp = static_cast<uint64_t>(epochSeconds),
-                       .unlockTimestampHardcore =
-                           hardcore ? static_cast<uint64_t>(epochSeconds) : 0,
-                       .synced = true};
+        auto newUnlock = UserUnlock{.username = username,
+                                    .achievementId = id,
+                                    .earned = true,
+                                    .earnedHardcore = hardcore,
+                                    .unlockTimestamp = static_cast<uint64_t>(epochSeconds),
+                                    .unlockTimestampHardcore = hardcore ? static_cast<uint64_t>(epochSeconds) : 0,
+                                    .synced = true};
 
         m_achievementService.create(newUnlock);
         return;

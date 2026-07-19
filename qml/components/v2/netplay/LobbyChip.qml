@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 
 // Always-visible reminder that a lobby is active while browsing the rest of
@@ -10,7 +9,7 @@ Rectangle {
     visible: NetworkService.inLobby
     width: chipRow.implicitWidth + 24
     height: 34
-    radius: 17
+    radius: height / 2
     color: Theme.surface
     border.color: Theme.border
     border.width: 1
@@ -18,12 +17,12 @@ Rectangle {
     RowLayout {
         id: chipRow
         anchors.centerIn: parent
-        spacing: 8
+        spacing: AppStyle.spacingSm
 
         Rectangle {
             width: 8
             height: 8
-            radius: 4
+            radius: AppStyle.radiusSm
             color: Theme.success
         }
         Text {

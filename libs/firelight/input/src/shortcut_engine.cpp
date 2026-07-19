@@ -18,7 +18,7 @@ void ShortcutEngine::setContext(const int scope) {
   // in a menu suppresses an input nothing is reading, and that mask would
   // otherwise still be there when the game came back
   for (const auto &[device, held] : m_held) {
-    device->suppressor().clear();
+    device->clearSuppressed();
   }
 }
 
@@ -39,13 +39,13 @@ void ShortcutEngine::setHotkeysEnabled(IGamepad *device, const bool enabled) {
   if (!enabled) {
     // Anything this device was withholding goes back to the game immediately;
     // handing the game its inputs is the entire point of turning these off
-    device->suppressor().clear();
+    device->clearSuppressed();
   }
 }
 
 void ShortcutEngine::forgetDevice(IGamepad *device) {
   std::lock_guard lock(m_mutex);
-  device->suppressor().clear();
+  device->clearSuppressed();
   m_held.erase(device);
   m_satisfied.erase(device);
   m_holdActive.erase(device);
@@ -92,7 +92,7 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device, const int 
     // The game gets this input back the moment it's physically let go, whether
     // or not the shortcut it fired is still active
     if (!pressed) {
-      device->suppressor().release(code);
+      device->unsuppress(code);
     }
 
     const auto profile = device->getProfile();
@@ -148,7 +148,7 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device, const int 
       // never got, and unmasking would hand it a second press. That leak is why
       // a modifier belongs on a button the game rarely reads
       if (rising && inScope) {
-        device->suppressor().suppress(satisfiedBy);
+        device->suppress(satisfiedBy);
       }
 
       switch (action->activation) {
@@ -159,7 +159,7 @@ void ShortcutEngine::onInput(const int playerIndex, IGamepad *device, const int 
           if (id == TOGGLE_HOTKEYS_ID) {
             m_hotkeysDisabled[device] = !disabled;
             if (!disabled) {
-              device->suppressor().clear();
+              device->clearSuppressed();
             }
             toggles.push_back(HotkeysToggledEvent{.playerIndex = playerIndex, .enabled = disabled});
           }

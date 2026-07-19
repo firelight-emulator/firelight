@@ -1,5 +1,4 @@
 import QtQuick
-import Firelight 1.0
 
 // A section heading. Set `text`
 Text {

@@ -32,7 +32,7 @@ TEST(RomLaunchTest, NonexistentPathReturnsMinusOne) {
 }
 
 TEST(RomLaunchTest, FileNotInLibraryReturnsMinusOne) {
-  // A real (junk) file that isn't in the empty library resolves to -1.
+  // A real (junk) file that isn't in the empty library resolves to -1
   const QString path = QDir::tempPath() + "/fl_romlaunch_junk.gba";
   QFile file(path);
   ASSERT_TRUE(file.open(QIODevice::WriteOnly));

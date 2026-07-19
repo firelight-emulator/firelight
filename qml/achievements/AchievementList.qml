@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
-import Firelight 1.0
 
 FocusScope {
     id: control

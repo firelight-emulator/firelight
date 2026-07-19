@@ -1,5 +1,5 @@
 //
-// Created by alexs on 8/9/2025.
+// Created by alexs on 8/9/2025
 //
 
 #include "qt_input_service_proxy.hpp"

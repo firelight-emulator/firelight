@@ -48,8 +48,8 @@ FocusScope {
                     visible: root.title !== ""
                 }
 
-                FLIcon {
-                    icon: "chevron-back"
+                Icon {
+                    name: "chevron-back"
                     Layout.topMargin: -3
                     Layout.bottomMargin: -4
                     Layout.fillHeight: true

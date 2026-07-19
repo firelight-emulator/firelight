@@ -1,7 +1,4 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
-import Firelight 1.0
 
 BaseSettingItem {
     property alias currentIndex: comboBox.currentIndex

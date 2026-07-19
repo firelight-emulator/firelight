@@ -213,7 +213,7 @@ FocusScope {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         width: Math.round(250 * AppStyle.scale)
-        padding: 16
+        padding: AppStyle.spacingLg
         clip: true
 
         background: Rectangle {
@@ -308,7 +308,7 @@ FocusScope {
             Text {
                 visible: root.searching && searchModel.count === 0
                 Layout.fillWidth: true
-                Layout.topMargin: 8
+                Layout.topMargin: AppStyle.spacingSm
                 text: qsTr("No settings found")
                 color: Theme.textMuted
                 horizontalAlignment: Text.AlignHCenter
@@ -346,12 +346,8 @@ FocusScope {
                             spacing: 0
 
                             // Divider between sections (not before the first)
-                            Rectangle {
+                            FLDivider {
                                 visible: index > 0
-                                Layout.fillWidth: true
-                                height: 1
-                                color: "white"
-                                opacity: 0.05
                             }
 
                             LibraryNavigationMenuSection {
@@ -398,8 +394,8 @@ FocusScope {
         FLIconButton {
             anchors.top: parent.top
             anchors.right: parent.right
-            anchors.topMargin: 12
-            anchors.rightMargin: 16
+            anchors.topMargin: AppStyle.spacingMd
+            anchors.rightMargin: AppStyle.spacingLg
             z: 1
             iconName: "close"
             tooltipText: "Close"

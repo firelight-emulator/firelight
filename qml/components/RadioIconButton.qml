@@ -1,9 +1,7 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Effects
-import Firelight 1.0
 
-IconButton {
+FLIconButton {
     id: control
     property var currentIndex: 0
     property var hoveredIndex: 0

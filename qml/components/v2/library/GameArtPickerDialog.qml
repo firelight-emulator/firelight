@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import Firelight 1.0
 
 // Per-game "Change artwork" picker. Shows the stored candidates + current
 // selection for a media type, lets the user search SteamGridDB for more, and
@@ -76,23 +75,26 @@ Dialog {
     }
 
     function refresh() {
-        if (!control.visible || control.contentHash === "")
+        if (!control.visible || control.contentHash === "") {
             return;
+        }
         control.storedList = GameArtService.storedAssets(control.contentHash, control.mediaType);
         control.onlineList = GameArtService.searchResults(control.contentHash, control.mediaType);
     }
 
     function doSearch() {
-        if (!GameArtService.providerConfigured)
+        if (!GameArtService.providerConfigured) {
             return;
+        }
         var term = control.searchTerm.trim() !== "" ? control.searchTerm : control.gameName;
         GameArtService.search(control.contentHash, term, control.platformId, control.mediaType);
     }
 
     // Load cached results when switching to a type; auto-search the first time
     function maybeAutoSearch() {
-        if (GameArtService.providerConfigured && control.onlineList.length === 0)
+        if (GameArtService.providerConfigured && control.onlineList.length === 0) {
             control.doSearch();
+        }
     }
 
     onMediaTypeChanged: {
@@ -108,12 +110,14 @@ Dialog {
     Connections {
         target: GameArtService
         function onSearchResultsReady(hash, type) {
-            if (hash === control.contentHash && type === control.mediaType)
+            if (hash === control.contentHash && type === control.mediaType) {
                 control.onlineList = GameArtService.searchResults(hash, type);
+            }
         }
         function onAssetsChanged(hash, type) {
-            if (hash === control.contentHash)
+            if (hash === control.contentHash) {
                 control.refresh();
+            }
         }
     }
 
@@ -127,7 +131,7 @@ Dialog {
 
     background: Rectangle {
         color: ColorPalette.neutral900
-        radius: 8
+        radius: AppStyle.radiusMd
         border.color: ColorPalette.neutral700
         border.width: 1
     }
@@ -169,16 +173,18 @@ Dialog {
         // A remote URL passes through; a local file path (user import) becomes a
         // file:// URL so Image can load it
         function resolveSource(u) {
-            if (!u)
+            if (!u) {
                 return "";
-            if (u.indexOf("://") >= 0)
+            }
+            if (u.indexOf("://") >= 0) {
                 return u;
+            }
             return "file:///" + u.replace(/\\/g, "/");
         }
 
         width: 104
         height: 104
-        radius: 6
+        radius: AppStyle.radiusMd
         color: ColorPalette.neutral800
         border.color: isSelected ? ColorPalette.accentColor : (hover.hovered ? ColorPalette.neutral500 : ColorPalette.neutral700)
         border.width: isSelected ? 3 : 1
@@ -205,15 +211,15 @@ Dialog {
     }
 
     contentItem: ColumnLayout {
-        spacing: 12
+        spacing: AppStyle.spacingMd
 
         // Type selector
         RowLayout {
             Layout.fillWidth: true
             Layout.leftMargin: 20
             Layout.rightMargin: 20
-            Layout.topMargin: 8
-            spacing: 8
+            Layout.topMargin: AppStyle.spacingSm
+            spacing: AppStyle.spacingSm
             Repeater {
                 model: control.mediaTypes
                 delegate: Button {
@@ -232,7 +238,7 @@ Dialog {
                         verticalAlignment: Text.AlignVCenter
                     }
                     background: Rectangle {
-                        radius: 6
+                        radius: AppStyle.radiusMd
                         color: parent.checked ? ColorPalette.neutral700 : "transparent"
                         border.width: 1
                         border.color: ColorPalette.neutral700
@@ -246,12 +252,11 @@ Dialog {
             }
         }
 
-        ScrollView {
+        FLScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.leftMargin: 20
             Layout.rightMargin: 20
-            clip: true
             contentWidth: availableWidth
 
             ColumnLayout {
@@ -288,8 +293,8 @@ Dialog {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.topMargin: 4
-                    Layout.bottomMargin: 4
+                    Layout.topMargin: AppStyle.spacingXs
+                    Layout.bottomMargin: AppStyle.spacingXs
                     implicitHeight: 1
                     color: ColorPalette.neutral800
                 }
@@ -320,7 +325,7 @@ Dialog {
                 RowLayout {
                     Layout.fillWidth: true
                     visible: GameArtService.providerConfigured
-                    spacing: 8
+                    spacing: AppStyle.spacingSm
                     FLTextField {
                         id: searchField
                         Layout.fillWidth: true
@@ -331,7 +336,7 @@ Dialog {
                     }
                     FirelightButton {
                         rounded: false
-                        radius: 6
+                        radius: AppStyle.radiusMd
                         label: "Search"
                         implicitWidth: 110
                         onClicked: control.doSearch()
@@ -353,7 +358,7 @@ Dialog {
                     }
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: AppStyle.spacingSm
                         FLTextField {
                             id: keyField
                             Layout.fillWidth: true
@@ -362,7 +367,7 @@ Dialog {
                         }
                         FirelightButton {
                             rounded: false
-                            radius: 6
+                            radius: AppStyle.radiusMd
                             label: "Save key"
                             implicitWidth: 110
                             enabled: keyField.text.length > 0
@@ -396,7 +401,7 @@ Dialog {
                 // Results grouped by matched game, each under its own header
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 12
+                    spacing: AppStyle.spacingMd
                     Repeater {
                         model: control.onlineGroups
                         delegate: ColumnLayout {
@@ -433,12 +438,12 @@ Dialog {
     }
 
     footer: RowLayout {
-        spacing: 8
+        spacing: AppStyle.spacingSm
         FirelightButton {
             Layout.leftMargin: 20
-            Layout.bottomMargin: 16
+            Layout.bottomMargin: AppStyle.spacingLg
             rounded: false
-            radius: 6
+            radius: AppStyle.radiusMd
             iconCode: ""
             label: "Import from file…"
             implicitWidth: 180
@@ -449,9 +454,9 @@ Dialog {
         }
         FirelightButton {
             Layout.rightMargin: 20
-            Layout.bottomMargin: 16
+            Layout.bottomMargin: AppStyle.spacingLg
             rounded: false
-            radius: 6
+            radius: AppStyle.radiusMd
             label: "Close"
             implicitWidth: 100
             onClicked: control.close()

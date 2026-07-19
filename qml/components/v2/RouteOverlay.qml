@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
-import Firelight 1.0
 
 // Hosts routes that present as a popup over the current view (e.g. /settings)
 // Driven entirely by Router: opens when the current route is an overlay, closes
@@ -34,7 +33,7 @@ Popup {
 
     background: Rectangle {
         color: Theme.surfaceElevated
-        radius: 8
+        radius: AppStyle.radiusMd
         border.color: Theme.border
         border.width: 1
 

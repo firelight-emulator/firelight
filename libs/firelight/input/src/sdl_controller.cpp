@@ -307,7 +307,7 @@ int16_t SdlController::evaluateMapping(const GamepadInput input) const {
   // A shortcut is using this input, so the game doesn't get to see it. Checked
   // here because every physical read goes through this one switch — including
   // the fall-through for inputs with no binding, and the light-gun/mouse path
-  if (suppressor().isSuppressed(static_cast<int>(input))) {
+  if (isSuppressed(static_cast<int>(input))) {
     return 0;
   }
 

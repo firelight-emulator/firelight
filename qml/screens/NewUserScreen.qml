@@ -1,9 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Dialogs
-import QtQuick.Window
 import QtQuick.Layouts 1.0
-import Firelight 1.0
 
 FocusScope {
     id: root

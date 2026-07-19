@@ -33,13 +33,13 @@ struct TransportEvents {
 
 // Peer-to-peer data plane. Connection handshakes ride the lobby backend's
 // signaling channel: the transport emits payloads via signalOut, and inbound
-// payloads are delivered to handleSignal.
+// payloads are delivered to handleSignal
 class IPeerTransport {
 public:
   virtual ~IPeerTransport() = default;
 
   // Guest side calls with isOfferer=true toward the host; the host side
-  // accepts inbound offers via handleSignal.
+  // accepts inbound offers via handleSignal
   virtual void connectToPeer(PlayerId memberId, bool isOfferer) = 0;
   virtual void handleSignal(PlayerId from, const std::string &payload) = 0;
   virtual void closePeer(PlayerId memberId) = 0;

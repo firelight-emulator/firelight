@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
 import QtQuick.Layouts 1.0
-import Firelight 1.0
 
 Button {
     id: root
@@ -156,8 +155,8 @@ Button {
                 padding: 4
                 Layout.fillHeight: true
                 Layout.preferredWidth: parent.height
-                contentItem: FLIcon {
-                    icon: "delete"
+                contentItem: Icon {
+                    name: "delete"
                     filled: false
                     size: height
                     color: parent.enabled ? "white" : "#727272"

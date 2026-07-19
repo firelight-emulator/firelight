@@ -1,7 +1,5 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
-import Firelight 1.0
 
 // Bespoke delegate for the Game Boy palette (widget "gbc-palette"): the usual
 // dropdown row plus a live preview of the selected palette underneath. The

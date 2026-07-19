@@ -1,10 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
-import QtQuick.Effects
-import Firelight 1.0
 
 Flickable {
     id: page

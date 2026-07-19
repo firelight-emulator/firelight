@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Firelight 1.0
 
 // Multi-select setting: a full-width wrap of toggleable chips over `options`
 // ({label, value}). `value` is a JSON array of the selected option values;
@@ -63,7 +62,7 @@ BaseSettingItem {
                 }
 
                 contentItem: RowLayout {
-                    spacing: 4
+                    spacing: AppStyle.spacingXs
                     Icon {
                         Layout.leftMargin: 10
                         visible: chip.on
@@ -73,7 +72,7 @@ BaseSettingItem {
                     }
                     Text {
                         Layout.leftMargin: chip.on ? 0 : 12
-                        Layout.rightMargin: 12
+                        Layout.rightMargin: AppStyle.spacingMd
                         text: chip.modelData.label
                         color: chip.on ? Theme.accent : Theme.textMuted
                         font.family: Constants.regularFontFamily

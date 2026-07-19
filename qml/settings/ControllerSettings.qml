@@ -116,10 +116,9 @@ FocusScope {
 
         // Capped: one row per platform would otherwise push the keybinds off
         // the page, and this page's viewport doesn't scroll as a whole
-        ScrollView {
+        FLScrollView {
             Layout.fillWidth: true
             Layout.preferredHeight: Math.min(platformColumn.implicitHeight, 130)
-            clip: true
 
             ColumnLayout {
                 id: platformColumn
@@ -234,7 +233,7 @@ FocusScope {
             model: profile.shortcutsModel
             spacing: 2
 
-            ScrollBar.vertical: ScrollBar {}
+            ScrollBar.vertical: FLScrollBar {}
 
             section.property: "category"
             section.criteria: ViewSection.FullString

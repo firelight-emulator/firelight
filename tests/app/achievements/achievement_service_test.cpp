@@ -953,7 +953,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_MultipleUsers_OnlySpe
   seedUserUnlock("user1", 100, true, false, 1609459200, 0);
   seedUserUnlock("user2", 100, true, false, 1609459200, 0);
 
-  // Empty response for user1 — achievement 100 should be relocked for user1.
+  // Empty response for user1 — achievement 100 should be relocked for user1
   auto response = createTestStartSessionResponse({}, {});
   EXPECT_TRUE(service->processStartSessionResponse("user1", 1, response));
 
@@ -969,7 +969,7 @@ TEST_F(AchievementServiceTest, ProcessStartSessionResponse_MultipleUsers_OnlySpe
 }
 
 // Game isolation: getAllUserUnlocks is filtered by gameId, so processing
-// game 1's session must not touch achievements belonging to game 2.
+// game 1's session must not touch achievements belonging to game 2
 TEST_F(AchievementServiceTest, ProcessStartSessionResponse_OtherGameUnlocks_NotAffected) {
   setupAchievementHierarchy(1, 10, {100});
   setupAchievementHierarchy(2, 20, {200});

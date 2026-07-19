@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Firelight 1.0
 
 // One settings row inside a section card: the label with its description beneath
 // it, the control to the right (or full-width below when `controlBelow`), and a
@@ -109,9 +108,9 @@ FocusScope {
         RowLayout {
             Layout.fillWidth: true
             Layout.leftMargin: root.contentIndent
-            Layout.rightMargin: 16
+            Layout.rightMargin: AppStyle.spacingLg
             Layout.topMargin: 13
-            spacing: 12
+            spacing: AppStyle.spacingMd
 
             Text {
                 id: labelText
@@ -132,8 +131,8 @@ FocusScope {
                 // Sized to the label so appearing and disappearing can't change
                 // the row's height — nothing should shift when a value changes
                 Layout.preferredHeight: labelText.implicitHeight
-                leftPadding: 8
-                rightPadding: 8
+                leftPadding: AppStyle.spacingSm
+                rightPadding: AppStyle.spacingSm
                 topPadding: 0
                 bottomPadding: 0
                 focusPolicy: Qt.NoFocus
@@ -177,7 +176,7 @@ FocusScope {
             visible: root.controlBelow
             Layout.fillWidth: true
             Layout.leftMargin: root.contentIndent
-            Layout.rightMargin: 16
+            Layout.rightMargin: AppStyle.spacingLg
             Layout.topMargin: root.controlBelow ? 10 : 0
             implicitHeight: (root.controlBelow && root.control) ? root.control.implicitHeight : 0
         }
@@ -188,7 +187,7 @@ FocusScope {
             id: descText
             Layout.fillWidth: true
             Layout.leftMargin: root.contentIndent
-            Layout.rightMargin: 16
+            Layout.rightMargin: AppStyle.spacingLg
             Layout.topMargin: root.description !== "" ? 6 : 0
             visible: root.description !== ""
             text: root.description
@@ -204,7 +203,7 @@ FocusScope {
             id: nestedColumn
             Layout.fillWidth: true
             Layout.leftMargin: root.contentIndent + 8
-            Layout.rightMargin: 16
+            Layout.rightMargin: AppStyle.spacingLg
             Layout.topMargin: children.length > 0 ? 10 : 0
             spacing: 6
             visible: children.length > 0

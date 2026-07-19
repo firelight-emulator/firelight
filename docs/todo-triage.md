@@ -39,3 +39,20 @@ Mark each **keep** / **fix now** / **delete**.
 | `src/main.cpp:456` | TODO | TODO: Move this to before service? | |
 | `tests/app/library/sqlite_user_library_test.cpp:470` | TODO | TODO: Delete content directory, deletes all rom files in it, does the above | |
 | `tests/app/rcheevos/rcheevos_offline_client_test.cpp:215` | TODO | // TODO: VERIFY THAT SYNCING WORKS | |
+
+## Bare `// TODO` markers — convention collision
+
+`CLAUDE.md` defines a bare `// TODO` on its own line as "an assistant comment awaiting your
+rewrite", kept greppable apart from real work (`// TODO: <what to do>`). Four bare markers survive
+the marker sweep, and two of them are yours from before the convention existed — so
+`grep -rn '// TODO$'` cannot currently separate the two meanings.
+
+Resolved: marking a comment that turns out to be yours is fine, so origin is not worth resolving
+before adding a marker. These four still want a `// TODO: <what>` so they read as real work.
+
+| Location | Origin | Context | Decision |
+|---|---|---|---|
+| `src/app/libretro/game.cpp:31` | yours (on `main`) | | |
+| `tests/app/library/sqlite_user_library_test.cpp:433` | yours (on `main`) | | |
+| `src/app/libretro/core_environment.cpp:705` | mine | sits above a commented-out `printf`; handler returns false, so `SET_MESSAGE_EXT` is unimplemented | |
+| `src/app/libretro/core_environment.cpp:828` | mine | top of the `SET_CORE_OPTIONS_V2_INTL` handler; intent unclear | |

@@ -53,7 +53,6 @@ FocusScope {
                         dangerous: true
 
                         onTriggered: {
-                            console.log("Deleting directory: " + folderDelegate.model.directory_id);
                             ContentDirectoryModel.deleteItem(folderDelegate.model.directory_id);
                         }
                     }
@@ -72,8 +71,8 @@ FocusScope {
                 }
                 contentItem: RowLayout {
                     spacing: 12
-                    FLIcon {
-                        icon: "folder"
+                    Icon {
+                        name: "folder"
                         filled: true
                         Layout.fillHeight: true
                         size: height * 2 / 3

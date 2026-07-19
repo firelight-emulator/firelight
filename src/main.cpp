@@ -347,7 +347,7 @@ int main(int argc, char *argv[]) {
 
   // Online play: direct-connection lobby (host shares their IP) + WebRTC
   // data plane + session. DiscordLobbyBackend can swap back in here once the
-  // app's OAuth client is configured in the Discord developer portal.
+  // app's OAuth client is configured in the Discord developer portal
   firelight::netplay::DirectLobbyBackend netplayLobbyBackend;
   firelight::netplay::RtcTransport netplayTransport;
   firelight::netplay::NetplayService netplayService(

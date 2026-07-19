@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import Firelight 1.0
 
 // A single-select segmented button group (e.g. Day / Week / Month). Feed
 // `segments` a list of labels; `currentIndex` is the selection

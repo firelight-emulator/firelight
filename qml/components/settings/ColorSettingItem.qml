@@ -1,7 +1,5 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
-import Firelight 1.0
 
 // Color setting: a row of preset swatches plus a hex entry for arbitrary
 // colors. `value` is a hex string (e.g. "#ff8800"); `presets` is an optional

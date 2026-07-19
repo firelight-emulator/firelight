@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import Firelight 1.0
 
 // Icon-only button. Glyph size from AppStyle (sm/md/lg, or an explicit
 // iconSize), colors from Theme. The hit target is floored at minTarget
@@ -51,10 +50,8 @@ RoundButton {
         opacity: control.enabled ? 1 : 0.5
     }
 
-    // Focus is drawn by the app's global cursor overlay (showGlobalCursor), so
-    // the button paints only the hover/press/checked wash — no second ring
     background: Rectangle {
-        radius: width / 2
+        radius: AppStyle.radiusMd
         color: Theme.textPrimary
         opacity: !control.enabled ? 0 : tapHandler.pressed ? 0.14 : (hoverHandler.hovered || control.checked) ? 0.10 : 0
     }

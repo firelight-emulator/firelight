@@ -486,7 +486,7 @@ TEST_F(SqliteUserLibraryTest, ContentDirectoryIdStampedOnCreateTest) {
   ASSERT_TRUE(stored.has_value());
   ASSERT_EQ(stored->m_contentDirectoryId, dir.id);
 
-  // A file under no known directory gets -1.
+  // A file under no known directory gets -1
   library::ContentFile orphan{.m_fileSizeBytes = 100,
                               .m_filePath = "elsewhere/game.sfc",
                               .m_fileMd5 = "bbb",

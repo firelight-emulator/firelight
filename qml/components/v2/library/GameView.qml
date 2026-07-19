@@ -2,7 +2,6 @@ import QtQuick
 import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
-import Firelight 1.0
 
 Item {
     id: root
@@ -86,9 +85,11 @@ Item {
     ]
     readonly property bool anyAdvancedFilter: filterHasAchievements || filterCompleted || filterPlayTime !== "any" || filterDecade !== 0 || filterGenre.trim().length > 0
     function playTimeLabel(v) {
-        for (var i = 0; i < playTimeOptions.length; i++)
-            if (playTimeOptions[i].value === v)
+        for (var i = 0; i < playTimeOptions.length; i++) {
+            if (playTimeOptions[i].value === v) {
                 return playTimeOptions[i].label;
+            }
+        }
         return "";
     }
     function clearAdvancedFilters() {
@@ -198,9 +199,11 @@ Item {
     // --- Selection helpers ---
     function _selectionRecount() {
         var n = 0;
-        for (var k in root.selectedIds)
-            if (root.selectedIds[k])
+        for (var k in root.selectedIds) {
+            if (root.selectedIds[k]) {
                 n++;
+            }
+        }
         root.selectedCount = n;
     }
     function isSelected(entryId) {
@@ -208,9 +211,11 @@ Item {
     }
     function selectedIdList() {
         var out = [];
-        for (var k in root.selectedIds)
-            if (root.selectedIds[k])
+        for (var k in root.selectedIds) {
+            if (root.selectedIds[k]) {
                 out.push(parseInt(k));
+            }
+        }
         return out;
     }
     function selectOnly(entryId, rowIndex) {
@@ -222,27 +227,31 @@ Item {
     }
     function toggleSelect(entryId, rowIndex) {
         var s = {};
-        for (var k in root.selectedIds)
-            if (root.selectedIds[k])
+        for (var k in root.selectedIds) {
+            if (root.selectedIds[k]) {
                 s[k] = true;
-        if (s[entryId])
+            }
+        }
+        if (s[entryId]) {
             delete s[entryId];
-        else
+        } else
             s[entryId] = true;
         root.selectedIds = s;
         root.selectionAnchorRow = rowIndex;
         root._selectionRecount();
     }
     function rangeSelectTo(rowIndex) {
-        if (root.selectionAnchorRow < 0)
+        if (root.selectionAnchorRow < 0) {
             root.selectionAnchorRow = rowIndex;
+        }
         var lo = Math.min(root.selectionAnchorRow, rowIndex);
         var hi = Math.max(root.selectionAnchorRow, rowIndex);
         var s = {};
         for (var i = lo; i <= hi && i < gameMirror.count; i++) {
             var o = gameMirror.objectAt(i);
-            if (o)
+            if (o) {
                 s[o.entryId] = true;
+            }
         }
         root.selectedIds = s;
         root._selectionRecount();
@@ -254,24 +263,27 @@ Item {
     }
     // Modifier-aware click from a tile / row
     function handleGameClick(entryId, rowIndex, modifiers) {
-        if (modifiers & Qt.ShiftModifier)
+        if (modifiers & Qt.ShiftModifier) {
             root.rangeSelectTo(rowIndex);
-        else if (modifiers & Qt.ControlModifier)
+        } else if (modifiers & Qt.ControlModifier) {
             root.toggleSelect(entryId, rowIndex);
-        else
+        } else
             root.selectOnly(entryId, rowIndex);
     }
     function bulkFavorite(fav) {
         var t = root.selectedIdList();
-        for (var i = 0; i < t.length; i++)
+        for (var i = 0; i < t.length; i++) {
             LibraryEntryModel.setEntryFavorite(t[i], fav);
+        }
     }
     function bulkRemoveFromFolder() {
-        if (root.removableFolderId === -1)
+        if (root.removableFolderId === -1) {
             return;
+        }
         var t = root.selectedIdList();
-        for (var i = 0; i < t.length; i++)
+        for (var i = 0; i < t.length; i++) {
             LibraryEntryModel.removeEntryFromFolder(t[i], root.removableFolderId);
+        }
     }
 
     // --- Detail panel (right dock) ---
@@ -313,12 +325,16 @@ Item {
                 property var smartIds: root.filterSmartIds
                 enabled: root.filterFolderId !== -1
                 function filter(data: RoleData): bool {
-                    for (var i = 0; i < manualIds.length; i++)
-                        if (data.folderIds.includes(manualIds[i]))
+                    for (var i = 0; i < manualIds.length; i++) {
+                        if (data.folderIds.includes(manualIds[i])) {
                             return true;
-                    for (var j = 0; j < smartIds.length; j++)
-                        if (LibraryEntryModel.matchesSmartFolder(smartIds[j], data.entryId))
+                        }
+                    }
+                    for (var j = 0; j < smartIds.length; j++) {
+                        if (LibraryEntryModel.matchesSmartFolder(smartIds[j], data.entryId)) {
                             return true;
+                        }
+                    }
                     return false;
                 }
                 onManualIdsChanged: invalidate()
@@ -352,14 +368,18 @@ Item {
                 enabled: root.filterPlayTime !== "any"
                 function filter(data: RoleData): bool {
                     var s = data.numSecondsPlayed;
-                    if (bucket === "never")
+                    if (bucket === "never") {
                         return !s || s <= 0;
-                    if (bucket === "short")
+                    }
+                    if (bucket === "short") {
                         return s > 0 && s < 3600;
-                    if (bucket === "medium")
+                    }
+                    if (bucket === "medium") {
                         return s >= 3600 && s < 36000;
-                    if (bucket === "long")
+                    }
+                    if (bucket === "long") {
                         return s >= 36000;
+                    }
                     return true;
                 }
                 onBucketChanged: invalidate()
@@ -560,9 +580,11 @@ Item {
                     model: root.sortOptions
                     textRole: "label"
                     currentIndex: {
-                        for (var i = 0; i < root.sortOptions.length; i++)
-                            if (root.sortOptions[i].role === root.sortRole)
+                        for (var i = 0; i < root.sortOptions.length; i++) {
+                            if (root.sortOptions[i].role === root.sortRole) {
                                 return i;
+                            }
+                        }
                         return 0;
                     }
                     onActivated: function (index) {
@@ -656,9 +678,11 @@ Item {
                                 model: root.playTimeOptions
                                 textRole: "label"
                                 currentIndex: {
-                                    for (var i = 0; i < root.playTimeOptions.length; i++)
-                                        if (root.playTimeOptions[i].value === root.filterPlayTime)
+                                    for (var i = 0; i < root.playTimeOptions.length; i++) {
+                                        if (root.playTimeOptions[i].value === root.filterPlayTime) {
                                             return i;
+                                        }
+                                    }
                                     return 0;
                                 }
                                 onActivated: function (index) {
@@ -677,9 +701,11 @@ Item {
                                 model: root.decadeOptions
                                 textRole: "label"
                                 currentIndex: {
-                                    for (var i = 0; i < root.decadeOptions.length; i++)
-                                        if (root.decadeOptions[i].value === root.filterDecade)
+                                    for (var i = 0; i < root.decadeOptions.length; i++) {
+                                        if (root.decadeOptions[i].value === root.filterDecade) {
                                             return i;
+                                        }
+                                    }
                                     return 0;
                                 }
                                 onActivated: function (index) {
@@ -766,12 +792,7 @@ Item {
             }
         }
 
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: 1
-            color: Theme.textPrimary
-            opacity: 0.15
-        }
+        FLDivider {}
 
         Loader {
             id: viewLoader

@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 import Firelight 1.0
 
 FocusScope {
@@ -125,7 +124,7 @@ FocusScope {
         preferredHighlightBegin: 64
         preferredHighlightEnd: height - 64
 
-        ScrollBar.vertical: ScrollBar {}
+        ScrollBar.vertical: FLScrollBar {}
 
         spacing: 4
 
@@ -355,8 +354,8 @@ FocusScope {
                     Layout.preferredWidth: 32
                     Layout.alignment: Qt.AlignVCenter
 
-                    FLIcon {
-                        icon: "bar-chart"
+                    Icon {
+                        name: "bar-chart"
                         color: "yellow"
                         anchors.fill: parent
                         size: height

@@ -2,13 +2,11 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
 import QtQuick.Layouts 1.0
-import Firelight 1.0
 
 FocusScope {
     id: control
 
     Keys.onEscapePressed: function (event) {
-        console.log(event);
         if (searchField.activeFocus || searchPopup.activeFocus) {
             if (searchField.text !== "") {
                 searchField.text = "";
@@ -23,7 +21,7 @@ FocusScope {
 
     Pane {
         anchors.fill: parent
-        padding: 4
+        padding: AppStyle.spacingXs
         topPadding: 3
         focus: true
 
@@ -62,7 +60,7 @@ FocusScope {
             Button {
                 Layout.fillHeight: true
                 Layout.preferredWidth: height
-                Layout.topMargin: 4
+                Layout.topMargin: AppStyle.spacingXs
                 Layout.margins: 3
                 focusPolicy: Qt.NoFocus
 
@@ -196,7 +194,7 @@ FocusScope {
 
         background: Rectangle {
             color: Theme.surfaceElevated
-            radius: 8
+            radius: AppStyle.radiusMd
             border.color: Theme.border
             border.width: 1
 
@@ -228,7 +226,7 @@ FocusScope {
                 visible: searchField.text !== ""
                 focus: true
                 anchors.fill: parent
-                anchors.leftMargin: 8
+                anchors.leftMargin: AppStyle.spacingSm
                 anchors.rightMargin: 18
                 model: SearchResultsModel
                 boundsBehavior: Flickable.StopAtBounds
@@ -276,7 +274,7 @@ FocusScope {
                             Layout.fillHeight: true
                             Layout.topMargin: -4
                             Layout.bottomMargin: -4
-                            Layout.rightMargin: 4
+                            Layout.rightMargin: AppStyle.spacingXs
                             HoverHandler {
                                 id: seeAllHover
                                 cursorShape: Qt.PointingHandCursor
@@ -284,7 +282,7 @@ FocusScope {
                             background: Rectangle {
                                 color: "white"
                                 opacity: seeAllHover.hovered ? 0.08 : 0
-                                radius: 4
+                                radius: AppStyle.radiusSm
                             }
                             contentItem: Text {
                                 text: "See all results"
@@ -323,12 +321,12 @@ FocusScope {
                             color: Theme.textMuted
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.left: parent.left
-                            anchors.leftMargin: 12
+                            anchors.leftMargin: AppStyle.spacingMd
                         }
                     }
                 }
 
-                ScrollBar.vertical: ScrollBar {
+                ScrollBar.vertical: FLScrollBar {
                     id: verticalScrollBar
                     policy: ScrollBar.AsNeeded
                     anchors.bottomMargin: 6
@@ -337,7 +335,7 @@ FocusScope {
                     width: 12
 
                     contentItem: Rectangle {
-                        radius: 8
+                        radius: AppStyle.radiusMd
                         implicitWidth: 16
                         color: "#ffffff"
                         opacity: verticalScrollBar.visualSize === 1 ? 0.0 : verticalScrollBar.hovered ? 0.6 : 0.3
@@ -365,7 +363,7 @@ FocusScope {
                     background: Rectangle {
                         color: "white"
                         opacity: down ? 0.06 : hovered ? 0.08 : 0
-                        radius: 4
+                        radius: AppStyle.radiusSm
                     }
 
                     HoverHandler {
@@ -373,7 +371,7 @@ FocusScope {
                     }
 
                     contentItem: RowLayout {
-                        spacing: 12
+                        spacing: AppStyle.spacingMd
                         Image {
                             Layout.fillHeight: true
                             Layout.preferredWidth: height

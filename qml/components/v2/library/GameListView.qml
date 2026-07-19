@@ -1,13 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Dialogs
-import QtQuick.Window
-import QtQml.Models
 import QtQuick.Layouts 1.0
-import QtNetwork
-import QtMultimedia
-import QtQuick.Effects
-import Firelight 1.0
 
 ListView {
     id: root
@@ -50,34 +43,42 @@ ListView {
     function targetsFor(entryId) {
         if (root.selectedIds[entryId] === true) {
             var out = [];
-            for (var k in root.selectedIds)
-                if (root.selectedIds[k])
+            for (var k in root.selectedIds) {
+                if (root.selectedIds[k]) {
                     out.push(parseInt(k));
-            if (out.length > 0)
+                }
+            }
+            if (out.length > 0) {
                 return out;
+            }
         }
         return [entryId];
     }
 
     function formatPlayTime(seconds) {
-        if (!seconds || seconds <= 0)
+        if (!seconds || seconds <= 0) {
             return "—";
+        }
         var h = Math.floor(seconds / 3600);
         var m = Math.round((seconds % 3600) / 60);
-        if (h > 0)
+        if (h > 0) {
             return h + "h " + m + "m";
-        if (m > 0)
+        }
+        if (m > 0) {
             return m + "m";
+        }
         return "<1m";
     }
     function formatLastPlayed(millis) {
-        if (!millis || millis <= 0)
+        if (!millis || millis <= 0) {
             return "Never";
+        }
         return Qt.formatDateTime(new Date(millis), "MMM d, yyyy");
     }
     function formatAchievements(earned, total) {
-        if (!total || total <= 0)
+        if (!total || total <= 0) {
             return "—";
+        }
         return earned + "/" + total;
     }
 
@@ -90,7 +91,7 @@ ListView {
         initialContentY = contentY;
     }
 
-    ScrollBar.vertical: ScrollBar {
+    ScrollBar.vertical: FLScrollBar {
         anchors.left: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
@@ -121,15 +122,15 @@ ListView {
         }
         contentItem: ColumnLayout {
             id: gameListHeader
-            spacing: 8
+            spacing: AppStyle.spacingSm
             RowLayout {
                 Layout.fillWidth: true
-                Layout.topMargin: 8
+                Layout.topMargin: AppStyle.spacingSm
                 Layout.leftMargin: 10
                 Layout.rightMargin: 10
                 Layout.minimumHeight: 32
                 Layout.maximumHeight: 32
-                spacing: 16
+                spacing: AppStyle.spacingLg
 
                 HoverHandler {
                     id: headerHoverHandler
@@ -267,12 +268,7 @@ ListView {
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: 1
-                color: Theme.textPrimary
-                opacity: 0.12
-            }
+            FLDivider {}
             Item {
                 implicitWidth: 1
                 implicitHeight: 8

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Blocks a commit whose staged C++/QML is not formatted.
+#
+# Install:  git config core.hooksPath scripts/hooks
+# Bypass:   git commit --no-verify
+exec "$(git rev-parse --show-toplevel)/scripts/check-format.sh" --staged

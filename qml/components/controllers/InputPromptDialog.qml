@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 import Firelight 1.0
 
 FirelightDialog {
@@ -32,8 +31,6 @@ FirelightDialog {
 
     onOpened: function () {
         timer.start();
-        console.log(dialog.buttons.length);
-        console.log(dialog.currentIndex);
     }
 
     onClosed: function () {

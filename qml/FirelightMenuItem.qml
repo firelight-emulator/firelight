@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
 
 Button {
     id: control
@@ -18,13 +17,13 @@ Button {
     implicitHeight: 42
 
     contentItem: Item {
-        FLIcon {
+        Icon {
             id: icon
             visible: control.labelIcon !== ""
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
 
-            icon: control.labelIcon ? control.labelIcon : "info"
+            name: control.labelIcon ? control.labelIcon : "info"
             width: parent.height - 8
             height: parent.height - 8
             size: parent.height - 8

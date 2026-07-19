@@ -1,10 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 // import QtQuick.Controls.Material
-import QtQuick.Dialogs
-import QtQuick.Window
 import QtQuick.Layouts
-import QtQuick.Effects
 import Firelight 1.0
 
 FirelightDialog {

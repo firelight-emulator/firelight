@@ -1,8 +1,5 @@
 import QtQuick
-import QtQuick.Controls
-import QtQml.Models
 import QtQuick.Layouts 1.0
-import Firelight 1.0
 
 Item {
     id: root
@@ -52,7 +49,7 @@ Item {
         RowLayout {
             Layout.fillWidth: true
             Layout.margins: 12
-            spacing: 8
+            spacing: AppStyle.spacingSm
 
             Text {
                 text: "Media"

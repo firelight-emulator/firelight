@@ -1,5 +1,4 @@
 import QtQuick
-import Firelight 1.0
 
 // A brief message over everything else. Deliberately not interactive and never
 // focusable: it reports what just happened, and a hotkey firing must not steal
@@ -23,7 +22,7 @@ Rectangle {
 
     width: label.implicitWidth + 32
     height: 40
-    radius: 20
+    radius: height / 2
     color: Theme.surface
     border.width: 1
     border.color: Theme.border

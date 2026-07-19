@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Firelight 1.0
 
 // Right-dock details for the last-clicked game. `data` is a plain snapshot
 // object (see GameView.focusSnapshot); null shows an empty state
@@ -17,15 +16,18 @@ Rectangle {
     color: Theme.surface
 
     function iconSource(u) {
-        if (!u)
+        if (!u) {
             return "";
-        if (u.indexOf("://") >= 0)
+        }
+        if (u.indexOf("://") >= 0) {
             return u;
+        }
         return "file:///" + u.replace(/\\/g, "/");
     }
     function fmtTime(seconds) {
-        if (!seconds || seconds <= 0)
+        if (!seconds || seconds <= 0) {
             return "—";
+        }
         var h = Math.floor(seconds / 3600);
         var m = Math.round((seconds % 3600) / 60);
         return h > 0 ? (h + "h " + m + "m") : (m > 0 ? (m + "m") : "<1m");
@@ -93,12 +95,7 @@ Rectangle {
             elide: Text.ElideRight
         }
 
-        Rectangle {
-            Layout.fillWidth: true
-            implicitHeight: 1
-            color: Theme.textPrimary
-            opacity: 0.12
-        }
+        FLDivider {}
 
         // Stat rows
         GridLayout {
@@ -185,12 +182,10 @@ Rectangle {
         }
 
         // Description (the scrollable bulk)
-        ScrollView {
+        FLScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.topMargin: AppStyle.spacingXs
-            clip: true
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
             Text {
                 width: panel.width - AppStyle.spacingLg * 2 - 1

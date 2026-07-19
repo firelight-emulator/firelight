@@ -7,7 +7,7 @@ namespace firelight::gui {
 
 // QML access to the core registry + the per-platform/per-game core override
 // (stored under the reserved "core" setting key). Levels use SettingsLevel
-// ints: 0 = Game, 1 = Platform, 2 = Global.
+// ints: 0 = Game, 1 = Platform, 2 = Global
 class QtCoreRegistryProxy : public QObject {
   Q_OBJECT
 public:

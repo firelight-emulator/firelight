@@ -42,7 +42,7 @@ struct LobbyEvents {
 
 // The only seam the rest of the app sees for lobbies, chat, connection
 // signaling, AND identity — implementations (Discord today, LAN or a custom
-// server later) keep their sign-in flows and tokens internal.
+// server later) keep their sign-in flows and tokens internal
 class ILobbyBackend {
 public:
   using ResultCallback = std::function<void(bool ok, const std::string &error)>;

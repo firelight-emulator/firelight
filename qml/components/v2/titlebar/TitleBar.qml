@@ -1,15 +1,11 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Effects
 import QtQuick.Layouts 1.0
-import Firelight 1.0
 
 FocusScope {
     id: root
     signal closeClicked
     signal maximizeClicked
     signal minimizeClicked
-    signal menuButtonClicked
 
     function activateSearch() {
         searchBar.forceActiveFocus();
@@ -52,7 +48,7 @@ FocusScope {
                 Layout.alignment: Qt.AlignVCenter
 
                 // Layout.topMargin: 2
-                Layout.leftMargin: 6
+                Layout.leftMargin: AppStyle.spacingXs
                 // tooltipText: "Open menu"
 
                 RightClickMenu {

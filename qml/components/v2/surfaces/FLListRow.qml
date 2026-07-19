@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Firelight 1.0
 
 // A standard selectable row: optional leading icon, a label, and an optional
 // trailing item (placed as a child). Height derives from content and is floored
@@ -16,6 +15,12 @@ ItemDelegate {
     default property alias trailing: trailingSlot.data
     property bool showGlobalCursor: true
 
+    // Gamepad and keyboard focus has to be visible; a mouse user already knows
+    // where they are, so the ring is suppressed for them
+    readonly property bool _focusRing: activeFocus && !InputMethodManager.usingMouse
+
+    opacity: control.enabled ? 1 : 0.4
+
     padding: AppStyle.spacingSm
     leftPadding: AppStyle.spacingMd
     rightPadding: AppStyle.spacingMd
@@ -24,6 +29,7 @@ ItemDelegate {
 
     HoverHandler {
         id: rowHover
+        enabled: control.enabled
         cursorShape: Qt.PointingHandCursor
     }
 
@@ -58,5 +64,7 @@ ItemDelegate {
     background: Rectangle {
         radius: AppStyle.radiusMd
         color: control.highlighted ? Theme.surfaceHover : rowHover.hovered ? Theme.surfaceElevated : "transparent"
+        border.width: control._focusRing ? 2 : 0
+        border.color: Theme.accent
     }
 }

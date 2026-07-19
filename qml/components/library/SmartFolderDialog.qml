@@ -1,9 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Window
 import QtQuick.Layouts
-import QtQuick.Effects
-import Firelight 1.0
 
 // Editor for a smart folder's name + criteria. Produces the SmartFolderCriteria
 // JSON consumed by the C++ evaluator (keys must match smart_folder.cpp's parse)
@@ -130,49 +127,65 @@ FirelightDialog {
         nameInput.text = priorName;
         if (kind === "recent") {
             lastDaysInput.text = "14";
-            if (!priorName.trim())
+            if (!priorName.trim()) {
                 nameInput.text = "Recently played";
+            }
         } else if (kind === "never") {
             unplayedOnly.checked = true;
-            if (!priorName.trim())
+            if (!priorName.trim()) {
                 nameInput.text = "Never played";
+            }
         } else if (kind === "favorites") {
             favoriteOnly.checked = true;
-            if (!priorName.trim())
+            if (!priorName.trim()) {
                 nameInput.text = "Favorites";
+            }
         } else if (kind === "played") {
             minMinutesInput.text = "60";
-            if (!priorName.trim())
+            if (!priorName.trim()) {
                 nameInput.text = "Sunk hours in";
+            }
         }
     }
 
     function buildFilterJson() {
         var c = {};
-        if (selectedDirIds.length > 0)
+        if (selectedDirIds.length > 0) {
             c.contentDirectoryIds = selectedDirIds;
-        if (pathContainsInput.text.trim().length > 0)
+        }
+        if (pathContainsInput.text.trim().length > 0) {
             c.pathContains = pathContainsInput.text.trim();
-        if (selectedPlatformIds.length > 0)
+        }
+        if (selectedPlatformIds.length > 0) {
             c.platformIds = selectedPlatformIds;
-        if (favoriteOnly.checked)
+        }
+        if (favoriteOnly.checked) {
             c.favorite = true;
-        if (genreInput.text.trim().length > 0)
+        }
+        if (genreInput.text.trim().length > 0) {
             c.genres = [genreInput.text.trim()];
-        if (developerInput.text.trim().length > 0)
+        }
+        if (developerInput.text.trim().length > 0) {
             c.developer = developerInput.text.trim();
-        if (publisherInput.text.trim().length > 0)
+        }
+        if (publisherInput.text.trim().length > 0) {
             c.publisher = publisherInput.text.trim();
-        if (yearMinInput.text.trim().length > 0)
+        }
+        if (yearMinInput.text.trim().length > 0) {
             c.yearMin = parseInt(yearMinInput.text);
-        if (yearMaxInput.text.trim().length > 0)
+        }
+        if (yearMaxInput.text.trim().length > 0) {
             c.yearMax = parseInt(yearMaxInput.text);
-        if (minMinutesInput.text.trim().length > 0)
+        }
+        if (minMinutesInput.text.trim().length > 0) {
             c.minSecondsPlayed = parseInt(minMinutesInput.text) * 60;
-        if (lastDaysInput.text.trim().length > 0)
+        }
+        if (lastDaysInput.text.trim().length > 0) {
             c.playedWithinDays = parseInt(lastDaysInput.text);
-        if (unplayedOnly.checked)
+        }
+        if (unplayedOnly.checked) {
             c.unplayed = true;
+        }
         return JSON.stringify(c);
     }
 

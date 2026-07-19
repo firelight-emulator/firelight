@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
-import QtQml.Models
-import Firelight 1.0
 
 Pane {
     id: root

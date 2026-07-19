@@ -1,13 +1,4 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Dialogs
-import QtQuick.Window
-import QtQml.Models
-import QtQuick.Layouts 1.0
-import QtNetwork
-import QtMultimedia
-import QtQuick.Effects
-import Firelight 1.0
 
 Item {
     id: root
@@ -39,14 +30,14 @@ Item {
             cursorShape: Qt.PointingHandCursor
         }
     }
-    FLIcon {
+    Icon {
         anchors.left: headerText.right
         anchors.top: headerText.top
-        anchors.leftMargin: 4
+        anchors.leftMargin: AppStyle.spacingXs
         anchors.topMargin: 2
         anchors.bottom: headerText.bottom
         visible: root.selected
-        icon: root.sortAscending ? "arrow-down" : "arrow-up"
+        name: root.sortAscending ? "arrow-down" : "arrow-up"
         size: 22
         color: Theme.textPrimary
     }

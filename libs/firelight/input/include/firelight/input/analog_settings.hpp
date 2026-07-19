@@ -47,7 +47,7 @@ struct AxisSettings {
     if (magnitude <= innerBound) {
       return 0;
     }
-    // Rescale the live range (innerBound..outerBound) back to a full 0..1.
+    // Rescale the live range (innerBound..outerBound) back to a full 0..1
     magnitude = std::clamp((magnitude - innerBound) / (outerBound - innerBound), 0.0f, 1.0f);
 
     if (curve == ResponseCurve::Exponential && curveExponent > 0.0f) {

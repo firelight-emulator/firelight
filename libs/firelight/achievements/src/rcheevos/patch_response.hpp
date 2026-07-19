@@ -17,8 +17,7 @@ struct PatchLeaderboard {
   bool Hidden{};
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PatchLeaderboard, ID, Mem, Format,
-                                   LowerIsBetter, Title, Description, Hidden)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(PatchLeaderboard, ID, Mem, Format, LowerIsBetter, Title, Description, Hidden)
 
 struct PatchAchievement {
   unsigned ID{};

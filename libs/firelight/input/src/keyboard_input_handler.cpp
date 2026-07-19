@@ -79,7 +79,7 @@ bool KeyboardInputHandler::isButtonPressed(int platformId, int controllerTypeId,
   }
 
   // A shortcut is using this key, so the game doesn't see it
-  if (suppressor().isSuppressed(defaultKey)) {
+  if (isSuppressed(defaultKey)) {
     return false;
   }
   return m_keyStates[defaultKey];

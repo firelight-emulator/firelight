@@ -202,10 +202,9 @@ FocusScope {
         }
     }
 
-    ScrollView {
+    FLScrollView {
         anchors.fill: parent
         contentWidth: availableWidth
-        clip: true
 
         ColumnLayout {
             width: root.width

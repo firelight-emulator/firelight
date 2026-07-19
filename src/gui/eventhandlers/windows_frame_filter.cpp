@@ -159,7 +159,7 @@ bool WindowsFrameFilter::nativeEventFilter(const QByteArray &eventType, void *me
 // Non-Windows platforms use the compositor's native title bar, so there's no
 // custom non-client hit-testing to do. We keep the class (and the WindowFrame
 // QML API) alive with Qt-based equivalents so MainWindow.qml still works: the
-// window position save/restore is driven through QWindow instead of Win32.
+// window position save/restore is driven through QWindow instead of Win32
 
 void WindowsFrameFilter::setWindow(QWindow *window) { m_window = window; }
 

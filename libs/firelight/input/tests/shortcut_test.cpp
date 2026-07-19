@@ -150,25 +150,25 @@ TEST_F(ShortcutTest, ComboWithholdsItsTriggerButABarePressStillReachesTheGame) {
 
   // Pressed on its own: no shortcut fires, so the game gets it
   engine.onInput(0, &pad, GamepadInput::EastFace, true);
-  EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
+  EXPECT_FALSE(pad.isSuppressed(GamepadInput::EastFace));
   engine.onInput(0, &pad, GamepadInput::EastFace, false);
 
   // Held with the modifier: the shortcut fires and the game must not see it
   engine.onInput(0, &pad, GamepadInput::Select, true);
   engine.onInput(0, &pad, GamepadInput::EastFace, true);
-  EXPECT_TRUE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
+  EXPECT_TRUE(pad.isSuppressed(GamepadInput::EastFace));
 
   // The modifier leaks on purpose: it was already down, so masking it now would
   // hand the core a release it never got
-  EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::Select));
+  EXPECT_FALSE(pad.isSuppressed(GamepadInput::Select));
 
   // Letting the modifier go first must not hand the core a spurious press —
   // the trigger stays withheld until it is itself released
   engine.onInput(0, &pad, GamepadInput::Select, false);
-  EXPECT_TRUE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
+  EXPECT_TRUE(pad.isSuppressed(GamepadInput::EastFace));
 
   engine.onInput(0, &pad, GamepadInput::EastFace, false);
-  EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
+  EXPECT_FALSE(pad.isSuppressed(GamepadInput::EastFace));
 }
 
 TEST_F(ShortcutTest, LeavingGameplayDropsEveryMask) {
@@ -182,12 +182,12 @@ TEST_F(ShortcutTest, LeavingGameplayDropsEveryMask) {
   engine.setContext(ScopeInGame);
   engine.onInput(0, &pad, GamepadInput::Select, true);
   engine.onInput(0, &pad, GamepadInput::WestFace, true);
-  ASSERT_TRUE(pad.suppressor().isSuppressed(GamepadInput::WestFace));
+  ASSERT_TRUE(pad.isSuppressed(GamepadInput::WestFace));
 
   // A ScopeAlways action can fire in a menu, where nothing reads the mask; it
   // must not still be set when the game comes back
   engine.setContext(ScopeInMenu);
-  EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::WestFace));
+  EXPECT_FALSE(pad.isSuppressed(GamepadInput::WestFace));
 }
 
 TEST_F(ShortcutTest, ForgettingADeviceDropsItsMasks) {
@@ -201,12 +201,12 @@ TEST_F(ShortcutTest, ForgettingADeviceDropsItsMasks) {
   engine.setContext(ScopeInGame);
   engine.onInput(0, &pad, GamepadInput::Select, true);
   engine.onInput(0, &pad, GamepadInput::SouthFace, true);
-  ASSERT_TRUE(pad.suppressor().isSuppressed(GamepadInput::SouthFace));
+  ASSERT_TRUE(pad.isSuppressed(GamepadInput::SouthFace));
 
   // Unplugged mid-combo: the release never arrives, so the mask has to go with
   // the device or it would wedge that button forever
   engine.forgetDevice(&pad);
-  EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::SouthFace));
+  EXPECT_FALSE(pad.isSuppressed(GamepadInput::SouthFace));
 }
 
 // Turning hotkeys off hands the whole device to the game — which is what a core
@@ -240,7 +240,7 @@ TEST_F(ShortcutTest, HotkeysOffSilencesEverythingButTheWayBack) {
   events.clear();
   engine.onInput(0, &pad, GamepadInput::EastFace, true);
   EXPECT_TRUE(events.empty());
-  EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
+  EXPECT_FALSE(pad.isSuppressed(GamepadInput::EastFace));
   engine.onInput(0, &pad, GamepadInput::EastFace, false);
 
   // The toggle itself still works, or there'd be no way back
@@ -292,12 +292,12 @@ TEST_F(ShortcutTest, TurningHotkeysOffHandsBackAnythingWithheld) {
   engine.setContext(ScopeInGame);
   engine.onInput(0, &pad, GamepadInput::Select, true);
   engine.onInput(0, &pad, GamepadInput::EastFace, true);
-  ASSERT_TRUE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
+  ASSERT_TRUE(pad.isSuppressed(GamepadInput::EastFace));
 
   // Giving the game its inputs back is the whole point, so a mask can't outlive
   // the switch being thrown
   engine.setHotkeysEnabled(&pad, false);
-  EXPECT_FALSE(pad.suppressor().isSuppressed(GamepadInput::EastFace));
+  EXPECT_FALSE(pad.isSuppressed(GamepadInput::EastFace));
 }
 
 TEST_F(ShortcutTest, ScopeGatesActivation) {

@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtMultimedia
-import Firelight 1.0
 
 Popup {
     id: viewer
@@ -31,13 +30,13 @@ Popup {
 
     background: Rectangle {
         color: "#000000"
-        radius: 6
+        radius: AppStyle.radiusMd
     }
 
     contentItem: Item {
         Image {
             anchors.fill: parent
-            anchors.margins: 8
+            anchors.margins: AppStyle.spacingSm
             visible: viewer.mediaKind === "screenshot"
             source: viewer.mediaKind === "screenshot" ? viewer.mediaUrl : ""
             fillMode: Image.PreserveAspectFit
@@ -47,7 +46,7 @@ Popup {
         VideoOutput {
             id: videoOut
             anchors.fill: parent
-            anchors.margins: 8
+            anchors.margins: AppStyle.spacingSm
             visible: viewer.mediaKind === "clip"
         }
 

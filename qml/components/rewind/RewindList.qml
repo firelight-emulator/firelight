@@ -1,13 +1,9 @@
 import QtQuick
 import QtQuick.Controls
-import QtMultimedia
-import QtQuick.Effects
-import QtQuick.Layouts
 import QtQml
 import Qt.labs.qmlmodels 1.0
-import QtQuick.Shapes 1.8
+
 // import Qt5Compat.GraphicalEffects
-import Firelight 1.0
 
 FocusScope {
     id: root
@@ -76,7 +72,6 @@ FocusScope {
 
         onCurrentIndexChanged: {
             sfx.play();
-            console.log("Current index changed: ", list.currentIndex);
         }
 
         model: root.model
@@ -136,7 +131,6 @@ FocusScope {
                         dele.ListView.view.currentIndex = dele.index;
                         return;
                     } else {
-                        console.log("selected: ", dele.index);
                         root.itemSelected(dele.index);
                     }
                 }

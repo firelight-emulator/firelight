@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 
 Item {
@@ -21,7 +20,7 @@ Item {
         Item {
             ColumnLayout {
                 anchors.centerIn: parent
-                spacing: 16
+                spacing: AppStyle.spacingLg
                 width: Math.min(parent.width - 48, 420)
 
                 Text {
@@ -44,7 +43,7 @@ Item {
                 // Signed out: one button, labeled from the provider
                 ColumnLayout {
                     visible: NetworkService.signInState !== "ready"
-                    spacing: 8
+                    spacing: AppStyle.spacingSm
                     Layout.fillWidth: true
 
                     FLButton {
@@ -65,7 +64,7 @@ Item {
 
                 ColumnLayout {
                     visible: NetworkService.signInState === "ready"
-                    spacing: 12
+                    spacing: AppStyle.spacingMd
                     Layout.fillWidth: true
 
                     Text {
@@ -78,7 +77,7 @@ Item {
 
                     RowLayout {
                         visible: NetworkService.providerName.length === 0
-                        spacing: 8
+                        spacing: AppStyle.spacingSm
                         Layout.fillWidth: true
 
                         Text {
@@ -108,7 +107,7 @@ Item {
                     }
 
                     RowLayout {
-                        spacing: 8
+                        spacing: AppStyle.spacingSm
                         Layout.fillWidth: true
 
                         FLTextField {

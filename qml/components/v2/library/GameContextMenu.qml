@@ -1,6 +1,4 @@
 import QtQuick
-import QtQuick.Controls
-import Firelight 1.0
 
 // Right-click menu for a game tile / list row. Acts on `targetIds` (the whole
 // multi-selection when the clicked game is part of it, otherwise just that one)
@@ -21,8 +19,9 @@ RightClickMenu {
     signal requestChangeArt(string contentHash, string displayName, int platformId)
 
     function _applyFavorite(fav) {
-        for (var i = 0; i < menu.targetIds.length; i++)
+        for (var i = 0; i < menu.targetIds.length; i++) {
             LibraryEntryModel.setEntryFavorite(menu.targetIds[i], fav);
+        }
     }
 
     RightClickMenuItem {

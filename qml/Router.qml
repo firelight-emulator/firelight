@@ -94,7 +94,7 @@ QtObject {
         navigated(transition);
     }
 
-    // Compatibility shims for call sites not yet migrated. Removed in Phase 4.
+    // Compatibility shims for call sites not yet migrated. Removed in Phase 4
     readonly property string currentRoute: path
     function navigateTo(rawPath) {
         navigate(rawPath);

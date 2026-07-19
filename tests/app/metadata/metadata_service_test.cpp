@@ -161,7 +161,7 @@ TEST_F(MetadataServiceTest, ApplyCandidateSelectsAndReprojects) {
   EXPECT_EQ(selected->thumbUrl, "https://sgdb/custom-icon_thumb.png");
 
   // The entry's grid icon uses the thumbnail (crisp at tile size), not the
-  // possibly-low-res full original.
+  // possibly-low-res full original
   const auto entry = library.getEntry(id);
   ASSERT_TRUE(entry.has_value());
   EXPECT_EQ(entry->icon1x1SourceUrl, "https://sgdb/custom-icon_thumb.png");

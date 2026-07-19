@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-import Firelight 1.0
 
 Item {
     id: gridRoot
@@ -13,13 +12,13 @@ Item {
     GridView {
         id: grid
         anchors.fill: parent
-        anchors.margins: 8
+        anchors.margins: AppStyle.spacingSm
         cellWidth: 184
         cellHeight: 132
         clip: true
         boundsBehavior: Flickable.StopAtBounds
 
-        ScrollBar.vertical: ScrollBar {
+        ScrollBar.vertical: FLScrollBar {
             width: 8
         }
 
@@ -32,7 +31,7 @@ Item {
             Button {
                 id: control
                 anchors.fill: parent
-                anchors.margins: 4
+                anchors.margins: AppStyle.spacingXs
                 padding: 0
                 hoverEnabled: true
 
@@ -49,7 +48,7 @@ Item {
 
                 background: Rectangle {
                     color: Theme.surfaceElevated
-                    radius: 4
+                    radius: AppStyle.radiusSm
                     border.width: 2
                     border.color: control.hovered ? "#4a90d9" : "transparent"
                 }
@@ -73,7 +72,7 @@ Item {
                         anchors.centerIn: parent
                         width: 36
                         height: 36
-                        radius: 18
+                        radius: height / 2
                         color: "#aa000000"
                         Text {
                             anchors.centerIn: parent
