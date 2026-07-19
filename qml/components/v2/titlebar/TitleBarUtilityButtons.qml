@@ -4,7 +4,7 @@ import QtQuick.Layouts 1.0
 
 FocusScope {
     id: root
-    objectName: "Top Bar Utility Buttons"
+    objectName: "TitleBarUtilityButtons"
 
     signal closeClicked
     signal maximizeClicked
@@ -15,13 +15,13 @@ FocusScope {
 
     RowLayout {
         id: buttonRow
-        objectName: "Top Bar Utility Buttons RowLayout"
+        objectName: "TitleBarUtilityButtons|Row"
         anchors.fill: parent
         spacing: 0
 
         Button {
             id: minButton
-            objectName: "Top Bar Minimize Button"
+            objectName: "TitleBarUtilityButtons|Minimize"
             Layout.fillHeight: true
             Layout.preferredWidth: AppStyle.titleBarUtilityButtonWidth
             Layout.topMargin: -(AppStyle.titleBarPadding)
@@ -56,7 +56,7 @@ FocusScope {
 
         Button {
             id: maxButton
-            objectName: "Top Bar Maximize Button"
+            objectName: "TitleBarUtilityButtons|Maximize"
             Layout.fillHeight: true
             Layout.preferredWidth: AppStyle.titleBarUtilityButtonWidth
             Layout.topMargin: -(AppStyle.titleBarPadding)
@@ -86,7 +86,7 @@ FocusScope {
 
         Button {
             id: closeButton
-            objectName: "Top Bar Close Button"
+            objectName: "TitleBarUtilityButtons|Close"
             Layout.fillHeight: true
             Layout.preferredWidth: AppStyle.titleBarUtilityButtonWidth
             Layout.topMargin: -(AppStyle.titleBarPadding)

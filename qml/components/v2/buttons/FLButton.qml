@@ -11,6 +11,8 @@ import QtQuick.Layouts
 Button {
     id: control
 
+    objectName: "FLButton|" + text
+
     // primary | secondary | ghost | danger
     property string variant: "secondary"
     // sm | md | lg

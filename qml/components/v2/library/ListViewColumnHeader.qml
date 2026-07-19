@@ -38,7 +38,7 @@ Item {
         anchors.bottom: headerText.bottom
         visible: root.selected
         name: root.sortAscending ? "arrow-down" : "arrow-up"
-        size: 22
+        size: AppStyle.iconSizeMd
         color: Theme.textPrimary
     }
 }

@@ -140,9 +140,9 @@ Dialog {
         spacing: 2
         Text {
             Layout.fillWidth: true
-            Layout.topMargin: 18
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
+            Layout.topMargin: AppStyle.spacingLg
+            Layout.leftMargin: AppStyle.spacingXl
+            Layout.rightMargin: AppStyle.spacingXl
             text: "Change artwork"
             color: Theme.textPrimary
             font.family: Constants.regularFontFamily
@@ -151,9 +151,9 @@ Dialog {
         }
         Text {
             Layout.fillWidth: true
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
-            Layout.bottomMargin: 6
+            Layout.leftMargin: AppStyle.spacingXl
+            Layout.rightMargin: AppStyle.spacingXl
+            Layout.bottomMargin: AppStyle.spacingSm
             text: control.gameName
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
@@ -191,7 +191,7 @@ Dialog {
 
         Image {
             anchors.fill: parent
-            anchors.margins: 6
+            anchors.margins: AppStyle.spacingSm
             source: thumb.resolveSource(thumb.url)
             fillMode: Image.PreserveAspectFit
             sourceSize.width: 256
@@ -216,8 +216,8 @@ Dialog {
         // Type selector
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
+            Layout.leftMargin: AppStyle.spacingXl
+            Layout.rightMargin: AppStyle.spacingXl
             Layout.topMargin: AppStyle.spacingSm
             spacing: AppStyle.spacingSm
             Repeater {
@@ -255,13 +255,13 @@ Dialog {
         FLScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
+            Layout.leftMargin: AppStyle.spacingXl
+            Layout.rightMargin: AppStyle.spacingXl
             contentWidth: availableWidth
 
             ColumnLayout {
                 width: parent.width
-                spacing: 10
+                spacing: AppStyle.spacingMd
 
                 // ---- Your artwork -------------------------------------------
                 Text {
@@ -279,7 +279,7 @@ Dialog {
                 }
                 Flow {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: AppStyle.spacingMd
                     Repeater {
                         model: control.storedList
                         delegate: ArtThumb {
@@ -302,7 +302,7 @@ Dialog {
                 // ---- SteamGridDB --------------------------------------------
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: AppStyle.spacingMd
                     Text {
                         text: "SteamGridDB"
                         color: Theme.textPrimary
@@ -347,7 +347,7 @@ Dialog {
                 ColumnLayout {
                     Layout.fillWidth: true
                     visible: !GameArtService.providerConfigured
-                    spacing: 6
+                    spacing: AppStyle.spacingSm
                     Text {
                         Layout.fillWidth: true
                         text: "Add your SteamGridDB API key to search for artwork."
@@ -408,7 +408,7 @@ Dialog {
                             id: groupDelegate
                             required property var modelData
                             Layout.fillWidth: true
-                            spacing: 6
+                            spacing: AppStyle.spacingSm
                             Text {
                                 Layout.fillWidth: true
                                 text: groupDelegate.modelData.gameName
@@ -420,7 +420,7 @@ Dialog {
                             }
                             Flow {
                                 Layout.fillWidth: true
-                                spacing: 10
+                                spacing: AppStyle.spacingMd
                                 Repeater {
                                     model: groupDelegate.modelData.items
                                     delegate: ArtThumb {
@@ -440,7 +440,7 @@ Dialog {
     footer: RowLayout {
         spacing: AppStyle.spacingSm
         FirelightButton {
-            Layout.leftMargin: 20
+            Layout.leftMargin: AppStyle.spacingXl
             Layout.bottomMargin: AppStyle.spacingLg
             rounded: false
             radius: AppStyle.radiusMd
@@ -453,7 +453,7 @@ Dialog {
             Layout.fillWidth: true
         }
         FirelightButton {
-            Layout.rightMargin: 20
+            Layout.rightMargin: AppStyle.spacingXl
             Layout.bottomMargin: AppStyle.spacingLg
             rounded: false
             radius: AppStyle.radiusMd

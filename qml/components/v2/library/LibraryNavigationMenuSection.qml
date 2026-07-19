@@ -53,7 +53,7 @@ FocusScope {
                     Layout.topMargin: -3
                     Layout.bottomMargin: -4
                     Layout.fillHeight: true
-                    size: 15
+                    size: AppStyle.iconSizeSm
                     visible: root.title !== "" && root.collapsible
                     color: Theme.textPrimary
                     opacity: 0.7

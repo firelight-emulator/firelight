@@ -30,7 +30,7 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 10
+            spacing: AppStyle.spacingMd
 
             Image {
                 source: NetworkService.gameArtUrl

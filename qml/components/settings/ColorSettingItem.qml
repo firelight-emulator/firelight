@@ -26,7 +26,7 @@ BaseSettingItem {
     }
 
     control: RowLayout {
-        spacing: 6
+        spacing: AppStyle.spacingSm
 
         Repeater {
             model: root.swatches

@@ -89,8 +89,8 @@ Pane {
                                 Image {
                                     anchors.centerIn: parent
                                     source: "qrc:/icons/chevron-back"
-                                    width: 16
-                                    height: 16
+                                    width: AppStyle.iconSizeSm
+                                    height: AppStyle.iconSizeSm
                                     fillMode: Image.PreserveAspectFit
                                 }
 
@@ -136,8 +136,8 @@ Pane {
                                 Image {
                                     anchors.centerIn: parent
                                     source: "qrc:/icons/chevron-forward"
-                                    width: 16
-                                    height: 16
+                                    width: AppStyle.iconSizeSm
+                                    height: AppStyle.iconSizeSm
                                     fillMode: Image.PreserveAspectFit
                                 }
                                 onClicked: {
@@ -430,10 +430,10 @@ Pane {
                                 spacing: AppStyle.spacingSm
 
                                 Image {
-                                    Layout.preferredWidth: 32
+                                    Layout.preferredWidth: AppStyle.iconSizeLg
                                     Layout.fillHeight: true
-                                    sourceSize.width: 32
-                                    sourceSize.height: 32
+                                    sourceSize.width: AppStyle.iconSizeLg
+                                    sourceSize.height: AppStyle.iconSizeLg
                                     source: modelData.iconSourceUrl
                                     fillMode: Image.PreserveAspectFit
                                 }

@@ -109,7 +109,7 @@ FocusScope {
             Layout.fillWidth: true
             Layout.leftMargin: root.contentIndent
             Layout.rightMargin: AppStyle.spacingLg
-            Layout.topMargin: 13
+            Layout.topMargin: AppStyle.spacingMd
             spacing: AppStyle.spacingMd
 
             Text {
@@ -205,7 +205,7 @@ FocusScope {
             Layout.leftMargin: root.contentIndent + 8
             Layout.rightMargin: AppStyle.spacingLg
             Layout.topMargin: children.length > 0 ? 10 : 0
-            spacing: 6
+            spacing: AppStyle.spacingSm
             visible: children.length > 0
         }
 

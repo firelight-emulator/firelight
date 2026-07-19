@@ -454,9 +454,9 @@ SplitView {
 
                         Text {
                             Layout.fillWidth: true
-                            Layout.leftMargin: 14
+                            Layout.leftMargin: AppStyle.spacingLg
                             Layout.topMargin: 2
-                            Layout.bottomMargin: 6
+                            Layout.bottomMargin: AppStyle.spacingSm
                             visible: !platformMenuSection.collapsed
                             text: splitView.showAllPlatforms ? qsTr("Show fewer") : qsTr("Show all platforms")
                             color: Theme.textMuted

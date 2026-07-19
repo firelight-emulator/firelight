@@ -4,7 +4,7 @@ import QtQuick.Layouts
 FocusScope {
     id: root
 
-    objectName: "LibraryNavigationMenuSection|" + title
+    objectName: "LibraryNavigationMenu|" + title
 
     property string title: ""
     property alias model: list.model
@@ -43,7 +43,7 @@ FocusScope {
 
             Icon {
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                size: 22
+                size: AppStyle.iconSizeMd
                 name: "arrow-down"
                 color: Theme.textMuted
                 rotation: contentContainer.collapsed ? 360 : 180

@@ -42,7 +42,7 @@ BaseSettingItem {
     }
 
     control: Flow {
-        spacing: 6
+        spacing: AppStyle.spacingSm
 
         Repeater {
             model: root.options
@@ -64,10 +64,10 @@ BaseSettingItem {
                 contentItem: RowLayout {
                     spacing: AppStyle.spacingXs
                     Icon {
-                        Layout.leftMargin: 10
+                        Layout.leftMargin: AppStyle.spacingMd
                         visible: chip.on
                         name: "check"
-                        size: 14
+                        size: AppStyle.iconSizeSm
                         color: Theme.accent
                     }
                     Text {

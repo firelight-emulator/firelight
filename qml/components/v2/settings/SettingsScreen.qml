@@ -224,7 +224,7 @@ FocusScope {
 
         ColumnLayout {
             anchors.fill: parent
-            spacing: 10
+            spacing: AppStyle.spacingMd
 
             FLSearchField {
                 id: searchField
@@ -420,7 +420,7 @@ FocusScope {
                 id: contentStack
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.topMargin: 14
+                Layout.topMargin: AppStyle.spacingLg
                 clip: true
                 initialItem: appearanceSettings
 

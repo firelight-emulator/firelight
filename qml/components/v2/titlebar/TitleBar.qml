@@ -12,7 +12,7 @@ FocusScope {
     }
 
     Item {
-        objectName: "Top Bar Drag Area"
+        objectName: "TitleBar|DragArea"
         anchors.fill: parent
         z: -1
 

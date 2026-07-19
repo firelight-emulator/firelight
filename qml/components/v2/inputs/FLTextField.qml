@@ -6,6 +6,8 @@ import QtQuick.Controls
 TextField {
     id: control
 
+    objectName: "FLTextField|" + placeholderText
+
     // sm | md
     property string size: "md"
     readonly property int _font: size === "sm" ? AppStyle.fontSizeSmall : AppStyle.fontSizeMedium

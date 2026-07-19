@@ -66,7 +66,7 @@ FocusScope {
             Layout.fillWidth: true
             visible: root.title !== ""
             topPadding: root.showTopPadding ? 22 : 2
-            bottomPadding: 10
+            bottomPadding: AppStyle.spacingMd
             leftPadding: 2
             rightPadding: 0
             background: Item {}

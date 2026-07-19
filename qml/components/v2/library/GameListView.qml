@@ -126,8 +126,8 @@ ListView {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.topMargin: AppStyle.spacingSm
-                Layout.leftMargin: 10
-                Layout.rightMargin: 10
+                Layout.leftMargin: AppStyle.spacingMd
+                Layout.rightMargin: AppStyle.spacingMd
                 Layout.minimumHeight: 32
                 Layout.maximumHeight: 32
                 spacing: AppStyle.spacingLg
@@ -138,12 +138,12 @@ ListView {
 
                 Button {
                     padding: 0
-                    implicitHeight: 24
-                    implicitWidth: 24
+                    implicitHeight: AppStyle.iconSizeMd
+                    implicitWidth: AppStyle.iconSizeMd
                     Layout.alignment: Qt.AlignVCenter
                     icon.source: "qrc:/icons/favorite"
-                    icon.width: 24
-                    icon.height: 24
+                    icon.width: AppStyle.iconSizeMd
+                    icon.height: AppStyle.iconSizeMd
                     icon.color: Theme.textMuted
                     background: Item {}
                 }
@@ -386,8 +386,8 @@ ListView {
             }
 
             Item {
-                width: 24
-                height: 24
+                width: AppStyle.iconSizeMd
+                height: AppStyle.iconSizeMd
 
                 Button {
                     padding: 0
@@ -446,11 +446,11 @@ ListView {
             }
             Button {
                 padding: 0
-                implicitHeight: 32
-                implicitWidth: 32
+                implicitHeight: AppStyle.iconSizeLg
+                implicitWidth: AppStyle.iconSizeLg
                 icon.source: "qrc:/icons/more-vertical"
-                icon.width: 32
-                icon.height: 32
+                icon.width: AppStyle.iconSizeLg
+                icon.height: AppStyle.iconSizeLg
                 icon.color: Theme.textMuted
                 background: Item {}
                 visible: delegateButton.hovered

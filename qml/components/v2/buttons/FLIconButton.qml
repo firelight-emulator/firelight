@@ -10,6 +10,8 @@ import QtQuick.Controls
 RoundButton {
     id: control
 
+    objectName: "FLIconButton|" + iconName
+
     required property string iconName
     // sm | md | lg
     property string size: "md"

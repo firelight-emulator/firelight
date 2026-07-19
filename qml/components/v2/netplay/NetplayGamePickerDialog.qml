@@ -23,7 +23,7 @@ Dialog {
             height: model.hidden ? 0 : implicitHeight
 
             contentItem: RowLayout {
-                spacing: 10
+                spacing: AppStyle.spacingMd
 
                 Image {
                     source: model.icon1x1SourceUrl

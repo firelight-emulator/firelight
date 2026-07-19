@@ -8,6 +8,8 @@ import QtQuick.Controls
 Row {
     id: control
 
+    objectName: "FLSegmentedControl|" + segments.join("/")
+
     property var segments: []
     property int currentIndex: 0
     signal activated(int index)

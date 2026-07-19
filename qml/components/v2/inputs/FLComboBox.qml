@@ -6,6 +6,10 @@ import QtQuick.Controls
 ComboBox {
     id: control
 
+    // No stable identifying value — displayText changes with the selection, so
+    // call sites that need a fixed handle should set their own
+    objectName: "FLComboBox"
+
     font.pixelSize: AppStyle.fontSizeMedium
     font.family: Constants.regularFontFamily
     implicitHeight: Math.max(AppStyle.minTarget, AppStyle.controlHeight)

@@ -1,39 +1,51 @@
 # Literal values left in the live QML
 
-Written for the styling pass. Spacing has been tokenized; sizes and colours have **not**, and this
-explains why — in both cases converting mechanically would have manufactured false consistency.
+Written for the styling pass. Spacing and icon sizes are tokenized; the remaining sizes and all
+colours are **not**, and this explains why — converting those mechanically would manufacture a
+consistency the UI does not actually have.
 
 Scope is `qml/components/v2/**` + `qml/components/settings/**`.
 
-## Done — spacing (82 sites, 25 files)
+## Done — spacing
 
-`spacing`, `padding`, `*Margin`, `anchors.margins` whose value was exactly 4 / 8 / 12 / 16 now use
-`AppStyle.spacing{Xs,Sm,Md,Lg}`. Line count and binding count were unchanged by the edit.
+`spacing`, `padding`, `*Margin`, `anchors.margins` now use `AppStyle.spacing{Xs,Sm,Md,Lg,Xl}`. Values
+that matched a token exactly went across first; the leftovers (6, 10, 11, 13, 14, 18, 20) were rounded
+to the nearest step, rounding up on ties. Line count and binding count were unchanged by every edit.
 
-**91 spacing literals remain**, on values with no token: mostly 6, 10, 20, plus `0`/`1`/`2` which are
-deliberate (zero gaps, hairlines). If 6 and 20 are real steps in your scale, they want tokens; if not,
-they want rounding to an existing step.
+What remains is deliberate:
 
-## Not done — sizes, and why
-
-Only **24 of ~103** `width`/`height` literals coincide with a token value, and the coincidence is not
-meaningful — a scrollbar's `width: 8` is not `spacingSm`, and a spacer's `width: 32` is not
-`iconSizeLg`. The values actually in use are mostly **off the scale entirely**:
-
-| value | count | token |
+| value | count | why it stayed |
 |---|---|---|
-| 32 | 9 | `iconSizeLg` |
-| 40 | 6 | — |
-| 34 | 6 | — |
-| 24 | 6 | `iconSizeMd` / `minTarget` |
-| 16 | 6 | `iconSizeSm` |
-| 48 | 5 | — |
-| 72 | 3 | — |
-| 36 | 3 | `controlHeight` |
+| 0 | 50 | zero gap |
+| 1 | 1 | hairline |
+| 2 | 15 | a 2px nudge is not a spacing step — `spacingXs` is 4, so tokenizing would double it |
+| 3 | 2 | same |
+| 64 | 1 | no token within range |
 
-The clearest evidence: every `Icon { size: … }` literal in the live tree is **14, 15 or 22** — not one
-matches `iconSizeSm/Md/Lg` (16/24/32). The icon sizes were never designed against the scale, so
-converting the few coincidental matches would imply a consistency that isn't there.
+## Done — icon sizes only
+
+Converted where the element genuinely *is* an icon and the value matched a token exactly: the two
+16×16 chevrons and the 32×32 list icon in `ActivityPageV2`, and the 24×24 / 32×32 icon buttons in
+`GameListView` (`implicitWidth`/`implicitHeight` plus their paired `icon.width`/`icon.height` and
+`sourceSize`).
+
+## Not done — the other sizes, and why
+
+The rest of the `width`/`height` literals are not token-shaped. Reading them by what they actually
+are, rather than by value:
+
+| what it is | values | why no token fits |
+|---|---|---|
+| dialog + panel widths | 800, 520, 500, 420, 399, 280, 240 | layout dimensions; the scale has nothing this large |
+| art + thumbnails | 240, 84, 72, 50, 40 | sized to the artwork, not to a control |
+| text column widths | 180, 140, 110, 104, 60, 30, 23 | measured to fit a string |
+| status dots, radio rings, drag handles | 18, 10, 8, 6, 4, 3 | sub-token ornament |
+| scrollbar widths | 8 | a scrollbar's `width: 8` is not `spacingSm` |
+| square badges + buttons | 36, 34, 32 | 34 and 36 are near `controlHeight` (36) but these are badges, not controls |
+
+The clearest evidence that the scale and the UI were never designed together: every `Icon { size: … }`
+literal in the live tree was **14, 15 or 22** — not one matched `iconSizeSm/Md/Lg` (16/24/32). Those
+four sites were rounded to the nearest token, but the mismatch is the real signal.
 
 **This is a design decision, not a cleanup**: either the scale grows to fit what the UI actually uses,
 or the UI moves onto the scale. Worth settling early in your pass, because everything else follows.

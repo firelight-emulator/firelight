@@ -37,7 +37,7 @@ BaseSettingItem {
                 background: Item {}
 
                 contentItem: RowLayout {
-                    spacing: 11
+                    spacing: AppStyle.spacingMd
 
                     Rectangle {
                         Layout.leftMargin: AppStyle.spacingXs

@@ -4,7 +4,7 @@ import QtQuick.Window
 
 ApplicationWindow {
     id: root
-    objectName: "Main Window"
+    objectName: "MainWindow"
 
     property bool frameReady: false
     property real previousX: 0

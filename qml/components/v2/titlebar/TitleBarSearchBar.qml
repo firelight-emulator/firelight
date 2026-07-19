@@ -227,7 +227,7 @@ FocusScope {
                 focus: true
                 anchors.fill: parent
                 anchors.leftMargin: AppStyle.spacingSm
-                anchors.rightMargin: 18
+                anchors.rightMargin: AppStyle.spacingLg
                 model: SearchResultsModel
                 boundsBehavior: Flickable.StopAtBounds
                 header: Pane {
@@ -329,7 +329,7 @@ FocusScope {
                 ScrollBar.vertical: FLScrollBar {
                     id: verticalScrollBar
                     policy: ScrollBar.AsNeeded
-                    anchors.bottomMargin: 6
+                    anchors.bottomMargin: AppStyle.spacingSm
                     anchors.right: parent.right
                     anchors.rightMargin: -20
                     width: 12

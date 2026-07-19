@@ -86,7 +86,7 @@ Item {
                     Text {
                         anchors.top: parent.top
                         anchors.right: parent.right
-                        anchors.margins: 6
+                        anchors.margins: AppStyle.spacingSm
                         visible: cell.model.favorite
                         text: "★"
                         color: "gold"
