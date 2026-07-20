@@ -1,9 +1,8 @@
 
-#include "../../../src/app/patching/ups_patch.hpp"
-
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <patching/ups_patch.hpp>
 #include <zlib.h>
 
 /**

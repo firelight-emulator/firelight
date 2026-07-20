@@ -188,7 +188,7 @@ std::optional<Savefile> SaveManager::readSaveData(const std::string &contentHash
 
 void SaveManager::writeSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index,
                                     const SuspendPoint &suspendPoint) {
-  writeSuspendPointToDisk(contentHash, index, suspendPoint);
+  writeSuspendPointToDisk(contentHash, saveSlotNumber, index, suspendPoint);
   EventDispatcher::instance().publish(SuspendPointUpdatedEvent{contentHash, saveSlotNumber, index});
 }
 
@@ -204,6 +204,18 @@ void SaveManager::deleteSuspendPoint(const std::string &contentHash, const int s
 
 std::string SaveManager::getSaveDirectory() const { return m_saveDirectory; }
 
+std::string SaveManager::getSharedCoreSaveDirectory() const {
+  const auto dir = m_saveDirectory + "/shared";
+
+  std::error_code ec;
+  fs::create_directories(dir, ec);
+  if (ec) {
+    spdlog::error("Failed to create shared core save directory {}: {}", dir, ec.message());
+  }
+
+  return dir;
+}
+
 void SaveManager::setSaveDirectory(const std::string &saveDirectory) {
   const auto stripped = stripFileUrl(saveDirectory);
   if (stripped == m_saveDirectory) {
@@ -212,7 +224,8 @@ void SaveManager::setSaveDirectory(const std::string &saveDirectory) {
   m_saveDirectory = stripped;
 }
 
-void SaveManager::writeSuspendPointToDisk(const std::string &contentHash, int index, const SuspendPoint &suspendPoint) {
+void SaveManager::writeSuspendPointToDisk(const std::string &contentHash, int saveSlotNumber, int index,
+                                          const SuspendPoint &suspendPoint) {
   const unsigned int slotNumber = index + 1;
   if (suspendPoint.locked) {
     spdlog::warn("Trying to write locked suspend point for entry with content "
@@ -221,7 +234,7 @@ void SaveManager::writeSuspendPointToDisk(const std::string &contentHash, int in
     return;
   }
 
-  const auto dir = suspendDir(m_saveDirectory, contentHash, suspendPoint.saveSlotNumber, slotNumber);
+  const auto dir = suspendDir(m_saveDirectory, contentHash, saveSlotNumber, slotNumber);
   std::error_code mkEc;
   fs::create_directories(dir, mkEc);
   if (mkEc) {
@@ -248,7 +261,7 @@ void SaveManager::writeSuspendPointToDisk(const std::string &contentHash, int in
     }
   }
 
-  auto metadata = m_saveDatabase.getSuspendPointMetadata(contentHash, suspendPoint.saveSlotNumber, slotNumber);
+  auto metadata = m_saveDatabase.getSuspendPointMetadata(contentHash, saveSlotNumber, slotNumber);
   if (metadata.has_value()) {
     metadata->lastModifiedAt = nowMs();
     metadata->locked = suspendPoint.locked;
@@ -256,7 +269,7 @@ void SaveManager::writeSuspendPointToDisk(const std::string &contentHash, int in
   } else {
     const auto ms = nowMs();
     SuspendPointMetadata newMetadata{.contentId = contentHash,
-                                     .saveSlotNumber = suspendPoint.saveSlotNumber,
+                                     .saveSlotNumber = saveSlotNumber,
                                      .slotNumber = slotNumber,
                                      .lastModifiedAt = ms,
                                      .createdAt = ms,

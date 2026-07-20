@@ -1,6 +1,11 @@
+#include "db/database_inspector.hpp"
+
 #include <firelight/activity/play_session.hpp>
 #include <firelight/activity/sqlite_activity_log.hpp>
 
+#include <atomic>
+#include <chrono>
+#include <filesystem>
 #include <gtest/gtest.h>
 #include <string>
 
@@ -18,9 +23,6 @@ PlaySession makeSession(const std::string &hash, uint64_t start, uint64_t end, u
 }
 } // namespace
 
-// NOTE: getDatabase() caches the :memory: connection per-thread and there is no
-// teardown, so instances on this thread share one database. Each test therefore
-// uses a unique content hash and only queries by that hash to stay isolated
 class SqliteActivityLogTest : public testing::Test {
 protected:
   SqliteActivityLog m_log{":memory:"};
@@ -77,6 +79,37 @@ TEST_F(SqliteActivityLogTest, GetLatestReturnsMostRecentByStartTime) {
 
 TEST_F(SqliteActivityLogTest, GetLatestForUnknownHashIsEmpty) {
   EXPECT_FALSE(m_log.getLatestPlaySession("hash_never_written").has_value());
+}
+
+// The whole point of the migration adoption: a session written to a file DB
+// survives being closed and reopened, and the store reports schema version 1
+TEST(SqliteActivityLogFileTest, DataAndSchemaSurviveReopen) {
+  namespace fs = std::filesystem;
+  static std::atomic_int counter{0};
+  const auto unique =
+      std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "_" + std::to_string(counter++);
+  const auto dbPath = (fs::temp_directory_path() / ("fl_activity_test_" + unique + ".db")).string();
+
+  {
+    SqliteActivityLog log(dbPath);
+    auto session = makeSession("hash_persist", 1000, 2000, 7000);
+    ASSERT_TRUE(log.createPlaySession(session));
+  }
+
+  {
+    SqliteActivityLog reopened(dbPath);
+    const auto latest = reopened.getLatestPlaySession("hash_persist");
+    ASSERT_TRUE(latest.has_value());
+    EXPECT_EQ(latest->startTime, 1000u);
+    EXPECT_EQ(latest->unpausedDurationMillis, 7000u);
+  }
+
+  const auto info = db::inspect(dbPath);
+  EXPECT_TRUE(info.integrityOk);
+  EXPECT_EQ(info.userVersion, 1);
+
+  std::error_code ec;
+  fs::remove(dbPath, ec);
 }
 
 } // namespace firelight::activity

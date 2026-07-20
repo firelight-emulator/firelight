@@ -1,8 +1,7 @@
-#include "../../../src/app/patching/ips_patch.hpp"
-
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <patching/ips_patch.hpp>
 #include <spdlog/spdlog.h>
 
 /**

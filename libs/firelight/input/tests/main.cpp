@@ -1,8 +1,8 @@
 #include <QCoreApplication>
 #include <gtest/gtest.h>
 
-// A QCoreApplication is required so Qt can load the QSQLITE driver used by
-// SqliteControllerRepository. No GUI is needed by the input module tests
+// A QCoreApplication backs the Qt types the input module still uses (no GUI is
+// needed by these tests)
 int main(int argc, char **argv) {
   QCoreApplication app(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);

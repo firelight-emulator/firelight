@@ -1,9 +1,7 @@
-#include "bps_patch.hpp"
-
-#include "util.hpp"
-
 #include <filesystem>
 #include <fstream>
+#include <patching/bps_patch.hpp>
+#include <patching/util.hpp>
 #include <spdlog/spdlog.h>
 #include <zlib.h>
 

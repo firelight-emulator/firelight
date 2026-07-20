@@ -1,8 +1,7 @@
-#include "pm_star_rod_mod_patch.hpp"
-
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <patching/pm_star_rod_mod_patch.hpp>
 
 namespace firelight::patching {
 

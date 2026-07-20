@@ -1,7 +1,6 @@
-#include "yay_0_codec.hpp"
-
 #include <cstdio>
 #include <cstring>
+#include <patching/yay_0_codec.hpp>
 
 namespace firelight::patching {
 

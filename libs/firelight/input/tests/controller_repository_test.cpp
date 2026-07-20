@@ -4,6 +4,9 @@
 #include <firelight/platforms/platform_service.hpp>
 
 #include <QtCore/qnamespace.h>
+#include <atomic>
+#include <chrono>
+#include <filesystem>
 #include <gtest/gtest.h>
 
 namespace firelight::input {
@@ -88,32 +91,60 @@ TEST_F(ControllerRepositoryTest, KeyboardProfileIsSeededFromTheKeyboardTable) {
   EXPECT_TRUE(keyboard->getShortcutMapping()->getBindings("fast_forward").empty());
 }
 
-// Reads a profile back with none of the in-memory state that created it
-// Connections are keyed per thread, so a second repository here shares the same
-// live database while keeping its own empty profile cache — which is exactly the
-// "what does the next launch see" question these tests are asking
-TEST_F(ControllerRepositoryTest, PersistedProfileStateIsReadBack) {
-  loadPresets();
-  const auto keyboard = m_repo.createProfile("ReloadKeys", DeviceType::Keyboard);
-  const auto pad = m_repo.createProfile("ReloadPad", DeviceType::Gamepad);
-  ASSERT_TRUE(keyboard);
-  ASSERT_TRUE(pad);
+// A second launch — a fresh repository on the same file DB, with none of the
+// in-memory state that created the profiles — sees what was persisted. Uses a
+// real file because each SQLite connection is now its own database
+TEST(ControllerRepositoryFileTest, PersistedProfileStateIsReadBack) {
+  namespace fs = std::filesystem;
+  static std::atomic_int counter{0};
+  const auto unique =
+      std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "_" + std::to_string(counter++);
+  const auto dbPath = (fs::temp_directory_path() / ("fl_controllers_test_" + unique + ".db")).string();
 
-  SqliteControllerRepository reopened{":memory:", m_platformService};
+  ShortcutRegistry::instance().loadFromString(R"({
+    "defaultPreset": "firelight",
+    "actions": [{"id": "fast_forward"}, {"id": "save_state"}, {"id": "open_quick_menu"}],
+    "presets": [
+      {"id": "firelight",
+       "gamepad": {"fast_forward": ["Select+RightTrigger"], "open_quick_menu": ["Select+R3", "Select+Start"]},
+       "keyboard": {"save_state": ["Key_F1"]}}
+    ]
+  })");
 
-  // The kind was hardcoded to 0 on insert, so the keyboard's profile used to
-  // come back as a gamepad profile and be re-flagged in memory every launch
-  const auto loadedKeyboard = reopened.getProfile(keyboard->getId());
-  ASSERT_TRUE(loadedKeyboard);
-  EXPECT_TRUE(loadedKeyboard->isKeyboardProfile());
-  EXPECT_EQ(loadedKeyboard->getPresetId(), "firelight");
+  platforms::PlatformService platformService;
+  int keyboardId = -1;
+  int padId = -1;
+  {
+    SqliteControllerRepository repo(dbPath, platformService);
+    const auto keyboard = repo.createProfile("ReloadKeys", DeviceType::Keyboard);
+    const auto pad = repo.createProfile("ReloadPad", DeviceType::Gamepad);
+    ASSERT_TRUE(keyboard);
+    ASSERT_TRUE(pad);
+    keyboardId = keyboard->getId();
+    padId = pad->getId();
+  }
 
-  const auto loadedPad = reopened.getProfile(pad->getId());
-  ASSERT_TRUE(loadedPad);
-  EXPECT_FALSE(loadedPad->isKeyboardProfile());
-  // Seeding writes through the mapping's sync callback, so it has to have
-  // reached the shortcuts row rather than just the profile in memory
-  EXPECT_EQ(loadedPad->getShortcutMapping()->getBindings("fast_forward").size(), 1u);
+  {
+    SqliteControllerRepository reopened(dbPath, platformService);
+
+    // The kind was hardcoded to 0 on insert, so the keyboard's profile used to
+    // come back as a gamepad profile and be re-flagged in memory every launch
+    const auto loadedKeyboard = reopened.getProfile(keyboardId);
+    ASSERT_TRUE(loadedKeyboard);
+    EXPECT_TRUE(loadedKeyboard->isKeyboardProfile());
+    EXPECT_EQ(loadedKeyboard->getPresetId(), "firelight");
+
+    const auto loadedPad = reopened.getProfile(padId);
+    ASSERT_TRUE(loadedPad);
+    EXPECT_FALSE(loadedPad->isKeyboardProfile());
+    // Seeding writes through the mapping's sync callback, so it has to have
+    // reached the shortcuts row rather than just the profile in memory
+    EXPECT_EQ(loadedPad->getShortcutMapping()->getBindings("fast_forward").size(), 1u);
+  }
+
+  ShortcutRegistry::instance().clear();
+  std::error_code ec;
+  fs::remove(dbPath, ec);
 }
 
 TEST_F(ControllerRepositoryTest, ProfileWithNoPresetCatalogStartsUnbound) {

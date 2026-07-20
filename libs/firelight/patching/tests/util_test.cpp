@@ -1,6 +1,5 @@
-#include "../../../src/app/patching/util.hpp"
-
 #include <gtest/gtest.h>
+#include <patching/util.hpp>
 #include <stdexcept>
 #include <vector>
 

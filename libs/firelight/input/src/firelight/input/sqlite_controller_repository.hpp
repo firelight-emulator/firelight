@@ -3,8 +3,13 @@
 #include <firelight/input/controller_repository.hpp>
 #include <firelight/input/gamepad_profile.hpp>
 
-#include <QSqlDatabase>
 #include <memory>
+#include <mutex>
+#include <string>
+
+namespace SQLite {
+class Database;
+}
 
 namespace firelight::platforms {
 class PlatformService;
@@ -15,9 +20,9 @@ class SqliteControllerRepository final : public IControllerRepository {
 public:
   // `platformService` supplies the platform list used to seed per-platform
   // profile mappings (injected rather than reached via a global singleton)
-  SqliteControllerRepository(QString dbFilePath, platforms::PlatformService &platformService);
+  SqliteControllerRepository(std::string dbFilePath, platforms::PlatformService &platformService);
 
-  ~SqliteControllerRepository() override = default;
+  ~SqliteControllerRepository() override;
 
   std::shared_ptr<GamepadProfile> getProfile(int id) override;
   std::shared_ptr<GamepadProfile> createProfile(std::string name, DeviceType device = DeviceType::Gamepad) override;
@@ -43,16 +48,18 @@ public:
   void clearGameProfileOverride(const std::string &contentHash) override;
 
 private:
-  QString m_dbFilePath;
+  std::string m_dbFilePath;
   platforms::PlatformService &m_platformService;
+  std::unique_ptr<SQLite::Database> m_db;
+  // Recursive because the public methods call each other (createProfile ->
+  // loadProfileContents -> getOrCreateMapping; cloneProfile -> getProfile), and
+  // the mapping sync callbacks write from the runtime thread as well
+  mutable std::recursive_mutex m_mutex;
 
-  [[nodiscard]] QSqlDatabase getDatabase() const;
   std::shared_ptr<InputMapping> getOrCreateMapping(int profileId, int platformId, int controllerTypeId);
   // Loads a profile's per-platform mappings and shortcut mapping into it
   // (shared by createProfile/getProfile)
   void loadProfileContents(const std::shared_ptr<GamepadProfile> &profile);
-
-  int m_keyboardProfileId;
 
   std::vector<std::shared_ptr<GamepadProfile>> m_profiles{};
   std::vector<std::shared_ptr<InputMapping>> m_inputMappings{};

@@ -31,10 +31,13 @@ public:
   void deleteSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index) override;
 
   [[nodiscard]] std::string getSaveDirectory() const override;
+
+  [[nodiscard]] std::string getSharedCoreSaveDirectory() const override;
   void setSaveDirectory(const std::string &saveDirectory) override;
 
 private:
-  void writeSuspendPointToDisk(const std::string &contentHash, int index, const SuspendPoint &suspendPoint);
+  void writeSuspendPointToDisk(const std::string &contentHash, int saveSlotNumber, int index,
+                               const SuspendPoint &suspendPoint);
 
   [[nodiscard]] std::optional<SuspendPoint> readSuspendPointFromDisk(const std::string &contentHash, int saveSlotNumber,
                                                                      int index) const;

@@ -9,9 +9,11 @@ add_library(firelight_activity STATIC
 target_include_directories(firelight_activity
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src
         PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
+        PRIVATE ${CMAKE_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp/include
 )
 
 target_link_libraries(firelight_activity
         PRIVATE spdlog::spdlog
-        PRIVATE Qt6::Sql
+        PRIVATE SQLiteCpp
 )

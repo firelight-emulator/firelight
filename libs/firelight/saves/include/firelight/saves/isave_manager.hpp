@@ -38,6 +38,12 @@ public:
   virtual void deleteSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index) = 0;
 
   [[nodiscard]] virtual std::string getSaveDirectory() const = 0;
+
+  // The one directory handed to cores for their own file writes. libretro gives
+  // a core a single save directory, so it is kept apart from the per-game tree
+  // this manager owns
+  [[nodiscard]] virtual std::string getSharedCoreSaveDirectory() const = 0;
+
   virtual void setSaveDirectory(const std::string &saveDirectory) = 0;
 };
 } // namespace firelight::saves

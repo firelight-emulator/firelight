@@ -90,9 +90,11 @@ GameLoadResult GameLoader::load(const int entryId, LaunchOverrides launch, const
                                                         catalog.coreDefaults(coreName), m_settingsService);
   result.coreConfig = coreConfig;
 
+  // Cores write their own files into one shared directory, kept out of the
+  // per-game tree the save manager owns
   std::string saveDirectory;
   if (const auto saveManager = m_context.saveManager) {
-    saveDirectory = saveManager->getSaveDirectory();
+    saveDirectory = saveManager->getSharedCoreSaveDirectory();
   }
 
   std::unique_ptr<::libretro::ICore> core;

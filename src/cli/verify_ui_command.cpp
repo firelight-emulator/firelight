@@ -32,7 +32,8 @@ constexpr std::array SETTINGS_SECTIONS = {
 // one, so it reports these rather than pretending to check them
 constexpr std::array GAMEPLAY_ROUTES = {"/quick-menu"};
 
-/** Whether this route needs a running game to mount. */
+// TODO
+/** Whether this route needs a running game to mount */
 bool needsGame(const QString &path) {
   for (const auto *route : GAMEPLAY_ROUTES) {
     if (path == QLatin1String(route)) {
@@ -43,7 +44,8 @@ bool needsGame(const QString &path) {
   return false;
 }
 
-/** Pulls the first entry id out of a library model, or -1 when it is empty. */
+// TODO
+/** Pulls the first entry id out of a library model, or -1 when it is empty */
 int firstEntryId(QQmlApplicationEngine &engine) {
   const auto value = engine.rootContext()->contextProperty("LibraryEntryModel");
   auto *model = value.value<QAbstractItemModel *>();
@@ -64,7 +66,8 @@ int firstEntryId(QQmlApplicationEngine &engine) {
   return -1;
 }
 
-/** Drives the route sweep off the event loop and exits when it is done. */
+// TODO
+/** Drives the route sweep off the event loop and exits when it is done */
 class Sweeper : public QObject {
 public:
   Sweeper(QQmlApplicationEngine &engine, QObject *rootObject, std::vector<QString> routes, const int settleMs,
@@ -87,7 +90,8 @@ public:
   }
 
 private:
-  /** Substitutes a real library id into a path parameter where one is needed. */
+  // TODO
+  /** Substitutes a real library id into a path parameter where one is needed */
   QString resolve(const QString &path, bool &syntheticOut) {
     if (!path.contains(':')) {
       return path;
@@ -199,16 +203,14 @@ private:
                                   {"failure", result.failure}});
       }
 
-      const QJsonObject root{{"total", static_cast<int>(m_results.size())},
-                             {"failed", failed},
-                             {"skipped", skipped},
-                             {"routes", routes}};
+      const QJsonObject root{
+          {"total", static_cast<int>(m_results.size())}, {"failed", failed}, {"skipped", skipped}, {"routes", routes}};
       std::cout << QJsonDocument(root).toJson(QJsonDocument::Indented).toStdString() << std::endl;
     } else {
       std::cout << "\nverify-ui: " << m_results.size() << " route(s), " << failed << " failed, " << skipped
                 << " skipped\n";
       for (const auto &result : m_results) {
-        const auto *status = result.skipped                                       ? "  skip "
+        const auto *status = result.skipped                                  ? "  skip "
                              : (result.mounted && result.fatalMessages == 0) ? "  ok   "
                                                                              : "  FAIL ";
         std::cout << status << result.path.toStdString();

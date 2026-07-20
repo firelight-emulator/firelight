@@ -83,6 +83,9 @@ explicitly-written property names. Never use it.
 - Everywhere else, comment only when the code is not clear on its own
 - **Never explain the reason.** A comment says *what* unclear code does, not *why* a choice was made,
   what it replaced, or what was tried before
+- **Stay local.** Don't reference other layers, services, or callers (e.g. "the QML layer goes through
+  X") unless that reference is required to understand the code right there. Don't restate what the
+  declaration already shows (e.g. re-listing a class's base classes)
 - No trailing period
 - No inline comments in QML unless needed to understand that specific part
 - Section headers look like:

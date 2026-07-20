@@ -3,7 +3,9 @@
 #include <firelight/platforms/platform_service.hpp>
 #include <firelight/settings/settings_service.hpp>
 
+#include <QCoreApplication>
 #include <algorithm>
+#include <filesystem>
 
 namespace firelight {
 namespace {
@@ -19,14 +21,16 @@ constexpr unsigned subclass(const unsigned base, const unsigned id) { return ((i
 using Class = input::GamepadInputClass;
 
 // Where bundled cores live and their dll suffix, per OS. Cores are shipped
-// under system/_cores/<os>/
+// under system/_cores/<os>/, resolved against the executable so a launch from
+// any working directory finds them
 std::string coreDirectoryPath() {
+  const auto base = QCoreApplication::applicationDirPath().toStdString() + "/system/_cores/";
 #if defined(_WIN32)
-  return "./system/_cores/windows/";
+  return base + "windows/";
 #elif defined(__linux__)
-  return "./system/_cores/linux/";
+  return base + "linux/";
 #elif defined(__APPLE__)
-  return "./system/_cores/macosx/";
+  return base + "macosx/";
 #else
   return "";
 #endif
@@ -219,6 +223,31 @@ std::string CoreRegistry::dllPathFor(const std::string &coreId) const {
     return {};
   }
   return coreDirectoryPath() + coreId + coreDllExtension();
+}
+
+std::vector<CoreAvailability> CoreRegistry::checkAvailability() const {
+  std::vector<CoreAvailability> result;
+  result.reserve(m_cores.size());
+
+  for (const auto &core : m_cores) {
+    CoreAvailability availability;
+    availability.coreId = core.id;
+    availability.expectedPath = dllPathFor(core.id);
+    availability.reachable = !core.supportedPlatformIds.empty();
+
+    std::error_code ec;
+    availability.present = !availability.expectedPath.empty() && std::filesystem::exists(availability.expectedPath, ec);
+
+    for (const auto &[platformId, defaultCore] : m_platformDefaults) {
+      if (defaultCore == core.id) {
+        availability.defaultForPlatforms.push_back(platformId);
+      }
+    }
+
+    result.push_back(std::move(availability));
+  }
+
+  return result;
 }
 
 void CoreRegistry::setSessionCoreOverride(const std::string &coreId) { m_sessionCoreOverride = coreId; }

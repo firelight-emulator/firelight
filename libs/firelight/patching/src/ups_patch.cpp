@@ -1,10 +1,8 @@
-#include "ups_patch.hpp"
-
-#include "util.hpp"
-
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <patching/ups_patch.hpp>
+#include <patching/util.hpp>
 #include <spdlog/spdlog.h>
 #include <zlib.h>
 

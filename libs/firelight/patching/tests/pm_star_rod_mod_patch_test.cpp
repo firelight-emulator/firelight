@@ -1,10 +1,9 @@
-#include "../../../src/app/patching/pm_star_rod_mod_patch.hpp"
-
-#include "../../../src/app/patching/yay_0_codec.hpp"
 #include "gtest/gtest.h"
 
 #include <filesystem>
 #include <fstream>
+#include <patching/pm_star_rod_mod_patch.hpp>
+#include <patching/yay_0_codec.hpp>
 
 /**
  * @brief Test fixture for Paper Mario Star Rod mod patch functionality

@@ -8,7 +8,6 @@
 #include <firelight/library/user_library_service.hpp>
 #include <firelight/saves/save_manager_impl.hpp>
 #include <firelight/settings/settings_service.hpp>
-#include <firelight/settings/sqlite_core_option_repository.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <QString>
@@ -30,7 +29,7 @@ protected:
   std::unique_ptr<library::UserLibraryService> m_libraryService;
   std::unique_ptr<library::EntryResolver> m_resolver;
   std::unique_ptr<settings::SettingsService> m_settingsService;
-  std::unique_ptr<settings::SqliteCoreOptionRepository> m_coreOptionRepo;
+  std::unique_ptr<settings::SqliteSettingsRepository> m_coreOptionRepo;
   std::unique_ptr<cheats::SqliteCheatRepository> m_cheatRepo;
   std::unique_ptr<saves::FakeSaveDatabase> m_userdataDb;
   std::unique_ptr<saves::SaveManager> m_saveManager;
@@ -55,7 +54,7 @@ protected:
     m_saveManager = std::make_unique<saves::SaveManager>(m_saveDir.path().toStdString(), *m_userdataDb);
     m_saveManager->setSaveDirectory(m_saveDir.path().toStdString());
 
-    m_coreOptionRepo = std::make_unique<settings::SqliteCoreOptionRepository>(":memory:");
+    m_coreOptionRepo = std::make_unique<settings::SqliteSettingsRepository>(":memory:");
     m_cheatRepo = std::make_unique<cheats::SqliteCheatRepository>(":memory:");
 
     CoreFactory factory =
@@ -117,11 +116,9 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   ASSERT_TRUE(instance->isInitialized());
   ASSERT_TRUE(m_fakeCore->initialized());
 
-  // The core was handed a Firelight-managed, per-game/per-slot save directory
-  // (not the system dir) so its own file writes stay organized
-  const auto expectedSaveDir = (m_saveDir.path() + "/" + QString::fromStdString(m_hash) + "/slot" +
-                                QString::number(instance->getSaveSlotNumber()) + "/core")
-                                   .toStdString();
+  // Cores get one shared directory for their own writes, held apart from the
+  // per-game tree the save manager owns
+  const auto expectedSaveDir = (m_saveDir.path() + "/shared").toStdString();
   EXPECT_EQ(m_fakeCore->savedSaveDirectory(), expectedSaveDir);
 
   // initialize() published EmulationStartedEvent, so the core's declared options

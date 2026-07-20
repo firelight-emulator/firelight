@@ -10,13 +10,12 @@ class QObject;
 
 namespace firelight::cli {
 
-/**
- * Mounts every registered route in turn and reports the ones that fail, so a UI
- * regression shows up without a human clicking through the app.
- */
+// TODO
+/** Mounts every registered route in turn and reports the ones that fail */
 class VerifyUiRunner {
 public:
-  /** The outcome of mounting one route. */
+  // TODO
+  /** The outcome of mounting one route */
   struct RouteResult {
     QString path;
     bool mounted = false;
@@ -26,13 +25,16 @@ public:
     int fatalMessages = 0;
   };
 
+  // TODO
   /**
-   * Starts the sweep. Returns immediately; the caller keeps running the event
-   * loop and the app exits with the result code once every route is visited.
+   * Starts the sweep and returns immediately; the caller keeps running the
+   * event loop, and the app exits with the result code once every route is
+   * visited
    */
   static void start(QQmlApplicationEngine &engine, QObject *rootObject, const CliOptions &options);
 
-  /** The routes visited when none are named on the command line. */
+  // TODO
+  /** The routes visited when none are named on the command line */
   static std::vector<QString> getDefaultRoutes();
 };
 

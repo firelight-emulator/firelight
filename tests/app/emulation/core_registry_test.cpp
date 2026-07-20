@@ -168,4 +168,64 @@ TEST_F(CoreRegistryResolveTest, SessionOverrideIgnoredWhenPlatformUnsupported) {
   EXPECT_EQ(registry.resolveCoreName(m_gb, m_hash, &m_service), "gambatte_libretro");
 }
 
+TEST(CoreRegistryTest, AvailabilityCoversEveryRegisteredCore) {
+  const auto &registry = CoreRegistry::instance();
+  const auto availability = registry.checkAvailability();
+
+  EXPECT_EQ(availability.size(), registry.cores().size());
+  for (const auto &entry : availability) {
+    EXPECT_FALSE(entry.coreId.empty());
+    EXPECT_FALSE(entry.expectedPath.empty());
+  }
+}
+
+TEST(CoreRegistryTest, AvailabilityPathMatchesDllPathFor) {
+  const auto &registry = CoreRegistry::instance();
+  for (const auto &entry : registry.checkAvailability()) {
+    EXPECT_EQ(entry.expectedPath, registry.dllPathFor(entry.coreId));
+  }
+}
+
+// A core with no supported platforms can never come out of resolveCoreName, so
+// shipping it is wasted bytes
+TEST(CoreRegistryTest, AvailabilityMarksCoresWithNoPlatformsUnreachable) {
+  const auto &registry = CoreRegistry::instance();
+  const auto availability = registry.checkAvailability();
+
+  const auto geolith = std::find_if(availability.begin(), availability.end(),
+                                    [](const auto &a) { return a.coreId == "geolith_libretro"; });
+  ASSERT_NE(geolith, availability.end());
+  EXPECT_FALSE(geolith->reachable);
+
+  const auto gba =
+      std::find_if(availability.begin(), availability.end(), [](const auto &a) { return a.coreId == "mgba_libretro"; });
+  ASSERT_NE(gba, availability.end());
+  EXPECT_TRUE(gba->reachable);
+}
+
+TEST(CoreRegistryTest, AvailabilityReportsWhichPlatformsDefaultToACore) {
+  const auto &registry = CoreRegistry::instance();
+  const auto availability = registry.checkAvailability();
+
+  const auto gba =
+      std::find_if(availability.begin(), availability.end(), [](const auto &a) { return a.coreId == "mgba_libretro"; });
+  ASSERT_NE(gba, availability.end());
+  EXPECT_NE(std::find(gba->defaultForPlatforms.begin(), gba->defaultForPlatforms.end(),
+                      firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE),
+            gba->defaultForPlatforms.end());
+}
+
+// Every platform default must name a core that is actually installed, or that
+// platform cannot launch at all
+TEST(CoreRegistryTest, EveryPlatformDefaultCoreIsInstalled) {
+  const auto &registry = CoreRegistry::instance();
+  for (const auto &entry : registry.checkAvailability()) {
+    if (entry.defaultForPlatforms.empty()) {
+      continue;
+    }
+    EXPECT_TRUE(entry.present) << entry.coreId << " is the default for " << entry.defaultForPlatforms.size()
+                               << " platform(s) but is not installed at " << entry.expectedPath;
+  }
+}
+
 } // namespace firelight

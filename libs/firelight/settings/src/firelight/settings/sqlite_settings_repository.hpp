@@ -1,15 +1,16 @@
 #pragma once
 
+#include <firelight/settings/core_option_repository.hpp>
 #include <firelight/settings/settings_repository.hpp>
 
 #include <SQLiteCpp/Database.h>
 
 namespace firelight::settings {
 
-// Persistence for the three settings tiers (global / platform / game). A plain
-// class implementing the std-typed ISettingsRepository — no Qt. The QML layer
-// goes through SettingsService, not this repository directly
-class SqliteSettingsRepository : public ISettingsRepository {
+// TODO
+// Persistence for settings.db: the global / platform / game settings tiers and
+// the per-core option cache
+class SqliteSettingsRepository : public ISettingsRepository, public ICoreOptionRepository {
 public:
   explicit SqliteSettingsRepository(std::string databaseFile);
   ~SqliteSettingsRepository() override;
@@ -41,6 +42,9 @@ public:
     }
     return defaultValue;
   }
+
+  void upsertCoreOptions(const std::string &coreName, const std::vector<CoreOption> &options) override;
+  [[nodiscard]] std::vector<CoreOption> getCoreOptions(const std::string &coreName) override;
 
 private:
   std::string m_databaseFile;

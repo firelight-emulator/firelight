@@ -14,6 +14,7 @@ enum class CliAction {
   ListSettings, // print the emulation setting catalog, then exit
   ListCores,    // print the known cores, then exit
   VerifyUi,     // mount every route, report failures, then exit
+  Doctor,       // report install and database health, then exit
   Exit,         // CLI already handled output (--help/--version) or errored
 };
 
@@ -32,7 +33,8 @@ struct CliOptions {
   bool exitOnClose = false;    // --exit-on-close (quit when the game closes)
   bool singleInstance = false; // --single-instance (forward to a running app)
   bool fatalWarnings = false;  // --fatal-warnings (any QML warning fails the run)
-  bool json = false;           // --json (machine-readable verify-ui report)
+  bool json = false;           // --json (machine-readable report)
+  bool strict = false;         // --strict (doctor: warnings fail too)
   int saveSlot = -1;           // --save-slot N; -1 = use the entry's active slot
   int settleMs = 1500;         // --settle-ms; how long to wait for a route to build
 

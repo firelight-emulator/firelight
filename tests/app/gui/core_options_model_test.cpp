@@ -1,7 +1,6 @@
 #include "gui/models/core_options_model.hpp"
 
 #include <firelight/settings/settings_service.hpp>
-#include <firelight/settings/sqlite_core_option_repository.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <gtest/gtest.h>
@@ -42,14 +41,13 @@ class CoreOptionsModelTest : public testing::Test {
 protected:
   SqliteSettingsRepository m_repo{":memory:"};
   SettingsService m_service{m_repo};
-  SqliteCoreOptionRepository m_coreOptions{":memory:"};
 
   void SetUp() override {
     SettingsService::setInstance(&m_service);
-    ServiceAccessor::setCoreOptionRepository(&m_coreOptions);
-    m_coreOptions.upsertCoreOptions(
-        GBA_CORE, {option("mgba_color_correction", "OFF", {{"OFF", "Off"}, {"GBA", "Game Boy Advance"}}),
-                   option("mgba_frameskip", "disabled", {{"disabled", "Disabled"}})});
+    ServiceAccessor::setCoreOptionRepository(&m_repo);
+    m_repo.upsertCoreOptions(GBA_CORE,
+                             {option("mgba_color_correction", "OFF", {{"OFF", "Off"}, {"GBA", "Game Boy Advance"}}),
+                              option("mgba_frameskip", "disabled", {{"disabled", "Disabled"}})});
   }
 
   void TearDown() override {
@@ -77,7 +75,7 @@ TEST_F(CoreOptionsModelTest, LoadsCachedOptionsForPlatformCore) {
 }
 
 TEST_F(CoreOptionsModelTest, FiltersByCategoryAndListsCategories) {
-  m_coreOptions.upsertCoreOptions(
+  m_repo.upsertCoreOptions(
       GBA_CORE, {option("top_opt", "a", {{"a", "A"}}), option("vid_opt", "x", {{"x", "X"}}, "video", "Video")});
 
   CoreOptionsModel model;

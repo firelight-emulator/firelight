@@ -37,6 +37,7 @@
 #include "cli/cli_app.hpp"
 #include "cli/console.hpp"
 #include "cli/data_dirs.hpp"
+#include "cli/doctor_command.hpp"
 #include "cli/launch_config.hpp"
 #include "cli/list_command.hpp"
 #include "cli/login_command.hpp"
@@ -103,7 +104,6 @@
 #include <firelight/saves/save_manager_impl.hpp>
 #include <firelight/saves/sqlite_save_database.hpp>
 #include <firelight/settings/settings_catalog.hpp>
-#include <firelight/settings/sqlite_core_option_repository.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <QApplication>
@@ -198,6 +198,9 @@ int main(int argc, char *argv[]) {
   if (cliOptions.action == firelight::cli::CliAction::ListCores) {
     return firelight::cli::runListCores(argc, argv);
   }
+  if (cliOptions.action == firelight::cli::CliAction::Doctor) {
+    return firelight::cli::runDoctor(argc, argv, cliOptions);
+  }
 
   // ===== Set up QApplication ===============================================================
   QSurfaceFormat format;
@@ -278,7 +281,7 @@ int main(int argc, char *argv[]) {
 
   // Activity service
   const auto activityDbPath = defaultAppDataPathString + "/activity.db";
-  firelight::activity::SqliteActivityLog activityLog(activityDbPath);
+  firelight::activity::SqliteActivityLog activityLog(activityDbPath.toStdString());
   firelight::ServiceAccessor::setActivityService(&activityLog);
 
   const auto userdataDbPath = defaultAppDataPathString + "/userdata.db";
@@ -336,7 +339,8 @@ int main(int argc, char *argv[]) {
 
   // Input service
   const auto controllerRepositoryDbPath = defaultAppDataPathString + "/controllers.db";
-  firelight::input::SqliteControllerRepository controllerRepository(controllerRepositoryDbPath, platformService);
+  firelight::input::SqliteControllerRepository controllerRepository(controllerRepositoryDbPath.toStdString(),
+                                                                    platformService);
 
   // Resolved relative to the executable, not the working directory — same as
   // the settings catalog below, and for the same reason
@@ -373,11 +377,9 @@ int main(int argc, char *argv[]) {
       netplayLobbyBackend, netplayTransport, userLibraryService, FL_VERSION, &raClient, &inputService,
       [&settingsService] { return std::make_shared<AudioManager>(settingsService); });
 
-  // Caches each core's declared options (populated after a core loads) so the
-  // advanced options editor can list them without the core running
-  firelight::settings::SqliteCoreOptionRepository coreOptionRepository(
-      (defaultAppDataPathString + "/settings.db").toStdString());
-  firelight::ServiceAccessor::setCoreOptionRepository(&coreOptionRepository);
+  // TODO
+  // The settings repository is also the core-option cache
+  firelight::ServiceAccessor::setCoreOptionRepository(&settingsRepository);
 
   // Cheat service
   firelight::cheats::SqliteCheatRepository cheatRepository((defaultAppDataPathString + "/cheats.db").toStdString());
@@ -388,24 +390,7 @@ int main(int argc, char *argv[]) {
   firelight::gui::QtAchievementServiceProxy achievementServiceProxy(achievementService);
   firelight::gui::QtGameArtProxy gameArtProxy(metadataService, steamGridDbArtProvider, mediaAssetRepository);
 
-  // PPSSPP loads a runtime asset tree (fonts, VFPU tables, texture atlases,
-  // compat db) from <system>/PPSSPP. These aren't part of the core DLL, so the
-  // app can't run PSP games without them. Seed the writable core-system copy
-  // once from the assets bundled next to the executable. Idempotent: keyed on a
-  // marker asset so it only runs when the destination hasn't been seeded yet
-  {
-    namespace fs = std::filesystem;
-    const fs::path ppssppDest = fs::path(defaultAppDataPathString.toStdString()) / "core-system" / "PPSSPP";
-    const fs::path ppssppSrc = fs::path(QCoreApplication::applicationDirPath().toStdString()) / "system" / "PPSSPP";
-    std::error_code ec;
-    if (!fs::exists(ppssppDest / "ppge_atlas.zim", ec) && fs::exists(ppssppSrc / "ppge_atlas.zim", ec)) {
-      spdlog::info("Seeding PPSSPP assets: {} -> {}", ppssppSrc.string(), ppssppDest.string());
-      fs::copy(ppssppSrc, ppssppDest, fs::copy_options::recursive | fs::copy_options::overwrite_existing, ec);
-      if (ec) {
-        spdlog::warn("Failed to seed PPSSPP assets: {}", ec.message());
-      }
-    }
-  }
+  firelight::cli::provisionCoreAssets(dataDirs);
 
   // Declared early so it outlives the QML engine and its EmulatorItem: those
   // are destroyed before the objects declared above them, and on exit while a
@@ -563,7 +548,7 @@ int main(int argc, char *argv[]) {
       .inputService = &inputService,
       .achievementManager = &raClient,
       .saveManager = &saveManager,
-      .coreOptionRepository = &coreOptionRepository,
+      .coreOptionRepository = &settingsRepository,
       .cheatRepository = &cheatRepository,
       .platformService = &platformService,
       .coreSystemDirectory = dataDirs.coreSystemPath.toStdString(),

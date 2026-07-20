@@ -69,6 +69,11 @@ CliOptions parseCli(int argc, char **argv) {
   verifyUi->add_option("--settle-ms", opts.settleMs, "How long to wait for a route to finish building")->type_name("N");
   verifyUi->add_flag("--json", opts.json, "Emit the report as JSON");
 
+  auto *doctor = app.add_subcommand("doctor", "Check the install and databases for problems, then exit");
+  doctor->fallthrough();
+  doctor->add_flag("--json", opts.json, "Emit the report as JSON");
+  doctor->add_flag("--strict", opts.strict, "Treat warnings as failures");
+
   auto *login = app.add_subcommand("login", "Log in to RetroAchievements (persists a token), then exit");
   login->add_option("--username", opts.raUsername, "RetroAchievements username")->type_name("USER");
   login->add_option("--password", opts.raPassword, "RetroAchievements password")->type_name("PASS");
@@ -99,6 +104,8 @@ CliOptions parseCli(int argc, char **argv) {
     opts.action = CliAction::RunScan;
   } else if (verifyUi->parsed()) {
     opts.action = CliAction::VerifyUi;
+  } else if (doctor->parsed()) {
+    opts.action = CliAction::Doctor;
   } else if (login->parsed()) {
     opts.action = CliAction::Login;
   } else if (listSettings) {

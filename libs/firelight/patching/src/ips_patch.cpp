@@ -1,9 +1,8 @@
-#include "ips_patch.hpp"
-
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <patching/ips_patch.hpp>
 #include <spdlog/spdlog.h>
 
 namespace firelight::patching {

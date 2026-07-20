@@ -48,12 +48,28 @@ struct CoreDeviceVariant {
   bool isDefault = false; // the port's default device for this core
 };
 
+// Whether a registered core is actually installed and reachable
+struct CoreAvailability {
+  std::string coreId;
+  std::string expectedPath;
+  bool present = false; // the file exists on disk
+  // Reachable through resolveCoreName: a core with no supported platforms can
+  // never be selected
+  bool reachable = false;
+  // Platforms that name this core as their default and so cannot launch without
+  // it
+  std::vector<int> defaultForPlatforms;
+};
+
 // The authority on which cores exist, which platforms each can run, and each
 // platform's default core. Decouples the core from the platform: the platform
 // is the stable identity, the core is a resolvable/overridable attribute
 class CoreRegistry {
 public:
   static CoreRegistry &instance();
+
+  // Every registered core cross-referenced against what is installed on disk
+  [[nodiscard]] std::vector<CoreAvailability> checkAvailability() const;
 
   // The known-good default core for a platform ("" if none)
   [[nodiscard]] std::string defaultCoreForPlatform(int platformId) const;
@@ -106,7 +122,7 @@ private:
   std::vector<CoreInfo> m_cores;
   std::map<int, std::string> m_platformDefaults;
   std::map<std::string, std::vector<CoreDeviceVariant>> m_coreDevices;
-  std::string m_sessionCoreOverride; // CLI `--core`; empty = none.
+  std::string m_sessionCoreOverride; // CLI `--core`; empty = none
 };
 
 } // namespace firelight

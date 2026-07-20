@@ -4,18 +4,21 @@
 #include <firelight/migrations/migration_runner.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
-#include <QDateTime>
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QThread>
+#include <SQLiteCpp/Database.h>
+#include <SQLiteCpp/Statement.h>
+#include <SQLiteCpp/Transaction.h>
+#include <chrono>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 #include <utility>
 
-constexpr auto DATABASE_PREFIX = "controllers_";
-
 namespace firelight::input {
 namespace {
+int64_t nowMs() {
+  using namespace std::chrono;
+  return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
 std::string serializeAnalog(const AnalogSettings &settings) { return nlohmann::json(settings).dump(); }
 
 AnalogSettings deserializeAnalog(const std::string &data) {
@@ -30,155 +33,161 @@ AnalogSettings deserializeAnalog(const std::string &data) {
 }
 } // namespace
 
-SqliteControllerRepository::SqliteControllerRepository(QString dbFilePath, platforms::PlatformService &platformService)
+SqliteControllerRepository::SqliteControllerRepository(std::string dbFilePath,
+                                                       platforms::PlatformService &platformService)
     : m_dbFilePath(std::move(dbFilePath)), m_platformService(platformService) {
-  auto db = getDatabase();
-
-  const auto exec = [&db](const char *sql) {
-    QSqlQuery query(db);
-    query.prepare(sql);
-    if (!query.exec()) {
-      spdlog::error("Table creation failed: {}", query.lastError().text().toStdString());
-    }
-  };
+  m_db = std::make_unique<SQLite::Database>(m_dbFilePath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
   // Forward-only schema migrations, stamped into PRAGMA user_version. A future
-  // schema change adds the next-numbered migration instead of renaming tables
-  // (the old `_v3`-suffix approach)
-  const auto createSchemaV1 = [&exec] {
-    exec("CREATE TABLE IF NOT EXISTS profiles("
-         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-         "name TEXT NOT NULL UNIQUE,"
-         "kind INTEGER NOT NULL DEFAULT 0,"
-         "builtin INTEGER NOT NULL DEFAULT 0,"
-         "based_on_type INTEGER NOT NULL DEFAULT -1,"
-         "icon TEXT,"
-         "analog_json TEXT,"
-         "created_at INTEGER NOT NULL,"
-         "updated_at INTEGER NOT NULL);");
+  // schema change adds the next-numbered migration
+  const std::vector<migrations::Migration> schema = {
+      {1,
+       [this] {
+         m_db->exec("CREATE TABLE IF NOT EXISTS profiles("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    "name TEXT NOT NULL UNIQUE,"
+                    "kind INTEGER NOT NULL DEFAULT 0,"
+                    "builtin INTEGER NOT NULL DEFAULT 0,"
+                    "based_on_type INTEGER NOT NULL DEFAULT -1,"
+                    "icon TEXT,"
+                    "analog_json TEXT,"
+                    "preset_id TEXT NOT NULL DEFAULT '',"
+                    "created_at INTEGER NOT NULL,"
+                    "updated_at INTEGER NOT NULL);");
 
-    exec("CREATE TABLE IF NOT EXISTS mappings("
-         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-         "profile_id INTEGER NOT NULL,"
-         "platform_id INTEGER NOT NULL,"
-         "controller_type INTEGER NOT NULL,"
-         "mapping_data TEXT,"
-         "created_at INTEGER NOT NULL,"
-         "UNIQUE(profile_id, platform_id, controller_type));");
+         m_db->exec("CREATE TABLE IF NOT EXISTS mappings("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    "profile_id INTEGER NOT NULL,"
+                    "platform_id INTEGER NOT NULL,"
+                    "controller_type INTEGER NOT NULL,"
+                    "mapping_data TEXT,"
+                    "created_at INTEGER NOT NULL,"
+                    "UNIQUE(profile_id, platform_id, controller_type));");
 
-    exec("CREATE TABLE IF NOT EXISTS shortcuts("
-         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-         "profile_id INTEGER NOT NULL UNIQUE,"
-         "mapping_data TEXT,"
-         "created_at INTEGER NOT NULL);");
+         m_db->exec("CREATE TABLE IF NOT EXISTS shortcuts("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    "profile_id INTEGER NOT NULL UNIQUE,"
+                    "mapping_data TEXT,"
+                    "created_at INTEGER NOT NULL);");
 
-    exec("CREATE TABLE IF NOT EXISTS devices("
-         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-         "device_name TEXT,"
-         "device_type INTEGER NOT NULL DEFAULT 0,"
-         "vendor_id INTEGER NOT NULL,"
-         "product_id INTEGER NOT NULL,"
-         "product_version INTEGER NOT NULL,"
-         "display_name TEXT,"
-         "active_profile_id INTEGER NOT NULL,"
-         "created_at INTEGER NOT NULL,"
-         "UNIQUE(vendor_id, product_id, product_version));");
+         m_db->exec("CREATE TABLE IF NOT EXISTS devices("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    "device_name TEXT,"
+                    "device_type INTEGER NOT NULL DEFAULT 0,"
+                    "vendor_id INTEGER NOT NULL,"
+                    "product_id INTEGER NOT NULL,"
+                    "product_version INTEGER NOT NULL,"
+                    "display_name TEXT,"
+                    "active_profile_id INTEGER NOT NULL,"
+                    "created_at INTEGER NOT NULL,"
+                    "UNIQUE(vendor_id, product_id, product_version));");
 
-    exec("CREATE TABLE IF NOT EXISTS game_overrides("
-         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-         "content_hash TEXT NOT NULL UNIQUE,"
-         "profile_id INTEGER NOT NULL,"
-         "created_at INTEGER NOT NULL);");
+         m_db->exec("CREATE TABLE IF NOT EXISTS game_overrides("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    "content_hash TEXT NOT NULL UNIQUE,"
+                    "profile_id INTEGER NOT NULL,"
+                    "created_at INTEGER NOT NULL);");
 
-    exec("CREATE TABLE IF NOT EXISTS platform_preferences("
-         "platform_id INTEGER PRIMARY KEY,"
-         "gamepad_type INTEGER NOT NULL);");
+         m_db->exec("CREATE TABLE IF NOT EXISTS platform_preferences("
+                    "platform_id INTEGER PRIMARY KEY,"
+                    "gamepad_type INTEGER NOT NULL);");
+       }},
   };
 
-  // The preset a profile's shortcuts were seeded from, so the editor can show
-  // which rows have been changed since and reset them back
-  const auto addPresetIdV2 = [&exec] { exec("ALTER TABLE profiles ADD COLUMN preset_id TEXT NOT NULL DEFAULT '';"); };
-
-  const std::vector<migrations::Migration> schema = {{1, createSchemaV1}, {2, addPresetIdV2}};
-
-  QSqlQuery versionQuery("PRAGMA user_version", db);
-  const int currentVersion = versionQuery.next() ? versionQuery.value(0).toInt() : 0;
-
-  db.transaction();
-  applyMigrations(currentVersion, schema,
-                  [&db](const int version) { QSqlQuery(db).exec(QString("PRAGMA user_version = %1").arg(version)); });
-  db.commit();
+  try {
+    SQLite::Transaction transaction(*m_db);
+    const int currentVersion = m_db->execAndGet("PRAGMA user_version").getInt();
+    migrations::applyMigrations(currentVersion, schema,
+                                [this](const int v) { m_db->exec("PRAGMA user_version = " + std::to_string(v)); });
+    transaction.commit();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to initialize controller store: {}", e.what());
+  }
 }
 
+SqliteControllerRepository::~SqliteControllerRepository() = default;
+
 void SqliteControllerRepository::setPlatformPreferredType(const int platformId, const int gamepadType) {
-  QSqlQuery query(getDatabase());
-  query.prepare("INSERT OR REPLACE INTO platform_preferences (platform_id, "
-                "gamepad_type) VALUES (:platformId, :gamepadType)");
-  query.bindValue(":platformId", platformId);
-  query.bindValue(":gamepadType", gamepadType);
-  if (!query.exec()) {
-    spdlog::error("Failed to set platform preference for {}: {}", platformId, query.lastError().text().toStdString());
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "INSERT OR REPLACE INTO platform_preferences(platform_id, gamepad_type) "
+                                   "VALUES(:platformId, :gamepadType);");
+    query.bind(":platformId", platformId);
+    query.bind(":gamepadType", gamepadType);
+    query.exec();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to set platform preference for {}: {}", platformId, e.what());
   }
 }
 
 void SqliteControllerRepository::clearPlatformPreferredType(const int platformId) {
-  QSqlQuery query(getDatabase());
-  query.prepare("DELETE FROM platform_preferences WHERE platform_id = :platformId");
-  query.bindValue(":platformId", platformId);
-  if (!query.exec()) {
-    spdlog::error("Failed to clear platform preference for {}: {}", platformId, query.lastError().text().toStdString());
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "DELETE FROM platform_preferences WHERE platform_id = :platformId;");
+    query.bind(":platformId", platformId);
+    query.exec();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to clear platform preference for {}: {}", platformId, e.what());
   }
 }
 
 std::optional<int> SqliteControllerRepository::getPlatformPreferredType(const int platformId) const {
-  QSqlQuery query(getDatabase());
-  query.prepare("SELECT gamepad_type FROM platform_preferences WHERE "
-                "platform_id = :platformId");
-  query.bindValue(":platformId", platformId);
-  if (!query.exec() || !query.next()) {
-    return std::nullopt;
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "SELECT gamepad_type FROM platform_preferences WHERE platform_id = :platformId;");
+    query.bind(":platformId", platformId);
+    if (query.executeStep()) {
+      return query.getColumn("gamepad_type").getInt();
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to read platform preference for {}: {}", platformId, e.what());
   }
-  return query.value("gamepad_type").toInt();
+
+  return std::nullopt;
 }
 
 std::optional<DeviceInfo> SqliteControllerRepository::getDeviceInfo(DeviceIdentifier identifier) const {
-  QSqlQuery query(getDatabase());
-  query.prepare("SELECT * FROM devices WHERE vendor_id = :vendorId AND "
-                "product_id = :productId AND product_version = :productVersion");
-  query.bindValue(":vendorId", identifier.vendorId);
-  query.bindValue(":productId", identifier.productId);
-  query.bindValue(":productVersion", identifier.productVersion);
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM devices WHERE vendor_id = :vendorId AND product_id = :productId "
+                                   "AND product_version = :productVersion;");
+    query.bind(":vendorId", identifier.vendorId);
+    query.bind(":productId", identifier.productId);
+    query.bind(":productVersion", identifier.productVersion);
 
-  if (!query.exec() || !query.next()) {
-    spdlog::debug("Device info not found for: {}", identifier.deviceName);
-    return std::nullopt;
+    if (query.executeStep()) {
+      return DeviceInfo{
+          .displayName = query.getColumn("display_name").getString(),
+          .profileId = query.getColumn("active_profile_id").getInt(),
+      };
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to read device info for {}: {}", identifier.deviceName, e.what());
   }
 
-  return DeviceInfo{
-      .displayName = query.value("display_name").toString().toStdString(),
-      .profileId = query.value("active_profile_id").toInt(),
-  };
+  spdlog::debug("Device info not found for: {}", identifier.deviceName);
+  return std::nullopt;
 }
 
 void SqliteControllerRepository::updateDeviceInfo(DeviceIdentifier identifier, const DeviceInfo &info) {
-  QSqlQuery query(getDatabase());
-  query.prepare("INSERT OR REPLACE INTO devices (device_name, device_type, vendor_id, "
-                "product_id, product_version, display_name, active_profile_id, "
-                "created_at) VALUES (:deviceName, :deviceType, :vendorId, :productId, "
-                ":productVersion, :displayName, :activeProfileId, :createdAt)");
-  query.bindValue(":deviceName", QString::fromStdString(identifier.deviceName));
-  query.bindValue(":deviceType", static_cast<int>(identifier.type));
-  query.bindValue(":vendorId", identifier.vendorId);
-  query.bindValue(":productId", identifier.productId);
-  query.bindValue(":productVersion", identifier.productVersion);
-  query.bindValue(":displayName", QString::fromStdString(info.displayName));
-  query.bindValue(":activeProfileId", info.profileId);
-  query.bindValue(":createdAt", QDateTime::currentMSecsSinceEpoch());
-
-  if (!query.exec()) {
-    spdlog::error("Failed to update device info: {}", query.lastError().text().toStdString());
-  } else {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "INSERT OR REPLACE INTO devices(device_name, device_type, vendor_id, product_id, "
+                                   "product_version, display_name, active_profile_id, created_at) "
+                                   "VALUES(:deviceName, :deviceType, :vendorId, :productId, :productVersion, "
+                                   ":displayName, :activeProfileId, :createdAt);");
+    query.bind(":deviceName", identifier.deviceName);
+    query.bind(":deviceType", static_cast<int>(identifier.type));
+    query.bind(":vendorId", identifier.vendorId);
+    query.bind(":productId", identifier.productId);
+    query.bind(":productVersion", identifier.productVersion);
+    query.bind(":displayName", info.displayName);
+    query.bind(":activeProfileId", info.profileId);
+    query.bind(":createdAt", nowMs());
+    query.exec();
     spdlog::debug("Updated device info for: {}", identifier.deviceName);
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to update device info: {}", e.what());
   }
 }
 
@@ -220,6 +229,8 @@ void seedShortcuts(ShortcutMapping &mapping, const std::string &presetId, const 
 } // namespace
 
 void SqliteControllerRepository::loadProfileContents(const std::shared_ptr<GamepadProfile> &profile) {
+  std::lock_guard lock(m_mutex);
+
   for (const auto &platform : m_platformService.listPlatforms()) {
     for (const auto &controller : platform.controllerTypes) {
       auto mapping = getOrCreateMapping(profile->getId(), platform.id, controller.id);
@@ -234,36 +245,47 @@ void SqliteControllerRepository::loadProfileContents(const std::shared_ptr<Gamep
   }
 
   const auto syncShortcuts = [id = profile->getId(), this](const ShortcutMapping &mapping) {
-    QSqlQuery updateQuery(getDatabase());
-    updateQuery.prepare("UPDATE shortcuts SET mapping_data = :mappingData "
-                        "WHERE profile_id = :profileId");
-    updateQuery.bindValue(":mappingData", QString::fromStdString(mapping.serialize()));
-    updateQuery.bindValue(":profileId", id);
-    if (!updateQuery.exec()) {
-      spdlog::error("Failed to update shortcuts: {}", updateQuery.lastError().text().toStdString());
+    std::lock_guard syncLock(m_mutex);
+    try {
+      SQLite::Statement update(*m_db,
+                               "UPDATE shortcuts SET mapping_data = :mappingData WHERE profile_id = :profileId;");
+      update.bind(":mappingData", mapping.serialize());
+      update.bind(":profileId", id);
+      update.exec();
+    } catch (const std::exception &e) {
+      spdlog::error("Failed to update shortcuts: {}", e.what());
     }
   };
 
-  QSqlQuery shortcutQuery(getDatabase());
-  shortcutQuery.prepare("SELECT * FROM shortcuts WHERE profile_id = :profileId");
-  shortcutQuery.bindValue(":profileId", profile->getId());
+  bool hasRow = false;
+  std::string mappingData;
+  try {
+    SQLite::Statement query(*m_db, "SELECT mapping_data FROM shortcuts WHERE profile_id = :profileId;");
+    query.bind(":profileId", profile->getId());
+    if (query.executeStep()) {
+      hasRow = true;
+      mappingData = query.getColumn("mapping_data").getString();
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to read shortcuts for profile {}: {}", profile->getId(), e.what());
+  }
 
-  if (shortcutQuery.exec() && shortcutQuery.next()) {
-    const auto mappingData = shortcutQuery.value("mapping_data").toString().toStdString();
+  if (hasRow) {
     auto shortcutMapping = std::make_shared<ShortcutMapping>(syncShortcuts);
     shortcutMapping->deserialize(mappingData);
     profile->setShortcutMapping(shortcutMapping);
   } else {
-    QSqlQuery createShortcutsQuery(getDatabase());
-    createShortcutsQuery.prepare("INSERT INTO shortcuts (profile_id, mapping_data, created_at) "
-                                 "VALUES (:profileId, :mappingData, :createdAt)");
-    createShortcutsQuery.bindValue(":profileId", profile->getId());
-    createShortcutsQuery.bindValue(":mappingData", QString());
-    createShortcutsQuery.bindValue(":createdAt", QDateTime::currentMSecsSinceEpoch());
-    if (!createShortcutsQuery.exec()) {
-      spdlog::error("Failed to create shortcuts for profile ID {}: {}", profile->getId(),
-                    createShortcutsQuery.lastError().text().toStdString());
+    try {
+      SQLite::Statement insert(*m_db, "INSERT INTO shortcuts(profile_id, mapping_data, created_at) "
+                                      "VALUES(:profileId, :mappingData, :createdAt);");
+      insert.bind(":profileId", profile->getId());
+      insert.bind(":mappingData", "");
+      insert.bind(":createdAt", nowMs());
+      insert.exec();
+    } catch (const std::exception &e) {
+      spdlog::error("Failed to create shortcuts for profile ID {}: {}", profile->getId(), e.what());
     }
+
     auto shortcutMapping = std::make_shared<ShortcutMapping>(syncShortcuts);
     seedShortcuts(*shortcutMapping, profile->getPresetId(),
                   profile->isKeyboardProfile() ? DeviceType::Keyboard : DeviceType::Gamepad);
@@ -273,26 +295,30 @@ void SqliteControllerRepository::loadProfileContents(const std::shared_ptr<Gamep
 
 std::shared_ptr<GamepadProfile> SqliteControllerRepository::createProfile(const std::string name,
                                                                           const DeviceType device) {
-  const auto now = QDateTime::currentMSecsSinceEpoch();
+  std::lock_guard lock(m_mutex);
+
   const auto presetId = ShortcutRegistry::instance().defaultPresetId();
 
-  QSqlQuery query(getDatabase());
-  query.prepare("INSERT INTO profiles (name, kind, builtin, based_on_type, "
-                "icon, analog_json, preset_id, created_at, updated_at) VALUES (:name, "
-                ":kind, 0, -1, '', :analog, :presetId, :createdAt, :updatedAt)");
-  query.bindValue(":name", QString::fromStdString(name));
-  query.bindValue(":kind", device == DeviceType::Keyboard ? 1 : 0);
-  query.bindValue(":analog", QString::fromStdString(serializeAnalog(AnalogSettings{})));
-  query.bindValue(":presetId", QString::fromStdString(presetId));
-  query.bindValue(":createdAt", now);
-  query.bindValue(":updatedAt", now);
-
-  if (!query.exec()) {
-    spdlog::error("Failed to create new profile: {}", query.lastError().text().toStdString());
+  int newId = -1;
+  try {
+    SQLite::Statement query(*m_db, "INSERT INTO profiles(name, kind, builtin, based_on_type, icon, analog_json, "
+                                   "preset_id, created_at, updated_at) "
+                                   "VALUES(:name, :kind, 0, -1, '', :analog, :presetId, :createdAt, :updatedAt);");
+    const auto now = nowMs();
+    query.bind(":name", name);
+    query.bind(":kind", device == DeviceType::Keyboard ? 1 : 0);
+    query.bind(":analog", serializeAnalog(AnalogSettings{}));
+    query.bind(":presetId", presetId);
+    query.bind(":createdAt", now);
+    query.bind(":updatedAt", now);
+    query.exec();
+    newId = static_cast<int>(m_db->getLastInsertRowid());
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to create new profile: {}", e.what());
     return nullptr;
   }
 
-  auto profile = std::make_shared<GamepadProfile>(query.lastInsertId().toInt());
+  auto profile = std::make_shared<GamepadProfile>(newId);
   profile->setName(name);
   // Both are set before loadProfileContents, which seeds the profile's
   // shortcuts from the preset for its kind of device
@@ -305,29 +331,35 @@ std::shared_ptr<GamepadProfile> SqliteControllerRepository::createProfile(const 
 }
 
 std::shared_ptr<GamepadProfile> SqliteControllerRepository::getProfile(const int id) {
+  std::lock_guard lock(m_mutex);
+
   for (const auto &profile : m_profiles) {
     if (profile->getId() == id) {
       return profile;
     }
   }
 
-  QSqlQuery query(getDatabase());
-  query.prepare("SELECT * FROM profiles WHERE id = :id");
-  query.bindValue(":id", id);
+  std::shared_ptr<GamepadProfile> profile;
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM profiles WHERE id = :id;");
+    query.bind(":id", id);
+    if (!query.executeStep()) {
+      spdlog::error("Profile with ID {} not found", id);
+      return nullptr;
+    }
 
-  if (!query.exec() || !query.next()) {
-    spdlog::error("Profile with ID {} not found", id);
+    profile = std::make_shared<GamepadProfile>(query.getColumn("id").getInt());
+    profile->setName(query.getColumn("name").getString());
+    profile->setIsKeyboardProfile(query.getColumn("kind").getInt() == 1);
+    profile->setBuiltin(query.getColumn("builtin").getInt() != 0);
+    profile->setBasedOnType(query.getColumn("based_on_type").getInt());
+    profile->setIcon(query.getColumn("icon").getString());
+    profile->setPresetId(query.getColumn("preset_id").getString());
+    profile->setDefaultAnalogSettings(deserializeAnalog(query.getColumn("analog_json").getString()));
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to read profile {}: {}", id, e.what());
     return nullptr;
   }
-
-  auto profile = std::make_shared<GamepadProfile>(query.value("id").toInt());
-  profile->setName(query.value("name").toString().toStdString());
-  profile->setIsKeyboardProfile(query.value("kind").toInt() == 1);
-  profile->setBuiltin(query.value("builtin").toInt() != 0);
-  profile->setBasedOnType(query.value("based_on_type").toInt());
-  profile->setIcon(query.value("icon").toString().toStdString());
-  profile->setPresetId(query.value("preset_id").toString().toStdString());
-  profile->setDefaultAnalogSettings(deserializeAnalog(query.value("analog_json").toString().toStdString()));
 
   loadProfileContents(profile);
 
@@ -336,17 +368,22 @@ std::shared_ptr<GamepadProfile> SqliteControllerRepository::getProfile(const int
 }
 
 std::vector<std::shared_ptr<GamepadProfile>> SqliteControllerRepository::listProfiles() {
-  std::vector<std::shared_ptr<GamepadProfile>> result;
+  std::lock_guard lock(m_mutex);
 
-  QSqlQuery query(getDatabase());
-  query.prepare("SELECT id FROM profiles ORDER BY id");
-  if (!query.exec()) {
-    spdlog::error("Failed to list profiles: {}", query.lastError().text().toStdString());
-    return result;
+  std::vector<int> ids;
+  try {
+    SQLite::Statement query(*m_db, "SELECT id FROM profiles ORDER BY id;");
+    while (query.executeStep()) {
+      ids.push_back(query.getColumn("id").getInt());
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to list profiles: {}", e.what());
+    return {};
   }
 
-  while (query.next()) {
-    if (auto profile = getProfile(query.value("id").toInt())) {
+  std::vector<std::shared_ptr<GamepadProfile>> result;
+  for (const int id : ids) {
+    if (auto profile = getProfile(id)) {
       result.emplace_back(profile);
     }
   }
@@ -354,6 +391,8 @@ std::vector<std::shared_ptr<GamepadProfile>> SqliteControllerRepository::listPro
 }
 
 std::shared_ptr<GamepadProfile> SqliteControllerRepository::cloneProfile(const int sourceId, std::string newName) {
+  std::lock_guard lock(m_mutex);
+
   const auto source = getProfile(sourceId);
   if (!source) {
     spdlog::error("Cannot clone: source profile {} not found", sourceId);
@@ -391,21 +430,24 @@ std::shared_ptr<GamepadProfile> SqliteControllerRepository::cloneProfile(const i
 }
 
 bool SqliteControllerRepository::deleteProfile(const int id) {
+  std::lock_guard lock(m_mutex);
+
   const auto profile = getProfile(id);
   if (profile && profile->isBuiltin()) {
     spdlog::warn("Refusing to delete built-in profile {}", id);
     return false;
   }
 
-  QSqlQuery query(getDatabase());
-  for (const char *sql : {"DELETE FROM profiles WHERE id = :id", "DELETE FROM mappings WHERE profile_id = :id",
-                          "DELETE FROM shortcuts WHERE profile_id = :id"}) {
-    query.prepare(sql);
-    query.bindValue(":id", id);
-    if (!query.exec()) {
-      spdlog::error("Failed to delete profile {}: {}", id, query.lastError().text().toStdString());
-      return false;
+  try {
+    for (const char *sql : {"DELETE FROM profiles WHERE id = :id;", "DELETE FROM mappings WHERE profile_id = :id;",
+                            "DELETE FROM shortcuts WHERE profile_id = :id;"}) {
+      SQLite::Statement query(*m_db, sql);
+      query.bind(":id", id);
+      query.exec();
     }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to delete profile {}: {}", id, e.what());
+    return false;
   }
 
   std::erase_if(m_profiles, [id](const std::shared_ptr<GamepadProfile> &p) { return p->getId() == id; });
@@ -416,14 +458,16 @@ bool SqliteControllerRepository::deleteProfile(const int id) {
 }
 
 bool SqliteControllerRepository::renameProfile(const int id, std::string newName) {
-  QSqlQuery query(getDatabase());
-  query.prepare("UPDATE profiles SET name = :name, updated_at = :updatedAt "
-                "WHERE id = :id");
-  query.bindValue(":name", QString::fromStdString(newName));
-  query.bindValue(":updatedAt", QDateTime::currentMSecsSinceEpoch());
-  query.bindValue(":id", id);
-  if (!query.exec()) {
-    spdlog::error("Failed to rename profile {}: {}", id, query.lastError().text().toStdString());
+  std::lock_guard lock(m_mutex);
+
+  try {
+    SQLite::Statement query(*m_db, "UPDATE profiles SET name = :name, updated_at = :updatedAt WHERE id = :id;");
+    query.bind(":name", newName);
+    query.bind(":updatedAt", nowMs());
+    query.bind(":id", id);
+    query.exec();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to rename profile {}: {}", id, e.what());
     return false;
   }
 
@@ -434,15 +478,17 @@ bool SqliteControllerRepository::renameProfile(const int id, std::string newName
 }
 
 void SqliteControllerRepository::setProfileAnalogSettings(const int profileId, const AnalogSettings &settings) {
-  QSqlQuery query(getDatabase());
-  query.prepare("UPDATE profiles SET analog_json = :analog, updated_at = "
-                ":updatedAt WHERE id = :id");
-  query.bindValue(":analog", QString::fromStdString(serializeAnalog(settings)));
-  query.bindValue(":updatedAt", QDateTime::currentMSecsSinceEpoch());
-  query.bindValue(":id", profileId);
-  if (!query.exec()) {
-    spdlog::error("Failed to update analog settings for profile {}: {}", profileId,
-                  query.lastError().text().toStdString());
+  std::lock_guard lock(m_mutex);
+
+  try {
+    SQLite::Statement query(*m_db,
+                            "UPDATE profiles SET analog_json = :analog, updated_at = :updatedAt WHERE id = :id;");
+    query.bind(":analog", serializeAnalog(settings));
+    query.bind(":updatedAt", nowMs());
+    query.bind(":id", profileId);
+    query.exec();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to update analog settings for profile {}: {}", profileId, e.what());
     return;
   }
 
@@ -452,14 +498,17 @@ void SqliteControllerRepository::setProfileAnalogSettings(const int profileId, c
 }
 
 void SqliteControllerRepository::setProfilePresetId(const int profileId, const std::string &presetId) {
-  QSqlQuery query(getDatabase());
-  query.prepare("UPDATE profiles SET preset_id = :presetId, updated_at = "
-                ":updatedAt WHERE id = :id");
-  query.bindValue(":presetId", QString::fromStdString(presetId));
-  query.bindValue(":updatedAt", QDateTime::currentMSecsSinceEpoch());
-  query.bindValue(":id", profileId);
-  if (!query.exec()) {
-    spdlog::error("Failed to update preset for profile {}: {}", profileId, query.lastError().text().toStdString());
+  std::lock_guard lock(m_mutex);
+
+  try {
+    SQLite::Statement query(*m_db,
+                            "UPDATE profiles SET preset_id = :presetId, updated_at = :updatedAt WHERE id = :id;");
+    query.bind(":presetId", presetId);
+    query.bind(":updatedAt", nowMs());
+    query.bind(":id", profileId);
+    query.exec();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to update preset for profile {}: {}", profileId, e.what());
     return;
   }
 
@@ -469,6 +518,8 @@ void SqliteControllerRepository::setProfilePresetId(const int profileId, const s
 }
 
 std::string SqliteControllerRepository::exportProfile(const int id) {
+  std::lock_guard lock(m_mutex);
+
   const auto profile = getProfile(id);
   if (!profile) {
     return {};
@@ -499,6 +550,8 @@ std::string SqliteControllerRepository::exportProfile(const int id) {
 }
 
 std::shared_ptr<GamepadProfile> SqliteControllerRepository::importProfile(const std::string &json) {
+  std::lock_guard lock(m_mutex);
+
   const auto j = nlohmann::json::parse(json, nullptr, false);
   if (j.is_discarded() || !j.is_object()) {
     spdlog::error("Cannot import profile: invalid JSON");
@@ -545,53 +598,49 @@ std::shared_ptr<GamepadProfile> SqliteControllerRepository::importProfile(const 
 }
 
 std::optional<int> SqliteControllerRepository::getGameProfileOverride(const std::string &contentHash) const {
-  QSqlQuery query(getDatabase());
-  query.prepare("SELECT profile_id FROM game_overrides WHERE content_hash = :hash");
-  query.bindValue(":hash", QString::fromStdString(contentHash));
-  if (!query.exec() || !query.next()) {
-    return std::nullopt;
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "SELECT profile_id FROM game_overrides WHERE content_hash = :hash;");
+    query.bind(":hash", contentHash);
+    if (query.executeStep()) {
+      return query.getColumn("profile_id").getInt();
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to read game override for {}: {}", contentHash, e.what());
   }
-  return query.value("profile_id").toInt();
+
+  return std::nullopt;
 }
 
 void SqliteControllerRepository::setGameProfileOverride(const std::string &contentHash, const int profileId) {
-  QSqlQuery query(getDatabase());
-  query.prepare("INSERT OR REPLACE INTO game_overrides (content_hash, "
-                "profile_id, created_at) VALUES (:hash, :profileId, :createdAt)");
-  query.bindValue(":hash", QString::fromStdString(contentHash));
-  query.bindValue(":profileId", profileId);
-  query.bindValue(":createdAt", QDateTime::currentMSecsSinceEpoch());
-  if (!query.exec()) {
-    spdlog::error("Failed to set game override for {}: {}", contentHash, query.lastError().text().toStdString());
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "INSERT OR REPLACE INTO game_overrides(content_hash, profile_id, created_at) "
+                                   "VALUES(:hash, :profileId, :createdAt);");
+    query.bind(":hash", contentHash);
+    query.bind(":profileId", profileId);
+    query.bind(":createdAt", nowMs());
+    query.exec();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to set game override for {}: {}", contentHash, e.what());
   }
 }
 
 void SqliteControllerRepository::clearGameProfileOverride(const std::string &contentHash) {
-  QSqlQuery query(getDatabase());
-  query.prepare("DELETE FROM game_overrides WHERE content_hash = :hash");
-  query.bindValue(":hash", QString::fromStdString(contentHash));
-  if (!query.exec()) {
-    spdlog::error("Failed to clear game override for {}: {}", contentHash, query.lastError().text().toStdString());
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "DELETE FROM game_overrides WHERE content_hash = :hash;");
+    query.bind(":hash", contentHash);
+    query.exec();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to clear game override for {}: {}", contentHash, e.what());
   }
-}
-
-QSqlDatabase SqliteControllerRepository::getDatabase() const {
-  const auto name = DATABASE_PREFIX + QString::number(reinterpret_cast<quint64>(QThread::currentThread()), 16);
-  if (QSqlDatabase::contains(name)) {
-    return QSqlDatabase::database(name);
-  }
-
-  spdlog::debug("Database connection with name {} does not exist; creating", name.toStdString());
-  auto db = QSqlDatabase::addDatabase("QSQLITE", name);
-  db.setDatabaseName(m_dbFilePath);
-  if (!db.open()) {
-    spdlog::error("Failed to open controller database connection '{}'", name.toStdString());
-  }
-  return db;
 }
 
 std::shared_ptr<InputMapping> SqliteControllerRepository::getOrCreateMapping(int profileId, const int platformId,
                                                                              const int controllerTypeId) {
+  std::lock_guard lock(m_mutex);
+
   for (const auto &mapping : m_inputMappings) {
     if (mapping->getControllerProfileId() == static_cast<unsigned>(profileId) &&
         mapping->getPlatformId() == static_cast<unsigned>(platformId) &&
@@ -601,52 +650,59 @@ std::shared_ptr<InputMapping> SqliteControllerRepository::getOrCreateMapping(int
   }
 
   const auto syncMapping = [this](InputMapping &m) {
-    QSqlQuery updateQuery(getDatabase());
-    updateQuery.prepare("UPDATE mappings SET mapping_data = :mappingData WHERE id = :id");
-    updateQuery.bindValue(":mappingData", QString::fromStdString(m.serialize()));
-    updateQuery.bindValue(":id", m.getId());
-    if (!updateQuery.exec()) {
-      spdlog::error("Update failed: {}", updateQuery.lastError().text().toStdString());
+    std::lock_guard syncLock(m_mutex);
+    try {
+      SQLite::Statement update(*m_db, "UPDATE mappings SET mapping_data = :mappingData WHERE id = :id;");
+      update.bind(":mappingData", m.serialize());
+      update.bind(":id", m.getId());
+      update.exec();
+    } catch (const std::exception &e) {
+      spdlog::error("Update failed: {}", e.what());
     }
   };
 
-  QSqlQuery mappingsQuery(getDatabase());
-  mappingsQuery.prepare("SELECT * FROM mappings WHERE profile_id = :profileId AND "
-                        "platform_id = :platformId AND controller_type = :controllerType");
-  mappingsQuery.bindValue(":profileId", profileId);
-  mappingsQuery.bindValue(":platformId", platformId);
-  mappingsQuery.bindValue(":controllerType", controllerTypeId);
-
-  if (!mappingsQuery.exec()) {
-    spdlog::error("Failed to fetch mappings for profile ID {}: {}", profileId,
-                  mappingsQuery.lastError().text().toStdString());
+  bool hasRow = false;
+  int mappingId = -1;
+  std::string mappingData;
+  try {
+    SQLite::Statement query(*m_db, "SELECT id, mapping_data FROM mappings WHERE profile_id = :profileId AND "
+                                   "platform_id = :platformId AND controller_type = :controllerType;");
+    query.bind(":profileId", profileId);
+    query.bind(":platformId", platformId);
+    query.bind(":controllerType", controllerTypeId);
+    if (query.executeStep()) {
+      hasRow = true;
+      mappingId = query.getColumn("id").getInt();
+      mappingData = query.getColumn("mapping_data").getString();
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to fetch mappings for profile ID {}: {}", profileId, e.what());
     return nullptr;
   }
 
-  if (mappingsQuery.next()) {
-    const auto mappingId = mappingsQuery.value("id").toInt();
+  if (hasRow) {
     auto mapping = std::make_shared<InputMapping>(mappingId, profileId, platformId, controllerTypeId, syncMapping);
-    mapping->deserialize(mappingsQuery.value("mapping_data").toString().toStdString());
+    mapping->deserialize(mappingData);
     m_inputMappings.emplace_back(mapping);
     return mapping;
   }
 
-  QSqlQuery insertQuery(getDatabase());
-  insertQuery.prepare("INSERT INTO mappings (profile_id, platform_id, controller_type, "
-                      "created_at) VALUES (:profileId, :platformId, :controllerType, "
-                      ":createdAt)");
-  insertQuery.bindValue(":profileId", profileId);
-  insertQuery.bindValue(":platformId", platformId);
-  insertQuery.bindValue(":controllerType", controllerTypeId);
-  insertQuery.bindValue(":createdAt", QDateTime::currentMSecsSinceEpoch());
-
-  if (!insertQuery.exec()) {
-    spdlog::error("Insert failed: {}", insertQuery.lastError().text().toStdString());
+  int newId = -1;
+  try {
+    SQLite::Statement insert(*m_db, "INSERT INTO mappings(profile_id, platform_id, controller_type, created_at) "
+                                    "VALUES(:profileId, :platformId, :controllerType, :createdAt);");
+    insert.bind(":profileId", profileId);
+    insert.bind(":platformId", platformId);
+    insert.bind(":controllerType", controllerTypeId);
+    insert.bind(":createdAt", nowMs());
+    insert.exec();
+    newId = static_cast<int>(m_db->getLastInsertRowid());
+  } catch (const std::exception &e) {
+    spdlog::error("Insert failed: {}", e.what());
     return nullptr;
   }
 
-  const auto lastId = insertQuery.lastInsertId().toInt();
-  auto mapping = std::make_shared<InputMapping>(lastId, profileId, platformId, controllerTypeId, syncMapping);
+  auto mapping = std::make_shared<InputMapping>(newId, profileId, platformId, controllerTypeId, syncMapping);
   m_inputMappings.emplace_back(mapping);
   return mapping;
 }

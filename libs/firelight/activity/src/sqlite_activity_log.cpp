@@ -1,30 +1,57 @@
 #include "firelight/activity/sqlite_activity_log.hpp"
 
 #include <firelight/activity/play_session.hpp>
+#include <firelight/migrations/migration_runner.hpp>
 
-#include <QSqlError>
-#include <QSqlQuery>
-#include <QThread>
+#include <SQLiteCpp/Database.h>
+#include <SQLiteCpp/Statement.h>
+#include <SQLiteCpp/Transaction.h>
 #include <spdlog/spdlog.h>
 #include <utility>
 
 namespace firelight::activity {
-constexpr auto DATABASE_PREFIX = "activity_";
+namespace {
+PlaySession readSession(SQLite::Statement &query) {
+  PlaySession session;
+  session.id = query.getColumn("id").getInt();
+  session.contentHash = query.getColumn("content_hash").getString();
+  session.slotNumber = query.getColumn("savefile_slot_number").getInt();
+  session.startTime = query.getColumn("start_time").getInt64();
+  session.endTime = query.getColumn("end_time").getInt64();
+  session.unpausedDurationMillis = query.getColumn("unpaused_duration_seconds").getInt64() * 1000;
+  return session;
+}
+} // namespace
 
-SqliteActivityLog::SqliteActivityLog(QString dbPath) : databasePath(std::move(dbPath)) {
-  QSqlQuery createPlaySessions(getDatabase());
-  createPlaySessions.prepare("CREATE TABLE IF NOT EXISTS play_sessions("
-                             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                             "content_hash TEXT NOT NULL,"
-                             "savefile_slot_number INTEGER NOT NULL,"
-                             "start_time INTEGER NOT NULL,"
-                             "end_time INTEGER NOT NULL,"
-                             "unpaused_duration_seconds INTEGER NOT NULL);");
+SqliteActivityLog::SqliteActivityLog(std::string databaseFile) : m_databaseFile(std::move(databaseFile)) {
+  m_db = std::make_unique<SQLite::Database>(m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+  try {
+    // Forward-only schema migrations (see migration_runner). A future change
+    // adds the next-numbered migration
+    const std::vector<migrations::Migration> schema = {
+        {1,
+         [this] {
+           m_db->exec("CREATE TABLE IF NOT EXISTS play_sessions("
+                      "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                      "content_hash TEXT NOT NULL,"
+                      "savefile_slot_number INTEGER NOT NULL,"
+                      "start_time INTEGER NOT NULL,"
+                      "end_time INTEGER NOT NULL,"
+                      "unpaused_duration_seconds INTEGER NOT NULL);");
+         }},
+    };
 
-  if (!createPlaySessions.exec()) {
-    spdlog::error("Table creation failed: {}", createPlaySessions.lastError().text().toStdString());
+    SQLite::Transaction transaction(*m_db);
+    const int currentVersion = m_db->execAndGet("PRAGMA user_version").getInt();
+    migrations::applyMigrations(currentVersion, schema,
+                                [this](const int v) { m_db->exec("PRAGMA user_version = " + std::to_string(v)); });
+    transaction.commit();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to initialize activity store: {}", e.what());
   }
 }
+
+SqliteActivityLog::~SqliteActivityLog() = default;
 
 bool SqliteActivityLog::createPlaySession(PlaySession &session) {
   if (session.contentHash.empty()) {
@@ -42,136 +69,73 @@ bool SqliteActivityLog::createPlaySession(PlaySession &session) {
     return false;
   }
 
-  const QString queryString = "INSERT INTO play_sessions ("
-                              "content_hash, "
-                              "savefile_slot_number, "
-                              "start_time, "
-                              "end_time, "
-                              "unpaused_duration_seconds) "
-                              "VALUES (:contentHash, :slotNumber, :startTime,"
-                              ":endTime, :unpausedDurationSeconds);";
-  auto query = QSqlQuery(getDatabase());
-  query.prepare(queryString);
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement insert(*m_db, "INSERT INTO play_sessions(content_hash, savefile_slot_number, "
+                                    "start_time, end_time, unpaused_duration_seconds) "
+                                    "VALUES(:contentHash, :slotNumber, :startTime, :endTime, :duration);");
+    insert.bind(":contentHash", session.contentHash);
+    insert.bind(":slotNumber", session.slotNumber);
+    insert.bind(":startTime", static_cast<int64_t>(session.startTime));
+    insert.bind(":endTime", static_cast<int64_t>(session.endTime));
+    insert.bind(":duration", static_cast<int64_t>(session.unpausedDurationMillis / 1000));
+    insert.exec();
 
-  query.bindValue(":contentHash", QString::fromStdString(session.contentHash));
-  query.bindValue(":slotNumber", session.slotNumber);
-  query.bindValue(":startTime", QVariant::fromValue(session.startTime));
-  query.bindValue(":endTime", QVariant::fromValue(session.endTime));
-  query.bindValue(":unpausedDurationSeconds", QVariant::fromValue(session.unpausedDurationMillis / 1000));
-
-  if (!query.exec()) {
-    spdlog::warn("Insert into play_sessions failed: {}", query.lastError().text().toStdString());
+    session.id = static_cast<int>(m_db->getLastInsertRowid());
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::warn("Insert into play_sessions failed: {}", e.what());
     return false;
   }
-
-  session.id = query.lastInsertId().toInt();
-
-  return true;
 }
 
 std::optional<PlaySession> SqliteActivityLog::getLatestPlaySession(std::string contentHash) {
-  const QString queryString = "SELECT * FROM play_sessions WHERE content_hash "
-                              "= :contentHash ORDER BY start_time DESC LIMIT 1;";
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM play_sessions WHERE content_hash = :contentHash "
+                                   "ORDER BY start_time DESC LIMIT 1;");
+    query.bind(":contentHash", contentHash);
 
-  auto query = QSqlQuery(getDatabase());
-  query.prepare(queryString);
-
-  query.bindValue(":contentHash", QString::fromStdString(contentHash));
-
-  if (!query.exec()) {
-    spdlog::warn("Query failed: {}", query.lastError().text().toStdString());
-    return std::nullopt;
-  }
-
-  if (query.next()) {
-    PlaySession session;
-    session.id = query.value("id").toInt();
-    session.contentHash = contentHash;
-    session.slotNumber = query.value("savefile_slot_number").toInt();
-    session.startTime = query.value("start_time").toULongLong();
-    session.endTime = query.value("end_time").toULongLong();
-    session.unpausedDurationMillis = query.value("unpaused_duration_seconds").toULongLong() * 1000;
-
-    return session;
+    if (query.executeStep()) {
+      return readSession(query);
+    }
+  } catch (const std::exception &e) {
+    spdlog::warn("Query failed: {}", e.what());
   }
 
   return std::nullopt;
 }
 
 std::vector<PlaySession> SqliteActivityLog::getPlaySessions(const std::string contentHash) {
-  // Query DB for all play sessions with the given content hash
-  const QString queryString = "SELECT * FROM play_sessions WHERE content_hash "
-                              "= :contentHash ORDER BY start_time DESC;";
+  std::lock_guard lock(m_mutex);
+  std::vector<PlaySession> sessions;
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM play_sessions WHERE content_hash = :contentHash "
+                                   "ORDER BY start_time DESC;");
+    query.bind(":contentHash", contentHash);
 
-  auto query = QSqlQuery(getDatabase());
-  query.prepare(queryString);
-
-  query.bindValue(":contentHash", QString::fromStdString(contentHash));
-
-  if (!query.exec()) {
-    spdlog::warn("Query failed: {}", query.lastError().text().toStdString());
-    return {};
+    while (query.executeStep()) {
+      sessions.push_back(readSession(query));
+    }
+  } catch (const std::exception &e) {
+    spdlog::warn("Query failed: {}", e.what());
   }
 
-  std::vector<PlaySession> playSessions;
-  while (query.next()) {
-    // Create a PlaySession object from the query result
-    PlaySession session;
-    session.contentHash = contentHash;
-    session.slotNumber = query.value("savefile_slot_number").toInt();
-    session.startTime = query.value("start_time").toULongLong();
-    session.endTime = query.value("end_time").toULongLong();
-    session.unpausedDurationMillis = query.value("unpaused_duration_seconds").toULongLong() * 1000;
-    session.slotNumber = query.value("savefile_slot_number").toInt();
-
-    playSessions.push_back(session);
-  }
-
-  return playSessions;
+  return sessions;
 }
 
 std::vector<PlaySession> SqliteActivityLog::getPlaySessions() {
-  const QString queryString = "SELECT * FROM play_sessions ORDER BY start_time DESC;";
-
-  auto query = QSqlQuery(getDatabase());
-  query.prepare(queryString);
-
-  if (!query.exec()) {
-    spdlog::warn("Query failed: {}", query.lastError().text().toStdString());
-    return {};
+  std::lock_guard lock(m_mutex);
+  std::vector<PlaySession> sessions;
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM play_sessions ORDER BY start_time DESC;");
+    while (query.executeStep()) {
+      sessions.push_back(readSession(query));
+    }
+  } catch (const std::exception &e) {
+    spdlog::warn("Query failed: {}", e.what());
   }
 
-  std::vector<PlaySession> playSessions;
-  while (query.next()) {
-    // Create a PlaySession object from the query result
-    PlaySession session;
-    session.contentHash = query.value("content_hash").toString().toStdString();
-    session.slotNumber = query.value("savefile_slot_number").toInt();
-    session.startTime = query.value("start_time").toULongLong();
-    session.endTime = query.value("end_time").toULongLong();
-    session.unpausedDurationMillis = query.value("unpaused_duration_seconds").toULongLong() * 1000;
-    session.slotNumber = query.value("savefile_slot_number").toInt();
-
-    playSessions.push_back(session);
-  }
-
-  return playSessions;
-}
-
-QSqlDatabase SqliteActivityLog::getDatabase() const {
-  const auto name = DATABASE_PREFIX + QString::number(reinterpret_cast<quint64>(QThread::currentThread()), 16);
-  if (QSqlDatabase::contains(name)) {
-    return QSqlDatabase::database(name);
-  }
-
-  spdlog::debug("Database connection with name {} does not exist; creating", name.toStdString());
-  auto db = QSqlDatabase::addDatabase("QSQLITE", name);
-  db.setDatabaseName(databasePath);
-  if (!db.open()) {
-    spdlog::error("Failed to open activity database connection '{}'", name.toStdString());
-  }
-  return db;
+  return sessions;
 }
 } // namespace firelight::activity
-
-// firelight

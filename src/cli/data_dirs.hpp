@@ -20,4 +20,10 @@ struct DataDirs {
 // legacy portable.txt marker next to the executable), else the platform
 // defaults. Requires a live QCoreApplication (uses applicationDirPath())
 DataDirs resolveDataDirs(const CliOptions &opts);
+
+// Seeds core runtime assets bundled with the install (PPSSPP fonts, VFPU tables,
+// atlases) into the writable core-system directory. Idempotent: keyed on a
+// marker asset so it only copies when the destination is unseeded. Any path that
+// can launch a game calls this before doing so. Requires a live QCoreApplication
+void provisionCoreAssets(const DataDirs &dirs);
 } // namespace firelight::cli

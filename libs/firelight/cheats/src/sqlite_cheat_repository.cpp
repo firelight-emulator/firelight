@@ -1,6 +1,9 @@
 #include <firelight/cheats/sqlite_cheat_repository.hpp>
+#include <firelight/migrations/migration_runner.hpp>
 
+#include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/Statement.h>
+#include <SQLiteCpp/Transaction.h>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 #include <utility>
@@ -36,20 +39,38 @@ std::vector<CheatPoke> pokesFromJson(const std::string &s) {
 SqliteCheatRepository::SqliteCheatRepository(std::string databaseFile) : m_databaseFile(std::move(databaseFile)) {
   m_database = std::make_unique<SQLite::Database>(m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
-  m_database->exec(R"(
-    CREATE TABLE IF NOT EXISTS cheats (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        content_hash TEXT NOT NULL,
-        name TEXT NOT NULL,
-        type INTEGER NOT NULL DEFAULT 0,
-        raw_code TEXT NOT NULL DEFAULT '',
-        pokes_json TEXT NOT NULL DEFAULT '[]',
-        enabled INTEGER NOT NULL DEFAULT 0,
-        affects_hardcore INTEGER NOT NULL DEFAULT 1,
-        ordinal INTEGER NOT NULL DEFAULT 0
-    );
-  )");
-  m_database->exec("CREATE INDEX IF NOT EXISTS idx_cheats_hash ON cheats(content_hash)");
+  // Forward-only schema migrations (see migration_runner). A future change adds
+  // the next-numbered migration
+  const std::vector<migrations::Migration> schema = {
+      {1,
+       [this] {
+         m_database->exec(R"(
+           CREATE TABLE IF NOT EXISTS cheats (
+               id INTEGER PRIMARY KEY AUTOINCREMENT,
+               content_hash TEXT NOT NULL,
+               name TEXT NOT NULL,
+               type INTEGER NOT NULL DEFAULT 0,
+               raw_code TEXT NOT NULL DEFAULT '',
+               pokes_json TEXT NOT NULL DEFAULT '[]',
+               enabled INTEGER NOT NULL DEFAULT 0,
+               affects_hardcore INTEGER NOT NULL DEFAULT 1,
+               ordinal INTEGER NOT NULL DEFAULT 0
+           );
+         )");
+         m_database->exec("CREATE INDEX IF NOT EXISTS idx_cheats_hash ON cheats(content_hash)");
+       }},
+  };
+
+  try {
+    SQLite::Transaction transaction(*m_database);
+    const int currentVersion = m_database->execAndGet("PRAGMA user_version").getInt();
+    migrations::applyMigrations(currentVersion, schema, [this](const int v) {
+      m_database->exec("PRAGMA user_version = " + std::to_string(v));
+    });
+    transaction.commit();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to initialize cheat store: {}", e.what());
+  }
 }
 
 SqliteCheatRepository::~SqliteCheatRepository() = default;

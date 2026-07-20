@@ -8,8 +8,8 @@ namespace {
 // Message fragments that mean a screen is broken. QML type errors and failed
 // bindings arrive as QtWarningMsg, so severity alone does not identify them
 constexpr std::array FATAL_PATTERNS = {
-    "is not a type",  "Cannot assign",       "Unable to assign", "TypeError:",
-    "ReferenceError:", "Binding loop detected", "File not found",  "is not defined",
+    "is not a type",   "Cannot assign",         "Unable to assign", "TypeError:",
+    "ReferenceError:", "Binding loop detected", "File not found",   "is not defined",
 };
 } // namespace
 

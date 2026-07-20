@@ -1,7 +1,9 @@
+#include <firelight/migrations/migration_runner.hpp>
 #include <firelight/saves/sqlite_save_database.hpp>
 
 #include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/Statement.h>
+#include <SQLiteCpp/Transaction.h>
 #include <chrono>
 #include <spdlog/spdlog.h>
 
@@ -41,24 +43,41 @@ SqliteSaveDatabase::SqliteSaveDatabase(const std::string &dbFile) : m_databaseFi
   m_db->exec("PRAGMA journal_mode=WAL;");
   m_db->exec("PRAGMA synchronous=NORMAL;");
 
-  m_db->exec("CREATE TABLE IF NOT EXISTS savefile_metadata("
-             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-             "content_id TEXT NOT NULL,"
-             "slot_number INTEGER NOT NULL,"
-             "savefile_md5 TEXT NOT NULL,"
-             "last_modified_at INTEGER NOT NULL,"
-             "created_at INTEGER NOT NULL,"
-             "UNIQUE(content_id, slot_number));");
+  // Forward-only schema migrations (see migration_runner). A future change adds
+  // the next-numbered migration
+  const std::vector<migrations::Migration> schema = {
+      {1,
+       [this] {
+         m_db->exec("CREATE TABLE IF NOT EXISTS savefile_metadata("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    "content_id TEXT NOT NULL,"
+                    "slot_number INTEGER NOT NULL,"
+                    "savefile_md5 TEXT NOT NULL,"
+                    "last_modified_at INTEGER NOT NULL,"
+                    "created_at INTEGER NOT NULL,"
+                    "UNIQUE(content_id, slot_number));");
 
-  m_db->exec("CREATE TABLE IF NOT EXISTS suspend_point_metadata("
-             "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-             "content_id TEXT NOT NULL,"
-             "save_slot_number INTEGER NOT NULL,"
-             "slot_number INTEGER NOT NULL,"
-             "locked INTEGER NOT NULL DEFAULT 0,"
-             "last_modified_at INTEGER NOT NULL,"
-             "created_at INTEGER NOT NULL,"
-             "UNIQUE(content_id, slot_number));");
+         m_db->exec("CREATE TABLE IF NOT EXISTS suspend_point_metadata("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    "content_id TEXT NOT NULL,"
+                    "save_slot_number INTEGER NOT NULL,"
+                    "slot_number INTEGER NOT NULL,"
+                    "locked INTEGER NOT NULL DEFAULT 0,"
+                    "last_modified_at INTEGER NOT NULL,"
+                    "created_at INTEGER NOT NULL,"
+                    "UNIQUE(content_id, slot_number));");
+       }},
+  };
+
+  try {
+    SQLite::Transaction transaction(*m_db);
+    const int currentVersion = m_db->execAndGet("PRAGMA user_version").getInt();
+    migrations::applyMigrations(currentVersion, schema,
+                                [this](const int v) { m_db->exec("PRAGMA user_version = " + std::to_string(v)); });
+    transaction.commit();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to initialize save database: {}", e.what());
+  }
 }
 
 SqliteSaveDatabase::~SqliteSaveDatabase() = default;

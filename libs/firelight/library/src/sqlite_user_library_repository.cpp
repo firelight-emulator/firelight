@@ -2,6 +2,7 @@
 
 #include <firelight/library/library_events.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
+#include <firelight/migrations/migration_runner.hpp>
 
 #include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/Statement.h>
@@ -73,126 +74,138 @@ ContentFile deserializeContentFile(SQLite::Statement &query) {
 SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_databasePath(path.toStdString()) {
   m_db = std::make_unique<SQLite::Database>(m_databasePath, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
+  // Forward-only schema migrations (see migration_runner). A future change adds
+  // the next-numbered migration. The ensureColumnExists() calls below remain a
+  // belt-and-suspenders for databases predating this runner
+  const std::vector<migrations::Migration> schema = {
+      {1, [this] {
+         m_db->exec("CREATE TABLE IF NOT EXISTS content_files("
+                    "id INTEGER PRIMARY KEY,"
+                    "file_path TEXT NOT NULL,"
+                    "file_size INTEGER NOT NULL,"
+                    "file_md5 TEXT NOT NULL,"
+                    "file_crc32 TEXT NOT NULL,"
+                    "in_archive INTEGER NOT NULL DEFAULT 0,"
+                    "archive_file_path TEXT,"
+                    "platform_id INTEGER NOT NULL,"
+                    "content_hash TEXT NOT NULL,"
+                    "content_type INTEGER NOT NULL DEFAULT 0,"
+                    "content_directory_id INTEGER NOT NULL DEFAULT -1,"
+                    "created_at INTEGER NOT NULL);");
+
+         // A multi-file disc set's member tracks/discs, keyed to the primary
+         // ContentFile (the cue/gdi/m3u sheet) in content_files
+         m_db->exec("CREATE TABLE IF NOT EXISTS disc_members("
+                    "id INTEGER PRIMARY KEY,"
+                    "content_file_id INTEGER NOT NULL,"
+                    "path TEXT NOT NULL,"
+                    "role TEXT NOT NULL,"
+                    "sort_index INTEGER NOT NULL DEFAULT 0,"
+                    "created_at INTEGER NOT NULL,"
+                    "UNIQUE (content_file_id, path));");
+
+         m_db->exec("CREATE TABLE IF NOT EXISTS patch_files("
+                    "id INTEGER PRIMARY KEY,"
+                    "file_path TEXT UNIQUE NOT NULL,"
+                    "file_size INTEGER NOT NULL,"
+                    "file_md5 TEXT NOT NULL,"
+                    "file_crc32 TEXT NOT NULL,"
+                    "target_md5 TEXT,"
+                    "patched_md5 TEXT,"
+                    "patched_content_hash TEXT,"
+                    "in_archive INTEGER NOT NULL DEFAULT 0,"
+                    "archive_file_path TEXT,"
+                    "created_at INTEGER NOT NULL);");
+
+         m_db->exec("CREATE TABLE IF NOT EXISTS entriesv1("
+                    "id INTEGER PRIMARY KEY,"
+                    "display_name TEXT NOT NULL,"
+                    "content_hash TEXT NOT NULL,"
+                    "platform_id INTEGER NOT NULL,"
+                    "active_save_slot INTEGER NOT NULL DEFAULT 1, "
+                    "hidden INTEGER NOT NULL DEFAULT 0, "
+                    "favorite INTEGER NOT NULL DEFAULT 0, "
+                    "icon_1x1_source_url TEXT, "
+                    "icon_2x3_source_url TEXT,"
+                    "icon_92x43_source_url TEXT, "
+                    "boxart_front_source_url TEXT, "
+                    "boxart_back_source_url TEXT, "
+                    "clear_logo_source_url TEXT, "
+                    "hero_image_source_url TEXT, "
+                    "description TEXT, "
+                    "release_year INTEGER, "
+                    "developer TEXT, "
+                    "publisher TEXT, "
+                    "genres TEXT, "
+                    "region_ids TEXT, "
+                    "retroachievements_set_id INTEGER, "
+                    "name_user_set INTEGER NOT NULL DEFAULT 0, "
+                    "created_at INTEGER NOT NULL);");
+
+         m_db->exec("CREATE TABLE IF NOT EXISTS run_configurations("
+                    "id INTEGER PRIMARY KEY,"
+                    "type TEXT NOT NULL,"
+                    "content_hash TEXT NOT NULL,"
+                    "content_file_id INTEGER NOT NULL,"
+                    "patch_id INTEGER,"
+                    "created_at INTEGER NOT NULL,"
+                    "UNIQUE (type, content_file_id, patch_id),"
+                    "UNIQUE (type, content_file_id));");
+
+         m_db->exec("CREATE TABLE IF NOT EXISTS content_directoriesv1("
+                    "id INTEGER PRIMARY KEY,"
+                    "path TEXT UNIQUE NOT NULL,"
+                    "num_files INTEGER NOT NULL DEFAULT 0,"
+                    "num_content_files INTEGER NOT NULL DEFAULT 0,"
+                    "last_modified INTEGER DEFAULT 0,"
+                    "recursive INTEGER NOT NULL DEFAULT 1,"
+                    "created_at INTEGER NOT NULL);");
+
+         m_db->exec("CREATE TABLE IF NOT EXISTS folders("
+                    "id INTEGER PRIMARY KEY,"
+                    "display_name TEXT UNIQUE NOT NULL,"
+                    "description TEXT,"
+                    "icon_source_url TEXT,"
+                    "type INTEGER NOT NULL DEFAULT 0,"
+                    "filter_json TEXT,"
+                    "color TEXT,"
+                    "sort_role TEXT,"
+                    "sort_ascending INTEGER NOT NULL DEFAULT 1,"
+                    "parent_id INTEGER NOT NULL DEFAULT -1,"
+                    "position INTEGER NOT NULL DEFAULT 0,"
+                    "created_at INTEGER NOT NULL);");
+
+         m_db->exec("CREATE TABLE IF NOT EXISTS folder_entries("
+                    "folder_id INTEGER NOT NULL,"
+                    "entry_id INTEGER NOT NULL,"
+                    "created_at INTEGER NOT NULL,"
+                    "UNIQUE (folder_id, entry_id));");
+
+         m_db->exec("CREATE UNIQUE INDEX IF NOT EXISTS pathIdx ON "
+                    "content_files(file_path);");
+
+         // folder_entries is looked up by entry_id (per-entry, in loops). The
+         // UNIQUE(folder_id, entry_id) index can't serve entry_id-only lookups, so
+         // add a dedicated index to avoid table scans
+         m_db->exec("CREATE INDEX IF NOT EXISTS folderEntryEntryIdx ON "
+                    "folder_entries(entry_id);");
+
+         // content_hash is the primary lookup key for entries, run configurations and
+         // content files (loadEntry + library scanning), so index each
+         m_db->exec("CREATE INDEX IF NOT EXISTS entriesContentHashIdx ON "
+                    "entriesv1(content_hash);");
+         m_db->exec("CREATE INDEX IF NOT EXISTS runConfigContentHashIdx ON "
+                    "run_configurations(content_hash);");
+         m_db->exec("CREATE INDEX IF NOT EXISTS contentFileContentHashIdx ON "
+                    "content_files(content_hash);");
+       }}};
+
   try {
-    m_db->exec("CREATE TABLE IF NOT EXISTS content_files("
-               "id INTEGER PRIMARY KEY,"
-               "file_path TEXT NOT NULL,"
-               "file_size INTEGER NOT NULL,"
-               "file_md5 TEXT NOT NULL,"
-               "file_crc32 TEXT NOT NULL,"
-               "in_archive INTEGER NOT NULL DEFAULT 0,"
-               "archive_file_path TEXT,"
-               "platform_id INTEGER NOT NULL,"
-               "content_hash TEXT NOT NULL,"
-               "content_type INTEGER NOT NULL DEFAULT 0,"
-               "content_directory_id INTEGER NOT NULL DEFAULT -1,"
-               "created_at INTEGER NOT NULL);");
-
-    // A multi-file disc set's member tracks/discs, keyed to the primary
-    // ContentFile (the cue/gdi/m3u sheet) in content_files
-    m_db->exec("CREATE TABLE IF NOT EXISTS disc_members("
-               "id INTEGER PRIMARY KEY,"
-               "content_file_id INTEGER NOT NULL,"
-               "path TEXT NOT NULL,"
-               "role TEXT NOT NULL,"
-               "sort_index INTEGER NOT NULL DEFAULT 0,"
-               "created_at INTEGER NOT NULL,"
-               "UNIQUE (content_file_id, path));");
-
-    m_db->exec("CREATE TABLE IF NOT EXISTS patch_files("
-               "id INTEGER PRIMARY KEY,"
-               "file_path TEXT UNIQUE NOT NULL,"
-               "file_size INTEGER NOT NULL,"
-               "file_md5 TEXT NOT NULL,"
-               "file_crc32 TEXT NOT NULL,"
-               "target_md5 TEXT,"
-               "patched_md5 TEXT,"
-               "patched_content_hash TEXT,"
-               "in_archive INTEGER NOT NULL DEFAULT 0,"
-               "archive_file_path TEXT,"
-               "created_at INTEGER NOT NULL);");
-
-    m_db->exec("CREATE TABLE IF NOT EXISTS entriesv1("
-               "id INTEGER PRIMARY KEY,"
-               "display_name TEXT NOT NULL,"
-               "content_hash TEXT NOT NULL,"
-               "platform_id INTEGER NOT NULL,"
-               "active_save_slot INTEGER NOT NULL DEFAULT 1, "
-               "hidden INTEGER NOT NULL DEFAULT 0, "
-               "favorite INTEGER NOT NULL DEFAULT 0, "
-               "icon_1x1_source_url TEXT, "
-               "icon_2x3_source_url TEXT,"
-               "icon_92x43_source_url TEXT, "
-               "boxart_front_source_url TEXT, "
-               "boxart_back_source_url TEXT, "
-               "clear_logo_source_url TEXT, "
-               "hero_image_source_url TEXT, "
-               "description TEXT, "
-               "release_year INTEGER, "
-               "developer TEXT, "
-               "publisher TEXT, "
-               "genres TEXT, "
-               "region_ids TEXT, "
-               "retroachievements_set_id INTEGER, "
-               "name_user_set INTEGER NOT NULL DEFAULT 0, "
-               "created_at INTEGER NOT NULL);");
-
-    m_db->exec("CREATE TABLE IF NOT EXISTS run_configurations("
-               "id INTEGER PRIMARY KEY,"
-               "type TEXT NOT NULL,"
-               "content_hash TEXT NOT NULL,"
-               "content_file_id INTEGER NOT NULL,"
-               "patch_id INTEGER,"
-               "created_at INTEGER NOT NULL,"
-               "UNIQUE (type, content_file_id, patch_id),"
-               "UNIQUE (type, content_file_id));");
-
-    m_db->exec("CREATE TABLE IF NOT EXISTS content_directoriesv1("
-               "id INTEGER PRIMARY KEY,"
-               "path TEXT UNIQUE NOT NULL,"
-               "num_files INTEGER NOT NULL DEFAULT 0,"
-               "num_content_files INTEGER NOT NULL DEFAULT 0,"
-               "last_modified INTEGER DEFAULT 0,"
-               "recursive INTEGER NOT NULL DEFAULT 1,"
-               "created_at INTEGER NOT NULL);");
-
-    m_db->exec("CREATE TABLE IF NOT EXISTS folders("
-               "id INTEGER PRIMARY KEY,"
-               "display_name TEXT UNIQUE NOT NULL,"
-               "description TEXT,"
-               "icon_source_url TEXT,"
-               "type INTEGER NOT NULL DEFAULT 0,"
-               "filter_json TEXT,"
-               "color TEXT,"
-               "sort_role TEXT,"
-               "sort_ascending INTEGER NOT NULL DEFAULT 1,"
-               "parent_id INTEGER NOT NULL DEFAULT -1,"
-               "position INTEGER NOT NULL DEFAULT 0,"
-               "created_at INTEGER NOT NULL);");
-
-    m_db->exec("CREATE TABLE IF NOT EXISTS folder_entries("
-               "folder_id INTEGER NOT NULL,"
-               "entry_id INTEGER NOT NULL,"
-               "created_at INTEGER NOT NULL,"
-               "UNIQUE (folder_id, entry_id));");
-
-    m_db->exec("CREATE UNIQUE INDEX IF NOT EXISTS pathIdx ON "
-               "content_files(file_path);");
-
-    // folder_entries is looked up by entry_id (per-entry, in loops). The
-    // UNIQUE(folder_id, entry_id) index can't serve entry_id-only lookups, so
-    // add a dedicated index to avoid table scans
-    m_db->exec("CREATE INDEX IF NOT EXISTS folderEntryEntryIdx ON "
-               "folder_entries(entry_id);");
-
-    // content_hash is the primary lookup key for entries, run configurations and
-    // content files (loadEntry + library scanning), so index each
-    m_db->exec("CREATE INDEX IF NOT EXISTS entriesContentHashIdx ON "
-               "entriesv1(content_hash);");
-    m_db->exec("CREATE INDEX IF NOT EXISTS runConfigContentHashIdx ON "
-               "run_configurations(content_hash);");
-    m_db->exec("CREATE INDEX IF NOT EXISTS contentFileContentHashIdx ON "
-               "content_files(content_hash);");
+    SQLite::Transaction transaction(*m_db);
+    const int currentVersion = m_db->execAndGet("PRAGMA user_version").getInt();
+    migrations::applyMigrations(currentVersion, schema,
+                                [this](const int v) { m_db->exec("PRAGMA user_version = " + std::to_string(v)); });
+    transaction.commit();
   } catch (const std::exception &e) {
     spdlog::error("Failed to initialize user library schema: {}", e.what());
   }

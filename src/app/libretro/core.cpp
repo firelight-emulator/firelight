@@ -40,7 +40,7 @@ void log(enum retro_log_level level, const char *fmt, ...) {
   } else if (level == RETRO_LOG_ERROR) {
     spdlog::error("[Core] {}", msg);
   } else {
-    spdlog::info("[Core] {}", msg); // Default to info for unknown levels.
+    spdlog::info("[Core] {}", msg); // Default to info for unknown levels
   }
 }
 

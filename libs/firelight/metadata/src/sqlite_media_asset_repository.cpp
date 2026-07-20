@@ -1,4 +1,5 @@
 #include <firelight/metadata/sqlite_media_asset_repository.hpp>
+#include <firelight/migrations/migration_runner.hpp>
 
 #include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/Statement.h>
@@ -35,27 +36,41 @@ MediaAsset readAsset(const SQLite::Statement &query) {
 SqliteMediaAssetRepository::SqliteMediaAssetRepository(std::string databaseFile)
     : m_databaseFile(std::move(databaseFile)) {
   m_db = std::make_unique<SQLite::Database>(m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+
+  // Forward-only schema migrations (see migration_runner). A future change adds
+  // the next-numbered migration
+  const std::vector<migrations::Migration> schema = {
+      {1,
+       [this] {
+         // Nullable text is stored as '' (never NULL) so the uniqueness index
+         // below actually dedupes
+         m_db->exec("CREATE TABLE IF NOT EXISTS media_assets("
+                    "id INTEGER PRIMARY KEY,"
+                    "content_hash TEXT NOT NULL,"
+                    "media_type INTEGER NOT NULL,"
+                    "source TEXT NOT NULL,"
+                    "remote_url TEXT NOT NULL DEFAULT '',"
+                    "thumb_url TEXT NOT NULL DEFAULT '',"
+                    "local_path TEXT NOT NULL DEFAULT '',"
+                    "width INTEGER NOT NULL DEFAULT 0,"
+                    "height INTEGER NOT NULL DEFAULT 0,"
+                    "external_id TEXT NOT NULL DEFAULT '',"
+                    "selected INTEGER NOT NULL DEFAULT 0,"
+                    "created_at INTEGER NOT NULL);");
+         m_db->exec("CREATE INDEX IF NOT EXISTS mediaContentHashIdx ON "
+                    "media_assets(content_hash);");
+         m_db->exec("CREATE UNIQUE INDEX IF NOT EXISTS mediaUniqueIdx ON "
+                    "media_assets(content_hash, media_type, source, external_id, "
+                    "remote_url);");
+       }},
+  };
+
   try {
-    // Nullable text is stored as '' (never NULL) so the uniqueness index below
-    // actually dedupes
-    m_db->exec("CREATE TABLE IF NOT EXISTS media_assets("
-               "id INTEGER PRIMARY KEY,"
-               "content_hash TEXT NOT NULL,"
-               "media_type INTEGER NOT NULL,"
-               "source TEXT NOT NULL,"
-               "remote_url TEXT NOT NULL DEFAULT '',"
-               "thumb_url TEXT NOT NULL DEFAULT '',"
-               "local_path TEXT NOT NULL DEFAULT '',"
-               "width INTEGER NOT NULL DEFAULT 0,"
-               "height INTEGER NOT NULL DEFAULT 0,"
-               "external_id TEXT NOT NULL DEFAULT '',"
-               "selected INTEGER NOT NULL DEFAULT 0,"
-               "created_at INTEGER NOT NULL);");
-    m_db->exec("CREATE INDEX IF NOT EXISTS mediaContentHashIdx ON "
-               "media_assets(content_hash);");
-    m_db->exec("CREATE UNIQUE INDEX IF NOT EXISTS mediaUniqueIdx ON "
-               "media_assets(content_hash, media_type, source, external_id, "
-               "remote_url);");
+    SQLite::Transaction transaction(*m_db);
+    const int currentVersion = m_db->execAndGet("PRAGMA user_version").getInt();
+    migrations::applyMigrations(currentVersion, schema,
+                                [this](const int v) { m_db->exec("PRAGMA user_version = " + std::to_string(v)); });
+    transaction.commit();
   } catch (const std::exception &e) {
     spdlog::error("Failed to initialize media store: {}", e.what());
   }
