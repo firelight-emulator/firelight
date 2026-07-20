@@ -120,6 +120,14 @@ std::optional<std::string> SettingsService::getEffectiveValue(const std::string 
   return getGlobalValue(key);
 }
 
+std::optional<std::string> SettingsService::getGlobalEffectiveValue(const std::string &key) {
+  if (const auto it = m_sessionOverrides.find(key); it != m_sessionOverrides.end()) {
+    return it->second;
+  }
+
+  return getGlobalValue(key);
+}
+
 void SettingsService::setSessionOverride(const std::string &key, const std::string &value) {
   m_sessionOverrides[key] = value;
 }

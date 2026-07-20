@@ -30,6 +30,35 @@ The build copies `_cores/windows/` into `build/system/_cores/` and `content.db` 
 
 Set `FL_DEBUG=1` in the environment to enable debug-level logging at runtime.
 
+## Verifying the UI without clicking
+
+A cold launch only ever builds `Main4` and the `/library` page — the other 12 routes are incubated
+lazily, so a broken screen is invisible until someone navigates to it. `verify-ui` mounts all 22
+screens (13 routes + `/quick-menu` + the 8 settings sections) against the real service graph and
+exits non-zero if any fails to mount or logs a fatal QML message.
+
+```bash
+QT_QPA_PLATFORM=offscreen ./build/debug-win/firelight.exe verify-ui          # ~35s, all routes
+QT_QPA_PLATFORM=offscreen ./build/debug-win/firelight.exe verify-ui --json   # machine-readable
+./build/debug-win/firelight.exe --route /gallery                             # open one route by hand
+```
+
+Exit codes: `3` root object failed to build · `4` a fatal QML message was logged · `5` a route failed.
+
+Three things that will waste your time otherwise:
+
+- **`QT_ASSUME_STDERR_HAS_CONSOLE=1` is what makes Qt/QML messages visible at all.** Without it a
+  Windows GUI build sends them to `OutputDebugString`, so grepping stdout for QML errors finds
+  nothing whether or not any exist. `main.cpp` now sets it unless you override it.
+- **From Git Bash, export `MSYS2_ARG_CONV_EXCL='*'`** or MSYS rewrites `--route /gallery` into a
+  Windows path and the route silently won't match.
+- **`QT_QPA_PLATFORM=offscreen` works** — Qt 6 builds the software scenegraph into `Qt6Quick.dll`
+  rather than shipping a `plugins/scenegraph/` directory, so the missing directory is not evidence
+  it is unavailable. Vulkan init fails offscreen, which is harmless: no route touches `EmulatorItem`.
+
+`--fatal-warnings` promotes every QML warning to fatal. There is a nonzero baseline today, so it is
+opt-in rather than the default.
+
 ## Code Style
 
 Formatting is enforced by `.clang-format` (C++) and `.qmlformat.ini` (QML); `.clang-tidy` carries the

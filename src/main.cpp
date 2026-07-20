@@ -32,6 +32,7 @@
 #include "app/netplay/gui/netplay_stream_item.hpp"
 #include "app/netplay/netplay_service.hpp"
 #include "app/netplay/tee_audio_output.hpp"
+#include "app/qml_message_log.hpp"
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "cli/cli_app.hpp"
 #include "cli/console.hpp"
@@ -43,6 +44,7 @@
 #include "cli/scan_command.hpp"
 #include "cli/single_instance.hpp"
 #include "cli/startup_options.hpp"
+#include "cli/verify_ui_command.hpp"
 #include "gui/EventEmitter.h"
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
@@ -128,12 +130,28 @@
 #include <sqlite_achievement_repository.hpp>
 #include <unistd.h>
 
+// TODO
+// Exit status when the root QML object fails to build
+constexpr int EXIT_ROOT_OBJECT_FAILED = 3;
+
+// TODO
+// Exit status when a QML message was classified fatal
+constexpr int EXIT_QML_ERRORS = 4;
+
 int main(int argc, char *argv[]) {
   // SDL_setenv("QT_QUICK_FLICKABLE_WHEEL_DECELERATION", "5000", true);
 
   // Make CLI output visible when launched from a terminal (Windows GUI apps
   // have no console by default)
   firelight::cli::attachParentConsole();
+
+  // TODO
+  // Without this Qt sends its own messages to the debugger instead of the
+  // console attached above, which hides every QML warning
+  if (!qEnvironmentVariableIsSet("QT_ASSUME_STDERR_HAS_CONSOLE")) {
+    qputenv("QT_ASSUME_STDERR_HAS_CONSOLE", "1");
+  }
+  firelight::gui::QmlMessageLog::install();
 
   std::set_terminate([]() {
     spdlog::error("Terminating due to an unhandled exception");
@@ -165,6 +183,7 @@ int main(int argc, char *argv[]) {
   if (cliOptions.verbose) {
     spdlog::set_level(spdlog::level::debug);
   }
+  firelight::gui::QmlMessageLog::setFatalWarnings(cliOptions.fatalWarnings);
 
   // Handle subcommands that don't need GUI and exit immediately
   if (cliOptions.action == firelight::cli::CliAction::RunScan) {
@@ -677,6 +696,18 @@ int main(int argc, char *argv[]) {
 
   auto cache = new CachingNetworkAccessManagerFactory();
 
+  // Declared before the engine so they outlive it: stack objects are destroyed
+  // in reverse, and QML bindings still read these while the engine tears down
+  firelight::gui::QtNetworkServiceProxy networkServiceProxy(netplayService);
+  firelight::gui::NetplaySlotsModel netplaySlotsModel(netplayService);
+  firelight::gui::NetplayChatModel netplayChatModel(netplayService);
+  QObject::connect(&networkServiceProxy, &firelight::gui::QtNetworkServiceProxy::slotsChanged, &netplaySlotsModel,
+                   &firelight::gui::NetplaySlotsModel::refresh);
+  QObject::connect(&networkServiceProxy, &firelight::gui::QtNetworkServiceProxy::lobbyStateChanged, &netplaySlotsModel,
+                   &firelight::gui::NetplaySlotsModel::refresh);
+  QObject::connect(&networkServiceProxy, &firelight::gui::QtNetworkServiceProxy::chatChanged, &netplayChatModel,
+                   &firelight::gui::NetplayChatModel::refresh);
+
   QQmlApplicationEngine engine;
   engine.setNetworkAccessManagerFactory(cache);
   // engine.networkAccessManager()->setCache(diskCache);
@@ -697,15 +728,6 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("CaptureModel", &captureListModel);
   engine.rootContext()->setContextProperty("PlatformModel", &platformListModel);
 
-  firelight::gui::QtNetworkServiceProxy networkServiceProxy(netplayService);
-  firelight::gui::NetplaySlotsModel netplaySlotsModel(netplayService);
-  firelight::gui::NetplayChatModel netplayChatModel(netplayService);
-  QObject::connect(&networkServiceProxy, &firelight::gui::QtNetworkServiceProxy::slotsChanged, &netplaySlotsModel,
-                   &firelight::gui::NetplaySlotsModel::refresh);
-  QObject::connect(&networkServiceProxy, &firelight::gui::QtNetworkServiceProxy::lobbyStateChanged, &netplaySlotsModel,
-                   &firelight::gui::NetplaySlotsModel::refresh);
-  QObject::connect(&networkServiceProxy, &firelight::gui::QtNetworkServiceProxy::chatChanged, &netplayChatModel,
-                   &firelight::gui::NetplayChatModel::refresh);
   engine.rootContext()->setContextProperty("NetworkService", &networkServiceProxy);
   engine.rootContext()->setContextProperty("NetplaySlotsModel", &netplaySlotsModel);
   engine.rootContext()->setContextProperty("NetplayChatModel", &netplayChatModel);
@@ -750,6 +772,7 @@ int main(int argc, char *argv[]) {
   startupData.raUsername = QString::fromStdString(cliOptions.raUsername);
   startupData.raPassword = QString::fromStdString(cliOptions.raPassword);
   startupData.raToken = QString::fromStdString(cliOptions.raToken);
+  startupData.startupRoute = QString::fromStdString(cliOptions.startupRoute);
   engine.rootContext()->setContextProperty("StartupOptions",
                                            new firelight::cli::StartupOptions(std::move(startupData)));
 
@@ -758,9 +781,20 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("SingleInstance", singleInstanceServer.get());
 
   QObject::connect(
-      &engine, &QQmlApplicationEngine::objectCreationFailed, &app, []() { QCoreApplication::exit(-1); },
-      Qt::QueuedConnection);
+      &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
+      []() { QCoreApplication::exit(EXIT_ROOT_OBJECT_FAILED); }, Qt::QueuedConnection);
   engine.loadFromModule("QMLFirelight", "Main4");
+
+  // objectCreationFailed only queues an exit, so without this the startup below
+  // runs on a null root object and crashes before the exit is delivered
+  if (engine.rootObjects().isEmpty()) {
+    spdlog::error("The QML root object failed to load");
+    return EXIT_ROOT_OBJECT_FAILED;
+  }
+
+  if (cliOptions.action == firelight::cli::CliAction::VerifyUi) {
+    firelight::cli::VerifyUiRunner::start(engine, engine.rootObjects().value(0), cliOptions);
+  }
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
@@ -846,6 +880,13 @@ int main(int argc, char *argv[]) {
 
   inputService.stop();
   inputLoopFuture.waitForFinished();
+
+  if (exitCode == 0) {
+    if (const auto fatalMessages = firelight::gui::QmlMessageLog::getFatalCount(); fatalMessages > 0) {
+      spdlog::error("{} fatal QML message(s) logged", fatalMessages);
+      exitCode = EXIT_QML_ERRORS;
+    }
+  }
 
   return exitCode;
 }

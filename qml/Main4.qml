@@ -167,6 +167,8 @@ MainWindow {
     RouteView {
         id: contentStack
 
+        objectName: "RouteView"
+
         anchors.bottom: gameplay.top
         anchors.left: navRail.right
         anchors.right: parent.right
@@ -175,7 +177,7 @@ MainWindow {
         anchors.rightMargin: 8
         anchors.bottomMargin: 8
 
-        Component.onCompleted: Router.navigate("/library")
+        Component.onCompleted: Router.navigate(StartupOptions.startupRoute !== "" ? StartupOptions.startupRoute : "/library")
     }
 
     // Shown while an uncached page is being built asynchronously
@@ -217,6 +219,77 @@ MainWindow {
                 NetworkService.confirmLaunch();
                 EmulationService.loadEntry(entryId);
             }
+        }
+    }
+
+    // A game named on the command line launches once the shell is up. When the
+    // CLI also asked for a RetroAchievements login, that has to land first so
+    // the session is credited to the right user
+    function maybeAutoLaunch() {
+        if (StartupOptions.launchEntryId >= 0) {
+            Qt.callLater(function () {
+                EmulationService.loadEntry(StartupOptions.launchEntryId);
+            });
+        }
+    }
+
+    // The launch still proceeds on a failed login, just without achievements
+    function raLoginFailed(reason) {
+        shortcutToast.show(qsTr("RetroAchievements login failed: ") + reason);
+        window.maybeAutoLaunch();
+    }
+
+    function beginRaLogin() {
+        if (StartupOptions.raToken.length > 0) {
+            achievement_manager.logInUserWithToken(StartupOptions.raUsername, StartupOptions.raToken);
+        } else {
+            achievement_manager.logInUserWithPassword(StartupOptions.raUsername, StartupOptions.raPassword);
+        }
+    }
+
+    Connections {
+        target: achievement_manager
+        enabled: StartupOptions.raPendingLogin
+
+        function onLoginSucceeded() {
+            window.maybeAutoLaunch();
+        }
+
+        function onLoginFailedWithInvalidCredentials() {
+            window.raLoginFailed(qsTr("Invalid username or password"));
+        }
+
+        function onLoginFailedWithExpiredToken() {
+            window.raLoginFailed(qsTr("Login token has expired"));
+        }
+
+        function onLoginFailedWithAccessDenied() {
+            window.raLoginFailed(qsTr("Access denied"));
+        }
+
+        function onLoginFailedWithInternalError() {
+            window.raLoginFailed(qsTr("RetroAchievements is unreachable"));
+        }
+    }
+
+    // Null unless --single-instance was passed; a second process forwards its
+    // launch here instead of opening another window
+    Connections {
+        target: SingleInstance
+        enabled: SingleInstance !== null
+
+        function onLaunchRequested(entryId) {
+            if (entryId >= 0) {
+                EmulationService.loadEntry(entryId);
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        if (StartupOptions.raPendingLogin) {
+            window.beginRaLogin();
+        } else {
+            window.maybeAutoLaunch();
         }
     }
 

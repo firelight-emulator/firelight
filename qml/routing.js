@@ -20,7 +20,7 @@ var ROUTES = [
     { pattern: "/activity" },
     { pattern: "/netplay" },
     { pattern: "/help" },
-    { pattern: "/quick-menu" }
+    { pattern: "/quick-menu", overlay: true }
 ];
 
 function patterns(routes) {

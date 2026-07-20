@@ -113,11 +113,32 @@ Item {
 
     function foreground() {
         mode = "playing";
+        if (Router.path === "/quick-menu") {
+            Router.back();
+        }
     }
 
     function openQuickMenu() {
         if (mode === "playing") {
             mode = "quickMenu";
+            if (Router.path !== "/quick-menu") {
+                Router.navigate("/quick-menu");
+            }
+        }
+    }
+
+    // The quick menu is a route as well as a hotkey target, so the address and
+    // the menu agree however it was opened. Each direction checks the other's
+    // state first, so the round trip settles instead of looping
+    Connections {
+        target: Router
+
+        function onNavigated() {
+            if (Router.path === "/quick-menu") {
+                gameplay.openQuickMenu();
+            } else if (gameplay.mode === "quickMenu") {
+                gameplay.foreground();
+            }
         }
     }
 

@@ -29,6 +29,8 @@ CliOptions parseCli(int argc, char **argv) {
   app.add_flag("--single-instance", opts.singleInstance,
                "Forward the launch to a running Firelight instead of opening a "
                "second window");
+  app.add_flag("--fatal-warnings", opts.fatalWarnings, "Exit non-zero if any QML warning or error is logged");
+  app.add_option("--route", opts.startupRoute, "Open this route on startup instead of /library")->type_name("PATH");
   app.add_option("--save-slot", opts.saveSlot, "Save slot to load for the launched game")->type_name("N");
   app.add_option("--controller", opts.controller, "Preferred controller type for the launched game")->type_name("NAME");
   app.add_option("--core", opts.core, "Force a specific libretro core for the launched game")->type_name("NAME");
@@ -60,6 +62,13 @@ CliOptions parseCli(int argc, char **argv) {
 
   auto *scan = app.add_subcommand("scan", "Rescan content directories, update the library, then exit");
 
+  auto *verifyUi = app.add_subcommand("verify-ui", "Mount every registered route, report failures, then exit");
+  // So `verify-ui --fatal-warnings` works, not just `--fatal-warnings verify-ui`
+  verifyUi->fallthrough();
+  verifyUi->add_option("--route", opts.verifyRoutes, "Sweep only this route (repeatable)")->type_name("PATH");
+  verifyUi->add_option("--settle-ms", opts.settleMs, "How long to wait for a route to finish building")->type_name("N");
+  verifyUi->add_flag("--json", opts.json, "Emit the report as JSON");
+
   auto *login = app.add_subcommand("login", "Log in to RetroAchievements (persists a token), then exit");
   login->add_option("--username", opts.raUsername, "RetroAchievements username")->type_name("USER");
   login->add_option("--password", opts.raPassword, "RetroAchievements password")->type_name("PASS");
@@ -88,6 +97,8 @@ CliOptions parseCli(int argc, char **argv) {
 
   if (scan->parsed()) {
     opts.action = CliAction::RunScan;
+  } else if (verifyUi->parsed()) {
+    opts.action = CliAction::VerifyUi;
   } else if (login->parsed()) {
     opts.action = CliAction::Login;
   } else if (listSettings) {

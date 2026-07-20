@@ -22,10 +22,13 @@ class StartupOptions : public QObject {
   Q_PROPERTY(QString raUsername READ raUsername CONSTANT)
   Q_PROPERTY(QString raPassword READ raPassword CONSTANT)
   Q_PROPERTY(QString raToken READ raToken CONSTANT)
+  // The route to open instead of the default, or empty for the default
+  Q_PROPERTY(QString startupRoute READ startupRoute CONSTANT)
 
 public:
   struct Data {
     int launchEntryId = -1;
+    QString startupRoute;
     bool startMuted = false;
     bool startPaused = false;
     int fullscreenOverride = -1;
@@ -66,6 +69,8 @@ public:
   [[nodiscard]] QString raPassword() const { return m_data.raPassword; }
 
   [[nodiscard]] QString raToken() const { return m_data.raToken; }
+
+  [[nodiscard]] QString startupRoute() const { return m_data.startupRoute; }
 
 private:
   Data m_data;

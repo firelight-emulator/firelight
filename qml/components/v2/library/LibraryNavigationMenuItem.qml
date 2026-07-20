@@ -145,7 +145,7 @@ Button {
             font.family: Constants.regularFontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             font.weight: Font.DemiBold
-            text: control.numberOfItems
+            text: control.numberOfItems ?? ""
             Layout.fillHeight: true
             verticalAlignment: Text.AlignVCenter
             visible: control.numberOfItems !== undefined && control.numberOfItems !== null && control.width > Math.round(64 * AppStyle.scale)

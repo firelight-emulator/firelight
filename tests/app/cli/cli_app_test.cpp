@@ -141,4 +141,42 @@ TEST(CliAppTest, ListSettingsAndCoresActions) {
   EXPECT_EQ(parseArgs({"firelight", "--list-cores"}).action, CliAction::ListCores);
 }
 
+TEST(CliAppTest, VerifyUiSubcommandSelectsAction) {
+  const auto opts = parseArgs({"firelight", "verify-ui"});
+  EXPECT_EQ(opts.action, CliAction::VerifyUi);
+  EXPECT_TRUE(opts.verifyRoutes.empty());
+  EXPECT_EQ(opts.settleMs, 1500);
+  EXPECT_FALSE(opts.json);
+}
+
+TEST(CliAppTest, VerifyUiCollectsRepeatedRoutes) {
+  const auto opts = parseArgs({"firelight", "verify-ui", "--route", "/gallery", "--route", "/activity"});
+  ASSERT_EQ(opts.verifyRoutes.size(), 2);
+  EXPECT_EQ(opts.verifyRoutes[0], "/gallery");
+  EXPECT_EQ(opts.verifyRoutes[1], "/activity");
+}
+
+TEST(CliAppTest, VerifyUiAcceptsSettleAndJson) {
+  const auto opts = parseArgs({"firelight", "verify-ui", "--settle-ms", "4000", "--json"});
+  EXPECT_EQ(opts.settleMs, 4000);
+  EXPECT_TRUE(opts.json);
+}
+
+TEST(CliAppTest, FatalWarningsFlagParses) {
+  const auto opts = parseArgs({"firelight", "--fatal-warnings"});
+  EXPECT_EQ(opts.action, CliAction::RunGui);
+  EXPECT_TRUE(opts.fatalWarnings);
+}
+
+TEST(CliAppTest, StartupRouteParses) {
+  const auto opts = parseArgs({"firelight", "--route", "/settings/appearance"});
+  EXPECT_EQ(opts.action, CliAction::RunGui);
+  EXPECT_EQ(opts.startupRoute, "/settings/appearance");
+}
+
+TEST(CliAppTest, StartupRouteDefaultsEmpty) {
+  const auto opts = parseArgs({"firelight"});
+  EXPECT_TRUE(opts.startupRoute.empty());
+}
+
 } // namespace firelight::cli

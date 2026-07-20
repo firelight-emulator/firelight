@@ -43,6 +43,9 @@ SplitView {
             property var counts: LibraryEntryModel.countByPlatform
             onCountsChanged: invalidate()
             function filter(data): bool {
+                if (!data) {
+                    return false;
+                }
                 return (counts[data.platformId] || 0) > 0;
             }
         }

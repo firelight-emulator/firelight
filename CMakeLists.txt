@@ -293,6 +293,8 @@ add_library(firelight_lib
         src/gui/models/activity_buckets_list_model.cpp
         src/gui/models/activity_buckets_list_model.hpp
         src/app/library/gui/library_path_model.cpp
+        src/app/qml_message_log.cpp
+        src/app/qml_message_log.hpp
         src/cli/cli_app.cpp
         src/cli/console.cpp
         src/cli/data_dirs.cpp
@@ -303,6 +305,8 @@ add_library(firelight_lib
         src/cli/scan_command.cpp
         src/cli/single_instance.cpp
         src/cli/startup_options.hpp
+        src/cli/verify_ui_command.cpp
+        src/cli/verify_ui_command.hpp
 )
 
 # Single source of truth for the app version, consumed by the CLI --version and

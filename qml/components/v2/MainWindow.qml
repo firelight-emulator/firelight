@@ -13,8 +13,10 @@ ApplicationWindow {
     property real previousHeight: height
 
     title: qsTr("Firelight")
-    visibility: Window.Windowed
-    visible: false
+    // Driven through visibility alone. Setting `visible` as well makes Qt warn
+    // about conflicting properties, and the window stays hidden until the frame
+    // has been positioned
+    visibility: Window.Hidden
 
     width: WindowGeometry.mainWindowWidth
     height: WindowGeometry.mainWindowHeight
@@ -25,7 +27,11 @@ ApplicationWindow {
     Component.onCompleted: {
         WindowFrame.setWindow(root);
         WindowFrame.setNativePosition(WindowGeometry.mainWindowX, WindowGeometry.mainWindowY);
-        visible = true;
+        // A --fullscreen/--windowed override applies to this launch only; -1
+        // means none was given and the saved preference stands
+        const override = StartupOptions.fullscreenOverride;
+        const startFullscreen = override === 1 || (override === -1 && GeneralSettings.fullscreen);
+        visibility = startFullscreen ? Window.FullScreen : Window.Windowed;
         frameReady = true;
     }
 

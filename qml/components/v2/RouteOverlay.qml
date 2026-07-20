@@ -60,6 +60,8 @@ Popup {
 
     contentItem: Loader {
         id: contentLoader
+
+        objectName: "RouteOverlayLoader"
     }
 
     function _setActive(active) {

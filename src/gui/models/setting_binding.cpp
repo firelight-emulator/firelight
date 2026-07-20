@@ -42,7 +42,7 @@ void SettingBinding::refresh() {
 
   std::optional<std::string> stored;
   if (service && !m_key.isEmpty()) {
-    stored = service->getGlobalValue(m_key.toStdString());
+    stored = service->getGlobalEffectiveValue(m_key.toStdString());
   }
 
   const auto resolved = QString::fromStdString(stored.value_or(definition ? definition->defaultValue : std::string{}));

@@ -87,6 +87,10 @@ public:
   // catalog default)
   std::optional<std::string> getEffectiveValue(const std::string &contentHash, int platformId, const std::string &key);
 
+  // Resolution for settings that have no per-game or per-platform tier (the app
+  // and interface settings): session override -> global
+  std::optional<std::string> getGlobalEffectiveValue(const std::string &key);
+
   // Sets an in-memory, non-persisted override that wins over every stored tier
   // in getEffectiveValue. Used by the CLI to apply per-launch config (`--set`)
   // without mutating the saved settings database. Intended to be populated once

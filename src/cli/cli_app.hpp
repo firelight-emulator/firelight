@@ -13,6 +13,7 @@ enum class CliAction {
   Login,        // run the headless `login` subcommand, then exit
   ListSettings, // print the emulation setting catalog, then exit
   ListCores,    // print the known cores, then exit
+  VerifyUi,     // mount every route, report failures, then exit
   Exit,         // CLI already handled output (--help/--version) or errored
 };
 
@@ -30,12 +31,20 @@ struct CliOptions {
   bool paused = false;         // --paused (start the game paused)
   bool exitOnClose = false;    // --exit-on-close (quit when the game closes)
   bool singleInstance = false; // --single-instance (forward to a running app)
+  bool fatalWarnings = false;  // --fatal-warnings (any QML warning fails the run)
+  bool json = false;           // --json (machine-readable verify-ui report)
   int saveSlot = -1;           // --save-slot N; -1 = use the entry's active slot
-  std::string configDir;       // --config-dir; empty = platform default
-  std::string romPath;         // positional content path; empty = none
-  std::string settingsFile;    // --settings-file; bulk emulation overrides
-  std::string controller;      // --controller NAME; per-launch preferred type
-  std::string core;            // --core NAME; per-launch core override
+  int settleMs = 1500;         // --settle-ms; how long to wait for a route to build
+
+  // `verify-ui --route PATH` entries; empty = sweep every registered route
+  std::vector<std::string> verifyRoutes;
+
+  std::string startupRoute; // --route PATH; empty = the default /library
+  std::string configDir;    // --config-dir; empty = platform default
+  std::string romPath;      // positional content path; empty = none
+  std::string settingsFile; // --settings-file; bulk emulation overrides
+  std::string controller;   // --controller NAME; per-launch preferred type
+  std::string core;         // --core NAME; per-launch core override
 
   // Inline `--set key=value` emulation overrides (already split on the first
   // '='), applied for this launch only

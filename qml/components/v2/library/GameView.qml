@@ -6,8 +6,6 @@ import QtQuick.Layouts 1.0
 Item {
     id: root
 
-    property int currentIndex: -1
-
     // --- Scope (the base set — one at a time, chosen in the sidebar) ---
     property int filterPlatformId: -1
     // A folder scope matches the folder AND all its descendants. The sidebar
@@ -800,7 +798,6 @@ Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
             sourceComponent: root.viewMode === "grid" ? gridView : listView
-            onLoaded: item.currentIndex = Qt.binding(() => root.currentIndex)
         }
     }
 

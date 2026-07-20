@@ -29,6 +29,9 @@ StackView {
     // show a loading indicator
     property bool loading: false
 
+    // Emitted when a screen fails to build
+    signal routeError(string path, string error)
+
     // Route pattern -> screen Component. Params (Router.params) are passed as
     // initial properties, so a pattern's :name captures must match the screen's
     // property names (e.g. :entryId -> FLGameDetailsPanel.entryId)
@@ -100,6 +103,8 @@ StackView {
     Component {
         id: notFoundComponent
         Item {
+            objectName: "RouteNotFound"
+
             Text {
                 anchors.centerIn: parent
                 color: "#FFFFFF"
@@ -331,6 +336,10 @@ StackView {
                     }
                 } else if (incubator.status === Component.Error) {
                     delete stack._incubators[key];
+                    stack.loading = false;
+                    var reason = component.errorString();
+                    console.error("Route failed to build:", Router.path, reason);
+                    stack.routeError(Router.path, reason);
                 }
             };
 

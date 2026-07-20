@@ -6,9 +6,11 @@ import Firelight 1.0
 Pane {
     id: root
 
-    // property alias controllerProfileId: gamepadProfile.profileId
     required property var playerNumber
-    required property var profileId
+
+    // The player's connected controller decides the profile, so the route only
+    // has to carry playerNumber
+    readonly property int profileId: gamepadStatus.profileId
 
     padding: 16
     background: Item {}
@@ -180,7 +182,7 @@ Pane {
                     shortcut: ""
                     gamepad: gamepadStatus
                     isKeyboard: profile.isKeyboardProfile
-                    modifierCandidates: shortcutsListView.model.modifierCandidates()
+                    modifierCandidates: shortcutsListView.model ? shortcutsListView.model.modifierCandidates() : []
 
                     onMappingAdded: function (shortcut, modifiers, input) {
                         shortcutsListView.model.addBinding(shortcut, modifiers, input);
