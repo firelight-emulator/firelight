@@ -39,12 +39,12 @@ FocusScope {
 
                 Text {
                     Layout.fillHeight: true
-                    text: root.title
-                    color: Theme.textPrimary
-                    opacity: 0.7
+                    text: root.title.toUpperCase()
+                    color: Theme.textMuted
                     font.family: Constants.regularFontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
-                    font.weight: Font.Medium
+                    font.weight: Font.DemiBold
+                    font.letterSpacing: 1
                     horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter
                     visible: root.title !== ""
@@ -57,8 +57,7 @@ FocusScope {
                     Layout.fillHeight: true
                     size: AppStyle.iconSizeSm
                     visible: root.title !== "" && root.collapsible
-                    color: Theme.textPrimary
-                    opacity: 0.7
+                    color: Theme.textMuted
                     rotation: contentContainer.collapsed ? 180 : 270
                     Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 

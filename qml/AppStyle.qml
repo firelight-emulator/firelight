@@ -42,6 +42,10 @@ Item {
     readonly property int iconSizeMd: Math.round(24 * scale)
     readonly property int iconSizeLg: Math.round(32 * scale)
 
+    // TODO
+    // Rounded tile behind a list-row icon (sidebar folder/platform chips)
+    readonly property int iconChipSize: Math.round(26 * scale)
+
     // Corner radii
     readonly property int radiusSm: Math.round(4 * scale)
     readonly property int radiusMd: Math.round(8 * scale)

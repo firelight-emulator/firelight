@@ -12,12 +12,15 @@ Pane {
     // Injected by the page so the sidebar stays decoupled: the SplitView root
     // (page), the games view it scopes, the owned-platforms model, and the
     // folder dialogs it opens
-    property var page
-    property var gameView
+    property LibraryPageV2 page
+    property GameView gameView
     property var ownedPlatformsModel
+
+    // TODO
+    // var: the page adds targetParentId/targetFolderId onto these at the call site
     property var createFolderDialog
     property var renameFolderDialog
-    property var smartFolderDialog
+    property SmartFolderDialog smartFolderDialog
 
     readonly property int fullWidth: Math.round(280 * AppStyle.scale)
     readonly property int railWidth: Math.round(56 * AppStyle.scale)
@@ -216,9 +219,9 @@ Pane {
                             id: platformMenuItem
                             required property var model
 
-                            iconSource: "qrc:/icons/" + model.iconName
+                            platformId: model.platformId
                             displayText: model.displayName
-                            numberOfItems: LibraryEntryModel.countByPlatform[model.platformId]
+                            numberOfItems: LibraryEntryModel.countByPlatform[model.platformId] ?? 0
 
                             width: ListView.view.width
                             ButtonGroup.group: libraryButtonGroup
@@ -338,9 +341,10 @@ Pane {
                                 }
                             }
 
-                            iconName: "folder"
+                            iconName: modelData.folderType === 1 ? "bookmark-star" : "folder"
+                            customIconUrl: modelData.icon1x1SourceUrl
                             iconColor: modelData.color !== "" ? modelData.color : Theme.textPrimary
-                            displayText: modelData.displayName
+                            displayText: modelData.displayName !== "" ? modelData.displayName : qsTr("Untitled folder")
                             accentColor: modelData.color
                             numberOfItems: {
                                 var num = LibraryEntryModel.countByFolderId[modelData.folderId];

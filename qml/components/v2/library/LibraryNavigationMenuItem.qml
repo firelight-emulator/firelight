@@ -4,16 +4,27 @@ import QtQuick.Layouts 1.0
 
 Button {
     id: control
-    // required property int index
 
     objectName: "LibraryNavigationMenuItem|" + displayText
 
     property string iconSource: ""
     property string iconName: ""
-    required property string displayText
-    property var numberOfItems
 
-    // Optional folder accent color (empty = none), shown as a thin left bar
+    // TODO
+    // Platform rows render their logo via FLPlatformIcon (>= 0 = a platform row)
+    property int platformId: -1
+
+    // TODO
+    // Custom folder art (empty = use the glyph/logo). Takes priority in the chip
+    property string customIconUrl: ""
+    required property string displayText
+
+    // TODO
+    // Row count badge; negative hides it
+    property int numberOfItems: -1
+
+    // TODO
+    // Folder color (empty = none). Tints the icon chip and the selection pill
     property string accentColor: ""
 
     property bool containsDrag: false
@@ -30,62 +41,88 @@ Button {
     property color iconColor: Theme.textPrimary
     signal toggleExpanded
 
+    // TODO
+    // The color the chip/pill tint derive from, and whether one was set
+    readonly property bool hasAccent: accentColor !== ""
+    readonly property color tintBase: hasAccent ? Qt.color(accentColor) : Theme.textMuted
+
     // Scales with the UI (36 at 100%) so the label isn't cramped when enlarged
     implicitHeight: AppStyle.controlHeight
     width: ListView.view.width
-
-    // onClicked: {
-    //     ListView.view.currentIndex = index
-    // }
 
     hoverEnabled: true
     checkable: true
     padding: AppStyle.spacingSm
 
     background: Item {
-        property alias radius: backgroundRect.radius
+        // TODO
+        // Reported to the global focus ring so it rounds to match the pill
+        readonly property int radius: AppStyle.radiusMd
+
+        // TODO
+        // Selection/hover pill, inset so it floats off the sidebar edges. Tints
+        // with the folder color when selected, else a neutral wash
         Rectangle {
             anchors.fill: parent
-
-            color: control.hovered || control.checked || control.down ? "#FFFFFF" : "transparent"
-            opacity: control.down ? 0.05 : control.hovered ? 0.08 : control.checked ? 0.12 : 0
-            radius: AppStyle.radiusSm
+            anchors.leftMargin: AppStyle.spacingXs
+            anchors.rightMargin: AppStyle.spacingXs
+            radius: AppStyle.radiusMd
+            color: {
+                if (control.checked) {
+                    return control.hasAccent ? Qt.rgba(control.tintBase.r, control.tintBase.g, control.tintBase.b, 0.16) : Qt.rgba(1, 1, 1, 0.12);
+                }
+                if (control.down) {
+                    return Qt.rgba(1, 1, 1, 0.05);
+                }
+                if (control.hovered) {
+                    return Qt.rgba(1, 1, 1, 0.06);
+                }
+                return "transparent";
+            }
         }
 
         Rectangle {
-            id: backgroundRect
-            color: "transparent"
             anchors.fill: parent
+            anchors.leftMargin: AppStyle.spacingXs
+            anchors.rightMargin: AppStyle.spacingXs
+            color: "transparent"
             border.color: control.containsDrag ? "#c36d00" : "transparent"
             border.width: 2
-            opacity: 1
-            radius: AppStyle.radiusSm
-        }
-
-        Rectangle {
-            id: accentBar
-            visible: control.accentColor !== ""
-            color: control.accentColor === "" ? "transparent" : control.accentColor
-            width: 3
-            radius: 1.5
-            anchors.left: parent.left
-            anchors.leftMargin: 2
-            anchors.verticalCenter: parent.verticalCenter
-            height: parent.height - 12
+            radius: AppStyle.radiusMd
         }
     }
+
     contentItem: RowLayout {
-        // iconSource may be a Material icon (qrc:/icons/<name>), a console logo, or folder
-        // art. Render known Material names as crisp font glyphs; everything else as a crisp
-        // (GPU curve-rendered) vector image
+        id: contentRow
+        spacing: 0
+
+        // qrc:/icons/<name> may be a Material glyph (browse, folder) or a console
+        // logo vector image; only the former resolves in MaterialSymbols
         readonly property string resolvedIconName: control.iconSource.indexOf("qrc:/icons/") === 0 ? control.iconSource.substring(11) : ""
         readonly property bool iconIsGlyph: resolvedIconName !== "" && MaterialSymbols.glyph(resolvedIconName) !== ""
 
-        // Nesting indent
+        // TODO
+        // The glyph to draw, if any (explicit iconName or a glyph-backed source)
+        readonly property string glyphName: control.iconName !== "" ? control.iconName : (iconIsGlyph ? resolvedIconName : "")
+
+        // TODO
+        // Otherwise a vector image: custom folder art first, then a console logo
+        readonly property string imageUrl: control.customIconUrl !== "" ? control.customIconUrl : (glyphName === "" ? control.iconSource : "")
+
+        // Nesting indent (with a quiet tree guide on the right edge)
         Item {
             visible: control.depth > 0
             Layout.preferredWidth: control.depth * Math.round(14 * AppStyle.scale)
             Layout.fillHeight: true
+
+            Rectangle {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                width: 1
+                height: parent.height - AppStyle.spacingSm
+                color: Theme.textPrimary
+                opacity: 0.1
+            }
         }
 
         // Disclosure chevron (a fixed column in tree sections so leaf and
@@ -117,15 +154,43 @@ Button {
             }
         }
 
-        Icon {
-            Layout.preferredWidth: height
-            Layout.fillHeight: true
-            // visible: parent.iconIsGlyph
-            name: control.iconName
-            filled: false
-            size: Math.round(20 * AppStyle.scale)
-            color: control.iconColor
+        // TODO
+        // Colored icon chip: the row's glanceable cue
+        Rectangle {
+            Layout.preferredWidth: AppStyle.iconChipSize
+            Layout.preferredHeight: AppStyle.iconChipSize
+            Layout.alignment: Qt.AlignVCenter
+            radius: AppStyle.radiusSm
+            color: Qt.rgba(control.tintBase.r, control.tintBase.g, control.tintBase.b, control.hasAccent ? 0.18 : 0.1)
+
+            FLPlatformIcon {
+                anchors.centerIn: parent
+                visible: control.platformId >= 0
+                platformId: control.platformId
+                width: AppStyle.iconSizeSm
+                height: AppStyle.iconSizeSm
+            }
+
+            Icon {
+                anchors.centerIn: parent
+                visible: control.platformId < 0 && contentRow.imageUrl === ""
+                name: contentRow.glyphName
+                filled: false
+                size: AppStyle.iconSizeSm
+                color: control.iconColor
+            }
+
+            Image {
+                anchors.centerIn: parent
+                visible: control.platformId < 0 && contentRow.imageUrl !== ""
+                width: AppStyle.iconSizeSm
+                height: AppStyle.iconSizeSm
+                fillMode: Image.PreserveAspectFit
+                sourceSize: Qt.size(width * 2, height * 2)
+                source: contentRow.imageUrl
+            }
         }
+
         Text {
             Layout.leftMargin: AppStyle.spacingSm
             Layout.fillWidth: true
@@ -141,14 +206,15 @@ Button {
         }
         Text {
             Layout.leftMargin: AppStyle.spacingSm
+            Layout.rightMargin: AppStyle.spacingXs
             color: Theme.textMuted
             font.family: Constants.regularFontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             font.weight: Font.DemiBold
-            text: control.numberOfItems ?? ""
+            text: control.numberOfItems >= 0 ? control.numberOfItems : ""
             Layout.fillHeight: true
             verticalAlignment: Text.AlignVCenter
-            visible: control.numberOfItems !== undefined && control.numberOfItems !== null && control.width > Math.round(64 * AppStyle.scale)
+            visible: control.numberOfItems >= 0 && control.width > Math.round(64 * AppStyle.scale)
         }
     }
 }
