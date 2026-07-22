@@ -74,12 +74,6 @@ Rectangle {
         }
 
         Rectangle {
-            anchors.fill: parent
-            color: "black"
-            opacity: root.dimAmount
-        }
-
-        Rectangle {
             anchors.topMargin: -70
             anchors.top: parent.top
             anchors.left: parent.left
@@ -114,5 +108,11 @@ Rectangle {
                 }
             }
         }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: "black"
+        opacity: root.dimAmount
     }
 }

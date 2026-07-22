@@ -312,8 +312,8 @@ FirelightDialog {
                     ]
                     delegate: FLButton {
                         required property var modelData
-                        size: "sm"
-                        variant: "secondary"
+                        compact: true
+                        variant: "default"
                         text: modelData.label
                         onClicked: control.applyTemplate(modelData.kind)
                     }

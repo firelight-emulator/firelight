@@ -49,6 +49,11 @@ Item {
 
     readonly property int windowPadding: Math.round(18 * scale)
 
+    // v2 button metrics: one height + a compact option, one fixed icon size
+    readonly property int buttonHeight: Math.max(minTarget, Math.round(34 * scale * density))
+    readonly property int buttonHeightCompact: Math.max(minTarget, Math.round(28 * scale * density))
+    readonly property int iconSizeButton: Math.round(20 * scale)
+
     // Button metrics (color/opacity moved to Theme)
     readonly property int buttonStandardWidth: Math.round(200 * scale)
     readonly property int buttonStandardHeight: Math.max(minTarget, Math.round(42 * scale * density))

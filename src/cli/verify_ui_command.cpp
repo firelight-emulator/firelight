@@ -259,6 +259,7 @@ std::vector<QString> VerifyUiRunner::getDefaultRoutes() {
       QStringLiteral("/activity"),
       QStringLiteral("/netplay"),
       QStringLiteral("/help"),
+      QStringLiteral("/dev/gallery"),
       QStringLiteral("/quick-menu"),
       QStringLiteral("/settings"),
   };

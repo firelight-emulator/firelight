@@ -62,6 +62,7 @@ class MediaService;
 // members are set once in main.cpp
 class ServiceAccessor {
 public:
+  virtual ~ServiceAccessor() = default;
   static void setInputService(input::InputService *service);
 
   static void setControllerProfileRepository(input::IControllerRepository *repository);

@@ -36,9 +36,10 @@ Text {
             "GRAD": root.grade
         })
 
-    // GPU curve rasterizer: crisp, resolution-independent, and safe under rotation/scaling
-    // (unlike NativeRendering). Set per-instance if a different mode is ever needed
-    renderType: Text.CurveRendering
+    // TODO
+    // Native hinted glyphs: sharpest for small static UI icons. Pixel-snapped, so
+    // not ideal under fractional scale/rotation. Set per-instance if that comes up
+    renderType: Text.NativeRendering
     textFormat: Text.PlainText
     horizontalAlignment: Text.AlignHCenter
     verticalAlignment: Text.AlignVCenter

@@ -168,6 +168,16 @@ FocusScope {
                 Layout.maximumWidth: Math.round(root.width * 0.6)
                 implicitWidth: (!root.controlBelow && root.control) ? root.control.implicitWidth : 0
                 implicitHeight: (!root.controlBelow && root.control) ? root.control.implicitHeight : 0
+
+                onImplicitWidthChanged: {
+                    console.log("Implicit width: " + implicitWidth)
+                }
+
+                Rectangle {
+                    color: "transparent"
+                    anchors.fill: parent
+                    border.color: "red"
+                }
             }
         }
 

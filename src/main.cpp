@@ -69,6 +69,7 @@
 #include "gui/qt_game_art_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include "gui/qt_network_service_proxy.hpp"
+#include "gui/qt_platform_service_proxy.hpp"
 #include "gui/qt_save_manager_proxy.hpp"
 #include "gui/qt_settings_catalog_proxy.hpp"
 #include "gui/settings_level_shim.hpp"
@@ -725,11 +726,11 @@ int main(int argc, char *argv[]) {
 
   engine.rootContext()->setContextProperty("InputService", &inputServiceProxy);
   engine.rootContext()->setContextProperty("EmulationService", new firelight::gui::QtEmulationServiceProxy());
-  // Only the shortcuts that genuinely need the UI reach QML; the rest are
-  // handled in ShortcutActions
   engine.rootContext()->setContextProperty("ShortcutDispatcher", &shortcutDispatcher);
   engine.rootContext()->setContextProperty("AchievementService", &achievementServiceProxy);
   engine.rootContext()->setContextProperty("GameArtService", &gameArtProxy);
+  engine.rootContext()->setContextProperty("PlatformService",
+                                           new firelight::gui::QtPlatformServiceProxy(&platformService));
 
   engine.rootContext()->setContextProperty("LibraryFolderModel", &libraryFolderListModel);
   engine.rootContext()->setContextProperty("LibraryScanner", &libScanner2);

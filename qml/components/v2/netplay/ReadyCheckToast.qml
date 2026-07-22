@@ -89,7 +89,7 @@ Rectangle {
                 onClicked: root.hostLaunchRequested()
             }
             FLButton {
-                variant: "ghost"
+                variant: "subtle"
                 visible: NetworkService.isHost
                 text: "Cancel"
                 onClicked: NetworkService.endSession()

@@ -35,6 +35,12 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+# Build every library statically and link it into the exe. Leaving this ON
+# turns keyword-less add_library targets (including vendored thirdparty like
+# SQLiteCpp) into DLLs that aren't deployed next to the exe, and mixes
+# static/shared libs so MinGW auto-exports duplicate symbols
+set(BUILD_SHARED_LIBS OFF)
+
 #option(ENABLE_ASAN "Enable Address Sanitizer" ON)
 #if(ENABLE_ASAN)
 #    message(STATUS "AddressSanitizer (ASan) enabled.")
@@ -78,7 +84,7 @@ pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
 # find_package(FFMPEG REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
-find_package(Qt6 6.11 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg REQUIRED)
+find_package(Qt6 6.11 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg ShaderTools REQUIRED)
 if (Qt6_VERSION VERSION_GREATER_EQUAL 6.10.0)
     find_package(Qt6 OPTIONAL_COMPONENTS
             GuiPrivate
@@ -171,7 +177,7 @@ set_source_files_properties(qml/MaterialSymbols.qml PROPERTIES QT_QML_SINGLETON_
 # is free of Qt Quick and Qt Multimedia — a headless/CLI frontend can reuse it.
 # firelight_lib links it and supplies the Qt implementations. (It still links
 # Qt6::Core directly, and Qt6::Gui transitively via firelight_input.)
-add_library(firelight_emulation_lib
+add_library(firelight_emulation_lib STATIC
         src/app/libretro/core.cpp
         src/app/libretro/core_environment.cpp
         src/app/libretro/libretro_dll.cpp
@@ -201,7 +207,7 @@ target_link_libraries(firelight_emulation_lib PUBLIC
         firelight_library
 )
 
-add_library(firelight_lib
+add_library(firelight_lib STATIC
         src/app/emulation/shortcut_actions.cpp
         src/app/emulation/shortcut_dispatcher.cpp
         src/app/audio/audio_manager.cpp
@@ -311,6 +317,8 @@ add_library(firelight_lib
         src/cli/startup_options.hpp
         src/cli/verify_ui_command.cpp
         src/cli/verify_ui_command.hpp
+        src/gui/qt_platform_service_proxy.cpp
+        src/gui/qt_platform_service_proxy.hpp
 )
 
 # Single source of truth for the app version, consumed by the CLI --version and
@@ -417,6 +425,12 @@ qt6_add_qml_module(firelight
         VERSION 1.0
         QML_FILES
         ${QML_FILES}
+)
+
+qt6_add_shaders(firelight "firelight_shaders"
+        PREFIX "/qt/qml/QMLFirelight"
+        BASE "${CMAKE_SOURCE_DIR}/qml"
+        FILES qml/shaders/rounded_image.frag
 )
 
 #target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})

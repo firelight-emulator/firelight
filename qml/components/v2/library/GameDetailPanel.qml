@@ -205,14 +205,14 @@ Rectangle {
 
             FLButton {
                 Layout.fillWidth: true
-                size: "sm"
+                compact: true
                 variant: "primary"
                 text: "Play"
                 onClicked: if (panel.gameData)
                     panel.requestPlay(panel.gameData.entryId)
             }
             FLIconButton {
-                size: "sm"
+                compact: true
                 iconName: "favorite"
                 checked: panel.gameData ? panel.gameData.favorite : false
                 tooltipText: (panel.gameData && panel.gameData.favorite) ? "Remove from favorites" : "Add to favorites"
@@ -220,7 +220,7 @@ Rectangle {
                     panel.requestFavorite(panel.gameData.entryId, !panel.gameData.favorite)
             }
             FLIconButton {
-                size: "sm"
+                compact: true
                 iconName: "folder"
                 tooltipText: "Add to folder"
                 onClicked: if (panel.gameData)

@@ -350,7 +350,7 @@ FocusScope {
                                 visible: index > 0
                             }
 
-                            LibraryNavigationMenuSection {
+                            LibraryNavigationMenu {
                                 Layout.fillWidth: true
                                 title: modelData.title
                                 collapsible: false

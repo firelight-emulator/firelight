@@ -13,16 +13,24 @@ Button {
         y: control.height + 8
 
         RightClickMenuItem {
+            text: qsTr("Gallery")
+            iconSource: "qrc:/icons/photo-album"
+            minWidth: 260
+            onTriggered: Router.navigate("/gallery")
+        }
+
+        RightClickMenuItem {
             text: qsTr("Achievements")
             iconSource: "qrc:/icons/trophy"
             minWidth: 260
-            onTriggered: { /* ... */ }
+            onTriggered: Router.navigate("/achievements")
         }
+
         RightClickMenuItem {
             text: qsTr("Activity")
             iconSource: "qrc:/icons/bar-chart"
             minWidth: 260
-            onTriggered: { /* ... */ }
+            onTriggered: Router.navigate("/activity")
         }
     }
 

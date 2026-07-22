@@ -328,10 +328,9 @@
     },
     {
       "key": "background-dim",
-      "label": "Image dim",
+      "label": "Background dimming",
       "group": "appearance-background",
       "order": 60,
-      "description": "Darkens the background so panels stay readable over it.",
       "keywords": [
         "wallpaper",
         "darken",
@@ -342,15 +341,7 @@
       "default": "0.4",
       "min": 0,
       "max": 1,
-      "step": 0.01,
-      "visibleWhen": [
-        {
-          "key": "background-mode",
-          "values": [
-            "image"
-          ]
-        }
-      ]
+      "step": 0.01
     },
     {
       "key": "theme-intensity",

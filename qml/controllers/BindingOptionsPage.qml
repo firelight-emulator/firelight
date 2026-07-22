@@ -125,8 +125,8 @@ FocusScope {
                         }
 
                         FLButton {
-                            size: "sm"
-                            variant: "ghost"
+                            compact: true
+                            variant: "subtle"
                             text: "Remove"
                             onClicked: bindings.removeBinding(index)
                         }

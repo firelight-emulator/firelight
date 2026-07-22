@@ -20,8 +20,8 @@ constexpr int EXIT_UNHEALTHY = 6;
 
 // Every database the app opens under the data directory
 constexpr std::array DATABASE_FILES = {
-    "library.db", "settings.db",  "rcheevos3.db", "activity.db", "userdata.db",
-    "media.db",   "captures.db",  "cheats.db",    "metadata.db", "controllers.db",
+    "library.db", "settings.db", "rcheevos3.db", "activity.db", "userdata.db",
+    "media.db",   "captures.db", "cheats.db",    "metadata.db", "controllers.db",
 };
 
 enum class Level { Ok, Info, Warn, Fail };
@@ -51,7 +51,8 @@ void checkCores(std::vector<Finding> &findings) {
     if (!core.present) {
       if (!core.defaultForPlatforms.empty()) {
         findings.push_back({Level::Fail, "cores",
-                            core.coreId + " is the default core for " + std::to_string(core.defaultForPlatforms.size()) +
+                            core.coreId + " is the default core for " +
+                                std::to_string(core.defaultForPlatforms.size()) +
                                 " platform(s) but is not installed at " + core.expectedPath});
       } else {
         findings.push_back({Level::Warn, "cores", core.coreId + " is registered but not installed"});

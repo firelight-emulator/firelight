@@ -93,6 +93,7 @@ Item {
             width: 8
         }
         boundsBehavior: Flickable.StopAtBounds
+        reuseItems: true
 
         delegate: Item {
             id: gameDelegate
@@ -138,22 +139,24 @@ Item {
                     onRequestChangeArt: (h, n, p) => gridRoot.requestChangeArt(h, n, p)
                 }
 
-                scale: hovered ? 1.05 : 1
-                Behavior on scale {
-                    NumberAnimation {
-                        duration: 120
-                        easing.type: Easing.InOutQuad
+                transform: Translate {
+                    y: control.hovered ? -2 : 0
+
+                    Behavior on y {
+                        NumberAnimation {
+                            duration: 120
+                            easing.type: Easing.InOutQuad
+                        }
                     }
                 }
 
-                background: Rectangle {
-                    color: control.down ? "#FFFFFF" : "transparent"
-                    opacity: control.down ? 0.05 : 0
-                    radius: AppStyle.radiusSm
-                }
+                background: Item {}
                 contentItem: GameTile {
                     source: gridRoot.iconSource(gameDelegate.model.icon1x1SourceUrl)
                     size: root.cellWidth
+                    platformId: gameDelegate.model.platformId
+                    title: gameDelegate.model.displayName
+                    titleVisible: control.hovered || control.activeFocus
                 }
 
                 // Status badges — always visible, so the wall of art carries
@@ -220,58 +223,13 @@ Item {
                     }
                 }
 
-                // Title reveal: pristine art at rest, a scrim + name on hover/focus
-                Rectangle {
-                    z: 2
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    height: Math.round(parent.height * 0.55)
-                    // Uniform radius, not per-corner: a Rectangle ignores its
-                    // gradient when per-corner radii are set. The top corners are
-                    // transparent in the gradient, so rounding them is invisible
-                    radius: AppStyle.radiusMd
-                    opacity: control.hovered || control.activeFocus ? 1 : 0
-                    gradient: Gradient {
-                        GradientStop {
-                            position: 0.0
-                            color: "transparent"
-                        }
-                        GradientStop {
-                            position: 1.0
-                            color: "#dd000000"
-                        }
-                    }
-                    Behavior on opacity {
-                        NumberAnimation {
-                            duration: 120
-                            easing.type: Easing.OutQuad
-                        }
-                    }
-
-                    Text {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        anchors.margins: AppStyle.spacingSm
-                        text: gameDelegate.model.displayName
-                        color: "white"
-                        font.family: Constants.regularFontFamily
-                        font.pixelSize: AppStyle.fontSizeSmall
-                        font.weight: Font.DemiBold
-                        elide: Text.ElideRight
-                        maximumLineCount: 2
-                        wrapMode: Text.WordWrap
-                    }
-                }
-
                 // Multi-select ring
                 Rectangle {
                     z: 3
                     anchors.fill: parent
                     visible: gameDelegate.selected
                     color: "transparent"
-                    radius: AppStyle.radiusMd
+                    radius: AppStyle.radiusLg
                     border.color: Theme.accent
                     border.width: Math.max(2, Math.round(2 * AppStyle.scale))
                 }

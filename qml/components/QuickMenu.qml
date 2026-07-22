@@ -387,7 +387,6 @@ Pane {
                         RadioIconButton {
                             Layout.preferredWidth: 42
                             Layout.preferredHeight: 42
-                            iconSize: 24
                             Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
                             focus: true
                             iconName: "sort"

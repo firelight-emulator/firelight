@@ -62,7 +62,7 @@ FocusScope {
         FLIconButton {
             visible: field.text !== ""
             iconName: "close"
-            size: "sm"
+            compact: true
             Layout.alignment: Qt.AlignVCenter
             onClicked: root.clear()
         }

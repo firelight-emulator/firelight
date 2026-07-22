@@ -40,7 +40,7 @@ FocusScope {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
 
-            spacing: AppStyle.spacingLg
+            spacing: AppStyle.spacingMd
 
             FLIconButton {
                 id: menuButton
@@ -151,15 +151,55 @@ FocusScope {
             }
         }
 
-        TitleBarSearchBar {
-            id: searchBar
+        RowLayout {
+            id: centerContentArea
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.horizontalCenter: parent.horizontalCenter
-            // Shrinks as the window narrows. The wider panel sets the mirrored
-            // margin on the shorter side so the bar stays exactly centred
-            width: Math.min(600, Math.max(0, parent.width - Math.max(leftContentArea.width, rightContentArea.width) * 2 - 32))
+            // width: Math.min(600, Math.max(0, parent.width - Math.max(leftContentArea.width, rightContentArea.width) * 2 - 32))
+
+            spacing: AppStyle.spacingMd
+
+            FLButton {
+                text: "Home"
+                iconName: "home"
+                Layout.alignment: Qt.AlignVCenter
+                variant: "subtle"
+                checkable: false
+                checked: Router.isActive("/home")
+                onClicked: Router.navigate("/home")
+            }
+
+            FLButton {
+                text: "Library"
+                iconName: "browse"
+                Layout.alignment: Qt.AlignVCenter
+                variant: "subtle"
+                checkable: false
+                checked: Router.isActive("/library")
+                onClicked: Router.navigate("/library")
+            }
+
+            FLButton {
+                text: "Mod Shop"
+                iconName: "shopping-bag"
+                Layout.alignment: Qt.AlignVCenter
+                variant: "subtle"
+                checkable: false
+                checked: Router.isActive("/shop")
+                onClicked: Router.navigate("/shop")
+            }
         }
+
+        // TitleBarSearchBar {
+        //     id: searchBar
+        //     anchors.top: parent.top
+        //     anchors.bottom: parent.bottom
+        //     anchors.horizontalCenter: parent.horizontalCenter
+        //     // Shrinks as the window narrows. The wider panel sets the mirrored
+        //     // margin on the shorter side so the bar stays exactly centred
+        //     width: Math.min(600, Math.max(0, parent.width - Math.max(leftContentArea.width, rightContentArea.width) * 2 - 32))
+        // }
 
         RowLayout {
             id: rightContentArea
@@ -167,10 +207,24 @@ FocusScope {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
 
-            spacing: AppStyle.spacingXl
+            spacing: AppStyle.spacingMd
+
+            FLIconButton {
+                iconName: "search"
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            FLIconButton {
+                iconName: "settings"
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: Router.navigate("/settings")
+            }
 
             TitleBarProfileButton {
                 Layout.fillHeight: true
+                Layout.topMargin: AppStyle.spacingXs
+                Layout.bottomMargin: AppStyle.spacingXs
+                Layout.leftMargin: AppStyle.spacingXs
                 Layout.preferredWidth: height
                 avatarUrlSource: achievement_manager.avatarUrl
             }
@@ -178,7 +232,6 @@ FocusScope {
             TitleBarUtilityButtons {
                 Layout.fillHeight: true
                 Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: -(parent.spacing / 2)
 
                 onMinimizeClicked: root.minimizeClicked()
                 onMaximizeClicked: root.maximizeClicked()

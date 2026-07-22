@@ -1,10 +1,11 @@
+#include "../../../libs/firelight/library/src/firelight/library/content_hasher.hpp"
+
 #include <firelight/platforms/platform_service.hpp>
+
 #include <fstream>
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
-
-#include "../../../libs/firelight/library/src/firelight/library/content_hasher.hpp"
 
 namespace firelight::library {
 namespace {

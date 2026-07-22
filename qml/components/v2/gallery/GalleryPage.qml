@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts 1.0
 
-Item {
+FLPage {
     id: root
 
     // When set, the gallery is pre-filtered to a single game's captures
@@ -12,6 +12,28 @@ Item {
     property bool sortAscending: false // newest first by default
 
     Component.onCompleted: CaptureModel.refresh()
+
+    headerActions: [
+        FLSegmentedControl {
+            readonly property var typeValues: ["all", "screenshot", "clip"]
+            segments: ["All", "Screenshots", "Clips"]
+            currentIndex: Math.max(0, typeValues.indexOf(root.typeFilter))
+            onActivated: function (index) {
+                root.typeFilter = typeValues[index];
+            }
+        },
+        FLButton {
+            text: "Favorites"
+            checkable: true
+            variant: checked ? "primary" : "default"
+            checked: root.showOnlyFavorites
+            onClicked: root.showOnlyFavorites = !root.showOnlyFavorites
+        },
+        FLButton {
+            text: root.sortAscending ? "Oldest first" : "Newest first"
+            onClicked: root.sortAscending = !root.sortAscending
+        }
+    ]
 
     SortFilterProxyModel {
         id: captureProxy
@@ -42,56 +64,9 @@ Item {
         ]
     }
 
-    ColumnLayout {
+    GalleryGridView {
         anchors.fill: parent
-        spacing: 0
-
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.margins: 12
-            spacing: AppStyle.spacingSm
-
-            Text {
-                text: "Media"
-                color: Theme.textPrimary
-                font.pixelSize: AppStyle.fontSizeLarge
-                font.weight: Font.Bold
-                font.family: Constants.regularFontFamily
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            // Capture-type filter
-            FLSegmentedControl {
-                readonly property var typeValues: ["all", "screenshot", "clip"]
-                segments: ["All", "Screenshots", "Clips"]
-                currentIndex: Math.max(0, typeValues.indexOf(root.typeFilter))
-                onActivated: function (index) {
-                    root.typeFilter = typeValues[index];
-                }
-            }
-
-            FLButton {
-                text: "Favorites"
-                checkable: true
-                variant: checked ? "primary" : "secondary"
-                checked: root.showOnlyFavorites
-                onClicked: root.showOnlyFavorites = !root.showOnlyFavorites
-            }
-
-            FLButton {
-                text: root.sortAscending ? "Oldest first" : "Newest first"
-                onClicked: root.sortAscending = !root.sortAscending
-            }
-        }
-
-        GalleryGridView {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            model: captureProxy
-        }
+        model: captureProxy
     }
 
     Text {

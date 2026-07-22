@@ -49,7 +49,7 @@ BaseSettingItem {
         }
 
         FLButton {
-            size: "sm"
+            compact: true
             text: qsTr("Browse…")
             enabled: root.enabled
             focusPolicy: Qt.NoFocus
@@ -57,8 +57,8 @@ BaseSettingItem {
         }
 
         FLButton {
-            size: "sm"
-            variant: "ghost"
+            compact: true
+            variant: "subtle"
             text: qsTr("Clear")
             visible: root.value !== ""
             enabled: root.enabled

@@ -11,13 +11,28 @@ namespace firelight::platforms {
 class IPlatformService {
 public:
   virtual ~IPlatformService() = default;
+
+  /**
+   * @param id The platform ID to look up
+   * @return The platform corresponding to the given ID, or std::nullopt if no platform is found
+   */
   [[nodiscard]] virtual std::optional<Platform> getPlatform(unsigned id) const = 0;
+
+  /**
+   * @return A list of all the platforms known to the service, in no particular order
+   */
   [[nodiscard]] virtual std::vector<Platform> listPlatforms() const = 0;
-  // The platform whose file associations include `extension` (lowercase, no
-  // dot), or PLATFORM_ID_UNKNOWN. Cartridge extensions only; ambiguous disc
-  // extensions are identified by content, not extension
+  /**
+   * @param extension The file extension (without the dot) to look up the platform for
+   * @return The platform ID corresponding to the given file extension, or PLATFORM_ID_UNKNOWN if no platform is found
+   */
   [[nodiscard]] virtual int platformIdForExtension(const std::string &extension) const = 0;
-  // Maps an rcheevos console id (RC_CONSOLE_*) to a Firelight platform id
+
+  /**
+   * @param rcConsoleId The RetroAchievements console ID to look up the platform for
+   * @return The platform ID corresponding to the given RetroAchievements console ID, or PLATFORM_ID_UNKNOWN if no
+   * platform is found
+   */
   [[nodiscard]] virtual int platformIdForRcConsole(int rcConsoleId) const = 0;
 };
 

@@ -1,48 +1,89 @@
 import QtQuick
-import QtQuick.Effects
 
-// A game boxart thumbnail. `source` is the art url (empty or still-loading
-// shows the placeholder frame); `size` sets the tile edge and drives the decode
-// resolution so a scaled-up tile stays crisp without over-decoding a small one
+// TODO
+// Box art (or a platform-icon fallback) with a title scrim that reveals on
+// hover/focus, all clipped to one set of rounded corners
 Item {
     id: root
 
     property url source: ""
     property int size: 140
-    property real radius: AppStyle.radiusMd
+    property real radius: AppStyle.radiusLg
+    property string title: ""
+    property bool titleVisible: false
+    required property int platformId
 
     implicitWidth: size
     implicitHeight: size
 
-    // Placeholder / letterbox behind the art
-    Rectangle {
+    Item {
+        id: rounded
         anchors.fill: parent
-        radius: root.radius
-        color: Theme.surfaceElevated
-    }
 
-    Image {
-        id: img
-        anchors.fill: parent
-        source: root.source
-        visible: status === Image.Ready
-        fillMode: Image.PreserveAspectFit
-        sourceSize.width: Math.min(512, root.size * 2)
-        sourceSize.height: Math.min(512, root.size * 2)
-        mipmap: true
-        smooth: true
         layer.enabled: root.radius > 0
-        layer.effect: MultiEffect {
-            maskEnabled: true
-            maskSource: mask
+        layer.smooth: true
+        layer.effect: FLRoundedMask {
+            radius: root.radius
         }
-    }
 
-    Rectangle {
-        id: mask
-        anchors.fill: parent
-        radius: root.radius
-        visible: false
-        layer.enabled: true
+        Rectangle {
+            anchors.fill: parent
+            visible: root.source === ""
+            color: Theme.surfaceElevated
+
+            FLPlatformIcon {
+                anchors.fill: parent
+                anchors.margins: AppStyle.spacingLg * 1.5
+                platformId: root.platformId
+            }
+        }
+
+        FLRoundedImage {
+            anchors.fill: parent
+            visible: root.source !== ""
+            source: root.source
+            radius: 0
+            fillMode: Image.PreserveAspectCrop
+            background: Theme.surfaceElevated
+        }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: Math.round(parent.height * 0.55)
+            opacity: root.titleVisible ? 1 : 0
+            gradient: Gradient {
+                GradientStop {
+                    position: 0.0
+                    color: "transparent"
+                }
+                GradientStop {
+                    position: 1.0
+                    color: "#dd000000"
+                }
+            }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 120
+                    easing.type: Easing.OutQuad
+                }
+            }
+
+            Text {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: AppStyle.spacingSm
+                text: root.title
+                color: "white"
+                font.family: Constants.regularFontFamily
+                font.pixelSize: AppStyle.fontSizeSmall
+                font.weight: Font.DemiBold
+                elide: Text.ElideRight
+                maximumLineCount: 2
+                wrapMode: Text.WordWrap
+            }
+        }
     }
 }

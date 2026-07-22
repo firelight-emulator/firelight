@@ -1,6 +1,10 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
+// TODO
+// A collapsible sidebar section: a title header with a chevron over a
+// non-interactive list of items. Label hides in the narrow collapsed rail
 FocusScope {
     id: root
 
@@ -22,49 +26,66 @@ FocusScope {
         anchors.fill: parent
         spacing: 0
 
-        RowLayout {
+        Pane {
             Layout.fillWidth: true
+            Layout.preferredHeight: 32
+            horizontalPadding: 0
+            background: Item {}
+            visible: root.title !== "" && root.width > Math.round(64 * AppStyle.scale)
 
-            Text {
-                Layout.fillHeight: true
-                text: root.title
-                color: Theme.textMuted
-                font.family: Constants.regularFontFamily
-                font.pixelSize: AppStyle.fontSizeMedium
-                font.weight: Font.DemiBold
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignVCenter
-            }
+            RowLayout {
+                anchors.fill: parent
+                spacing: 2
 
-            Item {
-                Layout.fillWidth: true
-                implicitHeight: 1
-            }
+                Text {
+                    Layout.fillHeight: true
+                    text: root.title
+                    color: Theme.textPrimary
+                    opacity: 0.7
+                    font.family: Constants.regularFontFamily
+                    font.pixelSize: AppStyle.fontSizeSmall
+                    font.weight: Font.Medium
+                    horizontalAlignment: Text.AlignLeft
+                    verticalAlignment: Text.AlignVCenter
+                    visible: root.title !== ""
+                }
 
-            Icon {
-                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                size: AppStyle.iconSizeMd
-                name: "arrow-down"
-                color: Theme.textMuted
-                rotation: contentContainer.collapsed ? 360 : 180
+                Icon {
+                    name: "chevron-back"
+                    Layout.topMargin: -3
+                    Layout.bottomMargin: -4
+                    Layout.fillHeight: true
+                    size: AppStyle.iconSizeSm
+                    visible: root.title !== "" && root.collapsible
+                    color: Theme.textPrimary
+                    opacity: 0.7
+                    rotation: contentContainer.collapsed ? 180 : 270
+                    Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
 
-                Behavior on rotation {
-                    NumberAnimation {
-                        duration: 160
-                        easing.type: Easing.InOutQuad
+                    Behavior on rotation {
+                        NumberAnimation {
+                            duration: 140
+                            easing.type: Easing.InOutQuad
+                        }
                     }
                 }
-                visible: root.collapsible
-            }
 
-            TapHandler {
-                enabled: root.collapsible
-                onTapped: contentContainer.collapsed = !contentContainer.collapsed
-            }
+                Item {
+                    Layout.fillWidth: true
+                    implicitHeight: 1
+                }
 
-            HoverHandler {
-                enabled: root.collapsible
-                cursorShape: Qt.PointingHandCursor
+                TapHandler {
+                    enabled: root.collapsible
+                    onTapped: contentContainer.collapsed = !contentContainer.collapsed
+                    margin: 8
+                }
+
+                HoverHandler {
+                    enabled: root.collapsible
+                    cursorShape: Qt.PointingHandCursor
+                    margin: 8
+                }
             }
         }
 
@@ -73,9 +94,9 @@ FocusScope {
             property bool collapsed: false
 
             Layout.fillWidth: true
-            Layout.topMargin: AppStyle.spacingSm
+            Layout.topMargin: 0
+            Layout.bottomMargin: collapsed ? 0 : 8
             Layout.preferredHeight: collapsed ? 0 : list.implicitHeight
-            // clip: true
 
             Behavior on Layout.preferredHeight {
                 NumberAnimation {

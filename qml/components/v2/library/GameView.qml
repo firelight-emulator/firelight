@@ -102,6 +102,7 @@ Item {
     property string sortRole: "displayName"
     property bool sortAscending: true
     property string viewMode: "grid"
+    readonly property int gameCount: gameMirror.count
 
     // --- Multi-select (drives bulk actions; independent of scope/refine) ---
     // entryId -> true. Reassigned wholesale on every change so bindings refresh
@@ -119,12 +120,16 @@ Item {
             role: "displayName"
         },
         {
-            label: "Recently played",
+            label: "Last played",
             role: "lastPlayedAt"
         },
         {
-            label: "Platform",
-            role: "platformId"
+            label: "Playtime",
+            role: "numSecondsPlayed"
+        },
+        {
+            label: "Achievements",
+            role: "achievementsEarned"
         },
         {
             label: "Date added",
@@ -190,8 +195,12 @@ Item {
         setScopeAll();
         showOnlyFavorites = false;
         showOnlyUnplayed = false;
-        searchField.text = "";
+        filterText = "";
         clearAdvancedFilters();
+    }
+
+    function openAddToFolder() {
+        addToFolderDialog.openFor(selectedIdList());
     }
 
     // --- Selection helpers ---
@@ -445,315 +454,15 @@ Item {
             Layout.bottomMargin: AppStyle.spacingSm
             spacing: AppStyle.spacingSm
 
-            // Breadcrumb (folder scopes only)
-            RowLayout {
+            GameViewHeader {
                 Layout.fillWidth: true
-                visible: root.scopeCrumb.length > 0
-                spacing: AppStyle.spacingXs
-
-                Text {
-                    text: "Library"
-                    color: Theme.textMuted
-                    font.family: Constants.regularFontFamily
-                    font.pixelSize: AppStyle.fontSizeSmall
-                }
-                Repeater {
-                    model: root.scopeCrumb
-                    delegate: RowLayout {
-                        required property var modelData
-                        required property int index
-                        spacing: AppStyle.spacingXs
-                        Icon {
-                            name: "chevron-forward"
-                            size: AppStyle.iconSizeSm
-                            color: Theme.textMuted
-                        }
-                        Text {
-                            text: parent.modelData.label
-                            color: parent.index === root.scopeCrumb.length - 1 ? Theme.textPrimary : Theme.textMuted
-                            font.family: Constants.regularFontFamily
-                            font.pixelSize: AppStyle.fontSizeSmall
-                            font.weight: Font.DemiBold
-                            TapHandler {
-                                onTapped: root.folderCrumbClicked(parent.modelData.folderId)
-                            }
-                            HoverHandler {
-                                cursorShape: Qt.PointingHandCursor
-                            }
-                        }
-                    }
-                }
+                view: root
             }
 
-            // Title + count + clear
-            RowLayout {
+            // Toolbar: search, quick filters, Filters/Display popups, details toggle
+            GameToolbar {
                 Layout.fillWidth: true
-                spacing: AppStyle.spacingSm
-
-                Text {
-                    text: root.scopeLabel
-                    color: Theme.textPrimary
-                    font.family: Constants.regularFontFamily
-                    font.pixelSize: AppStyle.fontSizeLarge
-                    font.weight: Font.Bold
-                }
-                Text {
-                    Layout.alignment: Qt.AlignBaseline
-                    text: gameMirror.count + (gameMirror.count === 1 ? " game" : " games")
-                    color: Theme.textMuted
-                    font.family: Constants.regularFontFamily
-                    font.pixelSize: AppStyle.fontSizeMedium
-                }
-                Item {
-                    Layout.fillWidth: true
-                }
-                FLButton {
-                    visible: root.isDirty
-                    size: "sm"
-                    variant: "ghost"
-                    text: "Clear filters"
-                    onClicked: root.clearAll()
-                }
-            }
-
-            // Bulk action bar — appears while games are multi-selected
-            RowLayout {
-                Layout.fillWidth: true
-                visible: root.selectedCount > 0
-                spacing: AppStyle.spacingSm
-
-                Text {
-                    text: root.selectedCount + " selected"
-                    color: Theme.accent
-                    font.family: Constants.regularFontFamily
-                    font.pixelSize: AppStyle.fontSizeMedium
-                    font.weight: Font.DemiBold
-                }
-                FLButton {
-                    size: "sm"
-                    variant: "secondary"
-                    iconName: "favorite"
-                    text: "Favorite"
-                    onClicked: root.bulkFavorite(true)
-                }
-                FLButton {
-                    size: "sm"
-                    variant: "secondary"
-                    text: "Add to folder…"
-                    onClicked: addToFolderDialog.openFor(root.selectedIdList())
-                }
-                FLButton {
-                    size: "sm"
-                    variant: "secondary"
-                    text: "Remove from folder"
-                    visible: root.removableFolderId !== -1
-                    onClicked: root.bulkRemoveFromFolder()
-                }
-                Item {
-                    Layout.fillWidth: true
-                }
-                FLButton {
-                    size: "sm"
-                    variant: "ghost"
-                    text: "Clear selection"
-                    onClicked: root.clearSelection()
-                }
-            }
-
-            // Search / sort / refine / view
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: AppStyle.spacingSm
-
-                FLSearchField {
-                    id: searchField
-                    Layout.preferredWidth: Math.round(240 * AppStyle.scale)
-                    placeholder: qsTr("Search this view")
-                    onTextChanged: root.filterText = text
-                }
-
-                FLComboBox {
-                    id: sortCombo
-                    Layout.preferredWidth: Math.round(170 * AppStyle.scale)
-                    model: root.sortOptions
-                    textRole: "label"
-                    currentIndex: {
-                        for (var i = 0; i < root.sortOptions.length; i++) {
-                            if (root.sortOptions[i].role === root.sortRole) {
-                                return i;
-                            }
-                        }
-                        return 0;
-                    }
-                    onActivated: function (index) {
-                        root.sortRole = root.sortOptions[index].role;
-                        root.persistFolderSort();
-                    }
-                }
-                FLIconButton {
-                    iconName: root.sortAscending ? "arrow-up" : "arrow-down"
-                    size: "sm"
-                    tooltipText: root.sortAscending ? "Ascending" : "Descending"
-                    onClicked: {
-                        root.sortAscending = !root.sortAscending;
-                        root.persistFolderSort();
-                    }
-                }
-
-                FLButton {
-                    size: "sm"
-                    iconName: "favorite"
-                    text: "Favorites"
-                    variant: root.showOnlyFavorites ? "primary" : "secondary"
-                    onClicked: root.showOnlyFavorites = !root.showOnlyFavorites
-                }
-                FLButton {
-                    size: "sm"
-                    text: "Unplayed"
-                    variant: root.showOnlyUnplayed ? "primary" : "secondary"
-                    onClicked: root.showOnlyUnplayed = !root.showOnlyUnplayed
-                }
-
-                FLButton {
-                    id: filtersButton
-                    size: "sm"
-                    text: "Filters"
-                    variant: root.anyAdvancedFilter ? "primary" : "secondary"
-                    onClicked: filtersPopup.opened ? filtersPopup.close() : filtersPopup.open()
-
-                    Popup {
-                        id: filtersPopup
-                        y: filtersButton.height + AppStyle.spacingXs
-                        width: Math.round(260 * AppStyle.scale)
-                        padding: AppStyle.spacingMd
-                        modal: false
-                        focus: true
-                        // Escape or the Filters button closes it; not press-outside,
-                        // which the nested combo popups would trip
-                        closePolicy: Popup.CloseOnEscape
-                        background: Rectangle {
-                            color: Theme.surfaceElevated
-                            radius: AppStyle.radiusMd
-                            border.color: Theme.border
-                            border.width: 1
-                        }
-
-                        ColumnLayout {
-                            width: parent.width
-                            spacing: AppStyle.spacingSm
-
-                            Text {
-                                text: "Refine"
-                                color: Theme.textPrimary
-                                font.family: Constants.regularFontFamily
-                                font.pixelSize: AppStyle.fontSizeMedium
-                                font.weight: Font.Bold
-                            }
-
-                            FLButton {
-                                Layout.fillWidth: true
-                                size: "sm"
-                                text: "Has achievements"
-                                variant: root.filterHasAchievements ? "primary" : "secondary"
-                                onClicked: root.filterHasAchievements = !root.filterHasAchievements
-                            }
-                            FLButton {
-                                Layout.fillWidth: true
-                                size: "sm"
-                                text: "Completed"
-                                variant: root.filterCompleted ? "primary" : "secondary"
-                                onClicked: root.filterCompleted = !root.filterCompleted
-                            }
-
-                            Text {
-                                text: "Play time"
-                                color: Theme.textMuted
-                                font.family: Constants.regularFontFamily
-                                font.pixelSize: AppStyle.fontSizeSmall
-                            }
-                            FLComboBox {
-                                Layout.fillWidth: true
-                                model: root.playTimeOptions
-                                textRole: "label"
-                                currentIndex: {
-                                    for (var i = 0; i < root.playTimeOptions.length; i++) {
-                                        if (root.playTimeOptions[i].value === root.filterPlayTime) {
-                                            return i;
-                                        }
-                                    }
-                                    return 0;
-                                }
-                                onActivated: function (index) {
-                                    root.filterPlayTime = root.playTimeOptions[index].value;
-                                }
-                            }
-
-                            Text {
-                                text: "Decade"
-                                color: Theme.textMuted
-                                font.family: Constants.regularFontFamily
-                                font.pixelSize: AppStyle.fontSizeSmall
-                            }
-                            FLComboBox {
-                                Layout.fillWidth: true
-                                model: root.decadeOptions
-                                textRole: "label"
-                                currentIndex: {
-                                    for (var i = 0; i < root.decadeOptions.length; i++) {
-                                        if (root.decadeOptions[i].value === root.filterDecade) {
-                                            return i;
-                                        }
-                                    }
-                                    return 0;
-                                }
-                                onActivated: function (index) {
-                                    root.filterDecade = root.decadeOptions[index].value;
-                                }
-                            }
-
-                            Text {
-                                text: "Genre contains"
-                                color: Theme.textMuted
-                                font.family: Constants.regularFontFamily
-                                font.pixelSize: AppStyle.fontSizeSmall
-                            }
-                            FLSearchField {
-                                id: genreFilterField
-                                Layout.fillWidth: true
-                                placeholder: "e.g. RPG"
-                                onTextChanged: root.filterGenre = text
-                            }
-
-                            FLButton {
-                                Layout.fillWidth: true
-                                size: "sm"
-                                variant: "ghost"
-                                text: "Clear these filters"
-                                visible: root.anyAdvancedFilter
-                                onClicked: root.clearAdvancedFilters()
-                            }
-                        }
-                    }
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                FLSegmentedControl {
-                    segments: ["Grid", "List"]
-                    currentIndex: root.viewMode === "grid" ? 0 : 1
-                    onActivated: function (index) {
-                        root.viewMode = index === 0 ? "grid" : "list";
-                    }
-                }
-
-                FLButton {
-                    size: "sm"
-                    text: "Details"
-                    variant: root.detailOpen ? "primary" : "secondary"
-                    onClicked: root.detailOpen = !root.detailOpen
-                }
+                view: root
             }
 
             // Active advanced-filter chips (removable)
@@ -785,7 +494,7 @@ Item {
                 RefineChip {
                     visible: root.filterGenre.trim().length > 0
                     label: "Genre: " + root.filterGenre
-                    onCleared: genreFilterField.text = ""
+                    onCleared: root.filterGenre = ""
                 }
             }
         }

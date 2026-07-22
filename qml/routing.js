@@ -20,6 +20,7 @@ var ROUTES = [
     { pattern: "/activity" },
     { pattern: "/netplay" },
     { pattern: "/help" },
+    { pattern: "/dev/gallery" },
     { pattern: "/quick-menu", overlay: true }
 ];
 

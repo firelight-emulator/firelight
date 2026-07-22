@@ -11,8 +11,10 @@ Item {
 
     GridView {
         id: grid
-        anchors.fill: parent
-        anchors.margins: AppStyle.spacingSm
+        y: AppStyle.spacingSm
+        height: parent.height - AppStyle.spacingSm * 2
+        width: Math.max(cellWidth, Math.floor(parent.width / cellWidth) * cellWidth)
+        x: Math.round((parent.width - width) / 2)
         cellWidth: 184
         cellHeight: 132
         clip: true

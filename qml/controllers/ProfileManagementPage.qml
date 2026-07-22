@@ -92,18 +92,18 @@ FocusScope {
                     }
 
                     FLButton {
-                        size: "sm"
+                        compact: true
                         text: "Clone"
                         onClicked: root.openNameDialog("clone", profileId, name + " copy")
                     }
                     FLButton {
-                        size: "sm"
+                        compact: true
                         text: "Rename"
                         enabled: !builtin
                         onClicked: root.openNameDialog("rename", profileId, name)
                     }
                     FLButton {
-                        size: "sm"
+                        compact: true
                         text: "Export"
                         onClicked: {
                             root.pendingId = profileId;
@@ -112,7 +112,7 @@ FocusScope {
                         }
                     }
                     FLButton {
-                        size: "sm"
+                        compact: true
                         variant: "danger"
                         text: "Delete"
                         enabled: !builtin

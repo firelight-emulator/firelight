@@ -48,7 +48,8 @@ StackView {
             "/gallery/games/:gameContentHash": galleryComponent,
             "/activity": activityComponent,
             "/netplay": netplayComponent,
-            "/help": helpComponent
+            "/help": helpComponent,
+            "/dev/gallery": devGalleryComponent
         })
 
     Component {
@@ -98,6 +99,10 @@ StackView {
     Component {
         id: helpComponent
         HelpScreen {}
+    }
+    Component {
+        id: devGalleryComponent
+        ComponentGallery {}
     }
 
     Component {

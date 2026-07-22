@@ -153,7 +153,7 @@ Item {
                     FLButton {
                         id: readyButton
                         checkable: true
-                        variant: checked ? "primary" : "secondary"
+                        variant: checked ? "primary" : "default"
                         text: checked ? "Ready!" : "Ready up"
                         onToggled: NetworkService.setReady(checked)
                     }

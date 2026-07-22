@@ -204,13 +204,19 @@ Prefer the reusable **`FL*` components in `qml/components/v2/`** (`FLButton`, `F
 `Button`/`TextField`/`Pane`/`ListView`. They already read the tokens, so they scale and re-theme for
 free. Add a new one rather than making a one-off.
 
+New screens use the **`FLPage`** scaffold (`qml/components/v2/surfaces/FLPage.qml`) — a title +
+`headerActions` over a body that fills the rest — so a screen stops re-laying-out its own chrome
+(this header is per-page, *not* the window `TitleBar`). Press **F11** in the running app for the live
+**component gallery** (`qml/components/v2/dev/ComponentGallery.qml`, route `/dev/gallery`) showing
+every `FL*` with its variants; add new ones there. Full walkthrough: `docs/making-a-screen.md`.
+
 Use the `AppStyle.fontSize{Small,Medium,Large,XLarge}` tokens for all text `font.pixelSize`. **Never use
 `font.pointSize`** — it renders ~25% smaller on macOS than on Windows because the logical-DPI baseline
 differs (72 vs 96), whereas `pixelSize` is consistent across platforms and still scales on HiDPI displays.
 
 ### Icons
 
-Render icons with the `Icon` component (`qml/components/Icon.qml`): `Icon { name: "settings"; size: 22; color: Theme.textPrimary }`. It draws a Material Symbols Rounded glyph via `Text.CurveRendering` (crisp and resolution-independent at any DPR, unlike distance-field or raster SVGs) and colors via `color`. Icon names map to codepoints in the `MaterialSymbols` singleton (`qml/MaterialSymbols.qml`, generated from the font's cmap); the same names as the `qrc:/icons/*` aliases. `FLIcon` is a thin backwards-compatible wrapper over `Icon` (its `icon:` = `Icon.name`). For non-Material artwork (console logos, folder art) use `VectorImage { preferredRendererType: VectorImage.CurveRenderer }`, not a raster `Image`.
+Render icons with the `Icon` component (`qml/components/Icon.qml`): `Icon { name: "settings"; size: 22; color: Theme.textPrimary }`. It draws a Material Symbols Rounded glyph via `Text.NativeRendering` and colors via `color`. NativeRendering (hinted, pixel-snapped) is the sharpest for small static UI icons; the smooth modes both fall down on these detail-dense glyphs at small sizes — `CurveRendering` aliases the many edges and distance-field (`QtRendering`) muddies the detail. The tradeoff is that NativeRendering isn't sub-pixel-accurate under fractional scale/rotation, so flip a specific instance to `CurveRendering` if it lives inside such an animation. Icon names map to codepoints in the `MaterialSymbols` singleton (`qml/MaterialSymbols.qml`, generated from the font's cmap); the same names as the `qrc:/icons/*` aliases. `FLIcon` is a thin backwards-compatible wrapper over `Icon` (its `icon:` = `Icon.name`). For non-Material artwork (console logos, folder art) use `VectorImage { preferredRendererType: VectorImage.CurveRenderer }`, not a raster `Image`.
 
 ### Achievements Subsystem
 

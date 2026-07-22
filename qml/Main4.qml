@@ -46,6 +46,14 @@ MainWindow {
         onTriggered: actualTitleBar.activateSearch()
     }
 
+    // TODO
+    // Dev-only: toggle the component gallery
+    Shortcut {
+        sequence: "F11"
+        context: Qt.ApplicationShortcut
+        onActivated: Router.matchedPattern === "/dev/gallery" ? Router.back() : Router.navigate("/dev/gallery")
+    }
+
     Pane {
         id: titleBar
         anchors.top: parent.top
@@ -72,97 +80,94 @@ MainWindow {
         }
     }
 
-    Pane {
-        id: navRail
-        anchors.top: titleBar.bottom
-        anchors.left: parent.left
-        anchors.leftMargin: 2
-        anchors.bottom: parent.bottom
-        width: Math.round(48 * AppStyle.scale)
-
-        background: Item {}
-
-        ColumnLayout {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            spacing: AppStyle.spacingLg
-
-            Repeater {
-                model: [
-                    {
-                        displayName: "Library",
-                        iconName: "browse",
-                        route: "/library"
-                    },
-                    {
-                        displayName: "Mod Shop",
-                        iconName: "shopping-bag",
-                        route: "/shop"
-                    },
-                    {
-                        displayName: "Controllers",
-                        iconName: "controller",
-                        route: "/controllers"
-                    },
-                    {
-                        displayName: "Gallery",
-                        iconName: "photo-library",
-                        route: "/gallery"
-                    },
-                    {
-                        displayName: "Activity",
-                        iconName: "bar-chart",
-                        route: "/activity"
-                    },
-                    {
-                        displayName: "Online Lobby",
-                        iconName: "online",
-                        route: "/netplay"
-                    }
-                ]
-
-                delegate: FLIconButton {
-                    id: menuItem
-                    required property var model
-
-                    checkable: false
-                    checked: Router.isActive(model.route)
-                    checkedColor: Theme.textPrimary
-                    size: "md"
-                    iconName: model.iconName
-                    tooltipText: model.displayName
-
-                    Layout.alignment: Qt.AlignVCenter
-
-                    onClicked: {
-                        Router.navigate(model.route);
-                    }
-                }
-            }
-
-            Item {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-            }
-
-            FLIconButton {
-                readonly property string route: "/settings"
-
-                checkable: false
-                checked: Router.isActive(route)
-                checkedColor: Theme.textPrimary
-                size: "md"
-                iconName: "settings"
-                tooltipText: "Settings"
-
-                Layout.alignment: Qt.AlignVCenter
-
-                onClicked: {
-                    Router.navigate(route);
-                }
-            }
-        }
-    }
+    // Pane {
+    //     id: navRail
+    //     anchors.top: titleBar.bottom
+    //     anchors.left: parent.left
+    //     anchors.bottom: parent.bottom
+    //     width: Math.round(48 * AppStyle.scale)
+    //
+    //     background: Item {}
+    //
+    //     ColumnLayout {
+    //         anchors.horizontalCenter: parent.horizontalCenter
+    //         anchors.top: parent.top
+    //         spacing: AppStyle.spacingLg
+    //
+    //         Repeater {
+    //             model: [
+    //                 {
+    //                     displayName: "Library",
+    //                     iconName: "browse",
+    //                     route: "/library"
+    //                 },
+    //                 {
+    //                     displayName: "Mod Shop",
+    //                     iconName: "shopping-bag",
+    //                     route: "/shop"
+    //                 },
+    //                 {
+    //                     displayName: "Controllers",
+    //                     iconName: "controller",
+    //                     route: "/controllers"
+    //                 },
+    //                 {
+    //                     displayName: "Gallery",
+    //                     iconName: "photo-library",
+    //                     route: "/gallery"
+    //                 },
+    //                 {
+    //                     displayName: "Activity",
+    //                     iconName: "bar-chart",
+    //                     route: "/activity"
+    //                 },
+    //                 {
+    //                     displayName: "Online Lobby",
+    //                     iconName: "online",
+    //                     route: "/netplay"
+    //                 }
+    //             ]
+    //
+    //             delegate: FLIconButton {
+    //                 id: menuItem
+    //                 required property var model
+    //
+    //                 checkable: false
+    //                 checked: Router.isActive(model.route)
+    //                 checkedColor: Theme.textPrimary
+    //                 iconName: model.iconName
+    //                 tooltipText: model.displayName
+    //
+    //                 Layout.alignment: Qt.AlignVCenter
+    //
+    //                 onClicked: {
+    //                     Router.navigate(model.route);
+    //                 }
+    //             }
+    //         }
+    //
+    //         Item {
+    //             Layout.fillHeight: true
+    //             Layout.fillWidth: true
+    //         }
+    //
+    //         FLIconButton {
+    //             readonly property string route: "/settings"
+    //
+    //             checkable: false
+    //             checked: Router.isActive(route)
+    //             checkedColor: Theme.textPrimary
+    //             iconName: "settings"
+    //             tooltipText: "Settings"
+    //
+    //             Layout.alignment: Qt.AlignVCenter
+    //
+    //             onClicked: {
+    //                 Router.navigate(route);
+    //             }
+    //         }
+    //     }
+    // }
 
     RouteView {
         id: contentStack
@@ -170,12 +175,9 @@ MainWindow {
         objectName: "RouteView"
 
         anchors.bottom: gameplay.top
-        anchors.left: navRail.right
+        anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: titleBar.bottom
-        anchors.leftMargin: 2
-        anchors.rightMargin: 8
-        anchors.bottomMargin: 8
 
         Component.onCompleted: Router.navigate(StartupOptions.startupRoute !== "" ? StartupOptions.startupRoute : "/library")
     }
