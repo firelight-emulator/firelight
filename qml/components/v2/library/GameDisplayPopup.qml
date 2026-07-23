@@ -59,10 +59,19 @@ Popup {
         }
         FLSegmentedControl {
             Layout.fillWidth: true
-            segments: ["Grid", "List"]
-            currentIndex: root.view.viewMode === "grid" ? 0 : 1
-            onActivated: function (index) {
-                root.view.viewMode = index === 0 ? "grid" : "list";
+            segments: [
+                {
+                    label: "Grid",
+                    value: "grid"
+                },
+                {
+                    label: "List",
+                    value: "list"
+                }
+            ]
+            currentValue: root.view.viewMode
+            onActivated: function (value) {
+                root.view.viewMode = value;
             }
         }
 
@@ -71,10 +80,15 @@ Popup {
         }
         FLSegmentedControl {
             Layout.fillWidth: true
-            segments: ["Small", "Medium", "Large"]
-            currentIndex: root._sizeIndex
-            onActivated: function (index) {
-                AppearanceSettings.tileSizeBinding.value = String(root._sizes[index].px);
+            segments: root._sizes.map(function (s) {
+                return {
+                    label: s.label,
+                    value: String(s.px)
+                };
+            })
+            currentValue: String(root._sizes[root._sizeIndex].px)
+            onActivated: function (value) {
+                AppearanceSettings.tileSizeBinding.value = value;
             }
         }
 
@@ -106,10 +120,19 @@ Popup {
         }
         FLSegmentedControl {
             Layout.fillWidth: true
-            segments: ["Ascending", "Descending"]
-            currentIndex: root.view.sortAscending ? 0 : 1
-            onActivated: function (index) {
-                root.view.sortAscending = index === 0;
+            segments: [
+                {
+                    label: "Ascending",
+                    value: "asc"
+                },
+                {
+                    label: "Descending",
+                    value: "desc"
+                }
+            ]
+            currentValue: root.view.sortAscending ? "asc" : "desc"
+            onActivated: function (value) {
+                root.view.sortAscending = value === "asc";
                 root.view.persistFolderSort();
             }
         }

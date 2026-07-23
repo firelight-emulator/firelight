@@ -1,63 +1,111 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
-// A single-select segmented button group (e.g. Day / Week / Month). Feed
-// `segments` a list of labels; `currentIndex` is the selection
+// A single-select segmented button group (e.g. Day / Week / Month). `segments`
+// is a list of {label, value, icon} (icon optional); the selection is the
+// segment whose value equals `currentValue`, and `activated` carries that value
 //
-//   FLSegmentedControl { segments: ["Day", "Week", "Month"]; onActivated: ... }
-Row {
+//   FLSegmentedControl {
+//       segments: [{label: "Day", value: "day"}, {label: "Week", value: "week"}]
+//       currentValue: "day"
+//       onActivated: value => ...
+//   }
+Rectangle {
     id: control
 
-    objectName: "FLSegmentedControl|" + segments.join("/")
+    objectName: "FLSegmentedControl|" + currentValue
 
     property var segments: []
-    property int currentIndex: 0
-    signal activated(int index)
+    property string currentValue: ""
+    property bool compact: true
+    signal activated(string value)
 
-    spacing: 0
+    onSegmentsChanged: {
+        console.log("Segments: " + segments)
+    }
 
-    Repeater {
-        model: control.segments
-        delegate: AbstractButton {
-            id: seg
-            required property int index
-            required property string modelData
-            readonly property bool selected: control.currentIndex === index
+    readonly property int _pad: 4
+    property bool _ready: false
 
-            implicitWidth: Math.max(AppStyle.minTarget, label.implicitWidth + AppStyle.spacingLg * 2)
-            implicitHeight: Math.max(AppStyle.minTarget, label.implicitHeight + AppStyle.spacingSm * 2)
-            property bool showGlobalCursor: true
+    // TODO
+    // Index of the selected segment, or -1 when nothing matches currentValue
+    readonly property int _selectedIndex: {
+        for (let i = 0; i < control.segments.length; ++i) {
+            if (control.segments[i].value === control.currentValue) {
+                return i;
+            }
+        }
+        return -1;
+    }
 
-            HoverHandler {
-                id: segHover
-                cursorShape: Qt.PointingHandCursor
+    implicitHeight: segRow.implicitHeight + control._pad * 2
+    implicitWidth: segRow.implicitWidth + control._pad * 2
+    radius: AppStyle.radiusLg
+    color: Theme.surface
+    border.width: 1
+    border.color: Theme.border
+
+    Component.onCompleted: control._ready = true
+
+    // Accent pill behind the selected segment
+    Rectangle {
+        readonly property real segWidth: {
+            const numSegments = control.segments.length
+            if (numSegments <= 0) {
+                return 0
             }
 
-            onClicked: {
-                control.currentIndex = index;
-                control.activated(index);
+            return (segRow.width - segRow.spacing * (numSegments - 1)) / numSegments
+        }
+
+        color: Theme.accent
+        radius: AppStyle.radiusMd
+        visible: control._selectedIndex >= 0
+        y: segRow.y
+        height: segRow.height
+        width: segWidth
+        x: segRow.x + control._selectedIndex * (segWidth + segRow.spacing)
+
+        Behavior on x {
+            enabled: control._ready
+            NumberAnimation {
+                duration: 60
+                easing.type: Easing.OutCubic
+            }
+        }
+    }
+
+    RowLayout {
+        id: segRow
+        anchors.fill: parent
+        anchors.margins: control._pad
+        spacing: 2
+
+        property int maxImplicitWidth: 0
+
+        Repeater {
+            id: segRepeater
+            model: control.segments
+            delegate: FLButton {
+                required property var modelData
+
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.preferredWidth: segRow.maxImplicitWidth
+
+                text: modelData.label
+                iconName: modelData.icon ?? ""
+                variant: "flat"
+                checkable: false
+                checked: modelData.value === control.currentValue
+                checkedColor: Theme.onAccent
+                compact: control.compact
+                onClicked: control.activated(modelData.value)
             }
 
-            contentItem: Text {
-                id: label
-                text: seg.modelData
-                font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
-                font.weight: seg.selected ? Font.DemiBold : Font.Medium
-                color: seg.selected ? Theme.textPrimary : Theme.textMuted
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            background: Rectangle {
-                color: seg.selected ? Theme.surfaceHover : segHover.hovered ? Theme.surfaceElevated : "transparent"
-                border.width: 1
-                border.color: Theme.border
-                // Round only the outer corners of the first/last segment
-                topLeftRadius: seg.index === 0 ? AppStyle.radiusMd : 0
-                bottomLeftRadius: seg.index === 0 ? AppStyle.radiusMd : 0
-                topRightRadius: seg.index === control.segments.length - 1 ? AppStyle.radiusMd : 0
-                bottomRightRadius: seg.index === control.segments.length - 1 ? AppStyle.radiusMd : 0
+            onItemAdded: function(index, item) {
+                segRow.maxImplicitWidth = Math.max(item.implicitWidth, segRow.maxImplicitWidth)
             }
         }
     }

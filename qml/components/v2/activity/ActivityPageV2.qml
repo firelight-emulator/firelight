@@ -59,10 +59,31 @@ Pane {
                                 Layout.preferredHeight: 1
                             }
 
-                            // Nothing reads currentIndex yet — the range still
-                            // always renders as a day
+                            // Nothing reads the range yet — it still always
+                            // renders as a day
                             FLSegmentedControl {
-                                segments: ["Day", "Week", "Month", "Year"]
+                                segments: [
+                                    {
+                                        label: "Day",
+                                        value: "day"
+                                    },
+                                    {
+                                        label: "Week",
+                                        value: "week"
+                                    },
+                                    {
+                                        label: "Month",
+                                        value: "month"
+                                    },
+                                    {
+                                        label: "Year",
+                                        value: "year"
+                                    }
+                                ]
+                                currentValue: "day"
+                                onActivated: function (value) {
+                                    currentValue = value;
+                                }
                             }
                         }
 

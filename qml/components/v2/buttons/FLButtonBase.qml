@@ -4,7 +4,7 @@ import QtQuick.Controls
 Button {
     id: control
 
-    // primary | default | danger | subtle
+    // primary | default | danger | subtle | flat
     property string variant: "default"
 
     property bool compact: false
@@ -15,8 +15,31 @@ Button {
     property bool showGlobalCursor: true
 
     readonly property bool _subtle: variant === "subtle"
-    readonly property color _fill: variant === "primary" ? Theme.accent : variant === "danger" ? Theme.danger : Theme.surfaceElevated
-    readonly property color _fg: control.checked && control._subtle ? checkedColor : variant === "primary" ? Theme.onAccent : variant === "danger" ? "white" : Theme.textPrimary
+    readonly property color _fill: variant === "primary" ? Theme.accent : variant === "danger" ? Theme.danger : variant === "flat" ? "transparent" : Theme.surfaceElevated
+    readonly property color _fg: {
+        if (variant === "flat") {
+            if (hover.hovered || checked) {
+                return Theme.textPrimary
+            }
+
+            // TODO!!!!
+            return Theme.textMuted
+        }
+
+        if (checked && variant === "subtle") {
+            return checkedColor
+        }
+
+        if (variant === "primary") {
+            return Theme.onAccent
+        }
+
+        if (variant === "danger") {
+            return "white"
+        }
+
+        return Theme.textPrimary
+    }
 
     hoverEnabled: true
     opacity: enabled ? 1 : 0.5
@@ -37,7 +60,7 @@ Button {
             anchors.fill: parent
             radius: parent.radius
             color: Theme.textPrimary
-            opacity: !control.enabled ? 0 : control._subtle ? (control.pressed ? 0.14 : (hover.hovered || control.checked) ? 0.10 : 0) : (control.pressed ? 0.12 : hover.hovered ? 0.07 : 0)
+            opacity: (!control.enabled || variant === "flat") ? 0 : control._subtle ? (control.pressed ? 0.14 : (hover.hovered || control.checked) ? 0.10 : 0) : (control.pressed ? 0.12 : hover.hovered ? 0.07 : 0)
             Behavior on opacity {
                 NumberAnimation {
                     duration: 64

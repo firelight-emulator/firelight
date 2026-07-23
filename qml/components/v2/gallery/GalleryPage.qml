@@ -15,11 +15,23 @@ FLPage {
 
     headerActions: [
         FLSegmentedControl {
-            readonly property var typeValues: ["all", "screenshot", "clip"]
-            segments: ["All", "Screenshots", "Clips"]
-            currentIndex: Math.max(0, typeValues.indexOf(root.typeFilter))
-            onActivated: function (index) {
-                root.typeFilter = typeValues[index];
+            segments: [
+                {
+                    label: "All",
+                    value: "all"
+                },
+                {
+                    label: "Screenshots",
+                    value: "screenshot"
+                },
+                {
+                    label: "Clips",
+                    value: "clip"
+                }
+            ]
+            currentValue: root.typeFilter
+            onActivated: function (value) {
+                root.typeFilter = value;
             }
         },
         FLButton {
