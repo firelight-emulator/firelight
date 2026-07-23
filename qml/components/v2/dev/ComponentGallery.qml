@@ -118,8 +118,24 @@ FLPage {
                     }
                 }
                 FLSegmentedControl {
-                    segments: ["Grid", "List", "Detail"]
-                    currentIndex: 0
+                    segments: [
+                        {
+                            label: "Grid",
+                            value: "grid"
+                        },
+                        {
+                            label: "List",
+                            value: "list"
+                        },
+                        {
+                            label: "Detail",
+                            value: "detail"
+                        }
+                    ]
+                    currentValue: "grid"
+                    onActivated: function (value) {
+                        currentValue = value;
+                    }
                 }
 
                 //****************
