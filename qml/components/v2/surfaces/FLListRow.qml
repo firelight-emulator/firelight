@@ -49,7 +49,7 @@ ItemDelegate {
             text: control.label
             color: Theme.textPrimary
             font.pixelSize: AppStyle.fontSizeMedium
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
         }

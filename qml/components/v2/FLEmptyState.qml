@@ -24,7 +24,7 @@ ColumnLayout {
         text: root.title
         color: Theme.textPrimary
         font.pixelSize: AppStyle.fontSizeLarge
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.weight: Font.DemiBold
         horizontalAlignment: Text.AlignHCenter
     }
@@ -35,7 +35,7 @@ ColumnLayout {
         text: root.subtitle
         color: Theme.textMuted
         font.pixelSize: AppStyle.fontSizeMedium
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
     }

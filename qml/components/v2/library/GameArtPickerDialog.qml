@@ -145,7 +145,7 @@ Dialog {
             Layout.rightMargin: AppStyle.spacingXl
             text: "Change artwork"
             color: Theme.textPrimary
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeLarge
             elide: Text.ElideRight
         }
@@ -156,7 +156,7 @@ Dialog {
             Layout.bottomMargin: AppStyle.spacingSm
             text: control.gameName
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             elide: Text.ElideRight
         }
@@ -232,7 +232,7 @@ Dialog {
                     contentItem: Text {
                         text: parent.text
                         color: parent.checked ? "white" : ColorPalette.neutral400
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -267,14 +267,14 @@ Dialog {
                 Text {
                     text: "Your artwork"
                     color: Theme.textPrimary
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                 }
                 Text {
                     visible: control.storedList.length === 0
                     text: "No artwork yet for this game."
                     color: Theme.textMuted
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                 }
                 Flow {
@@ -306,7 +306,7 @@ Dialog {
                     Text {
                         text: "SteamGridDB"
                         color: Theme.textPrimary
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                     }
                     BusyIndicator {
@@ -352,7 +352,7 @@ Dialog {
                         Layout.fillWidth: true
                         text: "Add your SteamGridDB API key to search for artwork."
                         color: Theme.textMuted
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         wrapMode: Text.WordWrap
                     }
@@ -380,7 +380,7 @@ Dialog {
                     Text {
                         text: "Get a key at steamgriddb.com/profile/preferences/api"
                         color: ColorPalette.hyperlinkColor
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         MouseArea {
                             anchors.fill: parent
@@ -394,7 +394,7 @@ Dialog {
                     visible: GameArtService.providerConfigured && control.onlineList.length === 0 && !GameArtService.searching
                     text: "No SteamGridDB results for this game and type."
                     color: ColorPalette.neutral500
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                 }
 
@@ -413,7 +413,7 @@ Dialog {
                                 Layout.fillWidth: true
                                 text: groupDelegate.modelData.gameName
                                 color: ColorPalette.neutral400
-                                font.family: Constants.regularFontFamily
+                                font.family: AppStyle.fontFamily
                                 font.pixelSize: AppStyle.fontSizeSmall
                                 font.weight: Font.DemiBold
                                 elide: Text.ElideRight

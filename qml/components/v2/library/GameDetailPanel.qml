@@ -54,7 +54,7 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
         color: Theme.textMuted
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.pixelSize: AppStyle.fontSizeMedium
     }
 
@@ -79,7 +79,7 @@ Rectangle {
             Layout.fillWidth: true
             text: panel.gameData ? panel.gameData.displayName : ""
             color: Theme.textPrimary
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeLarge
             font.weight: Font.Bold
             wrapMode: Text.WordWrap
@@ -90,7 +90,7 @@ Rectangle {
             Layout.fillWidth: true
             text: panel.gameData ? (panel.gameData.platformId + (panel.gameData.releaseYear > 0 ? "  ·  " + panel.gameData.releaseYear : "") + (panel.gameData.developer !== "" ? "  ·  " + panel.gameData.developer : "")) : ""
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             elide: Text.ElideRight
         }
@@ -107,7 +107,7 @@ Rectangle {
             Text {
                 text: "Last played"
                 color: Theme.textMuted
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeSmall
             }
             Text {
@@ -115,14 +115,14 @@ Rectangle {
                 horizontalAlignment: Text.AlignRight
                 text: panel.gameData ? panel.fmtDate(panel.gameData.lastPlayedAt) : ""
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.DemiBold
             }
             Text {
                 text: "Play time"
                 color: Theme.textMuted
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeSmall
             }
             Text {
@@ -130,7 +130,7 @@ Rectangle {
                 horizontalAlignment: Text.AlignRight
                 text: panel.gameData ? panel.fmtTime(panel.gameData.numSecondsPlayed) : ""
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.DemiBold
             }
@@ -148,7 +148,7 @@ Rectangle {
                 Text {
                     text: "Achievements"
                     color: Theme.textMuted
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                 }
                 Item {
@@ -157,7 +157,7 @@ Rectangle {
                 Text {
                     text: panel.gameData ? (panel.gameData.achievementsEarned + " / " + panel.gameData.achievementsTotal) : ""
                     color: Theme.textPrimary
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                     font.weight: Font.DemiBold
                 }
@@ -191,7 +191,7 @@ Rectangle {
                 width: panel.width - AppStyle.spacingLg * 2 - 1
                 text: panel.gameData && panel.gameData.description !== "" ? panel.gameData.description : "No description."
                 color: Theme.textMuted
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeSmall
                 wrapMode: Text.WordWrap
                 lineHeight: 1.25

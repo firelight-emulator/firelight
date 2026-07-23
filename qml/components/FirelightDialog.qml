@@ -42,7 +42,7 @@ Dialog {
 
         visible: control.headerText !== ""
 
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.pixelSize: AppStyle.fontSizeMedium
         leftPadding: 24
         topPadding: 16
@@ -63,7 +63,7 @@ Dialog {
     contentItem: Text {
         // anchors.centerIn: parent
         color: "white"
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         text: control.text
         // font.weight: Font.Light
         wrapMode: Text.WordWrap

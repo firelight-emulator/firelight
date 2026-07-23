@@ -15,7 +15,7 @@ FocusScope {
             font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.Normal
             width: gridView.width
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter

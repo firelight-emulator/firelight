@@ -22,7 +22,7 @@ BaseSettingItem {
             }
             return out;
         }
-        return Constants.folderColors.concat(["#ffffff"]);
+        return ColorPalette.folderColors.concat(["#ffffff"]);
     }
 
     control: RowLayout {

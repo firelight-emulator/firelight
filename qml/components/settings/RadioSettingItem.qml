@@ -61,7 +61,7 @@ BaseSettingItem {
                     Text {
                         text: opt.modelData.label
                         color: Theme.textPrimary
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeMedium
                         font.weight: Font.Medium
                         verticalAlignment: Text.AlignVCenter
@@ -75,7 +75,7 @@ BaseSettingItem {
                         visible: opt.modelData.note !== undefined && opt.modelData.note !== ""
                         text: opt.modelData.note !== undefined ? opt.modelData.note : ""
                         color: Theme.textMuted
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         verticalAlignment: Text.AlignVCenter
                     }

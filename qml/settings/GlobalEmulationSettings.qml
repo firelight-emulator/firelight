@@ -23,7 +23,7 @@ FocusScope {
             Layout.bottomMargin: 4
             text: qsTr("Global defaults for all games. Consoles and individual games can override these.")
             font.pixelSize: AppStyle.fontSizeSmall
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             wrapMode: Text.WordWrap
             color: Theme.textMuted
         }

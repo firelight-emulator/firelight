@@ -34,7 +34,7 @@ FocusScope {
                     verticalAlignment: Text.AlignVCenter
                     text: "Sort by:"
                     color: "white"
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                 }
 
@@ -89,7 +89,7 @@ FocusScope {
         Text {
             text: "Log in blah blah"
             color: "white"
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             Layout.alignment: Qt.AlignCenter
             horizontalAlignment: Text.AlignHCenter
@@ -107,8 +107,8 @@ FocusScope {
             hoverEnabled: true
             contentItem: Text {
                 text: qsTr("Log in")
-                color: Constants.colorTestBackground
-                font.family: Constants.regularFontFamily
+                color: Theme.surface
+                font.family: AppStyle.fontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 font.pixelSize: AppStyle.fontSizeMedium

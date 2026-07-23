@@ -4,7 +4,7 @@ Item {
     Text {
         text: "Firelight Emulator\nv0.12.2"
         font.pixelSize: AppStyle.fontSizeMedium
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         color: Theme.textPrimary
         width: parent.width
         font.weight: Font.DemiBold

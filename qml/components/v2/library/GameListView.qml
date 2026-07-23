@@ -255,7 +255,7 @@ ListView {
                         text: "Achievements"
                         font.pixelSize: AppStyle.fontSizeMedium
                         font.weight: Font.DemiBold
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         color: Theme.textMuted
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
@@ -368,7 +368,7 @@ ListView {
                     text: model.displayName
                     font.pixelSize: AppStyle.fontSizeMedium
                     font.weight: Font.DemiBold
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     color: Theme.textPrimary
                     elide: Text.ElideRight
                 }
@@ -379,7 +379,7 @@ ListView {
                     text: model.platformId
                     font.pixelSize: AppStyle.fontSizeMedium
                     font.weight: Font.DemiBold
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     color: Theme.textMuted
                     elide: Text.ElideRight
                 }
@@ -414,7 +414,7 @@ ListView {
                 text: root.formatPlayTime(delegateButton.model.numSecondsPlayed)
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Medium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 color: Theme.textMuted
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
@@ -426,7 +426,7 @@ ListView {
                 text: root.formatLastPlayed(delegateButton.model.lastPlayedAt)
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Medium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 color: Theme.textMuted
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
@@ -439,7 +439,7 @@ ListView {
                 text: root.formatAchievements(delegateButton.model.achievementsEarned, delegateButton.model.achievementsTotal)
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Medium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 color: Theme.textMuted
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter

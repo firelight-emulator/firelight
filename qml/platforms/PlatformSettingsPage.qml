@@ -77,7 +77,7 @@ FocusScope {
                 Layout.fillWidth: true
                 text: qsTr("Platform settings")
                 font.pixelSize: AppStyle.fontSizeLarge
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.Bold
                 Layout.bottomMargin: AppStyle.spacingSm
                 color: Theme.textPrimary
@@ -87,7 +87,7 @@ FocusScope {
                 Layout.fillWidth: true
                 text: qsTr("Here's where you can change the default settings for each platform. Later you'll be able to change them on a per-game basis.")
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.Normal
                 wrapMode: Text.WordWrap
                 color: Theme.textMuted
@@ -135,7 +135,7 @@ FocusScope {
                             text: platformButton.modelData.name
                             height: parent.height
                             font.pixelSize: AppStyle.fontSizeMedium
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.Normal
                             verticalAlignment: Text.AlignVCenter
                             horizontalAlignment: Text.AlignLeft

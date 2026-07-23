@@ -25,7 +25,7 @@ Pane {
         Text {
             Layout.preferredHeight: 23
             font.pixelSize: AppStyle.fontSizeMedium
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
             color: Theme.textPrimary
             verticalAlignment: Text.AlignVCenter

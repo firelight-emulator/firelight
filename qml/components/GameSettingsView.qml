@@ -39,7 +39,7 @@ FocusScope {
             Layout.alignment: Qt.AlignCenter
             Layout.preferredWidth: parent.width * 0.75
             font.pixelSize: AppStyle.fontSizeMedium
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.Medium
             color: Theme.textPrimary
             text: root.level === 0 ? "Settings are applied only to the current game" : "Settings are applied to all " + root.platformName + " games"

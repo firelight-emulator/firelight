@@ -108,7 +108,7 @@ FocusScope {
             text: "Preferred controller per platform"
             color: Theme.textPrimary
             font.pixelSize: AppStyle.fontSizeMedium
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
             Layout.fillWidth: true
             Layout.topMargin: 8
@@ -137,7 +137,7 @@ FocusScope {
                             text: displayName
                             color: Theme.textPrimary
                             font.pixelSize: AppStyle.fontSizeSmall
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             Layout.fillWidth: true
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -158,7 +158,7 @@ FocusScope {
             text: "Hotkeys"
             color: Theme.textPrimary
             font.pixelSize: AppStyle.fontSizeMedium
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
             Layout.fillWidth: true
             Layout.topMargin: 8
@@ -172,7 +172,7 @@ FocusScope {
                 text: "Profile"
                 color: Theme.textPrimary
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
             }
 
@@ -193,7 +193,7 @@ FocusScope {
                 text: "Preset"
                 color: Theme.textPrimary
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
             }
 
@@ -220,7 +220,7 @@ FocusScope {
             text: profile.isKeyboardProfile ? "Press a key with Shift, Control or Alt to make a combo." : "Hold a button like Select and press another to make a combo. A combo only reaches the hotkey — a bare button still reaches the game."
             color: Theme.textMuted
             font.pixelSize: AppStyle.fontSizeSmall
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             wrapMode: Text.WordWrap
         }
 
@@ -243,7 +243,7 @@ FocusScope {
                 text: section
                 color: Theme.textMuted
                 font.pixelSize: AppStyle.fontSizeSmall
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 topPadding: 12
                 bottomPadding: 4
@@ -301,7 +301,7 @@ FocusScope {
                         text: shortcutRow.model.name
                         color: Theme.textPrimary
                         font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.weight: Font.DemiBold
                         verticalAlignment: Text.AlignVCenter
                         elide: Text.ElideRight
@@ -313,7 +313,7 @@ FocusScope {
                         text: shortcutRow.model.bindingsLabel
                         color: shortcutRow.model.hasBinding ? Theme.textPrimary : Theme.textMuted
                         font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.weight: shortcutRow.model.hasBinding ? Font.DemiBold : Font.Medium
                         verticalAlignment: Text.AlignVCenter
                         elide: Text.ElideRight
@@ -326,7 +326,7 @@ FocusScope {
                         text: "Changed"
                         color: Theme.textMuted
                         font.pixelSize: AppStyle.fontSizeSmall
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         verticalAlignment: Text.AlignVCenter
                     }
 

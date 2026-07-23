@@ -26,8 +26,8 @@ Pane {
         RowLayout {
             id: navBanner
             Layout.fillWidth: true
-            Layout.maximumHeight: Constants.standardTitleBarHeight
-            Layout.minimumHeight: Constants.standardTitleBarHeight
+            Layout.maximumHeight: AppStyle.standardTitleBarHeight
+            Layout.minimumHeight: AppStyle.standardTitleBarHeight
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -54,7 +54,7 @@ Pane {
                         property bool showGlobalCursor: true
                         contentItem: Text {
                             text: modelData
-                            font.family: Constants.mainFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeMedium
                             font.weight: Font.Medium
                             color: Theme.textPrimary
@@ -204,7 +204,7 @@ Pane {
                     anchors.centerIn: parent
                     text: "No achievements found for this game"
                     color: Theme.textPrimary
-                    font.family: Constants.mainFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeMedium
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
@@ -271,7 +271,7 @@ Pane {
                                         Text {
                                             text: model.name
                                             color: Theme.textPrimary
-                                            font.family: Constants.mainFontFamily
+                                            font.family: AppStyle.fontFamily
                                             font.pixelSize: AppStyle.fontSizeMedium
                                             horizontalAlignment: Text.AlignLeft
                                             verticalAlignment: Text.AlignVCenter
@@ -290,7 +290,7 @@ Pane {
                                         Text {
                                             text: (AchievementService.inHardcoreSession ? model.numEarnedHardcore : model.numEarned) + "/" + model.numAchievements + " earned"
                                             color: Theme.textMuted
-                                            font.family: Constants.mainFontFamily
+                                            font.family: AppStyle.fontFamily
                                             font.pixelSize: AppStyle.fontSizeSmall
                                             horizontalAlignment: Text.AlignLeft
                                             verticalAlignment: Text.AlignVCenter
@@ -668,7 +668,7 @@ Pane {
                         text: "Controllers"
                         color: "white"
                         font.pixelSize: AppStyle.fontSizeLarge
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.weight: Font.DemiBold
                     }
                     Text {
@@ -676,7 +676,7 @@ Pane {
                         text: "Choose the device each player uses. Aim a Mouse or Light Gun with your mouse or the left analog stick; fire with the trigger (A by default)."
                         color: ColorPalette.neutral300
                         font.pixelSize: AppStyle.fontSizeSmall
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         wrapMode: Text.WordWrap
                     }
 
@@ -694,7 +694,7 @@ Pane {
                                 text: "Player " + (portRow.portIndex + 1)
                                 color: "white"
                                 font.pixelSize: AppStyle.fontSizeMedium
-                                font.family: Constants.regularFontFamily
+                                font.family: AppStyle.fontFamily
                                 font.weight: Font.DemiBold
                             }
                             Flow {
@@ -721,7 +721,7 @@ Pane {
                                             text: optionButton.modelData.name + (optionButton.modelData.deviceClass === 3 ? "  (Light Gun)" : optionButton.modelData.deviceClass === 2 ? "  (Mouse)" : "")
                                             color: optionButton.current ? "black" : "white"
                                             font.pixelSize: AppStyle.fontSizeSmall
-                                            font.family: Constants.regularFontFamily
+                                            font.family: AppStyle.fontFamily
                                             font.weight: Font.Medium
                                         }
                                         HoverHandler {
@@ -806,7 +806,7 @@ Pane {
                                     Layout.fillHeight: true
                                     text: "Suspend Points"
                                     color: "white"
-                                    font.family: Constants.regularFontFamily
+                                    font.family: AppStyle.fontFamily
                                     font.pixelSize: AppStyle.fontSizeLarge
                                     font.weight: Font.DemiBold
                                     verticalAlignment: Text.AlignVCenter
@@ -843,7 +843,7 @@ Pane {
                                             Layout.fillWidth: true
                                             text: "Undo last load"
                                             color: undoButton.enabled ? "white" : "#737373"
-                                            font.family: Constants.regularFontFamily
+                                            font.family: AppStyle.fontFamily
                                             font.pixelSize: AppStyle.fontSizeMedium
                                             font.weight: Font.Medium
                                             verticalAlignment: Text.AlignVCenter
@@ -911,7 +911,7 @@ Pane {
                                     color: "white"
                                     text: "Create in slot " + (theThing.index + 1)
                                     font.pixelSize: AppStyle.fontSizeMedium
-                                    font.family: Constants.regularFontFamily
+                                    font.family: AppStyle.fontFamily
                                     font.weight: Font.DemiBold
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter

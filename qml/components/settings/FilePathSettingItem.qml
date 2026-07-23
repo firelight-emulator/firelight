@@ -43,7 +43,7 @@ BaseSettingItem {
             text: root.value === "" ? qsTr("Not set") : root.value
             color: root.value === "" ? Theme.textMuted : Theme.textPrimary
             elide: Text.ElideMiddle
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             verticalAlignment: Text.AlignVCenter
         }

@@ -75,7 +75,7 @@ BaseSettingItem {
                         Layout.rightMargin: AppStyle.spacingMd
                         text: chip.modelData.label
                         color: chip.on ? Theme.accent : Theme.textMuted
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         font.weight: Font.DemiBold
                         verticalAlignment: Text.AlignVCenter

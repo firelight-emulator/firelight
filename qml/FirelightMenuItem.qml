@@ -42,7 +42,7 @@ Button {
             text: control.labelText
 
             font.pixelSize: AppStyle.fontSizeMedium
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
             color: control.enabled ? control.activeFocus ? (!InputMethodManager.usingMouse ? "black" : "white") : "white" : "#aaaaaa"
             horizontalAlignment: alignRight ? Text.AlignRight : Text.AlignLeft

@@ -139,7 +139,7 @@ FLIconButton {
                             leftPadding: 8
                             rightPadding: radioDelegate.indicator.width + 16
                             text: model.label || model.text || model
-                            font.family: Constants.lightFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeMedium
                             color: radioDelegate.checked ? ColorPalette.neutral100 : ColorPalette.neutral300
                             verticalAlignment: Text.AlignVCenter

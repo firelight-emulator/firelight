@@ -56,7 +56,7 @@ FocusScope {
                             font.pixelSize: AppStyle.fontSizeLarge
                             font.weight: Font.DemiBold
 
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             horizontalAlignment: Text.AlignLeft
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -66,7 +66,7 @@ FocusScope {
                             font.pixelSize: AppStyle.fontSizeMedium
                             font.weight: Font.Normal
 
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             horizontalAlignment: Text.AlignLeft
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -137,7 +137,7 @@ FocusScope {
                 color: Theme.textPrimary
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Normal
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -164,7 +164,7 @@ FocusScope {
                     Text {
                         anchors.fill: parent
                         font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         color: Theme.textMuted
                         text: "Username"
                         verticalAlignment: Text.AlignVCenter
@@ -177,7 +177,7 @@ FocusScope {
                         KeyNavigation.down: passwordTextInput
                         property bool showGlobalCursor: true
                         property var globalCursorProxy: thePane
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         focus: true
                         font.pixelSize: AppStyle.fontSizeMedium
                         color: Theme.textPrimary
@@ -211,7 +211,7 @@ FocusScope {
                     Text {
                         anchors.fill: parent
                         font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         color: Theme.textMuted
                         text: "Password"
                         verticalAlignment: Text.AlignVCenter
@@ -225,7 +225,7 @@ FocusScope {
                         KeyNavigation.down: submitButton
                         property bool showGlobalCursor: true
                         property var globalCursorProxy: theOtherPane
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeMedium
                         color: Theme.textPrimary
                         verticalAlignment: Text.AlignVCenter
@@ -286,7 +286,7 @@ FocusScope {
                 color: Theme.textPrimary
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Normal
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
@@ -297,7 +297,7 @@ FocusScope {
                 color: Theme.textMuted
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Normal
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }

@@ -32,7 +32,7 @@ Popup {
         Text {
             text: "Refine"
             color: Theme.textPrimary
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.Bold
         }
@@ -55,7 +55,7 @@ Popup {
         Text {
             text: "Play time"
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
         }
         FLComboBox {
@@ -78,7 +78,7 @@ Popup {
         Text {
             text: "Decade"
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
         }
         FLComboBox {
@@ -101,7 +101,7 @@ Popup {
         Text {
             text: "Genre contains"
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
         }
         FLSearchField {

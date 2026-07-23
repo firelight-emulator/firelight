@@ -35,7 +35,7 @@ FocusScope {
             Text {
                 text: "Controller Profiles"
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 font.pixelSize: AppStyle.fontSizeLarge
                 Layout.fillWidth: true
@@ -78,7 +78,7 @@ FocusScope {
                     Text {
                         text: name
                         color: Theme.textPrimary
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeMedium
                         Layout.fillWidth: true
                     }
@@ -87,7 +87,7 @@ FocusScope {
                         visible: builtin
                         text: "Built-in"
                         color: Theme.textMuted
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                     }
 
@@ -165,7 +165,7 @@ FocusScope {
         Text {
             text: "Delete this profile? This cannot be undone."
             color: Theme.textPrimary
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
         }
 
         onAccepted: profiles.deleteProfile(root.pendingId)

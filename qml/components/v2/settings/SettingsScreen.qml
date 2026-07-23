@@ -284,7 +284,7 @@ FocusScope {
                             Layout.fillWidth: true
                             text: resultDelegate.model.label
                             color: Theme.textPrimary
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
@@ -297,7 +297,7 @@ FocusScope {
                             visible: !resultDelegate.model.isPage
                             text: resultDelegate.model.groupLabel === "" ? resultDelegate.model.pageLabel : resultDelegate.model.pageLabel + " › " + resultDelegate.model.groupLabel
                             color: Theme.textMuted
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall - 2
                             elide: Text.ElideRight
                         }
@@ -312,7 +312,7 @@ FocusScope {
                 text: qsTr("No settings found")
                 color: Theme.textMuted
                 horizontalAlignment: Text.AlignHCenter
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeSmall
             }
 
@@ -528,7 +528,7 @@ FocusScope {
                 anchors.centerIn: parent
                 text: "Coming soon"
                 color: Theme.textMuted
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
             }
         }

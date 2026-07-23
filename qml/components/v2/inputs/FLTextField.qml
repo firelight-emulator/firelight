@@ -15,7 +15,7 @@ TextField {
     color: Theme.textPrimary
     placeholderTextColor: Theme.textMuted
     font.pixelSize: _font
-    font.family: Constants.regularFontFamily
+    font.family: AppStyle.fontFamily
     selectByMouse: true
     leftPadding: AppStyle.spacingMd
     rightPadding: AppStyle.spacingMd

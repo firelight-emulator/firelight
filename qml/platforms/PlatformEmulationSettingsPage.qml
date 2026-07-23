@@ -46,7 +46,7 @@ FocusScope {
                 Layout.fillHeight: true
                 text: qsTr("Default %1 settings").arg(root.platformName)
                 font.pixelSize: AppStyle.fontSizeLarge
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.Bold
                 horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter

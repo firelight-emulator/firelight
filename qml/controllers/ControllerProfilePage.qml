@@ -192,7 +192,7 @@ Pane {
                     text: "Shortcuts"
                     color: Theme.textPrimary
                     font.pixelSize: AppStyle.fontSizeLarge
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.weight: Font.DemiBold
                     verticalAlignment: Text.AlignVCenter
                     padding: 16
@@ -265,7 +265,7 @@ Pane {
                             text: model.name
                             color: Theme.textPrimary
                             font.pixelSize: AppStyle.fontSizeMedium
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.DemiBold
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -277,7 +277,7 @@ Pane {
                             font.pixelSize: AppStyle.fontSizeMedium
                             color: model.hasBinding ? "white" : ColorPalette.neutral400
                             text: model.bindingsLabel
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: model.hasBinding ? Font.DemiBold : Font.Medium
                             verticalAlignment: Text.AlignVCenter
                             elide: Text.ElideRight

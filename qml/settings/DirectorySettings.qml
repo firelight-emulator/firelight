@@ -81,7 +81,7 @@ FocusScope {
                     Text {
                         text: model.path
                         font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.weight: Font.DemiBold
                         color: Theme.textPrimary
                         verticalAlignment: Text.AlignVCenter
@@ -137,7 +137,7 @@ FocusScope {
 
         Text {
             font.pixelSize: AppStyle.fontSizeMedium
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.Medium
             color: Theme.textPrimary
             text: "This is where Firelight will save your save files and Suspend Point data."

@@ -20,7 +20,7 @@ Item {
         }
         font.pixelSize: AppStyle.fontSizeMedium
         font.weight: Font.DemiBold
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         color: "white"
         verticalAlignment: Text.AlignBottom
         horizontalAlignment: Text.AlignLeft
@@ -39,7 +39,7 @@ Item {
         }
         font.pixelSize: AppStyle.fontSizeMedium
         font.weight: Font.DemiBold
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         color: "#7e7e7e"
         verticalAlignment: Text.AlignTop
         horizontalAlignment: Text.AlignLeft

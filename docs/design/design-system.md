@@ -57,8 +57,8 @@ content must stay readable over anything (settings, dialogs, in-game menus).
 - Colour ← `Theme`, size ← `AppStyle`; add an `FL*` rather than a one-off.
 - **Assistant-added comments carry a bare `// TODO` marker** on the line above, for the author to reword
   or drop (`grep -rn '// TODO$'`).
-- One UI typeface: the **Lexend** variable font — every `Constants.*FontFamily` resolves to it, and weight
-  is chosen per call site via `font.weight`. Icons use Material Symbols (`symbolFontFamily`). A stray
+- One UI typeface: the **Lexend** variable font — `AppStyle.fontFamily` resolves to it, and weight
+  is chosen per call site via `font.weight`. Icons use Material Symbols (`AppStyle.symbolFontFamily`). A stray
   `font.family: "Consolas"` (netplay chat) still awaits a mono token.
 
 ## Migration status
@@ -74,6 +74,10 @@ content must stay readable over anything (settings, dialogs, in-game menus).
 - Removed the unused Material-3 `color_*` palette and `purple*` tokens from `Constants`.
 - Typeface consolidated onto the Lexend variable font: killed the `Segoe UI` hardcode (250 sites), fixed
   the qrc aliases that pointed at Inter/NunitoSans, and deleted the 23 unused font files.
+- `Constants.qml` fully dismantled and deleted: the font loaders + family tokens and the quick-menu banner
+  height moved to `AppStyle` (`fontFamily`, `symbolFontFamily`, `standardTitleBarHeight`), the folder swatch
+  palette to `ColorPalette` (`folderColors`), and the last `colorTest`/right-click-menu consumers repointed at
+  `Theme` (`surface`, `textPrimary`). Its dead tokens were dropped and the CMake singleton registration removed.
 
 **Pending**
 - z-layer tokens are defined but unwired — the live `z: 100` sites are window resize edges, not dropdowns,
@@ -82,7 +86,6 @@ content must stay readable over anything (settings, dialogs, in-game menus).
   visual decision.
 - `FLSuspendPointCard` keeps its own card shadow (a second elevation level would fold it in).
 - `LibrarySidebar`'s folder-colour menu is a named menu; it still lists the swatch colours inline.
-- `Constants.colorTest*` retained — one consumer remains (`AchievementList.qml`).
 - Legacy `ColorPalette` chrome inside `Theme.buttonBg*`, and the remaining raw colour/size literals, are a
   per-site decision (see `docs/qml-literals.md`), not a mechanical sweep.
 - A monospace token is still needed for the one hardcoded `font.family: "Consolas"` (netplay chat).

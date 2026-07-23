@@ -602,7 +602,7 @@ Item {
             Text {
                 text: chip.label
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeSmall
             }
             Icon {

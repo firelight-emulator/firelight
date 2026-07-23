@@ -111,7 +111,7 @@ FirelightDialog {
             Layout.preferredWidth: parent.width * 5 / 6
 
             color: Theme.textPrimary
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.Normal
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -125,7 +125,7 @@ FirelightDialog {
             color: Theme.textPrimary
             font.pixelSize: AppStyle.fontSizeLarge
             font.weight: Font.Bold
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }

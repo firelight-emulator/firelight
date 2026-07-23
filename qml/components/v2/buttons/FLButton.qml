@@ -35,7 +35,7 @@ FLButtonBase {
                 text: control.text
                 color: control._fg
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
             }
             Icon {

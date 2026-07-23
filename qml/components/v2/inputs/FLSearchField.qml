@@ -53,7 +53,7 @@ FocusScope {
             color: Theme.textPrimary
             placeholderTextColor: Theme.textMuted
             font.pixelSize: root._font
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             selectByMouse: true
             background: Item {}
             onAccepted: root.accepted()

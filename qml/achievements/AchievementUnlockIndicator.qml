@@ -185,7 +185,7 @@ Popup {
                 Layout.fillHeight: true
                 text: popup.splashText
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -199,7 +199,7 @@ Popup {
                 Layout.fillWidth: true
                 text: popup.title
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
                 maximumLineCount: 1
@@ -214,7 +214,7 @@ Popup {
                 Layout.fillHeight: true
                 text: popup.description
                 font.pixelSize: AppStyle.fontSizeSmall
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 wrapMode: Text.WordWrap
                 elide: Text.ElideRight
                 maximumLineCount: 2

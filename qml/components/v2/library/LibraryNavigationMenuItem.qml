@@ -195,7 +195,7 @@ Button {
             Layout.leftMargin: AppStyle.spacingSm
             Layout.fillWidth: true
             color: Theme.textPrimary
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             text: control.displayText
@@ -208,7 +208,7 @@ Button {
             Layout.leftMargin: AppStyle.spacingSm
             Layout.rightMargin: AppStyle.spacingXs
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             font.weight: Font.DemiBold
             text: control.numberOfItems >= 0 ? control.numberOfItems : ""

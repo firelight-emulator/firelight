@@ -90,7 +90,7 @@ Pane {
                         Layout.fillHeight: true
                         text: "Library"
                         color: "#ffffff"
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeMedium
                         font.weight: Font.DemiBold
                         horizontalAlignment: Text.AlignLeft
@@ -242,7 +242,7 @@ Pane {
                         visible: !platformMenuSection.collapsed
                         text: page.showAllPlatforms ? qsTr("Show fewer") : qsTr("Show all platforms")
                         color: Theme.textMuted
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         font.weight: Font.DemiBold
                         TapHandler {

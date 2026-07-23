@@ -75,7 +75,7 @@ FocusScope {
                 text: root.title
                 color: Theme.textPrimary
                 font.pixelSize: AppStyle.fontSizeLarge
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 verticalAlignment: Text.AlignVCenter
             }

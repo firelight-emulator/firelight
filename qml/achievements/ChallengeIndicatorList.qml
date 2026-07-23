@@ -71,7 +71,7 @@ ListView {
                     Layout.fillWidth: true
                     text: icon.title
                     font.pixelSize: AppStyle.fontSizeMedium
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
                     maximumLineCount: 1
@@ -84,7 +84,7 @@ ListView {
                     Layout.fillHeight: true
                     text: icon.description
                     font.pixelSize: AppStyle.fontSizeSmall
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     wrapMode: Text.WordWrap
                     verticalAlignment: Text.AlignVCenter
                     font.weight: Font.Normal

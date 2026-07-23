@@ -43,7 +43,7 @@ FirelightDialog {
             visible: folderList.count === 0
             text: control.targetIds.length > 1 ? "Adding " + control.targetIds.length + " games. No folders yet — create one from the sidebar." : "No folders yet. Create one from the sidebar."
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeMedium
             wrapMode: Text.WordWrap
         }
@@ -53,7 +53,7 @@ FirelightDialog {
             visible: folderList.count > 0 && control.targetIds.length > 1
             text: "Adding " + control.targetIds.length + " games"
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
         }
 
@@ -95,7 +95,7 @@ FirelightDialog {
                         Layout.fillWidth: true
                         text: folderRow.displayName
                         color: Theme.textPrimary
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeMedium
                         font.weight: Font.DemiBold
                         elide: Text.ElideRight

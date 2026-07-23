@@ -60,7 +60,7 @@ Button {
             Layout.fillHeight: true
             font.pixelSize: AppStyle.buttonTextFontSize
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: AppStyle.buttonTextFontWeight
             color: !enabled ? Theme.buttonTextDisabled : control.activeFocus && !InputMethodManager.usingMouse ? Theme.buttonTextFocused : Theme.buttonTextInactive
 
@@ -73,7 +73,7 @@ Button {
         text: control.text
         visible: control.enabled && ((hover.hovered && InputMethodManager.usingMouse) || (control.activeFocus && !InputMethodManager.usingMouse)) && control.text
         font.pixelSize: AppStyle.fontSizeMedium
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.weight: Font.Normal
         color: Theme.textPrimary
         anchors {

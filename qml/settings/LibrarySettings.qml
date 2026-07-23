@@ -15,7 +15,7 @@ Item {
             color: Theme.textPrimary
             font.pixelSize: AppStyle.fontSizeMedium
             // font.pointSize: 11
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
             // color: "#a6a6a6"
         }
@@ -26,7 +26,7 @@ Item {
             color: Theme.textMuted
             wrapMode: Text.WordWrap
             font.pixelSize: AppStyle.fontSizeMedium
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             Layout.bottomMargin: 8
         }
 
@@ -55,7 +55,7 @@ Item {
                     contentItem: TextInput {
                         padding: 4
                         text: model.path
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeMedium
                         color: Theme.textPrimary
                         verticalAlignment: Text.AlignVCenter
@@ -83,7 +83,7 @@ Item {
 
                         contentItem: Text {
                             text: "Change folder"
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter

@@ -51,7 +51,7 @@ Pane {
                                 font.weight: Font.DemiBold
                                 verticalAlignment: Text.AlignVCenter
                                 horizontalAlignment: Text.AlignLeft
-                                font.family: Constants.regularFontFamily
+                                font.family: AppStyle.fontFamily
                             }
 
                             Item {
@@ -137,7 +137,7 @@ Pane {
                                 font.weight: Font.Medium
                                 verticalAlignment: Text.AlignVCenter
                                 horizontalAlignment: Text.AlignHCenter
-                                font.family: Constants.regularFontFamily
+                                font.family: AppStyle.fontFamily
                             }
 
                             Button {
@@ -213,7 +213,7 @@ Pane {
                                             anchors.bottomMargin: AppStyle.spacingXs
                                             color: Theme.textPrimary
                                             opacity: 0.5
-                                            font.family: Constants.regularFontFamily
+                                            font.family: AppStyle.fontFamily
                                             font.weight: Font.Normal
                                             font.pixelSize: AppStyle.fontSizeMedium
                                             text: modelData
@@ -293,7 +293,7 @@ Pane {
                                                 Text {
                                                     text: "Games played during this hour:"
                                                     font.pixelSize: AppStyle.fontSizeMedium
-                                                    font.family: Constants.regularFontFamily
+                                                    font.family: AppStyle.fontFamily
                                                     font.weight: Font.DemiBold
                                                     verticalAlignment: Text.AlignVCenter
                                                     color: Theme.textPrimary
@@ -311,7 +311,7 @@ Pane {
                                                         Text {
                                                             text: "#" + (index + 1)
                                                             font.pixelSize: AppStyle.fontSizeMedium
-                                                            font.family: Constants.regularFontFamily
+                                                            font.family: AppStyle.fontFamily
                                                             font.weight: Font.DemiBold
                                                             verticalAlignment: Text.AlignVCenter
                                                             color: Theme.textPrimary
@@ -342,7 +342,7 @@ Pane {
                                                             Text {
                                                                 text: modelData.displayName
                                                                 font.pixelSize: AppStyle.fontSizeMedium
-                                                                font.family: Constants.regularFontFamily
+                                                                font.family: AppStyle.fontFamily
                                                                 font.weight: Font.DemiBold
                                                                 verticalAlignment: Text.AlignVCenter
                                                                 color: Theme.textPrimary
@@ -354,7 +354,7 @@ Pane {
                                                             Text {
                                                                 text: modelData.platformName
                                                                 font.pixelSize: AppStyle.fontSizeMedium
-                                                                font.family: Constants.regularFontFamily
+                                                                font.family: AppStyle.fontFamily
                                                                 font.weight: Font.Medium
                                                                 verticalAlignment: Text.AlignVCenter
                                                                 color: Theme.textMuted
@@ -383,7 +383,7 @@ Pane {
                                                                 return result;
                                                             }
                                                             font.pixelSize: AppStyle.fontSizeMedium
-                                                            font.family: Constants.regularFontFamily
+                                                            font.family: AppStyle.fontFamily
                                                             font.weight: Font.DemiBold
                                                             verticalAlignment: Text.AlignVCenter
                                                             color: Theme.textPrimary
@@ -465,7 +465,7 @@ Pane {
                                     text: modelData.displayName + " (" + modelData.platformName + ")"
                                     color: Theme.textPrimary
                                     font.pixelSize: AppStyle.fontSizeMedium
-                                    font.family: Constants.regularFontFamily
+                                    font.family: AppStyle.fontFamily
                                     font.weight: Font.Medium
                                 }
 
@@ -491,7 +491,7 @@ Pane {
                                     }
                                     color: Theme.textPrimary
                                     font.pixelSize: AppStyle.fontSizeMedium
-                                    font.family: Constants.regularFontFamily
+                                    font.family: AppStyle.fontFamily
                                     font.weight: Font.Medium
                                 }
                             }

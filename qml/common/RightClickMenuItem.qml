@@ -51,7 +51,7 @@ MenuItem {
             var ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
             ctx.beginPath();
-            ctx.fillStyle = enabled ? Constants.rightClickMenuItem_TextColor : "grey";
+            ctx.fillStyle = enabled ? Theme.textPrimary : "grey";
             ctx.moveTo(width * 0.35, height * 0.35);
             ctx.lineTo(width * 0.63, height / 2);
             ctx.lineTo(width * 0.35, height * 0.65);
@@ -98,7 +98,7 @@ MenuItem {
             color: enabled ? renameHover.hovered ? (control.dangerous ? ColorPalette.red700 : "white") : (control.dangerous ? ColorPalette.red500 : "#dfdfdf") : "grey"
             font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             // font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter

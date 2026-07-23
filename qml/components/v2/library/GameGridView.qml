@@ -216,7 +216,7 @@ Item {
                             anchors.centerIn: parent
                             text: gameDelegate.model.achievementsEarned + "/" + gameDelegate.model.achievementsTotal
                             color: "white"
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                             font.weight: Font.DemiBold
                         }

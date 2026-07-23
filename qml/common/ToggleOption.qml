@@ -35,7 +35,7 @@ Button {
                 color: Theme.textPrimary
                 font.pixelSize: AppStyle.fontSizeMedium
                 Layout.alignment: Qt.AlignLeft
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
             }
             Text {
@@ -47,7 +47,7 @@ Button {
                 font.pixelSize: AppStyle.fontSizeMedium
                 lineHeight: 1.2
                 Layout.alignment: Qt.AlignLeft
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 // font.weight: Font
                 wrapMode: Text.WordWrap
                 color: Theme.textMuted

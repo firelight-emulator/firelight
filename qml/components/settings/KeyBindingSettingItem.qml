@@ -27,7 +27,7 @@ BaseSettingItem {
             anchors.centerIn: parent
             text: root.listening ? qsTr("Press a key…") : (root.binding === "" ? qsTr("Unbound") : root.binding)
             color: root.listening ? Theme.accent : (root.binding === "" ? Theme.textMuted : Theme.textPrimary)
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             font.weight: Font.DemiBold
         }

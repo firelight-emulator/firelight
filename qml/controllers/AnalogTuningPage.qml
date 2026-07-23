@@ -35,14 +35,14 @@ FocusScope {
             Text {
                 text: ts.label
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
                 Layout.fillWidth: true
             }
             Text {
                 text: ts.percent ? Math.round(ts.value * 100) + "%" : ts.value.toFixed(2)
                 color: Theme.textMuted
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
             }
         }
@@ -139,7 +139,7 @@ FocusScope {
             Text {
                 text: panel.title
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 font.pixelSize: AppStyle.fontSizeMedium
                 Layout.bottomMargin: 4
@@ -173,7 +173,7 @@ FocusScope {
                 Text {
                     text: "Response curve"
                     color: Theme.textPrimary
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeMedium
                     Layout.fillWidth: true
                 }
@@ -213,7 +213,7 @@ FocusScope {
             Text {
                 text: "Analog Tuning"
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 font.pixelSize: AppStyle.fontSizeLarge
                 Layout.topMargin: 8
@@ -254,7 +254,7 @@ FocusScope {
             Text {
                 text: "Triggers"
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 font.pixelSize: AppStyle.fontSizeMedium
             }

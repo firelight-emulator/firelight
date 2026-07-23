@@ -87,6 +87,6 @@ FLPage {
         text: root.gameContentHash !== "" ? "No media for this game yet." : "No screenshots or clips yet."
         color: Theme.textMuted
         font.pixelSize: AppStyle.fontSizeMedium
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
     }
 }

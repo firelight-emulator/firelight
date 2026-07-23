@@ -166,7 +166,7 @@ FocusScope {
                 font.pixelSize: AppStyle.fontSizeSmall
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 visible: !model.connected
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.verticalCenter: parent.verticalCenter
@@ -357,7 +357,7 @@ FocusScope {
                         text: "Steam is running, and can take the Guide button before Firelight sees it. " + "If that's a problem, turn off \"Guide button focuses Steam\" in Steam's " + "Settings → Controller. Firelight doesn't bind Guide to anything."
                         color: Theme.textMuted
                         font.pixelSize: AppStyle.fontSizeSmall
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         wrapMode: Text.WordWrap
                     }
                 }

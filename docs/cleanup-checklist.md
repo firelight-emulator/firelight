@@ -709,7 +709,6 @@ normalization), so files that only changed line endings are excluded. Vendored t
 
 - [ ] `qml/AppStyle.qml` — 77 L / 25 C
 - [ ] `qml/AppearanceSettings.qml` — 78 L / 30 C
-- [ ] `qml/Constants.qml` — 124 L / 2 C
 - [ ] `qml/FirelightMenuItem.qml` — 70 L / 2 C
 - [ ] `qml/GeneralSettings.qml` — 43 L / 9 C
 - [ ] `qml/Main3.qml` — 682 L / 39 C

@@ -82,7 +82,7 @@ Button {
                 Text {
                     text: control.name
                     color: "white"
-                    font.family: Constants.mainFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeMedium
                     horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter
@@ -106,7 +106,7 @@ Button {
                     contentItem: Text {
                         text: control.type
                         color: "#c3c3c3"
-                        font.family: Constants.mainFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -119,7 +119,7 @@ Button {
                 Layout.fillHeight: true
                 text: control.description
                 color: "#c3c3c3"
-                font.family: Constants.mainFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.Normal
                 font.pixelSize: AppStyle.fontSizeMedium
                 lineHeight: 1.2
@@ -144,7 +144,7 @@ Button {
             Text {
                 text: control.points + " pt" + (control.points !== 1 ? "s" : "")
                 color: "white"
-                font.family: Constants.mainFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignBottom
@@ -155,7 +155,7 @@ Button {
             Text {
                 text: control.earned ? control.earnedDate : "Not earned"
                 color: "#c3c3c3"
-                font.family: Constants.mainFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
                 lineHeight: 1.2
                 wrapMode: Text.WordWrap

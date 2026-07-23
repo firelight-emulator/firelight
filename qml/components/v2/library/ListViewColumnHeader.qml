@@ -17,7 +17,7 @@ Item {
         text: root.text
         font.pixelSize: AppStyle.fontSizeMedium
         font.weight: root.selected ? Font.Bold : Font.DemiBold
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         color: root.selected ? Theme.textPrimary : Theme.textMuted
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter

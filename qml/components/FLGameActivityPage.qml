@@ -49,7 +49,7 @@ Pane {
             Text {
                 text: "Activity summary"
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 color: "white"
                 font.weight: Font.DemiBold
                 Layout.preferredHeight: 40
@@ -82,7 +82,7 @@ Pane {
                             anchors.bottom: timePlayedValue.top
                             anchors.bottomMargin: 8
                             font.pixelSize: AppStyle.fontSizeMedium
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.Medium
                             color: "white"
                             verticalAlignment: Text.AlignBottom
@@ -112,7 +112,7 @@ Pane {
                             }
                             anchors.bottom: parent.bottom
                             font.pixelSize: AppStyle.fontSizeXLarge
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             elide: Text.ElideRight
                             width: parent.width
                             font.weight: Font.Bold
@@ -132,7 +132,7 @@ Pane {
                             anchors.bottom: timesPlayedValue.top
                             anchors.bottomMargin: 8
                             font.pixelSize: AppStyle.fontSizeMedium
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.Medium
                             color: "white"
                             verticalAlignment: Text.AlignBottom
@@ -145,7 +145,7 @@ Pane {
                             elide: Text.ElideRight
                             width: parent.width
                             font.pixelSize: AppStyle.fontSizeXLarge
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.Bold
                             color: "white"
                             verticalAlignment: Text.AlignVCenter
@@ -163,7 +163,7 @@ Pane {
                             anchors.bottom: playTimeValue.top
                             anchors.bottomMargin: 8
                             font.pixelSize: AppStyle.fontSizeMedium
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.Medium
                             color: "white"
                             verticalAlignment: Text.AlignBottom
@@ -199,7 +199,7 @@ Pane {
                             font.pixelSize: AppStyle.fontSizeXLarge
                             elide: Text.ElideRight
                             width: parent.width
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.Bold
                             color: "white"
                             verticalAlignment: Text.AlignVCenter
@@ -212,7 +212,7 @@ Pane {
                 id: title
                 text: "Recent activity"
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 color: "white"
                 font.weight: Font.DemiBold
                 Layout.preferredHeight: 40
@@ -260,7 +260,7 @@ Pane {
                             padding: 0
                             font.pixelSize: AppStyle.fontSizeLarge
                             font.weight: Font.Medium
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             verticalAlignment: Text.AlignVCenter
                             Layout.fillWidth: true
                             elide: Text.ElideRight

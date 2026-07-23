@@ -26,7 +26,7 @@ FirelightDialog {
     property bool selectedSortAscending: true
 
     // The available folder accent colors ("" = none)
-    readonly property var swatchColors: [""].concat(Constants.folderColors)
+    readonly property var swatchColors: [""].concat(ColorPalette.folderColors)
 
     // Game-sort options for the folder's remembered sort (role names must match
     // EntryListModel's roles)
@@ -229,7 +229,7 @@ FirelightDialog {
                 anchors.fill: parent
                 anchors.leftMargin: 10
                 font.pixelSize: AppStyle.fontSizeSmall
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 color: Theme.textMuted
                 text: fieldPane.placeholder
                 verticalAlignment: Text.AlignVCenter
@@ -242,7 +242,7 @@ FirelightDialog {
                 anchors.rightMargin: 10
                 clip: true
                 inputMethodHints: fieldPane.inputHints
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeSmall
                 color: Theme.textPrimary
                 verticalAlignment: Text.AlignVCenter
@@ -254,14 +254,14 @@ FirelightDialog {
         Layout.fillWidth: true
         Layout.topMargin: 8
         color: Theme.textPrimary
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.pixelSize: AppStyle.fontSizeSmall
         font.weight: Font.DemiBold
     }
 
     component FieldLabel: Text {
         color: Theme.textMuted
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.pixelSize: AppStyle.fontSizeSmall
     }
 
@@ -358,7 +358,7 @@ FirelightDialog {
                             text: model.path
                             color: Theme.textPrimary
                             elide: Text.ElideMiddle
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -380,7 +380,7 @@ FirelightDialog {
                     leftPadding: 28
                     text: "Only favorites"
                     color: Theme.textPrimary
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -394,7 +394,7 @@ FirelightDialog {
                     leftPadding: 28
                     text: "Only unplayed (never launched)"
                     color: Theme.textPrimary
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -419,7 +419,7 @@ FirelightDialog {
                             leftPadding: 28
                             text: model.displayName
                             color: Theme.textPrimary
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                             verticalAlignment: Text.AlignVCenter
                         }

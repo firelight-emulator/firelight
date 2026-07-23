@@ -29,7 +29,7 @@ Flickable {
         text: String(root.source) !== "" ? FilesystemUtils.readTextFile(root.source) : ""
         wrapMode: Text.WordWrap
         color: "white"
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.pixelSize: AppStyle.fontSizeMedium
         lineHeight: 1.3
         linkColor: ColorPalette.hyperlinkColor

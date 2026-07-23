@@ -25,6 +25,24 @@ Item {
     readonly property int fontSizeLarge: Math.round(22 * scale)   // subtitles, section headers
     readonly property int fontSizeXLarge: Math.round(32 * scale)  // page / hero titles
 
+    // TODO
+    //*************************************************************
+    // Typeface — one UI font (the Lexend variable font; choose weight per call
+    // site via font.weight) plus the Material Symbols icon font
+    //*************************************************************
+    readonly property string fontFamily: _lexend.name
+    readonly property string symbolFontFamily: _symbols.name
+
+    FontLoader {
+        id: _lexend
+        source: "qrc:/fonts/lexend"
+    }
+
+    FontLoader {
+        id: _symbols
+        source: "qrc:/fonts/symbols"
+    }
+
     // Spacing / gaps / padding — scale AND density (density is about how tightly
     // content packs)
     readonly property int spacingXs: Math.round(4 * scale * density)
@@ -70,6 +88,9 @@ Item {
     // Title Bar
     //*************************************************************
     readonly property int titleBarHeight: Math.round(48 * scale)
+    // TODO
+    // Banner height for the in-game quick menu
+    readonly property int standardTitleBarHeight: Math.round(60 * scale)
     readonly property int titleBarPadding: Math.round(4 * scale)
     readonly property int titleBarUtilityButtonWidth: Math.round(48 * scale)
     readonly property int titleBarUtilityButtonIconSize: Math.round(10 * scale)

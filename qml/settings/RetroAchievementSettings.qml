@@ -56,7 +56,7 @@ FocusScope {
                     Layout.fillWidth: true
                     text: qsTr("Notifications")
                     font.pixelSize: AppStyle.fontSizeMedium
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.weight: Font.DemiBold
                     Layout.bottomMargin: 8
                     color: Theme.textMuted

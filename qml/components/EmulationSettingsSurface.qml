@@ -76,7 +76,7 @@ FocusScope {
                     leftPadding: 8
                     topPadding: 8
                     font.pixelSize: AppStyle.fontSizeMedium
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.weight: Font.DemiBold
                 }
 
@@ -88,7 +88,7 @@ FocusScope {
                     color: Theme.textMuted
                     wrapMode: Text.WordWrap
                     font.pixelSize: AppStyle.fontSizeSmall
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.weight: Font.Medium
                 }
 
@@ -110,7 +110,7 @@ FocusScope {
                         color: Theme.textPrimary
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.weight: Font.DemiBold
                     }
                     onClicked: coreOptionsModel.categoryFilter = ""
@@ -139,7 +139,7 @@ FocusScope {
                                 color: Theme.textPrimary
                                 verticalAlignment: Text.AlignVCenter
                                 font.pixelSize: AppStyle.fontSizeMedium
-                                font.family: Constants.regularFontFamily
+                                font.family: AppStyle.fontFamily
                                 font.weight: Font.DemiBold
                             }
                             Text {

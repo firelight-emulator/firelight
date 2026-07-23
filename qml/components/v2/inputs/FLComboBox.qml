@@ -11,7 +11,7 @@ ComboBox {
     objectName: "FLComboBox"
 
     font.pixelSize: AppStyle.fontSizeMedium
-    font.family: Constants.regularFontFamily
+    font.family: AppStyle.fontFamily
     implicitHeight: Math.max(AppStyle.minTarget, AppStyle.controlHeight)
     leftPadding: AppStyle.spacingMd
     rightPadding: AppStyle.iconSizeMd + AppStyle.spacingMd

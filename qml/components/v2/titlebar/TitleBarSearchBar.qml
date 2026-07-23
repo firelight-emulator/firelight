@@ -116,7 +116,7 @@ FocusScope {
                 placeholderText: qsTr("Search (Ctrl + F)")
                 font.pixelSize: AppStyle.fontSizeMedium
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 background: Rectangle {
                     color: "transparent"
                 }
@@ -215,7 +215,7 @@ FocusScope {
             Text {
                 text: qsTr("Type something to search!")
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 color: Theme.textMuted
                 anchors.centerIn: parent
@@ -241,7 +241,7 @@ FocusScope {
                         Text {
                             text: "Search results"
                             font.pixelSize: AppStyle.fontSizeMedium
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.DemiBold
                             color: Theme.textMuted
                             Layout.fillHeight: true
@@ -250,7 +250,7 @@ FocusScope {
                             id: countText
                             text: "(" + SearchResultsModel.rowCount() + ")"
                             font.pixelSize: AppStyle.fontSizeMedium
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.Medium
                             color: Theme.textMuted
                             Layout.fillHeight: true
@@ -287,7 +287,7 @@ FocusScope {
                             contentItem: Text {
                                 text: "See all results"
                                 font.pixelSize: AppStyle.fontSizeMedium
-                                font.family: Constants.regularFontFamily
+                                font.family: AppStyle.fontFamily
                                 font.weight: Font.Medium
                                 color: Theme.textMuted
                             }
@@ -316,7 +316,7 @@ FocusScope {
                         Text {
                             text: section
                             font.pixelSize: AppStyle.fontSizeMedium
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.DemiBold
                             color: Theme.textMuted
                             anchors.verticalCenter: parent.verticalCenter
@@ -396,7 +396,7 @@ FocusScope {
                             Text {
                                 text: model.displayName
                                 font.pixelSize: AppStyle.fontSizeMedium
-                                font.family: Constants.regularFontFamily
+                                font.family: AppStyle.fontFamily
                                 font.weight: Font.DemiBold
                                 verticalAlignment: Text.AlignVCenter
                                 color: Theme.textPrimary
@@ -408,7 +408,7 @@ FocusScope {
                             Text {
                                 text: model.platformName
                                 font.pixelSize: AppStyle.fontSizeMedium
-                                font.family: Constants.regularFontFamily
+                                font.family: AppStyle.fontFamily
                                 font.weight: Font.Medium
                                 verticalAlignment: Text.AlignVCenter
                                 color: Theme.textMuted

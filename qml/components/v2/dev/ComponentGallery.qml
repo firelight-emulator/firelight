@@ -38,7 +38,7 @@ FLPage {
                 Text {
                     text: "Component Gallery"
                     color: Theme.textPrimary
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeXLarge
                     font.weight: Font.DemiBold
                 }
@@ -46,7 +46,7 @@ FLPage {
                 Text {
                     text: "F11 or Esc to close  ·  color ← Theme, size ← AppStyle, reuse FL*"
                     color: Theme.textMuted
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                 }
 
@@ -168,7 +168,7 @@ FLPage {
                     Text {
                         text: "Toggle (off / on)"
                         color: Theme.textMuted
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                     }
                 }
@@ -192,7 +192,7 @@ FLPage {
                         Text {
                             text: "Solid panel"
                             color: Theme.textPrimary
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeMedium
                         }
                     }
@@ -201,7 +201,7 @@ FLPage {
                         Text {
                             text: "Glass panel"
                             color: Theme.textPrimary
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeMedium
                         }
                     }

@@ -20,7 +20,7 @@ Rectangle {
         text: root.text
         color: root._c
         font.pixelSize: AppStyle.fontSizeSmall
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.weight: Font.DemiBold
     }
 }

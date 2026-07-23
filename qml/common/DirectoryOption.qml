@@ -60,7 +60,7 @@ Button {
             font.pixelSize: AppStyle.fontSizeMedium
             Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
             verticalAlignment: Text.AlignVCenter
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
         }
 
@@ -73,7 +73,7 @@ Button {
             text: FilesystemUtils.isFile(root.value) ? FilesystemUtils.removeFileURI(root.value) : root.value
             font.pixelSize: AppStyle.fontSizeMedium
             Layout.alignment: Qt.AlignRight
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             // font.weight: Font.DemiBold
             wrapMode: Text.WordWrap
             Layout.leftMargin: 32

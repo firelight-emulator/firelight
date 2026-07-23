@@ -19,7 +19,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         color: Theme.textPrimary
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.pixelSize: AppStyle.fontSizeXLarge
         font.weight: Font.Black
         horizontalAlignment: Text.AlignLeft
@@ -32,7 +32,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.bottomMargin: 12
         color: Theme.textMuted
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.pixelSize: AppStyle.fontSizeMedium
         font.weight: Font.Normal
         text: modInfo.platformName
@@ -53,7 +53,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.topMargin: 16
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             leftPadding: 12
@@ -69,7 +69,7 @@ ColumnLayout {
             }
             contentItem: Text {
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
                 text: modInfo.authorName
                 // font.weight: Font.DemiBold
@@ -80,7 +80,7 @@ ColumnLayout {
             Layout.fillWidth: true
             bottomPadding: 24
             color: Theme.textPrimary
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeLarge
             font.weight: Font.DemiBold
             lineHeight: 1.2
@@ -91,7 +91,7 @@ ColumnLayout {
         Text {
             Layout.fillWidth: true
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignLeft
@@ -123,7 +123,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 bottomPadding: 24
                 color: Theme.textPrimary
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeLarge
                 font.weight: Font.DemiBold
                 lineHeight: 1.2
@@ -134,7 +134,7 @@ ColumnLayout {
             Text {
                 Layout.fillWidth: true
                 color: Theme.textMuted
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.DemiBold
                 horizontalAlignment: Text.AlignLeft
@@ -162,7 +162,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.topMargin: 16
                 color: Theme.textMuted
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.DemiBold
                 leftPadding: 12
@@ -178,7 +178,7 @@ ColumnLayout {
                 }
                 contentItem: Text {
                     color: Theme.textPrimary
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeMedium
                     text: modInfo.authorName
                     // font.weight: Font.DemiBold
@@ -200,7 +200,7 @@ ColumnLayout {
         background: Item {}
         contentItem: Text {
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignHCenter

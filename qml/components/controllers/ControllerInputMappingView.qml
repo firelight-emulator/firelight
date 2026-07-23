@@ -163,7 +163,7 @@ FocusScope {
                             text: classTab.modelData
                             color: classTab.current ? "black" : "white"
                             font.pixelSize: AppStyle.fontSizeSmall
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.weight: Font.Medium
                         }
                         HoverHandler {
@@ -315,7 +315,7 @@ FocusScope {
                     text: model.originalInputName
                     color: Theme.textPrimary
                     font.pixelSize: AppStyle.fontSizeMedium
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.weight: Font.DemiBold
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -332,7 +332,7 @@ FocusScope {
                         color: model.hasConflict ? Theme.warning : (!model.hasMapping ? Theme.textMuted : Theme.textPrimary)
                         text: model.hasMapping ? model.mappedInputName : "(Not mapped)"
 
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.weight: !model.hasMapping ? Font.Medium : Font.DemiBold
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -343,7 +343,7 @@ FocusScope {
                         font.pixelSize: AppStyle.fontSizeMedium
                         color: Theme.textMuted
                         text: " (Default)"
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         font.weight: Font.Medium
                         verticalAlignment: Text.AlignVCenter
                     }

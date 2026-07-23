@@ -45,7 +45,7 @@ FirelightDialog {
                     Text {
                         anchors.fill: parent
                         font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         color: ColorPalette.neutral500
                         text: "Folder name"
                         verticalAlignment: Text.AlignVCenter
@@ -58,7 +58,7 @@ FirelightDialog {
                         // KeyNavigation.down: passwordTextInput
                         property bool showGlobalCursor: true
                         property var globalCursorProxy: thePane
-                        font.family: Constants.regularFontFamily
+                        font.family: AppStyle.fontFamily
                         focus: true
                         font.pixelSize: AppStyle.fontSizeMedium
                         color: "white"

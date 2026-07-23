@@ -40,7 +40,7 @@ Button {
             rightPadding: 4
             text: "Slot " + (root.index + 1)
             font.pixelSize: AppStyle.fontSizeMedium
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
             color: "white"
             horizontalAlignment: Text.AlignLeft
@@ -51,7 +51,7 @@ Button {
             rightPadding: 4
             text: root.dateTimeString
             font.pixelSize: AppStyle.fontSizeMedium
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.Normal
             color: "#d1d1d1"
             horizontalAlignment: Text.AlignLeft
@@ -103,7 +103,7 @@ Button {
                 color: parent.enabled ? "white" : "#727272"
                 text: "Load Suspend Point"
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
@@ -130,7 +130,7 @@ Button {
                     color: "white"
                     text: "Overwrite"
                     font.pixelSize: AppStyle.fontSizeMedium
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.weight: Font.Normal
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter

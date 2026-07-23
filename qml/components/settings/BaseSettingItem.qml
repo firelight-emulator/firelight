@@ -119,7 +119,7 @@ FocusScope {
                 text: root.label
                 color: root.subItem ? Theme.textMuted : Theme.textPrimary
                 font.pixelSize: AppStyle.fontSizeMedium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 wrapMode: Text.WordWrap
             }
@@ -152,7 +152,7 @@ FocusScope {
                     text: qsTr("Reset")
                     color: Theme.textMuted
                     font.pixelSize: AppStyle.fontSizeSmall
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.weight: Font.Medium
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -203,7 +203,7 @@ FocusScope {
             text: root.description
             color: Theme.textMuted
             font.pixelSize: AppStyle.fontSizeSmall
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.Medium
             lineHeight: 1.3
             wrapMode: Text.WordWrap

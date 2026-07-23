@@ -52,7 +52,7 @@ FocusScope {
         Text {
             text: "Bindings for " + root.targetLabel
             color: Theme.textPrimary
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
             font.pixelSize: AppStyle.fontSizeLarge
         }
@@ -61,7 +61,7 @@ FocusScope {
             visible: bindings.count === 0 && !root.capturing
             text: "No custom bindings — the default mapping is used."
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
         }
 
@@ -97,7 +97,7 @@ FocusScope {
                         Text {
                             text: sourceLabel
                             color: Theme.textPrimary
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeMedium
                             Layout.fillWidth: true
                         }
@@ -105,7 +105,7 @@ FocusScope {
                         Text {
                             text: "Toggle"
                             color: Theme.textMuted
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                         }
                         Switch {
@@ -116,7 +116,7 @@ FocusScope {
                         Text {
                             text: "Turbo"
                             color: Theme.textMuted
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                         }
                         Switch {
@@ -140,7 +140,7 @@ FocusScope {
                         Text {
                             text: "Rate"
                             color: Theme.textMuted
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                         }
                         Slider {
@@ -155,7 +155,7 @@ FocusScope {
                         Text {
                             text: Math.round(turboRate) + " Hz"
                             color: Theme.textMuted
-                            font.family: Constants.regularFontFamily
+                            font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                         }
                     }
@@ -169,7 +169,7 @@ FocusScope {
                 visible: root.capturing
                 text: "Press a button on player " + root.capturePlayerNumber + "…"
                 color: Theme.accent
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
                 Layout.fillWidth: true
             }

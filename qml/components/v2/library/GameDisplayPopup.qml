@@ -44,7 +44,7 @@ Popup {
     // Small-caps section heading
     component SectionLabel: Text {
         color: Theme.textMuted
-        font.family: Constants.regularFontFamily
+        font.family: AppStyle.fontFamily
         font.pixelSize: AppStyle.fontSizeSmall
         font.weight: Font.DemiBold
         Layout.topMargin: AppStyle.spacingXs

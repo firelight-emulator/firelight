@@ -21,7 +21,7 @@ ColumnLayout {
         Text {
             text: "Library"
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
         }
         Repeater {
@@ -38,7 +38,7 @@ ColumnLayout {
                 Text {
                     text: parent.modelData.label
                     color: parent.index === root.view.scopeCrumb.length - 1 ? Theme.textPrimary : Theme.textMuted
-                    font.family: Constants.regularFontFamily
+                    font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                     font.weight: Font.DemiBold
                     TapHandler {
@@ -60,7 +60,7 @@ ColumnLayout {
         Text {
             text: root.view.scopeLabel
             color: Theme.textPrimary
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeLarge
             font.weight: Font.Bold
         }
@@ -68,7 +68,7 @@ ColumnLayout {
             Layout.alignment: Qt.AlignBaseline
             text: root.view.gameCount + (root.view.gameCount === 1 ? " game" : " games")
             color: Theme.textMuted
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeMedium
         }
         Item {
@@ -92,7 +92,7 @@ ColumnLayout {
         Text {
             text: root.view.selectedCount + " selected"
             color: Theme.accent
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
         }

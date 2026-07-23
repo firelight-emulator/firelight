@@ -57,8 +57,7 @@ Item {
     readonly property color whiteColor: "#f8fcfc"
     readonly property color blackColor: "#000000"
     // TODO
-    // Ember — the single accent ramp. Reconciles the oranges that were duplicated
-    // across ColorPalette, FLFocusHighlight and Constants into one primitive scale
+    // Ember — the single accent ramp
     readonly property color ember300: "#ffb787"
     readonly property color ember400: "#ff9f38"
     readonly property color ember500: "#ee7c1e"
@@ -75,4 +74,8 @@ Item {
     // TODO
     // Favourite / heart pink — fixed brand colour, not theme-dependent
     readonly property color pink: "#e55aa2"
+
+    // TODO
+    // Pickable folder / label swatch colours (data values, not theme roles)
+    readonly property var folderColors: ["#e5484d", "#f76b15", "#f5d90a", "#46a758", "#0091ff", "#8e4ec6", "#e93d82"]
 }

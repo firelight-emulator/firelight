@@ -113,7 +113,7 @@ StackView {
             Text {
                 anchors.centerIn: parent
                 color: "#FFFFFF"
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
                 text: "Page not found: " + Router.path
             }

@@ -25,7 +25,7 @@ Text {
     text: root.glyph.length > 0 ? root.glyph : MaterialSymbols.glyph(root.name)
     color: Theme.textPrimary
 
-    font.family: Constants.symbolFontFamily
+    font.family: AppStyle.symbolFontFamily
     font.pixelSize: root.size
     // Drive the optical-size axis to the rendered size (font range is 20-48) so the
     // glyph outline is optically correct; expose fill/weight/grade for variants
