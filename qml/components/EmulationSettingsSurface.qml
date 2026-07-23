@@ -100,7 +100,7 @@ FocusScope {
                     hoverEnabled: true
                     focusPolicy: Qt.NoFocus
                     background: Rectangle {
-                        color: ColorPalette.neutral300
+                        color: Theme.textPrimary
                         opacity: parent.hovered ? 0.2 : 0.08
                         radius: 8
                     }
@@ -127,7 +127,7 @@ FocusScope {
                         hoverEnabled: true
                         focusPolicy: Qt.NoFocus
                         background: Rectangle {
-                            color: ColorPalette.neutral300
+                            color: Theme.textPrimary
                             opacity: parent.hovered ? 0.2 : 0.08
                             radius: 8
                         }

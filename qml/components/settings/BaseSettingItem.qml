@@ -145,7 +145,7 @@ FocusScope {
 
                 background: Rectangle {
                     radius: 6
-                    color: ColorPalette.neutral300
+                    color: Theme.textPrimary
                     opacity: resetButton.hovered ? 0.2 : 0
                 }
                 contentItem: Text {

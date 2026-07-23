@@ -54,9 +54,9 @@ Dialog {
     }
 
     background: Rectangle {
-        color: ColorPalette.neutral900
+        color: Theme.surface
         radius: 8
-        border.color: ColorPalette.neutral700
+        border.color: Theme.border
         border.width: 1
     }
 

@@ -26,7 +26,7 @@ FirelightDialog {
     property bool selectedSortAscending: true
 
     // The available folder accent colors ("" = none)
-    readonly property var swatchColors: [""].concat(ColorPalette.folderColors)
+    readonly property var swatchColors: [""].concat(Theme.folderColors)
 
     // Game-sort options for the folder's remembered sort (role names must match
     // EntryListModel's roles)
@@ -533,7 +533,7 @@ FirelightDialog {
                         radius: 13
                         color: modelData === "" ? "transparent" : modelData
                         border.width: control.selectedColor === modelData ? 3 : 1
-                        border.color: control.selectedColor === modelData ? "white" : (modelData === "" ? ColorPalette.neutral500 : "#00000040")
+                        border.color: control.selectedColor === modelData ? "white" : (modelData === "" ? Theme.borderStrong : "#00000040")
 
                         // "None" swatch shows a slash
                         Rectangle {

@@ -72,7 +72,7 @@ FocusScope {
 
                 background: Rectangle {
                     opacity: 0.9
-                    color: ColorPalette.neutral900
+                    color: Theme.surface
                     radius: 4
                 }
             }
@@ -162,7 +162,7 @@ FocusScope {
 
             Text {
                 text: "No controller connected"
-                color: ColorPalette.neutral500
+                color: Theme.textMuted
                 font.pixelSize: AppStyle.fontSizeSmall
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter

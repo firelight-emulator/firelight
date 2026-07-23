@@ -260,7 +260,7 @@ FocusScope {
                 hoverEnabled: true
 
                 background: Rectangle {
-                    color: ColorPalette.neutral300
+                    color: Theme.textPrimary
                     radius: 8
                     opacity: shortcutRow.hovered || (!InputMethodManager.usingMouse && shortcutRow.activeFocus) ? 0.14 : 0
                 }
@@ -340,7 +340,7 @@ FocusScope {
 
                         background: Rectangle {
                             radius: 6
-                            color: ColorPalette.neutral300
+                            color: Theme.textPrimary
                             opacity: parent.hovered ? 0.2 : 0
                         }
 

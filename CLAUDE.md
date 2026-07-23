@@ -187,7 +187,7 @@ C++ services are not exposed to QML directly. Instead:
 
 ### QML Singletons
 
-`Constants.qml`, `ColorPalette.qml`, `AppStyle.qml`, `GeneralSettings.qml`, and `AppearanceSettings.qml` are declared as QML singleton types in `CMakeLists.txt`.
+`Theme.qml`, `AppStyle.qml`, `GeneralSettings.qml`, and `AppearanceSettings.qml` are declared as QML singleton types in `CMakeLists.txt`.
 
 ### Design system: color ← Theme, size ← AppStyle, components ← FL*
 

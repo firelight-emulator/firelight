@@ -117,9 +117,9 @@ FocusScope {
             value: SaveManager.saveDirectory
 
             background: Rectangle {
-                color: ColorPalette.neutral300
+                color: Theme.textPrimary
                 radius: 6
-                // border.color: ColorPalette.neutral700
+                // border.color: Theme.border
                 opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.2 : 0.1
 
                 Behavior on opacity {

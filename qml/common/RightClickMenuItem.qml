@@ -73,7 +73,7 @@ MenuItem {
 
     background: Rectangle {
 
-        color: enabled ? (renameHover.hovered ? (control.dangerous ? ColorPalette.red700 : ColorPalette.neutral100) : "transparent") : "transparent"
+        color: enabled ? (renameHover.hovered ? (control.dangerous ? Theme.danger : Theme.textPrimary) : "transparent") : "transparent"
         opacity: control.dangerous ? 1.0 : 0.1
         radius: 4
     }
@@ -95,7 +95,7 @@ MenuItem {
             Layout.topMargin: -1
             hovered: renameHover.hovered
             text: control.text
-            color: enabled ? renameHover.hovered ? (control.dangerous ? ColorPalette.red700 : "white") : (control.dangerous ? ColorPalette.red500 : "#dfdfdf") : "grey"
+            color: enabled ? renameHover.hovered ? (control.dangerous ? Theme.danger : "white") : (control.dangerous ? Theme.danger : "#dfdfdf") : "grey"
             font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             font.family: AppStyle.fontFamily

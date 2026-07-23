@@ -62,7 +62,7 @@ Pane {
                             horizontalAlignment: Text.AlignHCenter
                         }
                         background: Rectangle {
-                            color: ColorPalette.neutral100
+                            color: Theme.textPrimary
                             opacity: parent.TabBar.index === navTabBar.currentIndex ? 0.16 : parent.pressed ? 0.04 : hoverHandler.hovered ? 0.08 : 0
                             radius: 6
                         }
@@ -674,7 +674,7 @@ Pane {
                     Text {
                         Layout.fillWidth: true
                         text: "Choose the device each player uses. Aim a Mouse or Light Gun with your mouse or the left analog stick; fire with the trigger (A by default)."
-                        color: ColorPalette.neutral300
+                        color: Theme.textMuted
                         font.pixelSize: AppStyle.fontSizeSmall
                         font.family: AppStyle.fontFamily
                         wrapMode: Text.WordWrap
@@ -712,8 +712,8 @@ Pane {
                                         implicitWidth: optionText.implicitWidth + 28
                                         implicitHeight: 36
                                         radius: 6
-                                        color: optionButton.current ? ColorPalette.neutral100 : "transparent"
-                                        border.color: optionButton.current ? ColorPalette.neutral100 : ColorPalette.neutral500
+                                        color: optionButton.current ? Theme.textPrimary : "transparent"
+                                        border.color: optionButton.current ? Theme.textPrimary : Theme.borderStrong
                                         border.width: 1
                                         Text {
                                             id: optionText
