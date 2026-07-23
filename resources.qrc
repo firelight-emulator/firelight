@@ -16,14 +16,8 @@
         <file alias="click">assets/sfx/click.wav</file>
     </qresource>
     <qresource prefix="/fonts">
-        <!--        <file alias="lexend">assets/Lexend-Regular.ttf</file>-->
-        <!--        <file alias="lexend-light">assets/Lexend-Light.ttf</file>-->
-        <file alias="lexend">assets/fonts/Inter-VariableFont_opsz,wght.ttf</file>
-        <file alias="lexend-light">assets/fonts/NunitoSans_10pt-Regular.ttf</file>
-        <file alias="font-semibold">assets/fonts/Lexend-Medium.ttf</file>
-        <file alias="lexend-black">assets/fonts/NunitoSans_10pt_SemiCondensed-Black.ttf</file>
+        <file alias="lexend">assets/fonts/Lexend-VariableFont_wght.ttf</file>
         <file alias="symbols">assets/fonts/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf</file>
-        <file alias="main">assets/fonts/Lexend-VariableFont_wght.ttf</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="app-icon">assets/img/icon.ico</file>

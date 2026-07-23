@@ -57,8 +57,9 @@ content must stay readable over anything (settings, dialogs, in-game menus).
 - Colour ← `Theme`, size ← `AppStyle`; add an `FL*` rather than a one-off.
 - **Assistant-added comments carry a bare `// TODO` marker** on the line above, for the author to reword
   or drop (`grep -rn '// TODO$'`).
-- Font families are not settled — the primary UI font is still hardcoded (`Constants.regularFontFamily`)
-  and several families are loaded; consolidating onto one is a later pass.
+- One UI typeface: the **Lexend** variable font — every `Constants.*FontFamily` resolves to it, and weight
+  is chosen per call site via `font.weight`. Icons use Material Symbols (`symbolFontFamily`). A stray
+  `font.family: "Consolas"` (netplay chat) still awaits a mono token.
 
 ## Migration status
 
@@ -71,6 +72,8 @@ content must stay readable over anything (settings, dialogs, in-game menus).
 - Status colours tokenised through `ColorPalette`.
 - Favourite/heart colour and the folder swatch palette de-duplicated onto shared sources.
 - Removed the unused Material-3 `color_*` palette and `purple*` tokens from `Constants`.
+- Typeface consolidated onto the Lexend variable font: killed the `Segoe UI` hardcode (250 sites), fixed
+  the qrc aliases that pointed at Inter/NunitoSans, and deleted the 23 unused font files.
 
 **Pending**
 - z-layer tokens are defined but unwired — the live `z: 100` sites are window resize edges, not dropdowns,
@@ -82,4 +85,4 @@ content must stay readable over anything (settings, dialogs, in-game menus).
 - `Constants.colorTest*` retained — one consumer remains (`AchievementList.qml`).
 - Legacy `ColorPalette` chrome inside `Theme.buttonBg*`, and the remaining raw colour/size literals, are a
   per-site decision (see `docs/qml-literals.md`), not a mechanical sweep.
-- Typeface consolidation (one UI font) is a separate pass.
+- A monospace token is still needed for the one hardcoded `font.family: "Consolas"` (netplay chat).

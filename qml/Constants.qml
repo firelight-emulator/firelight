@@ -29,36 +29,20 @@ Item {
     }
 
     FontLoader {
-        id: main
-        source: "qrc:/fonts/main"
-    }
-
-    FontLoader {
-        id: localFont
+        id: lexend
         source: "qrc:/fonts/lexend"
     }
 
-    FontLoader {
-        id: lexendLight
-        source: "qrc:/fonts/lexend-light"
-    }
-
-    FontLoader {
-        id: lexendBlack
-        source: "qrc:/fonts/lexend-black"
-    }
-
-    FontLoader {
-        id: semibold
-        source: "qrc:/fonts/font-semibold"
-    }
-
     readonly property string symbolFontFamily: symbols.name
-    readonly property string regularFontFamily: "Segoe UI"
-    readonly property string mainFontFamily: localFont.name
-    readonly property string lightFontFamily: localFont.name
-    readonly property string strongFontFamily: lexendBlack.name
-    readonly property string semiboldFontFamily: semibold.name
+
+    // TODO
+    // One UI typeface — the Lexend variable font. Weight is chosen per call site
+    // via font.weight, so every family alias resolves to the same family
+    readonly property string regularFontFamily: lexend.name
+    readonly property string mainFontFamily: lexend.name
+    readonly property string lightFontFamily: lexend.name
+    readonly property string strongFontFamily: lexend.name
+    readonly property string semiboldFontFamily: lexend.name
 
     readonly property color colorTestSurface: "#161616"
     readonly property color colorTestBackground: "#212020"
