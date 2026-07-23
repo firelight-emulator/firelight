@@ -3,7 +3,7 @@ import QtQuick
 Item {
     id: root
 
-    property color borderColor: "#ff9f38"
+    property color borderColor: Theme.focusRing
     property real borderWidth: 2
     property real bounceAmplitude: 16
     property real defaultAnchorMargins: -4

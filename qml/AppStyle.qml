@@ -78,12 +78,32 @@ Item {
     // Navigation Rail
     //*************************************************************
     readonly property int navRailWidth: Math.round(48 * scale)
-    // readonly property int titleBarPadding: Math.round(4 * scale)
-    // readonly property int titleBarUtilityButtonWidth: Math.round(48 * scale)
-    // readonly property int titleBarUtilityButtonIconSize: Math.round(10 * scale)
 
+    // TODO
     //*************************************************************
-    // Something Else
+    // Motion — durations (ms) and a default easing curve, replacing the raw
+    // duration literals scattered through the QML
     //*************************************************************
+    readonly property int durationFast: 120
+    readonly property int durationBase: 200
+    readonly property int durationSlow: 320
+    readonly property int easingStandard: Easing.OutCubic
 
+    // TODO
+    //*************************************************************
+    // Elevation — MultiEffect blur radii (shadow colour is Theme.shadow)
+    //*************************************************************
+    readonly property int elevation1: 8
+    readonly property int elevation2: 16
+    readonly property int elevation3: 32
+
+    // TODO
+    //*************************************************************
+    // Stacking layers — one z scale, replacing ad-hoc z values
+    //*************************************************************
+    readonly property int zBase: 0
+    readonly property int zDropdown: 100
+    readonly property int zOverlay: 200
+    readonly property int zToast: 300
+    readonly property int zModal: 400
 }

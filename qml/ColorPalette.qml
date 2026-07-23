@@ -56,5 +56,13 @@ Item {
     readonly property color textFieldColor: "#242428"
     readonly property color whiteColor: "#f8fcfc"
     readonly property color blackColor: "#000000"
-    readonly property color accentColor: "#ee7c1e"
+    // TODO
+    // Ember — the single accent ramp. Reconciles the oranges that were duplicated
+    // across ColorPalette, FLFocusHighlight and Constants into one primitive scale
+    readonly property color ember300: "#ffb787"
+    readonly property color ember400: "#ff9f38"
+    readonly property color ember500: "#ee7c1e"
+    readonly property color ember600: "#c96410"
+
+    readonly property color accentColor: ember500
 }

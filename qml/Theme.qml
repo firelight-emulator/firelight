@@ -14,6 +14,11 @@ import QtQuick
 QtObject {
     id: theme
 
+    // TODO
+    // Theme identity. Dark-first today; a light mode branches the derivations
+    // below on this flag rather than forking the whole token set
+    readonly property bool dark: true
+
     // Radix Slate — dark scale. Step roles (Radix convention):
     //   1-2 backgrounds · 3-5 component surfaces (normal/hover/active) ·
     //   6-8 borders (subtle/normal/focus) · 11 muted text · 12 primary text
@@ -73,9 +78,18 @@ QtObject {
     readonly property color accent: AppearanceSettings.accentColor
     readonly property color onAccent: onColor(accent)
 
+    // TODO
+    // Focus ring is a fixed ember step, never the user's accent — so the
+    // controller-focus highlight stays high-contrast whatever the accent is set to
+    readonly property color focusRing: ColorPalette.ember400
+
     readonly property color success: "#30a46c"
     readonly property color warning: "#ffc53d"
     readonly property color danger: "#e5484d"
+
+    // TODO
+    // Shadow colour for elevated surfaces (paired with AppStyle.elevation* radii)
+    readonly property color shadow: Qt.rgba(0, 0, 0, 0.45)
 
     // --- chrome: button / title-bar state colors ---
     // Relocated from AppStyle (which is now metrics-only). Values unchanged;
