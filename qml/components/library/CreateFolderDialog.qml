@@ -29,7 +29,7 @@ FirelightDialog {
                 property var globalCursorSpacing: 0
 
                 background: Rectangle {
-                    color: ColorPalette.neutral800
+                    color: Theme.surfaceElevated
                     radius: 4
                 }
 
@@ -46,7 +46,7 @@ FirelightDialog {
                         anchors.fill: parent
                         font.pixelSize: AppStyle.fontSizeMedium
                         font.family: AppStyle.fontFamily
-                        color: ColorPalette.neutral500
+                        color: Theme.textMuted
                         text: "Folder name"
                         verticalAlignment: Text.AlignVCenter
                         visible: usernameTextInput.length === 0

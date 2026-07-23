@@ -154,8 +154,8 @@ FocusScope {
                         implicitWidth: classTabText.implicitWidth + 28
                         implicitHeight: 34
                         radius: 6
-                        color: classTab.current ? ColorPalette.neutral100 : "transparent"
-                        border.color: classTab.current ? ColorPalette.neutral100 : ColorPalette.neutral500
+                        color: classTab.current ? Theme.textPrimary : "transparent"
+                        border.color: classTab.current ? Theme.textPrimary : Theme.borderStrong
                         border.width: 1
                         Text {
                             id: classTabText
@@ -235,9 +235,9 @@ FocusScope {
             width: ListView.view.width
             hoverEnabled: true
             background: Rectangle {
-                color: ColorPalette.neutral300
+                color: Theme.textPrimary
                 radius: 8
-                border.color: ColorPalette.neutral500
+                border.color: Theme.borderStrong
                 opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.14 : 0
 
                 Behavior on opacity {

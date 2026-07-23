@@ -2,8 +2,8 @@ pragma Singleton
 
 import QtQuick
 
-// Semantic color tokens for the app (a clean layer alongside the legacy
-// ColorPalette). One theme color drives two derivations, Discord-style:
+// Semantic color tokens for the app. One theme color drives two derivations,
+// Discord-style:
 //   - SOLID tokens (surface/border/text): the Radix Slate (dark) neutral scale
 //     tinted toward the theme color. Used for functional surfaces that must stay
 //     readable over any background (game art, gradients)
@@ -32,6 +32,16 @@ QtObject {
     readonly property color _slate8: "#5a6169"
     readonly property color _slate11: "#b0b4ba"
     readonly property color _slate12: "#edeef0"
+
+    // TODO
+    // Fixed brand primitives (not the user accent) — consumed only through the
+    // semantic tokens below, never referenced at a call site
+    readonly property color _ember400: "#ff9f38"
+    readonly property color _statusGreen: "#30a46c"
+    readonly property color _statusYellow: "#ffc53d"
+    readonly property color _statusRed: "#e5484d"
+    readonly property color _pink: "#e55aa2"
+    readonly property color _link: "#89c5f9"
 
     // Persisted knobs
     readonly property real intensity: AppearanceSettings.themeIntensity
@@ -95,15 +105,19 @@ QtObject {
     // TODO
     // Focus ring is a fixed ember step, never the user's accent — so the
     // controller-focus highlight stays high-contrast whatever the accent is set to
-    readonly property color focusRing: ColorPalette.ember400
+    readonly property color focusRing: _ember400
 
-    readonly property color success: ColorPalette.statusGreen
-    readonly property color warning: ColorPalette.statusYellow
-    readonly property color danger: ColorPalette.statusRed
+    readonly property color success: _statusGreen
+    readonly property color warning: _statusYellow
+    readonly property color danger: _statusRed
+
+    // TODO
+    // Link / hyperlink text
+    readonly property color link: _link
 
     // TODO
     // Favourite (heart) colour — a fixed brand pink, independent of the accent
-    readonly property color favorite: ColorPalette.pink
+    readonly property color favorite: _pink
 
     // TODO
     // Shadow colour — currently the app ground, matching the existing MultiEffect
@@ -111,20 +125,12 @@ QtObject {
     readonly property color shadow: background
 
     // --- chrome: button / title-bar state colors ---
-    // Relocated from AppStyle (which is now metrics-only). Values unchanged;
-    // still on the legacy ColorPalette scale rather than the semantic tokens
-    // above — reconcile when the buttons are migrated to FLButton
-    readonly property color buttonBgDisabled: ColorPalette.neutral700
-    readonly property color buttonBgInactive: ColorPalette.neutral800
-    readonly property color buttonBgHovered: ColorPalette.neutral700
-    readonly property color buttonBgPressed: ColorPalette.neutral900
-    readonly property color buttonBgFocused: ColorPalette.neutral100
     readonly property real buttonBgOpacityDisabled: 0
     readonly property real buttonBgOpacityInactive: 0.15
     readonly property real buttonBgOpacityHovered: 0.3
     readonly property real buttonBgOpacityPressed: 0.2
     readonly property real buttonBgOpacityFocused: 1
-    readonly property color buttonTextDisabled: ColorPalette.neutral500
+    readonly property color buttonTextDisabled: textMuted
     readonly property color buttonTextInactive: "white"
     readonly property color buttonTextFocused: "black"
 
@@ -145,4 +151,8 @@ QtObject {
     readonly property color glass: Qt.rgba(_slate1.r, _slate1.g, _slate1.b, glassAlpha)
     readonly property color glassElevated: Qt.rgba(_slate1.r, _slate1.g, _slate1.b, Math.min(1, glassAlpha + 0.12))
     readonly property color glassBorder: Qt.rgba(1, 1, 1, 0.08)
+
+    // TODO
+    // Pickable folder / label swatch colours (data values, not theme roles)
+    readonly property var folderColors: ["#e5484d", "#f76b15", "#f5d90a", "#46a758", "#0091ff", "#8e4ec6", "#e93d82"]
 }

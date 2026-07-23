@@ -32,7 +32,7 @@ Flickable {
         font.family: AppStyle.fontFamily
         font.pixelSize: AppStyle.fontSizeMedium
         lineHeight: 1.3
-        linkColor: ColorPalette.hyperlinkColor
+        linkColor: Theme.link
 
         onLinkActivated: function (link) {
             if (link.startsWith("http://") || link.startsWith("https://")) {

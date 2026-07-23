@@ -207,9 +207,9 @@ Pane {
                     width: ListView.view.width
                     hoverEnabled: true
                     background: Rectangle {
-                        color: ColorPalette.neutral300
+                        color: Theme.textPrimary
                         radius: 8
-                        border.color: ColorPalette.neutral500
+                        border.color: Theme.borderStrong
                         opacity: parent.hovered || (!InputMethodManager.usingMouse && parent.activeFocus) ? 0.14 : 0
 
                         Behavior on opacity {
@@ -275,7 +275,7 @@ Pane {
                             Layout.alignment: Qt.AlignLeft
                             Layout.fillHeight: true
                             font.pixelSize: AppStyle.fontSizeMedium
-                            color: model.hasBinding ? "white" : ColorPalette.neutral400
+                            color: model.hasBinding ? "white" : Theme.textMuted
                             text: model.bindingsLabel
                             font.family: AppStyle.fontFamily
                             font.weight: model.hasBinding ? Font.DemiBold : Font.Medium

@@ -162,7 +162,6 @@ foreach (QML_FILE ${QML_FILES})
     set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
 endforeach ()
 
-set_source_files_properties(qml/ColorPalette.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/WindowGeometry.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
@@ -584,7 +583,6 @@ add_executable(fl_test
 # behaviour FLFocusHighlight no longer has, and a permanently red `check` gets
 # ignored. Re-add both lines together when fixing them
 file(GLOB QML_TEST_FILES
-        qml/ColorPalette.qml
         qml/AppStyle.qml
         qml/routing.js
         qml_tests/tst_routing.qml

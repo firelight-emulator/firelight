@@ -130,9 +130,9 @@ Dialog {
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
     background: Rectangle {
-        color: ColorPalette.neutral900
+        color: Theme.surface
         radius: AppStyle.radiusMd
-        border.color: ColorPalette.neutral700
+        border.color: Theme.border
         border.width: 1
     }
 
@@ -185,8 +185,8 @@ Dialog {
         width: 104
         height: 104
         radius: AppStyle.radiusMd
-        color: ColorPalette.neutral800
-        border.color: isSelected ? ColorPalette.accentColor : (hover.hovered ? ColorPalette.neutral500 : ColorPalette.neutral700)
+        color: Theme.surfaceElevated
+        border.color: isSelected ? Theme.accent : (hover.hovered ? Theme.borderStrong : Theme.border)
         border.width: isSelected ? 3 : 1
 
         Image {
@@ -231,7 +231,7 @@ Dialog {
                     onClicked: control.mediaType = modelData.type
                     contentItem: Text {
                         text: parent.text
-                        color: parent.checked ? "white" : ColorPalette.neutral400
+                        color: parent.checked ? "white" : Theme.textMuted
                         font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
@@ -239,9 +239,9 @@ Dialog {
                     }
                     background: Rectangle {
                         radius: AppStyle.radiusMd
-                        color: parent.checked ? ColorPalette.neutral700 : "transparent"
+                        color: parent.checked ? Theme.surfaceHover : "transparent"
                         border.width: 1
-                        border.color: ColorPalette.neutral700
+                        border.color: Theme.border
                         implicitHeight: 32
                         implicitWidth: 84
                     }
@@ -296,7 +296,7 @@ Dialog {
                     Layout.topMargin: AppStyle.spacingXs
                     Layout.bottomMargin: AppStyle.spacingXs
                     implicitHeight: 1
-                    color: ColorPalette.neutral800
+                    color: Theme.border
                 }
 
                 // ---- SteamGridDB --------------------------------------------
@@ -379,7 +379,7 @@ Dialog {
                     }
                     Text {
                         text: "Get a key at steamgriddb.com/profile/preferences/api"
-                        color: ColorPalette.hyperlinkColor
+                        color: Theme.link
                         font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         MouseArea {
@@ -393,7 +393,7 @@ Dialog {
                 Text {
                     visible: GameArtService.providerConfigured && control.onlineList.length === 0 && !GameArtService.searching
                     text: "No SteamGridDB results for this game and type."
-                    color: ColorPalette.neutral500
+                    color: Theme.textMuted
                     font.family: AppStyle.fontFamily
                     font.pixelSize: AppStyle.fontSizeSmall
                 }
@@ -412,7 +412,7 @@ Dialog {
                             Text {
                                 Layout.fillWidth: true
                                 text: groupDelegate.modelData.gameName
-                                color: ColorPalette.neutral400
+                                color: Theme.textMuted
                                 font.family: AppStyle.fontFamily
                                 font.pixelSize: AppStyle.fontSizeSmall
                                 font.weight: Font.DemiBold

@@ -41,9 +41,9 @@ FLIconButton {
         }
 
         background: Rectangle {
-            color: ColorPalette.neutral900
+            color: Theme.surface
             radius: 8
-            border.color: ColorPalette.neutral700
+            border.color: Theme.border
             border.width: 1
         }
 
@@ -111,7 +111,7 @@ FLIconButton {
                         }
 
                         background: Rectangle {
-                            color: radioDelegate.pressed ? ColorPalette.neutral700 : (radioDelegate.hovered ? ColorPalette.neutral800 : "transparent")
+                            color: radioDelegate.pressed ? Theme.surfaceHover : (radioDelegate.hovered ? Theme.surfaceElevated : "transparent")
                             radius: 4
                         }
 
@@ -121,7 +121,7 @@ FLIconButton {
                             x: parent.width - width - 8
                             y: parent.height / 2 - height / 2
                             radius: 10
-                            border.color: radioDelegate.checked ? "#c86500" : ColorPalette.neutral400
+                            border.color: radioDelegate.checked ? "#c86500" : Theme.borderStrong
                             border.width: 2
 
                             Rectangle {
@@ -141,7 +141,7 @@ FLIconButton {
                             text: model.label || model.text || model
                             font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeMedium
-                            color: radioDelegate.checked ? ColorPalette.neutral100 : ColorPalette.neutral300
+                            color: radioDelegate.checked ? Theme.textPrimary : Theme.textMuted
                             verticalAlignment: Text.AlignVCenter
                         }
                     }

@@ -276,7 +276,7 @@ FocusScope {
         }
 
         background: Rectangle {
-            color: ColorPalette.neutral900
+            color: Theme.surface
         }
 
         contentItem: Text {
