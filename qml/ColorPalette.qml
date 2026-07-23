@@ -71,4 +71,8 @@ Item {
     readonly property color statusGreen: "#30a46c"
     readonly property color statusYellow: "#ffc53d"
     readonly property color statusRed: "#e5484d"
+
+    // TODO
+    // Favourite / heart pink — fixed brand colour, not theme-dependent
+    readonly property color pink: "#e55aa2"
 }

@@ -396,7 +396,7 @@ ListView {
                     visible: model.favorite || delegateButton.hovered
                     icon.width: 24
                     icon.height: 24
-                    icon.color: model.favorite ? Qt.darker("#e55aa2", 1.3) : "#9c9c9c"
+                    icon.color: model.favorite ? Qt.darker(Theme.favorite, 1.3) : "#9c9c9c"
                     background: Item {}
                     HoverHandler {
                         cursorShape: Qt.PointingHandCursor

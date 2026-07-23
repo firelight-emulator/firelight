@@ -22,7 +22,7 @@ BaseSettingItem {
             }
             return out;
         }
-        return ["#e5484d", "#f76b15", "#f5d90a", "#46a758", "#0091ff", "#8e4ec6", "#e93d82", "#ffffff"];
+        return Constants.folderColors.concat(["#ffffff"]);
     }
 
     control: RowLayout {

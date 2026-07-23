@@ -88,6 +88,10 @@ QtObject {
     readonly property color danger: ColorPalette.statusRed
 
     // TODO
+    // Favourite (heart) colour — a fixed brand pink, independent of the accent
+    readonly property color favorite: ColorPalette.pink
+
+    // TODO
     // Shadow colour — currently the app ground, matching the existing MultiEffect
     // sites; decouple to a translucent dark in a later pass
     readonly property color shadow: background

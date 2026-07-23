@@ -26,7 +26,7 @@ FirelightDialog {
     property bool selectedSortAscending: true
 
     // The available folder accent colors ("" = none)
-    readonly property var swatchColors: ["", "#e5484d", "#f76b15", "#f5d90a", "#46a758", "#0091ff", "#8e4ec6", "#e93d82"]
+    readonly property var swatchColors: [""].concat(Constants.folderColors)
 
     // Game-sort options for the folder's remembered sort (role names must match
     // EntryListModel's roles)

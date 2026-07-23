@@ -18,6 +18,11 @@ Item {
 
     readonly property real standardTitleBarHeight: 60
 
+    // TODO
+    // Folder / label swatch palette — the pickable colours shared by the folder
+    // colour menu and the colour setting control (data, not theme colours)
+    readonly property var folderColors: ["#e5484d", "#f76b15", "#f5d90a", "#46a758", "#0091ff", "#8e4ec6", "#e93d82"]
+
     FontLoader {
         id: symbols
         source: "qrc:/fonts/symbols"

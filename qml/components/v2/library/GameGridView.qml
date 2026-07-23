@@ -195,7 +195,7 @@ Item {
                                 name: "favorite"
                                 filled: true
                                 size: Math.round(14 * AppStyle.scale)
-                                color: "#e55aa2"
+                                color: Theme.favorite
                             }
                         }
                     }
