@@ -257,10 +257,10 @@ Pane {
                                                 layer.enabled: true
                                                 layer.effect: MultiEffect {
                                                     shadowEnabled: true
-                                                    shadowColor: Theme.background
-                                                    shadowBlur: 1.0
-                                                    shadowVerticalOffset: 4.0
-                                                    shadowHorizontalOffset: 4.0
+                                                    shadowColor: Theme.shadow
+                                                    shadowBlur: AppStyle.elevationBlur
+                                                    shadowVerticalOffset: AppStyle.elevationOffset
+                                                    shadowHorizontalOffset: AppStyle.elevationOffset
                                                 }
                                             }
 

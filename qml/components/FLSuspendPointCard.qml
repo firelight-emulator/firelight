@@ -81,7 +81,7 @@ Button {
                     source: bg
                     anchors.fill: bg
                     autoPaddingEnabled: true
-                    shadowBlur: 1.0
+                    shadowBlur: AppStyle.elevationBlur
                     shadowColor: 'black'
                     shadowOpacity: 0.8
                     shadowEnabled: true

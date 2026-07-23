@@ -65,4 +65,10 @@ Item {
     readonly property color ember600: "#c96410"
 
     readonly property color accentColor: ember500
+
+    // TODO
+    // Status solids (Radix step 9) — the primitives behind Theme success/warning/danger
+    readonly property color statusGreen: "#30a46c"
+    readonly property color statusYellow: "#ffc53d"
+    readonly property color statusRed: "#e5484d"
 }

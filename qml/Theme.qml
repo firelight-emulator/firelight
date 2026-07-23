@@ -83,13 +83,14 @@ QtObject {
     // controller-focus highlight stays high-contrast whatever the accent is set to
     readonly property color focusRing: ColorPalette.ember400
 
-    readonly property color success: "#30a46c"
-    readonly property color warning: "#ffc53d"
-    readonly property color danger: "#e5484d"
+    readonly property color success: ColorPalette.statusGreen
+    readonly property color warning: ColorPalette.statusYellow
+    readonly property color danger: ColorPalette.statusRed
 
     // TODO
-    // Shadow colour for elevated surfaces (paired with AppStyle.elevation* radii)
-    readonly property color shadow: Qt.rgba(0, 0, 0, 0.45)
+    // Shadow colour — currently the app ground, matching the existing MultiEffect
+    // sites; decouple to a translucent dark in a later pass
+    readonly property color shadow: background
 
     // --- chrome: button / title-bar state colors ---
     // Relocated from AppStyle (which is now metrics-only). Values unchanged;

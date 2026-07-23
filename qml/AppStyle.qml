@@ -91,11 +91,11 @@ Item {
 
     // TODO
     //*************************************************************
-    // Elevation — MultiEffect blur radii (shadow colour is Theme.shadow)
+    // Elevation — MultiEffect drop-shadow preset: normalised blur (0..1) and
+    // offset (px). Shadow colour is Theme.shadow
     //*************************************************************
-    readonly property int elevation1: 8
-    readonly property int elevation2: 16
-    readonly property int elevation3: 32
+    readonly property real elevationBlur: 1.0
+    readonly property int elevationOffset: 4
 
     // TODO
     //*************************************************************
