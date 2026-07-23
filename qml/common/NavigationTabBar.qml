@@ -26,7 +26,7 @@ TabBar {
 
         Behavior on x {
             NumberAnimation {
-                duration: 120
+                duration: AppStyle.durationFast
                 easing.type: Easing.InOutQuad
             }
         }

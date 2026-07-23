@@ -144,7 +144,7 @@ Item {
 
                     Behavior on y {
                         NumberAnimation {
-                            duration: 120
+                            duration: AppStyle.durationFast
                             easing.type: Easing.InOutQuad
                         }
                     }

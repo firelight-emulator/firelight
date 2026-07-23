@@ -429,13 +429,13 @@ FocusScope {
                         property: "opacity"
                         from: 0.0
                         to: 1.0
-                        duration: 200
+                        duration: AppStyle.durationBase
                     }
                     NumberAnimation {
                         property: "y"
                         from: 30 * (root.movingDown ? 1 : -1)
                         to: 0
-                        duration: 200
+                        duration: AppStyle.durationBase
                         easing.type: Easing.InOutQuad
                     }
                 }
@@ -450,7 +450,7 @@ FocusScope {
                         property: "y"
                         from: 0
                         to: 30 * (root.movingDown ? -1 : 1)
-                        duration: 200
+                        duration: AppStyle.durationBase
                         easing.type: Easing.InOutQuad
                     }
                 }

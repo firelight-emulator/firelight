@@ -67,7 +67,7 @@ Item {
             NumberAnimation {
                 property: "height"
                 duration: 300
-                easing.type: Easing.OutCubic
+                easing.type: AppStyle.easingStandard
             }
         },
         Transition {
@@ -76,7 +76,7 @@ Item {
             NumberAnimation {
                 property: "height"
                 duration: 300
-                easing.type: Easing.OutCubic
+                easing.type: AppStyle.easingStandard
             }
         },
         Transition {
@@ -84,7 +84,7 @@ Item {
             NumberAnimation {
                 property: "height"
                 duration: 250
-                easing.type: Easing.OutCubic
+                easing.type: AppStyle.easingStandard
             }
         }
     ]

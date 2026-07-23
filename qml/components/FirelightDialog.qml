@@ -134,7 +134,7 @@ Dialog {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 200
+                duration: AppStyle.durationBase
             }
         }
     }
@@ -144,13 +144,13 @@ Dialog {
             property: "opacity"
             from: 0.0
             to: 1.0
-            duration: 200
+            duration: AppStyle.durationBase
         }
         NumberAnimation {
             property: "scale"
             from: 0.9
             to: 1.0
-            duration: 200
+            duration: AppStyle.durationBase
         }
     }
 
@@ -159,13 +159,13 @@ Dialog {
             property: "opacity"
             from: 1.0
             to: 0.0
-            duration: 200
+            duration: AppStyle.durationBase
         }
         NumberAnimation {
             property: "scale"
             from: 1.0
             to: 0.9
-            duration: 200
+            duration: AppStyle.durationBase
         }
     }
 }

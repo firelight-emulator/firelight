@@ -261,7 +261,7 @@ FocusScope {
         Behavior on opacity {
             NumberAnimation {
                 easing.type: Easing.InOutQuad
-                duration: 200
+                duration: AppStyle.durationBase
             }
         }
 
@@ -300,7 +300,7 @@ FocusScope {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 200
+                duration: AppStyle.durationBase
                 easing.type: Easing.InOutQuad
             }
         }

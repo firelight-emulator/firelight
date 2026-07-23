@@ -65,7 +65,7 @@ Item {
             }
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 120
+                    duration: AppStyle.durationFast
                     easing.type: Easing.OutQuad
                 }
             }

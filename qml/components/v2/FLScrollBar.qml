@@ -25,7 +25,7 @@ ScrollBar {
                 }
                 NumberAnimation {
                     target: control.contentItem
-                    duration: 200
+                    duration: AppStyle.durationBase
                     property: "opacity"
                     to: 0.0
                 }

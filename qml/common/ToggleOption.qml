@@ -76,7 +76,7 @@ Button {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 200
+                        duration: AppStyle.durationBase
                         easing.type: Easing.InOutQuad
                     }
                 }
@@ -87,7 +87,7 @@ Button {
 
                     Behavior on x {
                         NumberAnimation {
-                            duration: 200
+                            duration: AppStyle.durationBase
                             easing.type: Easing.InOutQuad
                         }
                     }

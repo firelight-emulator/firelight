@@ -140,7 +140,7 @@ Button {
                 rotation: control.expanded ? 90 : 0
                 Behavior on rotation {
                     NumberAnimation {
-                        duration: 120
+                        duration: AppStyle.durationFast
                     }
                 }
             }

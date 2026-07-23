@@ -85,7 +85,7 @@ Popup {
                 property: "opacity"
                 from: 1.0
                 to: 0
-                duration: 200
+                duration: AppStyle.durationBase
                 easing.type: Easing.InOutQuad
             }
         }

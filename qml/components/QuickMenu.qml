@@ -142,7 +142,7 @@ Pane {
                     to: 1.0
                 }
                 NumberAnimation {
-                    duration: 200
+                    duration: AppStyle.durationBase
                     easing.type: Easing.InOutQuad
                     from: 30 * (quickMenuStack.movingRight ? 1 : -1)
                     property: "x"
@@ -157,7 +157,7 @@ Pane {
                     to: 0.0
                 }
                 NumberAnimation {
-                    duration: 200
+                    duration: AppStyle.durationBase
                     easing.type: Easing.InOutQuad
                     from: 0
                     property: "x"

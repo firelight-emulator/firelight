@@ -12,14 +12,14 @@ Transition {
                 property: "opacity"
                 from: 0
                 to: 1
-                duration: 200
+                duration: AppStyle.durationBase
                 easing.type: Easing.InOutQuad
             }
             PropertyAnimation {
                 property: "y"
                 from: root.ViewTransition.destination.y + 20
                 to: root.ViewTransition.destination.y
-                duration: 200
+                duration: AppStyle.durationBase
                 easing.type: Easing.InOutQuad
             }
         }

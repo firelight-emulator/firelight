@@ -35,7 +35,7 @@ Switch {
         border.color: control._focusRing ? Theme.accent : control.checked ? Theme.accent : Theme.border
         Behavior on color {
             ColorAnimation {
-                duration: 120
+                duration: AppStyle.durationFast
             }
         }
 
@@ -48,7 +48,7 @@ Switch {
             color: Theme.onAccent
             Behavior on x {
                 NumberAnimation {
-                    duration: 120
+                    duration: AppStyle.durationFast
                     easing.type: Easing.InOutQuad
                 }
             }
