@@ -40,7 +40,8 @@ Pane {
     SplitView.preferredWidth: animatedWidth
 
     background: Rectangle {
-        color: Theme.glassElevated
+        // color: Theme.glassElevated
+        color: "transparent"
         // topLeftRadius: 8
         // bottomLeftRadius: 8
     }

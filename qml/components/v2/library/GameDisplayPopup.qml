@@ -5,7 +5,7 @@ import QtQuick.Layouts
 // TODO
 // The library's display menu: view mode, grid size, sort field, and order.
 // Reads and writes the sort/view state on the GameView passed as `view`
-Popup {
+FLPopup {
     id: root
 
     property var view
@@ -32,13 +32,6 @@ Popup {
     modal: false
     focus: true
     closePolicy: Popup.CloseOnEscape
-
-    background: Rectangle {
-        color: Theme.surfaceElevated
-        radius: AppStyle.radiusMd
-        border.color: Theme.border
-        border.width: 1
-    }
 
     // TODO
     // Small-caps section heading

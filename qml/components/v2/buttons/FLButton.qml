@@ -36,7 +36,7 @@ FLButtonBase {
                 color: control._fg
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.family: AppStyle.fontFamily
-                font.weight: Font.DemiBold
+                font.weight: Font.Normal
             }
             Icon {
                 visible: control.trailingIconName !== ""

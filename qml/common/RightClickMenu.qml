@@ -62,8 +62,8 @@ Menu {
     }
 
     background: Rectangle {
-        color: Theme.surfaceElevated
-        radius: 8
+        color: Theme.surface
+        radius: AppStyle.radiusLg
         border.color: Theme.border
         border.width: 1
 

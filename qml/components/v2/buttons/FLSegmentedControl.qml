@@ -21,9 +21,7 @@ Rectangle {
     property bool compact: true
     signal activated(string value)
 
-    onSegmentsChanged: {
-        console.log("Segments: " + segments)
-    }
+    onSegmentsChanged: segRow.maxImplicitWidth = 0
 
     readonly property int _pad: 4
     property bool _ready: false
@@ -42,7 +40,7 @@ Rectangle {
     implicitHeight: segRow.implicitHeight + control._pad * 2
     implicitWidth: segRow.implicitWidth + control._pad * 2
     radius: AppStyle.radiusLg
-    color: Theme.surface
+    color: Theme.backgroundInset
     border.width: 1
     border.color: Theme.border
 
@@ -59,7 +57,7 @@ Rectangle {
             return (segRow.width - segRow.spacing * (numSegments - 1)) / numSegments
         }
 
-        color: Theme.accent
+        color: Theme.surfaceHover
         radius: AppStyle.radiusMd
         visible: control._selectedIndex >= 0
         y: segRow.y
@@ -102,6 +100,8 @@ Rectangle {
                 checkedColor: Theme.onAccent
                 compact: control.compact
                 onClicked: control.activated(modelData.value)
+
+                onImplicitWidthChanged: segRow.maxImplicitWidth = Math.max(segRow.maxImplicitWidth, implicitWidth)
             }
 
             onItemAdded: function(index, item) {

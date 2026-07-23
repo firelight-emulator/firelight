@@ -62,14 +62,28 @@ QtObject {
         return (0.299 * fill.r + 0.587 * fill.g + 0.114 * fill.b) > 0.55 ? "#111113" : "#ffffff";
     }
 
-    // --- solid tokens (functional, Radix Slate tinted toward the theme color) ---
-    readonly property color background: blend(_slate1, themeColor, intensity * 0.5)
-    readonly property color backgroundSubtle: blend(_slate2, themeColor, intensity)
+    /***********************************************************
+    * Main color tokens
+    ***********************************************************/
+
+    // Use for main backgrounds - the window, popups, etc
+    readonly property color background: blend(_slate1, themeColor, intensity)
+
+    // Use for inset items like text inputs, button group backgrounds, etc
+    readonly property color backgroundInset: blend(_slate2, themeColor, intensity)
+
+    // Use for functional surfaces like cards, panels, and menus that sit directly on the background
     readonly property color surface: blend(_slate3, themeColor, intensity)
+
+    // Use for items that sit on top of surfaces
     readonly property color surfaceElevated: blend(_slate4, themeColor, intensity)
+
+    // Use for hover/active states of elevated surfaces
     readonly property color surfaceHover: blend(_slate5, themeColor, intensity)
+
+
     readonly property color border: blend(_slate6, themeColor, intensity)
-    readonly property color borderStrong: blend(_slate8, themeColor, intensity * 0.5)
+    readonly property color borderStrong: blend(_slate8, themeColor, intensity)
 
     readonly property color textPrimary: _slate12
     readonly property color textMuted: _slate11

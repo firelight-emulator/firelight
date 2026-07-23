@@ -7,10 +7,6 @@ BaseSettingItem {
     property string currentValue: ""
     property bool compact: false
 
-    onOptionsChanged: {
-        console.log("Options: " + JSON.stringify(options))
-    }
-
     signal changed(string value)
 
     controlBelow: (options ? options.length : 0) >= 5

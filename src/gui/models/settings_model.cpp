@@ -364,8 +364,17 @@ QVariant SettingsModel::data(const QModelIndex &index, int role) const {
     return item.stringValue;
   case DefaultValueRole:
     return item.defaultValue;
-  case OptionsRole:
-    return QVariant::fromValue(item.options);
+  case OptionsRole: {
+    // A QVector<QVariantHash> reaches QML as an opaque sequence whose elements
+    // expose no keys; a QVariantList hands each option over as a plain object
+    QVariantList options;
+    options.reserve(item.options.size());
+    for (const auto &option : item.options) {
+      options.append(option);
+    }
+
+    return options;
+  }
   case MinimumRole:
     return item.minimumValue;
   case MaximumRole:

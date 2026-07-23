@@ -473,7 +473,9 @@ FocusScope {
     Component {
         id: appearanceSettings
 
-        AppearanceSettingsPage {}
+        SettingsPage {
+            page: "appearance"
+        }
     }
     Component {
         id: platformSettings
@@ -488,7 +490,9 @@ FocusScope {
     Component {
         id: systemSettings
 
-        SystemSettingsPage {}
+        SettingsPage {
+            page: "system"
+        }
     }
     Component {
         id: controllerSettings
@@ -503,7 +507,9 @@ FocusScope {
     Component {
         id: notificationSettings
 
-        NotificationSettings {}
+        SettingsPage {
+            page: "notifications"
+        }
     }
     Component {
         id: retroAchievementSettings

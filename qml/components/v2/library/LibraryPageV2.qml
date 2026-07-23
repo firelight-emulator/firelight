@@ -267,7 +267,8 @@ SplitView {
         // clip: true
 
         background: Rectangle {
-            color: Theme.glass
+            // color: Theme.glass
+            color: "transparent"
             // topRightRadius: 8
             // bottomRightRadius: 8
         }
