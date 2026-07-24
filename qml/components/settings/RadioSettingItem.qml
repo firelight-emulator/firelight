@@ -31,10 +31,14 @@ BaseSettingItem {
                 onClicked: root.changed(modelData.value)
 
                 HoverHandler {
+                    id: optHover
                     cursorShape: Qt.PointingHandCursor
                 }
 
-                background: Item {}
+                background: Rectangle {
+                    color: optHover.hovered ? Theme.surfaceHover : "transparent"
+                    radius: AppStyle.radiusMd
+                }
 
                 contentItem: RowLayout {
                     spacing: AppStyle.spacingMd

@@ -14,7 +14,7 @@ RowLayout {
 
     property var cores: root.platformId !== -1 ? CoreRegistry.coresForPlatform(root.platformId) : []
 
-    spacing: 12
+    spacing: AppStyle.spacingMd
 
     ColumnLayout {
         Layout.fillWidth: true

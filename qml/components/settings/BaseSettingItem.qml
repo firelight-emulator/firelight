@@ -82,16 +82,15 @@ FocusScope {
         anchors.top: content.top
         anchors.bottom: content.bottom
 
-        topLeftRadius: root.isFirstInSection ? 12 : 0
-        topRightRadius: root.isFirstInSection ? 12 : 0
-        bottomLeftRadius: root.isLastInSection ? 12 : 0
-        bottomRightRadius: root.isLastInSection ? 12 : 0
+        topLeftRadius: root.isFirstInSection ? AppStyle.radiusLg : 0
+        topRightRadius: root.isFirstInSection ? AppStyle.radiusLg : 0
+        bottomLeftRadius: root.isLastInSection ? AppStyle.radiusLg : 0
+        bottomRightRadius: root.isLastInSection ? AppStyle.radiusLg : 0
 
-        color: Theme.textPrimary
-        opacity: hover.hovered || (!InputMethodManager.usingMouse && root.activeFocus) ? 0.08 : 0
+        color: hover.hovered || (!InputMethodManager.usingMouse && root.activeFocus) ? Theme.surfaceHover : "transparent"
 
-        Behavior on opacity {
-            NumberAnimation {
+        Behavior on color {
+            ColorAnimation {
                 duration: 100
                 easing.type: Easing.InOutQuad
             }
@@ -144,9 +143,8 @@ FocusScope {
                 }
 
                 background: Rectangle {
-                    radius: 6
-                    color: Theme.textPrimary
-                    opacity: resetButton.hovered ? 0.2 : 0
+                    radius: AppStyle.radiusMd
+                    color: resetButton.hovered ? Theme.surfaceHover : "transparent"
                 }
                 contentItem: Text {
                     text: qsTr("Reset")
@@ -220,7 +218,6 @@ FocusScope {
             Layout.preferredHeight: 1
             visible: root.showDivider
             color: Theme.border
-            opacity: 0.7
         }
     }
 }

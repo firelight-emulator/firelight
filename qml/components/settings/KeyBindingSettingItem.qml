@@ -17,7 +17,7 @@ BaseSettingItem {
     control: Rectangle {
         implicitHeight: 34
         implicitWidth: Math.max(72, keyText.implicitWidth + 24)
-        radius: 6
+        radius: AppStyle.radiusMd
         color: root.listening ? Theme.blend(Theme.surface, Theme.accent, 0.15) : Theme.surface
         border.width: 1
         border.color: root.listening ? Theme.accent : Theme.borderStrong

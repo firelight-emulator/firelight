@@ -70,26 +70,6 @@ FocusScope {
                 }
             ]
         }
-    // {
-    //     "title": "Library",
-    //     "items": [
-    //     ]
-    // },
-    // {
-    //     "title": "Emulation",
-    //     "items": [
-    //     ]
-    // },
-    // {
-    //     "title": "RetroAchievements",
-    //     "items": [
-    //     ]
-    // },
-    // {
-    //     "title": "",
-    //     "items": [
-    //     ]
-    // }
     ]
 
     // The currently selected item, driven by clicks and by the URL
@@ -218,8 +198,8 @@ FocusScope {
 
         background: Rectangle {
             color: Theme.surface
-            topLeftRadius: 8
-            bottomLeftRadius: 8
+            topLeftRadius: AppStyle.radiusMd
+            bottomLeftRadius: AppStyle.radiusMd
         }
 
         ColumnLayout {
@@ -272,8 +252,7 @@ FocusScope {
 
                     background: Rectangle {
                         radius: AppStyle.radiusMd
-                        color: Theme.textPrimary
-                        opacity: resultDelegate.hovered ? 0.10 : 0
+                        color: resultDelegate.hovered ? Theme.surfaceHover : "transparent"
                     }
 
                     contentItem: ColumnLayout {
@@ -478,16 +457,6 @@ FocusScope {
         }
     }
     Component {
-        id: platformSettings
-
-        PlatformSettingsPage {}
-    }
-    Component {
-        id: directorySettings
-
-        DirectorySettings {}
-    }
-    Component {
         id: systemSettings
 
         SettingsPage {
@@ -498,11 +467,6 @@ FocusScope {
         id: controllerSettings
 
         ControllerSettings {}
-    }
-    Component {
-        id: librarySettings
-
-        LibrarySettings {}
     }
     Component {
         id: notificationSettings
@@ -517,12 +481,6 @@ FocusScope {
         RetroAchievementSettings {
             gameRunning: root.gameRunning
         }
-    }
-
-    Component {
-        id: debugSettings
-
-        DebugPage {}
     }
 
     // Stand-in for nav items whose real page doesn't exist yet

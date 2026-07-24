@@ -85,7 +85,7 @@ BaseSettingItem {
                 background: Rectangle {
                     implicitHeight: 30
                     radius: 15
-                    color: chip.on ? Theme.blend(Theme.surface, Theme.accent, 0.18) : "transparent"
+                    color: chip.on ? Theme.blend(Theme.surface, Theme.accent, 0.18) : (chip.hovered ? Theme.surfaceHover : "transparent")
                     border.width: 1
                     border.color: chip.on ? Theme.accent : Theme.border
                 }

@@ -17,7 +17,7 @@ FocusScope {
         focus: achievement_manager.loggedIn
         background: Item {}
         contentItem: ColumnLayout {
-            spacing: 8
+            spacing: AppStyle.spacingSm
             Image {
                 Layout.maximumHeight: 60
                 Layout.minimumHeight: 60
@@ -29,11 +29,11 @@ FocusScope {
 
             Pane {
                 id: raAccountPane
-                Layout.topMargin: 16
+                Layout.topMargin: AppStyle.spacingLg
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 focus: true
                 background: Rectangle {
-                    radius: 4
+                    radius: AppStyle.radiusSm
                     color: Theme.surface
                 }
 
@@ -46,7 +46,7 @@ FocusScope {
                         Layout.preferredHeight: 140
                     }
                     ColumnLayout {
-                        spacing: 8
+                        spacing: AppStyle.spacingSm
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         Layout.alignment: Qt.AlignTop
@@ -121,7 +121,7 @@ FocusScope {
 
         contentItem: ColumnLayout {
             id: meColumn
-            spacing: 8
+            spacing: AppStyle.spacingSm
             Image {
                 Layout.maximumHeight: 60
                 Layout.minimumHeight: 60
@@ -132,7 +132,7 @@ FocusScope {
             }
             Text {
                 text: "Login"
-                Layout.topMargin: 24
+                Layout.topMargin: AppStyle.spacingXl
                 Layout.alignment: Qt.AlignHCenter
                 color: Theme.textPrimary
                 font.pixelSize: AppStyle.fontSizeMedium
@@ -144,13 +144,13 @@ FocusScope {
 
             Pane {
                 id: thePane
-                Layout.topMargin: 8
+                Layout.topMargin: AppStyle.spacingSm
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 280
                 Layout.preferredHeight: 48
                 background: Rectangle {
                     color: Theme.surface
-                    radius: 4
+                    radius: AppStyle.radiusSm
                 }
 
                 focus: true
@@ -199,7 +199,7 @@ FocusScope {
                 Layout.preferredHeight: 48
                 background: Rectangle {
                     color: Theme.surface
-                    radius: 4
+                    radius: AppStyle.radiusSm
                 }
 
                 HoverHandler {
@@ -242,7 +242,7 @@ FocusScope {
             FirelightButton {
                 id: submitButton
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 12
+                Layout.topMargin: AppStyle.spacingMd
                 KeyNavigation.down: goToWebsiteButton
                 label: "Submit"
                 enabled: usernameTextInput.text !== "" && passwordTextInput.text !== ""
@@ -305,7 +305,7 @@ FocusScope {
             FirelightButton {
                 id: goToWebsiteButton
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 12
+                Layout.topMargin: AppStyle.spacingMd
                 label: "Go to website"
                 onClicked: {
                     Qt.openUrlExternally("https://retroachievements.org/createaccount.php");

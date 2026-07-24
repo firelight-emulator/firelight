@@ -31,17 +31,32 @@ BaseSettingItem {
         Repeater {
             model: root.swatches
             delegate: Rectangle {
+                id: swatchCell
                 required property string modelData
-                width: AppStyle.iconSizeMd
-                height: AppStyle.iconSizeMd
+                width: AppStyle.iconSizeMd + AppStyle.spacingSm
+                height: AppStyle.iconSizeMd + AppStyle.spacingSm
                 radius: width / 2
-                color: modelData
-                border.width: root.value.toLowerCase() === modelData.toLowerCase() ? 3 : 1
-                border.color: root.value.toLowerCase() === modelData.toLowerCase() ? "white" : "#00000040"
+                color: swatchHover.hovered ? Theme.surfaceHover : "transparent"
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: AppStyle.iconSizeMd
+                    height: AppStyle.iconSizeMd
+                    radius: width / 2
+                    color: swatchCell.modelData
+                    border.width: root.value.toLowerCase() === swatchCell.modelData.toLowerCase() ? 3 : 1
+                    border.color: root.value.toLowerCase() === swatchCell.modelData.toLowerCase() ? Theme.focusRing : Theme.border
+                }
+
+                HoverHandler {
+                    id: swatchHover
+                    enabled: root.enabled
+                    cursorShape: Qt.PointingHandCursor
+                }
 
                 TapHandler {
                     enabled: root.enabled
-                    onTapped: root.picked(parent.modelData)
+                    onTapped: root.picked(swatchCell.modelData)
                 }
             }
         }

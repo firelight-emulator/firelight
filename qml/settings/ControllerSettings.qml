@@ -73,7 +73,7 @@ FocusScope {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 12
+        spacing: AppStyle.spacingMd
 
         ToggleSettingItem {
             Layout.fillWidth: true
@@ -111,7 +111,7 @@ FocusScope {
             font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
             Layout.fillWidth: true
-            Layout.topMargin: 8
+            Layout.topMargin: AppStyle.spacingSm
         }
 
         // Capped: one row per platform would otherwise push the keybinds off
@@ -123,7 +123,7 @@ FocusScope {
             ColumnLayout {
                 id: platformColumn
                 width: parent.width
-                spacing: 4
+                spacing: AppStyle.spacingXs
 
                 Repeater {
                     model: PlatformModel
@@ -131,7 +131,7 @@ FocusScope {
                         required property int platformId
                         required property string displayName
                         Layout.fillWidth: true
-                        spacing: 12
+                        spacing: AppStyle.spacingMd
 
                         Text {
                             text: displayName
@@ -161,12 +161,12 @@ FocusScope {
             font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
             Layout.fillWidth: true
-            Layout.topMargin: 8
+            Layout.topMargin: AppStyle.spacingSm
         }
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 12
+            spacing: AppStyle.spacingMd
 
             Text {
                 text: "Profile"
@@ -245,8 +245,8 @@ FocusScope {
                 font.pixelSize: AppStyle.fontSizeSmall
                 font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
-                topPadding: 12
-                bottomPadding: 4
+                topPadding: AppStyle.spacingMd
+                bottomPadding: AppStyle.spacingXs
             }
 
             delegate: Button {
@@ -260,9 +260,8 @@ FocusScope {
                 hoverEnabled: true
 
                 background: Rectangle {
-                    color: Theme.textPrimary
-                    radius: 8
-                    opacity: shortcutRow.hovered || (!InputMethodManager.usingMouse && shortcutRow.activeFocus) ? 0.14 : 0
+                    color: (shortcutRow.hovered || (!InputMethodManager.usingMouse && shortcutRow.activeFocus)) ? Theme.surfaceHover : "transparent"
+                    radius: AppStyle.radiusMd
                 }
 
                 onClicked: {
@@ -293,7 +292,7 @@ FocusScope {
                 }
 
                 contentItem: RowLayout {
-                    spacing: 12
+                    spacing: AppStyle.spacingMd
 
                     Text {
                         Layout.preferredWidth: 200
@@ -340,8 +339,7 @@ FocusScope {
 
                         background: Rectangle {
                             radius: 6
-                            color: Theme.textPrimary
-                            opacity: parent.hovered ? 0.2 : 0
+                            color: parent.hovered ? Theme.surfaceHover : "transparent"
                         }
 
                         contentItem: Icon {

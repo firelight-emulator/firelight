@@ -42,9 +42,14 @@ BaseSettingItem {
                 focusPolicy: Qt.NoFocus
                 onClicked: root.step(-root.stepSize)
                 HoverHandler {
+                    id: minusHover
                     cursorShape: Qt.PointingHandCursor
                 }
-                background: Item {}
+                background: Rectangle {
+                    color: minusHover.hovered ? Theme.surfaceHover : "transparent"
+                    topLeftRadius: AppStyle.radiusMd
+                    bottomLeftRadius: AppStyle.radiusMd
+                }
                 contentItem: Icon {
                     name: "remove"
                     size: AppStyle.iconSizeSm
@@ -70,9 +75,14 @@ BaseSettingItem {
                 focusPolicy: Qt.NoFocus
                 onClicked: root.step(root.stepSize)
                 HoverHandler {
+                    id: plusHover
                     cursorShape: Qt.PointingHandCursor
                 }
-                background: Item {}
+                background: Rectangle {
+                    color: plusHover.hovered ? Theme.surfaceHover : "transparent"
+                    topRightRadius: AppStyle.radiusMd
+                    bottomRightRadius: AppStyle.radiusMd
+                }
                 contentItem: Icon {
                     name: "add"
                     size: AppStyle.iconSizeSm

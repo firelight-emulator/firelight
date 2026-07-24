@@ -84,7 +84,7 @@ FocusScope {
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: rows.implicitHeight
-            radius: 12
+            radius: AppStyle.radiusLg
             color: Theme.surface
             border.width: 1
             border.color: Theme.border

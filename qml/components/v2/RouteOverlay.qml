@@ -32,7 +32,7 @@ Popup {
     property string _loadedPattern: ""
 
     background: Rectangle {
-        color: Theme.surfaceElevated
+        color: Theme.background
         radius: AppStyle.radiusMd
         border.color: Theme.border
         border.width: 1

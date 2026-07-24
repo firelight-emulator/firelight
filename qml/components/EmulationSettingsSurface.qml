@@ -60,11 +60,11 @@ FocusScope {
             ColumnLayout {
                 Layout.fillWidth: true
                 visible: root.platformId !== -1 && root.advancedOpen
-                spacing: 8
+                spacing: AppStyle.spacingSm
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.topMargin: 16
+                    Layout.topMargin: AppStyle.spacingLg
                     Layout.preferredHeight: 1
                     color: Theme.border
                 }
@@ -73,8 +73,8 @@ FocusScope {
                     Layout.fillWidth: true
                     text: qsTr("Advanced core options")
                     color: Theme.textPrimary
-                    leftPadding: 8
-                    topPadding: 8
+                    leftPadding: AppStyle.spacingSm
+                    topPadding: AppStyle.spacingSm
                     font.pixelSize: AppStyle.fontSizeMedium
                     font.family: AppStyle.fontFamily
                     font.weight: Font.DemiBold
@@ -82,7 +82,7 @@ FocusScope {
 
                 Text {
                     Layout.fillWidth: true
-                    leftPadding: 8
+                    leftPadding: AppStyle.spacingSm
                     visible: coreOptionsModel.categories.length === 0
                     text: qsTr("These are the core's raw options. They appear after a game on this console has run at least once.")
                     color: Theme.textMuted
@@ -94,19 +94,18 @@ FocusScope {
 
                 // Inside a category: a back link to the category list
                 Button {
+                    property bool showGlobalCursor: true
                     Layout.fillWidth: true
                     Layout.preferredHeight: 40
                     visible: coreOptionsModel.categoryFilter !== ""
                     hoverEnabled: true
-                    focusPolicy: Qt.NoFocus
                     background: Rectangle {
-                        color: Theme.textPrimary
-                        opacity: parent.hovered ? 0.2 : 0.08
-                        radius: 8
+                        color: parent.hovered ? Theme.surfaceHover : "transparent"
+                        radius: AppStyle.radiusMd
                     }
                     contentItem: Text {
                         text: "‹  " + qsTr("All categories")
-                        leftPadding: 8
+                        leftPadding: AppStyle.spacingSm
                         color: Theme.textPrimary
                         verticalAlignment: Text.AlignVCenter
                         font.pixelSize: AppStyle.fontSizeMedium
@@ -122,19 +121,18 @@ FocusScope {
 
                     Button {
                         required property var modelData
+                        property bool showGlobalCursor: true
                         Layout.fillWidth: true
                         Layout.preferredHeight: 56
                         hoverEnabled: true
-                        focusPolicy: Qt.NoFocus
                         background: Rectangle {
-                            color: Theme.textPrimary
-                            opacity: parent.hovered ? 0.2 : 0.08
-                            radius: 8
+                            color: parent.hovered ? Theme.surfaceHover : "transparent"
+                            radius: AppStyle.radiusMd
                         }
                         contentItem: RowLayout {
                             Text {
                                 Layout.fillWidth: true
-                                leftPadding: 8
+                                leftPadding: AppStyle.spacingSm
                                 text: modelData.label
                                 color: Theme.textPrimary
                                 verticalAlignment: Text.AlignVCenter
@@ -143,7 +141,7 @@ FocusScope {
                                 font.weight: Font.DemiBold
                             }
                             Text {
-                                rightPadding: 8
+                                rightPadding: AppStyle.spacingSm
                                 text: "›"
                                 color: Theme.textMuted
                                 font.pixelSize: AppStyle.fontSizeLarge
@@ -193,7 +191,7 @@ FocusScope {
 
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 16
+                    Layout.preferredHeight: AppStyle.spacingLg
                 }
             }
         }

@@ -42,7 +42,7 @@ FocusScope {
 
                 FirelightButton {
                     id: learnMoreButton
-                    Layout.topMargin: 8
+                    Layout.topMargin: AppStyle.spacingSm
                     label: "Learn more"
                     KeyNavigation.down: achievementUnlockToggle
                     Layout.alignment: Qt.AlignHCenter
@@ -58,7 +58,7 @@ FocusScope {
                     font.pixelSize: AppStyle.fontSizeMedium
                     font.family: AppStyle.fontFamily
                     font.weight: Font.DemiBold
-                    Layout.bottomMargin: 8
+                    Layout.bottomMargin: AppStyle.spacingSm
                     color: Theme.textMuted
                 }
 

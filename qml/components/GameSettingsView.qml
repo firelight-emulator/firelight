@@ -14,7 +14,7 @@ FocusScope {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 8
+        spacing: AppStyle.spacingSm
 
         TabBar {
             Layout.alignment: Qt.AlignCenter
@@ -50,9 +50,9 @@ FocusScope {
 
         CoreSelector {
             Layout.fillWidth: true
-            Layout.leftMargin: 12
-            Layout.rightMargin: 12
-            Layout.bottomMargin: 8
+            Layout.leftMargin: AppStyle.spacingMd
+            Layout.rightMargin: AppStyle.spacingMd
+            Layout.bottomMargin: AppStyle.spacingSm
             level: root.level
             platformId: root.platformId
             contentHash: root.contentHash
