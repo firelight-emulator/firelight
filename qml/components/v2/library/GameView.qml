@@ -518,7 +518,7 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        readonly property int openWidth: Math.round(320 * AppStyle.scale)
+        readonly property int openWidth: AppStyle.detailPanelWidth
         width: root.detailOpen ? openWidth : 0
         clip: true
         Behavior on width {
@@ -605,10 +605,15 @@ Item {
                 font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeSmall
             }
-            Icon {
-                name: "close"
-                size: AppStyle.iconSizeSm
-                color: Theme.textMuted
+            Item {
+                implicitWidth: AppStyle.minTarget
+                implicitHeight: AppStyle.minTarget
+                Icon {
+                    anchors.centerIn: parent
+                    name: "close"
+                    size: AppStyle.iconSizeSm
+                    color: Theme.textMuted
+                }
                 TapHandler {
                     onTapped: chip.cleared()
                 }

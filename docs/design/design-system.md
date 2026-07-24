@@ -35,6 +35,7 @@ background, intensity, glass opacity, `uiScale`, `uiDensity`).
 - Text: `textPrimary · textMuted`.
 - `accent` (user-set) · `onAccent` · `focusRing` (**fixed** `_ember400`, never the user accent).
 - `success · warning · danger` → the status primitives. `favorite` → `_pink`. `link` → `_link`.
+  `gold` → `_gold` (achievement mastery / 100%-complete).
 - `folderColors` — the pickable folder/label swatch palette (data, not a role).
 - `glass · glassElevated · glassBorder` — translucent, for expressive surfaces over the background.
 - `shadow` — drop-shadow colour (currently aliases `background`).
@@ -55,6 +56,7 @@ content must stay readable over anything (settings, dialogs, in-game menus).
 - Motion: `durationFast/Base/Slow` = 120/200/320, `easingStandard`.
 - Elevation: `elevationBlur` (normalised 0..1) + `elevationOffset` (px), for `MultiEffect` drop shadows.
 - Layers: `zBase/zDropdown/zOverlay/zToast/zModal` (defined; see migration).
+- Library layout: `sidebarWidth` 280 · `sidebarRailWidth` 56 · `sidebarLabelThreshold` 64 · `detailPanelWidth` 320.
 
 ## Conventions
 

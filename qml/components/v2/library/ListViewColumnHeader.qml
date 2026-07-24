@@ -4,12 +4,19 @@ Item {
     id: root
 
     required property string text
-    required property string sortRole
+    property string sortRole: ""
     property bool sortAscending: false
 
     property bool selected: false
 
     signal tapped
+
+    TapHandler {
+        onTapped: root.tapped()
+    }
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
 
     Text {
         id: headerText
@@ -21,14 +28,6 @@ Item {
         color: root.selected ? Theme.textPrimary : Theme.textMuted
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
-        TapHandler {
-            onTapped: root.tapped()
-        }
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.NoButton
-            cursorShape: Qt.PointingHandCursor
-        }
     }
     Icon {
         anchors.left: headerText.right

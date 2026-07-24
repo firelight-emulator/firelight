@@ -69,13 +69,13 @@ Button {
             radius: AppStyle.radiusMd
             color: {
                 if (control.checked) {
-                    return control.hasAccent ? Qt.rgba(control.tintBase.r, control.tintBase.g, control.tintBase.b, 0.16) : Qt.rgba(1, 1, 1, 0.12);
+                    return control.hasAccent ? Qt.rgba(control.tintBase.r, control.tintBase.g, control.tintBase.b, 0.16) : Theme.surfaceElevated;
                 }
                 if (control.down) {
-                    return Qt.rgba(1, 1, 1, 0.05);
+                    return Theme.surfaceHover;
                 }
                 if (control.hovered) {
-                    return Qt.rgba(1, 1, 1, 0.06);
+                    return Theme.surfaceHover;
                 }
                 return "transparent";
             }
@@ -86,7 +86,7 @@ Button {
             anchors.leftMargin: AppStyle.spacingXs
             anchors.rightMargin: AppStyle.spacingXs
             color: "transparent"
-            border.color: control.containsDrag ? "#c36d00" : "transparent"
+            border.color: control.containsDrag ? Theme.focusRing : "transparent"
             border.width: 2
             radius: AppStyle.radiusMd
         }
@@ -120,8 +120,7 @@ Button {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 1
                 height: parent.height - AppStyle.spacingSm
-                color: Theme.textPrimary
-                opacity: 0.1
+                color: Theme.border
             }
         }
 
@@ -202,7 +201,7 @@ Button {
             elide: Text.ElideRight
             // Hidden when the row is narrow (collapsed rail) — scales so it holds
             // at any UI scale
-            visible: control.width > Math.round(64 * AppStyle.scale)
+            visible: control.width > AppStyle.sidebarLabelThreshold
         }
         Text {
             Layout.leftMargin: AppStyle.spacingSm
@@ -214,7 +213,7 @@ Button {
             text: control.numberOfItems >= 0 ? control.numberOfItems : ""
             Layout.fillHeight: true
             verticalAlignment: Text.AlignVCenter
-            visible: control.numberOfItems >= 0 && control.width > Math.round(64 * AppStyle.scale)
+            visible: control.numberOfItems >= 0 && control.width > AppStyle.sidebarLabelThreshold
         }
     }
 }

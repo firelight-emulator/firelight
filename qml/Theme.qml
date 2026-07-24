@@ -42,6 +42,7 @@ QtObject {
     readonly property color _statusRed: "#e5484d"
     readonly property color _pink: "#e55aa2"
     readonly property color _link: "#89c5f9"
+    readonly property color _gold: "#e3b341"
 
     // Persisted knobs
     readonly property real intensity: AppearanceSettings.themeIntensity
@@ -110,6 +111,10 @@ QtObject {
     readonly property color success: _statusGreen
     readonly property color warning: _statusYellow
     readonly property color danger: _statusRed
+
+    // TODO
+    // Achievement mastery / 100%-complete gold — its own token, not warning
+    readonly property color gold: _gold
 
     // TODO
     // Link / hyperlink text

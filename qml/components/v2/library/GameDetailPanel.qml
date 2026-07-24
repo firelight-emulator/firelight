@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// Right-dock details for the last-clicked game. `data` is a plain snapshot
-// object (see GameView.focusSnapshot); null shows an empty state
+// Right-dock details for the last-clicked game. `gameData` is a plain snapshot
+// object; null shows an empty state
 Rectangle {
     id: panel
 
@@ -42,8 +42,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 1
-        color: Theme.textPrimary
-        opacity: 0.12
+        color: Theme.border
     }
 
     Text {
@@ -61,7 +60,6 @@ Rectangle {
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: AppStyle.spacingLg
-        anchors.leftMargin: AppStyle.spacingLg + 1
         spacing: AppStyle.spacingSm
         visible: !!panel.gameData
 
@@ -188,7 +186,7 @@ Rectangle {
             Layout.topMargin: AppStyle.spacingXs
 
             Text {
-                width: panel.width - AppStyle.spacingLg * 2 - 1
+                width: panel.width - AppStyle.spacingLg * 2
                 text: panel.gameData && panel.gameData.description !== "" ? panel.gameData.description : "No description."
                 color: Theme.textMuted
                 font.family: AppStyle.fontFamily

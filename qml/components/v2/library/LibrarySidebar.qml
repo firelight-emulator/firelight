@@ -22,8 +22,8 @@ Pane {
     property var renameFolderDialog
     property SmartFolderDialog smartFolderDialog
 
-    readonly property int fullWidth: Math.round(280 * AppStyle.scale)
-    readonly property int railWidth: Math.round(56 * AppStyle.scale)
+    readonly property int fullWidth: AppStyle.sidebarWidth
+    readonly property int railWidth: AppStyle.sidebarRailWidth
     // Animating a local property (not SplitView.preferredWidth directly, which
     // can't take a Behavior) makes the collapse glide
     property real animatedWidth: page.sidebarCollapsed ? railWidth : fullWidth
@@ -40,10 +40,9 @@ Pane {
     SplitView.preferredWidth: animatedWidth
 
     background: Rectangle {
-        // color: Theme.glassElevated
-        color: "transparent"
-        // topLeftRadius: 8
-        // bottomLeftRadius: 8
+        color: Theme.glassElevated
+        topLeftRadius: AppStyle.radiusMd
+        bottomLeftRadius: AppStyle.radiusMd
     }
     topPadding: 0
     bottomPadding: 0
@@ -90,7 +89,7 @@ Pane {
                         visible: !page.sidebarCollapsed
                         Layout.fillHeight: true
                         text: "Library"
-                        color: "#ffffff"
+                        color: Theme.textPrimary
                         font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeMedium
                         font.weight: Font.DemiBold
@@ -308,31 +307,31 @@ Pane {
                                     }
                                     RightClickMenuItem {
                                         text: qsTr("Red")
-                                        onTriggered: colorMenu.apply("#e5484d")
+                                        onTriggered: colorMenu.apply(Theme.folderColors[0])
                                     }
                                     RightClickMenuItem {
                                         text: qsTr("Orange")
-                                        onTriggered: colorMenu.apply("#f76b15")
+                                        onTriggered: colorMenu.apply(Theme.folderColors[1])
                                     }
                                     RightClickMenuItem {
                                         text: qsTr("Yellow")
-                                        onTriggered: colorMenu.apply("#f5d90a")
+                                        onTriggered: colorMenu.apply(Theme.folderColors[2])
                                     }
                                     RightClickMenuItem {
                                         text: qsTr("Green")
-                                        onTriggered: colorMenu.apply("#46a758")
+                                        onTriggered: colorMenu.apply(Theme.folderColors[3])
                                     }
                                     RightClickMenuItem {
                                         text: qsTr("Blue")
-                                        onTriggered: colorMenu.apply("#0091ff")
+                                        onTriggered: colorMenu.apply(Theme.folderColors[4])
                                     }
                                     RightClickMenuItem {
                                         text: qsTr("Purple")
-                                        onTriggered: colorMenu.apply("#8e4ec6")
+                                        onTriggered: colorMenu.apply(Theme.folderColors[5])
                                     }
                                     RightClickMenuItem {
                                         text: qsTr("Pink")
-                                        onTriggered: colorMenu.apply("#e93d82")
+                                        onTriggered: colorMenu.apply(Theme.folderColors[6])
                                     }
                                 }
                                 RightClickMenuItem {
