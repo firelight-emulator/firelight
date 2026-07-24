@@ -32,28 +32,22 @@ RowLayout {
         }
     }
 
+    FLButton {
+        id: filtersButton
+        compact: false
+        iconName: "filter"
+        text: "Filters"
+        variant: (root.view.filtersExpanded || root.view.anyPopupFilter) ? "primary" : "default"
+        onClicked: root.view.filtersExpanded = !root.view.filtersExpanded
+    }
+
     Item {
         Layout.fillWidth: true
     }
 
     FLButton {
-        id: filtersButton
-        compact: true
-        text: "Filters"
-        variant: root.view.anyPopupFilter ? "primary" : "default"
-        onClicked: filtersPopup.opened ? filtersPopup.close() : filtersPopup.open()
-
-        GameFiltersPopup {
-            id: filtersPopup
-            x: filtersButton.width - width
-            y: filtersButton.height + AppStyle.spacingXs
-            view: root.view
-        }
-    }
-
-    FLButton {
         id: displayButton
-        compact: true
+        compact: false
         iconName: root.view.viewMode === "grid" ? "grid_view" : "view_list"
         text: root.view.currentSortLabel
         trailingIconName: root.view.sortAscending ? "arrow-up" : "arrow-down"
@@ -67,10 +61,10 @@ RowLayout {
         }
     }
 
-    FLButton {
-        compact: true
-        text: "Details"
-        variant: root.view.detailOpen ? "primary" : "default"
-        onClicked: root.view.detailOpen = !root.view.detailOpen
-    }
+    // FLButton {
+    //     compact: true
+    //     text: "Details"
+    //     variant: root.view.detailOpen ? "primary" : "default"
+    //     onClicked: root.view.detailOpen = !root.view.detailOpen
+    // }
 }

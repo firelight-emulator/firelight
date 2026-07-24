@@ -38,6 +38,9 @@ Item {
     property int filterDecade: 0          // 0 = any; else the decade's start year
     property string filterGenre: ""
 
+    // The advanced-filter bar under the toolbar is expanded
+    property bool filtersExpanded: false
+
     readonly property var playTimeOptions: [
         {
             label: "Any play time",
@@ -510,36 +513,76 @@ Item {
                 view: root
             }
 
-            // Active advanced-filter chips (removable)
-            Flow {
-                Layout.fillWidth: true
-                visible: root.anyAdvancedFilter
-                spacing: AppStyle.spacingXs
+            // Advanced filters expand inline under the toolbar
+            GameFilterBar {
+                view: root
+                expanded: root.filtersExpanded
+            }
 
-                RefineChip {
-                    visible: root.filterHasAchievements
-                    label: "Has achievements"
-                    onCleared: root.filterHasAchievements = false
+            // TODO
+            // Bulk-action bar for multi-select. Slides in under the filter bar so
+            // selecting adds a little header height rather than shifting anything
+            Rectangle {
+                id: selectionBar
+                Layout.fillWidth: true
+                Layout.preferredHeight: root.selectedCount > 0 ? selectionRow.implicitHeight + AppStyle.spacingSm * 2 : 0
+                visible: Layout.preferredHeight > 0
+                clip: true
+                radius: AppStyle.radiusMd
+                color: Theme.backgroundInset
+
+                Behavior on Layout.preferredHeight {
+                    NumberAnimation {
+                        duration: AppStyle.durationFast
+                        easing.type: Easing.InOutQuad
+                    }
                 }
-                RefineChip {
-                    visible: root.filterCompleted
-                    label: "Completed"
-                    onCleared: root.filterCompleted = false
-                }
-                RefineChip {
-                    visible: root.filterPlayTime !== "any"
-                    label: root.playTimeLabel(root.filterPlayTime)
-                    onCleared: root.filterPlayTime = "any"
-                }
-                RefineChip {
-                    visible: root.filterDecade !== 0
-                    label: root.filterDecade + "s"
-                    onCleared: root.filterDecade = 0
-                }
-                RefineChip {
-                    visible: root.filterGenre.trim().length > 0
-                    label: "Genre: " + root.filterGenre
-                    onCleared: root.filterGenre = ""
+
+                RowLayout {
+                    id: selectionRow
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: AppStyle.spacingMd
+                    anchors.rightMargin: AppStyle.spacingMd
+                    spacing: AppStyle.spacingSm
+
+                    Text {
+                        text: root.selectedCount + " selected"
+                        color: Theme.accent
+                        font.family: AppStyle.fontFamily
+                        font.pixelSize: AppStyle.fontSizeMedium
+                        font.weight: Font.DemiBold
+                    }
+                    FLButton {
+                        compact: true
+                        variant: "default"
+                        iconName: "favorite"
+                        text: "Favorite"
+                        onClicked: root.bulkFavorite(true)
+                    }
+                    FLButton {
+                        compact: true
+                        variant: "default"
+                        text: "Add to folder…"
+                        onClicked: root.openAddToFolder()
+                    }
+                    FLButton {
+                        compact: true
+                        variant: "default"
+                        text: "Remove from folder"
+                        visible: root.removableFolderId !== -1
+                        onClicked: root.bulkRemoveFromFolder()
+                    }
+                    Item {
+                        Layout.fillWidth: true
+                    }
+                    FLButton {
+                        compact: true
+                        variant: "subtle"
+                        text: "Clear selection"
+                        onClicked: root.clearSelection()
+                    }
                 }
             }
         }
@@ -626,46 +669,5 @@ Item {
         property var numSecondsPlayed
         property int releaseYear
         property string genres
-    }
-
-    // A removable pill for an active refine filter
-    component RefineChip: Rectangle {
-        id: chip
-        property string label: ""
-        signal cleared
-        implicitHeight: Math.round(24 * AppStyle.scale)
-        implicitWidth: chipRow.implicitWidth + AppStyle.spacingMd
-        radius: implicitHeight / 2
-        color: Theme.surfaceElevated
-        border.color: Theme.border
-        border.width: 1
-
-        RowLayout {
-            id: chipRow
-            anchors.centerIn: parent
-            spacing: AppStyle.spacingXs
-            Text {
-                text: chip.label
-                color: Theme.textPrimary
-                font.family: AppStyle.fontFamily
-                font.pixelSize: AppStyle.fontSizeSmall
-            }
-            Item {
-                implicitWidth: AppStyle.minTarget
-                implicitHeight: AppStyle.minTarget
-                Icon {
-                    anchors.centerIn: parent
-                    name: "close"
-                    size: AppStyle.iconSizeSm
-                    color: Theme.textMuted
-                }
-                TapHandler {
-                    onTapped: chip.cleared()
-                }
-                HoverHandler {
-                    cursorShape: Qt.PointingHandCursor
-                }
-            }
-        }
     }
 }

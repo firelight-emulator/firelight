@@ -100,6 +100,7 @@ QHash<int, QByteArray> EntryListModel::roleNames() const {
   roles[NumSecondsPlayed] = "numSecondsPlayed";
   roles[AchievementsEarned] = "achievementsEarned";
   roles[AchievementsTotal] = "achievementsTotal";
+  roles[AchievementSetCount] = "achievementSetCount";
   return roles;
 }
 
@@ -174,6 +175,8 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return item.achievementsEarned;
   case AchievementsTotal:
     return item.achievementsTotal;
+  case AchievementSetCount:
+    return item.achievementSetCount;
   default:
     return QVariant{};
   }
@@ -432,6 +435,8 @@ void EntryListModel::applyAchievementCounts(Item &item) const {
       m_achievementService.getAchievementCounts(item.entry.contentHash, m_achievementService.getLoggedInUsername());
   item.achievementsEarned = earned;
   item.achievementsTotal = total;
+  item.achievementSetCount =
+      static_cast<int>(m_achievementService.getAchievementSetsForContentHash(item.entry.contentHash).size());
 }
 
 void EntryListModel::refreshAllAchievementCounts() {
@@ -440,7 +445,7 @@ void EntryListModel::refreshAllAchievementCounts() {
   }
   if (!m_items.empty()) {
     emit dataChanged(createIndex(0, 0), createIndex(static_cast<int>(m_items.size()) - 1, 0),
-                     {AchievementsEarned, AchievementsTotal});
+                     {AchievementsEarned, AchievementsTotal, AchievementSetCount});
   }
 }
 

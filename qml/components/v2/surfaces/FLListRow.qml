@@ -15,15 +15,11 @@ ItemDelegate {
     default property alias trailing: trailingSlot.data
     property bool showGlobalCursor: true
 
-    // Gamepad and keyboard focus has to be visible; a mouse user already knows
-    // where they are, so the ring is suppressed for them
-    readonly property bool _focusRing: activeFocus && !InputMethodManager.usingMouse
-
     opacity: control.enabled ? 1 : 0.4
 
-    padding: AppStyle.spacingSm
-    leftPadding: AppStyle.spacingMd
-    rightPadding: AppStyle.spacingMd
+    padding: AppStyle.spacingXs
+    leftPadding: AppStyle.spacingSm
+    rightPadding: AppStyle.spacingSm
     implicitHeight: Math.max(AppStyle.rowHeight, rowLayout.implicitHeight + topPadding + bottomPadding)
     implicitWidth: rowLayout.implicitWidth + leftPadding + rightPadding
 
@@ -64,7 +60,5 @@ ItemDelegate {
     background: Rectangle {
         radius: AppStyle.radiusMd
         color: control.highlighted ? Theme.surfaceHover : rowHover.hovered ? Theme.surfaceElevated : "transparent"
-        border.width: control._focusRing ? 2 : 0
-        border.color: Theme.accent
     }
 }

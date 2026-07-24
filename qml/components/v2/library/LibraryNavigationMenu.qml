@@ -42,9 +42,9 @@ FocusScope {
                     text: root.title.toUpperCase()
                     color: Theme.textMuted
                     font.family: AppStyle.fontFamily
-                    font.pixelSize: AppStyle.fontSizeSmall
-                    font.weight: Font.DemiBold
-                    font.letterSpacing: 1
+                    font.pixelSize: AppStyle.fontSizeXSmall
+                    font.weight: Font.Medium
+                    font.letterSpacing: 0.5
                     horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter
                     visible: root.title !== ""

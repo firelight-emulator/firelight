@@ -12,6 +12,11 @@ ComboBox {
 
     font.pixelSize: AppStyle.fontSizeMedium
     font.family: AppStyle.fontFamily
+    // TODO
+    // Size to the widest option (not the current text), floored so it stays
+    // usable in a right-aligned settings slot
+    implicitContentWidthPolicy: ComboBox.WidestText
+    implicitWidth: Math.max(AppStyle.inputWidth, implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(AppStyle.minTarget, AppStyle.controlHeight)
     leftPadding: AppStyle.spacingMd
     rightPadding: AppStyle.iconSizeMd + AppStyle.spacingMd

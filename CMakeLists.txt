@@ -156,6 +156,7 @@ file(GLOB QML_FILES
 
 # JS libraries aren't matched by the .qml glob above; add them explicitly.
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/routing.js)
+list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/components/v2/library/folder_tree.js)
 
 foreach (QML_FILE ${QML_FILES})
     get_filename_component(QML_FILE_NAME ${QML_FILE} NAME)

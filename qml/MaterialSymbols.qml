@@ -27,6 +27,7 @@ QtObject {
             "delete": "\ue92e",
             "display": "\ue30c",
             "favorite": "\ue87e",
+            "filter": "\ue152",
             "folder": "\ue2c7",
             "history": "\ue8b3",
             "home": "\ue9b2",

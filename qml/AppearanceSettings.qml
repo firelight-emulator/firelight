@@ -44,6 +44,9 @@ QtObject {
     property SettingBinding tileSizeBinding: SettingBinding {
         key: "library-tile-size"
     }
+    property SettingBinding tileSpacingBinding: SettingBinding {
+        key: "library-tile-spacing"
+    }
     property SettingBinding scaleBinding: SettingBinding {
         key: "interface-scale"
     }
@@ -85,6 +88,7 @@ QtObject {
     // Library grid cover-art edge, in px. The grid binds cellWidth/cellHeight
     // to this and GameTile decodes to match
     readonly property int libraryTileSize: parseInt(tileSizeBinding.value)
+    readonly property int libraryTileSpacing: parseInt(tileSpacingBinding.value)
 
     // Accessibility scaling. AppStyle multiplies its metric tokens by these:
     // uiScale enlarges everything (fonts + dimensions), uiDensity only affects

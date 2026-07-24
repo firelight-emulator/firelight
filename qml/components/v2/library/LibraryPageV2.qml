@@ -2,6 +2,7 @@ import QtQuick
 import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
+import "folder_tree.js" as FolderTree
 
 SplitView {
     id: splitView
@@ -13,21 +14,8 @@ SplitView {
     // Collapse the sidebar to an icon-only rail to reclaim grid width
     property bool sidebarCollapsed: false
 
-    CreateFolderDialog {
-        id: createFolderDialog
-        property int targetParentId: -1
-        onAccepted: LibraryFolderModel.createFolder(createFolderDialog.folderName, createFolderDialog.targetParentId)
-    }
-
-    CreateFolderDialog {
-        id: renameFolderDialog
-        property int targetFolderId: -1
-        headerText: "Rename folder"
-        onAccepted: LibraryFolderModel.setFolderName(renameFolderDialog.targetFolderId, renameFolderDialog.folderName)
-    }
-
-    SmartFolderDialog {
-        id: smartFolderDialog
+    FolderDialog {
+        id: folderDialog
     }
 
     // Owned platforms first: hide platforms with no games until "Show all"
@@ -42,13 +30,20 @@ SplitView {
             // appear once the library is ready instead of staying empty
             property var counts: LibraryEntryModel.countByPlatform
             onCountsChanged: invalidate()
-            function filter(data): bool {
+            // data must be typed: this proxy exposes model roles only through a
+            // declared parameter type, so an untyped `data` leaves platformId
+            // undefined and filters every platform out
+            function filter(data: PlatformRoleData): bool {
                 if (!data) {
                     return false;
                 }
                 return (counts[data.platformId] || 0) > 0;
             }
         }
+    }
+
+    component PlatformRoleData: QtObject {
+        property int platformId
     }
 
     // Folder tree: the folder model is flat, so flatten its parentId/position
@@ -77,6 +72,7 @@ SplitView {
                 position: o.position,
                 displayName: o.displayName,
                 description: o.description,
+                filterJson: o.filterJson,
                 color: o.color,
                 folderType: o.folderType,
                 icon1x1SourceUrl: o.icon1x1SourceUrl,
@@ -84,35 +80,7 @@ SplitView {
                 sortAscending: o.sortAscending
             });
         }
-        var byParent = {};
-        all.forEach(function (f) {
-            (byParent[f.parentId] = byParent[f.parentId] || []).push(f);
-        });
-        Object.keys(byParent).forEach(function (k) {
-            byParent[k].sort(function (a, b) {
-                return a.position - b.position;
-            });
-        });
-        var out = [];
-        function walk(pid, depth) {
-            (byParent[pid] || []).forEach(function (f) {
-                var kids = byParent[f.folderId] || [];
-                var expanded = splitView.expandedFolders[f.folderId] !== false;
-                var row = {};
-                for (var key in f) {
-                    row[key] = f[key];
-                }
-                row.depth = depth;
-                row.hasChildren = kids.length > 0;
-                row.expanded = expanded;
-                out.push(row);
-                if (expanded) {
-                    walk(f.folderId, depth + 1);
-                }
-            });
-        }
-        walk(-1, 0);
-        splitView.folderRows = out;
+        splitView.folderRows = FolderTree.flatten(all, splitView.expandedFolders, false);
     }
 
     // A folder + every folder nested under it, split by kind (manual vs smart),
@@ -190,6 +158,7 @@ SplitView {
             required property int position
             required property string displayName
             required property string description
+            required property string filterJson
             required property string color
             required property int folderType
             required property string icon1x1SourceUrl
@@ -246,18 +215,11 @@ SplitView {
         page: splitView
         gameView: gameView
         ownedPlatformsModel: ownedPlatformsModel
-        createFolderDialog: createFolderDialog
-        renameFolderDialog: renameFolderDialog
-        smartFolderDialog: smartFolderDialog
+        folderDialog: folderDialog
     }
 
     Pane {
         id: gamesPanel
-
-        property real achievementColumnWidth: 0
-        property real lastPlayedColumnWidth: 0
-        property real timePlayedColumnWidth: 0
-        property real titleColumnWidth: 0
 
         SplitView.fillHeight: true
         SplitView.fillWidth: true

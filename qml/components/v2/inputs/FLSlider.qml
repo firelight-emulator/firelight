@@ -1,8 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 
-// Themed slider. Track/handle from Theme; the control's touch height is floored
-// at minTarget
 Slider {
     id: control
 
@@ -10,9 +8,9 @@ Slider {
     // where they are, so the ring is suppressed for them
     readonly property bool _focusRing: activeFocus && !InputMethodManager.usingMouse
 
-    // The handle is its own size, not an icon. iconSizeSm only happened to match
     readonly property int _handle: Math.max(AppStyle.minTarget / 2, Math.round(16 * AppStyle.scale))
 
+    implicitWidth: AppStyle.inputWidth
     implicitHeight: Math.max(AppStyle.minTarget, AppStyle.controlHeight)
     opacity: control.enabled ? 1 : 0.4
 
@@ -28,7 +26,7 @@ Slider {
         width: control.availableWidth
         height: Math.round(4 * AppStyle.scale)
         radius: height / 2
-        color: Theme.surfaceHover
+        color: Theme.backgroundInset
 
         Rectangle {
             width: control.visualPosition * parent.width

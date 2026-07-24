@@ -16,8 +16,8 @@ FocusScope {
     readonly property int _font: size === "lg" ? AppStyle.fontSizeLarge : AppStyle.fontSizeMedium
     readonly property int _icon: size === "lg" ? AppStyle.iconSizeMd : AppStyle.iconSizeSm
 
-    implicitWidth: Math.round(240 * AppStyle.scale)
-    implicitHeight: Math.max(AppStyle.minTarget, row.implicitHeight + AppStyle.spacingSm * 2)
+    implicitWidth: Math.round(280 * AppStyle.scale)
+    implicitHeight: Math.max(AppStyle.minTarget, row.implicitHeight)
 
     function clear() {
         field.text = "";
@@ -26,10 +26,11 @@ FocusScope {
 
     Rectangle {
         anchors.fill: parent
-        radius: height / 2
-        color: field.activeFocus ? Theme.surfaceHover : Theme.surfaceElevated
-        border.width: field.activeFocus ? 2 : 1
-        border.color: field.activeFocus ? Theme.accent : Theme.border
+        radius: AppStyle.radiusMd
+        // color: field.activeFocus ? Theme.surfaceHover : Theme.surfaceElevated
+        color: Theme.backgroundInset
+        // border.color: field.activeFocus ? Theme.accent : Theme.border
+        border.color: Theme.border
     }
 
     RowLayout {
@@ -41,14 +42,16 @@ FocusScope {
 
         Icon {
             name: "search"
-            size: root._icon
+            size: AppStyle.iconSizeMd
             color: Theme.textMuted
             Layout.alignment: Qt.AlignVCenter
         }
         TextField {
             id: field
+            padding: 0
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
+            Layout.preferredHeight: AppStyle.controlHeight
             placeholderText: root.placeholder
             color: Theme.textPrimary
             placeholderTextColor: Theme.textMuted

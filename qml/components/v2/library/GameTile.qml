@@ -28,23 +28,24 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            visible: root.source === ""
             color: Theme.surfaceElevated
 
             FLPlatformIcon {
                 anchors.fill: parent
-                anchors.margins: AppStyle.spacingLg * 1.5
+                anchors.margins: Math.round(root.size * 0.17)
+                visible: artImage.status !== Image.Ready
                 platformId: root.platformId
             }
         }
 
         FLRoundedImage {
+            id: artImage
             anchors.fill: parent
-            visible: root.source !== ""
+            visible: status === Image.Ready
             source: root.source
             radius: 0
             fillMode: Image.PreserveAspectCrop
-            background: Theme.surfaceElevated
+            background: "transparent"
         }
 
         Rectangle {

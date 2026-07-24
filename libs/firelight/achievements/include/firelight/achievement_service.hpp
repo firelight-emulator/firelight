@@ -101,6 +101,19 @@ public:
   [[nodiscard]] std::pair<int, int> getAchievementCounts(const std::string &contentHash,
                                                          const std::string &username) const;
 
+  // TODO
+  /**
+   * @brief Retrieves all achievement sets for the game that owns a content hash
+   *
+   * A game may have a base set plus bonus subsets, so the returned size is the
+   * number of sets associated with the game
+   *
+   * @param contentHash The content hash to look up
+   * @return The game's achievement sets, or an empty vector if the hash maps to
+   *   no game
+   */
+  [[nodiscard]] std::vector<AchievementSet> getAchievementSetsForContentHash(const std::string &contentHash) const;
+
   bool processStartSessionResponse(const std::string &username, unsigned gameId,
                                    const StartSessionResponse &startSessionResponse);
 

@@ -3,42 +3,38 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // TODO
-// The library's advanced-filter popup. Reads and writes the filter state on the
-// GameView passed as `view`
-Popup {
+// Inline advanced-filter bar that expands under the toolbar (replacing the old
+// popup + chips). Holds the quick toggles plus play-time/decade/genre and reads
+// and writes the filter state on the GameView passed as `view`
+Rectangle {
     id: root
 
     property var view
+    property bool expanded: false
 
-    width: Math.round(260 * AppStyle.scale)
-    padding: AppStyle.spacingMd
-    modal: false
-    focus: true
-    // Escape or the Filters button closes it; not press-outside, which the
-    // nested combo popups would trip
-    closePolicy: Popup.CloseOnEscape
+    Layout.fillWidth: true
+    Layout.preferredHeight: expanded ? content.implicitHeight + AppStyle.spacingMd * 2 : 0
+    clip: true
+    visible: Layout.preferredHeight > 0
+    radius: AppStyle.radiusMd
+    color: Theme.backgroundInset
 
-    background: Rectangle {
-        color: Theme.surfaceElevated
-        radius: AppStyle.radiusMd
-        border.color: Theme.border
-        border.width: 1
+    Behavior on Layout.preferredHeight {
+        NumberAnimation {
+            duration: AppStyle.durationFast
+            easing.type: Easing.InOutQuad
+        }
     }
 
-    ColumnLayout {
-        width: parent.width
+    Flow {
+        id: content
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: AppStyle.spacingMd
         spacing: AppStyle.spacingSm
 
-        Text {
-            text: "Refine"
-            color: Theme.textPrimary
-            font.family: AppStyle.fontFamily
-            font.pixelSize: AppStyle.fontSizeMedium
-            font.weight: Font.Bold
-        }
-
         FLButton {
-            Layout.fillWidth: true
             compact: true
             iconName: "favorite"
             text: "Favorites"
@@ -46,36 +42,25 @@ Popup {
             onClicked: root.view.showOnlyFavorites = !root.view.showOnlyFavorites
         }
         FLButton {
-            Layout.fillWidth: true
             compact: true
             text: "Unplayed"
             variant: root.view.showOnlyUnplayed ? "primary" : "default"
             onClicked: root.view.showOnlyUnplayed = !root.view.showOnlyUnplayed
         }
-
         FLButton {
-            Layout.fillWidth: true
             compact: true
             text: "Has achievements"
             variant: root.view.filterHasAchievements ? "primary" : "default"
             onClicked: root.view.filterHasAchievements = !root.view.filterHasAchievements
         }
         FLButton {
-            Layout.fillWidth: true
             compact: true
             text: "Completed"
             variant: root.view.filterCompleted ? "primary" : "default"
             onClicked: root.view.filterCompleted = !root.view.filterCompleted
         }
 
-        Text {
-            text: "Play time"
-            color: Theme.textMuted
-            font.family: AppStyle.fontFamily
-            font.pixelSize: AppStyle.fontSizeSmall
-        }
         FLComboBox {
-            Layout.fillWidth: true
             model: root.view.playTimeOptions
             textRole: "label"
             currentIndex: {
@@ -90,15 +75,7 @@ Popup {
                 root.view.filterPlayTime = root.view.playTimeOptions[index].value;
             }
         }
-
-        Text {
-            text: "Decade"
-            color: Theme.textMuted
-            font.family: AppStyle.fontFamily
-            font.pixelSize: AppStyle.fontSizeSmall
-        }
         FLComboBox {
-            Layout.fillWidth: true
             model: root.view.decadeOptions
             textRole: "label"
             currentIndex: {
@@ -113,17 +90,9 @@ Popup {
                 root.view.filterDecade = root.view.decadeOptions[index].value;
             }
         }
-
-        Text {
-            text: "Genre contains"
-            color: Theme.textMuted
-            font.family: AppStyle.fontFamily
-            font.pixelSize: AppStyle.fontSizeSmall
-        }
         FLSearchField {
             id: genreField
-            Layout.fillWidth: true
-            placeholder: "e.g. RPG"
+            placeholder: "Genre…"
             onTextChanged: {
                 if (root.view.filterGenre !== text) {
                     root.view.filterGenre = text;
@@ -140,10 +109,9 @@ Popup {
         }
 
         FLButton {
-            Layout.fillWidth: true
             compact: true
             variant: "subtle"
-            text: "Clear these filters"
+            text: "Clear filters"
             visible: root.view.anyPopupFilter
             onClicked: root.view.clearPopupFilters()
         }

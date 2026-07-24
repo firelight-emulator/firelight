@@ -52,7 +52,7 @@ Button {
 
     hoverEnabled: true
     checkable: true
-    padding: AppStyle.spacingSm
+    padding: AppStyle.spacingXs
 
     background: Item {
         // TODO
@@ -106,22 +106,22 @@ Button {
         readonly property string glyphName: control.iconName !== "" ? control.iconName : (iconIsGlyph ? resolvedIconName : "")
 
         // TODO
-        // Otherwise a vector image: custom folder art first, then a console logo
-        readonly property string imageUrl: control.customIconUrl !== "" ? control.customIconUrl : (glyphName === "" ? control.iconSource : "")
+        // Otherwise a vector image: custom folder art first, then a console logo.
+        // A bare local path (user-imported art) becomes a file:// url so Image loads it
+        readonly property string imageUrl: {
+            const u = control.customIconUrl !== "" ? control.customIconUrl : (glyphName === "" ? control.iconSource : "");
+            if (u === "" || u.indexOf("qrc:") === 0 || u.indexOf("file:") === 0 || u.indexOf("http") === 0) {
+                return u;
+            }
+            return "file:///" + u.replace(/\\/g, "/");
+        }
 
-        // Nesting indent (with a quiet tree guide on the right edge)
+        // TODO
+        // Nesting indent
         Item {
             visible: control.depth > 0
             Layout.preferredWidth: control.depth * Math.round(14 * AppStyle.scale)
             Layout.fillHeight: true
-
-            Rectangle {
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                width: 1
-                height: parent.height - AppStyle.spacingSm
-                color: Theme.border
-            }
         }
 
         // Disclosure chevron (a fixed column in tree sections so leaf and
@@ -160,30 +160,30 @@ Button {
             Layout.preferredHeight: AppStyle.iconChipSize
             Layout.alignment: Qt.AlignVCenter
             radius: AppStyle.radiusSm
-            color: Qt.rgba(control.tintBase.r, control.tintBase.g, control.tintBase.b, control.hasAccent ? 0.18 : 0.1)
+            color: "transparent"
 
             FLPlatformIcon {
                 anchors.centerIn: parent
                 visible: control.platformId >= 0
                 platformId: control.platformId
-                width: AppStyle.iconSizeSm
-                height: AppStyle.iconSizeSm
+                width: AppStyle.iconSizeButton
+                height: AppStyle.iconSizeButton
             }
 
             Icon {
                 anchors.centerIn: parent
                 visible: control.platformId < 0 && contentRow.imageUrl === ""
                 name: contentRow.glyphName
-                filled: false
-                size: AppStyle.iconSizeSm
+                filled: true
+                size: AppStyle.iconSizeButton
                 color: control.iconColor
             }
 
             Image {
                 anchors.centerIn: parent
                 visible: control.platformId < 0 && contentRow.imageUrl !== ""
-                width: AppStyle.iconSizeSm
-                height: AppStyle.iconSizeSm
+                width: AppStyle.iconSizeButton
+                height: AppStyle.iconSizeButton
                 fillMode: Image.PreserveAspectFit
                 sourceSize: Qt.size(width * 2, height * 2)
                 source: contentRow.imageUrl
@@ -195,8 +195,8 @@ Button {
             Layout.fillWidth: true
             color: Theme.textPrimary
             font.family: AppStyle.fontFamily
-            font.pixelSize: AppStyle.fontSizeMedium
-            font.weight: Font.DemiBold
+            font.pixelSize: AppStyle.fontSizeSmall
+            font.weight: Font.Medium
             text: control.displayText
             elide: Text.ElideRight
             // Hidden when the row is narrow (collapsed rail) — scales so it holds
@@ -209,7 +209,7 @@ Button {
             color: Theme.textMuted
             font.family: AppStyle.fontFamily
             font.pixelSize: AppStyle.fontSizeSmall
-            font.weight: Font.DemiBold
+            font.weight: Font.Light
             text: control.numberOfItems >= 0 ? control.numberOfItems : ""
             Layout.fillHeight: true
             verticalAlignment: Text.AlignVCenter

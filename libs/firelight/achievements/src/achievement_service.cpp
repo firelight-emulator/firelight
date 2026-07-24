@@ -100,6 +100,15 @@ std::pair<int, int> AchievementService::getAchievementCounts(const std::string &
   return {earned, total};
 }
 
+std::vector<AchievementSet>
+AchievementService::getAchievementSetsForContentHash(const std::string &contentHash) const {
+  const auto set = m_repository.getAchievementSetByContentHash(contentHash);
+  if (!set.has_value()) {
+    return {};
+  }
+  return m_repository.getAchievementSetsByGameId(set->gameId);
+}
+
 bool AchievementService::processStartSessionResponse(const std::string &username, const unsigned gameId,
                                                      const StartSessionResponse &startSessionResponse) {
   auto foundUnsupportedEmu = false;

@@ -394,28 +394,6 @@
       "default": "false"
     },
     {
-      "key": "library-tile-size",
-      "label": "Library tile size",
-      "group": "system-display",
-      "order": 20,
-      "description": "How large game cover art appears in the library grid.",
-      "keywords": [
-        "grid",
-        "cover",
-        "art",
-        "thumbnail",
-        "zoom",
-        "size",
-        "big",
-        "small"
-      ],
-      "type": "slider",
-      "default": "140",
-      "min": 100,
-      "max": 240,
-      "step": 20
-    },
-    {
       "key": "interface-scale",
       "label": "Interface scale",
       "group": "system-display",
@@ -495,7 +473,6 @@
       "label": "Audio output device",
       "group": "system-audio",
       "order": 10,
-      "description": "Where game audio plays. Changes apply straight away.",
       "keywords": [
         "speaker",
         "headphones",
@@ -507,11 +484,10 @@
       "default": ""
     },
     {
-      "key": "volume",
-      "label": "Volume",
+      "key": "master-volume",
+      "label": "Master Volume",
       "group": "system-audio",
       "order": 10,
-      "description": "How loud game audio plays.",
       "keywords": [
         "loud",
         "sound",
@@ -540,22 +516,6 @@
       "default": "false"
     },
     {
-      "key": "menu-sounds",
-      "label": "Menu sounds",
-      "group": "system-audio",
-      "order": 20,
-      "description": "Play a sound when moving through menus.",
-      "keywords": [
-        "ui",
-        "click",
-        "beep",
-        "feedback"
-      ],
-      "_note": "INERT: persisted and searchable, but nothing reads it yet.",
-      "type": "boolean",
-      "default": "true"
-    },
-    {
       "key": "show-advanced-settings",
       "label": "Show advanced settings",
       "group": "system-general",
@@ -569,34 +529,6 @@
       ],
       "type": "boolean",
       "default": "false"
-    },
-    {
-      "key": "library-sort-method",
-      "label": "Library sort order",
-      "group": "system-general",
-      "order": 20,
-      "keywords": [
-        "games",
-        "order",
-        "alphabetical",
-        "recent"
-      ],
-      "type": "options",
-      "default": "alphabetical",
-      "options": [
-        {
-          "label": "Alphabetical",
-          "value": "alphabetical"
-        },
-        {
-          "label": "Recently played",
-          "value": "recently-played"
-        },
-        {
-          "label": "Recently added",
-          "value": "recently-added"
-        }
-      ]
     },
     {
       "key": "show-new-user-flow",

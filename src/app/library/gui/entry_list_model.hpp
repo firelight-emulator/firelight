@@ -58,7 +58,8 @@ public:
     LastPlayedAt,
     NumSecondsPlayed,
     AchievementsEarned,
-    AchievementsTotal
+    AchievementsTotal,
+    AchievementSetCount
   };
 
   struct Item {
@@ -67,6 +68,7 @@ public:
     uint64_t lastPlayedEpochMillis{};
     int achievementsEarned{};
     int achievementsTotal{};
+    int achievementSetCount{};
   };
 
   EntryListModel(UserLibraryService &userLibrary, activity::IActivityLog &activityLog,

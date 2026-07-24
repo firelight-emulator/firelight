@@ -2,6 +2,10 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
 
+// TODO
+// The library list view. No column header — each cell is self-describing (the
+// sort lives in the Display menu). Columns: art + name/platform, an achievement
+// trophy+bar+count, and a play-activity summary
 ListView {
     id: root
 
@@ -10,6 +14,7 @@ ListView {
     property string sortRole: "displayName"
     property bool sortAscending: true
 
+    // TODO
     // Multi-select state owned by GameView and bound in
     property var selectedIds: ({})
 
@@ -56,9 +61,6 @@ ListView {
     }
 
     function formatPlayTime(seconds) {
-        if (!seconds || seconds <= 0) {
-            return "—";
-        }
         var h = Math.floor(seconds / 3600);
         var m = Math.round((seconds % 3600) / 60);
         if (h > 0) {
@@ -71,21 +73,26 @@ ListView {
     }
     function formatLastPlayed(millis) {
         if (!millis || millis <= 0) {
-            return "Never";
+            return "";
         }
-        return Qt.formatDateTime(new Date(millis), "MMM d, yyyy");
-    }
-    function formatAchievements(earned, total) {
-        if (!total || total <= 0) {
-            return "—";
-        }
-        return earned + "/" + total;
+        return "Last played " + Qt.formatDateTime(new Date(millis), "MMM d, yyyy");
     }
 
-    property real titleColumnWidth: 340
-    property real timePlayedColumnWidth: 128
-    property real lastPlayedColumnWidth: 128
-    property real achievementColumnWidth: 128
+    // TODO
+    // A remote URL passes through; a local file path (user-imported art) becomes
+    // a file:// URL so Image can load it
+    function iconSource(u) {
+        if (!u) {
+            return "";
+        }
+        if (u.indexOf("://") >= 0) {
+            return u;
+        }
+        return "file:///" + u.replace(/\\/g, "/");
+    }
+
+    readonly property int achievementsColumnWidth: Math.round(150 * AppStyle.scale)
+    readonly property int activityColumnWidth: Math.round(140 * AppStyle.scale)
 
     Component.onCompleted: {
         initialContentY = contentY;
@@ -95,192 +102,18 @@ ListView {
         anchors.left: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        width: 8
+        width: AppStyle.spacingSm
     }
     boundsBehavior: Flickable.StopAtBounds
 
-    headerPositioning: ListView.OverlayHeader
-    header: Pane {
-        z: 2
-        padding: 0
-        width: ListView.view.width
-        background: Rectangle {
-            color: Theme.surface
-            topLeftRadius: AppStyle.radiusMd
-            topRightRadius: AppStyle.radiusMd
-            opacity: root.contentY > 0 ? 1 : 0
-            width: parent.width + 48
-            height: parent.height - 16
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 160
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-        contentItem: ColumnLayout {
-            id: gameListHeader
-            spacing: AppStyle.spacingSm
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.topMargin: AppStyle.spacingSm
-                Layout.leftMargin: AppStyle.spacingMd
-                Layout.rightMargin: AppStyle.spacingMd
-                Layout.minimumHeight: 32
-                Layout.maximumHeight: 32
-                spacing: AppStyle.spacingLg
-
-                HoverHandler {
-                    id: headerHoverHandler
-                }
-
-                Button {
-                    padding: 0
-                    implicitHeight: AppStyle.iconSizeMd
-                    implicitWidth: AppStyle.iconSizeMd
-                    Layout.alignment: Qt.AlignVCenter
-                    icon.source: "qrc:/icons/favorite"
-                    icon.width: AppStyle.iconSizeMd
-                    icon.height: AppStyle.iconSizeMd
-                    icon.color: Theme.textMuted
-                    background: Item {}
-                }
-
-                Item {
-                    implicitWidth: 48
-                    implicitHeight: 1
-                }
-
-                SplitView {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    padding: 0
-
-                    handle: Item {
-                        implicitWidth: 16
-                        SplitView.fillHeight: true
-
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: 1
-                            height: parent.height - 8
-                            color: Theme.textPrimary
-                            opacity: headerHoverHandler.hovered ? 0.12 : 0
-                        }
-                    }
-
-                    ListViewColumnHeader {
-                        id: titleHeader
-                        text: "Title"
-                        selected: root.sortRole === "displayName"
-                        sortAscending: root.sortAscending
-
-                        SplitView.fillHeight: true
-                        SplitView.minimumWidth: 256
-                        SplitView.preferredWidth: 340
-                        SplitView.fillWidth: true
-
-                        onWidthChanged: {
-                            root.titleColumnWidth = width;
-                        }
-
-                        onTapped: {
-                            if (root.sortRole === "displayName") {
-                                root.sortAscending = !root.sortAscending;
-                            } else {
-                                root.sortAscending = true;
-                                root.sortRole = "displayName";
-                            }
-                        }
-                    }
-
-                    ListViewColumnHeader {
-                        id: timePlayedHeader
-                        text: "Time played"
-                        selected: root.sortRole === "numSecondsPlayed"
-                        sortAscending: root.sortAscending
-
-                        SplitView.fillHeight: true
-                        SplitView.minimumWidth: 128
-                        SplitView.preferredWidth: 128
-
-                        onWidthChanged: {
-                            root.timePlayedColumnWidth = width;
-                        }
-
-                        onTapped: {
-                            if (root.sortRole === "numSecondsPlayed") {
-                                root.sortAscending = !root.sortAscending;
-                            } else {
-                                root.sortAscending = true;
-                                root.sortRole = "numSecondsPlayed";
-                            }
-                        }
-                    }
-
-                    ListViewColumnHeader {
-                        id: lastPlayedAtHeader
-                        text: "Last played"
-                        selected: root.sortRole === "lastPlayedAt"
-                        sortAscending: root.sortAscending
-
-                        SplitView.fillHeight: true
-                        SplitView.minimumWidth: 128
-                        SplitView.preferredWidth: 128
-
-                        onWidthChanged: {
-                            root.lastPlayedColumnWidth = width;
-                        }
-
-                        onTapped: {
-                            if (root.sortRole === "lastPlayedAt") {
-                                root.sortAscending = !root.sortAscending;
-                            } else {
-                                root.sortAscending = true;
-                                root.sortRole = "lastPlayedAt";
-                            }
-                        }
-                    }
-
-                    Text {
-                        id: achievementHeader
-                        SplitView.fillHeight: true
-                        SplitView.minimumWidth: 128
-                        SplitView.preferredWidth: 128
-                        onWidthChanged: {
-                            root.achievementColumnWidth = width;
-                        }
-                        text: "Achievements"
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.weight: Font.DemiBold
-                        font.family: AppStyle.fontFamily
-                        color: Theme.textMuted
-                        horizontalAlignment: Text.AlignLeft
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
-
-                Item {
-                    implicitWidth: 32
-                    implicitHeight: 1
-                }
-            }
-
-            FLDivider {}
-            Item {
-                implicitWidth: 1
-                implicitHeight: 8
-            }
-        }
-    }
     delegate: Button {
         id: delegateButton
         required property var model
         required property int index
         readonly property int _art: Math.round(48 * AppStyle.scale)
         readonly property bool selected: root.selectedIds[delegateButton.model.entryId] === true
+        readonly property bool _hasAchievements: delegateButton.model.achievementsTotal > 0
+        readonly property bool _achievementsDone: _hasAchievements && delegateButton.model.achievementsEarned >= delegateButton.model.achievementsTotal
         property bool showGlobalCursor: true
         height: Math.max(AppStyle.rowHeight, _art + AppStyle.spacingSm * 2)
         width: ListView.view.width
@@ -290,6 +123,7 @@ ListView {
         TapHandler {
             id: rowTap
             acceptedButtons: Qt.LeftButton
+            // TODO
             // Default (DragThreshold) policy takes only a passive grab, so it
             // cooperates with the row's folder-drag DragHandler
             onSingleTapped: {
@@ -347,116 +181,166 @@ ListView {
             border.color: Theme.accent
             border.width: delegateButton.selected ? Math.max(1, Math.round(AppStyle.scale)) : 0
         }
-        contentItem: RowLayout {
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: AppStyle.spacingSm
+            anchors.rightMargin: AppStyle.spacingSm
             spacing: AppStyle.spacingLg
 
             GameTile {
-                source: delegateButton.model.icon1x1SourceUrl
+                source: root.iconSource(delegateButton.model.icon1x1SourceUrl)
+                platformId: delegateButton.model.platformId
                 size: delegateButton._art
             }
 
+            // TODO
+            // Name + platform
             ColumnLayout {
-                Layout.minimumWidth: root.titleColumnWidth
-                Layout.maximumWidth: root.titleColumnWidth
+                Layout.fillWidth: true
                 Layout.fillHeight: true
+                spacing: 0
                 Text {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.verticalStretchFactor: 1
-                    text: model.displayName
+                    text: delegateButton.model.displayName
                     font.pixelSize: AppStyle.fontSizeMedium
                     font.weight: Font.DemiBold
                     font.family: AppStyle.fontFamily
                     color: Theme.textPrimary
                     elide: Text.ElideRight
+                    verticalAlignment: Text.AlignVCenter
                 }
                 Text {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     Layout.verticalStretchFactor: 1
-                    text: model.platformId
-                    font.pixelSize: AppStyle.fontSizeMedium
-                    font.weight: Font.DemiBold
+                    text: PlatformModel.getPlatformDisplayName(delegateButton.model.platformId)
+                    font.pixelSize: AppStyle.fontSizeSmall
                     font.family: AppStyle.fontFamily
                     color: Theme.textMuted
                     elide: Text.ElideRight
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+
+            // TODO
+            // Achievements: trophy + progress bar + earned/total. Fixed width and
+            // always present (content hidden when the game has none) so the
+            // columns line up down the list
+            Item {
+                Layout.preferredWidth: root.achievementsColumnWidth
+                Layout.fillHeight: true
+
+                RowLayout {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width
+                    spacing: AppStyle.spacingSm
+                    visible: delegateButton._hasAchievements
+
+                    Icon {
+                        name: "trophy"
+                        filled: true
+                        size: AppStyle.iconSizeSm
+                        color: delegateButton._achievementsDone ? Theme.gold : Theme.textMuted
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+                        height: Math.round(4 * AppStyle.scale)
+                        radius: height / 2
+                        color: Theme.backgroundInset
+                        Rectangle {
+                            width: parent.width * (delegateButton._hasAchievements ? delegateButton.model.achievementsEarned / delegateButton.model.achievementsTotal : 0)
+                            height: parent.height
+                            radius: height / 2
+                            color: delegateButton._achievementsDone ? Theme.gold : Theme.accent
+                        }
+                    }
+                    Text {
+                        text: delegateButton.model.achievementsEarned + "/" + delegateButton.model.achievementsTotal + (delegateButton.model.achievementSetCount > 1 ? " (+" + (delegateButton.model.achievementSetCount - 1) + ")" : "")
+                        font.pixelSize: AppStyle.fontSizeSmall
+                        font.family: AppStyle.fontFamily
+                        color: Theme.textMuted
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                }
+            }
+
+            // TODO
+            // Play activity — self-describing (no header). fillWidth is forced
+            // off: a ColumnLayout otherwise inherits it from its fillWidth Text
+            // child and steals slack from the name column, misaligning the rows
+            ColumnLayout {
+                Layout.preferredWidth: root.activityColumnWidth
+                Layout.fillWidth: false
+                Layout.fillHeight: true
+                spacing: 0
+                Text {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.verticalStretchFactor: 1
+                    text: delegateButton.model.numSecondsPlayed > 0 ? root.formatPlayTime(delegateButton.model.numSecondsPlayed) : "Never played"
+                    font.pixelSize: AppStyle.fontSizeSmall
+                    font.weight: Font.Medium
+                    font.family: AppStyle.fontFamily
+                    color: Theme.textPrimary
+                    elide: Text.ElideRight
+                    verticalAlignment: Text.AlignVCenter
+                }
+                Text {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.verticalStretchFactor: 1
+                    visible: text !== ""
+                    text: root.formatLastPlayed(delegateButton.model.lastPlayedAt)
+                    font.pixelSize: AppStyle.fontSizeSmall
+                    font.family: AppStyle.fontFamily
+                    color: Theme.textMuted
+                    elide: Text.ElideRight
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
 
             Item {
-                width: AppStyle.iconSizeMd
-                height: AppStyle.iconSizeMd
-
-                Button {
-                    padding: 0
-                    anchors.fill: parent
-                    icon.source: model.favorite ? "qrc:/icons/favorite" : "qrc:/icons/empty/favorite"
-                    visible: model.favorite || delegateButton.hovered
-                    icon.width: AppStyle.iconSizeMd
-                    icon.height: AppStyle.iconSizeMd
-                    icon.color: model.favorite ? Qt.darker(Theme.favorite, 1.3) : Theme.textMuted
-                    background: Item {}
-                    HoverHandler {
-                        cursorShape: Qt.PointingHandCursor
-                    }
-                    onClicked: {
-                        model.favorite = !model.favorite;
-                    }
+                Layout.preferredWidth: AppStyle.iconSizeMd
+                Layout.preferredHeight: AppStyle.iconSizeMd
+                Layout.alignment: Qt.AlignVCenter
+                Icon {
+                    anchors.centerIn: parent
+                    name: "favorite"
+                    filled: delegateButton.model.favorite
+                    size: AppStyle.iconSizeMd
+                    color: delegateButton.model.favorite ? Theme.favorite : Theme.textMuted
+                    visible: delegateButton.model.favorite || delegateButton.hovered
+                }
+                TapHandler {
+                    enabled: delegateButton.model.favorite || delegateButton.hovered
+                    onTapped: delegateButton.model.favorite = !delegateButton.model.favorite
+                }
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
                 }
             }
-
-            Text {
-                Layout.fillHeight: true
-                Layout.minimumWidth: root.timePlayedColumnWidth
-                Layout.maximumWidth: root.timePlayedColumnWidth
-                text: root.formatPlayTime(delegateButton.model.numSecondsPlayed)
-                font.pixelSize: AppStyle.fontSizeMedium
-                font.weight: Font.Medium
-                font.family: AppStyle.fontFamily
-                color: Theme.textMuted
-                elide: Text.ElideRight
-                verticalAlignment: Text.AlignVCenter
-            }
-            Text {
-                Layout.fillHeight: true
-                Layout.minimumWidth: root.lastPlayedColumnWidth
-                Layout.maximumWidth: root.lastPlayedColumnWidth
-                text: root.formatLastPlayed(delegateButton.model.lastPlayedAt)
-                font.pixelSize: AppStyle.fontSizeMedium
-                font.weight: Font.Medium
-                font.family: AppStyle.fontFamily
-                color: Theme.textMuted
-                elide: Text.ElideRight
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            Text {
-                Layout.fillHeight: true
-                Layout.minimumWidth: root.achievementColumnWidth
-                Layout.maximumWidth: root.achievementColumnWidth
-                text: root.formatAchievements(delegateButton.model.achievementsEarned, delegateButton.model.achievementsTotal)
-                font.pixelSize: AppStyle.fontSizeMedium
-                font.weight: Font.Medium
-                font.family: AppStyle.fontFamily
-                color: Theme.textMuted
-                elide: Text.ElideRight
-                verticalAlignment: Text.AlignVCenter
-            }
-            Button {
-                padding: 0
-                implicitHeight: AppStyle.iconSizeLg
-                implicitWidth: AppStyle.iconSizeLg
-                icon.source: "qrc:/icons/more-vertical"
-                icon.width: AppStyle.iconSizeLg
-                icon.height: AppStyle.iconSizeLg
-                icon.color: Theme.textMuted
-                background: Item {}
-                visible: delegateButton.hovered
-            }
-
             Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
+                Layout.preferredWidth: AppStyle.iconSizeMd
+                Layout.preferredHeight: AppStyle.iconSizeMd
+                Layout.alignment: Qt.AlignVCenter
+                Icon {
+                    anchors.centerIn: parent
+                    name: "more-vertical"
+                    size: AppStyle.iconSizeMd
+                    color: Theme.textMuted
+                    visible: delegateButton.hovered
+                }
+                TapHandler {
+                    enabled: delegateButton.hovered
+                    onTapped: delegateButton.ContextMenu.menu.popup()
+                }
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
             }
         }
     }

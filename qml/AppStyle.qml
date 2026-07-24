@@ -20,6 +20,9 @@ Item {
 
     // Font size scale — device-independent px. Use these for text; never font.pointSize
     // (pointSize renders ~25% smaller on macOS than Windows due to a 72-vs-96 logical-DPI baseline)
+    // TODO
+    // Overline / section-label size (uppercase group headers)
+    readonly property int fontSizeXSmall: Math.round(12 * scale)  // section labels, overlines
     readonly property int fontSizeSmall: Math.round(14 * scale)  // captions, muted/secondary labels
     readonly property int fontSizeMedium: Math.round(15 * scale)  // body / default
     readonly property int fontSizeLarge: Math.round(22 * scale)   // subtitles, section headers
@@ -27,8 +30,7 @@ Item {
 
     // TODO
     //*************************************************************
-    // Typeface — one UI font (the Lexend variable font; choose weight per call
-    // site via font.weight) plus the Material Symbols icon font
+    // Fonts - one UI font plus the Material Symbols icon font
     //*************************************************************
     readonly property string fontFamily: _lexend.name
     readonly property string symbolFontFamily: _symbols.name
@@ -53,7 +55,7 @@ Item {
 
     // Interactive heights — floored at minTarget
     readonly property int controlHeight: Math.max(minTarget, Math.round(36 * scale * density))
-    readonly property int rowHeight: Math.max(minTarget, Math.round(44 * scale * density))
+    readonly property int rowHeight: Math.max(minTarget, Math.round(36 * scale * density))
 
     // Icon glyph sizes — scale only (an icon isn't a density concern)
     readonly property int iconSizeSm: Math.round(16 * scale)
@@ -75,6 +77,11 @@ Item {
     readonly property int buttonHeight: Math.max(minTarget, Math.round(34 * scale * density))
     readonly property int buttonHeightCompact: Math.max(minTarget, Math.round(28 * scale * density))
     readonly property int iconSizeButton: Math.round(20 * scale)
+
+    // TODO
+    // Comfortable default width for value inputs (slider/combobox) so they don't
+    // collapse to their content width in a right-aligned settings slot
+    readonly property int inputWidth: Math.round(200 * scale)
 
     // Button metrics (color/opacity moved to Theme)
     readonly property int buttonStandardWidth: Math.round(200 * scale)
@@ -104,6 +111,10 @@ Item {
     readonly property int sidebarRailWidth: Math.round(56 * scale)
     readonly property int sidebarLabelThreshold: Math.round(64 * scale)
     readonly property int detailPanelWidth: Math.round(320 * scale)
+
+    readonly property int artIconSizeSm: Math.round(48 * scale)
+    readonly property int artIconSizeMd: Math.round(64 * scale)
+    readonly property int artIconSizeLg: Math.round(96 * scale)
 
     // TODO
     //*************************************************************

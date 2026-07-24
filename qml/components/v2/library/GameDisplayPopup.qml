@@ -38,14 +38,16 @@ FLPopup {
     component SectionLabel: Text {
         color: Theme.textMuted
         font.family: AppStyle.fontFamily
-        font.pixelSize: AppStyle.fontSizeSmall
-        font.weight: Font.DemiBold
+        font.pixelSize: AppStyle.fontSizeXSmall
+        font.weight: Font.Medium
+        font.capitalization: Font.AllUppercase
+        font.letterSpacing: 0.5
         Layout.topMargin: AppStyle.spacingXs
     }
 
     ColumnLayout {
         width: parent.width
-        spacing: AppStyle.spacingSm
+        spacing: AppStyle.spacingXs
 
         SectionLabel {
             text: "VIEW"
@@ -54,14 +56,17 @@ FLPopup {
             Layout.fillWidth: true
             segments: [
                 {
-                    label: "Grid",
-                    value: "grid"
-                },
-                {
+                    icon: "view_list",
                     label: "List",
                     value: "list"
+                },
+                {
+                    icon: "grid_view",
+                    label: "Grid",
+                    value: "grid"
                 }
             ]
+
             currentValue: root.view.viewMode
             onActivated: function (value) {
                 root.view.viewMode = value;
@@ -69,10 +74,12 @@ FLPopup {
         }
 
         SectionLabel {
-            text: "GRID SIZE"
+            text: "Grid size"
+            visible: root.view.viewMode === "grid"
         }
         FLSegmentedControl {
             Layout.fillWidth: true
+            visible: root.view.viewMode === "grid"
             segments: root._sizes.map(function (s) {
                 return {
                     label: s.label,
@@ -83,6 +90,32 @@ FLPopup {
             onActivated: function (value) {
                 AppearanceSettings.tileSizeBinding.value = value;
             }
+        }
+
+
+        SectionLabel {
+            text: "Grid spacing"
+            visible: root.view.viewMode === "grid"
+        }
+        FLSlider {
+            Layout.fillWidth: true
+            visible: root.view.viewMode === "grid"
+            from: 0
+            to: 100
+            stepSize: 2
+            value: 0
+            onValueChanged: function (value) {
+                console.log("value: " + value);
+                AppearanceSettings.tileSpacingBinding.value = value;
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: Theme.border
+            Layout.topMargin: AppStyle.spacingSm
+            Layout.bottomMargin: AppStyle.spacingXs
         }
 
         SectionLabel {

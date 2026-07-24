@@ -13,11 +13,26 @@ bool LibraryFolderListModel::setData(const QModelIndex &index, const QVariant &v
   library::FolderInfo &item = m_items[index.row()];
 
   switch (role) {
-  case FolderId:
-    return false;
   case DisplayName:
     item.displayName = value.toString().toStdString();
-    // TODO: Persist to db
+    break;
+  case Description:
+    item.description = value.toString().toStdString();
+    break;
+  case Icon1x1SourceUrl:
+    item.iconSourceUrl = value.toString().toStdString();
+    break;
+  case Color:
+    item.color = value.toString().toStdString();
+    break;
+  case FilterJson:
+    item.filterJson = value.toString().toStdString();
+    break;
+  case SortRole:
+    item.sortRole = value.toString().toStdString();
+    break;
+  case SortAscending:
+    item.sortAscending = value.toBool();
     break;
   default:
     return false;

@@ -15,12 +15,7 @@ Pane {
     property LibraryPageV2 page
     property GameView gameView
     property var ownedPlatformsModel
-
-    // TODO
-    // var: the page adds targetParentId/targetFolderId onto these at the call site
-    property var createFolderDialog
-    property var renameFolderDialog
-    property SmartFolderDialog smartFolderDialog
+    property FolderDialog folderDialog
 
     readonly property int fullWidth: AppStyle.sidebarWidth
     readonly property int railWidth: AppStyle.sidebarRailWidth
@@ -115,17 +110,11 @@ Pane {
 
                             RightClickMenuItem {
                                 text: "New folder"
-                                onTriggered: {
-                                    createFolderDialog.targetParentId = -1;
-                                    createFolderDialog.open();
-                                }
+                                onTriggered: folderDialog.openForCreate(false, -1)
                             }
                             RightClickMenuItem {
                                 text: "New smart folder"
-                                onTriggered: {
-                                    smartFolderDialog.editFolderId = -1;
-                                    smartFolderDialog.open();
-                                }
+                                onTriggered: folderDialog.openForCreate(true, -1)
                             }
                         }
                     }
@@ -146,8 +135,7 @@ Pane {
 
                 ScrollBar.vertical: FLScrollBar {
                     anchors.right: parent.right
-                    anchors.rightMargin: -4
-                    width: 0
+                    width: AppStyle.spacingSm
                 }
 
                 ColumnLayout {
@@ -178,7 +166,7 @@ Pane {
 
                         collapsible: false
 
-                        KeyNavigation.down: platformMenuSection.collapsed ? folderMenuSection.collapsed ? null : folderMenuSection : platformMenuSection
+                        KeyNavigation.down: folderMenuSection.collapsed ? (platformMenuSection.collapsed ? null : platformMenuSection) : folderMenuSection
 
                         delegate: LibraryNavigationMenuItem {
                             id: menuItem
@@ -200,66 +188,13 @@ Pane {
                     }
 
                     LibraryNavigationMenu {
-                        id: platformMenuSection
-                        Layout.fillWidth: true
-                        title: "Platforms"
-                        model: ownedPlatformsModel
-                        focus: true
-
-                        KeyNavigation.down: folderMenuSection.collapsed ? null : folderMenuSection
-
-                        onActiveFocusChanged: {
-                            if (activeFocus) {
-                                folderMenuSection.currentIndex = 0;
-                                libraryMenuSection.currentIndex = libraryMenuSection.count - 1;
-                            }
-                        }
-
-                        delegate: LibraryNavigationMenuItem {
-                            id: platformMenuItem
-                            required property var model
-
-                            platformId: model.platformId
-                            displayText: model.displayName
-                            numberOfItems: LibraryEntryModel.countByPlatform[model.platformId] ?? 0
-
-                            width: ListView.view.width
-                            ButtonGroup.group: libraryButtonGroup
-
-                            onCheckedChanged: {
-                                if (platformMenuItem.checked) {
-                                    gameView.setScopePlatform(model.platformId, model.displayName);
-                                }
-                            }
-                        }
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        Layout.leftMargin: AppStyle.spacingLg
-                        Layout.topMargin: 2
-                        Layout.bottomMargin: AppStyle.spacingSm
-                        visible: !platformMenuSection.collapsed
-                        text: page.showAllPlatforms ? qsTr("Show fewer") : qsTr("Show all platforms")
-                        color: Theme.textMuted
-                        font.family: AppStyle.fontFamily
-                        font.pixelSize: AppStyle.fontSizeSmall
-                        font.weight: Font.DemiBold
-                        TapHandler {
-                            onTapped: page.showAllPlatforms = !page.showAllPlatforms
-                        }
-                        HoverHandler {
-                            cursorShape: Qt.PointingHandCursor
-                        }
-                    }
-
-                    LibraryNavigationMenu {
                         id: folderMenuSection
                         Layout.fillWidth: true
                         title: "Folders"
                         model: page.folderRows
 
-                        KeyNavigation.up: platformMenuSection.collapsed ? libraryMenuSection : platformMenuSection
+                        KeyNavigation.up: libraryMenuSection
+                        KeyNavigation.down: platformMenuSection.collapsed ? null : platformMenuSection
 
                         onActiveFocusChanged: {
                             if (activeFocus) {
@@ -282,18 +217,11 @@ Pane {
                             ContextMenu.menu: RightClickMenu {
                                 RightClickMenuItem {
                                     text: qsTr("New subfolder")
-                                    onTriggered: {
-                                        createFolderDialog.targetParentId = folderMenuItem.modelData.folderId;
-                                        createFolderDialog.open();
-                                    }
+                                    onTriggered: folderDialog.openForCreate(false, folderMenuItem.modelData.folderId)
                                 }
                                 RightClickMenuItem {
-                                    text: qsTr("Rename")
-                                    onTriggered: {
-                                        renameFolderDialog.targetFolderId = folderMenuItem.modelData.folderId;
-                                        renameFolderDialog.initialText = folderMenuItem.modelData.displayName;
-                                        renameFolderDialog.open();
-                                    }
+                                    text: qsTr("Edit")
+                                    onTriggered: folderDialog.loadForEdit(folderMenuItem.modelData.folderId, folderMenuItem.modelData.folderType === 1, folderMenuItem.modelData.displayName, folderMenuItem.modelData.color, folderMenuItem.modelData.icon1x1SourceUrl, folderMenuItem.modelData.description, folderMenuItem.modelData.filterJson, folderMenuItem.modelData.sortRole, folderMenuItem.modelData.sortAscending)
                                 }
                                 RightClickMenu {
                                     id: colorMenu
@@ -467,6 +395,60 @@ Pane {
                                 height: 2
                                 color: Theme.accent
                             }
+                        }
+                    }
+
+                    LibraryNavigationMenu {
+                        id: platformMenuSection
+                        Layout.fillWidth: true
+                        title: "Platforms"
+                        model: ownedPlatformsModel
+                        focus: true
+
+                        KeyNavigation.up: folderMenuSection.collapsed ? libraryMenuSection : folderMenuSection
+
+                        onActiveFocusChanged: {
+                            if (activeFocus) {
+                                folderMenuSection.currentIndex = folderMenuSection.count - 1;
+                                libraryMenuSection.currentIndex = libraryMenuSection.count - 1;
+                            }
+                        }
+
+                        delegate: LibraryNavigationMenuItem {
+                            id: platformMenuItem
+                            required property var model
+
+                            platformId: model.platformId
+                            displayText: model.displayName
+                            numberOfItems: LibraryEntryModel.countByPlatform[model.platformId] ?? 0
+
+                            width: ListView.view.width
+                            ButtonGroup.group: libraryButtonGroup
+
+                            onCheckedChanged: {
+                                if (platformMenuItem.checked) {
+                                    gameView.setScopePlatform(model.platformId, model.displayName);
+                                }
+                            }
+                        }
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: AppStyle.spacingLg
+                        Layout.topMargin: 2
+                        Layout.bottomMargin: AppStyle.spacingSm
+                        visible: !platformMenuSection.collapsed
+                        text: page.showAllPlatforms ? qsTr("Show fewer") : qsTr("Show all platforms")
+                        color: Theme.textMuted
+                        font.family: AppStyle.fontFamily
+                        font.pixelSize: AppStyle.fontSizeSmall
+                        font.weight: Font.DemiBold
+                        TapHandler {
+                            onTapped: page.showAllPlatforms = !page.showAllPlatforms
+                        }
+                        HoverHandler {
+                            cursorShape: Qt.PointingHandCursor
                         }
                     }
 
