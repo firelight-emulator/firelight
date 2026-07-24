@@ -17,6 +17,15 @@ Item {
     // Human label + breadcrumb for the current scope, supplied by the sidebar
     property string scopeLabel: "All games"
     property var scopeCrumb: []
+    // TODO
+    // Icon + description for the current scope, drawn in the header identity block.
+    // scopePlatformId >= 0 draws the platform logo; else custom art (scopeIconUrl)
+    // when set, else the scopeIconName glyph
+    property string scopeIconUrl: ""
+    property string scopeIconName: "browse"
+    property color scopeIconColor: Theme.textPrimary
+    property int scopePlatformId: -1
+    property string scopeDescription: ""
 
     // --- Refine (stack on top of the scope; the proxy ANDs them) ---
     property bool showOnlyFavorites: false
@@ -82,6 +91,9 @@ Item {
         }
     ]
     readonly property bool anyAdvancedFilter: filterHasAchievements || filterCompleted || filterPlayTime !== "any" || filterDecade !== 0 || filterGenre.trim().length > 0
+    // TODO
+    // Every filter reachable from the Filters popup (advanced + the favorites/unplayed toggles)
+    readonly property bool anyPopupFilter: anyAdvancedFilter || showOnlyFavorites || showOnlyUnplayed
     function playTimeLabel(v) {
         for (var i = 0; i < playTimeOptions.length; i++) {
             if (playTimeOptions[i].value === v) {
@@ -95,7 +107,14 @@ Item {
         filterCompleted = false;
         filterPlayTime = "any";
         filterDecade = 0;
-        genreFilterField.text = "";
+        filterGenre = "";
+    }
+    // TODO
+    // Clears every filter reachable from the Filters popup
+    function clearPopupFilters() {
+        clearAdvancedFilters();
+        showOnlyFavorites = false;
+        showOnlyUnplayed = false;
     }
 
     // --- Sort / view ---
@@ -137,6 +156,17 @@ Item {
         }
     ]
 
+    // TODO
+    // The active sort role's label, shown on the Display button
+    readonly property string currentSortLabel: {
+        for (var i = 0; i < sortOptions.length; i++) {
+            if (sortOptions[i].role === sortRole) {
+                return sortOptions[i].label;
+            }
+        }
+        return "";
+    }
+
     readonly property bool isDirty: filterPlatformId !== -1 || filterFolderId !== -1 || showOnlyFavorites || showOnlyUnplayed || filterText !== "" || anyAdvancedFilter
 
     signal folderCrumbClicked(int folderId)
@@ -167,6 +197,11 @@ Item {
         filterSmartIds = [];
         scopeLabel = "All games";
         scopeCrumb = [];
+        scopeIconUrl = "";
+        scopeIconName = "browse";
+        scopeIconColor = Theme.textPrimary;
+        scopePlatformId = -1;
+        scopeDescription = "";
         clearSelection();
     }
 
@@ -177,16 +212,26 @@ Item {
         filterPlatformId = platformId;
         scopeLabel = label;
         scopeCrumb = [];
+        scopeIconUrl = "";
+        scopeIconName = "";
+        scopeIconColor = Theme.textPrimary;
+        scopePlatformId = platformId;
+        scopeDescription = "";
         clearSelection();
     }
 
-    function setScopeFolder(folderId, label, crumb, sr, asc, manualIds, smartIds) {
+    function setScopeFolder(folderId, label, crumb, sr, asc, manualIds, smartIds, iconUrl, folderType, color, description) {
         filterPlatformId = -1;
         filterFolderId = folderId;
         filterManualIds = manualIds ? manualIds : [];
         filterSmartIds = smartIds ? smartIds : [];
         scopeLabel = label;
         scopeCrumb = crumb ? crumb : [];
+        scopeIconUrl = iconUrl ? iconUrl : "";
+        scopeIconName = folderType === 1 ? "bookmark-star" : "folder";
+        scopeIconColor = color && color !== "" ? color : Theme.textPrimary;
+        scopePlatformId = -1;
+        scopeDescription = description ? description : "";
         applyFolderSort(sr, asc);
         clearSelection();
     }

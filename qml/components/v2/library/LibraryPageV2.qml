@@ -76,6 +76,7 @@ SplitView {
                 parentId: o.parentId,
                 position: o.position,
                 displayName: o.displayName,
+                description: o.description,
                 color: o.color,
                 folderType: o.folderType,
                 icon1x1SourceUrl: o.icon1x1SourceUrl,
@@ -188,6 +189,7 @@ SplitView {
             required property int parentId
             required property int position
             required property string displayName
+            required property string description
             required property string color
             required property int folderType
             required property string icon1x1SourceUrl
@@ -239,7 +241,6 @@ SplitView {
             }
         }
     }
-
 
     LibrarySidebar {
         page: splitView

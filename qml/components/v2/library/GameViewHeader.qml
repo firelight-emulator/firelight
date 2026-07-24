@@ -3,7 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // TODO
-// The library view's header: scope breadcrumb, title + count + clear, and the
+// The library view's header: scope breadcrumb, the scope identity block (icon +
+// name over a description/count line) with a clear-filters action, and the
 // multi-select bulk-action bar. Reads scope/selection state on the GameView `view`
 ColumnLayout {
     id: root
@@ -52,29 +53,74 @@ ColumnLayout {
         }
     }
 
-    // Title + count + clear
+    // Scope identity: icon chip + name over a muted description/count line
     RowLayout {
         Layout.fillWidth: true
-        spacing: AppStyle.spacingSm
+        spacing: AppStyle.spacingMd
 
-        Text {
-            text: root.view.scopeLabel
-            color: Theme.textPrimary
-            font.family: AppStyle.fontFamily
-            font.pixelSize: AppStyle.fontSizeLarge
-            font.weight: Font.Bold
+        // TODO
+        // Icon chip: platform logo, custom folder art, or a glyph fallback
+        Rectangle {
+            Layout.alignment: Qt.AlignVCenter
+            Layout.preferredWidth: AppStyle.iconSizeLg
+            Layout.preferredHeight: AppStyle.iconSizeLg
+            radius: AppStyle.radiusMd
+            color: Qt.rgba(root.view.scopeIconColor.r, root.view.scopeIconColor.g, root.view.scopeIconColor.b, 0.14)
+
+            FLPlatformIcon {
+                anchors.centerIn: parent
+                visible: root.view.scopePlatformId >= 0
+                platformId: root.view.scopePlatformId
+                width: AppStyle.iconSizeMd
+                height: AppStyle.iconSizeMd
+            }
+            Image {
+                anchors.centerIn: parent
+                visible: root.view.scopePlatformId < 0 && root.view.scopeIconUrl !== ""
+                width: AppStyle.iconSizeMd
+                height: AppStyle.iconSizeMd
+                fillMode: Image.PreserveAspectFit
+                sourceSize: Qt.size(width * 2, height * 2)
+                source: root.view.scopeIconUrl
+            }
+            Icon {
+                anchors.centerIn: parent
+                visible: root.view.scopePlatformId < 0 && root.view.scopeIconUrl === ""
+                name: root.view.scopeIconName
+                filled: false
+                size: AppStyle.iconSizeMd
+                color: root.view.scopeIconColor
+            }
         }
-        Text {
-            Layout.alignment: Qt.AlignBaseline
-            text: root.view.gameCount + (root.view.gameCount === 1 ? " game" : " games")
-            color: Theme.textMuted
-            font.family: AppStyle.fontFamily
-            font.pixelSize: AppStyle.fontSizeMedium
-        }
-        Item {
+
+        ColumnLayout {
             Layout.fillWidth: true
+            spacing: 0
+
+            Text {
+                Layout.fillWidth: true
+                text: root.view.scopeLabel
+                color: Theme.textPrimary
+                font.family: AppStyle.fontFamily
+                font.pixelSize: AppStyle.fontSizeLarge
+                font.weight: Font.Bold
+                elide: Text.ElideRight
+            }
+            Text {
+                Layout.fillWidth: true
+                text: {
+                    var count = root.view.gameCount + (root.view.gameCount === 1 ? " game" : " games");
+                    return root.view.scopeDescription !== "" ? root.view.scopeDescription + " · " + count : count;
+                }
+                color: Theme.textMuted
+                font.family: AppStyle.fontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
+                elide: Text.ElideRight
+            }
         }
+
         FLButton {
+            Layout.alignment: Qt.AlignVCenter
             visible: root.view.isDirty
             compact: true
             variant: "subtle"

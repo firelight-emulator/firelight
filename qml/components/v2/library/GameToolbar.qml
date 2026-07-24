@@ -3,9 +3,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // TODO
-// The library view's toolbar: search, quick filters, the Filters/Display popups,
-// and the details toggle. Reads/writes the filter + view state on the GameView
-// passed as `view`
+// The library view's toolbar: search on the left, then the Filters and Display
+// popups and the details toggle on the right. Reads/writes the filter + view state
+// on the GameView passed as `view`
 RowLayout {
     id: root
 
@@ -32,29 +32,20 @@ RowLayout {
         }
     }
 
-    FLButton {
-        compact: true
-        iconName: "favorite"
-        text: "Favorites"
-        variant: root.view.showOnlyFavorites ? "primary" : "default"
-        onClicked: root.view.showOnlyFavorites = !root.view.showOnlyFavorites
-    }
-    FLButton {
-        compact: true
-        text: "Unplayed"
-        variant: root.view.showOnlyUnplayed ? "primary" : "default"
-        onClicked: root.view.showOnlyUnplayed = !root.view.showOnlyUnplayed
+    Item {
+        Layout.fillWidth: true
     }
 
     FLButton {
         id: filtersButton
         compact: true
         text: "Filters"
-        variant: root.view.anyAdvancedFilter ? "primary" : "default"
+        variant: root.view.anyPopupFilter ? "primary" : "default"
         onClicked: filtersPopup.opened ? filtersPopup.close() : filtersPopup.open()
 
         GameFiltersPopup {
             id: filtersPopup
+            x: filtersButton.width - width
             y: filtersButton.height + AppStyle.spacingXs
             view: root.view
         }
@@ -63,8 +54,9 @@ RowLayout {
     FLButton {
         id: displayButton
         compact: true
-        text: "Display"
-        iconName: "tune"
+        iconName: root.view.viewMode === "grid" ? "grid_view" : "view_list"
+        text: root.view.currentSortLabel
+        trailingIconName: root.view.sortAscending ? "arrow-up" : "arrow-down"
         onClicked: displayPopup.opened ? displayPopup.close() : displayPopup.open()
 
         GameDisplayPopup {
@@ -73,10 +65,6 @@ RowLayout {
             y: displayButton.height + AppStyle.spacingXs
             view: root.view
         }
-    }
-
-    Item {
-        Layout.fillWidth: true
     }
 
     FLButton {

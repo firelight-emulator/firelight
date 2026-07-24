@@ -40,6 +40,22 @@ Popup {
         FLButton {
             Layout.fillWidth: true
             compact: true
+            iconName: "favorite"
+            text: "Favorites"
+            variant: root.view.showOnlyFavorites ? "primary" : "default"
+            onClicked: root.view.showOnlyFavorites = !root.view.showOnlyFavorites
+        }
+        FLButton {
+            Layout.fillWidth: true
+            compact: true
+            text: "Unplayed"
+            variant: root.view.showOnlyUnplayed ? "primary" : "default"
+            onClicked: root.view.showOnlyUnplayed = !root.view.showOnlyUnplayed
+        }
+
+        FLButton {
+            Layout.fillWidth: true
+            compact: true
             text: "Has achievements"
             variant: root.view.filterHasAchievements ? "primary" : "default"
             onClicked: root.view.filterHasAchievements = !root.view.filterHasAchievements
@@ -128,8 +144,8 @@ Popup {
             compact: true
             variant: "subtle"
             text: "Clear these filters"
-            visible: root.view.anyAdvancedFilter
-            onClicked: root.view.clearAdvancedFilters()
+            visible: root.view.anyPopupFilter
+            onClicked: root.view.clearPopupFilters()
         }
     }
 }

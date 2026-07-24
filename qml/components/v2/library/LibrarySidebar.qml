@@ -388,7 +388,7 @@ Pane {
                                             label: modelData.displayName,
                                             folderId: modelData.folderId
                                         }
-                                    ], modelData.sortRole, modelData.sortAscending, sub.manual, sub.smart);
+                                    ], modelData.sortRole, modelData.sortAscending, sub.manual, sub.smart, modelData.icon1x1SourceUrl, modelData.folderType, modelData.color, modelData.description);
                                 }
                             }
 
