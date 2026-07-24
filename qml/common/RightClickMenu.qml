@@ -63,7 +63,7 @@ Menu {
 
     background: Rectangle {
         color: Theme.surface
-        radius: AppStyle.radiusLg
+        radius: AppStyle.radiusMd
         border.color: Theme.border
         border.width: 1
 

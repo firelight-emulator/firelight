@@ -144,10 +144,7 @@ QtObject {
     readonly property color titleBarClosePressed: "#941320"
     readonly property real titleBarClosePressedOpacity: 1
 
-    // --- glass tokens (translucent over the blurred background) ---
-    // Kept a clean dark neutral (Discord-style): the color comes from the
-    // background bleeding through the translucency, NOT from tinting the panel,
-    // so surfaces stay dark and readable instead of muddy
+    // glass tokens (translucent over the blurred background)
     readonly property color glass: Qt.rgba(_slate1.r, _slate1.g, _slate1.b, glassAlpha)
     readonly property color glassElevated: Qt.rgba(_slate1.r, _slate1.g, _slate1.b, Math.min(1, glassAlpha + 0.12))
     readonly property color glassBorder: Qt.rgba(1, 1, 1, 0.08)

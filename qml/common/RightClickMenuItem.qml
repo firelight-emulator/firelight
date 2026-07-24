@@ -75,7 +75,7 @@ MenuItem {
 
         color: enabled ? (renameHover.hovered ? (control.dangerous ? Theme.danger : Theme.textPrimary) : "transparent") : "transparent"
         opacity: control.dangerous ? 1.0 : 0.1
-        radius: 4
+        radius: AppStyle.radiusSm
     }
 
     contentItem: RowLayout {
