@@ -31,7 +31,7 @@ FocusScope {
             Layout.preferredHeight: 32
             horizontalPadding: 0
             background: Item {}
-            visible: root.title !== "" && root.width > Math.round(64 * AppStyle.scale)
+            visible: root.title !== "" && root.width > AppStyle.sidebarLabelThreshold
 
             RowLayout {
                 anchors.fill: parent
@@ -77,13 +77,13 @@ FocusScope {
                 TapHandler {
                     enabled: root.collapsible
                     onTapped: contentContainer.collapsed = !contentContainer.collapsed
-                    margin: 8
+                    margin: AppStyle.spacingSm
                 }
 
                 HoverHandler {
                     enabled: root.collapsible
                     cursorShape: Qt.PointingHandCursor
-                    margin: 8
+                    margin: AppStyle.spacingSm
                 }
             }
         }
@@ -94,7 +94,7 @@ FocusScope {
 
             Layout.fillWidth: true
             Layout.topMargin: 0
-            Layout.bottomMargin: collapsed ? 0 : 8
+            Layout.bottomMargin: collapsed ? 0 : AppStyle.spacingSm
             Layout.preferredHeight: collapsed ? 0 : list.implicitHeight
 
             Behavior on Layout.preferredHeight {

@@ -216,8 +216,8 @@ SplitView {
 
         containmentMask: Item {
             height: splitView.height
-            width: 8
-            x: -4
+            width: AppStyle.spacingSm
+            x: -AppStyle.spacingXs
 
             HoverHandler {
                 id: handleHoverHandler
@@ -226,8 +226,8 @@ SplitView {
 
         Rectangle {
             anchors.centerIn: parent
-            color: "#FFFFFF"
-            height: parent.height - 16
+            color: Theme.borderStrong
+            height: parent.height - AppStyle.spacingLg
             opacity: handleHoverHandler.hovered ? 0.25 : 0
             width: 2
 
@@ -261,16 +261,14 @@ SplitView {
         SplitView.fillHeight: true
         SplitView.fillWidth: true
         bottomPadding: 0
-        horizontalPadding: 0 // 24
+        horizontalPadding: 0
         topPadding: 0
         verticalPadding: 0
-        // clip: true
 
         background: Rectangle {
-            // color: Theme.glass
-            color: "transparent"
-            // topRightRadius: 8
-            // bottomRightRadius: 8
+            color: Theme.glass
+            topRightRadius: AppStyle.radiusMd
+            bottomRightRadius: AppStyle.radiusMd
         }
 
         contentItem: GameView {

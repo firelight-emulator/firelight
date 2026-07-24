@@ -76,7 +76,7 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.margins: AppStyle.spacingSm
                 text: root.title
-                color: "white"
+                color: Theme.textPrimary
                 font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.DemiBold

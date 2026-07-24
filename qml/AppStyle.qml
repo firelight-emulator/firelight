@@ -95,10 +95,15 @@ Item {
     readonly property int titleBarUtilityButtonWidth: Math.round(48 * scale)
     readonly property int titleBarUtilityButtonIconSize: Math.round(10 * scale)
 
+    // TODO
     //*************************************************************
-    // Navigation Rail
+    // Library layout — sidebar full width, its collapsed icon rail, the width
+    // below which sidebar item labels hide, and the right-side detail dock
     //*************************************************************
-    readonly property int navRailWidth: Math.round(48 * scale)
+    readonly property int sidebarWidth: Math.round(280 * scale)
+    readonly property int sidebarRailWidth: Math.round(56 * scale)
+    readonly property int sidebarLabelThreshold: Math.round(64 * scale)
+    readonly property int detailPanelWidth: Math.round(320 * scale)
 
     // TODO
     //*************************************************************

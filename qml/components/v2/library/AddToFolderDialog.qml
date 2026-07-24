@@ -77,8 +77,7 @@ FirelightDialog {
                 padding: AppStyle.spacingSm
 
                 background: Rectangle {
-                    color: Theme.textPrimary
-                    opacity: folderRow.hovered ? 0.08 : 0
+                    color: folderRow.hovered ? Theme.surfaceHover : "transparent"
                     radius: AppStyle.radiusSm
                 }
 

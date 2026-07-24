@@ -231,7 +231,7 @@ Dialog {
                     onClicked: control.mediaType = modelData.type
                     contentItem: Text {
                         text: parent.text
-                        color: parent.checked ? "white" : Theme.textMuted
+                        color: parent.checked ? Theme.textPrimary : Theme.textMuted
                         font.family: AppStyle.fontFamily
                         font.pixelSize: AppStyle.fontSizeSmall
                         horizontalAlignment: Text.AlignHCenter
@@ -444,7 +444,6 @@ Dialog {
             Layout.bottomMargin: AppStyle.spacingLg
             rounded: false
             radius: AppStyle.radiusMd
-            iconCode: ""
             label: "Import from file…"
             implicitWidth: 180
             onClicked: importDialog.open()

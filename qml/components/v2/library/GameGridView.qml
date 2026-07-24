@@ -90,7 +90,7 @@ Item {
             anchors.left: parent.right
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            width: 8
+            width: AppStyle.spacingSm
         }
         boundsBehavior: Flickable.StopAtBounds
         reuseItems: true
@@ -106,6 +106,7 @@ Item {
 
             Button {
                 id: control
+                property bool showGlobalCursor: true
                 anchors.fill: parent
                 anchors.margins: AppStyle.spacingXs
                 padding: 0
@@ -210,12 +211,12 @@ Item {
                         height: Math.round(18 * AppStyle.scale)
                         width: achLabel.implicitWidth + Math.round(10 * AppStyle.scale)
                         radius: height / 2
-                        color: achPill.done ? "#cc9a6b12" : "#aa000000"
+                        color: achPill.done ? Theme.gold : "#aa000000"
                         Text {
                             id: achLabel
                             anchors.centerIn: parent
                             text: gameDelegate.model.achievementsEarned + "/" + gameDelegate.model.achievementsTotal
-                            color: "white"
+                            color: achPill.done ? Theme.onAccent : "white"
                             font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                             font.weight: Font.DemiBold

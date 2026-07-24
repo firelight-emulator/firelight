@@ -106,8 +106,8 @@ ListView {
         width: ListView.view.width
         background: Rectangle {
             color: Theme.surface
-            topLeftRadius: 8
-            topRightRadius: 8
+            topLeftRadius: AppStyle.radiusMd
+            topRightRadius: AppStyle.radiusMd
             opacity: root.contentY > 0 ? 1 : 0
             width: parent.width + 48
             height: parent.height - 16
@@ -199,7 +199,7 @@ ListView {
                     ListViewColumnHeader {
                         id: timePlayedHeader
                         text: "Time played"
-                        selected: root.sortRole === "platformId"
+                        selected: root.sortRole === "numSecondsPlayed"
                         sortAscending: root.sortAscending
 
                         SplitView.fillHeight: true
@@ -211,11 +211,11 @@ ListView {
                         }
 
                         onTapped: {
-                            if (root.sortRole === "platformId") {
+                            if (root.sortRole === "numSecondsPlayed") {
                                 root.sortAscending = !root.sortAscending;
                             } else {
                                 root.sortAscending = true;
-                                root.sortRole = "platformId";
+                                root.sortRole = "numSecondsPlayed";
                             }
                         }
                     }
@@ -250,7 +250,7 @@ ListView {
                         SplitView.minimumWidth: 128
                         SplitView.preferredWidth: 128
                         onWidthChanged: {
-                            gamesPanel.achievementColumnWidth = width;
+                            root.achievementColumnWidth = width;
                         }
                         text: "Achievements"
                         font.pixelSize: AppStyle.fontSizeMedium
@@ -281,6 +281,7 @@ ListView {
         required property int index
         readonly property int _art: Math.round(48 * AppStyle.scale)
         readonly property bool selected: root.selectedIds[delegateButton.model.entryId] === true
+        property bool showGlobalCursor: true
         height: Math.max(AppStyle.rowHeight, _art + AppStyle.spacingSm * 2)
         width: ListView.view.width
         padding: AppStyle.spacingSm
@@ -318,9 +319,6 @@ ListView {
 
         Drag.dragType: Drag.Automatic
         Drag.supportedActions: Qt.CopyAction
-        Drag.mimeData: {
-            "text/plain": "Copied text"
-        }
 
         DragHandler {
             id: dragHandler
@@ -394,9 +392,9 @@ ListView {
                     anchors.fill: parent
                     icon.source: model.favorite ? "qrc:/icons/favorite" : "qrc:/icons/empty/favorite"
                     visible: model.favorite || delegateButton.hovered
-                    icon.width: 24
-                    icon.height: 24
-                    icon.color: model.favorite ? Qt.darker(Theme.favorite, 1.3) : "#9c9c9c"
+                    icon.width: AppStyle.iconSizeMd
+                    icon.height: AppStyle.iconSizeMd
+                    icon.color: model.favorite ? Qt.darker(Theme.favorite, 1.3) : Theme.textMuted
                     background: Item {}
                     HoverHandler {
                         cursorShape: Qt.PointingHandCursor
