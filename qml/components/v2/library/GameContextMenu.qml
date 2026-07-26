@@ -17,6 +17,7 @@ RightClickMenu {
 
     signal requestAddToFolder(var entryIds)
     signal requestChangeArt(string contentHash, string displayName, int platformId)
+    signal requestEditGame(int entryId, string contentHash, int platformId)
 
     function _applyFavorite(fav) {
         for (var i = 0; i < menu.targetIds.length; i++) {
@@ -27,6 +28,14 @@ RightClickMenu {
     RightClickMenuItem {
         text: menu.targetIds.length > 1 ? "Play first game" : "Play"
         onTriggered: EmulationService.loadEntry(menu.primaryEntryId)
+    }
+    RightClickMenuItem {
+        text: "Game details"
+        onTriggered: Router.navigateTo("/library/entries/" + menu.primaryEntryId)
+    }
+    RightClickMenuItem {
+        text: "Edit game…"
+        onTriggered: menu.requestEditGame(menu.primaryEntryId, menu.contentHash, menu.platformId)
     }
     RightClickMenuItem {
         text: menu.primaryFavorite ? "Remove from favorites" : "Add to favorites"

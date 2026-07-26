@@ -40,6 +40,7 @@ Entry deserializeEntry(const SQLite::Statement &query) {
       .activeSaveSlot = query.getColumn("active_save_slot").getUInt(),
       .hidden = query.getColumn("hidden").getInt() != 0,
       .favorite = query.getColumn("favorite").getInt() != 0,
+      .rating = query.getColumn("rating").getUInt(),
       .icon1x1SourceUrl = query.getColumn("icon_1x1_source_url").getString(),
       .boxartFrontSourceUrl = query.getColumn("boxart_front_source_url").getString(),
       .boxartBackSourceUrl = query.getColumn("boxart_back_source_url").getString(),
@@ -222,6 +223,7 @@ SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_datab
   ensureColumnExists("folders", "parent_id", "INTEGER NOT NULL DEFAULT -1");
   ensureColumnExists("folders", "position", "INTEGER NOT NULL DEFAULT 0");
   ensureColumnExists("entriesv1", "name_user_set", "INTEGER NOT NULL DEFAULT 0");
+  ensureColumnExists("entriesv1", "rating", "INTEGER NOT NULL DEFAULT 0");
 
   // Give pre-existing content files their directory (new files get
   // it stamped at insert time in create(ContentFile))
@@ -497,13 +499,14 @@ bool SqliteUserLibraryRepository::update(Entry &entry) {
   try {
     SQLite::Statement query(*m_db, "UPDATE entriesv1 SET display_name = :displayName, "
                                    "active_save_slot = :activeSaveSlot, hidden = :hidden, "
-                                   "favorite = :favorite, name_user_set = :nameUserSet "
+                                   "favorite = :favorite, rating = :rating, name_user_set = :nameUserSet "
                                    "WHERE id = :id;");
     query.bind(":id", entry.id);
     query.bind(":displayName", entry.displayName);
     query.bind(":activeSaveSlot", entry.activeSaveSlot);
     query.bind(":hidden", entry.hidden ? 1 : 0);
     query.bind(":favorite", entry.favorite ? 1 : 0);
+    query.bind(":rating", entry.rating);
     query.bind(":nameUserSet", entry.nameUserSet ? 1 : 0);
     if (query.exec() == 0) {
       spdlog::error("Failed to update entry with ID {}: no rows affected", entry.id);

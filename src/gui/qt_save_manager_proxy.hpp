@@ -4,6 +4,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QVariantList>
 
 namespace firelight::gui {
 
@@ -19,6 +20,11 @@ public:
 
   [[nodiscard]] QString getSaveDirectory() const;
   void setSaveDirectory(const QString &saveDirectory);
+
+  // Per-slot save-file info for a game (slotNumber, hasData, name, description,
+  // lastModified epoch seconds), one entry per slot that has a save file. Cheap
+  // metadata read; the game need not be running
+  [[nodiscard]] Q_INVOKABLE QVariantList getSaveFiles(const QString &contentHash) const;
 
 signals:
   void saveDirectoryChanged(const QString &saveDirectory);

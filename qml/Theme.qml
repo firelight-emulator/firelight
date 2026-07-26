@@ -92,7 +92,6 @@ QtObject {
     // Use for hover/active states of elevated surfaces
     readonly property color surfaceHover: blend(_slate5, themeColor, intensity)
 
-
     readonly property color border: blend(_slate6, themeColor, intensity)
     readonly property color borderStrong: blend(_slate8, themeColor, intensity)
 

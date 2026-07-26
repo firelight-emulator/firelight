@@ -24,6 +24,11 @@ public:
   std::optional<Entry> getEntryWithContentHash(const std::string &contentHash);
   bool update(Entry &entry);
 
+  // Writes an entry's metadata fields (name, description, developer, publisher,
+  // genres, release year, artwork). Separate from update() so a user's own edits
+  // and the metadata pipeline share one write path
+  bool updateEntryMetadata(const Entry &entry);
+
   // Folders
   std::vector<FolderInfo> listFolders();
   bool create(FolderInfo &folder);

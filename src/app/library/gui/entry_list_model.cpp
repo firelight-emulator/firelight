@@ -101,6 +101,8 @@ QHash<int, QByteArray> EntryListModel::roleNames() const {
   roles[AchievementsEarned] = "achievementsEarned";
   roles[AchievementsTotal] = "achievementsTotal";
   roles[AchievementSetCount] = "achievementSetCount";
+  roles[Rating] = "rating";
+  roles[GroupKey] = "groupKey";
   return roles;
 }
 
@@ -136,6 +138,10 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return item.entry.hidden;
   case Favorite:
     return item.entry.favorite;
+  case Rating:
+    return item.entry.rating;
+  case GroupKey:
+    return item.groupKey;
   case Icon1x1SourceUrl:
     return QString::fromStdString(item.entry.icon1x1SourceUrl);
   case BoxartFrontSourceUrl:
@@ -189,6 +195,10 @@ bool EntryListModel::setData(const QModelIndex &index, const QVariant &value, in
 
   auto &item = m_items[index.row()];
 
+  // Metadata fields persist through updateEntryMetadata (a wider write that
+  // covers name/description/art); the rest go through update()
+  bool metadata = false;
+
   switch (role) {
   case DisplayName:
     item.entry.displayName = value.toString().toStdString();
@@ -199,12 +209,42 @@ bool EntryListModel::setData(const QModelIndex &index, const QVariant &value, in
     item.entry.favorite = value.toBool();
     emit numFavoritesChanged();
     break;
+  case Rating:
+    item.entry.rating = value.toUInt();
+    break;
+  case ActiveSaveSlot:
+    item.entry.activeSaveSlot = value.toUInt();
+    break;
+  case Description:
+    item.entry.description = value.toString().toStdString();
+    metadata = true;
+    break;
+  case Developer:
+    item.entry.developer = value.toString().toStdString();
+    metadata = true;
+    break;
+  case Publisher:
+    item.entry.publisher = value.toString().toStdString();
+    metadata = true;
+    break;
+  case ReleaseYear:
+    item.entry.releaseYear = value.toUInt();
+    metadata = true;
+    break;
+  case Genres:
+    item.entry.genres = value.toString().toStdString();
+    metadata = true;
+    break;
   default:
     return false;
   }
 
   emit dataChanged(index, index, {role});
-  m_userLibrary.update(item.entry);
+  if (metadata) {
+    m_userLibrary.updateEntryMetadata(item.entry);
+  } else {
+    m_userLibrary.update(item.entry);
+  }
 
   return true;
 }
@@ -281,6 +321,56 @@ int EntryListModel::getCount() const { return m_items.size(); }
 
 int EntryListModel::numFavorites() const {
   return std::ranges::count_if(m_items, [](const auto &item) { return item.entry.favorite; });
+}
+
+QString EntryListModel::getGroupMode() const { return m_groupMode; }
+
+void EntryListModel::setGroupMode(const QString &mode) {
+  if (m_groupMode == mode) {
+    return;
+  }
+  m_groupMode = mode;
+  emit groupModeChanged();
+  // Recompute the cached key once per row for the new mode, then notify so the
+  // proxy re-sorts and the section headers re-evaluate
+  for (auto &item : m_items) {
+    item.groupKey = computeGroupKey(item);
+  }
+  if (!m_items.empty()) {
+    emit dataChanged(createIndex(0, 0), createIndex(static_cast<int>(m_items.size()) - 1, 0), {GroupKey});
+  }
+}
+
+QString EntryListModel::computeGroupKey(const Item &item) const {
+  if (m_groupMode == "platform") {
+    const auto platform = m_platformService.getPlatform(item.entry.platformId);
+    return platform.has_value() ? QString::fromStdString(platform->name) : QStringLiteral("Unknown platform");
+  }
+  if (m_groupMode == "decade") {
+    if (item.entry.releaseYear == 0) {
+      return QStringLiteral("Unknown");
+    }
+    return QString::number((item.entry.releaseYear / 10) * 10) + QStringLiteral("s");
+  }
+  if (m_groupMode == "year") {
+    return item.entry.releaseYear == 0 ? QStringLiteral("Unknown") : QString::number(item.entry.releaseYear);
+  }
+  if (m_groupMode == "genre") {
+    if (item.entry.genres.empty()) {
+      return QStringLiteral("No genre");
+    }
+    auto genres = QString::fromStdString(item.entry.genres);
+    const auto comma = genres.indexOf(',');
+    return (comma >= 0 ? genres.left(comma) : genres).trimmed();
+  }
+  if (m_groupMode == "title") {
+    if (item.entry.displayName.empty()) {
+      return QStringLiteral("#");
+    }
+    const QChar first = QString::fromStdString(item.entry.displayName).at(0).toUpper();
+    return first.isLetter() ? QString(first) : QStringLiteral("#");
+  }
+  return {};
 }
 
 QVariantMap EntryListModel::getCountByPlatform() const {
@@ -396,6 +486,7 @@ void EntryListModel::reset() {
       }
 
       applyAchievementCounts(item);
+      item.groupKey = computeGroupKey(item);
 
       m_indexByEntryId[item.entry.id] = static_cast<int>(m_items.size());
       m_items.emplace_back(item);
@@ -480,6 +571,7 @@ void EntryListModel::syncEntry(const int entryId) {
   Item item{.entry = *entry};
   applyPlayStats(item);
   applyAchievementCounts(item);
+  item.groupKey = computeGroupKey(item);
 
   // Update the entry in place if it's already present in the model
   if (present) {

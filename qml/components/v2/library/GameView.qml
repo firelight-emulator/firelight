@@ -124,7 +124,43 @@ Item {
     property string sortRole: "displayName"
     property bool sortAscending: true
     property string viewMode: "grid"
+    // Section grouping: "none" | "platform" | "decade" | "year" | "genre" | "title"
+    property string groupBy: "none"
     readonly property int gameCount: gameMirror.count
+
+    readonly property var groupOptions: [
+        {
+            label: "None",
+            value: "none"
+        },
+        {
+            label: "Platform",
+            value: "platform"
+        },
+        {
+            label: "Decade",
+            value: "decade"
+        },
+        {
+            label: "Year",
+            value: "year"
+        },
+        {
+            label: "Genre",
+            value: "genre"
+        },
+        {
+            label: "Title (A–Z)",
+            value: "title"
+        }
+    ]
+
+    // Drives the model's derived groupKey role that the views section on
+    Binding {
+        target: LibraryEntryModel
+        property: "groupMode"
+        value: root.groupBy
+    }
 
     // --- Multi-select (drives bulk actions; independent of scope/refine) ---
     // entryId -> true. Reassigned wholesale on every change so bindings refresh
@@ -457,6 +493,13 @@ Item {
             }
         ]
         sorters: [
+            // Primary sort by group so sections stay contiguous. When grouping is
+            // off the key is empty for every row, so this is a no-op and the
+            // sort role below decides the order
+            RoleSorter {
+                roleName: "groupKey"
+                sortOrder: Qt.AscendingOrder
+            },
             RoleSorter {
                 roleName: root.sortRole
                 sortOrder: root.sortAscending ? Qt.AscendingOrder : Qt.DescendingOrder
@@ -473,7 +516,43 @@ Item {
         model: gameModel
         delegate: QtObject {
             required property int entryId
+            required property string groupKey
         }
+        onObjectAdded: Qt.callLater(root.rebuildGroupKeys)
+        onObjectRemoved: Qt.callLater(root.rebuildGroupKeys)
+    }
+
+    // The distinct group-header labels in display order, derived from the sorted
+    // mirror (the proxy is sorted by groupKey first). Feeds the grid's sectioned
+    // layout; the list view uses native ListView.section instead
+    property var groupKeys: []
+    // key -> count, so the grid can give each section a known height up front and
+    // the outer list only realizes on-screen sections (not all of them at once)
+    property var groupCounts: ({})
+    onGroupByChanged: Qt.callLater(root.rebuildGroupKeys)
+    function rebuildGroupKeys() {
+        if (root.groupBy === "none") {
+            root.groupKeys = [];
+            root.groupCounts = ({});
+            return;
+        }
+        var keys = [];
+        var counts = {};
+        var last = null;
+        for (var i = 0; i < gameMirror.count; i++) {
+            var o = gameMirror.objectAt(i);
+            if (!o) {
+                continue;
+            }
+            var k = o.groupKey;
+            counts[k] = (counts[k] || 0) + 1;
+            if (k !== last) {
+                keys.push(k);
+                last = k;
+            }
+        }
+        root.groupKeys = keys;
+        root.groupCounts = counts;
     }
 
     // Shared, single-instance dialogs raised by the grid/list context menus and
@@ -483,6 +562,9 @@ Item {
     }
     AddToFolderDialog {
         id: addToFolderDialog
+    }
+    FLGameEditDialog {
+        id: editGameDialog
     }
 
     ColumnLayout {
@@ -633,6 +715,7 @@ Item {
         GameListView {
             model: gameModel
             selectedIds: root.selectedIds
+            groupBy: root.groupBy
             onSortRoleChanged: {
                 root.sortRole = sortRole;
                 root.persistFolderSort();
@@ -645,6 +728,7 @@ Item {
             onGameFocused: data => root.detailData = data
             onRequestAddToFolder: entryIds => addToFolderDialog.openFor(entryIds)
             onRequestChangeArt: (hash, name, platformId) => artPicker.openFor(hash, name, platformId)
+            onRequestEditGame: (id, hash, platformId) => editGameDialog.loadAndOpen(id, hash, platformId)
         }
     }
 
@@ -653,10 +737,14 @@ Item {
         GameGridView {
             model: gameModel
             selectedIds: root.selectedIds
+            groupBy: root.groupBy
+            groupKeys: root.groupKeys
+            groupCounts: root.groupCounts
             onGameClicked: (entryId, rowIndex, modifiers) => root.handleGameClick(entryId, rowIndex, modifiers)
             onGameFocused: data => root.detailData = data
             onRequestAddToFolder: entryIds => addToFolderDialog.openFor(entryIds)
             onRequestChangeArt: (hash, name, platformId) => artPicker.openFor(hash, name, platformId)
+            onRequestEditGame: (id, hash, platformId) => editGameDialog.loadAndOpen(id, hash, platformId)
         }
     }
 

@@ -27,6 +27,9 @@ class EntryListModel : public QAbstractListModel {
   Q_PROPERTY(int numFavorites READ numFavorites NOTIFY numFavoritesChanged)
   Q_PROPERTY(QVariantMap countByPlatform READ getCountByPlatform NOTIFY countChanged)
   Q_PROPERTY(QVariantMap countByFolderId READ getCountByFolderId NOTIFY countByFolderIdChanged)
+  // Grouping key mode read by the GroupKey role: "none" | "platform" | "decade"
+  // | "year" | "genre" | "title"
+  Q_PROPERTY(QString groupMode READ getGroupMode WRITE setGroupMode NOTIFY groupModeChanged)
 
 public:
   /**
@@ -59,7 +62,9 @@ public:
     NumSecondsPlayed,
     AchievementsEarned,
     AchievementsTotal,
-    AchievementSetCount
+    AchievementSetCount,
+    Rating,
+    GroupKey
   };
 
   struct Item {
@@ -69,6 +74,10 @@ public:
     int achievementsEarned{};
     int achievementsTotal{};
     int achievementSetCount{};
+    // Cached group-header label for the current group mode, so data(GroupKey)
+    // (read O(n log n) times by the proxy sorter) is a plain string return rather
+    // than a per-call platform lookup
+    QString groupKey;
   };
 
   EntryListModel(UserLibraryService &userLibrary, activity::IActivityLog &activityLog,
@@ -112,6 +121,10 @@ public:
 
   QVariantMap getCountByFolderId() const;
 
+  QString getGroupMode() const;
+
+  void setGroupMode(const QString &mode);
+
 public slots:
   void reset();
 
@@ -124,7 +137,13 @@ signals:
 
   void countByFolderIdChanged();
 
+  void groupModeChanged();
+
 private:
+  // The group-header label for an item under the current group mode (platform
+  // name, decade, year, first letter, ...). Empty when grouping is off
+  [[nodiscard]] QString computeGroupKey(const Item &item) const;
+
   // Reconciles a single entry with the model after a create/update event:
   // inserts a newly-visible entry, removes one that became hidden/deleted, or
   // updates one in place (the QML SortFilterProxyModel re-sorts/re-filters, so
@@ -156,6 +175,7 @@ private:
   platforms::IPlatformService &m_platformService;
   achievements::AchievementService &m_achievementService;
   QList<Item> m_items{};
+  QString m_groupMode = "none";
 
   // Flattens an item (entry attributes + joined play stats) into the Qt-free
   // struct the smart-folder evaluator consumes

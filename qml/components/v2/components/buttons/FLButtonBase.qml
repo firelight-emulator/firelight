@@ -19,26 +19,26 @@ Button {
     readonly property color _fg: {
         if (variant === "flat") {
             if (hover.hovered || checked) {
-                return Theme.textPrimary
+                return Theme.textPrimary;
             }
 
             // TODO!!!!
-            return Theme.textMuted
+            return Theme.textMuted;
         }
 
         if (checked && variant === "subtle") {
-            return checkedColor
+            return checkedColor;
         }
 
         if (variant === "primary") {
-            return Theme.onAccent
+            return Theme.onAccent;
         }
 
         if (variant === "danger") {
-            return "white"
+            return "white";
         }
 
-        return Theme.textPrimary
+        return Theme.textPrimary;
     }
 
     hoverEnabled: true

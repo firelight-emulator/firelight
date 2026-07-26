@@ -14,6 +14,7 @@ struct Entry {
   unsigned activeSaveSlot = 1;
   bool hidden = false;
   bool favorite = false;
+  unsigned rating = 0; // user's 1-5 star rating; 0 = unrated
   std::string icon1x1SourceUrl;
   std::string boxartFrontSourceUrl;
   std::string boxartBackSourceUrl;

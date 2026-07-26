@@ -49,12 +49,12 @@ Rectangle {
     // Accent pill behind the selected segment
     Rectangle {
         readonly property real segWidth: {
-            const numSegments = control.segments.length
+            const numSegments = control.segments.length;
             if (numSegments <= 0) {
-                return 0
+                return 0;
             }
 
-            return (segRow.width - segRow.spacing * (numSegments - 1)) / numSegments
+            return (segRow.width - segRow.spacing * (numSegments - 1)) / numSegments;
         }
 
         color: Theme.surfaceHover
@@ -104,8 +104,8 @@ Rectangle {
                 onImplicitWidthChanged: segRow.maxImplicitWidth = Math.max(segRow.maxImplicitWidth, implicitWidth)
             }
 
-            onItemAdded: function(index, item) {
-                segRow.maxImplicitWidth = Math.max(item.implicitWidth, segRow.maxImplicitWidth)
+            onItemAdded: function (index, item) {
+                segRow.maxImplicitWidth = Math.max(item.implicitWidth, segRow.maxImplicitWidth);
             }
         }
     }

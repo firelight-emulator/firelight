@@ -1,6 +1,7 @@
 #include "qt_save_manager_proxy.hpp"
 
 #include <QSettings>
+#include <QVariantMap>
 
 namespace firelight::gui {
 
@@ -9,6 +10,20 @@ QtSaveManagerProxy::QtSaveManagerProxy(saves::ISaveManager &saveManager, QObject
 
 QString QtSaveManagerProxy::getSaveDirectory() const {
   return QString::fromStdString(m_saveManager.getSaveDirectory());
+}
+
+QVariantList QtSaveManagerProxy::getSaveFiles(const QString &contentHash) const {
+  QVariantList out;
+  for (const auto &info : m_saveManager.getSaveFileInfoList(contentHash.toStdString())) {
+    QVariantMap slot;
+    slot["slotNumber"] = info.slotNumber;
+    slot["hasData"] = info.hasData;
+    slot["name"] = QString::fromStdString(info.name);
+    slot["description"] = QString::fromStdString(info.description);
+    slot["lastModified"] = static_cast<qint64>(info.lastModifiedEpochSeconds);
+    out.append(slot);
+  }
+  return out;
 }
 
 void QtSaveManagerProxy::setSaveDirectory(const QString &saveDirectory) {

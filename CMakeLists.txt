@@ -151,6 +151,7 @@ file(GLOB QML_FILES
         qml/components/controllers/*.qml
         qml/components/v2/*.qml
         qml/components/v2/*/*.qml
+        qml/components/v2/*/*/*.qml
         qml/**/*.qml
 )
 
@@ -170,6 +171,7 @@ set_source_files_properties(qml/AppearanceSettings.qml PROPERTIES QT_QML_SINGLET
 set_source_files_properties(qml/Router.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/MaterialSymbols.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/components/v2/FLUtil.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 # The libretro/emulation core: the ABI wrapper + emulation lifecycle. Depends
 # only on domain interfaces (audio/mic/achievement clients are injected), so it

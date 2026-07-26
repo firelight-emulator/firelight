@@ -92,7 +92,6 @@ FLPopup {
             }
         }
 
-
         SectionLabel {
             text: "Grid spacing"
             visible: root.view.viewMode === "grid"
@@ -160,6 +159,34 @@ FLPopup {
             onActivated: function (value) {
                 root.view.sortAscending = value === "asc";
                 root.view.persistFolderSort();
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: Theme.border
+            Layout.topMargin: AppStyle.spacingSm
+            Layout.bottomMargin: AppStyle.spacingXs
+        }
+
+        SectionLabel {
+            text: "GROUP BY"
+        }
+        Repeater {
+            model: root.view.groupOptions
+            delegate: FLListRow {
+                required property var modelData
+                Layout.fillWidth: true
+                label: modelData.label
+                highlighted: root.view.groupBy === modelData.value
+                onClicked: root.view.groupBy = modelData.value
+                Icon {
+                    visible: root.view.groupBy === modelData.value
+                    name: "check"
+                    size: AppStyle.iconSizeSm
+                    color: Theme.accent
+                }
             }
         }
     }

@@ -53,6 +53,7 @@ FocusScope {
             Layout.alignment: Qt.AlignVCenter
             Layout.preferredHeight: AppStyle.controlHeight
             placeholderText: root.placeholder
+            font.weight: Font.Normal
             color: Theme.textPrimary
             placeholderTextColor: Theme.textMuted
             font.pixelSize: root._font

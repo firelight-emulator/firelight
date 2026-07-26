@@ -39,6 +39,8 @@ std::optional<Entry> UserLibraryService::getEntryWithContentHash(const std::stri
 
 bool UserLibraryService::update(Entry &entry) { return m_repository.update(entry); }
 
+bool UserLibraryService::updateEntryMetadata(const Entry &entry) { return m_repository.updateEntryMetadata(entry); }
+
 std::vector<FolderInfo> UserLibraryService::listFolders() { return m_repository.listFolders(); }
 
 bool UserLibraryService::create(FolderInfo &folder) { return m_repository.create(folder); }

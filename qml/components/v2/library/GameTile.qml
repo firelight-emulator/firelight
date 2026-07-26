@@ -1,14 +1,11 @@
 import QtQuick
 
-// TODO
-// Box art (or a platform-icon fallback) with a title scrim that reveals on
-// hover/focus, all clipped to one set of rounded corners
 Item {
     id: root
 
     property url source: ""
     property int size: 140
-    property real radius: AppStyle.radiusLg
+    property real radius: size < 100 ? AppStyle.radiusSm : AppStyle.radiusMd
     property string title: ""
     property bool titleVisible: false
     required property int platformId
