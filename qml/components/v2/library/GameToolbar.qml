@@ -49,11 +49,11 @@ RowLayout {
         id: displayButton
         compact: false
         iconName: root.view.viewMode === "grid" ? "grid_view" : "view_list"
-        text: root.view.currentSortLabel
-        trailingIconName: root.view.sortAscending ? "arrow-up" : "arrow-down"
+        text: root.view.viewMode === "grid" ? "Grid" : "List"
+        // trailingIconName: root.view.sortAscending ? "arrow-up" : "arrow-down"
         onClicked: displayPopup.opened ? displayPopup.close() : displayPopup.open()
 
-        GameDisplayPopup {
+        GameDisplayTypePopup {
             id: displayPopup
             x: displayButton.width - width
             y: displayButton.height + AppStyle.spacingXs

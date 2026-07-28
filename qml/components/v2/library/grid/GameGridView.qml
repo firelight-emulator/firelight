@@ -82,6 +82,15 @@ Item {
         visible: gridRoot.groupBy === "none"
         model: gridRoot.groupBy === "none" ? gridRoot.model : null
 
+        // TODO
+        // FLFocusHighlight drives all scrolling (with its scroll margins); the
+        // view must not also auto-scroll to the current item or the two fight
+        highlightFollowsCurrentItem: false
+
+        displayMarginBeginning: Math.round(cellHeight / 2)
+
+        keyNavigationWraps: false
+
         property real initialContentY: contentY
 
         property string sortRole: "displayName"
@@ -116,10 +125,12 @@ Item {
     Component {
         id: tileComponent
 
-        Item {
+        FocusScope {
             id: gameDelegate
             required property var model
             required property int index
+
+
             width: AppearanceSettings.libraryTileSize
             height: AppearanceSettings.libraryTileSize
 
@@ -132,6 +143,8 @@ Item {
                 anchors.margins: AppStyle.spacingXs
                 padding: 0
                 hoverEnabled: true
+                focus: true
+                property int radius: 12
 
                 TapHandler {
                     id: selectTap
@@ -175,6 +188,7 @@ Item {
 
                 background: Item {}
                 contentItem: GameTile {
+                    id: gameTile
                     source: gridRoot.iconSource(gameDelegate.model.icon1x1SourceUrl)
                     size: AppearanceSettings.libraryTileSize
                     platformId: gameDelegate.model.platformId
@@ -267,7 +281,7 @@ Item {
         anchors.fill: parent
         visible: gridRoot.groupBy !== "none"
         model: visible ? gridRoot.groupKeys : []
-        clip: true
+        // clip: true
         spacing: AppStyle.spacingMd
         boundsBehavior: Flickable.StopAtBounds
         cacheBuffer: Math.round(AppearanceSettings.libraryTileSize * 2)

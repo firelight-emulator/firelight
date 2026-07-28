@@ -43,6 +43,8 @@ QtObject {
     readonly property color _pink: "#e55aa2"
     readonly property color _link: "#89c5f9"
     readonly property color _gold: "#e3b341"
+    readonly property color _focusBlue: "#3d8bfd"
+    readonly property color _focusPurple: "#a24bf5"
 
     // Persisted knobs
     readonly property real intensity: AppearanceSettings.themeIntensity
@@ -106,6 +108,11 @@ QtObject {
     // Focus ring is a fixed ember step, never the user's accent — so the
     // controller-focus highlight stays high-contrast whatever the accent is set to
     readonly property color focusRing: _ember400
+
+    // TODO
+    // The two colors that rotate around the controller-focus ring (Switch-style)
+    readonly property color focusRingBlue: _focusBlue
+    readonly property color focusRingPurple: _focusPurple
 
     readonly property color success: _statusGreen
     readonly property color warning: _statusYellow

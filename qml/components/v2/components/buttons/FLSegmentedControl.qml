@@ -11,7 +11,7 @@ import QtQuick.Layouts
 //       currentValue: "day"
 //       onActivated: value => ...
 //   }
-Rectangle {
+Button {
     id: control
 
     objectName: "FLSegmentedControl|" + currentValue
@@ -20,6 +20,46 @@ Rectangle {
     property string currentValue: ""
     property bool compact: true
     signal activated(string value)
+
+    property bool showGlobalCursor: true
+
+    background: Rectangle {
+        radius: AppStyle.radiusLg
+        color: Theme.backgroundInset
+        border.width: 1
+        border.color: Theme.border
+    }
+
+    padding: 0
+    hoverEnabled: false
+
+    Keys.onPressed: function(event) {
+        if (event.key === Qt.Key_Left) {
+            const newIndex = Math.max(0, _selectedIndex - 1);
+            if (newIndex !== _selectedIndex) {
+                control.activated(control.segments[newIndex].value);
+                event.accepted = true;
+            }
+        } else if (event.key === Qt.Key_Right) {
+            const newIndex = Math.min(control.segments.length - 1, _selectedIndex + 1);
+            if (newIndex !== _selectedIndex) {
+                control.activated(control.segments[newIndex].value);
+                event.accepted = true;
+            }
+        } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            let next = _selectedIndex + 1
+            if (next === control.segments.length) {
+                next = 0
+            }
+
+            if (next !== _selectedIndex) {
+                control.activated(control.segments[next].value);
+                event.accepted = true;
+            }
+        }
+
+        event.accepted = false
+    }
 
     onSegmentsChanged: segRow.maxImplicitWidth = 0
 
@@ -39,10 +79,6 @@ Rectangle {
 
     implicitHeight: segRow.implicitHeight + control._pad * 2
     implicitWidth: segRow.implicitWidth + control._pad * 2
-    radius: AppStyle.radiusLg
-    color: Theme.backgroundInset
-    border.width: 1
-    border.color: Theme.border
 
     Component.onCompleted: control._ready = true
 
@@ -91,6 +127,7 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.preferredWidth: segRow.maxImplicitWidth
+                focusPolicy: Qt.NoFocus
 
                 text: modelData.label
                 iconName: modelData.icon ?? ""

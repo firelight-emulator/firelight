@@ -16,6 +16,7 @@ Popup {
     height: parent ? parent.height - 120 : 400
 
     modal: true
+    focus: true
     padding: 0
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
@@ -85,7 +86,12 @@ Popup {
         }
     }
 
-    onOpened: _setActive(true)
+    onOpened: {
+        _setActive(true);
+        if (contentLoader.item) {
+            contentLoader.item.forceActiveFocus();
+        }
+    }
 
     Connections {
         target: Router

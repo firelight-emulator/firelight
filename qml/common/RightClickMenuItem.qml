@@ -97,7 +97,7 @@ MenuItem {
             text: control.text
             color: enabled ? renameHover.hovered ? (control.dangerous ? Theme.danger : "white") : (control.dangerous ? Theme.danger : "#dfdfdf") : "grey"
             font.pixelSize: AppStyle.fontSizeMedium
-            font.weight: Font.DemiBold
+            font.weight: Font.Normal
             font.family: AppStyle.fontFamily
             // font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignLeft

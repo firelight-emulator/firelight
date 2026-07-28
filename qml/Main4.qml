@@ -54,30 +54,8 @@ MainWindow {
         onActivated: Router.matchedPattern === "/dev/gallery" ? Router.back() : Router.navigate("/dev/gallery")
     }
 
-    Pane {
-        id: titleBar
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: AppStyle.titleBarHeight
-        padding: AppStyle.titleBarPadding
-
-        background: Rectangle {
-            color: "transparent"
-            anchors.fill: parent
-        }
-
-        TitleBar {
-            id: actualTitleBar
-            anchors.fill: parent
-
-            onMaximizeClicked: {
-                window.maximize();
-                // emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: contentStack})
-            }
-            onMinimizeClicked: window.showMinimized()
-            onCloseClicked: window.close()
-        }
+    onActiveFocusItemChanged: {
+        console.log("Active focus item changed to: " + activeFocusItem);
     }
 
     // Pane {
@@ -224,6 +202,32 @@ MainWindow {
         }
     }
 
+    Pane {
+        id: titleBar
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: AppStyle.titleBarHeight
+        padding: AppStyle.titleBarPadding
+
+        background: Rectangle {
+            color: "transparent"
+            anchors.fill: parent
+        }
+
+        TitleBar {
+            id: actualTitleBar
+            anchors.fill: parent
+
+            onMaximizeClicked: {
+                window.maximize();
+                // emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: contentStack})
+            }
+            onMinimizeClicked: window.showMinimized()
+            onCloseClicked: window.close()
+        }
+    }
+
     // A game named on the command line launches once the shell is up. When the
     // CLI also asked for a RetroAchievements login, that has to land first so
     // the session is credited to the right user
@@ -297,5 +301,15 @@ MainWindow {
 
     component RoleData: QtObject {
         property string displayName
+    }
+
+    // TODO
+    // Lives in the window overlay (always visible, exact mapping) so the ring
+    // draws above popups and menus as well as the main content
+    FLFocusHighlight {
+        parent: Overlay.overlay
+        z: 100000
+        target: window.activeFocusItem
+        usingMouse: InputMethodManager.usingMouse
     }
 }

@@ -51,7 +51,8 @@ Button {
     }
 
     background: Rectangle {
-        radius: AppStyle.radiusMd
+        // radius: AppStyle.radiusMd
+        radius: width / 2
         color: control._subtle ? "transparent" : control._fill
         border.width: control.variant === "default" ? 1 : 0
         border.color: Theme.border

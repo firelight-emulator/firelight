@@ -6,6 +6,10 @@ import QtQuick.Effects
 Popup {
     id: control
 
+    onOpened: {
+        contentItem.forceActiveFocus();
+    }
+
     background: Rectangle {
         color: Theme.surface
         radius: AppStyle.radiusMd

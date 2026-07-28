@@ -8,7 +8,7 @@ FLButtonBase {
     property string iconName: ""
     property string trailingIconName: ""
 
-    readonly property int _hpad: compact ? AppStyle.spacingSm : AppStyle.spacingMd
+    readonly property int _hpad: compact ? AppStyle.spacingMd : AppStyle.spacingLg
 
     leftPadding: iconName !== "" ? AppStyle.spacingSm : _hpad
     rightPadding: trailingIconName !== "" ? AppStyle.spacingSm : _hpad

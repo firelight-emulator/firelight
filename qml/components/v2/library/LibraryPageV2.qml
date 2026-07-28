@@ -9,7 +9,7 @@ SplitView {
     orientation: Qt.Horizontal
     spacing: 0
 
-    clip: true
+    // clip: true
 
     // Collapse the sidebar to an icon-only rail to reclaim grid width
     property bool sidebarCollapsed: false
@@ -211,12 +211,12 @@ SplitView {
         }
     }
 
-    LibrarySidebar {
-        page: splitView
-        gameView: gameView
-        ownedPlatformsModel: ownedPlatformsModel
-        folderDialog: folderDialog
-    }
+    // LibrarySidebar {
+    //     page: splitView
+    //     gameView: gameView
+    //     ownedPlatformsModel: ownedPlatformsModel
+    //     folderDialog: folderDialog
+    // }
 
     Pane {
         id: gamesPanel
@@ -228,10 +228,7 @@ SplitView {
         topPadding: 0
         verticalPadding: 0
 
-        background: Rectangle {
-            color: Theme.glass
-            topRightRadius: AppStyle.radiusMd
-            bottomRightRadius: AppStyle.radiusMd
+        background: Item {
         }
 
         contentItem: GameView {

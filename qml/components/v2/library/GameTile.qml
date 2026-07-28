@@ -19,8 +19,11 @@ Item {
 
         layer.enabled: root.radius > 0
         layer.smooth: true
-        layer.effect: FLRoundedMask {
+        layer.effect: FLTileSurface {
             radius: root.radius
+            topLight: AppStyle.tileTopLight
+            bottomShade: AppStyle.tileBottomShade
+            bevelFrac: AppStyle.tileBevelDepth
         }
 
         Rectangle {

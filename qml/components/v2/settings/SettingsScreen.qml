@@ -331,12 +331,14 @@ FocusScope {
 
                             LibraryNavigationMenu {
                                 Layout.fillWidth: true
+                                focus: true
                                 title: modelData.title
                                 collapsible: false
                                 model: modelData.items
 
                                 delegate: LibraryNavigationMenuItem {
                                     required property var model
+                                    required property int index
 
                                     // Highlight is driven by the active route, not
                                     // by the list's own selection, so make it
@@ -346,6 +348,15 @@ FocusScope {
                                     iconName: model.iconName
                                     displayText: model.displayName
                                     width: ListView.view.width
+
+                                    // TODO
+                                    // Current row holds focus so the ring follows
+                                    // arrow/dpad moves; sync back so Tab and arrows
+                                    // stay in step
+                                    focus: ListView.isCurrentItem
+                                    onActiveFocusChanged: if (activeFocus) {
+                                        ListView.view.currentIndex = index;
+                                    }
 
                                     onClicked: root.navigateTo(model.route)
                                 }

@@ -108,9 +108,7 @@ ListView {
     boundsBehavior: Flickable.StopAtBounds
 
     delegate: GameListViewItem {
-        width: ListView.view.width - AppStyle.spacingLg - AppStyle.spacingSm
-        anchors.left: parent.left
-        anchors.leftMargin: AppStyle.spacingSm
+        width: ListView.view.width
         selectedIds: root.selectedIds
         achievementsColumnWidth: root.achievementsColumnWidth
         activityColumnWidth: root.activityColumnWidth

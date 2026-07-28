@@ -68,11 +68,6 @@ ApplicationWindow {
         }
     }
 
-    FLFocusHighlight {
-        target: root.activeFocusItem
-        usingMouse: InputMethodManager.usingMouse
-    }
-
     // Resize edges — z:100 so they sit above all content
     Item {
         anchors {

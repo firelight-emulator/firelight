@@ -567,113 +567,257 @@ Item {
         id: editGameDialog
     }
 
-    ColumnLayout {
-        id: mainColumn
+    FLColumnLayout {
+        id: toolbarColumn
         anchors.left: parent.left
         anchors.top: parent.top
+        anchors.topMargin: AppStyle.spacingMd
         anchors.bottom: parent.bottom
-        anchors.right: detailDock.left
-        spacing: 0
+        width: 72
+        spacing: AppStyle.spacingSm
 
-        // ---- Header / toolbar ----
-        ColumnLayout {
-            Layout.fillWidth: true
-            Layout.leftMargin: AppStyle.spacingLg
-            Layout.rightMargin: AppStyle.spacingLg
-            Layout.topMargin: AppStyle.spacingSm
-            Layout.bottomMargin: AppStyle.spacingSm
-            spacing: AppStyle.spacingSm
+        KeyNavigation.right: mainColumn
 
-            GameViewHeader {
-                Layout.fillWidth: true
-                view: root
-            }
+        FLIconButton {
+            Layout.alignment: Qt.AlignHCenter
+            iconName: "add"
+            tooltipText: "Add or create"
+            compact: false
+            onClicked: addPopup.opened ? addPopup.close() : addPopup.open()
 
-            // Toolbar: search, quick filters, Filters/Display popups, details toggle
-            GameToolbar {
-                Layout.fillWidth: true
-                view: root
-            }
+            RightClickMenu {
+                id: addPopup
+                x: parent.width + AppStyle.spacingXs
+                y: 0
 
-            // Advanced filters expand inline under the toolbar
-            GameFilterBar {
-                view: root
-                expanded: root.filtersExpanded
-            }
-
-            // TODO
-            // Bulk-action bar for multi-select. Slides in under the filter bar so
-            // selecting adds a little header height rather than shifting anything
-            Rectangle {
-                id: selectionBar
-                Layout.fillWidth: true
-                Layout.preferredHeight: root.selectedCount > 0 ? selectionRow.implicitHeight + AppStyle.spacingSm * 2 : 0
-                visible: Layout.preferredHeight > 0
-                clip: true
-                radius: AppStyle.radiusMd
-                color: Theme.backgroundInset
-
-                Behavior on Layout.preferredHeight {
-                    NumberAnimation {
-                        duration: AppStyle.durationFast
-                        easing.type: Easing.InOutQuad
+                RightClickMenuItem {
+                    text: "Add game"
+                    onTriggered: {
+                        // GameAddDialog.openForExisting();
                     }
                 }
 
-                RowLayout {
-                    id: selectionRow
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.leftMargin: AppStyle.spacingMd
-                    anchors.rightMargin: AppStyle.spacingMd
-                    spacing: AppStyle.spacingSm
+                RightClickMenuItem {
+                    text: "Create folder"
+                    onTriggered: {
+                        // GameAddDialog.openForExisting();
+                    }
+                }
 
-                    Text {
-                        text: root.selectedCount + " selected"
-                        color: Theme.accent
-                        font.family: AppStyle.fontFamily
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.weight: Font.DemiBold
+                enter: Transition {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: AppStyle.durationFast
+                        easing.type: Easing.InOutQuad
                     }
-                    FLButton {
-                        compact: true
-                        variant: "default"
-                        iconName: "favorite"
-                        text: "Favorite"
-                        onClicked: root.bulkFavorite(true)
-                    }
-                    FLButton {
-                        compact: true
-                        variant: "default"
-                        text: "Add to folder…"
-                        onClicked: root.openAddToFolder()
-                    }
-                    FLButton {
-                        compact: true
-                        variant: "default"
-                        text: "Remove from folder"
-                        visible: root.removableFolderId !== -1
-                        onClicked: root.bulkRemoveFromFolder()
-                    }
-                    Item {
-                        Layout.fillWidth: true
-                    }
-                    FLButton {
-                        compact: true
-                        variant: "subtle"
-                        text: "Clear selection"
-                        onClicked: root.clearSelection()
+                    NumberAnimation {
+                        property: "x"
+                        from: gameSortPopup.x - 8
+                        to: gameSortPopup.x
+                        duration: AppStyle.durationFast
+                        easing.type: Easing.InOutQuad
                     }
                 }
             }
         }
 
-        FLDivider {}
+        FLIconButton {
+            Layout.alignment: Qt.AlignHCenter
+            iconName: "search"
+            tooltipText: "Search"
+            compact: false
+        }
+
+        FLIconButton {
+            id: filterButton
+            Layout.alignment: Qt.AlignHCenter
+            iconName: "filter"
+            tooltipText: "Filter"
+            compact: false
+        }
+
+        FLIconButton {
+            id: sortButton
+            Layout.alignment: Qt.AlignHCenter
+            iconName: "sort"
+            tooltipText: "Sort"
+            compact: false
+            onClicked: gameSortPopup.opened ? gameSortPopup.close() : gameSortPopup.open()
+
+            GameSortPopup {
+                id: gameSortPopup
+                y: 0
+                x: sortButton.width + AppStyle.spacingXs
+                view: root
+
+                enter: Transition {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: AppStyle.durationFast
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        property: "x"
+                        from: gameSortPopup.x - 8
+                        to: gameSortPopup.x
+                        duration: AppStyle.durationFast
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+        }
+
+        FLIconButton {
+            id: viewAsButton
+            Layout.alignment: Qt.AlignHCenter
+            iconName: root.viewMode === "grid" ? "grid_view" : "view_list"
+            tooltipText: "View as"
+            compact: false
+            onClicked: displayPopup.opened ? displayPopup.close() : displayPopup.open()
+
+            GameDisplayTypePopup {
+                id: displayPopup
+                y: 0
+                x: viewAsButton.width + AppStyle.spacingXs
+                view: root
+
+                enter: Transition {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: AppStyle.durationFast
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        property: "x"
+                        from: viewAsButton.width + AppStyle.spacingXs - 12
+                        to: viewAsButton.width + AppStyle.spacingXs
+                        duration: AppStyle.durationFast
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+        }
+
+        Item {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+        }
+    }
+
+    ColumnLayout {
+        id: mainColumn
+        anchors.left: toolbarColumn.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.right: detailDock.left
+        anchors.rightMargin: 72
+        spacing: 0
+
+        // ---- Header / toolbar ----
+        // ColumnLayout {
+        //     Layout.fillWidth: true
+        //     Layout.leftMargin: AppStyle.spacingLg
+        //     Layout.rightMargin: AppStyle.spacingLg
+        //     Layout.topMargin: AppStyle.spacingSm
+        //     Layout.bottomMargin: AppStyle.spacingSm
+        //     spacing: AppStyle.spacingSm
+        //
+        //     GameViewHeader {
+        //         Layout.fillWidth: true
+        //         view: root
+        //     }
+        //
+        //     // Toolbar: search, quick filters, Filters/Display popups, details toggle
+        //     GameToolbar {
+        //         Layout.fillWidth: true
+        //         view: root
+        //     }
+        //
+        //     // Advanced filters expand inline under the toolbar
+        //     GameFilterBar {
+        //         view: root
+        //         expanded: root.filtersExpanded
+        //     }
+        //
+        //     // TODO
+        //     // Bulk-action bar for multi-select. Slides in under the filter bar so
+        //     // selecting adds a little header height rather than shifting anything
+        //     Rectangle {
+        //         id: selectionBar
+        //         Layout.fillWidth: true
+        //         Layout.preferredHeight: root.selectedCount > 0 ? selectionRow.implicitHeight + AppStyle.spacingSm * 2 : 0
+        //         visible: Layout.preferredHeight > 0
+        //         clip: true
+        //         radius: AppStyle.radiusMd
+        //         color: Theme.backgroundInset
+        //
+        //         Behavior on Layout.preferredHeight {
+        //             NumberAnimation {
+        //                 duration: AppStyle.durationFast
+        //                 easing.type: Easing.InOutQuad
+        //             }
+        //         }
+        //
+        //         RowLayout {
+        //             id: selectionRow
+        //             anchors.left: parent.left
+        //             anchors.right: parent.right
+        //             anchors.verticalCenter: parent.verticalCenter
+        //             anchors.leftMargin: AppStyle.spacingMd
+        //             anchors.rightMargin: AppStyle.spacingMd
+        //             spacing: AppStyle.spacingSm
+        //
+        //             Text {
+        //                 text: root.selectedCount + " selected"
+        //                 color: Theme.accent
+        //                 font.family: AppStyle.fontFamily
+        //                 font.pixelSize: AppStyle.fontSizeMedium
+        //                 font.weight: Font.DemiBold
+        //             }
+        //             FLButton {
+        //                 compact: true
+        //                 variant: "default"
+        //                 iconName: "favorite"
+        //                 text: "Favorite"
+        //                 onClicked: root.bulkFavorite(true)
+        //             }
+        //             FLButton {
+        //                 compact: true
+        //                 variant: "default"
+        //                 text: "Add to folder…"
+        //                 onClicked: root.openAddToFolder()
+        //             }
+        //             FLButton {
+        //                 compact: true
+        //                 variant: "default"
+        //                 text: "Remove from folder"
+        //                 visible: root.removableFolderId !== -1
+        //                 onClicked: root.bulkRemoveFromFolder()
+        //             }
+        //             Item {
+        //                 Layout.fillWidth: true
+        //             }
+        //             FLButton {
+        //                 compact: true
+        //                 variant: "subtle"
+        //                 text: "Clear selection"
+        //                 onClicked: root.clearSelection()
+        //             }
+        //         }
+        //     }
+        // }
+        //
+        // FLDivider {}
 
         Loader {
             id: viewLoader
-            clip: true
+            // clip: true
             Layout.fillHeight: true
             Layout.fillWidth: true
             sourceComponent: root.viewMode === "grid" ? gridView : listView

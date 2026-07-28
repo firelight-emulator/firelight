@@ -71,12 +71,16 @@ Item {
     readonly property int radiusMd: Math.round(8 * scale)
     readonly property int radiusLg: Math.round(12 * scale)
 
+    // TODO
+    // Border thickness of the controller-focus ring
+    readonly property int focusRingWidth: Math.round(3 * scale)
+
     readonly property int windowPadding: Math.round(18 * scale)
 
     // v2 button metrics: one height + a compact option, one fixed icon size
-    readonly property int buttonHeight: Math.max(minTarget, Math.round(34 * scale * density))
+    readonly property int buttonHeight: Math.max(minTarget, Math.round(42 * scale * density))
     readonly property int buttonHeightCompact: Math.max(minTarget, Math.round(28 * scale * density))
-    readonly property int iconSizeButton: Math.round(20 * scale)
+    readonly property int iconSizeButton: Math.round(22 * scale)
 
     // TODO
     // Comfortable default width for value inputs (slider/combobox) so they don't
@@ -121,9 +125,12 @@ Item {
     // Motion — durations (ms) and a default easing curve, replacing the raw
     // duration literals scattered through the QML
     //*************************************************************
-    readonly property int durationFast: 120
-    readonly property int durationBase: 200
-    readonly property int durationSlow: 320
+    readonly property int durationFast: 80
+    readonly property int durationBase: 120
+    readonly property int durationSlow: 200
+    // TODO
+    // One full revolution of the focus ring's rotating gradient
+    readonly property int durationSpin: 4200
     readonly property int easingStandard: Easing.OutCubic
 
     // TODO
@@ -133,6 +140,13 @@ Item {
     //*************************************************************
     readonly property real elevationBlur: 1.0
     readonly property int elevationOffset: 4
+
+    // TODO
+    // Game-tile bevel lighting: rim brighten on top-facing edges, rim darken on
+    // bottom-facing edges, and how far the bevel reaches in (fraction of the tile)
+    readonly property real tileTopLight: 0.12
+    readonly property real tileBottomShade: 0.16
+    readonly property real tileBevelDepth: 0.06
 
     // TODO
     //*************************************************************

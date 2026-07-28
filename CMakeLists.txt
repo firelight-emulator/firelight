@@ -432,6 +432,8 @@ qt6_add_shaders(firelight "firelight_shaders"
         PREFIX "/qt/qml/QMLFirelight"
         BASE "${CMAKE_SOURCE_DIR}/qml"
         FILES qml/shaders/rounded_image.frag
+        qml/shaders/focus_ring.frag
+        qml/shaders/tile_surface.frag
 )
 
 #target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
