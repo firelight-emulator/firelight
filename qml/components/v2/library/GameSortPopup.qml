@@ -26,37 +26,47 @@ FLPopup {
         font.capitalization: Font.AllUppercase
         font.letterSpacing: 0.5
         Layout.topMargin: AppStyle.spacingXs
+        focusPolicy: Qt.NoFocus
     }
 
-    ColumnLayout {
+    contentItem: FocusScope {
         width: parent.width
-        spacing: AppStyle.spacingXs
+        implicitHeight: contentLayout.implicitHeight
 
-        SectionLabel {
-            text: "SORT BY"
-        }
-        Repeater {
-            model: root.view.sortOptions
-            delegate: FLListRow {
-                required property var modelData
-                Layout.fillWidth: true
-                label: modelData.label
-                highlighted: root.view.sortRole === modelData.role
-                onClicked: {
-                    if (root.view.sortRole === modelData.role) {
-                        root.view.sortAscending = !root.view.sortAscending;
-                    } else {
-                        root.view.sortRole = modelData.role;
-                        root.view.sortAscending = true;
-                        root.view.persistFolderSort();
+        FLColumnLayout {
+            id: contentLayout
+            width: parent.width
+            spacing: AppStyle.spacingXs
+
+            SectionLabel {
+                text: "SORT BY"
+                focusPolicy: Qt.NoFocus
+            }
+            Repeater {
+                model: root.view.sortOptions
+                delegate: FLListRow {
+                    required property var modelData
+                    focus: true
+                    Layout.fillWidth: true
+                    parent: contentLayout
+                    label: modelData.label
+                    highlighted: root.view.sortRole === modelData.role
+                    onClicked: {
+                        if (root.view.sortRole === modelData.role) {
+                            root.view.sortAscending = !root.view.sortAscending;
+                        } else {
+                            root.view.sortRole = modelData.role;
+                            root.view.sortAscending = true;
+                            root.view.persistFolderSort();
+                        }
+
                     }
-
-                }
-                Icon {
-                    visible: root.view.sortRole === modelData.role
-                    name: root.view.sortAscending ? "arrow-down" : "arrow-up"
-                    size: AppStyle.iconSizeSm
-                    color: Theme.accent
+                    Icon {
+                        visible: root.view.sortRole === modelData.role
+                        name: root.view.sortAscending ? "arrow-down" : "arrow-up"
+                        size: AppStyle.iconSizeSm
+                        color: Theme.accent
+                    }
                 }
             }
         }

@@ -8,7 +8,8 @@ ColumnLayout {
     property int currentIndex: 0
 
     Keys.onPressed: function(event) {
-        console.log("Key pressed: " + event.key + ", currentIndex: " + root.currentIndex);
+        console.log("Key pressed: " + event.key + ", currentIndex: " + root.currentIndex + ", current child: " + (root.children[root.currentIndex] ? root.children[root.currentIndex] : "none"));
+        console.log("all children: " + root.children.length);
         if (event.key === Qt.Key_Up) {
             let newIndex = root.currentIndex - 1;
             if (newIndex < 0) {
@@ -51,6 +52,18 @@ ColumnLayout {
             root.currentIndex = newIndex;
             root.children[newIndex].forceActiveFocus();
             event.accepted = true;
+        }
+    }
+
+    onChildrenChanged: {
+        if (activeFocus) {
+            for (let i = currentIndex; i < root.children.length; i++) {
+                if (root.children[i].visible && root.children[i].enabled && root.children[i].focusPolicy !== Qt.NoFocus) {
+                    root.children[i].forceActiveFocus();
+                    currentIndex = i;
+                    break;
+                }
+            }
         }
     }
 

@@ -57,6 +57,18 @@ Item {
     property real _scrollTo: 0
     property bool _scrollPending: false
 
+    // TODO
+    // Tween state for the single-step scroll (fixed-duration quadratic ease-out)
+    // and cruise state for held repeats (constant velocity at the repeat
+    // cadence, landing with a velocity-matched tween)
+    property real _scrollFrom: 0
+    property real _scrollT: 0
+    property bool _cruising: false
+    property real _cruiseVel: 0
+    property real _cruiseInterval: 0
+    property real _clock: 0
+    property real _lastChangeAt: -1
+
     function findFlickableAncestor(item: Item): Item {
         var p = item.parent;
         while (p) {
@@ -84,9 +96,10 @@ Item {
     }
 
     function applyScrollNow() {
-        if (_scrollPending) {
+        if (_scrollPending || _cruising) {
             _flick.contentY = _scrollTo;
             _scrollPending = false;
+            _cruising = false;
         }
     }
 
@@ -127,12 +140,15 @@ Item {
         return c.mapToItem(root, -s, -s, c.width + 2 * s, c.height + 2 * s);
     }
 
+    // TODO
+    // Settled geometry lands on whole pixels so the band isn't split across
+    // pixels and softened; motion stays fractional for smoothness
     function snapNow() {
         const r = desiredRect();
-        activeRing.x = r.x;
-        activeRing.y = r.y;
-        activeRing.width = r.width;
-        activeRing.height = r.height;
+        activeRing.x = Math.round(r.x);
+        activeRing.y = Math.round(r.y);
+        activeRing.width = Math.round(r.width);
+        activeRing.height = Math.round(r.height);
         activeRing.radiusPx = radiusFor(cursorItem);
         gliding = false;
     }
@@ -141,7 +157,7 @@ Item {
     property bool gliding: false
 
     // Exponential follow rate tuned so a glide settles in ~durationFast
-    readonly property real glideRate: 4000 / AppStyle.durationFast
+    readonly property real glideRate: 6000 / AppStyle.durationBase
 
     // TODO
     // The ring being moved and tracked; in "jump" mode the two alternate so the
@@ -155,10 +171,38 @@ Item {
             return;
         }
 
+        const prevFlick = _flick;
+        const interval = _lastChangeAt >= 0 ? _clock - _lastChangeAt : -1;
+        _lastChangeAt = _clock;
+
         _flick = findFlickableAncestor(cursorItem);
-        _scrollPending = _flick !== null;
-        if (_scrollPending) {
-            _scrollTo = computeScrollTarget();
+        if (_flick === null) {
+            _scrollPending = false;
+            _cruising = false;
+        } else {
+            const scrollTarget = computeScrollTarget();
+            const inFlight = (_scrollPending || _cruising) && _flick === prevFlick;
+            const sameDestination = inFlight && Math.abs(scrollTarget - _scrollTo) < 0.5;
+
+            if (!sameDestination) {
+                if (inFlight && interval > 0 && interval < 0.25) {
+                    // TODO
+                    // Held repeats: cruise closes the whole remaining gap just
+                    // slower than the repeat cadence, so a coverage deficit
+                    // repays itself and the cruise never runs dry mid-stream
+                    _scrollTo = scrollTarget;
+                    _cruiseVel = Math.abs(_scrollTo - _flick.contentY) / (interval * 1.25);
+                    _cruiseInterval = interval;
+                    _cruising = true;
+                    _scrollPending = false;
+                } else {
+                    _scrollFrom = _flick.contentY;
+                    _scrollTo = scrollTarget;
+                    _scrollT = 0;
+                    _cruising = false;
+                    _scrollPending = Math.abs(scrollTarget - _flick.contentY) > 0.5;
+                }
+            }
         }
 
         if (ringA.opacity === 0 && ringB.opacity === 0) {
@@ -202,32 +246,61 @@ Item {
     FrameAnimation {
         running: root.cursorItem !== null
         onTriggered: {
+            root._clock += frameTime;
             const k = Math.min(1, frameTime * root.glideRate);
+            const T = AppStyle.durationBase / 1000;
 
             // TODO
-            // The scroll animates here in both modes; in "glide" it runs at the
-            // ring's rate so a scrolled step leaves the ring holding still while
-            // the content slides under it
-            if (root._scrollPending) {
-                if (Math.abs(root._scrollTo - root._flick.contentY) > 0.5) {
-                    root._flick.contentY += (root._scrollTo - root._flick.contentY) * k;
+            // Scroll motion, Switch-style: a cruise covers held repeats at
+            // constant velocity, then hands off to the fixed-duration quadratic
+            // ease-out tween at matched velocity; single steps tween directly
+            if (root._cruising) {
+                const d = root._scrollTo - root._flick.contentY;
+                // TODO
+                // Quiet = the repeat stream has stopped; only then may the
+                // cruise decelerate, otherwise every mid-stream slowdown bleeds
+                // coverage and the item drifts off-screen
+                const quiet = root._clock - root._lastChangeAt > root._cruiseInterval * 1.2;
+
+                if (Math.abs(d) <= 0.5) {
+                    root._flick.contentY = root._scrollTo;
+                    if (quiet) {
+                        root._cruising = false;
+                    }
+                } else if (quiet && Math.abs(d) <= root._cruiseVel * T / 2) {
+                    root._scrollFrom = root._flick.contentY;
+                    root._scrollT = 0;
+                    root._cruising = false;
+                    root._scrollPending = true;
                 } else {
+                    root._flick.contentY += (d > 0 ? 1 : -1) * Math.min(Math.abs(d), root._cruiseVel * frameTime);
+                }
+            }
+
+            if (root._scrollPending) {
+                root._scrollT += frameTime;
+
+                if (root._scrollT >= T) {
                     root.applyScrollNow();
+                } else {
+                    const u = root._scrollT / T;
+                    root._flick.contentY = root._scrollFrom + (root._scrollTo - root._scrollFrom) * (1 - (1 - u) * (1 - u));
                 }
             }
 
             if (!root.gliding) {
                 const r0 = root.desiredRect();
-                root.activeRing.x = r0.x;
-                root.activeRing.y = r0.y;
-                root.activeRing.width = r0.width;
-                root.activeRing.height = r0.height;
+                const still = !root._scrollPending && !root._cruising;
+                root.activeRing.x = still ? Math.round(r0.x) : r0.x;
+                root.activeRing.y = still ? Math.round(r0.y) : r0.y;
+                root.activeRing.width = still ? Math.round(r0.width) : r0.width;
+                root.activeRing.height = still ? Math.round(r0.height) : r0.height;
                 root.activeRing.radiusPx = root.radiusFor(root.cursorItem);
                 return;
             }
 
             let r = root.desiredRect();
-            if (root._scrollPending) {
+            if (root._scrollPending || root._cruising) {
                 r.y -= root._scrollTo - root._flick.contentY;
             }
             const rad = root.radiusFor(root.cursorItem);
@@ -241,7 +314,7 @@ Item {
             const remaining = Math.max(
                 Math.abs(r.x - root.activeRing.x), Math.abs(r.y - root.activeRing.y),
                 Math.abs(r.width - root.activeRing.width), Math.abs(r.height - root.activeRing.height),
-                root._scrollPending ? Math.abs(root._scrollTo - root._flick.contentY) : 0);
+                root._scrollPending || root._cruising ? Math.abs(root._scrollTo - root._flick.contentY) : 0);
 
             if (remaining < 0.5) {
                 root.applyScrollNow();
@@ -273,7 +346,7 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: AppStyle.durationFast
+                duration: AppStyle.durationSnap
             }
         }
     }
@@ -292,7 +365,7 @@ Item {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: AppStyle.durationFast
+                duration: AppStyle.durationSnap
             }
         }
     }

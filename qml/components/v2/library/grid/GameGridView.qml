@@ -64,39 +64,61 @@ Item {
         return [entryId];
     }
 
-    // A remote URL passes through; a local file path (user-imported art) becomes
-    // a file:// URL so Image can load it
-    function iconSource(u) {
-        if (!u) {
-            return "";
-        }
-        if (u.indexOf("://") >= 0) {
-            return u;
-        }
-        return "file:///" + u.replace(/\\/g, "/");
-    }
-
     GridView {
         id: root
 
         visible: gridRoot.groupBy === "none"
         model: gridRoot.groupBy === "none" ? gridRoot.model : null
 
-        // TODO
         // FLFocusHighlight drives all scrolling (with its scroll margins); the
         // view must not also auto-scroll to the current item or the two fight
         highlightFollowsCurrentItem: false
-
         displayMarginBeginning: Math.round(cellHeight / 2)
 
+        // We manually handle this
+        keyNavigationEnabled: false
         keyNavigationWraps: false
+
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_Left) {
+                if (currentIndex <= 0 || currentIndex % _cellsPerRow === 0) {
+                    return;
+                }
+
+                currentIndex = currentIndex - 1;
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Right) {
+                if (currentIndex >= root.count - 1 || (currentIndex + 1) % _cellsPerRow === 0) {
+                    return;
+                }
+
+                currentIndex = currentIndex + 1;
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Up) {
+                if (currentIndex < _cellsPerRow) {
+                    return;
+                }
+
+                currentIndex = currentIndex - _cellsPerRow;
+                event.accepted = true;
+            } else if (event.key === Qt.Key_Down) {
+                if (currentIndex >= root.count - _cellsPerRow) {
+                    return;
+                }
+
+                currentIndex = currentIndex + _cellsPerRow;
+                event.accepted = true;
+            }
+        }
 
         property real initialContentY: contentY
 
         property string sortRole: "displayName"
         property bool sortAscending: true
 
-        width: Math.max(cellWidth, Math.floor(parent.width / cellWidth) * cellWidth)
+        property int _cellsPerRow: Math.max(1, Math.floor(parent.width / cellWidth))
+
+        width: _cellsPerRow * cellWidth
         height: parent.height
         x: Math.round((parent.width - width) / 2)
 
@@ -189,7 +211,7 @@ Item {
                 background: Item {}
                 contentItem: GameTile {
                     id: gameTile
-                    source: gridRoot.iconSource(gameDelegate.model.icon1x1SourceUrl)
+                    source: FLUtil.toUrl(gameDelegate.model.icon1x1SourceUrl)
                     size: AppearanceSettings.libraryTileSize
                     platformId: gameDelegate.model.platformId
                     title: gameDelegate.model.displayName

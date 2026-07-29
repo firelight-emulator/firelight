@@ -22,6 +22,7 @@ ItemDelegate {
     rightPadding: AppStyle.spacingSm
     implicitHeight: Math.max(AppStyle.rowHeight, rowLayout.implicitHeight + topPadding + bottomPadding)
     implicitWidth: rowLayout.implicitWidth + leftPadding + rightPadding
+    focusPolicy: Qt.StrongFocus
 
     HoverHandler {
         id: rowHover

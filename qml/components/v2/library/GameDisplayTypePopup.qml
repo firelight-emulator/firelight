@@ -50,7 +50,7 @@ FLPopup {
         width: parent.width
         implicitHeight: contentLayout.implicitHeight
 
-        Keys.onReleased: event => {
+        Keys.onPressed: event => {
             if (event.key === Qt.Key_Back) {
                 root.close();
                 event.accepted = true;

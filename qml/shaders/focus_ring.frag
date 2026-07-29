@@ -31,7 +31,7 @@ void main() {
     float dist = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - r;
 
     float halfW = ringWidthPx * 0.5;
-    float aa = fwidth(dist) * 0.7;
+    float aa = fwidth(dist) * 0.5;
     float alpha = 1.0 - smoothstep(halfW - aa, halfW + aa, abs(dist));
 
     float ang = atan(centered.y, centered.x) / TWO_PI + 0.5;

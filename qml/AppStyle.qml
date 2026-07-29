@@ -129,6 +129,9 @@ Item {
     readonly property int durationBase: 120
     readonly property int durationSlow: 200
     // TODO
+    // Near-instant crossfade for the focus cursor's tile-to-tile handoff
+    readonly property int durationSnap: 40
+    // TODO
     // One full revolution of the focus ring's rotating gradient
     readonly property int durationSpin: 4200
     readonly property int easingStandard: Easing.OutCubic
