@@ -138,40 +138,48 @@ add_subdirectory(libs/firelight/discord)
 add_subdirectory(libs/discord)
 add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
 
+#file(GLOB QML_FILES
+#        qml/*.qml
+#        qml/components/achievements/*.qml
+#        qml/components/activity/*.qml
+#        qml/components/navigation/*.qml
+#        qml/components/transitions/*.qml
+#        qml/components/rewind/*.qml
+#        qml/components/library/*.qml
+#        qml/components/settings/*.qml
+#        qml/components/emulation/*.qml
+#        qml/components/controllers/*.qml
+#        qml/components/v2/*.qml
+#        qml/components/v2/*/*.qml
+#        qml/components/v2/*/*/*.qml
+#        qml/**/*.qml
+#)
+
 file(GLOB QML_FILES
-        qml/*.qml
-        qml/components/achievements/*.qml
-        qml/components/activity/*.qml
-        qml/components/navigation/*.qml
-        qml/components/transitions/*.qml
-        qml/components/rewind/*.qml
-        qml/components/library/*.qml
-        qml/components/settings/*.qml
-        qml/components/emulation/*.qml
-        qml/components/controllers/*.qml
-        qml/components/v2/*.qml
-        qml/components/v2/*/*.qml
-        qml/components/v2/*/*/*.qml
-        qml/**/*.qml
+        qml/v3/*.qml
+        qml/v3/*/*.qml
+        qml/v3/*/*/*.qml
 )
 
 # JS libraries aren't matched by the .qml glob above; add them explicitly.
-list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/routing.js)
-list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/components/v2/library/folder_tree.js)
+list(APPEND QML_FILES qml/v3/routing.js)
+list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/folder_tree.js)
 
 foreach (QML_FILE ${QML_FILES})
     get_filename_component(QML_FILE_NAME ${QML_FILE} NAME)
     set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
 endforeach ()
 
-set_source_files_properties(qml/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/WindowGeometry.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/Router.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/MaterialSymbols.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/components/v2/FLUtil.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/WindowGeometry.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/Router.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/MaterialSymbols.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/FLUtil.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/FocusCursor.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/singletons/SoundEffects.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 # The libretro/emulation core: the ABI wrapper + emulation lifecycle. Depends
 # only on domain interfaces (audio/mic/achievement clients are injected), so it
@@ -320,6 +328,7 @@ add_library(firelight_lib STATIC
         src/cli/verify_ui_command.hpp
         src/gui/qt_platform_service_proxy.cpp
         src/gui/qt_platform_service_proxy.hpp
+        src/gui/sound_effect.hpp
 )
 
 # Single source of truth for the app version, consumed by the CLI --version and
@@ -588,8 +597,8 @@ add_executable(fl_test
 # behaviour FLFocusHighlight no longer has, and a permanently red `check` gets
 # ignored. Re-add both lines together when fixing them
 file(GLOB QML_TEST_FILES
-        qml/AppStyle.qml
-        qml/routing.js
+        qml/v3/AppStyle.qml
+        qml/v3/routing.js
         qml_tests/tst_routing.qml
         #        qml/components/IconButton.qml
         #        qml/components/FLFocusHighlight.qml

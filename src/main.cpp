@@ -73,6 +73,7 @@
 #include "gui/qt_save_manager_proxy.hpp"
 #include "gui/qt_settings_catalog_proxy.hpp"
 #include "gui/settings_level_shim.hpp"
+#include "gui/sound_effect.hpp"
 #include "libretro/core_registry.hpp"
 #include "metadata/cpr_http_client.hpp"
 #include "metadata/metadata_service.hpp"
@@ -528,6 +529,7 @@ int main(int argc, char *argv[]) {
   qmlRegisterUncreatableMetaObject(firelight::gui::SettingsLevelShim::staticMetaObject, "Firelight", 1, 0,
                                    "SettingsLevel", "SettingsLevel is an enum, not a type");
   qmlRegisterType<firelight::activity::GameActivityListModel>("Firelight", 1, 0, "GameActivityModel");
+  qmlRegisterType<firelight::gui::SoundEffect>("Firelight", 1, 0, "SoundEffect");
 
   QNetworkInformation::loadDefaultBackend();
   if (QNetworkInformation::instance()->reachability() == QNetworkInformation::Reachability::Online) {
@@ -784,6 +786,9 @@ int main(int argc, char *argv[]) {
 
   QObject *rootObject = engine.rootObjects().value(0);
   auto window = qobject_cast<QQuickWindow *>(rootObject);
+
+  // Just doing this to instantiate it
+  engine.singletonInstance<QObject *>("QMLFirelight", "SoundEffects");
 
   // Give Qt's Vulkan renderer a shared instance that enables the external
   // memory/semaphore/fence *capabilities* extensions. HW-render cores that

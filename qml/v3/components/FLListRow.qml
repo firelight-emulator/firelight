@@ -4,9 +4,10 @@ import QtQuick.Layouts
 
 // A standard selectable row: optional leading icon, a label, and an optional
 // trailing item (placed as a child). Height derives from content and is floored
-// at rowHeight, so it reflows when text grows
+// at listRowHeight, so it reflows when text grows
 //
 //   FLListRow { iconName: "settings"; label: "Appearance" }
+//   FLListRow { label: "Name"; FLRadioIndicator { selected: true } }
 ItemDelegate {
     id: control
 
@@ -18,11 +19,12 @@ ItemDelegate {
     opacity: control.enabled ? 1 : 0.4
 
     padding: AppStyle.spacingXs
-    leftPadding: AppStyle.spacingSm
-    rightPadding: AppStyle.spacingSm
+    leftPadding: AppStyle.spacingLg
+    rightPadding: AppStyle.spacingLg
     implicitHeight: Math.max(AppStyle.listRowHeight, rowLayout.implicitHeight + topPadding + bottomPadding)
     implicitWidth: rowLayout.implicitWidth + leftPadding + rightPadding
     focusPolicy: Qt.StrongFocus
+    highlighted: (control.activeFocus && !InputMethodManager.usingMouse) || control.pressed || rowHover.hovered
 
     HoverHandler {
         id: rowHover
@@ -33,6 +35,7 @@ ItemDelegate {
     contentItem: RowLayout {
         id: rowLayout
         spacing: AppStyle.spacingMd
+
         Icon {
             visible: control.iconName !== ""
             Layout.alignment: Qt.AlignVCenter
@@ -40,16 +43,19 @@ ItemDelegate {
             size: AppStyle.iconSizeMd
             color: control.highlighted ? Theme.accent : Theme.textPrimary
         }
+
         Text {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
             text: control.label
-            color: Theme.textPrimary
+            color: control.label === "Name" ? "#1bcbfd" : Theme.textPrimary
             font.pixelSize: AppStyle.fontSizeMedium
             font.family: AppStyle.fontFamily
+            font.weight: Font.DemiBold
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
         }
+
         Item {
             id: trailingSlot
             Layout.alignment: Qt.AlignVCenter
@@ -58,8 +64,17 @@ ItemDelegate {
         }
     }
 
+    // TODO
+    // Hover and keyboard focus read the same; pressing drops a step down the
+    // surface ladder so the row darkens under the finger
     background: Rectangle {
-        radius: AppStyle.radiusMd
-        color: control.highlighted ? Theme.surfaceHover : rowHover.hovered ? Theme.surfaceElevated : "transparent"
+        radius: 6
+        color: control.pressed ? Theme.surfaceElevated : control.highlighted ? Theme.surfaceHover : "transparent"
+
+        Behavior on color {
+            ColorAnimation {
+                duration: AppStyle.durationSnap
+            }
+        }
     }
 }

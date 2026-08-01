@@ -1,0 +1,101 @@
+import QtQuick
+import QtQuick.Controls
+
+Button {
+    id: control
+
+    // primary | default | danger | subtle | flat
+    property string variant: "default"
+
+    property bool compact: false
+    property string tooltipText: ""
+    // TODO
+    // Icon/label tint when checked; subtle toggles only
+    property color checkedColor: Theme.textPrimary
+    property bool showGlobalCursor: true
+
+    readonly property bool _subtle: variant === "subtle"
+    readonly property color _fill: variant === "primary" ? Theme.accent : variant === "danger" ? Theme.danger : variant === "flat" ? "transparent" : Theme.surfaceElevated
+    readonly property color _fg: {
+        if (variant === "flat") {
+            if (hover.hovered || checked) {
+                return Theme.textPrimary;
+            }
+
+            // TODO!!!!
+            return Theme.textMuted;
+        }
+
+        if (checked && variant === "subtle") {
+            return checkedColor;
+        }
+
+        if (variant === "primary") {
+            return Theme.onAccent;
+        }
+
+        if (variant === "danger") {
+            return "white";
+        }
+
+        return Theme.textPrimary;
+    }
+
+    hoverEnabled: true
+    opacity: enabled ? 1 : 0.5
+    implicitHeight: compact ? AppStyle.buttonHeightCompact : AppStyle.buttonHeight
+
+    // TODO
+    // Focus as the controller cursor shows it; a mouse click also lands focus,
+    // and leaving that tinted reads as stuck
+    readonly property bool _cursorFocused: control.activeFocus && !InputMethodManager.usingMouse && !FocusCursor.blinking
+
+    HoverHandler {
+        id: hover
+        cursorShape: Qt.PointingHandCursor
+    }
+
+    background: Rectangle {
+        // radius: AppStyle.radiusMd
+        radius: width / 2
+        color: control._subtle ? "transparent" : control._fill
+        border.width: control.variant === "default" ? 1 : 0
+        border.color: Theme.border
+
+        Rectangle {
+            anchors.fill: parent
+            radius: parent.radius
+            color: Theme.textPrimary
+            // TODO
+            // Flat carries no chrome at rest, but the cursor still needs a fill
+            // behind the ring; hover keeps signalling through the icon instead
+            opacity: {
+                if (!control.enabled) {
+                    return 0;
+                }
+
+                if (control.variant === "flat") {
+                    return control._cursorFocused ? Theme.buttonBgOpacityFocused : 0;
+                }
+
+                if (control._subtle) {
+                    return control.pressed ? 0.14 : (hover.hovered || control.checked || control._cursorFocused) ? 0.10 : 0;
+                }
+
+                return control.pressed ? 0.12 : hover.hovered ? 0.07 : 0;
+            }
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 64
+                }
+            }
+        }
+    }
+
+    FLToolTip {
+        x: control.width + AppStyle.spacingSm
+        y: control.height / 2 - height / 2 - verticalPadding / 2
+        visible: (hover.hovered || control._cursorFocused) && control.tooltipText !== ""
+        text: control.tooltipText
+    }
+}

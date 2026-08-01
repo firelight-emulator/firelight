@@ -14,9 +14,17 @@
         <file alias="open-quick">assets/sfx/openquick.wav</file>
         <file alias="nope">assets/sfx/nope.wav</file>
         <file alias="click">assets/sfx/click.wav</file>
+        <file alias="blip">assets/sfx/switch2/deck_ui_misc_10.wav</file>
+        <file alias="select-radio">assets/sfx/switch2/bubble.wav</file>
+        <file alias="bump">assets/sfx/switch2/deck_ui_bumper_end.wav</file>
+        <file alias="button-nav">assets/sfx/switch2/button_nav.wav</file>
+        <file alias="game-tile-focus">assets/sfx/switch2/game_view_nav.wav</file>
+        <file alias="show-modal">assets/sfx/switch2/deck_ui_into_game_detail.wav</file>
+        <file alias="hide-modal">assets/sfx/switch2/deck_ui_hide_modal.wav</file>
     </qresource>
     <qresource prefix="/fonts">
         <file alias="lexend">assets/fonts/Lexend-VariableFont_wght.ttf</file>
+        <file alias="noto-sans">assets/fonts/NotoSans-VariableFont_wdth,wght.ttf</file>
         <file alias="symbols">assets/fonts/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf</file>
     </qresource>
     <qresource prefix="/images">
