@@ -43,6 +43,7 @@ Item {
 
 
     property string _pendingSortRole: ""
+    property string _pendingViewType: ""
 
 
 
@@ -726,6 +727,54 @@ Item {
             compact: false
             onClicked: displayPopup.opened ? displayPopup.close() : displayPopup.open()
 
+            FLPopup {
+                id: displayPopup
+                x: viewAsButton.width + AppStyle.spacingXs
+                minWidth: 240
+
+                // TODO
+                // The choice shown in the list, which leads the applied sort by
+                // the confirm beat
+                property string chosenViewMode: root.viewMode
+
+                onAboutToShow: displayPopup.chosenViewMode = root.viewMode
+
+                // TODO
+                // The grid transition starts once the popup is gone, so the two
+                // motions read as one sequence instead of overlapping
+                onClosed: {
+                    // FocusCursor.blink(AppStyle.durationSlow)
+                    viewModeConfirmTimer.stop();
+                    if (displayPopup.chosenViewMode !== root.viewMode) {
+                        root._pendingViewType = displayPopup.chosenViewMode;
+                    } else {
+                        FocusCursor.blink(AppStyle.durationBase);
+                    }
+                }
+
+                Timer {
+                    id: viewModeConfirmTimer
+                    interval: InputMethodManager.usingMouse ? 0 : AppStyle.confirmPause
+                    onTriggered: displayPopup.close()
+                }
+
+                contentItem: FLRadioGroup {
+                    model: [{
+                        label: "Grid",
+                        value: "grid"
+                    },
+                    {
+                        label: "List",
+                        value: "list"
+                    }]
+                    currentValue: displayPopup.chosenViewMode
+                    onActivated: value => {
+                        displayPopup.chosenViewMode = value;
+                        viewModeConfirmTimer.restart();
+                    }
+                }
+            }
+
             // GameDisplayTypePopup {
             //     id: displayPopup
             //     y: 0
@@ -875,6 +924,10 @@ Item {
         sortAnimation.start()
     }
 
+    on_PendingViewTypeChanged: {
+        changeViewAnimation.start()
+    }
+
     SequentialAnimation {
         id: sortAnimation
         running: false
@@ -905,6 +958,7 @@ Item {
         ScriptAction {
             script: {
                 root.sortRole = root._pendingSortRole;
+                viewLoader.item.contentY = 0;
                 // root._pendingSortRole = "";
             }
         }
@@ -932,7 +986,66 @@ Item {
                 FocusCursor.endBlink()
             }
         }
+    }
 
+    SequentialAnimation {
+        id: changeViewAnimation
+        running: false
+        ScriptAction {
+            script: {
+                FocusCursor.startBlink()
+            }
+        }
+        ParallelAnimation {
+            NumberAnimation {
+                target: viewLoader
+                property: "opacity"
+                from: 1
+                to: 0
+                duration: AppStyle.durationSlow
+                easing.type: Easing.InOutQuad
+            }
+            NumberAnimation {
+                target: viewLoader
+                property: "y"
+                from: 0
+                to: 12
+                duration: AppStyle.durationBase
+                easing.type: Easing.InOutQuad
+            }
+        }
+
+        ScriptAction {
+            script: {
+                root.viewMode = root._pendingViewType;
+                viewLoader.item.contentY = 0;
+                // root._pendingSortRole = "";
+            }
+        }
+
+        ParallelAnimation {
+            NumberAnimation {
+                target: viewLoader
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: AppStyle.durationSlow
+                easing.type: Easing.InOutQuad
+            }
+            NumberAnimation {
+                target: viewLoader
+                property: "y"
+                from: 12
+                to: 0
+                duration: AppStyle.durationBase
+                easing.type: Easing.InOutQuad
+            }
+        }
+        ScriptAction {
+            script: {
+                FocusCursor.endBlink()
+            }
+        }
     }
 
     // Right dock: details for the last-clicked game. Width animates 0 -> open so

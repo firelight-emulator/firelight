@@ -21,6 +21,8 @@ Item {
     // only realizes on-screen sections
     property var groupCounts: ({})
 
+    property alias contentY: root.contentY
+
     signal gameClicked(int entryId, int rowIndex, int modifiers)
     signal gameFocused(var data)
     signal requestAddToFolder(var entryIds)
