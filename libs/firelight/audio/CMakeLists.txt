@@ -8,6 +8,8 @@ pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
 add_library(firelight_audio STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/audio_rate_controller.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/audio_resampler.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/pcm_converter.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/sfx_mixer.cpp
 )
 target_include_directories(firelight_audio
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src
@@ -27,6 +29,9 @@ enable_testing()
 add_executable(firelight_audio_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/main.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/audio_rate_controller_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/audio_resampler_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/pcm_converter_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/sfx_mixer_test.cpp
 )
 target_include_directories(firelight_audio_test
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/tests

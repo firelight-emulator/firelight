@@ -958,7 +958,7 @@ Item {
         ScriptAction {
             script: {
                 root.sortRole = root._pendingSortRole;
-                viewLoader.item.contentY = 0;
+                viewLoader.item.contentY = 0 - (viewLoader.item.header ? viewLoader.item.header.height : 0);
                 // root._pendingSortRole = "";
             }
         }

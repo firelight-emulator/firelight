@@ -516,6 +516,26 @@
       "default": "false"
     },
     {
+      "key": "ui-sound-volume",
+      "label": "Interface Sound Volume",
+      "group": "system-audio",
+      "order": 30,
+      "description": "Loudness of menu and navigation sounds. Separate from game audio, so muting a game leaves menu feedback alone.",
+      "keywords": [
+        "ui",
+        "menu",
+        "interface",
+        "navigation",
+        "click",
+        "sound"
+      ],
+      "type": "slider",
+      "default": "100",
+      "min": 0,
+      "max": 100,
+      "step": 1
+    },
+    {
       "key": "show-advanced-settings",
       "label": "Show advanced settings",
       "group": "system-general",

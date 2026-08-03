@@ -56,7 +56,9 @@ FocusScope {
     readonly property alias focusedIndex: internal.focusedIndex
 
     onFocusedIndexChanged: {
-        SoundEffects.menuNavigate.play();
+        if (!InputMethodManager.usingMouse) {
+            SoundEffects.menuNavigate.play();
+        }
     }
 
     signal activated(var value)

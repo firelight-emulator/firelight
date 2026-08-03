@@ -25,6 +25,7 @@ QtObject {
 
     readonly property FLSoundEffect radioSelect: FLSoundEffect {
         source: "qrc:/sfx/select-radio"
+        volume: 0.8
     }
 
     readonly property FLSoundEffect iconButtonFocus: FLSoundEffect {

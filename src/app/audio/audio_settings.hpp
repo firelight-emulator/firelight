@@ -18,4 +18,9 @@ inline constexpr auto MUTED_KEY = "audio-muted";
 // the volume you had rather than to full
 inline constexpr auto VOLUME_KEY = "volume";
 
+// TODO
+// Loudness of the interface's own sounds, 0-100. Deliberately its own key so
+// muting or quietening a game leaves menu feedback alone
+inline constexpr auto UI_SOUND_VOLUME_KEY = "ui-sound-volume";
+
 } // namespace firelight::audio

@@ -557,6 +557,26 @@ TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
   }
 }
 
+// UiSoundPlayer reads this key for interface loudness. It is deliberately not
+// the game volume, so the two are pinned separately
+TEST(ShippedSettingsCatalogTest, DeclaresTheUiSoundVolumeKey) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
+
+  const auto *setting = c.findByKey(firelight::audio::UI_SOUND_VOLUME_KEY);
+  ASSERT_NE(setting, nullptr) << "UiSoundPlayer reads '" << firelight::audio::UI_SOUND_VOLUME_KEY
+                              << "', which the catalog doesn't declare";
+  EXPECT_TRUE(c.isAppSetting(firelight::audio::UI_SOUND_VOLUME_KEY)) << "interface volume is read from the global tier";
+  EXPECT_EQ(setting->type, SettingType::INTEGER);
+  EXPECT_EQ(setting->widget, "slider");
+  EXPECT_EQ(setting->minValue, 0);
+  EXPECT_EQ(setting->maxValue, 100);
+  EXPECT_EQ(setting->defaultValue, "100");
+  // Sharing the game volume's key would mean quietening a game also silenced
+  // menu feedback, which is the thing this key exists to avoid
+  EXPECT_STRNE(firelight::audio::UI_SOUND_VOLUME_KEY, firelight::audio::VOLUME_KEY);
+}
+
 // AudioManager reads this key to pick an output. If it stopped existing, audio
 // would quietly fall back to the system default with no error anywhere — so the
 // key and its declaration are pinned together

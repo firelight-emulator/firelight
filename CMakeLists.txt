@@ -220,6 +220,10 @@ add_library(firelight_lib STATIC
         src/app/emulation/shortcut_actions.cpp
         src/app/emulation/shortcut_dispatcher.cpp
         src/app/audio/audio_manager.cpp
+        src/app/audio/audio_device_selection.cpp
+        src/app/audio/audio_device_selection.hpp
+        src/app/audio/ui_sound_player.cpp
+        src/app/audio/ui_sound_player.hpp
         src/app/audio/qt_microphone.cpp
         src/app/audio/qt_microphone.hpp
         src/app/metadata/metadata_service.cpp
@@ -257,7 +261,6 @@ add_library(firelight_lib STATIC
         src/gui/models/shop/shop_item_model.cpp
         src/app/saves/gui/suspend_point_list_model.cpp
         src/gui/game_image_provider.cpp
-        src/app/audio/SfxPlayer.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/library/gui/entry_list_model.cpp
         src/app/media/gui/capture_list_model.cpp

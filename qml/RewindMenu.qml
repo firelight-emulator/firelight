@@ -46,10 +46,6 @@ FocusScope {
     }
 
     StackView.onActivated: function () {
-        // root.openSfx.stop()
-        // root.openSfx.play()
-        // console.log(root.openSfx.mediaStatus)
-        sfx_player.play("rewindopen");
         enterAnimation.start();
     }
 

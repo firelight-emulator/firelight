@@ -55,7 +55,8 @@ public:
    * @param data Pointer to the input audio data (interleaved stereo S16)
    * @param numFrames Number of frames in the input data (each frame consists of 2 samples: left and right)
    * @param compensationDelta The number of samples to adjust the output by, to keep the audio sink buffer near 50%
-   *   full. Positive values will reduce the output sample count, while negative values will increase it
+   *   full. Positive values raise the output sample count, while negative values lower it, so a buffer that is too
+   *   full is drained by passing a negative delta
    *
    * @return Vector containing the resampled audio data (interleaved stereo S16)
    */

@@ -6,7 +6,6 @@
 #include "achievements/gui/retro_achievements_game_item.hpp"
 #include "activity/gui/game_activity_item.hpp"
 #include "app/achievements/gui/AchievementSetItem.hpp"
-#include "app/audio/SfxPlayer.hpp"
 #include "app/audio/audio_manager.hpp"
 #include "app/audio/qt_microphone.hpp"
 #include "app/emulation/emulation_context.hpp"
@@ -50,6 +49,7 @@
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/eventhandlers/windows_frame_filter.hpp"
+#include "app/audio/ui_sound_player.hpp"
 #include "gui/filesystem_utils.hpp"
 #include "gui/game_image_provider.hpp"
 #include "gui/gamepad_profile_item.hpp"
@@ -696,6 +696,11 @@ int main(int argc, char *argv[]) {
   QObject::connect(&networkServiceProxy, &firelight::gui::QtNetworkServiceProxy::chatChanged, &netplayChatModel,
                    &firelight::gui::NetplayChatModel::refresh);
 
+  // Declared before the engine so it outlives every QML object that reaches it.
+  // Opening the stream here also keeps the output device from powering down,
+  // which is what otherwise eats the head of each UI sound
+  firelight::audio::UiSoundPlayer uiSoundPlayer(settingsService);
+
   QQmlApplicationEngine engine;
   engine.setNetworkAccessManagerFactory(cache);
   // engine.networkAccessManager()->setCache(diskCache);
@@ -704,6 +709,7 @@ int main(int argc, char *argv[]) {
   engine.addImageProvider("gameImages", gameImageProvider);
 
   engine.rootContext()->setContextProperty("FilesystemUtils", new firelight::gui::FilesystemUtils());
+  engine.rootContext()->setContextProperty("UiSoundPlayer", &uiSoundPlayer);
   engine.rootContext()->setContextProperty("ImageUtils", new firelight::gui::ImageUtils());
   engine.rootContext()->setContextProperty("EventEmitter", new firelight::gui::EventEmitter());
   engine.rootContext()->setContextProperty("CoreRegistry", new firelight::gui::QtCoreRegistryProxy());
@@ -849,8 +855,6 @@ int main(int argc, char *argv[]) {
   discordCallbackTimer.start();
 
   window->setIcon(QIcon(":/images/app-icon"));
-
-  engine.rootContext()->setContextProperty("sfx_player", new firelight::audio::SfxPlayer());
 
   const auto richPresenceMessageChangedSubscriber =
       EventDispatcher::instance().subscribe<firelight::achievements::RichPresenceMessageChangedEvent>(
