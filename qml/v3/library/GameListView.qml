@@ -6,7 +6,7 @@ import QtQuick.Layouts 1.0
 // The library list view. No column header — each cell is self-describing (the
 // sort lives in the Display menu). Columns: art + name/platform, an achievement
 // trophy+bar+count, and a play-activity summary
-ListView {
+FLListView {
     id: root
 
     property real initialContentY: contentY
@@ -114,7 +114,7 @@ ListView {
         activityColumnWidth: root.activityColumnWidth
         ratingColumnWidth: root.ratingColumnWidth
 
-        onSingleTapped: function(entryId, index, modifiers) {
+        onSingleTapped: function (entryId, index, modifiers) {
             root.gameClicked(entryId, index, modifiers);
             root.gameFocused(root.focusSnapshot(model));
         }

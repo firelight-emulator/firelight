@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
+import Firelight 1.0
 
 Button {
     id: control
@@ -16,7 +17,7 @@ Button {
     readonly property bool selected: control.selectedIds[control.model.entryId] === true
     readonly property bool _hasAchievements: control.model.achievementsTotal > 0
     readonly property bool _achievementsDone: _hasAchievements && control.model.achievementsEarned >= control.model.achievementsTotal
-    property bool showGlobalCursor: true
+    FLFocus.showCursor: true
     height: Math.max(AppStyle.rowHeight, _art + AppStyle.spacingSm * 2)
     padding: AppStyle.spacingSm
     hoverEnabled: true
@@ -48,12 +49,13 @@ Button {
     //     onRequestEditGame: control.requestEditGame
     // }
 
-    Keys.onPressed: function (event) {
-        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Select) {
-            control.doubleClicked(control.model.entryId)
-            event.accepted = true;
+    FLFocus.actions: [
+        FLAction {
+            keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter]
+            label: qsTr("Play")
+            onTriggered: control.doubleTapped(control.model.entryId)
         }
-    }
+    ]
 
     Drag.dragType: Drag.Automatic
     Drag.supportedActions: Qt.CopyAction
@@ -257,9 +259,7 @@ Button {
                             }
                         }
                     }
-
                 }
-
             }
         }
 
@@ -274,11 +274,11 @@ Button {
                 // starSize: AppStyle.iconSizeSm
 
                 Component.onCompleted: {
-                    value = control.model.rating
+                    value = control.model.rating;
                 }
 
                 onValueChanged: {
-                    control.model.rating = value
+                    control.model.rating = value;
                 }
             }
         }

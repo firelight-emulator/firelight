@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Firelight 1.0
 
 // A single-select segmented button group (e.g. Day / Week / Month). `segments`
 // is a list of {label, value, icon} (icon optional); the selection is the
@@ -21,7 +22,7 @@ Button {
     property bool compact: true
     signal activated(string value)
 
-    property bool showGlobalCursor: true
+    FLFocus.showCursor: true
 
     background: Rectangle {
         radius: AppStyle.radiusLg
@@ -33,7 +34,7 @@ Button {
     padding: 0
     hoverEnabled: false
 
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Left) {
             const newIndex = Math.max(0, _selectedIndex - 1);
             if (newIndex !== _selectedIndex) {
@@ -47,9 +48,9 @@ Button {
                 event.accepted = true;
             }
         } else if (event.key === Qt.Key_Space || event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            let next = _selectedIndex + 1
+            let next = _selectedIndex + 1;
             if (next === control.segments.length) {
-                next = 0
+                next = 0;
             }
 
             if (next !== _selectedIndex) {
@@ -57,8 +58,6 @@ Button {
                 event.accepted = true;
             }
         }
-
-        event.accepted = false
     }
 
     onSegmentsChanged: segRow.maxImplicitWidth = 0

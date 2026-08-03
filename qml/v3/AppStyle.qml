@@ -135,6 +135,7 @@ Item {
     // Motion — durations (ms) and a default easing curve, replacing the raw
     // duration literals scattered through the QML
     //*************************************************************
+    readonly property int durationVeryFast: 50
     readonly property int durationFast: 80
     readonly property int durationBase: 120
     readonly property int durationSlow: 200

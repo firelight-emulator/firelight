@@ -12,7 +12,7 @@ FLButtonBase {
     objectName: "FLIconButton|" + iconName
 
     property string iconName: ""
-    SoundEffect.focus: "icon-button-focus"
+    FLFocus.focusSound: SoundEffects.iconButtonFocus
 
     // onActiveFocusChanged: {
     //     if (activeFocus) {

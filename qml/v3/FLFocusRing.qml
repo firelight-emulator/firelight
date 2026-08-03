@@ -9,6 +9,8 @@ ShaderEffect {
     property real radiusPx: 0
     property real ringWidthPx: 2
     property real padPx: 8
+    property real fillPx: 0
+    property color fillColor: "transparent"
     property real phase: 0
     property color colorA: "#89c5f9"
     property color colorB: "#a78bfa"

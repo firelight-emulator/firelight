@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Firelight 1.0
 
 // A standard selectable row: optional leading icon, a label, and an optional
 // trailing item (placed as a child). Height derives from content and is floored
@@ -14,7 +15,7 @@ ItemDelegate {
     property string iconName: ""
     property string label: ""
     default property alias trailing: trailingSlot.data
-    property bool showGlobalCursor: true
+    FLFocus.showCursor: true
 
     opacity: control.enabled ? 1 : 0.4
 
@@ -24,7 +25,13 @@ ItemDelegate {
     implicitHeight: Math.max(AppStyle.listRowHeight, rowLayout.implicitHeight + topPadding + bottomPadding)
     implicitWidth: rowLayout.implicitWidth + leftPadding + rightPadding
     focusPolicy: Qt.StrongFocus
-    highlighted: (control.activeFocus && !InputMethodManager.usingMouse) || control.pressed || rowHover.hovered
+
+    // TODO
+    // Focus as the controller cursor shows it, shared with every other control
+    // so a row never stays lit while the ring is blinked out
+    readonly property bool cursorFocused: FocusCursor.isOn(control)
+
+    highlighted: control.cursorFocused || control.pressed || rowHover.hovered
 
     HoverHandler {
         id: rowHover

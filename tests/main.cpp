@@ -8,6 +8,7 @@
 #include <QTest>
 #include <QtQuickTest>
 #include <gtest/gtest.h>
+#include <gui/focus_info.hpp>
 #include <service_accessor.hpp>
 
 int main(int argc, char **argv) {
@@ -27,6 +28,10 @@ int main(int argc, char **argv) {
   // test binary is launched
   const auto catalogPath = QCoreApplication::applicationDirPath() + "/system/settings_catalog.json";
   firelight::settings::SettingsCatalog::instance().loadFromFile(catalogPath.toStdString());
+
+  // Needed by the tests that build QML declaring focus metadata
+  qmlRegisterType<firelight::gui::FocusAction>("Firelight", 1, 0, "FLAction");
+  qmlRegisterType<firelight::gui::FocusInfo>("Firelight", 1, 0, "FLFocus");
 
   ::testing::InitGoogleTest(&argc, argv);
   auto result = RUN_ALL_TESTS();

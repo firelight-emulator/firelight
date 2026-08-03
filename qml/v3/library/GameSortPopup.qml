@@ -33,6 +33,10 @@ FLPopup {
         width: parent.width
         implicitHeight: contentLayout.implicitHeight
 
+        Keys.onPressed: event => {
+            event.accepted = root.navigate(event.key, event.isAutoRepeat);
+        }
+
         FLColumnLayout {
             id: contentLayout
             width: parent.width
@@ -59,7 +63,6 @@ FLPopup {
                             root.view.sortAscending = true;
                             root.view.persistFolderSort();
                         }
-
                     }
                     Icon {
                         visible: root.view.sortRole === modelData.role

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import Firelight 1.0
 
 Button {
     id: control
@@ -12,7 +13,7 @@ Button {
     // TODO
     // Icon/label tint when checked; subtle toggles only
     property color checkedColor: Theme.textPrimary
-    property bool showGlobalCursor: true
+    FLFocus.showCursor: true
 
     readonly property bool _subtle: variant === "subtle"
     readonly property color _fill: variant === "primary" ? Theme.accent : variant === "danger" ? Theme.danger : variant === "flat" ? "transparent" : Theme.surfaceElevated
@@ -48,7 +49,7 @@ Button {
     // TODO
     // Focus as the controller cursor shows it; a mouse click also lands focus,
     // and leaving that tinted reads as stuck
-    readonly property bool _cursorFocused: control.activeFocus && !InputMethodManager.usingMouse && !FocusCursor.blinking
+    readonly property bool cursorFocused: FocusCursor.isOn(control)
 
     HoverHandler {
         id: hover
@@ -75,11 +76,11 @@ Button {
                 }
 
                 if (control.variant === "flat") {
-                    return control._cursorFocused ? Theme.buttonBgOpacityFocused : 0;
+                    return control.cursorFocused ? Theme.buttonBgOpacityFocused : 0;
                 }
 
                 if (control._subtle) {
-                    return control.pressed ? 0.14 : (hover.hovered || control.checked || control._cursorFocused) ? 0.10 : 0;
+                    return control.pressed ? 0.14 : (hover.hovered || control.checked || control.cursorFocused) ? 0.10 : 0;
                 }
 
                 return control.pressed ? 0.12 : hover.hovered ? 0.07 : 0;
@@ -95,7 +96,7 @@ Button {
     FLToolTip {
         x: control.width + AppStyle.spacingSm
         y: control.height / 2 - height / 2 - verticalPadding / 2
-        visible: (hover.hovered || control._cursorFocused) && control.tooltipText !== ""
+        visible: (hover.hovered || control.cursorFocused) && control.tooltipText !== ""
         text: control.tooltipText
     }
 }

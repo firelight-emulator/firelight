@@ -12,14 +12,18 @@ layout(std140, binding = 0) uniform buf {
     float heightPx;
     float phase;
     float padPx;
+    float fillPx;
     vec4 colorA;
     vec4 colorB;
+    vec4 fillColor;
 };
 
 const float TWO_PI = 6.28318530718;
 
 // A rounded-rect ring whose two colors rotate around it. The band is inset by
-// padPx from the item bounds so it and its antialiasing never clip the edges
+// padPx from the item bounds so it and its antialiasing never clip the edges.
+// fillColor paints the gap between the surrounded item and the band, which is
+// fillPx wide measured in from the band's centreline
 void main() {
     vec2 sizePx = vec2(widthPx, heightPx);
     vec2 halfSize = sizePx * 0.5;
@@ -40,5 +44,10 @@ void main() {
     mixT = smoothstep(0.12, 0.88, mixT);
     vec4 col = mix(colorA, colorB, mixT);
 
-    fragColor = col * alpha * qt_Opacity;
+    // The surrounded item's own edge. Running the fill under the band as well
+    // keeps a hairline of background from showing between the two
+    float inner = -fillPx;
+    float fillA = smoothstep(inner - aa, inner + aa, dist) * (1.0 - smoothstep(halfW - aa, halfW + aa, dist));
+
+    fragColor = (fillColor * fillA * (1.0 - alpha) + col * alpha) * qt_Opacity;
 }

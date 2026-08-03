@@ -1,7 +1,6 @@
 #include <firelight/audio/audio_resampler.hpp>
 
 #include <gtest/gtest.h>
-
 #include <vector>
 
 namespace {

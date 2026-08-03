@@ -1,0 +1,138 @@
+import QtQuick
+import QtQuick.Controls
+import QtTest
+import Firelight 1.0
+
+// Covers the parts of FLFocus that only exist once QML is involved: declaring
+// metadata and actions inline, and reaching an object's metadata from JS
+TestCase {
+    id: testCase
+    name: "FocusInfo"
+
+    Item {
+        id: declared
+
+        FLFocus.showCursor: true
+        FLFocus.spacing: -8
+        FLFocus.holdEdges: FLFocus.Vertical
+        FLFocus.actions: [
+            FLAction {
+                keys: [Qt.Key_Select, Qt.Key_Return]
+                label: "Play"
+            },
+            FLAction {
+                keys: [Qt.Key_Menu]
+                label: "Options"
+            }
+        ]
+    }
+
+    // Never mentions FLFocus, so it must carry no metadata
+    Item {
+        id: undeclared
+    }
+
+    // Only ever touched from JS, to prove an attachment can be created that way
+    Item {
+        id: setFromJs
+    }
+
+    // The FLButtonBase -> FLIconButton relationship: metadata declared in a base
+    // component must reach instances of anything derived from it, or every
+    // button in the app silently loses its ring
+    FocusDerived {
+        id: derived
+    }
+
+    property int plainButtonClicks: 0
+
+    // An ordinary button that declares nothing, standing in for the title bar's
+    // buttons
+    Button {
+        id: plainButton
+        onClicked: testCase.plainButtonClicks++
+    }
+
+    function test_declares_metadata_inline() {
+        compare(declared.FLFocus.showCursor, true);
+        compare(declared.FLFocus.spacing, -8);
+        verify(declared.FLFocus.holdEdges & FLFocus.Up);
+        verify(declared.FLFocus.holdEdges & FLFocus.Down);
+        verify(!(declared.FLFocus.holdEdges & FLFocus.Left));
+    }
+
+    function test_declares_a_list_of_actions_inline() {
+        compare(declared.FLFocus.getActionCount(), 2);
+        compare(declared.FLFocus.getAction(0).label, "Play");
+        compare(declared.FLFocus.getAction(1).label, "Options");
+    }
+
+    // The whole point: one item, two buttons, two outcomes
+    function test_separate_keys_reach_separate_actions() {
+        compare(declared.FLFocus.getActionFor(Qt.Key_Select).label, "Play");
+        compare(declared.FLFocus.getActionFor(Qt.Key_Return).label, "Play");
+        compare(declared.FLFocus.getActionFor(Qt.Key_Menu).label, "Options");
+        compare(declared.FLFocus.getActionFor(Qt.Key_Escape), null);
+    }
+
+    function test_actions_outlive_the_binding() {
+        // A second read must see the same objects, not a rebuilt list
+        const first = declared.FLFocus.getAction(0);
+        compare(declared.FLFocus.getAction(0), first);
+        compare(declared.FLFocus.getActionFor(Qt.Key_Select), first);
+    }
+
+    function test_triggering_an_action_reaches_its_handler() {
+        let fired = 0;
+        const action = declared.FLFocus.getActionFor(Qt.Key_Menu);
+        action.triggered.connect(function () {
+            fired++;
+        });
+
+        action.triggered();
+
+        compare(fired, 1);
+    }
+
+    // An item that declared nothing must be distinguishable, which is what lets
+    // the migration run typed and duck-typed lookups side by side
+    function test_find_returns_null_for_an_item_that_declared_nothing() {
+        compare(declared.FLFocus.find(undeclared), null);
+        compare(declared.FLFocus.find(null), null);
+    }
+
+    function test_find_returns_the_attached_instance() {
+        compare(declared.FLFocus.find(declared), declared.FLFocus);
+    }
+
+    // The zero-config path: an ordinary button declares no actions, so the
+    // window activates it by calling click(). The Controls documentation lists
+    // only toggle() under Methods, so pin that click() really is reachable —
+    // if it were not, activation would fail silently rather than error
+    function test_a_plain_button_is_activated_by_calling_click() {
+        compare(typeof plainButton.click, "function");
+
+        plainButton.click();
+
+        compare(testCase.plainButtonClicks, 1);
+    }
+
+    function test_a_plain_button_declares_no_actions() {
+        compare(declared.FLFocus.find(plainButton), null);
+    }
+
+    function test_metadata_declared_in_a_base_reaches_derived_instances() {
+        verify(declared.FLFocus.find(derived) !== null);
+        compare(derived.FLFocus.showCursor, true);
+        compare(derived.FLFocus.spacing, -4);
+    }
+
+    function test_metadata_can_be_created_from_js() {
+        compare(declared.FLFocus.find(setFromJs), null);
+
+        setFromJs.FLFocus.barrier = true;
+
+        compare(setFromJs.FLFocus.barrier, true);
+        verify(declared.FLFocus.find(setFromJs) !== null);
+    }
+}

@@ -5,10 +5,9 @@ import Firelight 1.0
 import "focus_nav.js" as Nav
 
 // TODO
-// A column whose children the cursor walks with Up and Down. Running out of
-// children refuses the press rather than swallowing it, so it reaches whatever
-// sits above or below the column
-ColumnLayout {
+// A row whose children the cursor walks with Left and Right. The mirror of
+// FLColumnLayout, and refuses at its ends the same way
+RowLayout {
     id: root
 
     // TODO
@@ -18,20 +17,18 @@ ColumnLayout {
     focus: true
 
     // TODO
-    // Where the cursor was last, so entering the column again returns to it
-    // rather than always to the top
+    // Where the cursor was last, so entering the row again returns to it rather
+    // than always to the start
     property int currentIndex: 0
 
     // TODO
-    // Moves the cursor within the column, reporting whether it consumed the
-    // press. It starts from where focus actually is, not where this column last
-    // put it — anything else may have moved focus since
+    // Moves the cursor within the row, reporting whether it consumed the press
     function moveFocus(direction: int): bool {
-        if (direction !== Nav.Up && direction !== Nav.Down) {
+        if (direction !== Nav.Left && direction !== Nav.Right) {
             return false;
         }
 
-        const step = direction === Nav.Up ? -1 : 1;
+        const step = direction === Nav.Left ? -1 : 1;
         const focused = Nav.focusedIndex(root.children);
         const from = focused >= 0 ? focused : root.currentIndex - step;
         const next = Nav.nextFocusable(root.children, from, step);
@@ -47,8 +44,8 @@ ColumnLayout {
     }
 
     // TODO
-    // Focus arriving on the column itself is handed to a child: the one the
-    // cursor was last on, else the nearest that can take it
+    // Focus arriving on the row itself is handed to a child: the one the cursor
+    // was last on, else the nearest that can take it
     function focusFirstChild(from: int) {
         const index = Nav.firstFocusable(root.children, from);
 
@@ -61,10 +58,10 @@ ColumnLayout {
     }
 
     Keys.onPressed: event => {
-        if (event.key === Qt.Key_Up) {
-            event.accepted = root.moveFocus(Nav.Up);
-        } else if (event.key === Qt.Key_Down) {
-            event.accepted = root.moveFocus(Nav.Down);
+        if (event.key === Qt.Key_Left) {
+            event.accepted = root.moveFocus(Nav.Left);
+        } else if (event.key === Qt.Key_Right) {
+            event.accepted = root.moveFocus(Nav.Right);
         }
     }
 

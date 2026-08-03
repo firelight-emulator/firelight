@@ -113,6 +113,7 @@ QtObject {
     // The two colors that rotate around the controller-focus ring (Switch-style)
     readonly property color focusRingBlue: _focusBlue
     readonly property color focusRingPurple: _focusPurple
+    readonly property color focusRingFill: "transparent"
 
     readonly property color success: _statusGreen
     readonly property color warning: _statusYellow

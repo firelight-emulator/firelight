@@ -41,11 +41,8 @@ Item {
     // The advanced-filter bar under the toolbar is expanded
     property bool filtersExpanded: false
 
-
     property string _pendingSortRole: ""
     property string _pendingViewType: ""
-
-
 
     readonly property var playTimeOptions: [
         {
@@ -582,8 +579,6 @@ Item {
         width: 72
         spacing: AppStyle.spacingSm
 
-        KeyNavigation.right: mainColumn
-
         FLIconButton {
             Layout.alignment: Qt.AlignHCenter
             iconName: "add"
@@ -672,8 +667,6 @@ Item {
                     confirmTimer.stop();
                     if (gameSortPopup.chosenRole !== root.sortRole) {
                         root._pendingSortRole = gameSortPopup.chosenRole;
-                    } else {
-                        FocusCursor.blink(AppStyle.durationBase);
                     }
                 }
 
@@ -684,6 +677,10 @@ Item {
                 }
 
                 contentItem: FLRadioGroup {
+                    Keys.onPressed: event => {
+                        event.accepted = gameSortPopup.navigate(event.key, event.isAutoRepeat);
+                    }
+
                     model: root.sortOptions
                     valueRole: "role"
                     currentValue: gameSortPopup.chosenRole
@@ -747,8 +744,6 @@ Item {
                     viewModeConfirmTimer.stop();
                     if (displayPopup.chosenViewMode !== root.viewMode) {
                         root._pendingViewType = displayPopup.chosenViewMode;
-                    } else {
-                        FocusCursor.blink(AppStyle.durationBase);
                     }
                 }
 
@@ -759,14 +754,20 @@ Item {
                 }
 
                 contentItem: FLRadioGroup {
-                    model: [{
-                        label: "Grid",
-                        value: "grid"
-                    },
-                    {
-                        label: "List",
-                        value: "list"
-                    }]
+                    Keys.onPressed: event => {
+                        event.accepted = displayPopup.navigate(event.key, event.isAutoRepeat);
+                    }
+
+                    model: [
+                        {
+                            label: "Grid",
+                            value: "grid"
+                        },
+                        {
+                            label: "List",
+                            value: "list"
+                        }
+                    ]
                     currentValue: displayPopup.chosenViewMode
                     onActivated: value => {
                         displayPopup.chosenViewMode = value;
@@ -921,11 +922,11 @@ Item {
     }
 
     on_PendingSortRoleChanged: {
-        sortAnimation.start()
+        sortAnimation.start();
     }
 
     on_PendingViewTypeChanged: {
-        changeViewAnimation.start()
+        changeViewAnimation.start();
     }
 
     SequentialAnimation {
@@ -933,7 +934,7 @@ Item {
         running: false
         ScriptAction {
             script: {
-                FocusCursor.startBlink()
+                FocusCursor.startBlink();
             }
         }
         ParallelAnimation {
@@ -958,7 +959,7 @@ Item {
         ScriptAction {
             script: {
                 root.sortRole = root._pendingSortRole;
-                viewLoader.item.contentY = 0 - (viewLoader.item.header ? viewLoader.item.header.height : 0);
+                viewLoader.item.positionViewAtBeginning();
                 // root._pendingSortRole = "";
             }
         }
@@ -983,7 +984,7 @@ Item {
         }
         ScriptAction {
             script: {
-                FocusCursor.endBlink()
+                FocusCursor.endBlink();
             }
         }
     }
@@ -993,7 +994,7 @@ Item {
         running: false
         ScriptAction {
             script: {
-                FocusCursor.startBlink()
+                FocusCursor.startBlink();
             }
         }
         ParallelAnimation {
@@ -1018,7 +1019,7 @@ Item {
         ScriptAction {
             script: {
                 root.viewMode = root._pendingViewType;
-                viewLoader.item.contentY = 0;
+                viewLoader.item.positionViewAtBeginning();
                 // root._pendingSortRole = "";
             }
         }
@@ -1043,7 +1044,7 @@ Item {
         }
         ScriptAction {
             script: {
-                FocusCursor.endBlink()
+                FocusCursor.endBlink();
             }
         }
     }

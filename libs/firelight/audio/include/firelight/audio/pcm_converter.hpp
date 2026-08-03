@@ -47,8 +47,7 @@ public:
    * @param targetChannelCount The channel count to convert to
    * @return Interleaved float32 samples, or nullopt if the conversion could not be set up
    */
-  static std::optional<std::vector<float>> convert(const PcmData &input, int targetSampleRate,
-                                                   int targetChannelCount);
+  static std::optional<std::vector<float>> convert(const PcmData &input, int targetSampleRate, int targetChannelCount);
 };
 
 } // namespace firelight::audio

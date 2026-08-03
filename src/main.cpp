@@ -8,6 +8,7 @@
 #include "app/achievements/gui/AchievementSetItem.hpp"
 #include "app/audio/audio_manager.hpp"
 #include "app/audio/qt_microphone.hpp"
+#include "app/audio/ui_sound_player.hpp"
 #include "app/emulation/emulation_context.hpp"
 #include "app/emulation/emulation_service.hpp"
 #include "app/emulation/shortcut_dispatcher.hpp"
@@ -49,8 +50,9 @@
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 #include "gui/eventhandlers/window_resize_handler.hpp"
 #include "gui/eventhandlers/windows_frame_filter.hpp"
-#include "app/audio/ui_sound_player.hpp"
 #include "gui/filesystem_utils.hpp"
+#include "gui/focus/focus_navigator.hpp"
+#include "gui/focus_info.hpp"
 #include "gui/game_image_provider.hpp"
 #include "gui/gamepad_profile_item.hpp"
 #include "gui/image_utils.hpp"
@@ -73,7 +75,6 @@
 #include "gui/qt_save_manager_proxy.hpp"
 #include "gui/qt_settings_catalog_proxy.hpp"
 #include "gui/settings_level_shim.hpp"
-#include "gui/sound_effect.hpp"
 #include "libretro/core_registry.hpp"
 #include "metadata/cpr_http_client.hpp"
 #include "metadata/metadata_service.hpp"
@@ -529,7 +530,9 @@ int main(int argc, char *argv[]) {
   qmlRegisterUncreatableMetaObject(firelight::gui::SettingsLevelShim::staticMetaObject, "Firelight", 1, 0,
                                    "SettingsLevel", "SettingsLevel is an enum, not a type");
   qmlRegisterType<firelight::activity::GameActivityListModel>("Firelight", 1, 0, "GameActivityModel");
-  qmlRegisterType<firelight::gui::SoundEffect>("Firelight", 1, 0, "SoundEffect");
+  qmlRegisterType<firelight::gui::FocusAction>("Firelight", 1, 0, "FLAction");
+  qmlRegisterType<firelight::gui::FocusInfo>("Firelight", 1, 0, "FLFocus");
+  qmlRegisterSingletonInstance("Firelight", 1, 0, "FocusNavigator", new firelight::gui::FocusNavigator(&app));
 
   QNetworkInformation::loadDefaultBackend();
   if (QNetworkInformation::instance()->reachability() == QNetworkInformation::Reachability::Online) {

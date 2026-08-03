@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Firelight 1.0
 
 // TODO
 // A vertical group of radio options. `model` is a list of strings, or of
@@ -26,7 +27,6 @@ FocusScope {
 
     property var model: []
     property var currentValue: undefined
-    property bool showGlobalCursor: false
 
     // TODO
     // Which keys of a model object hold the row's text and its value, named
@@ -168,15 +168,8 @@ FocusScope {
 
                 // TODO
                 // Up/Down are the surrounding FLColumnLayout's; Space arrives as
-                // AbstractButton's click, and the gamepad A button reaches here
-                // as Return/Enter/Select
-                Keys.onPressed: function (event) {
-                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Select) {
-                        root.select(option.index);
-                        event.accepted = true;
-                    }
-                }
-
+                // AbstractButton's click, and the gamepad A button reaches this
+                // through the window's activation fallback
                 onClicked: root.select(option.index)
 
                 FLRadioIndicator {

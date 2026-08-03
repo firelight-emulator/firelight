@@ -36,20 +36,20 @@ StackView {
     // initial properties, so a pattern's :name captures must match the screen's
     // property names (e.g. :entryId -> FLGameDetailsPanel.entryId)
     readonly property var routes: ({
-            "/library": libraryComponent,
-            // "/library/entries/:entryId": gameDetailsComponent,
-            // "/shop": shopComponent,
-            // "/shop/mods/:modId": shopItemComponent,
-            // "/settings": settingsComponent,
-            // "/controllers": controllersComponent,
-            // "/controllers/profiles/:playerNumber": controllerProfileComponent,
-            // "/controllers/manage": profileManagementComponent,
-            // "/gallery": galleryComponent,
-            // "/gallery/games/:gameContentHash": galleryComponent,
-            // "/activity": activityComponent,
-            // "/netplay": netplayComponent,
-            // "/help": helpComponent,
-            // "/dev/gallery": devGalleryComponent
+            "/library": libraryComponent
+        // "/library/entries/:entryId": gameDetailsComponent,
+        // "/shop": shopComponent,
+        // "/shop/mods/:modId": shopItemComponent,
+        // "/settings": settingsComponent,
+        // "/controllers": controllersComponent,
+        // "/controllers/profiles/:playerNumber": controllerProfileComponent,
+        // "/controllers/manage": profileManagementComponent,
+        // "/gallery": galleryComponent,
+        // "/gallery/games/:gameContentHash": galleryComponent,
+        // "/activity": activityComponent,
+        // "/netplay": netplayComponent,
+        // "/help": helpComponent,
+        // "/dev/gallery": devGalleryComponent
         })
 
     Component {

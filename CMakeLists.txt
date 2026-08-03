@@ -163,6 +163,7 @@ file(GLOB QML_FILES
 
 # JS libraries aren't matched by the .qml glob above; add them explicitly.
 list(APPEND QML_FILES qml/v3/routing.js)
+list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/focus_nav.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/folder_tree.js)
 
 foreach (QML_FILE ${QML_FILES})
@@ -331,7 +332,14 @@ add_library(firelight_lib STATIC
         src/cli/verify_ui_command.hpp
         src/gui/qt_platform_service_proxy.cpp
         src/gui/qt_platform_service_proxy.hpp
-        src/gui/sound_effect.hpp
+        src/gui/focus_action.hpp
+        src/gui/focus_info.hpp
+        src/gui/focus/candidate_collector.cpp
+        src/gui/focus/candidate_collector.hpp
+        src/gui/focus/focus_navigator.cpp
+        src/gui/focus/focus_navigator.hpp
+        src/gui/focus/spatial_resolver.cpp
+        src/gui/focus/spatial_resolver.hpp
 )
 
 # Single source of truth for the app version, consumed by the CLI --version and
@@ -555,6 +563,11 @@ add_executable(fl_test
         tests/app/library/library_scanner_test.cpp
         tests/app/metadata/metadata_service_test.cpp
         tests/app/gui/filesystem_utils_test.cpp
+        tests/app/gui/focus_info_test.cpp
+        tests/app/gui/focus/candidate_collector_test.cpp
+        tests/app/gui/focus/focus_navigator_test.cpp
+        tests/app/gui/focus/spatial_resolver_test.cpp
+        tests/app/gui/input_method_detection_handler_test.cpp
         tests/app/library/entry_resolver_test.cpp
         tests/app/library/smart_folder_test.cpp
         tests/app/db/daos/play_session_test.cpp
@@ -603,6 +616,13 @@ file(GLOB QML_TEST_FILES
         qml/v3/AppStyle.qml
         qml/v3/routing.js
         qml_tests/tst_routing.qml
+        qml_tests/tst_focus_info.qml
+        qml_tests/tst_focus_nav.qml
+        qml_tests/tst_focus_navigator.qml
+        qml_tests/tst_focus_return.qml
+        qml/v3/focus_nav.js
+        qml_tests/FocusBase.qml
+        qml_tests/FocusDerived.qml
         #        qml/components/IconButton.qml
         #        qml/components/FLFocusHighlight.qml
         #        qml_tests/components/tst_FLFocusHighlight.qml

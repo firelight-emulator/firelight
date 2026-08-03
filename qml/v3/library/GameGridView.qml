@@ -21,7 +21,9 @@ Item {
     // only realizes on-screen sections
     property var groupCounts: ({})
 
-    property alias contentY: root.contentY
+    function positionViewAtBeginning() {
+        root.positionViewAtBeginning();
+    }
 
     signal gameClicked(int entryId, int rowIndex, int modifiers)
     signal gameFocused(var data)
@@ -72,80 +74,20 @@ Item {
         return [entryId];
     }
 
-    GridView {
+    FLGridView {
         id: root
 
         visible: gridRoot.groupBy === "none"
         model: gridRoot.groupBy === "none" ? gridRoot.model : null
 
-        // FLFocusHighlight drives all scrolling (with its scroll margins); the
-        // view must not also auto-scroll to the current item or the two fight
-        highlightFollowsCurrentItem: false
         displayMarginBeginning: Math.round(cellHeight / 2)
-
-        // We manually handle this
-        keyNavigationEnabled: false
-        keyNavigationWraps: false
-
-        Timer {
-            id: autoRepeatTimer
-            interval: 60
-            repeat: false
-        }
-
-        Keys.onPressed: event => {
-            if (event.isAutoRepeat) {
-                if (autoRepeatTimer.running) {
-                    event.accepted = true
-                    return
-                } else {
-                    autoRepeatTimer.start()
-                }
-            }
-
-            if (event.key === Qt.Key_Left) {
-                if (currentIndex <= 0 || currentIndex % _cellsPerRow === 0) {
-                    return;
-                }
-
-                SoundEffects.gameTileFocus.play(event.isAutoRepeat);
-                currentIndex = currentIndex - 1;
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Right) {
-                if (currentIndex >= root.count - 1 || (currentIndex + 1) % _cellsPerRow === 0) {
-                    return;
-                }
-
-                SoundEffects.gameTileFocus.play(event.isAutoRepeat);
-                currentIndex = currentIndex + 1;
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Up) {
-                if (currentIndex < _cellsPerRow) {
-                    return;
-                }
-
-                SoundEffects.gameTileFocus.play(event.isAutoRepeat);
-                currentIndex = currentIndex - _cellsPerRow;
-                event.accepted = true;
-            } else if (event.key === Qt.Key_Down) {
-                if (currentIndex >= root.count - _cellsPerRow) {
-                    return;
-                }
-
-                SoundEffects.gameTileFocus.play(event.isAutoRepeat);
-                currentIndex = currentIndex + _cellsPerRow;
-                event.accepted = true;
-            }
-        }
 
         property real initialContentY: contentY
 
         property string sortRole: "displayName"
         property bool sortAscending: true
 
-        property int _cellsPerRow: Math.max(1, Math.floor(parent.width / cellWidth))
-
-        width: _cellsPerRow * cellWidth
+        width: Math.max(1, Math.floor(parent.width / cellWidth)) * cellWidth
         height: parent.height
         x: Math.round((parent.width - width) / 2)
 
@@ -180,7 +122,6 @@ Item {
             required property var model
             required property int index
 
-
             width: AppearanceSettings.libraryTileSize
             height: AppearanceSettings.libraryTileSize
 
@@ -188,15 +129,18 @@ Item {
 
             Button {
                 id: control
-                property bool showGlobalCursor: true
                 anchors.fill: parent
-                anchors.margins: AppStyle.spacingXs
+                anchors.margins: 6
                 padding: 0
+                horizontalPadding: 0
                 hoverEnabled: true
                 focus: true
-                property int radius: 12
 
-                SoundEffect.focus: "game-tile-focus"
+                FLFocus.showCursor: true
+                FLFocus.spacing: 3
+                FLFocus.fill: "black"
+                FLFocus.focusSound: SoundEffects.gameTileFocus
+                FLFocus.radius: gameTile.radius + Math.round(FLFocus.spacing / 2)
 
                 TapHandler {
                     id: selectTap
@@ -208,10 +152,38 @@ Item {
                     onDoubleTapped: EmulationService.loadEntry(gameDelegate.model.entryId)
                 }
 
-                Keys.onPressed: function (event) {
-                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Select) {
-                        EmulationService.loadEntry(gameDelegate.model.entryId);
-                        event.accepted = true;
+                FLFocus.actions: [
+                    FLAction {
+                        keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter]
+                        label: qsTr("Play")
+                        onTriggered: activatedAnimation.start()
+                    }
+                ]
+
+                SequentialAnimation {
+                    id: activatedAnimation
+                    ParallelAnimation {
+                        NumberAnimation {
+                            target: control
+                            property: "scale"
+                            from: 1.0
+                            to: 0.95
+                            duration: AppStyle.durationVeryFast
+                            easing.type: Easing.InOutQuad
+                        }
+                        ScriptAction {
+                            script: {
+                                SoundEffects.openPopup.play();
+                            }
+                        }
+                    }
+                    NumberAnimation {
+                        target: control
+                        property: "scale"
+                        from: 0.95
+                        to: 1.0
+                        duration: AppStyle.durationVeryFast
+                        easing.type: Easing.InOutQuad
                     }
                 }
 

@@ -97,9 +97,8 @@ std::optional<std::vector<float>> PcmConverter::convert(const PcmData &input, co
     return std::nullopt;
   }
 
-  const auto capacity =
-      av_rescale_rnd(swr_get_delay(context, input.sampleRate) + static_cast<int64_t>(inputFrames), targetSampleRate,
-                     input.sampleRate, AV_ROUND_UP);
+  const auto capacity = av_rescale_rnd(swr_get_delay(context, input.sampleRate) + static_cast<int64_t>(inputFrames),
+                                       targetSampleRate, input.sampleRate, AV_ROUND_UP);
 
   std::vector<float> output(static_cast<size_t>(capacity) * targetChannelCount);
   auto *outputBytes = reinterpret_cast<uint8_t *>(output.data());

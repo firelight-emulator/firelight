@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
 
+// Window chrome, not part of the interface the cursor navigates: every button
+// here is mouse-only, so none of them take focus
 FocusScope {
     id: root
     objectName: "TitleBarUtilityButtons"
@@ -27,7 +29,7 @@ FocusScope {
             Layout.topMargin: -(AppStyle.titleBarPadding)
             Layout.bottomMargin: -(AppStyle.titleBarPadding)
 
-            focus: true
+            focusPolicy: Qt.NoFocus
 
             HoverHandler {
                 cursorShape: Qt.PointingHandCursor
@@ -62,6 +64,8 @@ FocusScope {
             Layout.topMargin: -(AppStyle.titleBarPadding)
             Layout.bottomMargin: -(AppStyle.titleBarPadding)
 
+            focusPolicy: Qt.NoFocus
+
             HoverHandler {
                 cursorShape: Qt.PointingHandCursor
             }
@@ -92,6 +96,8 @@ FocusScope {
             Layout.topMargin: -(AppStyle.titleBarPadding)
             Layout.bottomMargin: -(AppStyle.titleBarPadding)
             Layout.rightMargin: -(AppStyle.titleBarPadding)
+
+            focusPolicy: Qt.NoFocus
 
             HoverHandler {
                 cursorShape: Qt.PointingHandCursor

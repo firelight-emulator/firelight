@@ -107,7 +107,6 @@ void UiSoundPlayer::refreshVolume() {
   }
 }
 
-
 UiSoundPlayer::~UiSoundPlayer() { m_sink.reset(); }
 
 QAudioFormat UiSoundPlayer::chooseFormat(const QAudioDevice &device) {
@@ -229,8 +228,7 @@ void UiSoundPlayer::reopen() {
   m_format = chooseFormat(device);
 
   if (!m_format.isValid()) {
-    spdlog::warn("No usable format on audio output '{}'; UI sounds will be silent",
-                 device.description().toStdString());
+    spdlog::warn("No usable format on audio output '{}'; UI sounds will be silent", device.description().toStdString());
     return;
   }
 

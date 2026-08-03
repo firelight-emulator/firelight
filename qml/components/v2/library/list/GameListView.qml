@@ -114,7 +114,7 @@ ListView {
         activityColumnWidth: root.activityColumnWidth
         ratingColumnWidth: root.ratingColumnWidth
 
-        onSingleTapped: function(entryId, index, modifiers) {
+        onSingleTapped: function (entryId, index, modifiers) {
             root.gameClicked(entryId, index, modifiers);
             root.gameFocused(root.focusSnapshot(model));
         }

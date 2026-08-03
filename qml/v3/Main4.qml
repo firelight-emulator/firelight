@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
+import Firelight 1.0
 
 MainWindow {
     id: window
@@ -157,23 +158,67 @@ MainWindow {
         // stay quiet, and the release (or focus moving) re-arms it
         property bool deadHeld: false
 
+        // TODO
+        // Runs whatever the focused item declared for this key. Falls back to
+        // click() so an ordinary button needs no declaration at all
+        function activate(key: int): bool {
+            const focused = window.activeFocusItem;
+
+            if (focused === null) {
+                return false;
+            }
+
+            const info = contentContainer.FLFocus.find(focused);
+            const action = info !== null ? info.getActionFor(key) : null;
+
+            if (action !== null) {
+                if (action.sound) {
+                    action.sound.play(false);
+                }
+
+                action.triggered();
+                return true;
+            }
+
+            if (info !== null && info.getActionCount() > 0) {
+                return false;
+            }
+
+            if (key !== Qt.Key_Select && key !== Qt.Key_Return && key !== Qt.Key_Enter) {
+                return false;
+            }
+
+            if (typeof focused.click !== "function") {
+                return false;
+            }
+
+            focused.click();
+            return true;
+        }
+
         Keys.onPressed: event => {
+            // TODO
+            // Holding a face button repeats ~33 times a second, so only the
+            // press itself activates
+            if (!event.isAutoRepeat && contentContainer.activate(event.key)) {
+                event.accepted = true;
+                return;
+            }
+
+            // TODO
+            // A direction no container claimed is answered against whatever
+            // else is on screen, so the cursor crosses between them without
+            // either knowing the other exists
+            if (FocusNavigator.move(window.activeFocusItem, event.key, event.isAutoRepeat) !== FocusNavigator.NoTarget) {
+                event.accepted = true;
+                return;
+            }
+
             if (contentContainer.deadHeld) {
                 return;
             }
 
-            if (event.key === Qt.Key_Up) {
-                focusHighlight.bumpUp();
-            } else if (event.key === Qt.Key_Down) {
-                focusHighlight.bumpDown();
-            } else if (event.key === Qt.Key_Left) {
-                focusHighlight.bumpLeft();
-            } else if (event.key === Qt.Key_Right) {
-                focusHighlight.bumpRight();
-            } else {
-                return;
-            }
-            contentContainer.deadHeld = true;
+            contentContainer.deadHeld = FocusCursor.bump(event.key);
         }
 
         Keys.onReleased: event => {

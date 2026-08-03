@@ -228,8 +228,7 @@ SplitView {
         topPadding: 0
         verticalPadding: 0
 
-        background: Item {
-        }
+        background: Item {}
 
         contentItem: GameView {
             id: gameView

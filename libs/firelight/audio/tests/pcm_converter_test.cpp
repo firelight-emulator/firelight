@@ -1,9 +1,8 @@
 #include <firelight/audio/pcm_converter.hpp>
 
-#include <gtest/gtest.h>
-
 #include <cmath>
 #include <cstdint>
+#include <gtest/gtest.h>
 #include <vector>
 
 namespace firelight::audio {

@@ -1,9 +1,8 @@
 #include <firelight/audio/sfx_mixer.hpp>
 
-#include <gtest/gtest.h>
-
 #include <atomic>
 #include <cmath>
+#include <gtest/gtest.h>
 #include <thread>
 #include <vector>
 

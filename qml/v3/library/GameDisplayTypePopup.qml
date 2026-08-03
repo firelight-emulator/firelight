@@ -54,7 +54,10 @@ FLPopup {
             if (event.key === Qt.Key_Back) {
                 root.close();
                 event.accepted = true;
+                return;
             }
+
+            event.accepted = root.navigate(event.key, event.isAutoRepeat);
         }
         FLColumnLayout {
             id: contentLayout

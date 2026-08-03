@@ -50,7 +50,7 @@ Button {
 
     Keys.onPressed: function (event) {
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Select) {
-            control.doubleClicked(control.model.entryId)
+            control.doubleClicked(control.model.entryId);
             event.accepted = true;
         }
     }
@@ -257,9 +257,7 @@ Button {
                             }
                         }
                     }
-
                 }
-
             }
         }
 
@@ -274,11 +272,11 @@ Button {
                 // starSize: AppStyle.iconSizeSm
 
                 Component.onCompleted: {
-                    value = control.model.rating
+                    value = control.model.rating;
                 }
 
                 onValueChanged: {
-                    control.model.rating = value
+                    control.model.rating = value;
                 }
             }
         }
