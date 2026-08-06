@@ -13,12 +13,16 @@ FLButtonBase {
 
     property string iconName: ""
     property color iconColor: control._fg
+    property alias filled: content.filled
+
+
     FLFocus.focusSound: SoundEffects.iconButtonFocus
 
     variant: "subtle"
     implicitWidth: implicitHeight
 
     contentItem: Icon {
+        id: content
         anchors.centerIn: parent
         name: control.iconName
         size: AppStyle.iconSizeButton

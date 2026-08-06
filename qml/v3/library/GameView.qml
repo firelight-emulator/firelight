@@ -634,8 +634,9 @@ Item {
         FLIconButton {
             id: filterButton
             Layout.alignment: Qt.AlignHCenter
-            iconName: "filter"
+            iconName: "filter-alt"
             tooltipText: "Filter"
+            filled: false
             compact: false
         }
 

@@ -28,6 +28,7 @@ QtObject {
             "display": "\ue30c",
             "favorite": "\ue87e",
             "filter": "\ue152",
+            "filter-alt": "\uef4f",
             "folder": "\ue2c7",
             "history": "\ue8b3",
             "home": "\ue9b2",
