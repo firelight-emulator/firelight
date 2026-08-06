@@ -14,6 +14,8 @@ ShaderEffect {
     property real phase: 0
     property color colorA: "#89c5f9"
     property color colorB: "#a78bfa"
+    property color colorC: "#433173"
+    property color colorD: "#8a8ade"
     property real widthPx: width
     property real heightPx: height
 

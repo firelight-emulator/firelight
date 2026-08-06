@@ -1,11 +1,9 @@
 #include "gui/focus_info.hpp"
 
-#include <gtest/gtest.h>
-
 #include <QObject>
 #include <QQmlComponent>
 #include <QQmlEngine>
-
+#include <gtest/gtest.h>
 #include <memory>
 
 namespace firelight::gui {

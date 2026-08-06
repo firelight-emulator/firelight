@@ -50,8 +50,7 @@ bool isAhead(const QRectF &origin, const QRectF &candidate) {
 
 } // namespace
 
-int SpatialResolver::pick(const QRectF &origin, const Direction direction,
-                          const std::vector<QRectF> &candidates) {
+int SpatialResolver::pick(const QRectF &origin, const Direction direction, const std::vector<QRectF> &candidates) {
   const auto from = orient(origin, direction);
 
   auto bestIndex = NONE;
@@ -105,8 +104,7 @@ int SpatialResolver::pickNearestLane(const QRectF &origin, const Direction direc
     const auto gap = std::max(0.0, to.top() - from.bottom());
 
     // Lane first, so the row nearest the press wins outright; distance only separates that row
-    if (bestIndex == NONE || lane < bestLane - EDGE_EPSILON ||
-        (lane < bestLane + EDGE_EPSILON && gap < bestGap)) {
+    if (bestIndex == NONE || lane < bestLane - EDGE_EPSILON || (lane < bestLane + EDGE_EPSILON && gap < bestGap)) {
       bestIndex = static_cast<int>(i);
       bestLane = lane;
       bestGap = gap;

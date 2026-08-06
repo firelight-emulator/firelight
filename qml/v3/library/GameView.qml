@@ -642,51 +642,23 @@ Item {
         FLIconButton {
             id: sortButton
             Layout.alignment: Qt.AlignHCenter
-            iconName: "sort"
+            iconName: "list-arrow"
             tooltipText: "Sort"
             compact: false
+            iconColor: gameSortPopup.visible ? "#1bcbfd" : Theme.textPrimary
             onClicked: gameSortPopup.opened ? gameSortPopup.close() : gameSortPopup.open()
 
-            FLPopup {
+            FLRadioMenuPopup {
                 id: gameSortPopup
                 x: sortButton.width + AppStyle.spacingXs
-                minWidth: 240
 
-                // TODO
-                // The choice shown in the list, which leads the applied sort by
-                // the confirm beat
-                property string chosenRole: root.sortRole
+                model: root.sortOptions
+                valueRole: "role"
+                currentValue: root.sortRole
 
-                onAboutToShow: gameSortPopup.chosenRole = root.sortRole
-
-                // TODO
-                // The grid transition starts once the popup is gone, so the two
-                // motions read as one sequence instead of overlapping
                 onClosed: {
-                    // FocusCursor.blink(AppStyle.durationSlow)
-                    confirmTimer.stop();
-                    if (gameSortPopup.chosenRole !== root.sortRole) {
-                        root._pendingSortRole = gameSortPopup.chosenRole;
-                    }
-                }
-
-                Timer {
-                    id: confirmTimer
-                    interval: InputMethodManager.usingMouse ? 0 : AppStyle.confirmPause
-                    onTriggered: gameSortPopup.close()
-                }
-
-                contentItem: FLRadioGroup {
-                    Keys.onPressed: event => {
-                        event.accepted = gameSortPopup.navigate(event.key, event.isAutoRepeat);
-                    }
-
-                    model: root.sortOptions
-                    valueRole: "role"
-                    currentValue: gameSortPopup.chosenRole
-                    onActivated: value => {
-                        gameSortPopup.chosenRole = value;
-                        confirmTimer.restart();
+                    if (gameSortPopup.currentValue !== root.sortRole) {
+                        root._pendingSortRole = gameSortPopup.currentValue;
                     }
                 }
             }

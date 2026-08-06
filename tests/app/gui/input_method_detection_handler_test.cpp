@@ -1,10 +1,9 @@
 #include "gui/eventhandlers/input_method_detection_handler.hpp"
 
-#include <gtest/gtest.h>
-
 #include <QCoreApplication>
 #include <QKeyEvent>
 #include <QObject>
+#include <gtest/gtest.h>
 
 namespace firelight::gui {
 
@@ -94,8 +93,7 @@ TEST(InputMethodDetectionHandlerTest, AFreshPressAfterAHoldIsNotRepeating) {
 TEST(InputMethodDetectionHandlerTest, RepeatingChangesAreAnnouncedOnce) {
   Filtered filtered;
   auto changes = 0;
-  QObject::connect(&filtered.handler, &InputMethodDetectionHandler::keyRepeatingChanged,
-                   [&changes] { changes++; });
+  QObject::connect(&filtered.handler, &InputMethodDetectionHandler::keyRepeatingChanged, [&changes] { changes++; });
 
   sendKey(filtered.window, QEvent::KeyPress, true);
   sendKey(filtered.window, QEvent::KeyPress, true);

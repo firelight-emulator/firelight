@@ -566,6 +566,7 @@ add_executable(fl_test
         tests/app/gui/focus_info_test.cpp
         tests/app/gui/focus/candidate_collector_test.cpp
         tests/app/gui/focus/focus_navigator_test.cpp
+        tests/app/gui/focus/root_key_filter_test.cpp
         tests/app/gui/focus/spatial_resolver_test.cpp
         tests/app/gui/input_method_detection_handler_test.cpp
         tests/app/library/entry_resolver_test.cpp
@@ -620,6 +621,7 @@ file(GLOB QML_TEST_FILES
         qml_tests/tst_focus_nav.qml
         qml_tests/tst_focus_navigator.qml
         qml_tests/tst_focus_return.qml
+        qml_tests/tst_root_keys.qml
         qml/v3/focus_nav.js
         qml_tests/FocusBase.qml
         qml_tests/FocusDerived.qml

@@ -12,17 +12,8 @@ FLButtonBase {
     objectName: "FLIconButton|" + iconName
 
     property string iconName: ""
+    property color iconColor: control._fg
     FLFocus.focusSound: SoundEffects.iconButtonFocus
-
-    // onActiveFocusChanged: {
-    //     if (activeFocus) {
-    //         if (InputMethodManager.usingMouse) {
-    //             return
-    //         }
-    //
-    //         SoundEffects.iconButtonFocus.play();
-    //     }
-    // }
 
     variant: "subtle"
     implicitWidth: implicitHeight
@@ -31,6 +22,6 @@ FLButtonBase {
         anchors.centerIn: parent
         name: control.iconName
         size: AppStyle.iconSizeButton
-        color: control._fg
+        color: control.iconColor
     }
 }

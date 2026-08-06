@@ -531,7 +531,9 @@ Item {
         id: ringA
 
         colorA: Theme.focusRingBlue
-        colorB: Theme.focusRingPurple
+        colorB: Theme.focusRingPale
+        colorC: Theme.focusRingPurple
+        colorD: Theme.focusRingPeriwinkle
         ringWidthPx: AppStyle.focusRingWidth
         padPx: root.ringPad
         fillPx: root.ringOffsetFor(root.cursorItem)
@@ -552,7 +554,9 @@ Item {
         id: ringB
 
         colorA: Theme.focusRingBlue
-        colorB: Theme.focusRingPurple
+        colorB: Theme.focusRingPale
+        colorC: Theme.focusRingPurple
+        colorD: Theme.focusRingPeriwinkle
         ringWidthPx: AppStyle.focusRingWidth
         padPx: root.ringPad
         fillPx: root.ringOffsetFor(root.cursorItem)

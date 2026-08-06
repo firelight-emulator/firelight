@@ -49,8 +49,7 @@ public:
    * @param candidates What the view is offering, in tree-walk order, in scene coordinates
    * @return The index of the winner, or NONE
    */
-  static int pickNearestLane(const QRectF &origin, Direction direction,
-                             const std::vector<QRectF> &candidates);
+  static int pickNearestLane(const QRectF &origin, Direction direction, const std::vector<QRectF> &candidates);
 };
 
 } // namespace firelight::gui

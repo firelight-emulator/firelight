@@ -43,8 +43,10 @@ QtObject {
     readonly property color _pink: "#e55aa2"
     readonly property color _link: "#89c5f9"
     readonly property color _gold: "#e3b341"
-    readonly property color _focusBlue: "#3d8bfd"
-    readonly property color _focusPurple: "#a24bf5"
+    readonly property color _focusBlue: "#0073e6"
+    readonly property color _focusPurple: "#5e2fbc"
+    readonly property color _focusPale: "#5ac4f2"
+    readonly property color _focusPeriwinkle: "#8379ec"
 
     // Persisted knobs
     readonly property real intensity: AppearanceSettings.themeIntensity
@@ -113,6 +115,8 @@ QtObject {
     // The two colors that rotate around the controller-focus ring (Switch-style)
     readonly property color focusRingBlue: _focusBlue
     readonly property color focusRingPurple: _focusPurple
+    readonly property color focusRingPale: _focusPale
+    readonly property color focusRingPeriwinkle: _focusPeriwinkle
     readonly property color focusRingFill: "transparent"
 
     readonly property color success: _statusGreen

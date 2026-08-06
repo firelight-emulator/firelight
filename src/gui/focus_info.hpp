@@ -134,8 +134,8 @@ public:
    * The actions the attached item offers, in the order they were declared
    */
   [[nodiscard]] QQmlListProperty<FocusAction> getActions() {
-    return {this, this, &FocusInfo::appendAction, &FocusInfo::countActions, &FocusInfo::actionAt,
-            &FocusInfo::clearActions};
+    return {
+        this, this, &FocusInfo::appendAction, &FocusInfo::countActions, &FocusInfo::actionAt, &FocusInfo::clearActions};
   }
 
   /**

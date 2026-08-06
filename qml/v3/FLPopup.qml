@@ -6,7 +6,7 @@ import Firelight 1.0
 
 Popup {
     id: control
-    property int minWidth: 0
+    property int minWidth: AppStyle.defaultPopupMinimumWidth
 
     padding: AppStyle.spacingSm
     implicitWidth: Math.max(minWidth, contentItem.implicitWidth + padding * 2)

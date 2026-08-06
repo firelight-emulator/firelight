@@ -116,6 +116,9 @@ Item {
     readonly property int titleBarUtilityButtonWidth: Math.round(48 * scale)
     readonly property int titleBarUtilityButtonIconSize: Math.round(10 * scale)
 
+
+    readonly property int defaultPopupMinimumWidth: Math.round(240 * scale)
+
     // TODO
     //*************************************************************
     // Library layout — sidebar full width, its collapsed icon rail, the width
@@ -151,7 +154,7 @@ Item {
     readonly property real focusBumpKick: 1200
     // TODO
     // One full revolution of the focus ring's rotating gradient
-    readonly property int durationSpin: 4200
+    readonly property int durationSpin: 6600
     readonly property int easingStandard: Easing.OutCubic
 
     // TODO

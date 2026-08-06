@@ -2,11 +2,10 @@
 
 #include "gui/focus_info.hpp"
 
-#include <gtest/gtest.h>
-
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQuickItem>
+#include <gtest/gtest.h>
 
 namespace firelight::gui {
 
@@ -306,8 +305,8 @@ TEST(CandidateCollectorTest, WhatAnItemViewHoldsButDoesNotShowIsOutOfReach) {
   ASSERT_FALSE(found.empty());
 
   for (const auto &candidate : found) {
-    EXPECT_TRUE(viewport.contains(candidate.rect))
-        << "offered something at " << candidate.rect.x() << "," << candidate.rect.y() << " the view does not fully show";
+    EXPECT_TRUE(viewport.contains(candidate.rect)) << "offered something at " << candidate.rect.x() << ","
+                                                   << candidate.rect.y() << " the view does not fully show";
   }
 }
 

@@ -4,8 +4,8 @@
 #include "gui/focus_info.hpp"
 
 #include <QDateTime>
-#include <algorithm>
 #include <QQuickWindow>
+#include <algorithm>
 
 namespace firelight::gui {
 
@@ -49,9 +49,7 @@ Direction opposite(const Direction direction) {
 /**
  * Whether one item is the other, or holds it
  */
-bool holds(const QQuickItem *outer, QQuickItem *inner) {
-  return outer == inner || outer->isAncestorOf(inner);
-}
+bool holds(const QQuickItem *outer, QQuickItem *inner) { return outer == inner || outer->isAncestorOf(inner); }
 
 /**
  * The whole of what is on screen, which is as far as a search can reach when nothing narrows it
@@ -164,8 +162,7 @@ void FocusNavigator::forget() {
 }
 
 QQuickItem *FocusNavigator::wayBack(QQuickItem *origin, const Direction direction, const bool isAutoRepeat) const {
-  if (isAutoRepeat || m_steppedFrom.isNull() || m_steppedTo != origin ||
-      direction != opposite(m_steppedDirection)) {
+  if (isAutoRepeat || m_steppedFrom.isNull() || m_steppedTo != origin || direction != opposite(m_steppedDirection)) {
     return nullptr;
   }
 
