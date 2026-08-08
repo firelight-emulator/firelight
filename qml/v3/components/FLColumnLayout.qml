@@ -41,7 +41,12 @@ ColumnLayout {
         }
 
         root.currentIndex = next;
-        root.children[next].forceActiveFocus();
+        const child = root.children[next];
+        if (child.enterFrom !== undefined) {
+            child.enterFrom(step);
+        } else {
+            child.forceActiveFocus();
+        }
 
         return true;
     }

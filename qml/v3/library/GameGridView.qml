@@ -154,7 +154,7 @@ Item {
 
                 FLFocus.actions: [
                     FLAction {
-                        keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter]
+                        keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
                         label: qsTr("Play")
                         onTriggered: activatedAnimation.start()
                     }

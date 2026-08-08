@@ -28,16 +28,17 @@ SplitView {
             // Counts populate after entries finish loading; binding the map here
             // re-invalidates the filter when it changes, so owned platforms
             // appear once the library is ready instead of staying empty
-            property var counts: LibraryEntryModel.countByPlatform
-            onCountsChanged: invalidate()
+            // property var counts: LibraryEntryModel.countByPlatform
+            // onCountsChanged: invalidate()
             // data must be typed: this proxy exposes model roles only through a
             // declared parameter type, so an untyped `data` leaves platformId
             // undefined and filters every platform out
             function filter(data: PlatformRoleData): bool {
-                if (!data) {
-                    return false;
-                }
-                return (counts[data.platformId] || 0) > 0;
+                return true;
+                // if (!data) {
+                //     return false;
+                // }
+                // return (counts[data.platformId] || 0) > 0;
             }
         }
     }

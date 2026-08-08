@@ -28,10 +28,12 @@ FocusScope {
     property var model: []
     property var currentValue: undefined
 
+    Layout.fillWidth: true
+
     // TODO
     // Which keys of a model object hold the row's text and its value, named
     // after ComboBox's equivalents. A model of plain strings ignores both
-    property string textRole: "label"
+    property string textRole: "text"
     property string valueRole: "value"
 
     // TODO
@@ -50,23 +52,8 @@ FocusScope {
     // The selected option's row, or null while nothing is selected
     readonly property Item currentItem: currentIndex >= 0 && currentIndex < repeater.count ? repeater.itemAt(currentIndex) : null
 
-    // TODO
-    // Which option the cursor sits on, which is only the selected one until the
-    // user moves with the arrow keys
-    readonly property alias focusedIndex: internal.focusedIndex
-
-    onFocusedIndexChanged: {
-        if (!InputMethodManager.usingMouse) {
-            SoundEffects.menuNavigate.play();
-        }
-    }
 
     signal activated(var value)
-
-    QtObject {
-        id: internal
-        property int focusedIndex: -1
-    }
 
     implicitWidth: column.implicitWidth
     implicitHeight: column.implicitHeight
@@ -116,7 +103,8 @@ FocusScope {
         }
 
         SoundEffects.radioSelect.play();
-        root.activated(root.valueFor(root.model[index]));
+        root.currentValue = root.valueFor(root.model[index]);
+        root.activated(root.currentValue);
     }
 
     // TODO
@@ -129,13 +117,16 @@ FocusScope {
         repeater.itemAt(index).forceActiveFocus();
     }
 
-    // TODO
-    // Focus entering the group lands on the selected option, or the first one
-    // when nothing is selected yet
-    onActiveFocusChanged: {
-        if (activeFocus && repeater.count > 0) {
-            root.focusOption(Math.max(0, root.currentIndex));
+    function focusCurrentIndex() {
+        if (root.currentIndex >= 0 && root.currentIndex < repeater.count) {
+            focusOption(root.currentIndex);
+        } else if (repeater.count > 0) {
+            focusOption(0);
         }
+    }
+
+    function enterFrom(step: int) {
+        focusOption(step < 0 ? root.model.length - 1 : 0);
     }
 
     FLColumnLayout {
@@ -147,7 +138,7 @@ FocusScope {
             id: repeater
             model: root.model
 
-            delegate: FLListRow {
+            delegate: FLMenuItem {
                 id: option
 
                 required property var modelData
@@ -156,15 +147,8 @@ FocusScope {
                 readonly property bool selected: root.currentIndex === index
 
                 objectName: "FLRadioOption|" + root.labelFor(modelData)
-
-                Layout.fillWidth: true
                 label: root.labelFor(modelData)
-
-                onActiveFocusChanged: {
-                    if (option.activeFocus) {
-                        internal.focusedIndex = option.index;
-                    }
-                }
+                checked: selected
 
                 // TODO
                 // Up/Down are the surrounding FLColumnLayout's; Space arrives as

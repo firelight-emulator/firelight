@@ -162,7 +162,7 @@ file(GLOB QML_FILES
 )
 
 # JS libraries aren't matched by the .qml glob above; add them explicitly.
-list(APPEND QML_FILES qml/v3/routing.js)
+list(APPEND QML_FILES qml/v3/routing/routing.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/focus_nav.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/folder_tree.js)
 
@@ -171,14 +171,14 @@ foreach (QML_FILE ${QML_FILES})
     set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
 endforeach ()
 
-set_source_files_properties(qml/v3/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/v3/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/v3/WindowGeometry.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/v3/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/v3/Router.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/v3/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/v3/MaterialSymbols.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-set_source_files_properties(qml/v3/FLUtil.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/singletons/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/singletons/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/singletons/WindowGeometry.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/singletons/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/routing/Router.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/singletons/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/singletons/MaterialSymbols.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/singletons/FLUtil.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/FocusCursor.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/singletons/SoundEffects.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
@@ -340,6 +340,8 @@ add_library(firelight_lib STATIC
         src/gui/focus/focus_navigator.hpp
         src/gui/focus/spatial_resolver.cpp
         src/gui/focus/spatial_resolver.hpp
+        src/gui/models/library_entry_sort_filter_model.cpp
+        src/gui/models/library_entry_sort_filter_model.hpp
 )
 
 # Single source of truth for the app version, consumed by the CLI --version and
@@ -562,6 +564,7 @@ add_executable(fl_test
         tests/app/library/library_ingest_service_test.cpp
         tests/app/library/library_scanner_test.cpp
         tests/app/metadata/metadata_service_test.cpp
+        tests/gui/models/library_entry_sort_filter_model_test.cpp
         tests/app/gui/filesystem_utils_test.cpp
         tests/app/gui/focus_info_test.cpp
         tests/app/gui/focus/candidate_collector_test.cpp
@@ -614,8 +617,8 @@ add_executable(fl_test
 # behaviour FLFocusHighlight no longer has, and a permanently red `check` gets
 # ignored. Re-add both lines together when fixing them
 file(GLOB QML_TEST_FILES
-        qml/v3/AppStyle.qml
-        qml/v3/routing.js
+        qml/v3/singletons/AppStyle.qml
+        qml/v3/routing/routing.js
         qml_tests/tst_routing.qml
         qml_tests/tst_focus_info.qml
         qml_tests/tst_focus_nav.qml

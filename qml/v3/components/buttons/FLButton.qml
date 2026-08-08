@@ -13,6 +13,7 @@ FLButtonBase {
     leftPadding: iconName !== "" ? AppStyle.spacingSm : _hpad
     rightPadding: trailingIconName !== "" ? AppStyle.spacingSm : _hpad
     implicitWidth: contentItem.implicitWidth + leftPadding + rightPadding
+    rounded: false
 
     contentItem: Item {
         implicitWidth: row.implicitWidth

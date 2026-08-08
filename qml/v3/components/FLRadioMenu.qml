@@ -1,6 +1,6 @@
 import QtQuick
 
-FLPopup {
+FLMenu {
     id: control
 
     property alias model: radioGroup.model
@@ -14,6 +14,7 @@ FLPopup {
         target: control
 
         function onAboutToShow() {
+            radioGroup.focusCurrentIndex();
             closeTimer.stop();
         }
 
@@ -29,11 +30,8 @@ FLPopup {
         onTriggered: control.close()
     }
 
-    contentItem: FLRadioGroup {
+    FLRadioGroup {
         id: radioGroup
-        Keys.onPressed: event => {
-            event.accepted = control.navigate(event.key, event.isAutoRepeat);
-        }
 
         onActivated: value => {
             control.currentValue = value;

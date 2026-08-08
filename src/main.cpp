@@ -59,6 +59,7 @@
 #include "gui/models/activity_buckets_list_model.hpp"
 #include "gui/models/core_options_model.hpp"
 #include "gui/models/game_activity_list_model.hpp"
+#include "gui/models/library_entry_sort_filter_model.hpp"
 #include "gui/models/search_results_list_model.hpp"
 #include "gui/models/setting_binding.hpp"
 #include "gui/models/settings_model.hpp"
@@ -467,6 +468,9 @@ int main(int argc, char *argv[]) {
   firelight::library::EntryListModel entryListModel(userLibraryService, activityLog, platformService,
                                                     achievementService);
 
+  firelight::gui::LibraryEntrySortFilterModel entrySortFilterModel;
+  entrySortFilterModel.setSourceModel(&entryListModel);
+
   // Gallery model over the capture index (screenshots + clips)
   firelight::gui::CaptureListModel captureListModel(gameCaptureRepository, userLibraryService);
 
@@ -510,6 +514,7 @@ int main(int argc, char *argv[]) {
 
   qmlRegisterType<firelight::achievements::RetroAchievementsGameItem>("Firelight", 1, 0, "RetroAchievementsGame");
 
+  qmlRegisterType<firelight::gui::LibraryEntrySortFilterModel>("Firelight", 1, 0, "LibraryEntrySortFilterModel");
   qmlRegisterType<firelight::LibraryEntryItem>("Firelight", 1, 0, "LibraryEntry");
   qmlRegisterType<firelight::saves::SuspendPointsItem>("Firelight", 1, 0, "SuspendPoints");
   qmlRegisterType<firelight::activity::GameActivityItem>("Firelight", 1, 0, "GameActivity");

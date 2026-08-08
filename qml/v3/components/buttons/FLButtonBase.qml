@@ -7,6 +7,7 @@ Button {
 
     // primary | default | danger | subtle | flat
     property string variant: "default"
+    property bool rounded: true
 
     property bool compact: false
     property string tooltipText: ""
@@ -14,6 +15,8 @@ Button {
     // Icon/label tint when checked; subtle toggles only
     property color checkedColor: Theme.textPrimary
     FLFocus.showCursor: true
+
+    property bool canInteract: true
 
     readonly property bool _subtle: variant === "subtle"
     readonly property color _fill: variant === "primary" ? Theme.accent : variant === "danger" ? Theme.danger : variant === "flat" ? "transparent" : Theme.surfaceElevated
@@ -42,14 +45,52 @@ Button {
         return Theme.textPrimary;
     }
 
+
+
     hoverEnabled: true
-    opacity: enabled ? 1 : 0.5
+    opacity: canInteract ? 1 : 0.5
     implicitHeight: compact ? AppStyle.buttonHeightCompact : AppStyle.buttonHeight
 
     // TODO
     // Focus as the controller cursor shows it; a mouse click also lands focus,
     // and leaving that tinted reads as stuck
     readonly property bool cursorFocused: FocusCursor.isOn(control)
+
+    // TODO
+    // The keys that activate a button when it declared no action answering to them
+    readonly property var activationKeys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
+
+    // TODO
+    // Space and Select never leave a button — it takes both for itself and turns
+    // them into a click — so a declared action answering to either has to run
+    // here rather than at the window. A Connections because a derived type
+    // declaring Keys.onPressed would replace an instance handler
+    Connections {
+        target: control.Keys
+
+        function onPressed(event) {
+            const action = control.FLFocus.getActionFor(event.key);
+
+            if (action !== null) {
+                if (action.sound) {
+                    action.sound.play(false);
+                }
+
+                action.triggered();
+                event.accepted = true;
+                return;
+            }
+
+            // TODO
+            // Activation happens on the press for every key. Left alone, the
+            // button takes Space and Select for itself and commits them on the
+            // release
+            if (control.activationKeys.indexOf(event.key) !== -1) {
+                control.click();
+                event.accepted = true;
+            }
+        }
+    }
 
     HoverHandler {
         id: hover
@@ -58,7 +99,7 @@ Button {
 
     background: Rectangle {
         // radius: AppStyle.radiusMd
-        radius: width / 2
+        radius: control.rounded ? width / 2 : AppStyle.radiusMd
         color: control._subtle ? "transparent" : control._fill
         border.width: control.variant === "default" ? 1 : 0
         border.color: Theme.border
@@ -71,7 +112,7 @@ Button {
             // Flat carries no chrome at rest, but the cursor still needs a fill
             // behind the ring; hover keeps signalling through the icon instead
             opacity: {
-                if (!control.enabled) {
+                if (!control.canInteract) {
                     return 0;
                 }
 

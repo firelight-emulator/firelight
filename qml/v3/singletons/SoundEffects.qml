@@ -15,8 +15,8 @@ QtObject {
         source: "qrc:/sfx/show-modal"
     }
 
-    readonly property FLSoundEffect closePopup: FLSoundEffect {
-        source: "qrc:/sfx/hide-modal"
+    readonly property FLSoundEffect back: FLSoundEffect {
+        source: "qrc:/sfx/back"
     }
 
     readonly property FLSoundEffect menuNavigate: FLSoundEffect {
@@ -34,5 +34,15 @@ QtObject {
 
     readonly property FLSoundEffect gameTileFocus: FLSoundEffect {
         source: "qrc:/sfx/game-tile-focus"
+    }
+
+    readonly property FLSoundEffect check: FLSoundEffect {
+        source: "qrc:/sfx/check"
+        volume: 0.8
+    }
+
+    readonly property FLSoundEffect uncheck: FLSoundEffect {
+        source: "qrc:/sfx/uncheck"
+        volume: 0.8
     }
 }

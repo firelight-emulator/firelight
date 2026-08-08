@@ -14,7 +14,7 @@ FLButtonBase {
     property string iconName: ""
     property color iconColor: control._fg
     property alias filled: content.filled
-
+    rounded: true
 
     FLFocus.focusSound: SoundEffects.iconButtonFocus
 

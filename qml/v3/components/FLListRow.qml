@@ -17,6 +17,8 @@ ItemDelegate {
     default property alias trailing: trailingSlot.data
     FLFocus.showCursor: true
 
+    Layout.fillWidth: true
+
     opacity: control.enabled ? 1 : 0.4
 
     padding: AppStyle.spacingXs
@@ -32,6 +34,45 @@ ItemDelegate {
     readonly property bool cursorFocused: FocusCursor.isOn(control)
 
     highlighted: control.cursorFocused || control.pressed || rowHover.hovered
+
+    // TODO
+    // The keys that activate a row when it declared no action answering to them
+    readonly property var activationKeys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
+
+    // TODO
+    // Space and Select never leave a row — ItemDelegate takes both for itself and
+    // turns them into a click — so a declared action answering to either has to
+    // run here rather than at the window. A Connections because a derived type
+    // declaring Keys.onPressed would replace an instance handler
+    Connections {
+        target: control.Keys
+
+        function onPressed(event) {
+            if (event.isAutoRepeat) {
+                return;
+            }
+
+            const action = control.FLFocus.getActionFor(event.key);
+
+            if (action !== null) {
+                if (action.sound) {
+                    action.sound.play(false);
+                }
+
+                action.triggered();
+                event.accepted = true;
+                return;
+            }
+
+            // TODO
+            // Activation happens on the press for every key. Left alone, the row
+            // takes Space and Select for itself and commits them on the release
+            if (control.activationKeys.indexOf(event.key) !== -1) {
+                control.click();
+                event.accepted = true;
+            }
+        }
+    }
 
     HoverHandler {
         id: rowHover
@@ -55,7 +96,7 @@ ItemDelegate {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
             text: control.label
-            color: control.label === "Name" ? "#1bcbfd" : Theme.textPrimary
+            color: control.checked ? "#1bcbfd" : Theme.textPrimary
             font.pixelSize: AppStyle.fontSizeMedium
             font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold
