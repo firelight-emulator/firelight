@@ -52,7 +52,6 @@ FocusScope {
     // The selected option's row, or null while nothing is selected
     readonly property Item currentItem: currentIndex >= 0 && currentIndex < repeater.count ? repeater.itemAt(currentIndex) : null
 
-
     signal activated(var value)
 
     implicitWidth: column.implicitWidth

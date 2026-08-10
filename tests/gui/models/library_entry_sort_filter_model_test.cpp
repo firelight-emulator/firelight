@@ -8,11 +8,14 @@
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_service.hpp>
 #include <firelight/platforms/platform_service.hpp>
+#include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <QDir>
 #include <QEventLoop>
 #include <QTimer>
+#include <algorithm>
 #include <gtest/gtest.h>
+#include <library/variant_group_service.hpp>
 
 // Verifies what the sorted/filtered view puts in front of QML: which rows survive
 // each filter, what order they come out in, and that a property change is picked
@@ -47,6 +50,9 @@ protected:
   platforms::PlatformService m_platformService;
   achievements::SqliteAchievementRepository m_achievementRepo{":memory:"};
   achievements::AchievementService m_achievementService{m_achievementRepo};
+  settings::SqliteSettingsRepository m_settingsRepo{":memory:"};
+  settings::SettingsService m_settingsService{m_settingsRepo};
+  library::VariantGroupService m_variantGroups{m_service, m_settingsService};
 
   void SetUp() override {
     auto charlie = makeEntry("Charlie", "hashC", 3);
@@ -57,12 +63,30 @@ protected:
     ASSERT_TRUE(m_repo.createEntry(alpha));
     ASSERT_TRUE(m_repo.createEntry(bravo));
 
-    m_source.emplace(m_service, m_activityLog, m_platformService, m_achievementService);
+    m_source.emplace(m_service, m_activityLog, m_platformService, m_achievementService, m_variantGroups);
     m_model.setSourceModel(&m_source.value());
   }
 
   std::optional<library::EntryListModel> m_source;
   LibraryEntrySortFilterModel m_model;
+
+  // Puts the two Zelda entries in a group, and returns whether it was made
+  bool groupUsaAndJapan() {
+    auto usa = makeEntry("Zelda (USA)", "hashU", 3);
+    auto japan = makeEntry("Zelda (Japan)", "hashJ", 3);
+
+    if (!m_repo.createEntry(usa) || !m_repo.createEntry(japan)) {
+      return false;
+    }
+
+    usa.metadata.regions = {"US"};
+    japan.metadata.regions = {"JP"};
+    m_repo.update(usa);
+    m_repo.update(japan);
+    pump();
+
+    return m_variantGroups.createGroupFrom({usa.id, japan.id}).has_value();
+  }
 
   std::vector<QString> names() {
     std::vector<QString> result;
@@ -130,22 +154,24 @@ TEST_F(LibraryEntrySortFilterModelTest, FiltersCompose) {
   EXPECT_EQ(names(), (std::vector<QString>{"alpha", "Charlie"}));
 }
 
-// Setting properties stages them; nothing rebuilds until the caller commits, so
-// changing several costs one reset rather than one each
+// Setting properties stages them; nothing changes until the caller commits, so
+// changing several costs one pass rather than one each
 TEST_F(LibraryEntrySortFilterModelTest, RebuildsOnlyWhenApplied) {
-  auto resets = 0;
-  QObject::connect(&m_model, &QAbstractItemModel::modelReset, [&resets] { ++resets; });
+  auto touched = 0;
+  QObject::connect(&m_model, &QAbstractItemModel::modelReset, [&touched] { ++touched; });
+  QObject::connect(&m_model, &QAbstractItemModel::rowsRemoved, [&touched] { ++touched; });
+  QObject::connect(&m_model, &QAbstractItemModel::layoutChanged, [&touched] { ++touched; });
 
   m_model.setFilterText("a");
   m_model.setSortAscending(false);
   m_model.setPlatformIds({3});
 
-  EXPECT_EQ(resets, 0);
+  EXPECT_EQ(touched, 0);
   EXPECT_EQ(m_model.getCount(), 3);
 
   m_model.applyFilters();
 
-  EXPECT_EQ(resets, 1);
+  EXPECT_GT(touched, 0);
   EXPECT_EQ(names(), (std::vector<QString>{"Charlie", "alpha"}));
 }
 
@@ -166,6 +192,139 @@ TEST_F(LibraryEntrySortFilterModelTest, EntryIdAtFollowsVisibleOrder) {
   EXPECT_EQ(m_model.getEntryIdAt(0), firstId);
   EXPECT_EQ(m_model.getEntryIdAt(-1), -1);
   EXPECT_EQ(m_model.getEntryIdAt(m_model.getCount()), -1);
+}
+
+// A filter narrowing the list keeps the rows that survived, so the view keeps its
+// delegates and its scroll position instead of rebuilding from scratch
+TEST_F(LibraryEntrySortFilterModelTest, FilteringRemovesRowsWithoutResetting) {
+  auto resets = 0;
+  auto removes = 0;
+  QObject::connect(&m_model, &QAbstractItemModel::modelReset, [&resets] { ++resets; });
+  QObject::connect(&m_model, &QAbstractItemModel::rowsRemoved, [&removes] { ++removes; });
+
+  // Drops the rows either side of Bravo, so removals come in two runs
+  m_model.setFilterText("RAV");
+  m_model.applyFilters();
+
+  EXPECT_EQ(resets, 0);
+  EXPECT_EQ(removes, 2);
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, WideningAFilterInsertsWithoutResetting) {
+  m_model.setFilterText("RAV");
+  m_model.applyFilters();
+  ASSERT_EQ(m_model.getCount(), 1);
+
+  auto resets = 0;
+  auto inserts = 0;
+  QObject::connect(&m_model, &QAbstractItemModel::modelReset, [&resets] { ++resets; });
+  QObject::connect(&m_model, &QAbstractItemModel::rowsInserted, [&inserts] { ++inserts; });
+
+  m_model.setFilterText("");
+  m_model.applyFilters();
+
+  EXPECT_EQ(resets, 0);
+  EXPECT_GT(inserts, 0);
+  EXPECT_EQ(names(), (std::vector<QString>{"alpha", "Bravo", "Charlie"}));
+}
+
+// A reorder is described as a layout change rather than a reset, which is what lets the
+// view move the delegates it already has instead of building new ones
+TEST_F(LibraryEntrySortFilterModelTest, ReorderingIsALayoutChangeNotAReset) {
+  auto resets = 0;
+  auto layoutChanges = 0;
+  QObject::connect(&m_model, &QAbstractItemModel::modelReset, [&resets] { ++resets; });
+  QObject::connect(&m_model, &QAbstractItemModel::layoutChanged, [&layoutChanges] { ++layoutChanges; });
+
+  m_model.setSortAscending(false);
+  m_model.applyFilters();
+
+  EXPECT_EQ(resets, 0);
+  EXPECT_GT(layoutChanges, 0);
+  EXPECT_EQ(names(), (std::vector<QString>{"Charlie", "Bravo", "alpha"}));
+}
+
+// Applying with nothing changed must not disturb the view at all
+TEST_F(LibraryEntrySortFilterModelTest, AnUnchangedApplyEmitsNothing) {
+  auto touched = 0;
+  QObject::connect(&m_model, &QAbstractItemModel::modelReset, [&touched] { ++touched; });
+  QObject::connect(&m_model, &QAbstractItemModel::rowsRemoved, [&touched] { ++touched; });
+  QObject::connect(&m_model, &QAbstractItemModel::rowsInserted, [&touched] { ++touched; });
+
+  m_model.applyFilters();
+  m_model.applyFilters();
+
+  EXPECT_EQ(touched, 0);
+}
+
+// Art arriving does not move a row, so nothing about the order changes -- but the
+// view still has to be told, or the tile keeps showing what it had
+TEST_F(LibraryEntrySortFilterModelTest, ASourceChangeReachesTheViewWithoutMovingRows) {
+  auto changed = 0;
+  auto structural = 0;
+  QObject::connect(&m_model, &QAbstractItemModel::dataChanged, [&changed] { ++changed; });
+  QObject::connect(&m_model, &QAbstractItemModel::modelReset, [&structural] { ++structural; });
+  QObject::connect(&m_model, &QAbstractItemModel::rowsRemoved, [&structural] { ++structural; });
+  QObject::connect(&m_model, &QAbstractItemModel::rowsInserted, [&structural] { ++structural; });
+
+  const auto entryId = m_model.getEntryIdAt(0);
+  m_source->setEntryFavorite(entryId, true);
+  pump();
+
+  EXPECT_GT(changed, 0);
+  EXPECT_EQ(structural, 0);
+  EXPECT_EQ(m_model.getCount(), 3);
+}
+
+// A group takes one row, and it is the entry standing for the group
+TEST_F(LibraryEntrySortFilterModelTest, AGroupShowsAsOneRow) {
+  ASSERT_TRUE(groupUsaAndJapan());
+  pump();
+
+  EXPECT_EQ(m_model.getCount(), 4);
+  const auto shown = names();
+  EXPECT_EQ(std::count(shown.begin(), shown.end(), QStringLiteral("Zelda (USA)")), 1);
+  EXPECT_EQ(std::count(shown.begin(), shown.end(), QStringLiteral("Zelda (Japan)")), 0);
+}
+
+// Turning collapsing off is what the "show every version" option does
+TEST_F(LibraryEntrySortFilterModelTest, ShowingEveryVariantBringsTheOthersBack) {
+  ASSERT_TRUE(groupUsaAndJapan());
+  pump();
+  ASSERT_EQ(m_model.getCount(), 4);
+
+  m_model.setCollapseVariants(false);
+  pump();
+
+  EXPECT_EQ(m_model.getCount(), 5);
+  const auto shown = names();
+  EXPECT_EQ(std::count(shown.begin(), shown.end(), QStringLiteral("Zelda (Japan)")), 1);
+}
+
+// Searching a folded-away variant by its own name still finds the group
+TEST_F(LibraryEntrySortFilterModelTest, AFoldedVariantIsFoundByItsOwnName) {
+  ASSERT_TRUE(groupUsaAndJapan());
+  pump();
+
+  m_model.setFilterText("japan");
+  m_model.applyFilters();
+  pump();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Zelda (USA)"}));
+}
+
+// The chips count what the grid shows, not how many files are behind it
+TEST_F(LibraryEntrySortFilterModelTest, PlatformCountsFollowTheCollapsedRows) {
+  ASSERT_TRUE(groupUsaAndJapan());
+  pump();
+
+  EXPECT_EQ(m_model.getCountByPlatform().value("3").toInt(), 3);
+
+  m_model.setCollapseVariants(false);
+  pump();
+
+  EXPECT_EQ(m_model.getCountByPlatform().value("3").toInt(), 4);
 }
 
 } // namespace firelight::gui

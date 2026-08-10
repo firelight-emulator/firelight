@@ -39,6 +39,41 @@ public:
 
   bool updateEntryMetadata(const Entry &entry) override;
 
+  bool applyEntryMetadata(int entryId, const GameMetadata &incoming, const std::set<std::string> &changedFields,
+                          bool isUserEdit) override;
+
+  bool markArtFetched(int entryId, uint64_t whenMillis) override;
+
+  std::vector<int> getEntryIdsMissingArt(int limit) override;
+
+  bool createVariantGroup(VariantGroup &group) override;
+
+  bool updateVariantGroup(const VariantGroup &group) override;
+
+  bool deleteVariantGroup(int groupId) override;
+
+  std::vector<VariantGroup> getVariantGroups() override;
+
+  std::optional<VariantGroup> getVariantGroup(int groupId) override;
+
+  bool setEntryVariantGroup(int entryId, std::optional<int> groupId, bool isUserChoice) override;
+
+  std::vector<int> getEntryIdsWithNormalizedTitle(unsigned platformId, const std::string &normalizedTitle) override;
+
+  std::vector<Entry> getEntriesInVariantGroup(int groupId) override;
+
+  bool createTag(Tag &tag) override;
+
+  bool renameTag(int tagId, const std::string &name) override;
+
+  bool mergeTags(int sourceTagId, int targetTagId) override;
+
+  bool deleteTag(int tagId) override;
+
+  std::vector<Tag> getTags() override;
+
+  bool setEntryTags(int entryId, const std::vector<int> &tagIds) override;
+
   bool deleteContentDirectory(int id) override;
 
   bool create(ContentFile &romFile) override;

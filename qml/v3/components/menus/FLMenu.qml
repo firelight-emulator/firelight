@@ -80,8 +80,8 @@ FLPopup {
         }
 
         FLColumnLayout {
-            id: column;
-            anchors.fill: parent;
+            id: column
+            anchors.fill: parent
             spacing: AppStyle.spacingXs
             focus: true
         }

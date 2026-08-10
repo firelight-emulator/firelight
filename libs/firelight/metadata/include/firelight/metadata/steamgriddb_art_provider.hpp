@@ -25,7 +25,7 @@ public:
    */
   void setApiKey(std::string apiKey) { m_apiKey = std::move(apiKey); }
 
-  [[nodiscard]] std::vector<ArtCandidate> search(const std::string &gameName, int platformId, MediaType type) override;
+  [[nodiscard]] ArtSearchResult search(const std::string &gameName, int platformId, MediaType type) override;
 
 private:
   struct GameMatch {
@@ -38,12 +38,25 @@ private:
    * @param limit The maximum number of matches to return
    * @return List of game matches (id and name) for the given game name, up to the specified limit
    */
-  [[nodiscard]] std::vector<GameMatch> resolveGames(const std::string &gameName, int limit) const;
+  /**
+   * @param body The autocomplete response body
+   * @param limit The maximum number of matches to return
+   * @return The game matches named in the body, up to limit
+   */
+  [[nodiscard]] static std::vector<GameMatch> parseGames(const std::string &body, int limit);
 
   /**
    * Append art candidates for the given game to the output vector, up to the specified remaining count
    */
-  void collectArtForGame(const GameMatch &game, MediaType type, int remaining, std::vector<ArtCandidate> &out) const;
+  /**
+   * Appends one game's art to out.
+   *
+   * @param restrictToShape Whether to ask only for the sizes matching type. Dropping it is how a
+   *   game with no art of the wanted shape still contributes rather than yielding to a worse-matching
+   *   game that happens to have one
+   */
+  void collectArtForGame(const GameMatch &game, MediaType type, int remaining, bool restrictToShape, int matchScore,
+                         std::vector<ArtCandidate> &out) const;
 
   [[nodiscard]] HttpResponse apiGet(const std::string &path) const;
 

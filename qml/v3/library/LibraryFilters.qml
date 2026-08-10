@@ -7,17 +7,16 @@ Item {
     property list<int> pendingPlatformIds: []
     property list<int> platformIds: []
 
-    signal pendingValuesChanged()
+    signal pendingValuesChanged
 
     onPendingShowOnlyFavoritesChanged: pendingValuesChanged()
     onPendingPlatformIdsChanged: pendingValuesChanged()
 
     function commitAll() {
-        showOnlyFavorites = pendingShowOnlyFavorites
-        platformIds = pendingPlatformIds
+        showOnlyFavorites = pendingShowOnlyFavorites;
+        platformIds = pendingPlatformIds;
     }
 
     function clearAll() {
-
     }
 }

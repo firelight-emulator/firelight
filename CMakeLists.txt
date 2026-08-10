@@ -116,6 +116,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 #include(${CMAKE_SOURCE_DIR}/libs/qwindowkit/CMakeLists.txt)
 include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
+add_subdirectory(libs/firelight/util)
 add_subdirectory(libs/firelight/achievements)
 add_subdirectory(libs/firelight/activity)
 add_subdirectory(libs/firelight/settings)
@@ -231,6 +232,7 @@ add_library(firelight_lib STATIC
         src/app/metadata/cpr_http_client.cpp
         src/app/metadata/cpr_http_client.hpp
         src/gui/qt_game_art_proxy.cpp
+        src/gui/qt_variant_group_proxy.cpp
         src/gui/qt_game_art_proxy.hpp
 
         src/app/input/gui/analog_settings_model.cpp
@@ -263,6 +265,7 @@ add_library(firelight_lib STATIC
         src/app/saves/gui/suspend_point_list_model.cpp
         src/gui/game_image_provider.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
+        src/app/library/variant_group_service.cpp
         src/app/library/gui/entry_list_model.cpp
         src/app/media/gui/capture_list_model.cpp
         src/app/netplay/direct_lobby_backend.cpp
@@ -394,6 +397,7 @@ target_link_libraries(firelight_lib PUBLIC
         firelight_media
         firelight_metadata
         firelight_library
+        firelight_util
         firelight_saves
         firelight_discord
         patching
@@ -562,6 +566,7 @@ add_executable(fl_test
         tests/app/library/content_loader_test.cpp
         tests/app/library/entry_list_model_test.cpp
         tests/app/library/library_ingest_service_test.cpp
+        tests/app/library/variant_group_service_test.cpp
         tests/app/library/library_scanner_test.cpp
         tests/app/metadata/metadata_service_test.cpp
         tests/gui/models/library_entry_sort_filter_model_test.cpp

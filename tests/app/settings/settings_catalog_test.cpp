@@ -660,4 +660,47 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
   }
 }
 
+// GeneralSettings.qml binds these by key, and a binding to a key the catalog stopped
+// declaring reads as empty rather than as an error
+TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheGeneralFacadeBinds) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
+
+  // TODO
+  // library-sort-method is left out: the facade still binds it but the catalog has never
+  // declared it and nothing reads the property, so listing it here would assert a fix
+  // rather than guard a contract
+  const std::vector<std::string> facadeKeys = {"fullscreen", "show-advanced-settings", "show-new-user-flow",
+                                               "library-collapse-variants"};
+
+  for (const auto &key : facadeKeys) {
+    const auto *setting = c.findByKey(key);
+    EXPECT_NE(setting, nullptr) << "GeneralSettings.qml binds '" << key << "', which the catalog no longer declares";
+    if (setting == nullptr) {
+      continue;
+    }
+
+    EXPECT_TRUE(c.isAppSetting(key)) << "'" << key << "' must be an app setting: the facade reads the global tier only";
+    EXPECT_FALSE(setting->defaultValue.empty()) << "'" << key << "' has no default, so the facade would start empty";
+  }
+}
+
+// The variant settings back the grouping rules, which have no meaning without them
+TEST(ShippedSettingsCatalogTest, DeclaresTheVariantGroupingKeys) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
+
+  const auto *collapse = c.findByKey("library-collapse-variants");
+  ASSERT_NE(collapse, nullptr);
+  EXPECT_EQ(collapse->defaultValue, "true");
+
+  const auto *regions = c.findByKey("library-region-priority");
+  ASSERT_NE(regions, nullptr);
+  EXPECT_FALSE(regions->defaultValue.empty());
+
+  const auto *languages = c.findByKey("library-language-priority");
+  ASSERT_NE(languages, nullptr);
+  EXPECT_FALSE(languages->defaultValue.empty());
+}
+
 } // namespace firelight::settings

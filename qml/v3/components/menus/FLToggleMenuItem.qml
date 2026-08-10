@@ -17,12 +17,12 @@ FLMenuItem {
 
     onClicked: {
         if (control.checked) {
-            SoundEffects.uncheck.play()
+            SoundEffects.uncheck.play();
         } else {
-            SoundEffects.check.play()
+            SoundEffects.check.play();
         }
 
-        control.selected(!control.checked)
+        control.selected(!control.checked);
     }
 
     FLToggleIndicator {

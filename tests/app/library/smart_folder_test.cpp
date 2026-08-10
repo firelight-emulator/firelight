@@ -12,7 +12,7 @@ EntryFields sampleEntry() {
   EntryFields e;
   e.platformId = 3;
   e.favorite = true;
-  e.genres = "Role-Playing, Adventure";
+  e.genres = {"Role-Playing", "Adventure"};
   e.developer = "Squaresoft";
   e.publisher = "Squaresoft";
   e.releaseYear = 1997;

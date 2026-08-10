@@ -92,6 +92,47 @@ TEST_F(MediaAssetRepositoryTest, DifferentTypesCoexist) {
   EXPECT_EQ(repo.listForContentAndType("h1", MediaType::BoxartFront).size(), 1u);
 }
 
+TEST_F(MediaAssetRepositoryTest, MatchDetailsRoundTrip) {
+  auto grid = make("h1", MediaType::GridSquare, MediaSource::SteamGridDb, "u1");
+  grid.unconfirmed = true;
+  grid.matchedName = "La-Mulana";
+  grid.matchScore = 1;
+  ASSERT_TRUE(repo.add(grid));
+
+  const auto all = repo.listForContent("h1");
+  ASSERT_EQ(all.size(), 1u);
+  EXPECT_TRUE(all[0].unconfirmed);
+  EXPECT_EQ(all[0].matchedName, "La-Mulana");
+  EXPECT_EQ(all[0].matchScore, 1);
+}
+
+TEST_F(MediaAssetRepositoryTest, UnconfirmedSelectionsAreListedWorstFirst) {
+  auto exact = make("h1", MediaType::GridSquare, MediaSource::SteamGridDb, "u1");
+  exact.selected = true;
+  exact.unconfirmed = true;
+  exact.matchScore = 3;
+  ASSERT_TRUE(repo.add(exact));
+
+  auto guess = make("h2", MediaType::GridSquare, MediaSource::SteamGridDb, "u2");
+  guess.selected = true;
+  guess.unconfirmed = true;
+  guess.matchScore = 1;
+  ASSERT_TRUE(repo.add(guess));
+
+  auto certain = make("h3", MediaType::Icon, MediaSource::RetroAchievements, "u3");
+  certain.selected = true;
+  ASSERT_TRUE(repo.add(certain));
+
+  auto unselected = make("h4", MediaType::GridSquare, MediaSource::SteamGridDb, "u4");
+  unselected.unconfirmed = true;
+  ASSERT_TRUE(repo.add(unselected));
+
+  const auto review = repo.listUnconfirmedSelections();
+  ASSERT_EQ(review.size(), 2u);
+  EXPECT_EQ(review[0].contentHash, "h2");
+  EXPECT_EQ(review[1].contentHash, "h1");
+}
+
 TEST_F(MediaAssetRepositoryTest, Remove) {
   auto imported = make("h1", MediaType::Icon, MediaSource::User, "");
   imported.localPath = "/tmp/x.png";

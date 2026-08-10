@@ -18,6 +18,31 @@ struct ArtCandidate {
   int height = 0;
   std::string externalId; // Provider-specific asset id
   std::string gameName;   // Name of the game this artwork is for (may differ from the search query)
+  // How well gameName answered the query: 3 exact, 2 prefix, 1 substring, 0 unrelated.
+  // A low score is the signal that a match is worth a human looking at
+  int matchScore = 0;
+};
+
+/**
+ * Why a search came back the way it did.
+ *
+ * A search that found nothing and a search that could not be made look the same in the results, and
+ * they must not be treated the same: one is an answer, the other is worth asking again later
+ */
+enum class ArtSearchStatus {
+  Ok,
+  RateLimited,
+  Failed,
+};
+
+/**
+ * What a search produced, and whether it actually ran
+ */
+struct ArtSearchResult {
+  ArtSearchStatus status = ArtSearchStatus::Ok;
+  std::vector<ArtCandidate> candidates;
+
+  [[nodiscard]] bool ok() const { return status == ArtSearchStatus::Ok; }
 };
 
 /**
@@ -42,10 +67,9 @@ public:
    * @param platformId The platform ID, not always applied but good to include for more accurate results. Use 0 if
    * unknown
    * @param type The type of artwork to search for (icon, screenshot, etc.)
-   * @return A list of artwork candidates for the given game name, platform, and media type
-   *   The list may be empty if no results are found
+   * @return The artwork candidates, and whether the search ran at all. An empty list with an Ok
+   *   status means the provider has nothing; any other status means the question went unanswered
    */
-  [[nodiscard]] virtual std::vector<ArtCandidate> search(const std::string &gameName, int platformId,
-                                                         MediaType type) = 0;
+  [[nodiscard]] virtual ArtSearchResult search(const std::string &gameName, int platformId, MediaType type) = 0;
 };
 } // namespace firelight::metadata

@@ -1,4 +1,5 @@
 #include <firelight/library/archive_reader.hpp>
+#include <firelight/util/strings.hpp>
 
 #include <algorithm>
 #include <archive.h>
@@ -19,11 +20,6 @@ archive *openArchive(const std::string &path) {
     return nullptr;
   }
   return a;
-}
-
-std::string toLower(std::string s) {
-  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
-  return s;
 }
 
 std::string baseNameOf(const char *entryPath) { return std::filesystem::path(entryPath).filename().string(); }
@@ -91,7 +87,7 @@ std::vector<uint8_t> ArchiveReader::readEntryByBaseName(const std::string &baseN
   std::vector<uint8_t> bytes;
   archive_entry *entry;
   while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
-    if (toLower(baseNameOf(archive_entry_pathname(entry))) == baseNameLower) {
+    if (strings::toLower(baseNameOf(archive_entry_pathname(entry))) == baseNameLower) {
       bytes = readCurrentEntry(a);
       break;
     }
@@ -112,7 +108,7 @@ bool ArchiveReader::extractEntries(const std::set<std::string> &wantedBaseNamesL
   archive_entry *entry;
   while (archive_read_next_header(a, &entry) == ARCHIVE_OK) {
     const std::string base = baseNameOf(archive_entry_pathname(entry));
-    if (!wantedBaseNamesLower.contains(toLower(base))) {
+    if (!wantedBaseNamesLower.contains(strings::toLower(base))) {
       archive_read_data_skip(a);
       continue;
     }

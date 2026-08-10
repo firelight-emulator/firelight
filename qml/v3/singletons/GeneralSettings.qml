@@ -27,11 +27,15 @@ QtObject {
     property SettingBinding newUserBinding: SettingBinding {
         key: "show-new-user-flow"
     }
+    property SettingBinding collapseVariantsBinding: SettingBinding {
+        key: "library-collapse-variants"
+    }
 
     readonly property bool fullscreen: fullscreenBinding.value === "true"
     readonly property bool showAdvancedSettings: advancedBinding.value === "true"
     readonly property bool showNewUserFlow: newUserBinding.value === "true"
     readonly property string librarySortMethod: sortBinding.value
+    readonly property bool collapseVariants: collapseVariantsBinding.value !== "false"
 
     function setFullscreen(value) {
         fullscreenBinding.value = value ? "true" : "false";
@@ -47,5 +51,9 @@ QtObject {
 
     function setLibrarySortMethod(value) {
         sortBinding.value = value;
+    }
+
+    function setCollapseVariants(value) {
+        collapseVariantsBinding.value = value ? "true" : "false";
     }
 }

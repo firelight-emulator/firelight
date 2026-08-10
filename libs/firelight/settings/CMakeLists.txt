@@ -23,6 +23,7 @@ target_include_directories(firelight_settings
 )
 
 target_link_libraries(firelight_settings
+        PRIVATE firelight_util
         PRIVATE spdlog::spdlog
         PRIVATE SQLiteCpp
         PRIVATE sqlite3

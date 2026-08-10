@@ -8,11 +8,13 @@
 #include <firelight/library/user_library_repository.hpp>
 #include <firelight/library/user_library_service.hpp>
 #include <firelight/platforms/platform_service.hpp>
+#include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <QDir>
 #include <QEventLoop>
 #include <QTimer>
 #include <gtest/gtest.h>
+#include <library/variant_group_service.hpp>
 
 // Verifies that EntryListModel stays in sync with the library incrementally:
 // EntryCreatedEvent inserts a row, EntryUpdatedEvent removes a now-hidden entry
@@ -45,7 +47,10 @@ protected:
   platforms::PlatformService m_platformService;
   achievements::SqliteAchievementRepository m_achievementRepo{":memory:"};
   achievements::AchievementService m_achievementService{m_achievementRepo};
-  EntryListModel m_model{m_service, m_activityLog, m_platformService, m_achievementService};
+  settings::SqliteSettingsRepository m_settingsRepo{":memory:"};
+  settings::SettingsService m_settingsService{m_settingsRepo};
+  VariantGroupService m_variantGroups{m_service, m_settingsService};
+  EntryListModel m_model{m_service, m_activityLog, m_platformService, m_achievementService, m_variantGroups};
 
   int rows() { return m_model.rowCount(QModelIndex()); }
 };

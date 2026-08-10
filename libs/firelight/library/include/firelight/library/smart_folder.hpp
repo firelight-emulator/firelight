@@ -15,9 +15,8 @@ namespace firelight::library {
 struct EntryFields {
   int platformId = 0;
   bool favorite = false;
-  // The entry's genres, as stored on the entry (a free-form string, typically
-  // comma- or semicolon-separated, e.g. "Action, Adventure")
-  std::string genres;
+  // The entry's genres. A criterion matches when any of them contains it
+  std::vector<std::string> genres;
   std::string developer;
   std::string publisher;
   int releaseYear = 0; // 0 = unknown

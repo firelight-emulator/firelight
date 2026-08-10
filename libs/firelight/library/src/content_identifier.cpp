@@ -2,6 +2,7 @@
 #include <firelight/library/content_identifier.hpp>
 #include <firelight/library/file_bytes.hpp>
 #include <firelight/platforms/platform_service.hpp>
+#include <firelight/util/strings.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -17,9 +18,7 @@ std::string ContentIdentifier::suffixOf(const std::string &name) {
   if (dot == std::string::npos) {
     return {};
   }
-  std::string ext = name.substr(dot + 1);
-  std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
-  return ext;
+  return strings::toLower(name.substr(dot + 1));
 }
 
 IdentifiedContent ContentIdentifier::identify(const std::string &path) const {

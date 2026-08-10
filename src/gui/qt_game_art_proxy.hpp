@@ -33,6 +33,10 @@ class QtGameArtProxy final : public QObject {
   Q_PROPERTY(QString apiKey READ apiKey WRITE setApiKey NOTIFY providerConfiguredChanged)
 
 public:
+  /** Where the user's SteamGridDB key is persisted */
+  static constexpr auto API_KEY_SETTING = "steamgriddb/apiKey";
+
+public:
   QtGameArtProxy(metadata::MetadataService &service, metadata::SteamGridDbArtProvider &provider,
                  metadata::IMediaAssetRepository &mediaAssets, QObject *parent = nullptr);
   ~QtGameArtProxy() override;

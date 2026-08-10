@@ -75,7 +75,9 @@
 #include "gui/qt_platform_service_proxy.hpp"
 #include "gui/qt_save_manager_proxy.hpp"
 #include "gui/qt_settings_catalog_proxy.hpp"
+#include "gui/qt_variant_group_proxy.hpp"
 #include "gui/settings_level_shim.hpp"
+#include "library/variant_group_service.hpp"
 #include "libretro/core_registry.hpp"
 #include "metadata/cpr_http_client.hpp"
 #include "metadata/metadata_service.hpp"
@@ -325,16 +327,27 @@ int main(int argc, char *argv[]) {
       (defaultAppDataPathString + "/metadata.db").toStdString());
   firelight::metadata::SqliteMediaAssetRepository mediaAssetRepository(
       (defaultAppDataPathString + "/media.db").toStdString());
+  // Optional online art provider backing the "Change artwork" picker and the
+  // art sweep. The key is a user setting (empty until supplied); the provider
+  // stays unconfigured and no-ops until then. cpr lives here in the app so the
+  // metadata module stays HTTP-dependency-free
+  firelight::metadata::CprHttpClient cprHttpClient;
+  // The key is the user's, persisted where the art picker writes it. Seeded here
+  // because the sweep starts well before the picker's proxy is constructed
+  const QSettings artProviderSettings;
+  firelight::metadata::SteamGridDbArtProvider steamGridDbArtProvider(
+      cprHttpClient,
+      artProviderSettings.value(firelight::gui::QtGameArtProxy::API_KEY_SETTING).toString().toStdString());
+
   firelight::metadata::MetadataService metadataService(userLibrary, gameMetadataSource, mediaAssetRepository,
-                                                       (defaultAppDataPathString + "/media").toStdString());
+                                                       (defaultAppDataPathString + "/media").toStdString(),
+                                                       &steamGridDbArtProvider);
   metadataService.backfillMissing();
 
-  // Optional online art provider backing the "Change artwork" picker. The key
-  // is a user setting (empty until supplied); the provider stays unconfigured
-  // and no-ops until then. cpr lives here in the app so the metadata module
-  // stays HTTP-dependency-free
-  firelight::metadata::CprHttpClient cprHttpClient;
-  firelight::metadata::SteamGridDbArtProvider steamGridDbArtProvider(cprHttpClient, "");
+  // Fills in missing art in the background, one lookup at a time. No-ops while the
+  // provider has no key, and leaves those entries unmarked so they are still
+  // reachable once one is supplied
+  metadataService.startArtSweep();
 
   firelight::library::LibraryScanner2 libScanner2(userLibrary, platformService);
 
@@ -372,6 +385,11 @@ int main(int argc, char *argv[]) {
   firelight::settings::SettingsService settingsService(settingsRepository);
   firelight::settings::SettingsService::setInstance(&settingsService);
 
+  // Keeps each variant group pointed at the release the region/language ordering
+  // prefers. Constructed after the settings service because that is where the
+  // ordering lives
+  firelight::library::VariantGroupService variantGroupService(userLibraryService, settingsService);
+
   // Online play: direct-connection lobby (host shares their IP) + WebRTC
   // data plane + session. DiscordLobbyBackend can swap back in here once the
   // app's OAuth client is configured in the Discord developer portal
@@ -393,6 +411,8 @@ int main(int argc, char *argv[]) {
   firelight::gui::QtInputServiceProxy inputServiceProxy(inputService);
   firelight::gui::QtAchievementServiceProxy achievementServiceProxy(achievementService);
   firelight::gui::QtGameArtProxy gameArtProxy(metadataService, steamGridDbArtProvider, mediaAssetRepository);
+
+  firelight::gui::QtVariantGroupProxy variantGroupProxy(variantGroupService);
 
   firelight::cli::provisionCoreAssets(dataDirs);
 
@@ -466,7 +486,7 @@ int main(int argc, char *argv[]) {
   // Set up the models for QML
   // ***********************************************
   firelight::library::EntryListModel entryListModel(userLibraryService, activityLog, platformService,
-                                                    achievementService);
+                                                    achievementService, variantGroupService);
 
   firelight::gui::LibraryEntrySortFilterModel entrySortFilterModel;
   entrySortFilterModel.setSourceModel(&entryListModel);
@@ -745,6 +765,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("ShortcutDispatcher", &shortcutDispatcher);
   engine.rootContext()->setContextProperty("AchievementService", &achievementServiceProxy);
   engine.rootContext()->setContextProperty("GameArtService", &gameArtProxy);
+  engine.rootContext()->setContextProperty("VariantGroupService", &variantGroupProxy);
   engine.rootContext()->setContextProperty("PlatformService",
                                            new firelight::gui::QtPlatformServiceProxy(&platformService));
 

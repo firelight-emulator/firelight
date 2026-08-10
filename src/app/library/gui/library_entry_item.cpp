@@ -18,7 +18,6 @@ void LibraryEntryItem::setEntryId(const int entryId) {
 
     m_contentHash = QString::fromStdString(entry->contentHash);
     m_name = QString::fromStdString(entry->displayName);
-    m_achievementSetId = entry->retroachievementsSetId;
     m_icon1x1SourceUrl = QString::fromStdString(entry->icon1x1SourceUrl);
     m_platformId = entry->platformId;
 
@@ -32,7 +31,6 @@ void LibraryEntryItem::setEntryId(const int entryId) {
     emit icon1x1SourceUrlChanged();
     emit contentHashChanged();
     emit nameChanged();
-    emit achievementSetIdChanged();
   }
 
   m_entryId = entryId;
@@ -45,8 +43,6 @@ QString LibraryEntryItem::getContentHash() { return m_contentHash; }
 int LibraryEntryItem::getPlatformId() const { return m_platformId; }
 
 QString LibraryEntryItem::getName() const { return m_name; }
-
-int LibraryEntryItem::getAchievementSetId() const { return m_achievementSetId; }
 
 QString LibraryEntryItem::getIcon1x1SourceUrl() const { return m_icon1x1SourceUrl; }
 

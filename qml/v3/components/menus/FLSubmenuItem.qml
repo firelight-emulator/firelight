@@ -62,7 +62,7 @@ FLMenuItem {
     onHoveredChanged: hovered ? hoverTimer.restart() : hoverTimer.stop()
     onClicked: control.openSubmenu()
 
-    Keys.onPressed: function(event) {
+    Keys.onPressed: function (event) {
         if (event.key !== Qt.Key_Right) {
             event.accepted = false;
             return;
@@ -115,15 +115,15 @@ FLMenuItem {
                     sound: clearButton.canInteract ? SoundEffects.openPopup : SoundEffects.cursorBump
                     onTriggered: {
                         if (!clearButton.canInteract) {
-                            return
+                            return;
                         }
 
-                        clearButton.click()
+                        clearButton.click();
                     }
                 }
             ]
 
-            Keys.onPressed: function(event) {
+            Keys.onPressed: function (event) {
                 if (event.key !== Qt.Key_Left) {
                     event.accepted = false;
                     return;
@@ -133,8 +133,8 @@ FLMenuItem {
                 control.closeSubmenu();
             }
 
-            onClicked: function(event) {
-                control.currentValues = []
+            onClicked: function (event) {
+                control.currentValues = [];
             }
 
             // variant: "subtle"
@@ -151,7 +151,7 @@ FLMenuItem {
                 required property var modelData
                 required property int index
 
-                Keys.onPressed: function(event) {
+                Keys.onPressed: function (event) {
                     if (event.key !== Qt.Key_Left) {
                         event.accepted = false;
                         return;
@@ -165,13 +165,13 @@ FLMenuItem {
 
                 checked: control.currentValues.indexOf(modelData[control.valueRole]) !== -1
 
-                onSelected: function(selected) {
+                onSelected: function (selected) {
                     if (selected) {
-                        control.currentValues.push(modelData[control.valueRole])
-                        control.currentValuesChanged()
+                        control.currentValues.push(modelData[control.valueRole]);
+                        control.currentValuesChanged();
                     } else {
-                        control.currentValues.splice(control.currentValues.indexOf(modelData[control.valueRole]), 1)
-                        control.currentValuesChanged()
+                        control.currentValues.splice(control.currentValues.indexOf(modelData[control.valueRole]), 1);
+                        control.currentValuesChanged();
                     }
                 }
             }

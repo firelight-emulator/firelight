@@ -19,7 +19,7 @@ public:
 
   ~SqliteGameMetadataSource() override;
 
-  std::optional<GameMetadata> lookup(const std::string &contentHash) override;
+  std::optional<MetadataLookup> lookup(const std::string &contentHash) override;
 
 private:
   std::string m_databaseFile;

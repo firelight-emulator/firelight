@@ -1,4 +1,5 @@
 #include <firelight/library/smart_folder.hpp>
+#include <firelight/util/strings.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -6,21 +7,6 @@
 #include <nlohmann/json.hpp>
 
 namespace firelight::library {
-
-namespace {
-// Case-insensitive ASCII substring test. An empty needle matches anything
-bool containsCaseInsensitive(const std::string &haystack, const std::string &needle) {
-  if (needle.empty()) {
-    return true;
-  }
-  const auto toLower = [](const std::string &s) {
-    std::string out = s;
-    std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::tolower(c); });
-    return out;
-  };
-  return toLower(haystack).find(toLower(needle)) != std::string::npos;
-}
-} // namespace
 
 SmartFolderCriteria SmartFolderCriteria::parse(const std::string &json) {
   SmartFolderCriteria c;
@@ -161,7 +147,7 @@ bool SmartFolderCriteria::matches(const EntryFields &entry, const int64_t nowMil
   if (!criteria.pathContains.empty()) {
     const bool anyPathMatches =
         std::any_of(entry.contentPaths.begin(), entry.contentPaths.end(),
-                    [&](const std::string &p) { return containsCaseInsensitive(p, criteria.pathContains); });
+                    [&](const std::string &p) { return strings::containsIgnoringCase(p, criteria.pathContains); });
     if (!anyPathMatches) {
       return false;
     }
@@ -176,16 +162,18 @@ bool SmartFolderCriteria::matches(const EntryFields &entry, const int64_t nowMil
     return false;
   }
   if (!criteria.genres.empty()) {
-    const bool anyGenre = std::any_of(criteria.genres.begin(), criteria.genres.end(),
-                                      [&](const std::string &g) { return containsCaseInsensitive(entry.genres, g); });
+    const bool anyGenre = std::any_of(criteria.genres.begin(), criteria.genres.end(), [&](const std::string &wanted) {
+      return std::any_of(entry.genres.begin(), entry.genres.end(),
+                         [&](const std::string &held) { return strings::containsIgnoringCase(held, wanted); });
+    });
     if (!anyGenre) {
       return false;
     }
   }
-  if (!criteria.developer.empty() && !containsCaseInsensitive(entry.developer, criteria.developer)) {
+  if (!criteria.developer.empty() && !strings::containsIgnoringCase(entry.developer, criteria.developer)) {
     return false;
   }
-  if (!criteria.publisher.empty() && !containsCaseInsensitive(entry.publisher, criteria.publisher)) {
+  if (!criteria.publisher.empty() && !strings::containsIgnoringCase(entry.publisher, criteria.publisher)) {
     return false;
   }
   // An unknown release year (0) satisfies no year bound, so a year-range folder

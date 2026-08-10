@@ -18,6 +18,6 @@ public:
    * @param contentHash The content hash of the game for which to look up metadata
    * @return The metadata for the game, or std::nullopt if no metadata could be found for the given content hash
    */
-  [[nodiscard]] virtual std::optional<GameMetadata> lookup(const std::string &contentHash) = 0;
+  [[nodiscard]] virtual std::optional<MetadataLookup> lookup(const std::string &contentHash) = 0;
 };
 } // namespace firelight::metadata

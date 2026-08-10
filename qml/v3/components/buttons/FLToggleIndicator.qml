@@ -38,5 +38,4 @@ Item {
             color: Theme.textPrimary
         }
     }
-
 }

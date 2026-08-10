@@ -41,6 +41,90 @@ bool UserLibraryService::update(Entry &entry) { return m_repository.update(entry
 
 bool UserLibraryService::updateEntryMetadata(const Entry &entry) { return m_repository.updateEntryMetadata(entry); }
 
+bool UserLibraryService::applyEntryMetadata(const int entryId, const GameMetadata &incoming,
+                                            const std::set<std::string> &changedFields, const bool isUserEdit) {
+  return m_repository.applyEntryMetadata(entryId, incoming, changedFields, isUserEdit);
+}
+
+bool UserLibraryService::markArtFetched(const int entryId, const uint64_t whenMillis) {
+  return m_repository.markArtFetched(entryId, whenMillis);
+}
+
+std::vector<int> UserLibraryService::getEntryIdsMissingArt(const int limit) {
+  return m_repository.getEntryIdsMissingArt(limit);
+}
+
+bool UserLibraryService::createTag(Tag &tag) { return m_repository.createTag(tag); }
+
+bool UserLibraryService::renameTag(const int tagId, const std::string &name) {
+  return m_repository.renameTag(tagId, name);
+}
+
+bool UserLibraryService::mergeTags(const int sourceTagId, const int targetTagId) {
+  return m_repository.mergeTags(sourceTagId, targetTagId);
+}
+
+bool UserLibraryService::deleteTag(const int tagId) { return m_repository.deleteTag(tagId); }
+
+std::vector<Tag> UserLibraryService::getTags() { return m_repository.getTags(); }
+
+bool UserLibraryService::setEntryTags(const int entryId, const std::vector<int> &tagIds) {
+  return m_repository.setEntryTags(entryId, tagIds);
+}
+
+bool UserLibraryService::createVariantGroup(VariantGroup &group) { return m_repository.createVariantGroup(group); }
+
+bool UserLibraryService::updateVariantGroup(const VariantGroup &group) {
+  return m_repository.updateVariantGroup(group);
+}
+
+bool UserLibraryService::deleteVariantGroup(const int groupId) { return m_repository.deleteVariantGroup(groupId); }
+
+std::vector<VariantGroup> UserLibraryService::getVariantGroups() { return m_repository.getVariantGroups(); }
+
+std::optional<VariantGroup> UserLibraryService::getVariantGroup(const int groupId) {
+  return m_repository.getVariantGroup(groupId);
+}
+
+bool UserLibraryService::setEntryVariantGroup(const int entryId, const std::optional<int> groupId,
+                                              const bool isUserChoice) {
+  return m_repository.setEntryVariantGroup(entryId, groupId, isUserChoice);
+}
+
+std::vector<int> UserLibraryService::getEntryIdsWithNormalizedTitle(const unsigned platformId,
+                                                                    const std::string &normalizedTitle) {
+  return m_repository.getEntryIdsWithNormalizedTitle(platformId, normalizedTitle);
+}
+
+std::vector<Entry> UserLibraryService::getEntriesInVariantGroup(const int groupId) {
+  return m_repository.getEntriesInVariantGroup(groupId);
+}
+
+bool UserLibraryService::setVariantGroupPrimary(const int groupId, const int entryId) {
+  auto group = m_repository.getVariantGroup(groupId);
+
+  if (!group.has_value()) {
+    return false;
+  }
+
+  group->primaryEntryId = entryId;
+  group->primaryUserSet = true;
+
+  return m_repository.updateVariantGroup(*group);
+}
+
+bool UserLibraryService::clearVariantGroupPrimary(const int groupId) {
+  auto group = m_repository.getVariantGroup(groupId);
+
+  if (!group.has_value()) {
+    return false;
+  }
+
+  group->primaryUserSet = false;
+
+  return m_repository.updateVariantGroup(*group);
+}
+
 std::vector<FolderInfo> UserLibraryService::listFolders() { return m_repository.listFolders(); }
 
 bool UserLibraryService::create(FolderInfo &folder) { return m_repository.create(folder); }

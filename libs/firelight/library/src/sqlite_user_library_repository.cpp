@@ -3,6 +3,7 @@
 #include <firelight/library/library_events.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/migrations/migration_runner.hpp>
+#include <firelight/util/strings.hpp>
 
 #include <SQLiteCpp/Database.h>
 #include <SQLiteCpp/Statement.h>
@@ -24,10 +25,6 @@ int64_t nowMs() { return duration_cast<milliseconds>(system_clock::now().time_si
 
 int64_t nowSecs() { return duration_cast<seconds>(system_clock::now().time_since_epoch()).count(); }
 
-bool startsWith(const std::string &value, const std::string &prefix) {
-  return value.size() >= prefix.size() && value.compare(0, prefix.size(), prefix) == 0;
-}
-
 // Builds an Entry from the current row of a `SELECT e.*` / `SELECT *` over
 // entriesv1. Does not read folder ids or file locations (the loaders add those)
 Entry deserializeEntry(const SQLite::Statement &query) {
@@ -44,13 +41,16 @@ Entry deserializeEntry(const SQLite::Statement &query) {
       .icon1x1SourceUrl = query.getColumn("icon_1x1_source_url").getString(),
       .boxartFrontSourceUrl = query.getColumn("boxart_front_source_url").getString(),
       .boxartBackSourceUrl = query.getColumn("boxart_back_source_url").getString(),
-      .description = query.getColumn("description").getString(),
-      .releaseYear = query.getColumn("release_year").getUInt(),
-      .developer = query.getColumn("developer").getString(),
-      .publisher = query.getColumn("publisher").getString(),
-      .genres = query.getColumn("genres").getString(),
-      .regionIds = query.getColumn("region_ids").getString(),
-      .retroachievementsSetId = query.getColumn("retroachievements_set_id").getUInt(),
+      .normalizedTitle = query.getColumn("normalized_title").getString(),
+      .metadata = GameMetadata::parse(query.getColumn("metadata_json").getString()),
+      .metadataOverrides = MetadataOverrides::parse(query.getColumn("metadata_overrides_json").getString()),
+      .variantGroupId = query.getColumn("variant_group_id").isNull()
+                            ? std::nullopt
+                            : std::optional(query.getColumn("variant_group_id").getInt()),
+      .variantGroupUserSet = query.getColumn("variant_group_user_set").getInt() != 0,
+      .artFetchedAt = query.getColumn("art_fetched_at").isNull()
+                          ? std::nullopt
+                          : std::optional(static_cast<uint64_t>(query.getColumn("art_fetched_at").getInt64())),
       .createdAt = static_cast<uint64_t>(query.getColumn("created_at").getInt64()),
   };
 }
@@ -126,21 +126,46 @@ SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_datab
                     "active_save_slot INTEGER NOT NULL DEFAULT 1, "
                     "hidden INTEGER NOT NULL DEFAULT 0, "
                     "favorite INTEGER NOT NULL DEFAULT 0, "
+                    "rating INTEGER NOT NULL DEFAULT 0, "
                     "icon_1x1_source_url TEXT, "
-                    "icon_2x3_source_url TEXT,"
-                    "icon_92x43_source_url TEXT, "
                     "boxart_front_source_url TEXT, "
                     "boxart_back_source_url TEXT, "
-                    "clear_logo_source_url TEXT, "
-                    "hero_image_source_url TEXT, "
-                    "description TEXT, "
-                    "release_year INTEGER, "
-                    "developer TEXT, "
-                    "publisher TEXT, "
-                    "genres TEXT, "
-                    "region_ids TEXT, "
-                    "retroachievements_set_id INTEGER, "
+                    "normalized_title TEXT NOT NULL DEFAULT '', "
+                    "metadata_json TEXT, "
+                    "metadata_overrides_json TEXT, "
+                    "variant_group_id INTEGER, "
+                    "variant_group_user_set INTEGER NOT NULL DEFAULT 0, "
+                    // When art was last looked up for this entry. NULL means never
+                    // tried, which is what makes the sweep resumable
+                    "art_fetched_at INTEGER, "
                     "name_user_set INTEGER NOT NULL DEFAULT 0, "
+                    "created_at INTEGER NOT NULL);");
+
+         // COLLATE NOCASE on the name is what stops "sci-fi" and "Sci-Fi" becoming two
+         // tags. Only the user writes these, so one spelling per idea is achievable
+         // here in a way it is not for scraped genres
+         m_db->exec("CREATE TABLE IF NOT EXISTS tags("
+                    "id INTEGER PRIMARY KEY,"
+                    "name TEXT UNIQUE NOT NULL COLLATE NOCASE, "
+                    "color TEXT, "
+                    "created_at INTEGER NOT NULL);");
+
+         m_db->exec("CREATE TABLE IF NOT EXISTS entry_tags("
+                    "entry_id INTEGER NOT NULL,"
+                    "tag_id INTEGER NOT NULL,"
+                    "created_at INTEGER NOT NULL,"
+                    "UNIQUE(entry_id, tag_id));");
+
+         m_db->exec("CREATE INDEX IF NOT EXISTS entriesNormalizedTitleIdx "
+                    "ON entriesv1(platform_id, normalized_title);");
+
+         m_db->exec("CREATE TABLE IF NOT EXISTS variant_groups("
+                    "id INTEGER PRIMARY KEY,"
+                    "title TEXT NOT NULL,"
+                    "title_user_set INTEGER NOT NULL DEFAULT 0, "
+                    "primary_entry_id INTEGER, "
+                    "primary_user_set INTEGER NOT NULL DEFAULT 0, "
+                    "auto_launch_primary INTEGER NOT NULL DEFAULT 0, "
                     "created_at INTEGER NOT NULL);");
 
          m_db->exec("CREATE TABLE IF NOT EXISTS run_configurations("
@@ -199,6 +224,16 @@ SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_datab
                     "run_configurations(content_hash);");
          m_db->exec("CREATE INDEX IF NOT EXISTS contentFileContentHashIdx ON "
                     "content_files(content_hash);");
+
+         // Partial because most entries belong to no variant group, so the index stays
+         // small no matter how large the library gets
+         m_db->exec("CREATE INDEX IF NOT EXISTS entriesVariantGroupIdx ON "
+                    "entriesv1(variant_group_id) WHERE variant_group_id IS NOT NULL;");
+
+         // The UNIQUE(entry_id, tag_id) index serves the per-entry direction; this one
+         // is what makes "how many entries use this tag" and deleting a tag everywhere
+         // cheap
+         m_db->exec("CREATE INDEX IF NOT EXISTS entryTagTagIdx ON entry_tags(tag_id);");
        }}};
 
   try {
@@ -214,6 +249,11 @@ SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_datab
   // Migrate databases created before these columns existed. CREATE TABLE IF
   // NOT EXISTS won't add columns to an existing table, so add them here;
   // otherwise reads/writes referencing them fail on older databases
+  //
+  // TODO
+  // These run on every startup rather than once per version, so removing a
+  // column from the schema above means removing its line here in the same
+  // change — otherwise the next startup adds it straight back as NULL
   ensureColumnExists("content_files", "content_directory_id", "INTEGER NOT NULL DEFAULT -1");
   ensureColumnExists("folders", "type", "INTEGER NOT NULL DEFAULT 0");
   ensureColumnExists("folders", "filter_json", "TEXT");
@@ -258,7 +298,7 @@ int SqliteUserLibraryRepository::resolveContentDirectoryId(const std::string &on
   int bestId = -1;
   int bestLen = -1;
   for (const auto &dir : getContentDirectories()) {
-    if (startsWith(onDiskPath, dir.path) && static_cast<int>(dir.path.length()) > bestLen) {
+    if (strings::startsWith(onDiskPath, dir.path) && static_cast<int>(dir.path.length()) > bestLen) {
       bestId = dir.id;
       bestLen = static_cast<int>(dir.path.length());
     }
@@ -525,24 +565,15 @@ bool SqliteUserLibraryRepository::updateEntryMetadata(const Entry &entry) {
   std::lock_guard lock(m_mutex);
   try {
     SQLite::Statement query(*m_db, "UPDATE entriesv1 SET display_name = :displayName, "
-                                   "name_user_set = :nameUserSet, description = :description, "
-                                   "developer = :developer, publisher = :publisher, "
-                                   "genres = :genres, region_ids = :regionIds, "
-                                   "release_year = :releaseYear, "
-                                   "retroachievements_set_id = :raSetId, "
+                                   "name_user_set = :nameUserSet, "
+                                   "normalized_title = :normalizedTitle, "
                                    "icon_1x1_source_url = :icon1x1, "
                                    "boxart_front_source_url = :boxartFront, "
                                    "boxart_back_source_url = :boxartBack WHERE id = :id;");
     query.bind(":id", entry.id);
     query.bind(":displayName", entry.displayName);
     query.bind(":nameUserSet", entry.nameUserSet ? 1 : 0);
-    query.bind(":description", entry.description);
-    query.bind(":developer", entry.developer);
-    query.bind(":publisher", entry.publisher);
-    query.bind(":genres", entry.genres);
-    query.bind(":regionIds", entry.regionIds);
-    query.bind(":releaseYear", entry.releaseYear);
-    query.bind(":raSetId", entry.retroachievementsSetId);
+    query.bind(":normalizedTitle", entry.normalizedTitle);
     query.bind(":icon1x1", entry.icon1x1SourceUrl);
     query.bind(":boxartFront", entry.boxartFrontSourceUrl);
     query.bind(":boxartBack", entry.boxartBackSourceUrl);
@@ -556,6 +587,448 @@ bool SqliteUserLibraryRepository::updateEntryMetadata(const Entry &entry) {
   }
 
   EventDispatcher::instance().publish(EntryUpdatedEvent{.entryId = entry.id});
+  return true;
+}
+
+bool SqliteUserLibraryRepository::applyEntryMetadata(const int entryId, const GameMetadata &incoming,
+                                                     const std::set<std::string> &changedFields,
+                                                     const bool isUserEdit) {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement readQuery(*m_db, "SELECT metadata_json, metadata_overrides_json FROM entriesv1 WHERE id = :id;");
+    readQuery.bind(":id", entryId);
+
+    if (!readQuery.executeStep()) {
+      return false;
+    }
+
+    auto merged = GameMetadata::parse(readQuery.getColumn(0).getString());
+    auto overrides = MetadataOverrides::parse(readQuery.getColumn(1).getString());
+
+    const auto shouldWrite = [&](const char *field) {
+      return changedFields.count(field) > 0 && (isUserEdit || !overrides.isUserSet(field));
+    };
+
+    const auto take = [&](const char *field, auto &destination, const auto &source) {
+      if (shouldWrite(field)) {
+        destination = source;
+
+        if (isUserEdit) {
+          overrides.markUserSet(field);
+        }
+      }
+    };
+
+    take(metadata_fields::DESCRIPTION, merged.description, incoming.description);
+    take(metadata_fields::DEVELOPER, merged.developer, incoming.developer);
+    take(metadata_fields::PUBLISHER, merged.publisher, incoming.publisher);
+    take(metadata_fields::RELEASE_YEAR, merged.releaseYear, incoming.releaseYear);
+    take(metadata_fields::RELEASE_DATE, merged.releaseDate, incoming.releaseDate);
+    take(metadata_fields::PLAYERS, merged.players, incoming.players);
+    take(metadata_fields::REVISION, merged.revision, incoming.revision);
+    take(metadata_fields::GENRES, merged.genres, incoming.genres);
+    take(metadata_fields::REGIONS, merged.regions, incoming.regions);
+    take(metadata_fields::LANGUAGES, merged.languages, incoming.languages);
+    take(metadata_fields::FLAGS, merged.flags, incoming.flags);
+
+    SQLite::Statement writeQuery(*m_db, "UPDATE entriesv1 SET metadata_json = :metadata, "
+                                        "metadata_overrides_json = :overrides WHERE id = :id;");
+    writeQuery.bind(":id", entryId);
+    writeQuery.bind(":metadata", merged.toJson());
+    writeQuery.bind(":overrides", overrides.toJson());
+
+    if (writeQuery.exec() == 0) {
+      return false;
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to apply entry metadata for ID {}: {}", entryId, e.what());
+    return false;
+  }
+
+  EventDispatcher::instance().publish(EntryUpdatedEvent{.entryId = entryId});
+  return true;
+}
+
+bool SqliteUserLibraryRepository::markArtFetched(const int entryId, const uint64_t whenMillis) {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "UPDATE entriesv1 SET art_fetched_at = :when WHERE id = :id;");
+    query.bind(":id", entryId);
+    query.bind(":when", static_cast<int64_t>(whenMillis));
+
+    return query.exec() != 0;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to mark art fetched for entry {}: {}", entryId, e.what());
+    return false;
+  }
+}
+
+std::vector<int> SqliteUserLibraryRepository::getEntryIdsMissingArt(const int limit) {
+  std::lock_guard lock(m_mutex);
+  std::vector<int> ids;
+  try {
+    SQLite::Statement query(*m_db, "SELECT id FROM entriesv1 WHERE art_fetched_at IS NULL "
+                                   "AND hidden = 0 ORDER BY id LIMIT :limit;");
+    query.bind(":limit", limit);
+
+    while (query.executeStep()) {
+      ids.push_back(query.getColumn("id").getInt());
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get entries missing art: {}", e.what());
+  }
+
+  return ids;
+}
+
+//****************
+// variant groups
+//****************
+
+namespace {
+VariantGroup deserializeVariantGroup(const SQLite::Statement &query) {
+  return VariantGroup{
+      .id = query.getColumn("id").getInt(),
+      .title = query.getColumn("title").getString(),
+      .titleUserSet = query.getColumn("title_user_set").getInt() != 0,
+      .primaryEntryId = query.getColumn("primary_entry_id").isNull()
+                            ? std::nullopt
+                            : std::optional(query.getColumn("primary_entry_id").getInt()),
+      .primaryUserSet = query.getColumn("primary_user_set").getInt() != 0,
+      .autoLaunchPrimary = query.getColumn("auto_launch_primary").getInt() != 0,
+      .createdAt = static_cast<uint64_t>(query.getColumn("created_at").getInt64()),
+  };
+}
+} // namespace
+
+bool SqliteUserLibraryRepository::createVariantGroup(VariantGroup &group) {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "INSERT INTO variant_groups(title, title_user_set, primary_entry_id, "
+                                   "primary_user_set, auto_launch_primary, created_at) VALUES"
+                                   "(:title, :titleUserSet, :primaryEntryId, :primaryUserSet, "
+                                   ":autoLaunchPrimary, :createdAt);");
+    query.bind(":title", group.title);
+    query.bind(":titleUserSet", group.titleUserSet ? 1 : 0);
+
+    if (group.primaryEntryId.has_value()) {
+      query.bind(":primaryEntryId", *group.primaryEntryId);
+    } else {
+      query.bind(":primaryEntryId");
+    }
+
+    query.bind(":primaryUserSet", group.primaryUserSet ? 1 : 0);
+    query.bind(":autoLaunchPrimary", group.autoLaunchPrimary ? 1 : 0);
+    query.bind(":createdAt", nowSecs());
+    query.exec();
+
+    group.id = static_cast<int>(m_db->getLastInsertRowid());
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to create variant group: {}", e.what());
+    return false;
+  }
+}
+
+bool SqliteUserLibraryRepository::updateVariantGroup(const VariantGroup &group) {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "UPDATE variant_groups SET title = :title, "
+                                   "title_user_set = :titleUserSet, primary_entry_id = :primaryEntryId, "
+                                   "primary_user_set = :primaryUserSet, "
+                                   "auto_launch_primary = :autoLaunchPrimary WHERE id = :id;");
+    query.bind(":id", group.id);
+    query.bind(":title", group.title);
+    query.bind(":titleUserSet", group.titleUserSet ? 1 : 0);
+
+    if (group.primaryEntryId.has_value()) {
+      query.bind(":primaryEntryId", *group.primaryEntryId);
+    } else {
+      query.bind(":primaryEntryId");
+    }
+
+    query.bind(":primaryUserSet", group.primaryUserSet ? 1 : 0);
+    query.bind(":autoLaunchPrimary", group.autoLaunchPrimary ? 1 : 0);
+
+    return query.exec() != 0;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to update variant group {}: {}", group.id, e.what());
+    return false;
+  }
+}
+
+bool SqliteUserLibraryRepository::deleteVariantGroup(const int groupId) {
+  std::lock_guard lock(m_mutex);
+  try {
+    // There are no foreign keys, so the members are cleared here rather than by
+    // a cascade
+    SQLite::Statement clearQuery(*m_db,
+                                 "UPDATE entriesv1 SET variant_group_id = NULL WHERE variant_group_id = :groupId;");
+    clearQuery.bind(":groupId", groupId);
+    clearQuery.exec();
+
+    SQLite::Statement query(*m_db, "DELETE FROM variant_groups WHERE id = :id;");
+    query.bind(":id", groupId);
+
+    return query.exec() != 0;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to delete variant group {}: {}", groupId, e.what());
+    return false;
+  }
+}
+
+std::vector<VariantGroup> SqliteUserLibraryRepository::getVariantGroups() {
+  std::lock_guard lock(m_mutex);
+  std::vector<VariantGroup> groups;
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM variant_groups ORDER BY title;");
+
+    while (query.executeStep()) {
+      groups.emplace_back(deserializeVariantGroup(query));
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get variant groups: {}", e.what());
+  }
+
+  return groups;
+}
+
+std::optional<VariantGroup> SqliteUserLibraryRepository::getVariantGroup(const int groupId) {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM variant_groups WHERE id = :id;");
+    query.bind(":id", groupId);
+
+    if (query.executeStep()) {
+      return deserializeVariantGroup(query);
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get variant group {}: {}", groupId, e.what());
+  }
+
+  return std::nullopt;
+}
+
+bool SqliteUserLibraryRepository::setEntryVariantGroup(const int entryId, const std::optional<int> groupId,
+                                                       const bool isUserChoice) {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "UPDATE entriesv1 SET variant_group_id = :groupId, "
+                                   "variant_group_user_set = :userSet WHERE id = :id;");
+    query.bind(":id", entryId);
+    query.bind(":userSet", isUserChoice ? 1 : 0);
+
+    if (groupId.has_value()) {
+      query.bind(":groupId", *groupId);
+    } else {
+      query.bind(":groupId");
+    }
+
+    if (query.exec() == 0) {
+      return false;
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to set variant group for entry {}: {}", entryId, e.what());
+    return false;
+  }
+
+  EventDispatcher::instance().publish(EntryUpdatedEvent{.entryId = entryId});
+  return true;
+}
+
+std::vector<int> SqliteUserLibraryRepository::getEntryIdsWithNormalizedTitle(const unsigned platformId,
+                                                                             const std::string &normalizedTitle) {
+  std::lock_guard lock(m_mutex);
+  std::vector<int> ids;
+
+  if (normalizedTitle.empty()) {
+    return ids;
+  }
+
+  try {
+    SQLite::Statement query(*m_db, "SELECT id FROM entriesv1 WHERE platform_id = :platformId "
+                                   "AND normalized_title = :normalizedTitle ORDER BY id;");
+    query.bind(":platformId", platformId);
+    query.bind(":normalizedTitle", normalizedTitle);
+
+    while (query.executeStep()) {
+      ids.push_back(query.getColumn("id").getInt());
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get entries with title {}: {}", normalizedTitle, e.what());
+  }
+
+  return ids;
+}
+
+std::vector<Entry> SqliteUserLibraryRepository::getEntriesInVariantGroup(const int groupId) {
+  std::lock_guard lock(m_mutex);
+  std::vector<Entry> entries;
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM entriesv1 WHERE variant_group_id = :groupId;");
+    query.bind(":groupId", groupId);
+
+    while (query.executeStep()) {
+      auto entry = deserializeEntry(query);
+      populateEntrySource(entry);
+      entries.emplace_back(std::move(entry));
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get entries in variant group {}: {}", groupId, e.what());
+  }
+
+  return entries;
+}
+
+//****************
+// tags
+//****************
+
+bool SqliteUserLibraryRepository::createTag(Tag &tag) {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "INSERT INTO tags(name, color, created_at) VALUES"
+                                   "(:name, :color, :createdAt) ON CONFLICT(name) DO NOTHING;");
+    query.bind(":name", tag.name);
+    query.bind(":color", tag.color);
+    query.bind(":createdAt", nowSecs());
+    query.exec();
+
+    // The name may already have been taken, in which case the caller gets the tag
+    // that exists rather than a failure
+    SQLite::Statement idQuery(*m_db, "SELECT id, name FROM tags WHERE name = :name;");
+    idQuery.bind(":name", tag.name);
+
+    if (!idQuery.executeStep()) {
+      return false;
+    }
+
+    tag.id = idQuery.getColumn("id").getInt();
+    tag.name = idQuery.getColumn("name").getString();
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to create tag '{}': {}", tag.name, e.what());
+    return false;
+  }
+}
+
+bool SqliteUserLibraryRepository::renameTag(const int tagId, const std::string &name) {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Statement query(*m_db, "UPDATE tags SET name = :name WHERE id = :id;");
+    query.bind(":id", tagId);
+    query.bind(":name", name);
+
+    return query.exec() != 0;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to rename tag {}: {}", tagId, e.what());
+    return false;
+  }
+}
+
+bool SqliteUserLibraryRepository::mergeTags(const int sourceTagId, const int targetTagId) {
+  if (sourceTagId == targetTagId) {
+    return true;
+  }
+
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Transaction transaction(*m_db);
+
+    // OR IGNORE absorbs the entries that carried both tags; without it the move
+    // trips UNIQUE(entry_id, tag_id) and the merge fails
+    SQLite::Statement moveQuery(*m_db, "UPDATE OR IGNORE entry_tags SET tag_id = :targetId WHERE tag_id = :sourceId;");
+    moveQuery.bind(":targetId", targetTagId);
+    moveQuery.bind(":sourceId", sourceTagId);
+    moveQuery.exec();
+
+    SQLite::Statement clearQuery(*m_db, "DELETE FROM entry_tags WHERE tag_id = :sourceId;");
+    clearQuery.bind(":sourceId", sourceTagId);
+    clearQuery.exec();
+
+    SQLite::Statement deleteQuery(*m_db, "DELETE FROM tags WHERE id = :sourceId;");
+    deleteQuery.bind(":sourceId", sourceTagId);
+    deleteQuery.exec();
+
+    transaction.commit();
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to merge tag {} into {}: {}", sourceTagId, targetTagId, e.what());
+    return false;
+  }
+}
+
+bool SqliteUserLibraryRepository::deleteTag(const int tagId) {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Transaction transaction(*m_db);
+
+    SQLite::Statement clearQuery(*m_db, "DELETE FROM entry_tags WHERE tag_id = :id;");
+    clearQuery.bind(":id", tagId);
+    clearQuery.exec();
+
+    SQLite::Statement query(*m_db, "DELETE FROM tags WHERE id = :id;");
+    query.bind(":id", tagId);
+    const auto removed = query.exec();
+
+    transaction.commit();
+    return removed != 0;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to delete tag {}: {}", tagId, e.what());
+    return false;
+  }
+}
+
+std::vector<Tag> SqliteUserLibraryRepository::getTags() {
+  std::lock_guard lock(m_mutex);
+  std::vector<Tag> tags;
+  try {
+    SQLite::Statement query(*m_db, "SELECT t.id, t.name, t.color, t.created_at, "
+                                   "COUNT(et.entry_id) AS usage_count "
+                                   "FROM tags t LEFT JOIN entry_tags et ON et.tag_id = t.id "
+                                   "GROUP BY t.id ORDER BY t.name;");
+
+    while (query.executeStep()) {
+      tags.emplace_back(Tag{
+          .id = query.getColumn("id").getInt(),
+          .name = query.getColumn("name").getString(),
+          .color = query.getColumn("color").getString(),
+          .createdAt = static_cast<uint64_t>(query.getColumn("created_at").getInt64()),
+          .usageCount = query.getColumn("usage_count").getInt(),
+      });
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get tags: {}", e.what());
+  }
+
+  return tags;
+}
+
+bool SqliteUserLibraryRepository::setEntryTags(const int entryId, const std::vector<int> &tagIds) {
+  std::lock_guard lock(m_mutex);
+  try {
+    SQLite::Transaction transaction(*m_db);
+
+    SQLite::Statement clearQuery(*m_db, "DELETE FROM entry_tags WHERE entry_id = :entryId;");
+    clearQuery.bind(":entryId", entryId);
+    clearQuery.exec();
+
+    for (const auto tagId : tagIds) {
+      SQLite::Statement query(*m_db, "INSERT OR IGNORE INTO entry_tags(entry_id, tag_id, created_at) "
+                                     "VALUES(:entryId, :tagId, :createdAt);");
+      query.bind(":entryId", entryId);
+      query.bind(":tagId", tagId);
+      query.bind(":createdAt", nowSecs());
+      query.exec();
+    }
+
+    transaction.commit();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to set tags for entry {}: {}", entryId, e.what());
+    return false;
+  }
+
+  EventDispatcher::instance().publish(EntryUpdatedEvent{.entryId = entryId});
   return true;
 }
 
@@ -588,10 +1061,10 @@ bool SqliteUserLibraryRepository::deleteContentDirectory(int id) {
   for (const auto &rom : getContentFiles()) {
     auto romPath = rom.m_inArchive ? rom.m_archivePathName : rom.m_filePath;
 
-    if (startsWith(romPath, path)) {
+    if (strings::startsWith(romPath, path)) {
       auto found = false;
       for (const auto &contentPath : getContentDirectories()) {
-        if (startsWith(romPath, contentPath.path)) {
+        if (strings::startsWith(romPath, contentPath.path)) {
           found = true;
           break;
         }
@@ -739,18 +1212,75 @@ std::vector<Entry> SqliteUserLibraryRepository::getEntries(int offset, int limit
     return {};
   }
 
-  for (auto &entry : entries) {
-    try {
-      SQLite::Statement folderQuery(*m_db, "SELECT folder_id FROM folder_entries WHERE entry_id = :entryId;");
-      folderQuery.bind(":entryId", entry.id);
+  // TODO
+  // Three grouped queries rather than one per entry per join. At a few thousand
+  // entries the per-entry form re-prepares thousands of statements, and adding tags
+  // to it would have made that a third worse
+  std::unordered_map<int, size_t> indexById;
+  std::unordered_map<std::string, std::vector<size_t>> indexByHash;
 
-      while (folderQuery.executeStep()) {
-        entry.folderIds.push_back(folderQuery.getColumn("folder_id").getInt());
+  for (size_t i = 0; i < entries.size(); ++i) {
+    indexById[entries[i].id] = i;
+    indexByHash[entries[i].contentHash].push_back(i);
+  }
+
+  try {
+    SQLite::Statement folderQuery(*m_db, "SELECT entry_id, folder_id FROM folder_entries;");
+
+    while (folderQuery.executeStep()) {
+      const auto found = indexById.find(folderQuery.getColumn("entry_id").getInt());
+
+      if (found != indexById.end()) {
+        entries[found->second].folderIds.push_back(folderQuery.getColumn("folder_id").getInt());
       }
-    } catch (const std::exception &e) {
-      spdlog::error("Failed to get folder IDs for entry {}: {}", entry.id, e.what());
     }
-    populateEntrySource(entry);
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get folder IDs: {}", e.what());
+  }
+
+  try {
+    SQLite::Statement tagQuery(*m_db, "SELECT entry_id, tag_id FROM entry_tags;");
+
+    while (tagQuery.executeStep()) {
+      const auto found = indexById.find(tagQuery.getColumn("entry_id").getInt());
+
+      if (found != indexById.end()) {
+        entries[found->second].tagIds.push_back(tagQuery.getColumn("tag_id").getInt());
+      }
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get tag IDs: {}", e.what());
+  }
+
+  try {
+    SQLite::Statement sourceQuery(*m_db, "SELECT content_hash, content_directory_id, file_path, in_archive, "
+                                         "archive_file_path FROM content_files;");
+
+    while (sourceQuery.executeStep()) {
+      const auto found = indexByHash.find(sourceQuery.getColumn("content_hash").getString());
+
+      if (found == indexByHash.end()) {
+        continue;
+      }
+
+      const auto directoryId = sourceQuery.getColumn("content_directory_id").getInt();
+      const auto path = sourceQuery.getColumn("in_archive").getInt() != 0
+                            ? sourceQuery.getColumn("archive_file_path").getString()
+                            : sourceQuery.getColumn("file_path").getString();
+
+      for (const auto index : found->second) {
+        auto &entry = entries[index];
+
+        if (directoryId >= 0 &&
+            std::ranges::find(entry.contentDirectoryIds, directoryId) == entry.contentDirectoryIds.end()) {
+          entry.contentDirectoryIds.push_back(directoryId);
+        }
+
+        entry.contentPaths.push_back(path);
+      }
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get content locations: {}", e.what());
   }
 
   return entries;
@@ -786,6 +1316,17 @@ std::optional<Entry> SqliteUserLibraryRepository::getEntry(const int entryId) {
     spdlog::error("Failed to get folder IDs for entry {}: {}", entry.id, e.what());
   }
 
+  try {
+    SQLite::Statement tagQuery(*m_db, "SELECT tag_id FROM entry_tags WHERE entry_id = :entryId;");
+    tagQuery.bind(":entryId", entry.id);
+
+    while (tagQuery.executeStep()) {
+      entry.tagIds.push_back(tagQuery.getColumn("tag_id").getInt());
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get tag IDs for entry {}: {}", entry.id, e.what());
+  }
+
   populateEntrySource(entry);
   return entry;
 }
@@ -817,6 +1358,17 @@ std::optional<Entry> SqliteUserLibraryRepository::getEntryWithContentHash(const 
     }
   } catch (const std::exception &e) {
     spdlog::error("Failed to get folder IDs for entry {}: {}", entry.id, e.what());
+  }
+
+  try {
+    SQLite::Statement tagQuery(*m_db, "SELECT tag_id FROM entry_tags WHERE entry_id = :entryId;");
+    tagQuery.bind(":entryId", entry.id);
+
+    while (tagQuery.executeStep()) {
+      entry.tagIds.push_back(tagQuery.getColumn("tag_id").getInt());
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get tag IDs for entry {}: {}", entry.id, e.what());
   }
 
   populateEntrySource(entry);

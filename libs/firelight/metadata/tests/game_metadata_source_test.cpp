@@ -34,6 +34,56 @@ std::string makeFixtureDb() {
 }
 } // namespace
 
+// The source conforms to the shape rather than handing its column contents through, so the
+// library never has to know how this one writes a row
+TEST(GameMetadataSourceTest, SplitsGenresAndCanonicalizesRegions) {
+  const auto path = (std::filesystem::temp_directory_path() / "fl_meta_shape.db").string();
+  std::filesystem::remove(path);
+  {
+    SQLite::Database db(path, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+    db.exec("CREATE TABLE games(id INTEGER PRIMARY KEY, name TEXT, description TEXT, developer TEXT, "
+            "publisher TEXT, genre TEXT, release_year INTEGER, release_date TEXT, region TEXT, "
+            "players TEXT, ra_game_id INTEGER, platform_id INTEGER);");
+    db.exec("CREATE TABLE game_hashes(content_hash TEXT PRIMARY KEY, game_id INTEGER);");
+    db.exec("CREATE TABLE game_media(game_id INTEGER, media_type INTEGER, url TEXT);");
+    db.exec("INSERT INTO games VALUES(1, 'Game', '', '', '', 'Action, Adventure; RPG', 1994, '', "
+            "'USA, Europe', '1', 0, 6);");
+    db.exec("INSERT INTO game_hashes VALUES('hashA', 1);");
+  }
+  {
+    SqliteGameMetadataSource source(path);
+    const auto md = source.lookup("hashA");
+    ASSERT_TRUE(md.has_value());
+
+    EXPECT_EQ(md->metadata.genres, (std::vector<std::string>{"Action", "Adventure", "RPG"}));
+    EXPECT_EQ(md->metadata.regions, (std::vector<std::string>{"US", "EU"}));
+  }
+  std::filesystem::remove(path);
+}
+
+// A region nobody recognizes is kept rather than dropped, so the row is not silently lost
+TEST(GameMetadataSourceTest, KeepsAnUnrecognizedRegionAsWritten) {
+  const auto path = (std::filesystem::temp_directory_path() / "fl_meta_region.db").string();
+  std::filesystem::remove(path);
+  {
+    SQLite::Database db(path, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+    db.exec("CREATE TABLE games(id INTEGER PRIMARY KEY, name TEXT, description TEXT, developer TEXT, "
+            "publisher TEXT, genre TEXT, release_year INTEGER, release_date TEXT, region TEXT, "
+            "players TEXT, ra_game_id INTEGER, platform_id INTEGER);");
+    db.exec("CREATE TABLE game_hashes(content_hash TEXT PRIMARY KEY, game_id INTEGER);");
+    db.exec("CREATE TABLE game_media(game_id INTEGER, media_type INTEGER, url TEXT);");
+    db.exec("INSERT INTO games VALUES(1, 'Game', '', '', '', '', 1994, '', 'Atlantis', '1', 0, 6);");
+    db.exec("INSERT INTO game_hashes VALUES('hashA', 1);");
+  }
+  {
+    SqliteGameMetadataSource source(path);
+    const auto md = source.lookup("hashA");
+    ASSERT_TRUE(md.has_value());
+    EXPECT_EQ(md->metadata.regions, (std::vector<std::string>{"Atlantis"}));
+  }
+  std::filesystem::remove(path);
+}
+
 TEST(GameMetadataSourceTest, LooksUpKnownHash) {
   const auto path = makeFixtureDb();
   {
@@ -43,10 +93,10 @@ TEST(GameMetadataSourceTest, LooksUpKnownHash) {
     const auto md = source.lookup("hashA");
     ASSERT_TRUE(md.has_value());
     EXPECT_EQ(md->name, "Super Metroid");
-    EXPECT_EQ(md->developer, "Nintendo R&D1");
-    EXPECT_EQ(md->publisher, "Nintendo");
-    EXPECT_EQ(md->genre, "Action");
-    EXPECT_EQ(md->releaseYear, 1994u);
+    EXPECT_EQ(md->metadata.developer, "Nintendo R&D1");
+    EXPECT_EQ(md->metadata.publisher, "Nintendo");
+    EXPECT_EQ(md->metadata.genres, (std::vector<std::string>{"Action"}));
+    EXPECT_EQ(md->metadata.releaseYear, 1994u);
     EXPECT_EQ(md->retroAchievementsId, 10003u);
     EXPECT_EQ(md->platformId, 6);
 

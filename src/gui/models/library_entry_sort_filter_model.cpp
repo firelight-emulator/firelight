@@ -1,25 +1,23 @@
 #include "library_entry_sort_filter_model.hpp"
 
-#include <algorithm>
 #include <spdlog/spdlog.h>
 
 namespace firelight::gui {
 
-namespace {
-/**
- * One accepted row with its sort key already read, so a comparison touches no roles
- */
-struct SortableRow {
-  int sourceRow;
-  QString text;
-  qint64 number;
-};
-} // namespace
+LibraryEntrySortFilterModel::LibraryEntrySortFilterModel(QObject *parent) : QSortFilterProxyModel(parent) {
+  // Names sort the way a reader expects rather than the way ASCII does
+  setSortCaseSensitivity(Qt::CaseInsensitive);
+  // TODO
+  // Qualified: the unqualified name is this class's staging setter, which records what
+  // to sort by later rather than telling the proxy what to sort by now
+  QSortFilterProxyModel::setSortRole(m_pendingSortRole);
+  setDynamicSortFilter(true);
+  sort(0, Qt::AscendingOrder);
 
-LibraryEntrySortFilterModel::LibraryEntrySortFilterModel(QObject *parent) : QAbstractListModel(parent) {
-  m_applyTimer.setSingleShot(true);
-  m_applyTimer.setInterval(0);
-  connect(&m_applyTimer, &QTimer::timeout, this, &LibraryEntrySortFilterModel::applyFilters);
+  // count is derived, so anything that changes the row set changes it
+  connect(this, &QAbstractItemModel::rowsInserted, this, &LibraryEntrySortFilterModel::countChanged);
+  connect(this, &QAbstractItemModel::rowsRemoved, this, &LibraryEntrySortFilterModel::countChanged);
+  connect(this, &QAbstractItemModel::modelReset, this, &LibraryEntrySortFilterModel::countChanged);
 }
 
 QAbstractListModel *LibraryEntrySortFilterModel::getSourceModel() const { return m_sourceModel; }
@@ -36,17 +34,10 @@ void LibraryEntrySortFilterModel::setSourceModel(QAbstractListModel *sourceModel
     return;
   }
 
-  if (m_sourceModel != nullptr) {
-    m_sourceModel->disconnect(this);
-  }
-
   m_sourceModel = entryModel;
+  QSortFilterProxyModel::setSourceModel(entryModel);
 
   if (m_sourceModel != nullptr) {
-    connect(m_sourceModel, &QAbstractListModel::dataChanged, this, &LibraryEntrySortFilterModel::scheduleApply);
-    connect(m_sourceModel, &QAbstractListModel::rowsInserted, this, &LibraryEntrySortFilterModel::scheduleApply);
-    connect(m_sourceModel, &QAbstractListModel::rowsRemoved, this, &LibraryEntrySortFilterModel::scheduleApply);
-    connect(m_sourceModel, &QAbstractListModel::modelReset, this, &LibraryEntrySortFilterModel::scheduleApply);
     connect(m_sourceModel, &library::EntryListModel::countChanged, this,
             &LibraryEntrySortFilterModel::countByPlatformChanged);
   }
@@ -54,86 +45,178 @@ void LibraryEntrySortFilterModel::setSourceModel(QAbstractListModel *sourceModel
   emit sourceModelChanged();
   emit filtersOrSortChanged();
   applyFilters();
+  emit countChanged();
 }
 
-int LibraryEntrySortFilterModel::getCount() const { return static_cast<int>(m_sourceRows.size()); }
+int LibraryEntrySortFilterModel::getCount() const { return rowCount({}); }
 
-QString LibraryEntrySortFilterModel::getFilterText() const { return m_filterText; }
+QString LibraryEntrySortFilterModel::getFilterText() const { return m_pendingFilterText; }
 
 void LibraryEntrySortFilterModel::setFilterText(const QString &filterText) {
-  if (m_filterText == filterText) {
+  if (m_pendingFilterText == filterText) {
     return;
   }
 
-  m_filterText = filterText;
+  m_pendingFilterText = filterText;
   emit filterTextChanged();
   emit filtersOrSortChanged();
-  // scheduleApply();
 }
 
-bool LibraryEntrySortFilterModel::isFavoritesOnly() const { return m_favoritesOnly; }
+bool LibraryEntrySortFilterModel::isFavoritesOnly() const { return m_pendingFavoritesOnly; }
 
 void LibraryEntrySortFilterModel::setFavoritesOnly(const bool favoritesOnly) {
-  if (m_favoritesOnly == favoritesOnly) {
+  if (m_pendingFavoritesOnly == favoritesOnly) {
     return;
   }
 
-  m_favoritesOnly = favoritesOnly;
+  m_pendingFavoritesOnly = favoritesOnly;
   emit favoritesOnlyChanged();
   emit filtersOrSortChanged();
-  // scheduleApply();
 }
 
-QVariantList LibraryEntrySortFilterModel::getPlatformIds() const { return m_platformIds; }
+QVariantList LibraryEntrySortFilterModel::getPlatformIds() const { return m_pendingPlatformIds; }
 
 void LibraryEntrySortFilterModel::setPlatformIds(const QVariantList &platformIds) {
-  if (m_platformIds == platformIds) {
+  if (m_pendingPlatformIds == platformIds) {
     return;
   }
 
-  m_platformIds = platformIds;
-
-  // TODO
-  // Converted once here rather than per row in accepts()
-  m_acceptedPlatformIds.clear();
-
-  for (const auto &platformId : platformIds) {
-    m_acceptedPlatformIds.insert(platformId.toInt());
-  }
-
+  m_pendingPlatformIds = platformIds;
   emit platformIdsChanged();
   emit filtersOrSortChanged();
-  // scheduleApply();
 }
 
-LibraryEntrySortFilterModel::SortRole LibraryEntrySortFilterModel::getSortRole() const { return m_sortRole; }
+LibraryEntrySortFilterModel::SortRole LibraryEntrySortFilterModel::getSortRole() const { return m_pendingSortRole; }
 
 void LibraryEntrySortFilterModel::setSortRole(const SortRole sortRole) {
-  if (m_sortRole == sortRole) {
+  if (m_pendingSortRole == sortRole) {
     return;
   }
 
-  m_sortRole = sortRole;
+  m_pendingSortRole = sortRole;
   emit sortRoleChanged();
   emit filtersOrSortChanged();
-  // scheduleApply();
 }
 
-bool LibraryEntrySortFilterModel::isSortAscending() const { return m_sortAscending; }
+bool LibraryEntrySortFilterModel::isSortAscending() const { return m_pendingSortAscending; }
 
 void LibraryEntrySortFilterModel::setSortAscending(const bool sortAscending) {
-  if (m_sortAscending == sortAscending) {
+  if (m_pendingSortAscending == sortAscending) {
     return;
   }
 
-  m_sortAscending = sortAscending;
+  m_pendingSortAscending = sortAscending;
   emit sortAscendingChanged();
   emit filtersOrSortChanged();
-  // scheduleApply();
 }
 
 bool LibraryEntrySortFilterModel::anyFiltersActive() const {
-  return !m_filterText.isEmpty() || m_favoritesOnly || !m_acceptedPlatformIds.isEmpty();
+  return !m_pendingFilterText.isEmpty() || m_pendingFavoritesOnly || !m_pendingPlatformIds.isEmpty();
+}
+
+void LibraryEntrySortFilterModel::applyFilters() {
+  // TODO
+  // Lowered once here to match the search text, which is stored that way so the compare
+  // is not case-folding both sides on every row
+  m_filterText = m_pendingFilterText.toLower();
+  m_favoritesOnly = m_pendingFavoritesOnly;
+
+  // TODO
+  // Converted once here rather than per row in filterAcceptsRow
+  m_acceptedPlatformIds.clear();
+
+  for (const auto &platformId : m_pendingPlatformIds) {
+    m_acceptedPlatformIds.insert(platformId.toInt());
+  }
+
+  QSortFilterProxyModel::setSortRole(m_pendingSortRole);
+  sort(0, m_pendingSortAscending ? Qt::AscendingOrder : Qt::DescendingOrder);
+  invalidateFilter();
+}
+
+bool LibraryEntrySortFilterModel::filterAcceptsRow(const int sourceRow, const QModelIndex &sourceParent) const {
+  if (m_sourceModel == nullptr) {
+    return false;
+  }
+
+  const auto sourceIndex = m_sourceModel->index(sourceRow, 0, sourceParent);
+
+  if (m_favoritesOnly && !m_sourceModel->data(sourceIndex, library::EntryListModel::Favorite).toBool()) {
+    return false;
+  }
+
+  if (!m_acceptedPlatformIds.isEmpty()) {
+    const auto platformId = m_sourceModel->data(sourceIndex, library::EntryListModel::PlatformId).toInt();
+
+    if (!m_acceptedPlatformIds.contains(platformId)) {
+      return false;
+    }
+  }
+
+  if (!m_filterText.isEmpty()) {
+    // TODO
+    // Precomputed and already lowercased, and it carries the group's other names, so
+    // searching a variant by its own title finds the row standing for it
+    const auto searchText = m_sourceModel->data(sourceIndex, library::EntryListModel::SearchText).toString();
+
+    if (!searchText.contains(m_filterText)) {
+      return false;
+    }
+  }
+
+  // TODO
+  // A group shows as the one entry standing for it. Last, so a filtered-out group does
+  // not cost a grouping lookup
+  if (m_collapseVariants) {
+    const auto groupId = m_sourceModel->data(sourceIndex, library::EntryListModel::VariantGroupId).toInt();
+
+    if (groupId != -1 && !m_sourceModel->data(sourceIndex, library::EntryListModel::IsVariantPrimary).toBool()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool LibraryEntrySortFilterModel::isCollapseVariants() const { return m_collapseVariants; }
+
+void LibraryEntrySortFilterModel::setCollapseVariants(const bool collapseVariants) {
+  if (m_collapseVariants == collapseVariants) {
+    return;
+  }
+
+  m_collapseVariants = collapseVariants;
+  invalidateFilter();
+  emit collapseVariantsChanged();
+  emit countByPlatformChanged();
+}
+
+QVariantList LibraryEntrySortFilterModel::getVariantEntryIds(const int groupId) const {
+  if (m_sourceModel == nullptr || groupId == -1) {
+    return {};
+  }
+
+  QVariantList primary;
+  QVariantList others;
+
+  for (auto row = 0; row < m_sourceModel->rowCount(QModelIndex()); ++row) {
+    const auto index = m_sourceModel->index(row, 0);
+
+    if (m_sourceModel->data(index, library::EntryListModel::VariantGroupId).toInt() != groupId) {
+      continue;
+    }
+
+    const auto entryId = m_sourceModel->data(index, library::EntryListModel::Id);
+
+    if (m_sourceModel->data(index, library::EntryListModel::IsVariantPrimary).toBool()) {
+      primary.append(entryId);
+    } else {
+      others.append(entryId);
+    }
+  }
+
+  primary.append(others);
+  return primary;
 }
 
 QVariantList LibraryEntrySortFilterModel::getSortOptions() {
@@ -167,110 +250,12 @@ QVariantList LibraryEntrySortFilterModel::getSortOptions() {
   return list;
 }
 
-bool LibraryEntrySortFilterModel::accepts(const QModelIndex &sourceIndex) const {
-  if (m_favoritesOnly && !m_sourceModel->data(sourceIndex, library::EntryListModel::Favorite).toBool()) {
-    return false;
-  }
-
-  if (!m_acceptedPlatformIds.isEmpty()) {
-    const auto platformId = m_sourceModel->data(sourceIndex, library::EntryListModel::PlatformId).toInt();
-
-    if (!m_acceptedPlatformIds.contains(platformId)) {
-      return false;
-    }
-  }
-
-  if (!m_filterText.isEmpty()) {
-    const auto displayName = m_sourceModel->data(sourceIndex, library::EntryListModel::DisplayName).toString();
-
-    if (!displayName.contains(m_filterText, Qt::CaseInsensitive)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-void LibraryEntrySortFilterModel::scheduleApply() { m_applyTimer.start(); }
-
-void LibraryEntrySortFilterModel::applyFilters() {
-  m_applyTimer.stop();
-
-  beginResetModel();
-  m_sourceRows.clear();
-
-  if (m_sourceModel == nullptr) {
-    endResetModel();
-    emit countChanged();
-    return;
-  }
-
-  const auto sortRole = m_sortRole;
-  const auto isTextSort = sortRole == library::EntryListModel::DisplayName;
-  const auto sourceRowCount = m_sourceModel->rowCount({});
-
-  std::vector<SortableRow> rows;
-  rows.reserve(sourceRowCount);
-
-  for (auto row = 0; row < sourceRowCount; ++row) {
-    const auto sourceIndex = m_sourceModel->index(row, 0);
-
-    if (!accepts(sourceIndex)) {
-      continue;
-    }
-
-    // TODO
-    // Read once per row here; a comparison then compares two members
-    if (isTextSort) {
-      rows.push_back({row, m_sourceModel->data(sourceIndex, sortRole).toString().toCaseFolded(), 0});
-    } else {
-      rows.push_back({row, {}, m_sourceModel->data(sourceIndex, sortRole).toLongLong()});
-    }
-  }
-
-  // TODO
-  // Stable so rows sharing a key keep the same order between passes, rather than
-  // shuffling when an unrelated filter changes
-  std::stable_sort(rows.begin(), rows.end(), [isTextSort, this](const SortableRow &left, const SortableRow &right) {
-    if (isTextSort) {
-      return m_sortAscending ? left.text < right.text : right.text < left.text;
-    }
-
-    return m_sortAscending ? left.number < right.number : right.number < left.number;
-  });
-
-  m_sourceRows.reserve(rows.size());
-
-  for (const auto &row : rows) {
-    m_sourceRows.push_back(row.sourceRow);
-  }
-
-  endResetModel();
-  emit countChanged();
-}
-
-QModelIndex LibraryEntrySortFilterModel::sourceIndexFor(const int row) const {
-  if (m_sourceModel == nullptr || row < 0 || row >= static_cast<int>(m_sourceRows.size())) {
-    return {};
-  }
-
-  const auto sourceRow = m_sourceRows.at(row);
-
-  if (sourceRow >= m_sourceModel->rowCount({})) {
-    return {};
-  }
-
-  return m_sourceModel->index(sourceRow, 0);
-}
-
 int LibraryEntrySortFilterModel::getEntryIdAt(const int row) const {
-  const auto sourceIndex = sourceIndexFor(row);
-
-  if (!sourceIndex.isValid()) {
+  if (row < 0 || row >= rowCount({})) {
     return -1;
   }
 
-  return m_sourceModel->data(sourceIndex, library::EntryListModel::Id).toInt();
+  return data(index(row, 0), library::EntryListModel::Id).toInt();
 }
 
 QVariantMap LibraryEntrySortFilterModel::getCountByPlatform() const {
@@ -278,7 +263,29 @@ QVariantMap LibraryEntrySortFilterModel::getCountByPlatform() const {
     return {};
   }
 
-  return m_sourceModel->getCountByPlatform();
+  if (!m_collapseVariants) {
+    return m_sourceModel->getCountByPlatform();
+  }
+
+  // TODO
+  // Counted over the rows a collapsed grid actually shows, so the platform totals and
+  // the grid do not disagree by however many variants are folded away. The platform
+  // filter itself is left out, so its own chip still shows what selecting it would give
+  QVariantMap counts;
+
+  for (auto row = 0; row < m_sourceModel->rowCount(QModelIndex()); ++row) {
+    const auto index = m_sourceModel->index(row, 0);
+    const auto groupId = m_sourceModel->data(index, library::EntryListModel::VariantGroupId).toInt();
+
+    if (groupId != -1 && !m_sourceModel->data(index, library::EntryListModel::IsVariantPrimary).toBool()) {
+      continue;
+    }
+
+    const auto platformId = m_sourceModel->data(index, library::EntryListModel::PlatformId).toString();
+    counts[platformId] = counts.value(platformId, 0).toInt() + 1;
+  }
+
+  return counts;
 }
 
 bool LibraryEntrySortFilterModel::matchesSmartFolder(const int folderId, const int entryId) {
@@ -303,52 +310,6 @@ void LibraryEntrySortFilterModel::setEntryFavorite(const int entryId, const bool
   }
 
   m_sourceModel->setEntryFavorite(entryId, favorite);
-}
-
-int LibraryEntrySortFilterModel::rowCount(const QModelIndex &parent) const {
-  if (parent.isValid()) {
-    return 0;
-  }
-
-  return static_cast<int>(m_sourceRows.size());
-}
-
-QVariant LibraryEntrySortFilterModel::data(const QModelIndex &index, const int role) const {
-  const auto sourceIndex = sourceIndexFor(index.row());
-
-  if (!index.isValid() || !sourceIndex.isValid()) {
-    return {};
-  }
-
-  return m_sourceModel->data(sourceIndex, role);
-}
-
-bool LibraryEntrySortFilterModel::setData(const QModelIndex &index, const QVariant &value, const int role) {
-  const auto sourceIndex = sourceIndexFor(index.row());
-
-  if (!index.isValid() || !sourceIndex.isValid()) {
-    return false;
-  }
-
-  return m_sourceModel->setData(sourceIndex, value, role);
-}
-
-QHash<int, QByteArray> LibraryEntrySortFilterModel::roleNames() const {
-  if (m_sourceModel == nullptr) {
-    return {};
-  }
-
-  return m_sourceModel->roleNames();
-}
-
-Qt::ItemFlags LibraryEntrySortFilterModel::flags(const QModelIndex &index) const {
-  const auto sourceIndex = sourceIndexFor(index.row());
-
-  if (!index.isValid() || !sourceIndex.isValid()) {
-    return Qt::NoItemFlags;
-  }
-
-  return m_sourceModel->flags(sourceIndex);
 }
 
 } // namespace firelight::gui

@@ -94,6 +94,73 @@ TEST_F(LibraryIngestServiceTest, RemovingLastRunConfigHidesEntry) {
   EXPECT_TRUE(entry->hidden);
 }
 
+// The reason removal hides rather than deletes: everything the user built on top of
+// an entry has to be there when the file comes back. content_hash is what makes the
+// returning file land on the same row rather than a new one
+TEST_F(LibraryIngestServiceTest, RemovingAndReaddingAFileKeepsTheEntryIntact) {
+  auto contentFile = makeContentFile("/roms/Chrono Trigger (USA).sfc", 6, "hashKeep");
+  ASSERT_TRUE(m_repo.create(contentFile));
+
+  auto entry = m_repo.getEntryWithContentHash("hashKeep");
+  ASSERT_TRUE(entry.has_value());
+  const auto originalId = entry->id;
+
+  // Everything a user can put on an entry
+  entry->displayName = "Chrono Trigger";
+  entry->nameUserSet = true;
+  entry->favorite = true;
+  entry->rating = 5;
+  entry->activeSaveSlot = 3;
+  ASSERT_TRUE(m_repo.update(*entry));
+
+  GameMetadata edited;
+  edited.description = "My own words";
+  ASSERT_TRUE(m_repo.applyEntryMetadata(originalId, edited, {metadata_fields::DESCRIPTION}, true));
+
+  Tag tag{.name = "finished"};
+  ASSERT_TRUE(m_repo.createTag(tag));
+  ASSERT_TRUE(m_repo.setEntryTags(originalId, {tag.id}));
+
+  auto folder = FolderInfo{.displayName = "Favourites"};
+  ASSERT_TRUE(m_repo.create(folder));
+  auto membership = FolderEntryInfo{.folderId = folder.id, .entryId = originalId};
+  ASSERT_TRUE(m_repo.create(membership));
+
+  VariantGroup group{.title = "Chrono Trigger"};
+  ASSERT_TRUE(m_repo.createVariantGroup(group));
+  ASSERT_TRUE(m_repo.setEntryVariantGroup(originalId, group.id, true));
+
+  // The file goes away
+  ASSERT_TRUE(m_repo.deleteContentFile(contentFile.m_id));
+
+  entry = m_repo.getEntryWithContentHash("hashKeep");
+  ASSERT_TRUE(entry.has_value());
+  EXPECT_TRUE(entry->hidden);
+
+  // ...and comes back
+  auto readded = makeContentFile("D:/elsewhere/Chrono Trigger (USA).sfc", 6, "hashKeep");
+  ASSERT_TRUE(m_repo.create(readded));
+
+  entry = m_repo.getEntryWithContentHash("hashKeep");
+  ASSERT_TRUE(entry.has_value());
+  EXPECT_FALSE(entry->hidden);
+
+  EXPECT_EQ(entry->id, originalId);
+  EXPECT_EQ(entry->displayName, "Chrono Trigger");
+  EXPECT_TRUE(entry->nameUserSet);
+  EXPECT_TRUE(entry->favorite);
+  EXPECT_EQ(entry->rating, 5u);
+  EXPECT_EQ(entry->activeSaveSlot, 3u);
+  EXPECT_EQ(entry->metadata.description, "My own words");
+  EXPECT_TRUE(entry->metadataOverrides.isUserSet(metadata_fields::DESCRIPTION));
+  EXPECT_EQ(entry->tagIds, (std::vector<int>{tag.id}));
+  EXPECT_EQ(entry->folderIds, (std::vector<int>{folder.id}));
+  EXPECT_EQ(entry->variantGroupId, group.id);
+
+  // Only one row for the content, so the re-add did not duplicate it
+  EXPECT_EQ(countEntriesWithHash(m_repo.getEntries(0, 0), "hashKeep"), 1);
+}
+
 // A delete event while other run configurations still exist must NOT hide the
 // entry (only the removal of the *last* one hides it)
 TEST_F(LibraryIngestServiceTest, DeleteEventKeepsEntryVisibleWhileRunConfigsRemain) {

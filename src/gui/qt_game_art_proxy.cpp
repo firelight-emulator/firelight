@@ -10,10 +10,6 @@
 
 namespace firelight::gui {
 
-namespace {
-constexpr auto API_KEY_SETTING = "steamgriddb/apiKey";
-} // namespace
-
 QtGameArtProxy::QtGameArtProxy(metadata::MetadataService &service, metadata::SteamGridDbArtProvider &provider,
                                metadata::IMediaAssetRepository &mediaAssets, QObject *parent)
     : QObject(parent), m_service(service), m_provider(provider), m_mediaAssets(mediaAssets) {
@@ -24,7 +20,7 @@ QtGameArtProxy::QtGameArtProxy(metadata::MetadataService &service, metadata::Ste
   // Seed the provider with the persisted key (the user can also paste one at
   // runtime via setApiKey)
   const QSettings settings;
-  m_provider.setApiKey(settings.value(API_KEY_SETTING).toString().toStdString());
+  m_provider.setApiKey(settings.value(QtGameArtProxy::API_KEY_SETTING).toString().toStdString());
 }
 
 QtGameArtProxy::~QtGameArtProxy() {
@@ -42,13 +38,18 @@ QString QtGameArtProxy::providerName() const { return QString::fromStdString(m_p
 
 QString QtGameArtProxy::apiKey() const {
   const QSettings settings;
-  return settings.value(API_KEY_SETTING).toString();
+  return settings.value(QtGameArtProxy::API_KEY_SETTING).toString();
 }
 
 void QtGameArtProxy::setApiKey(const QString &key) {
   QSettings settings;
-  settings.setValue(API_KEY_SETTING, key);
+  settings.setValue(QtGameArtProxy::API_KEY_SETTING, key);
   m_provider.setApiKey(key.toStdString());
+
+  // TODO
+  // Entries skipped while there was no key were deliberately left unmarked, so the
+  // sweep still has them to look up
+  m_service.startArtSweep();
   emit providerConfiguredChanged();
 }
 
@@ -86,7 +87,7 @@ void QtGameArtProxy::search(const QString &contentHash, const QString &gameName,
   m_pool.start([this, contentHash, mediaType, name, platformId, type] {
     std::vector<metadata::ArtCandidate> results;
     if (!m_shuttingDown) {
-      results = m_provider.search(name, platformId, type);
+      results = m_provider.search(name, platformId, type).candidates;
     }
 
     // Marshal the results back onto the GUI thread. Tying the invocation to

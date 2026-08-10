@@ -11,11 +11,48 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::library {
+
+namespace {
+// TODO
+// QML reads and writes these as one comma-separated string, so the list shape stops
+// at the model boundary
+QString joinList(const std::vector<std::string> &values) {
+  QStringList parts;
+
+  for (const auto &value : values) {
+    parts.append(QString::fromStdString(value));
+  }
+
+  return parts.join(QStringLiteral(", "));
+}
+
+std::vector<std::string> splitList(const QString &value) {
+  std::vector<std::string> values;
+
+  for (const auto &part : value.split(QLatin1Char(','), Qt::SkipEmptyParts)) {
+    const auto trimmed = part.trimmed();
+
+    if (!trimmed.isEmpty()) {
+      values.push_back(trimmed.toStdString());
+    }
+  }
+
+  return values;
+}
+} // namespace
+
 EntryListModel::EntryListModel(UserLibraryService &userLibrary, activity::IActivityLog &activityLog,
                                platforms::IPlatformService &platformService,
-                               achievements::AchievementService &achievementService, QObject *parent)
+                               achievements::AchievementService &achievementService, VariantGroupService &variantGroups,
+                               QObject *parent)
     : QAbstractListModel(parent), m_userLibrary(userLibrary), m_activityLog(activityLog),
-      m_platformService(platformService), m_achievementService(achievementService) {
+      m_platformService(platformService), m_achievementService(achievementService), m_variantGroups(variantGroups) {
+  m_variantGroupUpdatedConnection =
+      EventDispatcher::instance().subscribe<VariantGroupUpdatedEvent>([this](const VariantGroupUpdatedEvent &event) {
+        const auto groupId = event.groupId;
+        QMetaObject::invokeMethod(this, [this, groupId] { refreshVariantGroup(groupId); }, Qt::QueuedConnection);
+      });
+
   m_gamePlayedConnection = EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
       [this](const emulation::EmulationStartedEvent &event) {
         // Published on the render thread; hop to the GUI thread before
@@ -103,6 +140,11 @@ QHash<int, QByteArray> EntryListModel::roleNames() const {
   roles[AchievementSetCount] = "achievementSetCount";
   roles[Rating] = "rating";
   roles[GroupKey] = "groupKey";
+  roles[VariantGroupId] = "variantGroupId";
+  roles[VariantCount] = "variantCount";
+  roles[IsVariantPrimary] = "isVariantPrimary";
+  roles[VariantAutoLaunch] = "variantAutoLaunch";
+  roles[SearchText] = "searchText";
   return roles;
 }
 
@@ -113,12 +155,20 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return QVariant{};
   }
 
-  const auto item = m_items.at(index.row());
+  const auto &item = m_items.at(index.row());
 
   switch (role) {
   case Id:
     return item.entry.id;
   case DisplayName:
+    // TODO
+    // The entry standing for a group is shown under the group's name. Until somebody
+    // renames the group the two are the same string, so this only shows through once
+    // the name was chosen deliberately
+    if (item.isVariantPrimary && !item.variantTitle.isEmpty()) {
+      return item.variantTitle;
+    }
+
     return QString::fromStdString(item.entry.displayName);
   case ContentHash:
     return QString::fromStdString(item.entry.contentHash);
@@ -142,6 +192,16 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return item.entry.rating;
   case GroupKey:
     return item.groupKey;
+  case VariantGroupId:
+    return item.variantGroupId;
+  case VariantCount:
+    return item.variantCount;
+  case IsVariantPrimary:
+    return item.isVariantPrimary;
+  case VariantAutoLaunch:
+    return item.variantAutoLaunch;
+  case SearchText:
+    return item.searchText;
   case Icon1x1SourceUrl:
     return QString::fromStdString(item.entry.icon1x1SourceUrl);
   case BoxartFrontSourceUrl:
@@ -149,17 +209,17 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
   case BoxartBackSourceUrl:
     return QString::fromStdString(item.entry.boxartBackSourceUrl);
   case Description:
-    return QString::fromStdString(item.entry.description);
+    return QString::fromStdString(item.entry.metadata.description);
   case ReleaseYear:
-    return item.entry.releaseYear;
+    return item.entry.metadata.releaseYear;
   case Developer:
-    return QString::fromStdString(item.entry.developer);
+    return QString::fromStdString(item.entry.metadata.developer);
   case Publisher:
-    return QString::fromStdString(item.entry.publisher);
+    return QString::fromStdString(item.entry.metadata.publisher);
   case Genres:
-    return QString::fromStdString(item.entry.genres);
+    return joinList(item.entry.metadata.genres);
   case RegionIds:
-    return QString::fromStdString(item.entry.regionIds);
+    return joinList(item.entry.metadata.regions);
   case CreatedAt:
     return QVariant::fromValue(item.entry.createdAt);
   case FolderIds:
@@ -174,9 +234,9 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return paths;
   }
   case LastPlayedAt:
-    return QVariant::fromValue(item.lastPlayedEpochMillis);
+    return QVariant::fromValue(item.variantLastPlayedMillis);
   case NumSecondsPlayed:
-    return QVariant::fromValue(item.numSecondsPlayed);
+    return QVariant::fromValue(item.variantSecondsPlayed);
   case AchievementsEarned:
     return item.achievementsEarned;
   case AchievementsTotal:
@@ -195,12 +255,20 @@ bool EntryListModel::setData(const QModelIndex &index, const QVariant &value, in
 
   auto &item = m_items[index.row()];
 
-  // Metadata fields persist through updateEntryMetadata (a wider write that
-  // covers name/description/art); the rest go through update()
-  bool metadata = false;
+  // TODO
+  // A metadata field goes through applyEntryMetadata so the write merges into the
+  // stored document and records that the user set it; the rest go through update()
+  const char *changedField = nullptr;
 
   switch (role) {
   case DisplayName:
+    // TODO
+    // The row is showing the group's name, so that is what a rename edits
+    if (item.isVariantPrimary && item.variantGroupId != -1) {
+      m_variantGroups.setTitle(item.variantGroupId, value.toString().toStdString());
+      return true;
+    }
+
     item.entry.displayName = value.toString().toStdString();
     item.entry.nameUserSet = true;
     break;
@@ -216,32 +284,33 @@ bool EntryListModel::setData(const QModelIndex &index, const QVariant &value, in
     item.entry.activeSaveSlot = value.toUInt();
     break;
   case Description:
-    item.entry.description = value.toString().toStdString();
-    metadata = true;
+    item.entry.metadata.description = value.toString().toStdString();
+    changedField = metadata_fields::DESCRIPTION;
     break;
   case Developer:
-    item.entry.developer = value.toString().toStdString();
-    metadata = true;
+    item.entry.metadata.developer = value.toString().toStdString();
+    changedField = metadata_fields::DEVELOPER;
     break;
   case Publisher:
-    item.entry.publisher = value.toString().toStdString();
-    metadata = true;
+    item.entry.metadata.publisher = value.toString().toStdString();
+    changedField = metadata_fields::PUBLISHER;
     break;
   case ReleaseYear:
-    item.entry.releaseYear = value.toUInt();
-    metadata = true;
+    item.entry.metadata.releaseYear = value.toUInt();
+    changedField = metadata_fields::RELEASE_YEAR;
     break;
   case Genres:
-    item.entry.genres = value.toString().toStdString();
-    metadata = true;
+    item.entry.metadata.genres = splitList(value.toString());
+    changedField = metadata_fields::GENRES;
     break;
   default:
     return false;
   }
 
   emit dataChanged(index, index, {role});
-  if (metadata) {
-    m_userLibrary.updateEntryMetadata(item.entry);
+  if (changedField != nullptr) {
+    item.entry.metadataOverrides.markUserSet(changedField);
+    m_userLibrary.applyEntryMetadata(item.entry.id, item.entry.metadata, {changedField}, true);
   } else {
     m_userLibrary.update(item.entry);
   }
@@ -347,21 +416,20 @@ QString EntryListModel::computeGroupKey(const Item &item) const {
     return platform.has_value() ? QString::fromStdString(platform->name) : QStringLiteral("Unknown platform");
   }
   if (m_groupMode == "decade") {
-    if (item.entry.releaseYear == 0) {
+    if (item.entry.metadata.releaseYear == 0) {
       return QStringLiteral("Unknown");
     }
-    return QString::number((item.entry.releaseYear / 10) * 10) + QStringLiteral("s");
+    return QString::number((item.entry.metadata.releaseYear / 10) * 10) + QStringLiteral("s");
   }
   if (m_groupMode == "year") {
-    return item.entry.releaseYear == 0 ? QStringLiteral("Unknown") : QString::number(item.entry.releaseYear);
+    return item.entry.metadata.releaseYear == 0 ? QStringLiteral("Unknown")
+                                                : QString::number(item.entry.metadata.releaseYear);
   }
   if (m_groupMode == "genre") {
-    if (item.entry.genres.empty()) {
+    if (item.entry.metadata.genres.empty()) {
       return QStringLiteral("No genre");
     }
-    auto genres = QString::fromStdString(item.entry.genres);
-    const auto comma = genres.indexOf(',');
-    return (comma >= 0 ? genres.left(comma) : genres).trimmed();
+    return QString::fromStdString(item.entry.metadata.genres.front()).trimmed();
   }
   if (m_groupMode == "title") {
     if (item.entry.displayName.empty()) {
@@ -417,10 +485,10 @@ EntryFields EntryListModel::buildEntryFields(const Item &item) {
   EntryFields fields;
   fields.platformId = static_cast<int>(item.entry.platformId);
   fields.favorite = item.entry.favorite;
-  fields.genres = item.entry.genres;
-  fields.developer = item.entry.developer;
-  fields.publisher = item.entry.publisher;
-  fields.releaseYear = static_cast<int>(item.entry.releaseYear);
+  fields.genres = item.entry.metadata.genres;
+  fields.developer = item.entry.metadata.developer;
+  fields.publisher = item.entry.metadata.publisher;
+  fields.releaseYear = static_cast<int>(item.entry.metadata.releaseYear);
   fields.contentDirectoryIds = item.entry.contentDirectoryIds;
   fields.contentPaths = item.entry.contentPaths;
   fields.lastPlayedMillis = static_cast<int64_t>(item.lastPlayedEpochMillis);
@@ -455,6 +523,142 @@ bool EntryListModel::matchesSmartFolder(int folderId, int entryId) {
 void EntryListModel::invalidateSmartFolderCache() {
   m_smartFolderCache.clear();
   emit countByFolderIdChanged();
+}
+
+void EntryListModel::applyVariantGrouping() {
+  m_entryIdsByGroup.clear();
+
+  const auto groups = m_userLibrary.getVariantGroups();
+
+  if (groups.empty()) {
+    for (auto &item : m_items) {
+      item.variantGroupId = -1;
+      item.variantCount = 1;
+      item.isVariantPrimary = true;
+      item.variantAutoLaunch = false;
+      item.variantTitle.clear();
+      item.variantSecondsPlayed = item.numSecondsPlayed;
+      item.variantLastPlayedMillis = item.lastPlayedEpochMillis;
+      item.searchText = computeSearchText(item);
+    }
+
+    return;
+  }
+
+  std::vector<Entry> entries;
+  entries.reserve(m_items.size());
+
+  for (const auto &item : m_items) {
+    entries.push_back(item.entry);
+  }
+
+  const auto resolution = m_variantGroups.resolveAll(entries, groups);
+
+  std::unordered_map<int, const VariantGroup *> groupsById;
+  for (const auto &group : groups) {
+    groupsById[group.id] = &group;
+  }
+
+  struct Totals {
+    uint64_t seconds = 0;
+    uint64_t lastPlayed = 0;
+  };
+
+  // TODO
+  // Only the rows count. A hidden entry is one the user took out of their library, so it
+  // stops counting toward what the group played
+  std::unordered_map<int, Totals> totalsByGroup;
+
+  for (auto &item : m_items) {
+    const auto groupId = item.entry.variantGroupId.value_or(-1);
+    const auto group = groupsById.find(groupId);
+
+    if (groupId == -1 || group == groupsById.end()) {
+      item.variantGroupId = -1;
+      item.variantCount = 1;
+      item.isVariantPrimary = true;
+      item.variantAutoLaunch = false;
+      item.variantTitle.clear();
+      item.variantSecondsPlayed = item.numSecondsPlayed;
+      item.variantLastPlayedMillis = item.lastPlayedEpochMillis;
+      continue;
+    }
+
+    const auto primary = resolution.primaryByGroup.find(groupId);
+    const auto count = resolution.memberCountByGroup.find(groupId);
+
+    item.variantGroupId = groupId;
+    item.variantCount = count == resolution.memberCountByGroup.end() ? 1 : count->second;
+    item.isVariantPrimary = primary != resolution.primaryByGroup.end() && primary->second == item.entry.id;
+    item.variantAutoLaunch = group->second->autoLaunchPrimary;
+    item.variantTitle = QString::fromStdString(group->second->title);
+
+    m_entryIdsByGroup[groupId].push_back(item.entry.id);
+
+    auto &totals = totalsByGroup[groupId];
+    totals.seconds += item.numSecondsPlayed;
+    totals.lastPlayed = std::max(totals.lastPlayed, item.lastPlayedEpochMillis);
+  }
+
+  for (auto &item : m_items) {
+    if (item.variantGroupId != -1) {
+      const auto &totals = totalsByGroup[item.variantGroupId];
+      item.variantSecondsPlayed = totals.seconds;
+      item.variantLastPlayedMillis = totals.lastPlayed;
+    }
+
+    item.searchText = computeSearchText(item);
+  }
+}
+
+QString EntryListModel::computeSearchText(const Item &item) const {
+  QStringList parts;
+  parts.append(QString::fromStdString(item.entry.displayName));
+
+  if (!item.variantTitle.isEmpty()) {
+    parts.append(item.variantTitle);
+  }
+
+  if (item.isVariantPrimary && item.variantGroupId != -1) {
+    const auto members = m_entryIdsByGroup.find(item.variantGroupId);
+
+    if (members != m_entryIdsByGroup.end()) {
+      for (const auto memberId : members->second) {
+        const auto index = m_indexByEntryId.find(memberId);
+
+        if (index != m_indexByEntryId.end()) {
+          parts.append(QString::fromStdString(m_items.at(index->second).entry.displayName));
+        }
+      }
+    }
+  }
+
+  return parts.join(QLatin1Char('\n')).toLower();
+}
+
+void EntryListModel::refreshVariantGroup(const int groupId) {
+  std::vector<int> affected;
+
+  for (auto i = 0; i < m_items.size(); ++i) {
+    if (m_items.at(i).variantGroupId == groupId || m_items.at(i).entry.variantGroupId.value_or(-1) == groupId) {
+      affected.push_back(i);
+    }
+  }
+
+  applyVariantGrouping();
+
+  // TODO
+  // Rows that joined or left the group in this pass are told about too, so the proxy
+  // re-tests the one that stopped standing for the group as well as the one that started
+  for (auto i = 0; i < m_items.size(); ++i) {
+    if (m_items.at(i).variantGroupId == groupId && std::find(affected.begin(), affected.end(), i) == affected.end()) {
+      affected.push_back(i);
+    }
+  }
+
+  for (const auto row : affected) {
+    emit dataChanged(createIndex(row, 0), createIndex(row, 0), {});
+  }
 }
 
 void EntryListModel::reset() {
@@ -492,6 +696,8 @@ void EntryListModel::reset() {
       m_items.emplace_back(item);
     }
   }
+
+  applyVariantGrouping();
 
   emit endResetModel();
   emit countChanged();
@@ -559,10 +765,17 @@ void EntryListModel::syncEntry(const int entryId) {
   if (!visible) {
     if (present) {
       const int row = it->second;
+      const auto leftGroup = m_items.at(row).variantGroupId;
+
       beginRemoveRows(QModelIndex(), row, row);
       m_items.removeAt(row);
       rebuildIndex(); // keep the id->row map consistent before the proxy reads
       endRemoveRows();
+
+      if (leftGroup != -1) {
+        refreshVariantGroup(leftGroup);
+      }
+
       scheduleCountsChanged();
     }
     return;
@@ -573,11 +786,25 @@ void EntryListModel::syncEntry(const int entryId) {
   applyAchievementCounts(item);
   item.groupKey = computeGroupKey(item);
 
+  const auto joinedGroup = entry->variantGroupId.value_or(-1);
+
   // Update the entry in place if it's already present in the model
   if (present) {
     const int row = it->second;
+    const auto leftGroup = m_items.at(row).variantGroupId;
     m_items[row] = item;
+
+    applyVariantGrouping();
     emit dataChanged(createIndex(row, 0), createIndex(row, 0), {});
+
+    if (leftGroup != -1 && leftGroup != joinedGroup) {
+      refreshVariantGroup(leftGroup);
+    }
+
+    if (joinedGroup != -1) {
+      refreshVariantGroup(joinedGroup);
+    }
+
     scheduleCountsChanged();
     return;
   }
@@ -588,6 +815,13 @@ void EntryListModel::syncEntry(const int entryId) {
   m_items.append(item);
   m_indexByEntryId[entryId] = row;
   endInsertRows();
+
+  if (joinedGroup != -1) {
+    refreshVariantGroup(joinedGroup);
+  } else {
+    applyVariantGrouping();
+  }
+
   scheduleCountsChanged();
 }
 } // namespace firelight::library

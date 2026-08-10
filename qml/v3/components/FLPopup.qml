@@ -65,8 +65,6 @@ Menu {
         }
     }
 
-
-
     Connections {
         target: FocusCursor.highlight
         function onCursorItemChanged() {

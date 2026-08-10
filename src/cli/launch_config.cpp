@@ -1,5 +1,7 @@
 #include "cli/launch_config.hpp"
 
+#include <firelight/util/strings.hpp>
+
 #include <algorithm>
 #include <cctype>
 #include <fstream>
@@ -11,20 +13,6 @@
 namespace firelight::cli {
 
 namespace {
-
-std::string trim(const std::string &s) {
-  const auto begin = s.find_first_not_of(" \t\r\n");
-  if (begin == std::string::npos) {
-    return {};
-  }
-  const auto end = s.find_last_not_of(" \t\r\n");
-  return s.substr(begin, end - begin + 1);
-}
-
-std::string toLower(std::string s) {
-  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
-  return s;
-}
 
 // Converts a JSON scalar to the string form the settings layer stores. Objects
 // and arrays are rejected (a setting value is always a scalar)
@@ -64,7 +52,7 @@ std::vector<OverridePair> parseProperties(const std::string &contents) {
   std::istringstream stream(contents);
   std::string line;
   while (std::getline(stream, line)) {
-    const auto trimmed = trim(line);
+    const auto trimmed = strings::trim(line);
     if (trimmed.empty() || trimmed[0] == '#' || trimmed[0] == ';') {
       continue;
     }
@@ -74,8 +62,8 @@ std::vector<OverridePair> parseProperties(const std::string &contents) {
                                "key=value): " +
                                trimmed);
     }
-    const auto key = trim(trimmed.substr(0, eq));
-    const auto value = trim(trimmed.substr(eq + 1));
+    const auto key = strings::trim(trimmed.substr(0, eq));
+    const auto value = strings::trim(trimmed.substr(eq + 1));
     if (key.empty()) {
       throw std::runtime_error("settings-file line has an empty key: " + trimmed);
     }
@@ -95,7 +83,7 @@ std::vector<OverridePair> loadOverrideFile(const std::string &path) {
   buffer << file.rdbuf();
   const auto contents = buffer.str();
 
-  const auto trimmed = trim(contents);
+  const auto trimmed = strings::trim(contents);
   if (!trimmed.empty() && trimmed[0] == '{') {
     return parseJson(trimmed);
   }
@@ -123,7 +111,7 @@ std::optional<GamepadType> parseControllerType(const std::string &name) {
       {"nso-snes", NINTENDO_NSO_SNES},
       {"nso-genesis", NINTENDO_NSO_GENESIS},
   };
-  const auto it = ALIASES.find(toLower(name));
+  const auto it = ALIASES.find(strings::toLower(name));
   if (it == ALIASES.end()) {
     return std::nullopt;
   }

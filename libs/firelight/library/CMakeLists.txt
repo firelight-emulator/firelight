@@ -9,6 +9,9 @@ find_package(nlohmann_json REQUIRED)
 add_library(firelight_library STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_user_library_repository.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/smart_folder.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/metadata_overrides.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/filename_tags.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/variant_group.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/library_scanner2.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/archive_reader.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/content_hasher.cpp
@@ -32,6 +35,7 @@ target_include_directories(firelight_library
 )
 
 target_link_libraries(firelight_library
+        PUBLIC firelight_util
         PUBLIC Qt6::Core
         PRIVATE Qt6::Concurrent
         PRIVATE SQLiteCpp
@@ -43,3 +47,25 @@ target_link_libraries(firelight_library
         PRIVATE rcheevos
         PRIVATE firelight_platforms
 )
+
+# --- Unit tests for the parts that need no database, no Qt and no services ---
+find_package(GTest REQUIRED)
+include(GoogleTest)
+enable_testing()
+
+add_executable(firelight_library_test
+        ${CMAKE_CURRENT_LIST_DIR}/tests/main.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/metadata_overrides_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/filename_tags_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/variant_primary_test.cpp
+)
+target_include_directories(firelight_library_test
+        PRIVATE ${CMAKE_CURRENT_LIST_DIR}/tests
+        PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src
+)
+target_link_libraries(firelight_library_test
+        PRIVATE firelight_library
+        PRIVATE firelight_util
+        PRIVATE GTest::gtest
+)
+gtest_discover_tests(firelight_library_test)

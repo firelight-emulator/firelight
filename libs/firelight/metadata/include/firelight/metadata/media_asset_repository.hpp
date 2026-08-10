@@ -31,6 +31,15 @@ public:
                                                                       MediaType type) = 0;
 
   /**
+   * Every selected asset that came from matching a title rather than a content hash.
+   *
+   * One query rather than one per game, because the caller is asking about a whole library
+   *
+   * @return The unconfirmed selections, worst-scoring first
+   */
+  [[nodiscard]] virtual std::vector<MediaAsset> listUnconfirmedSelections() = 0;
+
+  /**
    * @param contentHash The content hash of the game to get the selected asset for
    * @param type The type of asset to get the selected asset for
    * @return The currently selected asset for the given content hash and type, or std::nullopt if none is selected

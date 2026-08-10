@@ -5,6 +5,7 @@ find_package(nlohmann_json REQUIRED)
 
 add_library(firelight_metadata STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/media_asset.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/media_slot.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_game_metadata_source.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/sqlite_media_asset_repository.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/steamgriddb_art_provider.cpp
@@ -16,6 +17,7 @@ target_include_directories(firelight_metadata
         PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp/include
 )
 target_link_libraries(firelight_metadata
+        PUBLIC firelight_util
         PRIVATE spdlog::spdlog
         PRIVATE SQLiteCpp
         PRIVATE sqlite3
@@ -32,6 +34,7 @@ add_executable(firelight_metadata_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/game_metadata_source_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/media_asset_repository_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/steamgriddb_art_provider_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/media_slot_test.cpp
 )
 target_include_directories(firelight_metadata_test
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/tests
@@ -40,6 +43,7 @@ target_include_directories(firelight_metadata_test
 )
 target_link_libraries(firelight_metadata_test
         PRIVATE firelight_metadata
+        PRIVATE firelight_util
         PRIVATE SQLiteCpp
         PRIVATE sqlite3
         PRIVATE nlohmann_json::nlohmann_json

@@ -679,4 +679,254 @@ TEST_F(SqliteUserLibraryTest, EntryFileLocationsUseArchivePathTest) {
   ASSERT_EQ(entry->contentPaths.at(0), "roms/games.zip");
 }
 
+// Variant groups: a set of entries that are the same game. Membership lives on the
+// entry, so removing a group has to clear its members by hand -- there are no
+// foreign keys anywhere in this schema
+TEST_F(SqliteUserLibraryTest, VariantGroupRoundTrips) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::VariantGroup group{.title = "Chrono Trigger"};
+  ASSERT_TRUE(library.createVariantGroup(group));
+  ASSERT_NE(group.id, -1);
+
+  const auto stored = library.getVariantGroup(group.id);
+  ASSERT_TRUE(stored.has_value());
+  EXPECT_EQ(stored->title, "Chrono Trigger");
+  EXPECT_FALSE(stored->primaryEntryId.has_value());
+  EXPECT_FALSE(stored->primaryUserSet);
+}
+
+TEST_F(SqliteUserLibraryTest, EntriesJoinAndLeaveAVariantGroup) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::VariantGroup group{.title = "Super Metroid"};
+  ASSERT_TRUE(library.createVariantGroup(group));
+
+  library::Entry usa{.displayName = "Super Metroid (USA)", .contentHash = "hashUsa", .platformId = 6};
+  library::Entry jp{.displayName = "Super Metroid (Japan)", .contentHash = "hashJp", .platformId = 6};
+  ASSERT_TRUE(library.createEntry(usa));
+  ASSERT_TRUE(library.createEntry(jp));
+
+  ASSERT_TRUE(library.setEntryVariantGroup(usa.id, group.id, true));
+  ASSERT_TRUE(library.setEntryVariantGroup(jp.id, group.id, true));
+  EXPECT_EQ(library.getEntriesInVariantGroup(group.id).size(), 2u);
+
+  ASSERT_TRUE(library.setEntryVariantGroup(jp.id, std::nullopt, true));
+  EXPECT_EQ(library.getEntriesInVariantGroup(group.id).size(), 1u);
+
+  const auto loose = library.getEntry(jp.id);
+  ASSERT_TRUE(loose.has_value());
+  EXPECT_FALSE(loose->variantGroupId.has_value());
+}
+
+TEST_F(SqliteUserLibraryTest, DeletingAVariantGroupReleasesItsMembers) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::VariantGroup group{.title = "Zelda"};
+  ASSERT_TRUE(library.createVariantGroup(group));
+
+  library::Entry entry{.displayName = "Zelda (USA)", .contentHash = "hashZelda", .platformId = 5};
+  ASSERT_TRUE(library.createEntry(entry));
+  ASSERT_TRUE(library.setEntryVariantGroup(entry.id, group.id, true));
+
+  ASSERT_TRUE(library.deleteVariantGroup(group.id));
+
+  EXPECT_FALSE(library.getVariantGroup(group.id).has_value());
+
+  const auto released = library.getEntry(entry.id);
+  ASSERT_TRUE(released.has_value());
+  EXPECT_FALSE(released->variantGroupId.has_value());
+}
+
+// The whole point of the override set: a scrape must leave a user's typing alone
+TEST_F(SqliteUserLibraryTest, ApplyEntryMetadataRespectsTheOverrideSet) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::Entry entry{.displayName = "game.sfc", .contentHash = "hashMeta", .platformId = 6};
+  ASSERT_TRUE(library.createEntry(entry));
+
+  GameMetadata mine;
+  mine.description = "My own words";
+  ASSERT_TRUE(library.applyEntryMetadata(entry.id, mine, {metadata_fields::DESCRIPTION}, true));
+
+  GameMetadata scraped;
+  scraped.description = "Scraped words";
+  scraped.developer = "Nintendo";
+  ASSERT_TRUE(
+      library.applyEntryMetadata(entry.id, scraped, {metadata_fields::DESCRIPTION, metadata_fields::DEVELOPER}, false));
+
+  const auto stored = library.getEntry(entry.id);
+  ASSERT_TRUE(stored.has_value());
+  EXPECT_EQ(stored->metadata.description, "My own words");
+  EXPECT_EQ(stored->metadata.developer, "Nintendo");
+  EXPECT_TRUE(stored->metadataOverrides.isUserSet(metadata_fields::DESCRIPTION));
+  EXPECT_FALSE(stored->metadataOverrides.isUserSet(metadata_fields::DEVELOPER));
+}
+
+// A field only becomes pinned when the change is the user's; a scrape writing it
+// must not make it immune to the next scrape
+TEST_F(SqliteUserLibraryTest, OnlyAUserEditPinsAField) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::Entry entry{.displayName = "game.sfc", .contentHash = "hashPin", .platformId = 6};
+  ASSERT_TRUE(library.createEntry(entry));
+
+  GameMetadata first;
+  first.developer = "Old";
+  ASSERT_TRUE(library.applyEntryMetadata(entry.id, first, {metadata_fields::DEVELOPER}, false));
+
+  GameMetadata second;
+  second.developer = "New";
+  ASSERT_TRUE(library.applyEntryMetadata(entry.id, second, {metadata_fields::DEVELOPER}, false));
+
+  const auto stored = library.getEntry(entry.id);
+  ASSERT_TRUE(stored.has_value());
+  EXPECT_EQ(stored->metadata.developer, "New");
+  EXPECT_TRUE(stored->metadataOverrides.fields.empty());
+}
+
+// Tags are the user's own vocabulary, so one spelling per idea is enforceable here
+// in a way it is not for scraped genres
+TEST_F(SqliteUserLibraryTest, TagNamesCollideCaseInsensitively) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::Tag lower{.name = "sci-fi"};
+  library::Tag upper{.name = "Sci-Fi"};
+
+  ASSERT_TRUE(library.createTag(lower));
+  ASSERT_TRUE(library.createTag(upper));
+
+  EXPECT_EQ(lower.id, upper.id);
+  EXPECT_EQ(library.getTags().size(), 1u);
+}
+
+TEST_F(SqliteUserLibraryTest, SetEntryTagsReplacesAndCounts) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::Tag favourite{.name = "favourite"};
+  library::Tag backlog{.name = "backlog"};
+  ASSERT_TRUE(library.createTag(favourite));
+  ASSERT_TRUE(library.createTag(backlog));
+
+  library::Entry entry{.displayName = "game.sfc", .contentHash = "hashTag", .platformId = 6};
+  ASSERT_TRUE(library.createEntry(entry));
+
+  ASSERT_TRUE(library.setEntryTags(entry.id, {favourite.id, backlog.id}));
+
+  auto stored = library.getEntry(entry.id);
+  ASSERT_TRUE(stored.has_value());
+  EXPECT_EQ(stored->tagIds.size(), 2u);
+
+  // Setting is a replace, not an add
+  ASSERT_TRUE(library.setEntryTags(entry.id, {backlog.id}));
+
+  stored = library.getEntry(entry.id);
+  ASSERT_TRUE(stored.has_value());
+  EXPECT_EQ(stored->tagIds, (std::vector<int>{backlog.id}));
+
+  for (const auto &tag : library.getTags()) {
+    EXPECT_EQ(tag.usageCount, tag.id == backlog.id ? 1 : 0);
+  }
+}
+
+TEST_F(SqliteUserLibraryTest, RenamingATagKeepsItsEntries) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::Tag tag{.name = "rpg"};
+  ASSERT_TRUE(library.createTag(tag));
+
+  library::Entry entry{.displayName = "game.sfc", .contentHash = "hashRename", .platformId = 6};
+  ASSERT_TRUE(library.createEntry(entry));
+  ASSERT_TRUE(library.setEntryTags(entry.id, {tag.id}));
+
+  ASSERT_TRUE(library.renameTag(tag.id, "Role-Playing"));
+
+  const auto tags = library.getTags();
+  ASSERT_EQ(tags.size(), 1u);
+  EXPECT_EQ(tags.front().name, "Role-Playing");
+  EXPECT_EQ(tags.front().usageCount, 1);
+}
+
+// The case the OR IGNORE exists for: an entry carrying both tags would otherwise
+// trip UNIQUE(entry_id, tag_id) and fail the whole merge
+TEST_F(SqliteUserLibraryTest, MergingTagsAbsorbsEntriesCarryingBoth) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::Tag source{.name = "scifi"};
+  library::Tag target{.name = "science-fiction"};
+  ASSERT_TRUE(library.createTag(source));
+  ASSERT_TRUE(library.createTag(target));
+
+  library::Entry both{.displayName = "both.sfc", .contentHash = "hashBoth", .platformId = 6};
+  library::Entry onlySource{.displayName = "one.sfc", .contentHash = "hashOne", .platformId = 6};
+  ASSERT_TRUE(library.createEntry(both));
+  ASSERT_TRUE(library.createEntry(onlySource));
+
+  ASSERT_TRUE(library.setEntryTags(both.id, {source.id, target.id}));
+  ASSERT_TRUE(library.setEntryTags(onlySource.id, {source.id}));
+
+  ASSERT_TRUE(library.mergeTags(source.id, target.id));
+
+  const auto tags = library.getTags();
+  ASSERT_EQ(tags.size(), 1u);
+  EXPECT_EQ(tags.front().id, target.id);
+  EXPECT_EQ(tags.front().usageCount, 2);
+
+  const auto stored = library.getEntry(both.id);
+  ASSERT_TRUE(stored.has_value());
+  EXPECT_EQ(stored->tagIds, (std::vector<int>{target.id}));
+}
+
+TEST_F(SqliteUserLibraryTest, DeletingATagTakesItOffEveryEntry) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::Tag tag{.name = "temporary"};
+  ASSERT_TRUE(library.createTag(tag));
+
+  library::Entry entry{.displayName = "game.sfc", .contentHash = "hashDelete", .platformId = 6};
+  ASSERT_TRUE(library.createEntry(entry));
+  ASSERT_TRUE(library.setEntryTags(entry.id, {tag.id}));
+
+  ASSERT_TRUE(library.deleteTag(tag.id));
+
+  EXPECT_TRUE(library.getTags().empty());
+
+  const auto stored = library.getEntry(entry.id);
+  ASSERT_TRUE(stored.has_value());
+  EXPECT_TRUE(stored->tagIds.empty());
+}
+
+// getEntries loads folders, tags and file locations in grouped queries rather than
+// per entry, so it has to attach each to the right row
+TEST_F(SqliteUserLibraryTest, GetEntriesAttachesJoinsToTheRightRows) {
+  auto library = library::SqliteUserLibraryRepository(":memory:");
+
+  library::Tag tag{.name = "rpg"};
+  ASSERT_TRUE(library.createTag(tag));
+  auto folder = library::FolderInfo{.displayName = "Favourites"};
+  ASSERT_TRUE(library.create(folder));
+
+  library::Entry tagged{.displayName = "Alpha", .contentHash = "hashAlpha", .platformId = 6};
+  library::Entry bare{.displayName = "Bravo", .contentHash = "hashBravo", .platformId = 6};
+  ASSERT_TRUE(library.createEntry(tagged));
+  ASSERT_TRUE(library.createEntry(bare));
+
+  ASSERT_TRUE(library.setEntryTags(tagged.id, {tag.id}));
+  auto membership = library::FolderEntryInfo{.folderId = folder.id, .entryId = tagged.id};
+  ASSERT_TRUE(library.create(membership));
+
+  const auto entries = library.getEntries(0, 0);
+  ASSERT_EQ(entries.size(), 2u);
+
+  for (const auto &entry : entries) {
+    if (entry.id == tagged.id) {
+      EXPECT_EQ(entry.tagIds, (std::vector<int>{tag.id}));
+      EXPECT_EQ(entry.folderIds, (std::vector<int>{folder.id}));
+    } else {
+      EXPECT_TRUE(entry.tagIds.empty());
+      EXPECT_TRUE(entry.folderIds.empty());
+    }
+  }
+}
+
 } // namespace firelight::db

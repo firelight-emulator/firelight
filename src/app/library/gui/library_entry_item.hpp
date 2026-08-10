@@ -13,7 +13,6 @@ class LibraryEntryItem : public QQuickItem, public ServiceAccessor {
   Q_PROPERTY(QString name READ getName NOTIFY nameChanged)
   Q_PROPERTY(QString icon1x1SourceUrl READ getIcon1x1SourceUrl NOTIFY icon1x1SourceUrlChanged)
   Q_PROPERTY(QString platformIconName READ getPlatformIconName NOTIFY platformIconNameChanged)
-  Q_PROPERTY(int achievementSetId READ getAchievementSetId NOTIFY achievementSetIdChanged)
   //        Q_PROPERTY(QString abbreviation READ getAbbreviation NOTIFY
   //        abbreviationChanged)
 
@@ -32,8 +31,6 @@ public:
 
   [[nodiscard]] QString getName() const;
 
-  [[nodiscard]] int getAchievementSetId() const;
-
   [[nodiscard]] QString getIcon1x1SourceUrl() const;
 
   [[nodiscard]] QString getPlatformIconName() const;
@@ -49,8 +46,6 @@ signals:
 
   void nameChanged();
 
-  void achievementSetIdChanged();
-
   void icon1x1SourceUrlChanged();
 
   void platformIconNameChanged();
@@ -61,7 +56,6 @@ private:
   int m_platformId = 0;
   QString m_contentHash;
   QString m_name;
-  int m_achievementSetId = 0;
   QString m_icon1x1SourceUrl;
   QString m_platformIconName;
   //        QString m_abbreviation;

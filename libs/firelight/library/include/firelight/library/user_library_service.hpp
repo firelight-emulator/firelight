@@ -24,10 +24,49 @@ public:
   std::optional<Entry> getEntryWithContentHash(const std::string &contentHash);
   bool update(Entry &entry);
 
-  // Writes an entry's metadata fields (name, description, developer, publisher,
-  // genres, release year, artwork). Separate from update() so a user's own edits
-  // and the metadata pipeline share one write path
+  // Writes an entry's name and artwork projections. Separate from update() so a
+  // user's own edits and the metadata pipeline share one write path
   bool updateEntryMetadata(const Entry &entry);
+
+  // TODO
+  // Merges metadata into an entry's document, leaving fields the user pinned alone
+  // unless the change is theirs
+  bool applyEntryMetadata(int entryId, const GameMetadata &incoming, const std::set<std::string> &changedFields,
+                          bool isUserEdit);
+
+  // TODO
+  // Records that art was looked up, found or not
+  bool markArtFetched(int entryId, uint64_t whenMillis);
+
+  // TODO
+  // A handful of entries art has never been looked up for
+  std::vector<int> getEntryIdsMissingArt(int limit);
+
+  // Variant groups
+  bool createVariantGroup(VariantGroup &group);
+  bool updateVariantGroup(const VariantGroup &group);
+  bool deleteVariantGroup(int groupId);
+  std::vector<VariantGroup> getVariantGroups();
+  std::optional<VariantGroup> getVariantGroup(int groupId);
+  bool setEntryVariantGroup(int entryId, std::optional<int> groupId, bool isUserChoice);
+  std::vector<int> getEntryIdsWithNormalizedTitle(unsigned platformId, const std::string &normalizedTitle);
+  std::vector<Entry> getEntriesInVariantGroup(int groupId);
+
+  // TODO
+  // Pins a group's primary, so the preference ordering stops moving it
+  bool setVariantGroupPrimary(int groupId, int entryId);
+
+  // TODO
+  // Hands the primary back to the preference ordering
+  bool clearVariantGroupPrimary(int groupId);
+
+  // Tags
+  bool createTag(Tag &tag);
+  bool renameTag(int tagId, const std::string &name);
+  bool mergeTags(int sourceTagId, int targetTagId);
+  bool deleteTag(int tagId);
+  std::vector<Tag> getTags();
+  bool setEntryTags(int entryId, const std::vector<int> &tagIds);
 
   // Folders
   std::vector<FolderInfo> listFolders();

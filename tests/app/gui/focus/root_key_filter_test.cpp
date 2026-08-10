@@ -1,8 +1,7 @@
-#include <gtest/gtest.h>
-
 #include <QKeyEvent>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <gtest/gtest.h>
 
 // Probe for a global key handler installed at the end of the delivery chain
 // rather than the start. A key goes to the focused item and then bubbles up

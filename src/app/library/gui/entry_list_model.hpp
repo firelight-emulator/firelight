@@ -6,6 +6,7 @@
 
 #include <QAbstractListModel>
 #include <QTimer>
+#include <library/variant_group_service.hpp>
 #include <unordered_map>
 
 namespace firelight::activity {
@@ -64,7 +65,12 @@ public:
     AchievementsTotal,
     AchievementSetCount,
     Rating,
-    GroupKey
+    GroupKey,
+    VariantGroupId,
+    VariantCount,
+    IsVariantPrimary,
+    VariantAutoLaunch,
+    SearchText
   };
 
   struct Item {
@@ -78,11 +84,27 @@ public:
     // (read O(n log n) times by the proxy sorter) is a plain string return rather
     // than a per-call platform lookup
     QString groupKey;
+    // TODO
+    // An entry in no variant group reads as a group of one, so nothing downstream has
+    // to branch on whether grouping applies
+    int variantGroupId = -1;
+    int variantCount = 1;
+    bool isVariantPrimary = true;
+    bool variantAutoLaunch = false;
+    QString variantTitle;
+    // TODO
+    // Playtime across the whole group, and the most recent session any of it saw
+    uint64_t variantSecondsPlayed{};
+    uint64_t variantLastPlayedMillis{};
+    // TODO
+    // Everything a text filter should match on one line: this entry's name, the group's
+    // title, and the names of the variants it stands for
+    QString searchText;
   };
 
   EntryListModel(UserLibraryService &userLibrary, activity::IActivityLog &activityLog,
                  platforms::IPlatformService &platformService, achievements::AchievementService &achievementService,
-                 QObject *parent = nullptr);
+                 VariantGroupService &variantGroups, QObject *parent = nullptr);
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
@@ -174,6 +196,7 @@ private:
   activity::IActivityLog &m_activityLog;
   platforms::IPlatformService &m_platformService;
   achievements::AchievementService &m_achievementService;
+  VariantGroupService &m_variantGroups;
   QList<Item> m_items{};
   QString m_groupMode = "none";
 
@@ -190,11 +213,31 @@ private:
   // not O(n^2))
   std::unordered_map<int, int> m_indexByEntryId;
 
+  // TODO
+  // The entries of each group, so re-picking a primary after one member changes reads
+  // what is already loaded rather than the database
+  std::unordered_map<int, std::vector<int>> m_entryIdsByGroup;
+
+  // TODO
+  // Fills in the variant fields and the group's totals across every row, then hands back
+  // which entry stands for each group
+  void applyVariantGrouping();
+
+  // TODO
+  // Re-picks the primary for one group and tells the view about every row that changed,
+  // including the one that stopped standing for it
+  void refreshVariantGroup(int groupId);
+
+  // TODO
+  // Name, group title, and the variants' names, lowercased for the filter to match against
+  [[nodiscard]] QString computeSearchText(const Item &item) const;
+
   ScopedConnection m_gamePlayedConnection;
   ScopedConnection m_entryCreatedConnection;
   ScopedConnection m_entryUpdatedConnection;
   ScopedConnection m_achievementSessionEndedConnection;
   ScopedConnection m_userLoggedInConnection;
+  ScopedConnection m_variantGroupUpdatedConnection;
 
   // Fires once (single-shot, 0ms) after a burst of syncEntry calls to emit the
   // count-property change signals a single time

@@ -37,6 +37,13 @@ struct MediaAsset {
   int height = 0;
   std::string externalId; // Provider-specific id (SteamGridDB asset id, etc.)
   bool selected = false;
+  // True when this came from matching a title rather than the content hash, so a
+  // review screen can find the guesses among the certain ones
+  bool unconfirmed = false;
+  // What the provider thought the game was, and how well that answered the query.
+  // Kept because "La Wares -> La-Mulana" is only obviously wrong once you can see it
+  std::string matchedName;
+  int matchScore = 0;
   uint64_t createdAt = 0;
 
   /**

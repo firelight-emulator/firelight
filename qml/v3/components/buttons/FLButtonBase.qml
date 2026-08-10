@@ -45,8 +45,6 @@ Button {
         return Theme.textPrimary;
     }
 
-
-
     hoverEnabled: true
     opacity: canInteract ? 1 : 0.5
     implicitHeight: compact ? AppStyle.buttonHeightCompact : AppStyle.buttonHeight

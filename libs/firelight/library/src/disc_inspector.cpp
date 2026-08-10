@@ -3,6 +3,7 @@
 #include <firelight/library/disc_inspector.hpp>
 #include <firelight/library/file_bytes.hpp>
 #include <firelight/platforms/platform_service.hpp>
+#include <firelight/util/strings.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -26,11 +27,6 @@ namespace {
 // skipped rather than risk filling the user's temp drive
 constexpr int64_t MAX_IN_ARCHIVE_DISC_EXTRACT_BYTES = 2LL * 1024 * 1024 * 1024;
 
-std::string toLower(std::string s) {
-  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
-  return s;
-}
-
 std::string baseNameOf(const std::string &path) { return std::filesystem::path(path).filename().string(); }
 
 std::string suffixOf(const std::string &name) {
@@ -38,7 +34,7 @@ std::string suffixOf(const std::string &name) {
   if (dot == std::string::npos) {
     return {};
   }
-  return toLower(name.substr(dot + 1));
+  return strings::toLower(name.substr(dot + 1));
 }
 
 // A unique temporary directory removed when this object goes out of scope
@@ -217,12 +213,12 @@ std::vector<IdentifiedDiscMember> DiscInspector::collectLooseMembers(const std::
 
   const std::filesystem::path sheet(sheetPath);
   const std::filesystem::path dir = sheet.parent_path();
-  const std::string sheetNameLower = toLower(sheet.filename().string());
+  const std::string sheetNameLower = strings::toLower(sheet.filename().string());
 
   std::set<std::string> seen;
   for (const auto &token : sheetFilenameCandidates(bytes)) {
     const std::string base = baseNameOf(token);
-    const std::string baseLower = toLower(base);
+    const std::string baseLower = strings::toLower(base);
     std::error_code ec;
     if (baseLower.empty() || baseLower == sheetNameLower || seen.contains(baseLower) ||
         !std::filesystem::exists(dir / base, ec)) {
@@ -246,11 +242,11 @@ DiscIdentity DiscInspector::inspectFile(const std::string &path, std::vector<Ide
 DiscIdentity DiscInspector::inspectArchiveEntry(const std::string &archivePath, const std::string &entryName,
                                                 std::vector<IdentifiedDiscMember> &outMembers) const {
   const ArchiveReader reader(archivePath);
-  const std::string targetBaseLower = toLower(baseNameOf(entryName));
+  const std::string targetBaseLower = strings::toLower(baseNameOf(entryName));
 
   std::unordered_map<std::string, int64_t> sizeByBase;
   for (const auto &entry : reader.listEntries()) {
-    sizeByBase[toLower(entry.baseName)] = entry.size;
+    sizeByBase[strings::toLower(entry.baseName)] = entry.size;
   }
   if (!sizeByBase.contains(targetBaseLower)) {
     return {};
@@ -270,7 +266,7 @@ DiscIdentity DiscInspector::inspectArchiveEntry(const std::string &archivePath, 
 
     if (firelight::library::isDiscSheetExtension(suffixOf(name))) {
       for (const auto &token : sheetFilenameCandidates(reader.readEntryByBaseName(name))) {
-        const std::string candidate = toLower(baseNameOf(token));
+        const std::string candidate = strings::toLower(baseNameOf(token));
         if (!candidate.empty() && sizeByBase.contains(candidate)) {
           worklist.push_back(candidate);
         }

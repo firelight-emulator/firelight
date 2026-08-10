@@ -24,6 +24,8 @@ public:
 
   std::vector<MediaAsset> listForContentAndType(const std::string &contentHash, MediaType type) override;
 
+  std::vector<MediaAsset> listUnconfirmedSelections() override;
+
   std::optional<MediaAsset> selectedFor(const std::string &contentHash, MediaType type) override;
 
   bool add(MediaAsset &asset) override;

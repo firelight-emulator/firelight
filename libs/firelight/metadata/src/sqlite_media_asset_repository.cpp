@@ -28,6 +28,9 @@ MediaAsset readAsset(const SQLite::Statement &query) {
   asset.height = query.getColumn("height").getInt();
   asset.externalId = query.getColumn("external_id").getString();
   asset.selected = query.getColumn("selected").getInt() != 0;
+  asset.unconfirmed = query.getColumn("unconfirmed").getInt() != 0;
+  asset.matchedName = query.getColumn("matched_name").getString();
+  asset.matchScore = query.getColumn("match_score").getInt();
   asset.createdAt = static_cast<uint64_t>(query.getColumn("created_at").getInt64());
   return asset;
 }
@@ -56,6 +59,12 @@ SqliteMediaAssetRepository::SqliteMediaAssetRepository(std::string databaseFile)
                     "height INTEGER NOT NULL DEFAULT 0,"
                     "external_id TEXT NOT NULL DEFAULT '',"
                     "selected INTEGER NOT NULL DEFAULT 0,"
+                    // Set on anything applied from a title search rather than an
+                    // authoritative hash match, so a wrong guess stays
+                    // distinguishable from a right one
+                    "unconfirmed INTEGER NOT NULL DEFAULT 0,"
+                    "matched_name TEXT NOT NULL DEFAULT '',"
+                    "match_score INTEGER NOT NULL DEFAULT 0,"
                     "created_at INTEGER NOT NULL);");
          m_db->exec("CREATE INDEX IF NOT EXISTS mediaContentHashIdx ON "
                     "media_assets(content_hash);");
@@ -112,6 +121,21 @@ std::vector<MediaAsset> SqliteMediaAssetRepository::listForContentAndType(const 
   return assets;
 }
 
+std::vector<MediaAsset> SqliteMediaAssetRepository::listUnconfirmedSelections() {
+  std::lock_guard lock(m_mutex);
+  std::vector<MediaAsset> assets;
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM media_assets WHERE selected = 1 AND unconfirmed = 1 "
+                                   "ORDER BY match_score, content_hash");
+    while (query.executeStep()) {
+      assets.push_back(readAsset(query));
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to list unconfirmed selections: {}", e.what());
+  }
+  return assets;
+}
+
 std::optional<MediaAsset> SqliteMediaAssetRepository::selectedFor(const std::string &contentHash, MediaType type) {
   std::lock_guard lock(m_mutex);
   try {
@@ -135,9 +159,10 @@ bool SqliteMediaAssetRepository::add(MediaAsset &asset) {
     {
       SQLite::Statement insert(*m_db, "INSERT OR IGNORE INTO media_assets(content_hash, media_type, source, "
                                       "remote_url, thumb_url, local_path, width, height, external_id, "
-                                      "selected, created_at) VALUES(:contentHash, :mediaType, :source, :remoteUrl, "
-                                      ":thumbUrl, :localPath, :width, :height, "
-                                      ":externalId, 0, :createdAt)");
+                                      "selected, unconfirmed, matched_name, match_score, created_at) "
+                                      "VALUES(:contentHash, :mediaType, :source, "
+                                      ":remoteUrl, :thumbUrl, :localPath, :width, :height, "
+                                      ":externalId, 0, :unconfirmed, :matchedName, :matchScore, :createdAt)");
       insert.bind(":contentHash", asset.contentHash);
       insert.bind(":mediaType", static_cast<int>(asset.type));
       insert.bind(":source", toString(asset.source));
@@ -147,6 +172,9 @@ bool SqliteMediaAssetRepository::add(MediaAsset &asset) {
       insert.bind(":width", asset.width);
       insert.bind(":height", asset.height);
       insert.bind(":externalId", asset.externalId);
+      insert.bind(":unconfirmed", asset.unconfirmed ? 1 : 0);
+      insert.bind(":matchedName", asset.matchedName);
+      insert.bind(":matchScore", asset.matchScore);
       insert.bind(":createdAt", static_cast<int64_t>(asset.createdAt ? asset.createdAt : nowMs()));
       insert.exec();
     }
