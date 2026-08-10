@@ -70,8 +70,18 @@ public:
     VariantCount,
     IsVariantPrimary,
     VariantAutoLaunch,
+    // Whether this entry's platform has an installed core. False means the row is shown with a
+    // badge rather than hidden, so nobody has to guess why a game will not start
+    Playable,
     SearchText
   };
+
+  /**
+   * Re-reads which platforms have an installed core.
+   *
+   * A platform fact rather than an entry one, so it is looked up once instead of per row
+   */
+  void refreshPlayablePlatforms();
 
   struct Item {
     Entry entry;
@@ -212,6 +222,9 @@ private:
   // matchesSmartFolder lookup avoid an O(n) scan (so a filter pass is O(n),
   // not O(n^2))
   std::unordered_map<int, int> m_indexByEntryId;
+
+  // The platforms with an installed core, read once per reset rather than per row
+  QSet<int> m_playablePlatformIds;
 
   // TODO
   // The entries of each group, so re-picking a primary after one member changes reads

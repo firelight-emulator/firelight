@@ -20,6 +20,13 @@ int EntryResolver::scoreConfig(const RunConfiguration &config, const ContentFile
   if (config.type == RunConfiguration::TYPE_PATCH && config.patchId != -1) {
     score += 1;
   }
+
+  // A playlist reaches every disc of the set, so leaving this to the tie-break would let the
+  // order files were scanned in decide whether the game launches whole or as disc one alone
+  if (config.type == RunConfiguration::TYPE_PLAYLIST) {
+    score += 4;
+  }
+
   return score;
 }
 

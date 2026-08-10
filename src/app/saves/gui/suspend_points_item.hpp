@@ -11,7 +11,7 @@ namespace firelight::saves {
 class SuspendPointsItem : public QObject, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY contentHashChanged)
-  Q_PROPERTY(int saveSlotNumber READ getSaveSlotNumber WRITE setSaveSlotNumber NOTIFY saveSlotNumberChanged)
+  Q_PROPERTY(int saveSlot READ getSaveSlotNumber WRITE setSaveSlotNumber NOTIFY saveSlotNumberChanged)
   Q_PROPERTY(QAbstractListModel *suspendPoints READ getSuspendPoints NOTIFY suspendPointsChanged)
 
 public:
@@ -20,12 +20,12 @@ public:
 
     m_suspendPointUpdatedConnection =
         EventDispatcher::instance().subscribe<SuspendPointUpdatedEvent>([this](const SuspendPointUpdatedEvent &event) {
-          if (QString::fromStdString(event.contentHash) != m_contentHash || event.saveSlotNumber != m_saveSlotNumber) {
+          if (QString::fromStdString(event.contentHash) != m_contentHash || event.saveSlot != m_saveSlotNumber) {
             return;
           }
 
           const auto suspendPoint =
-              getSaveManager()->readSuspendPoint(m_contentHash.toStdString(), event.saveSlotNumber, event.index);
+              getSaveManager()->readSuspendPoint(m_contentHash.toStdString(), event.saveSlot, event.index);
           if (suspendPoint.has_value()) {
             m_suspendPointsModel->updateData(event.index, *suspendPoint);
           }
@@ -33,7 +33,7 @@ public:
 
     m_suspendPointDeletedConnection =
         EventDispatcher::instance().subscribe<SuspendPointDeletedEvent>([this](const SuspendPointDeletedEvent &event) {
-          if (QString::fromStdString(event.contentHash) != m_contentHash || event.saveSlotNumber != m_saveSlotNumber) {
+          if (QString::fromStdString(event.contentHash) != m_contentHash || event.saveSlot != m_saveSlotNumber) {
             return;
           }
 
@@ -45,7 +45,7 @@ public:
   void setContentHash(const QString &contentHash);
 
   int getSaveSlotNumber() const;
-  void setSaveSlotNumber(int saveSlotNumber);
+  void setSaveSlotNumber(int saveSlot);
 
   [[nodiscard]] SuspendPointListModel *getSuspendPoints() const;
 

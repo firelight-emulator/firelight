@@ -10,8 +10,9 @@ struct SuspendPoint {
   std::string contentHash;
   std::vector<uint8_t> state;
   std::vector<uint8_t> retroachievementsState;
-  long long timestamp;
+  // Epoch milliseconds
+  long long timestamp = 0;
   firelight::Image image;
   bool locked = false;
-  int saveSlotNumber;
+  int saveSlot = 0;
 };

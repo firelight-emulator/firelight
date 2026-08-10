@@ -8,10 +8,11 @@ struct SavefileInfo {
   bool hasData = false;
   std::string filePath;
   std::string contentHash;
-  int slotNumber = -1;
+  int saveSlot = -1;
   std::string savefileMd5;
   std::string name;
   std::string description;
-  int64_t lastModifiedEpochSeconds = 0;
+  // Epoch milliseconds, like every other timestamp in the app
+  int64_t lastModifiedAt = 0;
 };
 } // namespace firelight::saves

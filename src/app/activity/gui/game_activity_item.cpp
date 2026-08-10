@@ -20,7 +20,7 @@ void GameActivityItem::setContentHash(const QString &contentHash) {
   m_timesPlayed = 0;
   m_totalSecondsPlayed = 0;
   for (const auto &session : playSessions) {
-    printf("Play session: %s, %llu, %llu, %llu\n", session.contentHash.c_str(), session.startTime, session.endTime,
+    printf("Play session: %s, %llu, %llu, %llu\n", session.contentHash.c_str(), session.startedAt, session.endedAt,
            session.unpausedDurationMillis);
     m_timesPlayed++;
     m_totalSecondsPlayed += session.unpausedDurationMillis / 1000;

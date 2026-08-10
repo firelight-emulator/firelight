@@ -93,7 +93,7 @@ void MediaService::index(CaptureType type, const QString &contentHash, const QSt
   capture.type = type;
   capture.filePath = filePath.toStdString();
   capture.thumbnailPath = thumbnailPath.toStdString();
-  capture.timestamp = timestamp;
+  capture.capturedAt = timestamp;
   m_captures.add(capture);
 }
 

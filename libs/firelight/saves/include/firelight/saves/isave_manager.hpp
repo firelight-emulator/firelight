@@ -37,6 +37,15 @@ public:
 
   virtual void deleteSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index) = 0;
 
+  /**
+   * Moves everything saved under one content hash to another, for when two library entries turn
+   * out to be one game. Slots already present at the destination are left alone rather than
+   * overwritten, because losing a save is worse than leaving a duplicate behind
+   *
+   * @return True when there was something to move and it moved
+   */
+  virtual bool transferSaves(const std::string &fromContentHash, const std::string &toContentHash) = 0;
+
   [[nodiscard]] virtual std::string getSaveDirectory() const = 0;
 
   // The one directory handed to cores for their own file writes. libretro gives

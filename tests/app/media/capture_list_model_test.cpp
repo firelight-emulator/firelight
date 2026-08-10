@@ -15,7 +15,7 @@ media::GameCapture makeCapture(const std::string &hash, media::CaptureType type,
   c.type = type;
   c.filePath = path;
   c.thumbnailPath = path;
-  c.timestamp = 100;
+  c.capturedAt = 100;
   return c;
 }
 } // namespace

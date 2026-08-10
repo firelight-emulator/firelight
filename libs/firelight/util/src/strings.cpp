@@ -11,15 +11,13 @@ bool isSpace(const char character) { return std::isspace(static_cast<unsigned ch
 
 bool isAlphanumeric(const char character) { return std::isalnum(static_cast<unsigned char>(character)) != 0; }
 
-char lower(const char character) {
-  return static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
-}
+char lower(const char character) { return static_cast<char>(std::tolower(static_cast<unsigned char>(character))); }
 
 // Numerals past 20 are rare enough in titles that spelling them out beats parsing them
 constexpr std::array<std::pair<std::string_view, std::string_view>, 20> ROMAN_NUMERALS = {{
-    {"xx", "20"}, {"xix", "19"}, {"xviii", "18"}, {"xvii", "17"}, {"xvi", "16"}, {"xv", "15"}, {"xiv", "14"},
-    {"xiii", "13"}, {"xii", "12"}, {"xi", "11"}, {"x", "10"}, {"ix", "9"}, {"viii", "8"}, {"vii", "7"},
-    {"vi", "6"}, {"v", "5"}, {"iv", "4"}, {"iii", "3"}, {"ii", "2"}, {"i", "1"},
+    {"xx", "20"},   {"xix", "19"}, {"xviii", "18"}, {"xvii", "17"}, {"xvi", "16"}, {"xv", "15"},  {"xiv", "14"},
+    {"xiii", "13"}, {"xii", "12"}, {"xi", "11"},    {"x", "10"},    {"ix", "9"},   {"viii", "8"}, {"vii", "7"},
+    {"vi", "6"},    {"v", "5"},    {"iv", "4"},     {"iii", "3"},   {"ii", "2"},   {"i", "1"},
 }};
 
 constexpr std::array<std::string_view, 3> ARTICLES = {"the", "a", "an"};
@@ -106,8 +104,8 @@ std::vector<std::string> split(const std::string_view value, const char separato
 
   while (true) {
     const auto found = value.find(separator, position);
-    const auto piece = trim(value.substr(position, found == std::string_view::npos ? std::string_view::npos
-                                                                                  : found - position));
+    const auto piece =
+        trim(value.substr(position, found == std::string_view::npos ? std::string_view::npos : found - position));
 
     if (keepEmpty || !piece.empty()) {
       pieces.push_back(piece);
@@ -145,6 +143,10 @@ bool startsWithIgnoringCase(const std::string_view value, const std::string_view
   return value.size() >= prefix.size() && toLower(value.substr(0, prefix.size())) == toLower(prefix);
 }
 
+bool endsWithIgnoringCase(const std::string_view value, const std::string_view suffix) {
+  return value.size() >= suffix.size() && toLower(value.substr(value.size() - suffix.size())) == toLower(suffix);
+}
+
 bool contains(const std::string_view haystack, const std::string_view needle) {
   return haystack.find(needle) != std::string_view::npos;
 }
@@ -169,7 +171,8 @@ std::string foldAmpersand(const std::string_view value) {
 
     // TODO
     // An ampersand between two letters is part of a name rather than the word
-    const auto glued = (i > 0 && isAlphanumeric(value[i - 1])) && (i + 1 < value.size() && isAlphanumeric(value[i + 1]));
+    const auto glued =
+        (i > 0 && isAlphanumeric(value[i - 1])) && (i + 1 < value.size() && isAlphanumeric(value[i + 1]));
 
     if (glued) {
       folded.push_back('&');

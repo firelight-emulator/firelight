@@ -150,6 +150,13 @@ bool VariantGroupService::autoGroupByTitle(const int entryId) {
     }
 
     // TODO
+    // Discs of one game share a title once the disc tag is stripped, so without this they
+    // read as alternate releases of each other and all but one disappears behind a primary
+    if (peer->discNumber != entry->discNumber) {
+      continue;
+    }
+
+    // TODO
     // Joining the group one of them already has is what stops a third release making a
     // second group beside the one holding the first two
     if (peer->variantGroupId.has_value()) {

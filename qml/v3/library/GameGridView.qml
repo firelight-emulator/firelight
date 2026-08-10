@@ -48,6 +48,7 @@ Item {
             developer: m.developer,
             releaseYear: m.releaseYear,
             favorite: m.favorite,
+            playable: m.playable,
             lastPlayedAt: m.lastPlayedAt,
             numSecondsPlayed: m.numSecondsPlayed,
             achievementsEarned: m.achievementsEarned,
@@ -242,6 +243,22 @@ Item {
                             color: Theme.accent
                             border.color: "#66000000"
                             border.width: 1
+                        }
+
+                        // No core installed for this platform, so the game is here but
+                        // cannot start
+                        Rectangle {
+                            visible: !gameDelegate.model.playable
+                            width: Math.round(22 * AppStyle.scale)
+                            height: width
+                            radius: AppStyle.radiusSm
+                            color: "#99000000"
+                            Icon {
+                                anchors.centerIn: parent
+                                name: "cancel"
+                                size: Math.round(14 * AppStyle.scale)
+                                color: Theme.textMuted
+                            }
                         }
 
                         // Favorite heart chip

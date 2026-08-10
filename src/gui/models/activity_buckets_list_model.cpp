@@ -132,9 +132,9 @@ void ActivityBucketsListModel::refreshData() {
   QLocale locale = QLocale::system();
 
   if (m_granularity == Day && !m_allSessions.empty()) {
-    uint64_t earliestMs = m_allSessions[0].startTime;
+    uint64_t earliestMs = m_allSessions[0].startedAt;
     for (const auto &session : m_allSessions) {
-      earliestMs = std::min(earliestMs, session.startTime);
+      earliestMs = std::min(earliestMs, session.startedAt);
     }
 
     const QDate firstDay =
@@ -162,12 +162,12 @@ void ActivityBucketsListModel::refreshData() {
 
         QMap<QString, qint64> playtimeByGame;
         for (const auto &session : m_allSessions) {
-          if (session.endTime <= hourStartMs || session.startTime >= hourEndMs) {
+          if (session.endedAt <= hourStartMs || session.startedAt >= hourEndMs) {
             continue;
           }
 
-          const uint64_t clippedStart = std::max(session.startTime, hourStartMs);
-          const uint64_t clippedEnd = std::min(session.endTime, hourEndMs);
+          const uint64_t clippedStart = std::max(session.startedAt, hourStartMs);
+          const uint64_t clippedEnd = std::min(session.endedAt, hourEndMs);
           playtimeByGame[QString::fromStdString(session.contentHash)] += static_cast<qint64>(clippedEnd - clippedStart);
           totalBucketPlaytimeByGame[QString::fromStdString(session.contentHash)] +=
               static_cast<qint64>(clippedEnd - clippedStart);

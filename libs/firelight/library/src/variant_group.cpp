@@ -1,6 +1,5 @@
-#include <firelight/library/variant_group.hpp>
-
 #include <firelight/library/filename_tags.hpp>
+#include <firelight/library/variant_group.hpp>
 
 #include <algorithm>
 #include <cctype>

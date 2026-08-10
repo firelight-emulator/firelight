@@ -22,13 +22,13 @@ QVariant PlaySessionListModel::data(const QModelIndex &index, int role) const {
 
   switch (role) {
   case StartTime:
-    return QVariant::fromValue(item.startTime);
+    return QVariant::fromValue(item.startedAt);
   case EndTime:
-    return QVariant::fromValue(item.endTime);
+    return QVariant::fromValue(item.endedAt);
   case NumUnpausedSeconds:
     return QVariant::fromValue(item.unpausedDurationMillis / 1000);
   case SaveSlotNumber:
-    return item.slotNumber;
+    return item.saveSlot;
   default:
     return QVariant{};
   }

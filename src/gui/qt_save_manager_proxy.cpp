@@ -16,11 +16,11 @@ QVariantList QtSaveManagerProxy::getSaveFiles(const QString &contentHash) const 
   QVariantList out;
   for (const auto &info : m_saveManager.getSaveFileInfoList(contentHash.toStdString())) {
     QVariantMap slot;
-    slot["slotNumber"] = info.slotNumber;
+    slot["saveSlot"] = info.saveSlot;
     slot["hasData"] = info.hasData;
     slot["name"] = QString::fromStdString(info.name);
     slot["description"] = QString::fromStdString(info.description);
-    slot["lastModified"] = static_cast<qint64>(info.lastModifiedEpochSeconds);
+    slot["lastModified"] = static_cast<qint64>(info.lastModifiedAt);
     out.append(slot);
   }
   return out;

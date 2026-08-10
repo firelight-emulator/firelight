@@ -3,6 +3,7 @@
 #include <firelight/library/content_directory.hpp>
 #include <firelight/library/content_file.hpp>
 #include <firelight/library/disc_member.hpp>
+#include <firelight/library/disc_set.hpp>
 #include <firelight/library/entry.hpp>
 #include <firelight/library/folder_entry_info.hpp>
 #include <firelight/library/folder_info.hpp>
@@ -13,6 +14,7 @@
 
 #include <optional>
 #include <set>
+#include <string_view>
 #include <vector>
 
 namespace firelight::library {
@@ -29,6 +31,16 @@ struct EntryUpdatedEvent {
 // group is dissolved. The id outlives the group, so a listener must tolerate it being gone
 struct VariantGroupUpdatedEvent {
   int groupId;
+};
+
+// TODO
+// Published when one entry is folded into another because they turned out to be the same
+// game. Anything keyed on the content hash has to follow, and the library cannot do that
+// itself because saves and activity live in other modules
+struct EntryAbsorbedEvent {
+  int survivingEntryId;
+  std::string absorbedContentHash;
+  std::string survivingContentHash;
 };
 
 class IUserLibraryRepository {
@@ -49,8 +61,13 @@ public:
 
   virtual bool createEntry(Entry &entry) = 0;
 
+  /**
+   * Records a way to launch a content file. The type is what tells one disc's own way in from
+   * the playlist that stands for the whole set
+   */
   virtual void createRunConfiguration(int contentFileId, const std::string &path, int platformId,
-                                      const std::string &contentHash) = 0;
+                                      const std::string &contentHash,
+                                      std::string_view type = RunConfiguration::TYPE_ROM) = 0;
 
   virtual bool update(FolderInfo &folder) = 0;
 
@@ -91,6 +108,51 @@ public:
    * a library of thousands
    */
   virtual std::vector<int> getEntryIdsMissingArt(int limit) = 0;
+
+  //****************
+  // disc sets
+  //****************
+
+  /**
+   * Creates a multi-disc game, setting the id on the passed set
+   */
+  virtual bool createDiscSet(DiscSet &set) = 0;
+
+  virtual bool updateDiscSet(const DiscSet &set) = 0;
+
+  virtual bool deleteDiscSet(int setId) = 0;
+
+  [[nodiscard]] virtual std::optional<DiscSet> getDiscSet(int setId) = 0;
+
+  [[nodiscard]] virtual std::vector<DiscSet> getDiscSets() = 0;
+
+  /**
+   * The set holding a given disc, found from the content file rather than from an entry
+   */
+  [[nodiscard]] virtual std::optional<DiscSet> getDiscSetForContentFile(int contentFileId) = 0;
+
+  /**
+   * Every disc of a set, ordered by disc number
+   */
+  [[nodiscard]] virtual std::vector<ContentFile> getDiscsInSet(int setId) = 0;
+
+  /**
+   * Puts a content file in a set, or takes it out when the set is empty
+   */
+  virtual bool setContentFileDiscSet(int contentFileId, std::optional<int> setId) = 0;
+
+  /**
+   * Points an entry at a set. isUserChoice records that a person decided it, which is what
+   * stops automatic grouping undoing them
+   */
+  virtual bool setEntryDiscSet(int entryId, std::optional<int> setId, bool isUserChoice) = 0;
+
+  /**
+   * Which disc a save slot was last on, or nothing when it has never been launched
+   */
+  [[nodiscard]] virtual std::optional<int> getLastDisc(int entryId, int saveSlot) = 0;
+
+  virtual bool setLastDisc(int entryId, int saveSlot, int discNumber) = 0;
 
   //****************
   // variant groups
@@ -174,6 +236,22 @@ public:
 
   virtual std::optional<ContentFile> getContentFile(int id) = 0;
 
+  /**
+   * Every catalogued file holding the same content, which for a disc set member is its disc
+   */
+  [[nodiscard]] virtual std::vector<ContentFile> getContentFilesWithContentHash(const std::string &contentHash) = 0;
+
+  /**
+   * The catalogued file at a path, whatever size it is now. A file we rewrite changes size,
+   * which is what the path-and-size lookup keys on
+   */
+  [[nodiscard]] virtual std::optional<ContentFile> getContentFileWithPath(const std::string &filePath) = 0;
+
+  /**
+   * Re-stamps what a rewrite changed. The row keeps its id, so the ways to launch it survive
+   */
+  virtual bool setContentFileIdentity(int contentFileId, const std::string &contentHash, size_t fileSizeBytes) = 0;
+
   virtual bool deleteContentFile(int id) = 0;
 
   virtual std::optional<PatchFile> getPatchFile(int id) = 0;
@@ -182,9 +260,20 @@ public:
 
   virtual std::optional<Entry> getEntry(int entryId) = 0;
 
+  /**
+   * Removes an entry and everything hanging off it in this database. Saves and playtime are
+   * keyed on the content hash and are not touched
+   */
+  virtual bool deleteEntry(int entryId) = 0;
+
   virtual std::optional<Entry> getEntryWithContentHash(const std::string &contentHash) = 0;
 
   virtual std::vector<RunConfiguration> getRunConfigurations(const std::string &contentHash) = 0;
+
+  /**
+   * Removes the ways to launch one file, leaving the file itself catalogued
+   */
+  virtual bool deleteRunConfigurationsForContentFile(int contentFileId) = 0;
 
   virtual std::vector<ContentDirectory> getContentDirectories() = 0;
 };

@@ -225,6 +225,17 @@ std::string CoreRegistry::dllPathFor(const std::string &coreId) const {
   return coreDirectoryPath() + coreId + coreDllExtension();
 }
 
+bool CoreRegistry::isPlatformPlayable(const int platformId) const {
+  const auto coreId = resolveCoreName(platformId, "", nullptr);
+
+  if (coreId.empty()) {
+    return false;
+  }
+
+  std::error_code ec;
+  return std::filesystem::exists(dllPathFor(coreId), ec);
+}
+
 std::vector<CoreAvailability> CoreRegistry::checkAvailability() const {
   std::vector<CoreAvailability> result;
   result.reserve(m_cores.size());

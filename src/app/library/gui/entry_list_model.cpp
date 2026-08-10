@@ -144,6 +144,7 @@ QHash<int, QByteArray> EntryListModel::roleNames() const {
   roles[VariantCount] = "variantCount";
   roles[IsVariantPrimary] = "isVariantPrimary";
   roles[VariantAutoLaunch] = "variantAutoLaunch";
+  roles[Playable] = "playable";
   roles[SearchText] = "searchText";
   return roles;
 }
@@ -200,6 +201,8 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return item.isVariantPrimary;
   case VariantAutoLaunch:
     return item.variantAutoLaunch;
+  case Playable:
+    return m_playablePlatformIds.contains(static_cast<int>(item.entry.platformId));
   case SearchText:
     return item.searchText;
   case Icon1x1SourceUrl:
@@ -661,7 +664,19 @@ void EntryListModel::refreshVariantGroup(const int groupId) {
   }
 }
 
+void EntryListModel::refreshPlayablePlatforms() {
+  m_playablePlatformIds.clear();
+
+  for (const auto &platform : m_platformService.listPlatforms()) {
+    if (CoreRegistry::instance().isPlatformPlayable(static_cast<int>(platform.id))) {
+      m_playablePlatformIds.insert(platform.id);
+    }
+  }
+}
+
 void EntryListModel::reset() {
+  refreshPlayablePlatforms();
+
   emit beginResetModel();
   m_items.clear();
   m_smartFolderCache.clear();
@@ -677,7 +692,7 @@ void EntryListModel::reset() {
   for (const auto &session : m_activityLog.getPlaySessions()) {
     auto &s = statsByHash[session.contentHash];
     s.totalMillis += session.unpausedDurationMillis;
-    s.lastEndMillis = std::max(s.lastEndMillis, session.endTime);
+    s.lastEndMillis = std::max(s.lastEndMillis, session.endedAt);
   }
 
   for (const auto &entry : m_userLibrary.getEntries(0, 0)) {
@@ -721,7 +736,7 @@ void EntryListModel::applyPlayStats(Item &item) const {
   uint64_t lastEndMillis = 0;
   for (const auto &session : m_activityLog.getPlaySessions(item.entry.contentHash)) {
     totalMillis += session.unpausedDurationMillis;
-    lastEndMillis = std::max(lastEndMillis, session.endTime);
+    lastEndMillis = std::max(lastEndMillis, session.endedAt);
   }
   item.numSecondsPlayed = totalMillis / 1000;
   item.lastPlayedEpochMillis = lastEndMillis;

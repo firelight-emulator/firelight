@@ -1,10 +1,9 @@
 #pragma once
 
+#include <firelight/event_dispatcher.hpp>
 #include <firelight/library/user_library_service.hpp>
 #include <firelight/library/variant_group.hpp>
 #include <firelight/settings/settings_service.hpp>
-
-#include <firelight/event_dispatcher.hpp>
 
 #include <atomic>
 #include <unordered_map>

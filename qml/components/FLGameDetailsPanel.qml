@@ -53,11 +53,11 @@ Item {
         }
         return Qt.formatDateTime(new Date(millis), "MMM d, yyyy");
     }
-    function fmtEpochSecs(secs) {
-        if (!secs || secs <= 0) {
+    function fmtDateTime(millis) {
+        if (!millis || millis <= 0) {
             return "—";
         }
-        return Qt.formatDateTime(new Date(secs * 1000), "MMM d, yyyy h:mm ap");
+        return Qt.formatDateTime(new Date(millis), "MMM d, yyyy h:mm ap");
     }
 
     Flickable {
@@ -449,7 +449,7 @@ Item {
                                         font.weight: Font.DemiBold
                                     }
                                     Text {
-                                        text: "Saved " + root.fmtEpochSecs(slotRow.modelData.lastModified)
+                                        text: "Saved " + root.fmtDateTime(slotRow.modelData.lastModified)
                                         color: Theme.textMuted
                                         font.family: AppStyle.fontFamily
                                         font.pixelSize: AppStyle.fontSizeXSmall

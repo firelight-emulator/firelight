@@ -1,3 +1,6 @@
+#include "firelight/library/chd_cdreader.hpp"
+#include "firelight/library/rc_hash_logging.hpp"
+
 #include <firelight/library/archive_reader.hpp>
 #include <firelight/library/content_extensions.hpp>
 #include <firelight/library/disc_inspector.hpp>
@@ -18,7 +21,12 @@
 
 namespace firelight::library {
 
-DiscInspector::DiscInspector(platforms::IPlatformService &platformService) : m_platformService(platformService) {}
+DiscInspector::DiscInspector(platforms::IPlatformService &platformService) : m_platformService(platformService) {
+  // rcheevos' own reader cannot open a CHD, so without this every CHD fails to identify
+  // and is never catalogued
+  installChdCdReader();
+  installRcHashLogging();
+}
 
 namespace {
 
@@ -178,6 +186,16 @@ DiscIdentity DiscInspector::detect(const std::string &discFilePath) const {
   char hash[33];
   while (rc_hash_iterate(hash, &iterator)) {
     const int rcConsole = iterator.consoles[iterator.index - 1];
+
+    // Game Boy is what rcheevos falls back to for an extension it has no handler for, and it
+    // whole-file hashes rather than reading the disc. A disc is never a Game Boy game, so this
+    // is the fallback firing rather than a match — taking it would scatter a compressed PSP or
+    // CloneCD image into the Game Boy platform under a hash that means nothing
+    if (rcConsole == RC_CONSOLE_GAMEBOY) {
+      spdlog::debug("Ignoring the Game Boy fallback for disc image: {}", discFilePath);
+      continue;
+    }
+
     int platformId = m_platformService.platformIdForRcConsole(rcConsole);
     if (platformId != firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN) {
       // rcheevos uses the Sega CD console as an umbrella that also matches Sega
@@ -192,6 +210,20 @@ DiscIdentity DiscInspector::detect(const std::string &discFilePath) const {
       spdlog::debug("Detected disc {} as platform {} (rc console {}), hash {}", discFilePath, platformId, rcConsole,
                     hash);
       break;
+    }
+  }
+
+  // rcheevos offers a .iso to PS2, PSP, 3DO, Sega CD, GameCube and Wii, and to no PlayStation
+  // at all, so a PS1 disc dumped as a plain .iso matches nothing and disappears. Asking here
+  // rather than adding a candidate, because the list is rebuilt on the first iteration
+  if (!identity.valid && strings::endsWithIgnoringCase(discFilePath, ".iso")) {
+    char playstationHash[33] = {0};
+
+    if (rc_hash_generate(playstationHash, RC_CONSOLE_PLAYSTATION, &iterator) != 0) {
+      identity.valid = true;
+      identity.platformId = m_platformService.platformIdForRcConsole(RC_CONSOLE_PLAYSTATION);
+      identity.contentHash = std::string(playstationHash);
+      spdlog::debug("Detected iso {} as a PlayStation disc, hash {}", discFilePath, playstationHash);
     }
   }
 

@@ -23,6 +23,8 @@ public:
   std::vector<PlaySession> getPlaySessions(std::string contentHash) override;
   std::vector<PlaySession> getPlaySessions() override;
 
+  bool transferSessions(const std::string &fromContentHash, const std::string &toContentHash) override;
+
 private:
   std::string m_databaseFile;
   std::unique_ptr<SQLite::Database> m_db;

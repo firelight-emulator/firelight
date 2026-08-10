@@ -682,6 +682,102 @@ TEST_F(SqliteUserLibraryTest, EntryFileLocationsUseArchivePathTest) {
 // Variant groups: a set of entries that are the same game. Membership lives on the
 // entry, so removing a group has to clear its members by hand -- there are no
 // foreign keys anywhere in this schema
+// A multi-disc game is one set holding several content files. The membership edge is on the
+// file, so the set is found from its discs rather than from the entry
+TEST_F(SqliteUserLibraryTest, DiscSetHoldsItsDiscsInOrder) {
+  library::SqliteUserLibraryRepository library(":memory:");
+
+  library::DiscSet set{.title = "Final Fantasy VII"};
+  ASSERT_TRUE(library.createDiscSet(set));
+  EXPECT_GT(set.id, 0);
+
+  const auto makeDisc = [&](const std::string &path, const int discNumber) {
+    library::ContentFile file;
+    file.m_filePath = path;
+    file.m_fileSizeBytes = 1;
+    file.m_fileMd5 = path;
+    file.m_fileCrc32 = "";
+    file.m_platformId = 6;
+    file.m_contentHash = path;
+    file.m_discNumber = discNumber;
+    library.create(file);
+    library.setContentFileDiscSet(file.m_id, set.id);
+    return file.m_id;
+  };
+
+  // Added out of order to prove the ordering comes from the disc number, not insertion
+  makeDisc("ff7-d3.cue", 3);
+  const auto discOneId = makeDisc("ff7-d1.cue", 1);
+  makeDisc("ff7-d2.cue", 2);
+
+  const auto discs = library.getDiscsInSet(set.id);
+  ASSERT_EQ(discs.size(), 3u);
+  EXPECT_EQ(discs[0].m_discNumber, 1);
+  EXPECT_EQ(discs[1].m_discNumber, 2);
+  EXPECT_EQ(discs[2].m_discNumber, 3);
+
+  const auto found = library.getDiscSetForContentFile(discOneId);
+  ASSERT_TRUE(found.has_value());
+  EXPECT_EQ(found->title, "Final Fantasy VII");
+}
+
+// Dissolving a set must not take the discs or the entry with it
+TEST_F(SqliteUserLibraryTest, DeletingADiscSetKeepsItsDiscsAndEntry) {
+  library::SqliteUserLibraryRepository library(":memory:");
+
+  library::DiscSet set{.title = "Zelda"};
+  ASSERT_TRUE(library.createDiscSet(set));
+
+  library::ContentFile file;
+  file.m_filePath = "zelda-d1.cue";
+  file.m_fileSizeBytes = 1;
+  file.m_fileMd5 = "zelda-d1";
+  file.m_fileCrc32 = "";
+  file.m_platformId = 6;
+  file.m_contentHash = "zeldaHash";
+  ASSERT_TRUE(library.create(file));
+  ASSERT_TRUE(library.setContentFileDiscSet(file.m_id, set.id));
+
+  library::Entry entry;
+  entry.displayName = "Zelda";
+  entry.contentHash = "zeldaHash";
+  entry.platformId = 6;
+  ASSERT_TRUE(library.createEntry(entry));
+  ASSERT_TRUE(library.setEntryDiscSet(entry.id, set.id, true));
+
+  ASSERT_TRUE(library.deleteDiscSet(set.id));
+
+  EXPECT_FALSE(library.getDiscSet(set.id).has_value());
+  EXPECT_TRUE(library.getEntry(entry.id).has_value());
+  EXPECT_FALSE(library.getEntry(entry.id)->discSetId.has_value());
+  EXPECT_FALSE(library.getDiscSetForContentFile(file.m_id).has_value());
+}
+
+// Two playthroughs of one game sit on different discs, so the last disc is remembered per
+// save slot rather than per game
+TEST_F(SqliteUserLibraryTest, LastDiscIsRememberedPerSaveSlot) {
+  library::SqliteUserLibraryRepository library(":memory:");
+
+  library::Entry entry;
+  entry.displayName = "Grandia";
+  entry.contentHash = "grandiaHash";
+  entry.platformId = 6;
+  ASSERT_TRUE(library.createEntry(entry));
+
+  EXPECT_FALSE(library.getLastDisc(entry.id, 1).has_value());
+
+  ASSERT_TRUE(library.setLastDisc(entry.id, 1, 2));
+  ASSERT_TRUE(library.setLastDisc(entry.id, 2, 1));
+
+  EXPECT_EQ(library.getLastDisc(entry.id, 1), 2);
+  EXPECT_EQ(library.getLastDisc(entry.id, 2), 1);
+
+  // Writing the same slot again moves it rather than adding a second row
+  ASSERT_TRUE(library.setLastDisc(entry.id, 1, 3));
+  EXPECT_EQ(library.getLastDisc(entry.id, 1), 3);
+  EXPECT_EQ(library.getLastDisc(entry.id, 2), 1);
+}
+
 TEST_F(SqliteUserLibraryTest, VariantGroupRoundTrips) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
 

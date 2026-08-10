@@ -13,7 +13,7 @@ GameCapture makeCapture(const std::string &hash, CaptureType type, const std::st
   c.type = type;
   c.filePath = path;
   c.thumbnailPath = path;
-  c.timestamp = 1000;
+  c.capturedAt = 1000;
   return c;
 }
 } // namespace

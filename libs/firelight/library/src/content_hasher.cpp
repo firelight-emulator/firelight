@@ -1,3 +1,5 @@
+#include "firelight/library/rc_hash_logging.hpp"
+
 #include <firelight/library/content_hasher.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
@@ -94,6 +96,8 @@ std::string ContentHasher::md5(const uint8_t *data, const size_t len) {
   md5_finish(&state, digest);
   return toHex(digest, 16);
 }
+
+ContentHasher::ContentHasher() { installRcHashLogging(); }
 
 HashedContent ContentHasher::hash(const int platformId, const std::vector<uint8_t> &fileBytes) const {
   HashedContent result;

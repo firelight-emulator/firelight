@@ -74,6 +74,10 @@ public:
   // The known-good default core for a platform ("" if none)
   [[nodiscard]] std::string defaultCoreForPlatform(int platformId) const;
 
+  // Whether the core a platform would resolve to is actually installed. Computed rather than
+  // stored, so installing a core makes its games playable without a rescan
+  [[nodiscard]] bool isPlatformPlayable(int platformId) const;
+
   // Every core that can run the platform, default first ("" list if none)
   [[nodiscard]] std::vector<PlatformCore> coresForPlatform(int platformId) const;
 

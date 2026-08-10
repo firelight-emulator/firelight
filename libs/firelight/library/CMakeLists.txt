@@ -17,7 +17,12 @@ add_library(firelight_library STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/content_hasher.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/content_identifier.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/content_loader.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/chd_cdreader.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/rc_hash_logging.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/disc_inspector.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/disc_set.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/disc_set_playlist.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/disc_set_service.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/entry_resolver.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/library_ingest_service.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/user_library_service.cpp
@@ -36,6 +41,7 @@ target_include_directories(firelight_library
 
 target_link_libraries(firelight_library
         PUBLIC firelight_util
+        PRIVATE chdr-static
         PUBLIC Qt6::Core
         PRIVATE Qt6::Concurrent
         PRIVATE SQLiteCpp
@@ -57,6 +63,8 @@ add_executable(firelight_library_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/main.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/metadata_overrides_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/filename_tags_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/disc_set_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/disc_set_playlist_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/variant_primary_test.cpp
 )
 target_include_directories(firelight_library_test

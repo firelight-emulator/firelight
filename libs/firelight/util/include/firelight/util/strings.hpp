@@ -49,6 +49,11 @@ namespace firelight::strings {
 [[nodiscard]] bool startsWithIgnoringCase(std::string_view value, std::string_view prefix);
 
 /**
+ * @return Whether value ends with suffix, ignoring ASCII case
+ */
+[[nodiscard]] bool endsWithIgnoringCase(std::string_view value, std::string_view suffix);
+
+/**
  * @return Whether needle appears anywhere in haystack
  */
 [[nodiscard]] bool contains(std::string_view haystack, std::string_view needle);

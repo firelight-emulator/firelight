@@ -1,5 +1,4 @@
 #include <firelight/library/filename_tags.hpp>
-
 #include <firelight/util/region_codes.hpp>
 #include <firelight/util/strings.hpp>
 
@@ -9,17 +8,40 @@
 namespace firelight::library {
 
 namespace {
-// The number trailing a keyword, as in "Disc 2"; 0 when there is none
-int trailingNumber(const std::string &value, const size_t afterKeyword) {
-  const auto digits = strings::trim(value.substr(afterKeyword));
+// Nobody presses more discs than this, so a bigger number is part of a name rather than a
+// count. It is what keeps "CD32" from reading as disc thirty-two
+constexpr int MAX_DISC_NUMBER = 20;
 
-  if (digits.empty() || !std::all_of(digits.begin(), digits.end(), [](const unsigned char c) {
-        return std::isdigit(c);
-      })) {
-    return 0;
+// The disc a token names, however it was written: "Disc 1", "CD1", "Disc 1 of 3". Anything
+// after the digits is ignored, so the "of 3" costs nothing. 0 when the token names no disc
+int parseDiscNumber(const std::string &token) {
+  for (const auto *keyword : {"disc", "disk", "cd"}) {
+    if (!strings::startsWithIgnoringCase(token, keyword)) {
+      continue;
+    }
+
+    auto index = std::string(keyword).size();
+
+    while (index < token.size() && std::isspace(static_cast<unsigned char>(token[index])) != 0) {
+      ++index;
+    }
+
+    const auto firstDigit = index;
+
+    while (index < token.size() && std::isdigit(static_cast<unsigned char>(token[index])) != 0) {
+      ++index;
+    }
+
+    // No digits means a word that merely begins the same way: CDROM, Discovery, a bare Disc
+    if (index == firstDigit) {
+      continue;
+    }
+
+    const auto number = std::stoi(token.substr(firstDigit, index - firstDigit));
+    return number <= MAX_DISC_NUMBER ? number : 0;
   }
 
-  return std::stoi(digits);
+  return 0;
 }
 
 // The single-token groups that name something other than a region or a language
@@ -34,15 +56,9 @@ bool applyKeywordGroup(const std::string &token, FilenameTags &tags) {
     return true;
   }
 
-  for (const auto *keyword : {"disc ", "disk ", "cd "}) {
-    if (strings::startsWithIgnoringCase(token, keyword)) {
-      const auto number = trailingNumber(token, std::string(keyword).size());
-
-      if (number > 0) {
-        tags.discNumber = number;
-        return true;
-      }
-    }
+  if (const auto disc = parseDiscNumber(token); disc > 0) {
+    tags.discNumber = disc;
+    return true;
   }
 
   const auto lowered = strings::toLower(token);
@@ -105,9 +121,8 @@ void applyParenGroup(const std::string &body, FilenameTags &tags) {
     return;
   }
 
-  const auto isRegionGroup = std::all_of(tokens.begin(), tokens.end(), [](const std::string &token) {
-    return !regionForTag(token).empty();
-  });
+  const auto isRegionGroup =
+      std::all_of(tokens.begin(), tokens.end(), [](const std::string &token) { return !regionForTag(token).empty(); });
 
   if (isRegionGroup) {
     for (const auto &token : tokens) {
@@ -138,6 +153,12 @@ void applyBracketGroup(const std::string &body, FilenameTags &tags) {
 
   if (trimmed == "!") {
     tags.flags.emplace_back(content_flags::VERIFIED_DUMP);
+    return;
+  }
+
+  // Sets written with square brackets put the disc there too
+  if (const auto disc = parseDiscNumber(trimmed); disc > 0) {
+    tags.discNumber = disc;
     return;
   }
 
@@ -247,8 +268,6 @@ FilenameTags parseFilenameTags(const std::string_view fileName) {
   return tags;
 }
 
-std::string normalizeTitle(const std::string &title) {
-  return strings::collapseWhitespace(strings::toLower(title));
-}
+std::string normalizeTitle(const std::string &title) { return strings::collapseWhitespace(strings::toLower(title)); }
 
 } // namespace firelight::library

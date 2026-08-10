@@ -49,7 +49,7 @@ QVariant CaptureListModel::data(const QModelIndex &index, int role) const {
     return QUrl::fromLocalFile(QString::fromStdString(thumb)).toString();
   }
   case Timestamp:
-    return static_cast<qint64>(c.timestamp);
+    return static_cast<qint64>(c.capturedAt);
   case Favorite:
     return c.favorite;
   default:

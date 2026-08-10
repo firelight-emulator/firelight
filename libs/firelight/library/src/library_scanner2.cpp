@@ -1,6 +1,7 @@
 #include <firelight/library/archive_reader.hpp>
 #include <firelight/library/content_extensions.hpp>
 #include <firelight/library/content_identifier.hpp>
+#include <firelight/library/filename_tags.hpp>
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
@@ -251,15 +252,18 @@ void LibraryScanner2::scanDirectory(const QString &path) {
               const auto identified =
                   identifier.identifyInArchive(entry.pathName, {}, static_cast<size_t>(entry.size), archivePath);
               if (identified.valid) {
-                auto romInfo = ContentFile{.m_type = ContentType::Disc,
-                                           .m_fileSizeBytes = identified.fileSizeBytes,
-                                           .m_filePath = entry.pathName,
-                                           .m_fileMd5 = identified.fileMd5,
-                                           .m_fileCrc32 = ":)",
-                                           .m_inArchive = true,
-                                           .m_archivePathName = archivePath,
-                                           .m_platformId = identified.platformId,
-                                           .m_contentHash = identified.contentHash};
+                auto romInfo =
+                    ContentFile{.m_type = ContentType::Disc,
+                                .m_fileSizeBytes = identified.fileSizeBytes,
+                                .m_filePath = entry.pathName,
+                                .m_fileMd5 = identified.fileMd5,
+                                // Not computed for content yet; DAT matching against content.db is what would need it
+                                .m_fileCrc32 = "",
+                                .m_inArchive = true,
+                                .m_archivePathName = archivePath,
+                                .m_platformId = identified.platformId,
+                                .m_contentHash = identified.contentHash,
+                                .m_discNumber = parseFilenameTags(entry.pathName).discNumber};
                 m_library.create(romInfo);
                 persistDiscMembers(romInfo.m_id, identified.discMembers);
                 dirHasContent = true;
@@ -278,15 +282,17 @@ void LibraryScanner2::scanDirectory(const QString &path) {
               const std::vector<uint8_t> bytes = readBytes();
               const auto identified = identifier.identifyInArchive(entry.pathName, bytes, bytes.size(), archivePath);
               if (identified.valid) {
-                auto romInfo = ContentFile{.m_type = ContentType::Cartridge,
-                                           .m_fileSizeBytes = identified.fileSizeBytes,
-                                           .m_filePath = entry.pathName,
-                                           .m_fileMd5 = identified.fileMd5,
-                                           .m_fileCrc32 = ":)",
-                                           .m_inArchive = true,
-                                           .m_archivePathName = archivePath,
-                                           .m_platformId = identified.platformId,
-                                           .m_contentHash = identified.contentHash};
+                auto romInfo =
+                    ContentFile{.m_type = ContentType::Cartridge,
+                                .m_fileSizeBytes = identified.fileSizeBytes,
+                                .m_filePath = entry.pathName,
+                                .m_fileMd5 = identified.fileMd5,
+                                // Not computed for content yet; DAT matching against content.db is what would need it
+                                .m_fileCrc32 = "",
+                                .m_inArchive = true,
+                                .m_archivePathName = archivePath,
+                                .m_platformId = identified.platformId,
+                                .m_contentHash = identified.contentHash};
                 m_library.create(romInfo);
                 dirHasContent = true;
                 ++m_changesInScan;
@@ -346,15 +352,18 @@ void LibraryScanner2::scanDirectory(const QString &path) {
 
       const auto identified = identifier.identify(fileInfo.filePath().toStdString());
       if (identified.valid) {
-        auto romInfo = ContentFile{.m_type = identified.isDisc ? ContentType::Disc : ContentType::Cartridge,
-                                   .m_fileSizeBytes = identified.fileSizeBytes,
-                                   .m_filePath = fileInfo.filePath().toStdString(),
-                                   .m_fileMd5 = identified.fileMd5,
-                                   .m_fileCrc32 = ":)",
-                                   .m_inArchive = false,
-                                   .m_archivePathName = "",
-                                   .m_platformId = identified.platformId,
-                                   .m_contentHash = identified.contentHash};
+        auto romInfo =
+            ContentFile{.m_type = identified.isDisc ? ContentType::Disc : ContentType::Cartridge,
+                        .m_fileSizeBytes = identified.fileSizeBytes,
+                        .m_filePath = fileInfo.filePath().toStdString(),
+                        .m_fileMd5 = identified.fileMd5,
+                        // Not computed for content yet; DAT matching against content.db is what would need it
+                        .m_fileCrc32 = "",
+                        .m_inArchive = false,
+                        .m_archivePathName = "",
+                        .m_platformId = identified.platformId,
+                        .m_contentHash = identified.contentHash,
+                        .m_discNumber = parseFilenameTags(fileInfo.filePath().toStdString()).discNumber};
         m_library.create(romInfo);
         persistDiscMembers(romInfo.m_id, identified.discMembers);
         dirHasContent = true;

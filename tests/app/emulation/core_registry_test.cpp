@@ -228,4 +228,27 @@ TEST(CoreRegistryTest, EveryPlatformDefaultCoreIsInstalled) {
   }
 }
 
+// Whether a game can start is a platform fact, not an entry one: the library shows a badge
+// rather than hiding the row, so this has to agree with what checkAvailability reports
+TEST(CoreRegistryTest, PlatformIsPlayableExactlyWhenItsCoreIsInstalled) {
+  const auto &registry = CoreRegistry::instance();
+  auto checkedAny = false;
+
+  for (const auto &entry : registry.checkAvailability()) {
+    for (const auto platformId : entry.defaultForPlatforms) {
+      EXPECT_EQ(registry.isPlatformPlayable(platformId), entry.present)
+          << "platform " << platformId << " defaults to " << entry.coreId;
+      checkedAny = true;
+    }
+  }
+
+  EXPECT_TRUE(checkedAny) << "no platform declares a default core, so nothing was actually checked";
+}
+
+// A platform nothing can run is not playable, rather than being reported as fine because no
+// core objected
+TEST(CoreRegistryTest, AnUnknownPlatformIsNotPlayable) {
+  EXPECT_FALSE(CoreRegistry::instance().isPlatformPlayable(999999));
+}
+
 } // namespace firelight

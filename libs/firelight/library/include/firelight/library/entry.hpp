@@ -37,6 +37,19 @@ struct Entry {
   std::string normalizedTitle;
 
   // TODO
+  // Which disc of a set this is, 0 when it is not one. Read from the entry's content file
+  // rather than stored again here
+  int discNumber = 0;
+
+  // TODO
+  // The multi-disc game this entry is, when it is one
+  std::optional<int> discSetId{};
+
+  // TODO
+  // Whether a person decided this entry's disc set. Automatic grouping leaves it alone
+  bool discSetUserSet = false;
+
+  // TODO
   // The set of releases this entry is one of
   std::optional<int> variantGroupId{};
 

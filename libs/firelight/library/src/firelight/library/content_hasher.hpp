@@ -21,6 +21,8 @@ struct HashedContent {
 // for everything else
 class ContentHasher {
 public:
+  ContentHasher();
+
   [[nodiscard]] HashedContent hash(int platformId, const std::vector<uint8_t> &fileBytes) const;
 
   // Lowercase-hex MD5 of a byte range (used for whole-file hashes)

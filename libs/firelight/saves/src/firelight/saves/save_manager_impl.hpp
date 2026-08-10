@@ -30,6 +30,8 @@ public:
 
   void deleteSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index) override;
 
+  bool transferSaves(const std::string &fromContentHash, const std::string &toContentHash) override;
+
   [[nodiscard]] std::string getSaveDirectory() const override;
 
   [[nodiscard]] std::string getSharedCoreSaveDirectory() const override;

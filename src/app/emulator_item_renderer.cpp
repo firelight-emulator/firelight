@@ -55,7 +55,7 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
     m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
   }
 
-  m_playSession.endTime = QDateTime::currentMSecsSinceEpoch();
+  m_playSession.endedAt = QDateTime::currentMSecsSinceEpoch();
   m_activityLog->createPlaySession(m_playSession);
 
   m_achievementManager->unloadGame();
@@ -504,7 +504,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       sp.retroachievementsState = m_achievementManager->serializeState();
       sp.image = firelight::gui::toImage(m_currentImage);
       sp.timestamp = QDateTime::currentMSecsSinceEpoch();
-      sp.saveSlotNumber = m_saveSlotNumber;
+      sp.saveSlot = m_saveSlotNumber;
       m_saveManager->writeSuspendPoint(m_contentHash.toStdString(), m_saveSlotNumber, command.suspendPointIndex, sp);
     } break;
 
@@ -547,7 +547,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         before.retroachievementsState = m_achievementManager->serializeState();
         before.image = firelight::gui::toImage(m_currentImage);
         before.timestamp = QDateTime::currentMSecsSinceEpoch();
-        before.saveSlotNumber = m_saveSlotNumber;
+        before.saveSlot = m_saveSlotNumber;
         m_beforeLastLoadSuspendPoint = before;
         emulatorItem->m_canUndoLoadSuspendPoint = true;
         emulatorItem->canUndoLoadSuspendPointChanged();
@@ -734,8 +734,8 @@ void EmulatorItemRenderer::initializeEmulatorInstance(QRhiCommandBuffer *cb) {
   cb->endPass(batch);
 
   m_playSession.contentHash = m_contentHash.toStdString();
-  m_playSession.startTime = QDateTime::currentMSecsSinceEpoch();
-  m_playSession.slotNumber = m_saveSlotNumber;
+  m_playSession.startedAt = QDateTime::currentMSecsSinceEpoch();
+  m_playSession.saveSlot = m_saveSlotNumber;
   if (!m_paused) {
     m_playSessionTimer.start();
   }

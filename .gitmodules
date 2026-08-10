@@ -4,3 +4,6 @@
 [submodule "libs/rcheevos"]
 	path = libs/rcheevos
 	url = https://github.com/RetroAchievements/rcheevos.git
+[submodule "thirdparty/libchdr"]
+	path = thirdparty/libchdr
+	url = https://github.com/rtissera/libchdr.git

@@ -112,6 +112,36 @@ TEST(FilenameTagsTest, DiscNumberIsCapturedAndIsNotARegion) {
   EXPECT_EQ(parseFilenameTags("Game (CD 3).cue").discNumber, 3);
 }
 
+// The forms that used to yield no disc number while still being stripped from the title,
+// which left every disc of a set sharing a normalized title and being grouped as regional
+// variants of each other
+TEST(FilenameTagsTest, RecognizesTheOtherWaysDiscsAreWritten) {
+  EXPECT_EQ(parseFilenameTags("Game (CD1).cue").discNumber, 1);
+  EXPECT_EQ(parseFilenameTags("Game (Disc2).cue").discNumber, 2);
+  EXPECT_EQ(parseFilenameTags("Game (Disk3).cue").discNumber, 3);
+  EXPECT_EQ(parseFilenameTags("Game [Disc 1].cue").discNumber, 1);
+  EXPECT_EQ(parseFilenameTags("Game (Disc 1 of 3).cue").discNumber, 1);
+  EXPECT_EQ(parseFilenameTags("Game (Disc 2 of 3).cue").discNumber, 2);
+  EXPECT_EQ(parseFilenameTags("Game (disc 1).cue").discNumber, 1);
+
+  // The tag comes out of the title whichever way it was written, so every disc of a set
+  // reduces to the same thing
+  EXPECT_EQ(parseFilenameTags("Game (CD1).cue").title, "Game");
+  EXPECT_EQ(parseFilenameTags("Game [Disc 2].cue").title, "Game");
+  EXPECT_EQ(parseFilenameTags("Game (Disc 1 of 3).cue").title, "Game");
+}
+
+// A title is not a disc tag just because it starts with the same letters
+TEST(FilenameTagsTest, DoesNotInventDiscNumbers) {
+  EXPECT_EQ(parseFilenameTags("Game (CDROM).cue").discNumber, 0);
+  EXPECT_EQ(parseFilenameTags("Game (Discovery).cue").discNumber, 0);
+  EXPECT_EQ(parseFilenameTags("Game (Disc).cue").discNumber, 0);
+  EXPECT_EQ(parseFilenameTags("Game (USA).cue").discNumber, 0);
+
+  // A platform name that happens to start the same way is not a disc count
+  EXPECT_EQ(parseFilenameTags("Game (CD32).cue").discNumber, 0);
+}
+
 TEST(FilenameTagsTest, ParsesAFullyLoadedName) {
   const auto tags = parseFilenameTags("Some Game (USA, Europe) (En,Fr,De) (Rev 1) [!].zip");
 

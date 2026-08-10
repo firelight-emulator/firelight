@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <string>
 
 namespace firelight::library {
@@ -27,6 +28,13 @@ struct ContentFile {
   std::string m_archivePathName;
   int m_platformId = -1;
   std::string m_contentHash;
+  // Which disc of a set this file is, 0 when it is not one. Parsed from the name at scan
+  // time, so it is known before anything asynchronous runs
+  int m_discNumber = 0;
+
+  // The multi-disc game this file belongs to. This is the membership edge: the set is found
+  // from its files, not from the entry
+  std::optional<int> m_discSetId{};
   // The content directory (content_directoriesv1.id) this file was found under,
   // resolved by longest path-prefix match. -1 when it belongs to no known
   // directory (e.g. imported before source tracking, and unmatched by the

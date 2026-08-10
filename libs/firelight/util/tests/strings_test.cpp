@@ -52,9 +52,7 @@ TEST(StringsTest, Join) {
   EXPECT_EQ(join({}, ", "), "");
 }
 
-TEST(StringsTest, SplitAndJoinRoundTrip) {
-  EXPECT_EQ(join(split("US, EU, JP", ','), ","), "US,EU,JP");
-}
+TEST(StringsTest, SplitAndJoinRoundTrip) { EXPECT_EQ(join(split("US, EU, JP", ','), ","), "US,EU,JP"); }
 
 TEST(StringsTest, StartsWith) {
   EXPECT_TRUE(startsWith("zelda", "zel"));
@@ -69,6 +67,15 @@ TEST(StringsTest, StartsWithIgnoringCase) {
   EXPECT_TRUE(startsWithIgnoringCase("BETA 2", "beta"));
   EXPECT_FALSE(startsWithIgnoringCase("Revision", "rev "));
   EXPECT_FALSE(startsWithIgnoringCase("Re", "rev "));
+}
+
+TEST(StringsTest, EndsWithIgnoringCase) {
+  EXPECT_TRUE(endsWithIgnoringCase("game.chd", ".chd"));
+  EXPECT_TRUE(endsWithIgnoringCase("GAME.CHD", ".chd"));
+  EXPECT_TRUE(endsWithIgnoringCase("game.Chd", ".CHD"));
+  EXPECT_FALSE(endsWithIgnoringCase("game.cue", ".chd"));
+  EXPECT_FALSE(endsWithIgnoringCase("chd", ".chd"));
+  EXPECT_TRUE(endsWithIgnoringCase("anything", ""));
 }
 
 TEST(StringsTest, Contains) {

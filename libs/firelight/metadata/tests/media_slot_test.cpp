@@ -19,8 +19,7 @@ MediaAsset asset(const int id, const MediaType type, const bool selected = false
 } // namespace
 
 TEST(MediaSlotTest, PrefersTheFirstTypeInTheLadder) {
-  const std::vector assets = {asset(1, MediaType::Ingame), asset(2, MediaType::Icon),
-                              asset(3, MediaType::GridSquare)};
+  const std::vector assets = {asset(1, MediaType::Ingame), asset(2, MediaType::Icon), asset(3, MediaType::GridSquare)};
 
   const auto resolved = resolveSlot(assets, MediaSlot::TileSquare);
 

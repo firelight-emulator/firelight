@@ -23,7 +23,7 @@ QVariant SavefileListModel::data(const QModelIndex &index, int role) const {
   case ContentHash:
     return QString::fromStdString(item.contentHash);
   case SlotNumber:
-    return item.slotNumber;
+    return item.saveSlot;
   case SavefileMd5:
     return QString::fromStdString(item.savefileMd5);
   case Name:
@@ -31,7 +31,7 @@ QVariant SavefileListModel::data(const QModelIndex &index, int role) const {
   case Description:
     return QString::fromStdString(item.description);
   case LastModified:
-    return QDateTime::fromSecsSinceEpoch(item.lastModifiedEpochSeconds).toString("yyyy-MM-dd hh:mm:ss");
+    return QDateTime::fromMSecsSinceEpoch(item.lastModifiedAt).toString("yyyy-MM-dd hh:mm:ss");
   default:
     return QVariant{};
   }

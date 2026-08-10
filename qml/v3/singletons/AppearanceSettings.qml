@@ -84,11 +84,11 @@ QtObject {
     // How strongly solid surfaces are tinted toward backgroundColor
     readonly property real themeIntensity: parseFloat(tintBinding.value)
     // Opacity of translucent "glass" surfaces over the background
-    readonly property real glassOpacity: parseFloat(glassBinding.value)
+    readonly property real glassOpacity: parseFloat(glassBinding.value) || 0.55
     // Library grid cover-art edge, in px. The grid binds cellWidth/cellHeight
     // to this and GameTile decodes to match
-    readonly property int libraryTileSize: parseInt(tileSizeBinding.value)
-    readonly property int libraryTileSpacing: parseInt(tileSpacingBinding.value)
+    readonly property int libraryTileSize: parseInt(tileSizeBinding.value) || 160
+    readonly property int libraryTileSpacing: parseInt(tileSpacingBinding.value) || 12
 
     // Accessibility scaling. AppStyle multiplies its metric tokens by these:
     // uiScale enlarges everything (fonts + dimensions), uiDensity only affects

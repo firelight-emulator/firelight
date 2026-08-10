@@ -2,6 +2,7 @@
 
 #include <firelight/platforms/platform_service.hpp>
 
+#include <algorithm>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <string>
@@ -95,6 +96,88 @@ TEST(ContentHasherTest, SameBytesHashIdenticallyAcrossCalls) {
   const ContentHasher hasher;
   EXPECT_EQ(hasher.hash(PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE, bytes).contentHash,
             hasher.hash(PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE, bytes).contentHash);
+}
+
+namespace {
+// A .v64 is the same ROM with every byte pair swapped
+std::vector<uint8_t> toByteSwapped(const std::vector<uint8_t> &z64) {
+  auto swapped = z64;
+  for (size_t i = 0; i + 1 < swapped.size(); i += 2) {
+    std::swap(swapped[i], swapped[i + 1]);
+  }
+  return swapped;
+}
+
+// A .n64 is the same ROM with every four-byte word reversed
+std::vector<uint8_t> toWordSwapped(const std::vector<uint8_t> &z64) {
+  auto swapped = z64;
+  for (size_t i = 0; i + 3 < swapped.size(); i += 4) {
+    std::swap(swapped[i], swapped[i + 3]);
+    std::swap(swapped[i + 1], swapped[i + 2]);
+  }
+  return swapped;
+}
+} // namespace
+
+// The same N64 game in all three dump formats is one game. Everything a user owns hangs off the
+// content hash, so a .v64 that hashed differently from its .z64 would be a second library entry
+// with its own saves
+TEST(ContentHasherTest, EveryN64DumpFormatOfOneRomHashesTheSame) {
+  const auto z64 = readFile("test_resources/testrom.z64");
+  ASSERT_FALSE(z64.empty()) << "test_resources/testrom.z64 missing from the build directory";
+
+  const ContentHasher hasher;
+  const auto fromZ64 = hasher.hash(PlatformService::PLATFORM_ID_N64, z64);
+  const auto fromV64 = hasher.hash(PlatformService::PLATFORM_ID_N64, toByteSwapped(z64));
+  const auto fromN64 = hasher.hash(PlatformService::PLATFORM_ID_N64, toWordSwapped(z64));
+
+  ASSERT_FALSE(fromZ64.contentHash.empty());
+  EXPECT_EQ(fromV64.contentHash, fromZ64.contentHash);
+  EXPECT_EQ(fromN64.contentHash, fromZ64.contentHash);
+
+  // And the bytes handed to the core are the big-endian ones whatever came in
+  EXPECT_EQ(fromV64.contentBytes, z64);
+  EXPECT_EQ(fromN64.contentBytes, z64);
+}
+
+// A headered and a headerless dump of one NES game are the same game
+TEST(ContentHasherTest, TheINesHeaderDoesNotChangeTheHash) {
+  std::vector<uint8_t> body(4096);
+  for (size_t i = 0; i < body.size(); ++i) {
+    body[i] = static_cast<uint8_t>(i * 7);
+  }
+
+  std::vector<uint8_t> headered{'N', 'E', 'S', 0x1A, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  headered.insert(headered.end(), body.begin(), body.end());
+
+  const ContentHasher hasher;
+  const auto withHeader = hasher.hash(PlatformService::PLATFORM_ID_NES, headered);
+  const auto withoutHeader = hasher.hash(PlatformService::PLATFORM_ID_NES, body);
+
+  EXPECT_FALSE(withHeader.contentHash.empty());
+  EXPECT_EQ(withHeader.contentHash, withoutHeader.contentHash);
+
+  // The header still reaches the core, which needs it to pick a mapper
+  EXPECT_EQ(withHeader.contentBytes, headered);
+}
+
+// A copier header is 512 bytes on top of a power-of-two ROM, which is how it is recognised
+TEST(ContentHasherTest, TheSnesCopierHeaderDoesNotChangeTheHash) {
+  std::vector<uint8_t> body(2048);
+  for (size_t i = 0; i < body.size(); ++i) {
+    body[i] = static_cast<uint8_t>(i % 251);
+  }
+
+  std::vector<uint8_t> headered(512, 0xAB);
+  headered.insert(headered.end(), body.begin(), body.end());
+  ASSERT_EQ(headered.size() % 1024, 512u);
+
+  const ContentHasher hasher;
+  const auto withHeader = hasher.hash(PlatformService::PLATFORM_ID_SNES, headered);
+  const auto withoutHeader = hasher.hash(PlatformService::PLATFORM_ID_SNES, body);
+
+  EXPECT_FALSE(withHeader.contentHash.empty());
+  EXPECT_EQ(withHeader.contentHash, withoutHeader.contentHash);
 }
 
 } // namespace firelight::library

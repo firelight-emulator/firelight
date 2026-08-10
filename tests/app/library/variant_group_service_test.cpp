@@ -1,5 +1,6 @@
 #include "app/library/variant_group_service.hpp"
 
+#include <firelight/library/filename_tags.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_service.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
@@ -68,6 +69,37 @@ protected:
 
     entry.normalizedTitle = normalizedTitle;
     m_repo.updateEntryMetadata(entry);
+
+    return entry.id;
+  }
+
+  // Creates an entry whose metadata came from parsing the given filename, the way populate does
+  int makeUngroupedFromFile(const std::string &fileName) {
+    const auto tags = parseFilenameTags(fileName);
+
+    Entry entry;
+    entry.displayName = tags.title;
+    entry.contentHash = fileName;
+    entry.platformId = 6;
+    m_repo.createEntry(entry);
+
+    entry.normalizedTitle = normalizeTitle(tags.title);
+    m_repo.updateEntryMetadata(entry);
+
+    // The disc a file is lives on the content file, so the entry needs one to read it through
+    ContentFile file;
+    file.m_filePath = fileName;
+    file.m_fileSizeBytes = 1;
+    file.m_fileMd5 = fileName;
+    file.m_fileCrc32 = "0";
+    file.m_platformId = 6;
+    file.m_contentHash = fileName;
+    file.m_discNumber = tags.discNumber;
+    m_repo.create(file);
+
+    GameMetadata metadata;
+    metadata.regions = tags.regions;
+    m_repo.applyEntryMetadata(entry.id, metadata, {metadata_fields::REGIONS}, false);
 
     return entry.id;
   }
@@ -447,6 +479,24 @@ TEST_F(VariantGroupServiceTest, PinningADifferentPrimaryDoesNotRenameTheGroup) {
   ASSERT_TRUE(service.pinPrimary(groupId, japan));
 
   EXPECT_EQ(m_repo.getVariantGroup(groupId)->title, "Zelda");
+}
+
+// Discs of one game are not regional variants of each other. Nothing pinned this before, and
+// the forms below are exactly the ones whose disc tag used to parse as nothing while still
+// being stripped from the title, leaving every disc sharing a normalized title
+TEST_F(VariantGroupServiceTest, DiscsOfOneGameAreNotVariants) {
+  const auto discOne = makeUngroupedFromFile("Final Fantasy VII (USA) (Disc 1).cue");
+  const auto discTwo = makeUngroupedFromFile("Final Fantasy VII (USA) (Disc 2).cue");
+  const auto discThree = makeUngroupedFromFile("Final Fantasy VII (USA) (CD3).cue");
+
+  VariantGroupService service(m_library, m_settings);
+
+  EXPECT_FALSE(service.autoGroupByTitle(discTwo));
+  EXPECT_FALSE(service.autoGroupByTitle(discThree));
+
+  EXPECT_TRUE(m_repo.getVariantGroups().empty());
+  EXPECT_FALSE(m_repo.getEntry(discOne)->variantGroupId.has_value());
+  EXPECT_FALSE(m_repo.getEntry(discTwo)->variantGroupId.has_value());
 }
 
 } // namespace firelight::library

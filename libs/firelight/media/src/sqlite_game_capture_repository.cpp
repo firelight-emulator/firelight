@@ -22,7 +22,7 @@ GameCapture readCapture(const SQLite::Statement &query) {
   c.type = static_cast<CaptureType>(query.getColumn("capture_type").getInt());
   c.filePath = query.getColumn("file_path").getString();
   c.thumbnailPath = query.getColumn("thumbnail_path").getString();
-  c.timestamp = query.getColumn("timestamp").getInt64();
+  c.capturedAt = query.getColumn("captured_at").getInt64();
   c.favorite = query.getColumn("favorite").getInt() != 0;
   c.createdAt = query.getColumn("created_at").getInt64();
   return c;
@@ -44,7 +44,7 @@ SqliteGameCaptureRepository::SqliteGameCaptureRepository(std::string databaseFil
                       "capture_type INTEGER NOT NULL,"
                       "file_path TEXT NOT NULL,"
                       "thumbnail_path TEXT NOT NULL DEFAULT '',"
-                      "timestamp INTEGER NOT NULL,"
+                      "captured_at INTEGER NOT NULL,"
                       "favorite INTEGER NOT NULL DEFAULT 0,"
                       "created_at INTEGER NOT NULL);");
            m_db->exec("CREATE INDEX IF NOT EXISTS captureContentHashIdx ON "
@@ -71,14 +71,14 @@ bool SqliteGameCaptureRepository::add(GameCapture &capture) {
   try {
     {
       SQLite::Statement insert(*m_db, "INSERT OR IGNORE INTO captures(content_hash, capture_type, "
-                                      "file_path, thumbnail_path, timestamp, favorite, created_at) "
+                                      "file_path, thumbnail_path, captured_at, favorite, created_at) "
                                       "VALUES(:contentHash, :captureType, :filePath, :thumbnailPath, "
-                                      ":timestamp, :favorite, :createdAt)");
+                                      ":capturedAt, :favorite, :createdAt)");
       insert.bind(":contentHash", capture.contentHash);
       insert.bind(":captureType", static_cast<int>(capture.type));
       insert.bind(":filePath", capture.filePath);
       insert.bind(":thumbnailPath", capture.thumbnailPath);
-      insert.bind(":timestamp", static_cast<int64_t>(capture.timestamp ? capture.timestamp : nowMs()));
+      insert.bind(":capturedAt", static_cast<int64_t>(capture.capturedAt ? capture.capturedAt : nowMs()));
       insert.bind(":favorite", capture.favorite ? 1 : 0);
       insert.bind(":createdAt", static_cast<int64_t>(capture.createdAt ? capture.createdAt : nowMs()));
       insert.exec();
@@ -101,7 +101,7 @@ std::vector<GameCapture> SqliteGameCaptureRepository::listAll() {
   std::lock_guard lock(m_mutex);
   std::vector<GameCapture> out;
   try {
-    SQLite::Statement query(*m_db, "SELECT * FROM captures ORDER BY timestamp DESC, id DESC");
+    SQLite::Statement query(*m_db, "SELECT * FROM captures ORDER BY captured_at DESC, id DESC");
     while (query.executeStep()) {
       out.push_back(readCapture(query));
     }
@@ -116,7 +116,7 @@ std::vector<GameCapture> SqliteGameCaptureRepository::listForGame(const std::str
   std::vector<GameCapture> out;
   try {
     SQLite::Statement query(*m_db, "SELECT * FROM captures WHERE content_hash = "
-                                   ":contentHash ORDER BY timestamp DESC, id DESC");
+                                   ":contentHash ORDER BY captured_at DESC, id DESC");
     query.bind(":contentHash", contentHash);
     while (query.executeStep()) {
       out.push_back(readCapture(query));

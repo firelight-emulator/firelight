@@ -139,6 +139,14 @@ add_subdirectory(libs/firelight/discord)
 add_subdirectory(libs/discord)
 add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
 
+# libchdr gives rcheevos a way to read CHD, which its bundled cdreader cannot do.
+# Bundled zlib/zstd rather than system ones so the codecs a CHD may use are always
+# present regardless of what the build host has installed
+set(WITH_SYSTEM_ZLIB OFF CACHE BOOL "" FORCE)
+set(WITH_SYSTEM_ZSTD OFF CACHE BOOL "" FORCE)
+set(INSTALL_STATIC_LIBS OFF CACHE BOOL "" FORCE)
+add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/libchdr EXCLUDE_FROM_ALL)
+
 #file(GLOB QML_FILES
 #        qml/*.qml
 #        qml/components/achievements/*.qml
@@ -266,6 +274,7 @@ add_library(firelight_lib STATIC
         src/gui/game_image_provider.cpp
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/library/variant_group_service.cpp
+        src/app/library/entry_merge_service.cpp
         src/app/library/gui/entry_list_model.cpp
         src/app/media/gui/capture_list_model.cpp
         src/app/netplay/direct_lobby_backend.cpp
@@ -567,7 +576,10 @@ add_executable(fl_test
         tests/app/library/entry_list_model_test.cpp
         tests/app/library/library_ingest_service_test.cpp
         tests/app/library/variant_group_service_test.cpp
+        tests/app/library/disc_set_service_test.cpp
         tests/app/library/library_scanner_test.cpp
+        tests/app/library/library_e2e_test.cpp
+        tests/app/library/chd_disc_test.cpp
         tests/app/metadata/metadata_service_test.cpp
         tests/gui/models/library_entry_sort_filter_model_test.cpp
         tests/app/gui/filesystem_utils_test.cpp

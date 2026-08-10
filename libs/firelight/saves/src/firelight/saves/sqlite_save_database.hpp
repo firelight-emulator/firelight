@@ -22,7 +22,7 @@ public:
 
   bool createSavefileMetadata(SavefileMetadata &metadata) override;
 
-  std::optional<SavefileMetadata> getSavefileMetadata(std::string contentId, int slotNumber) override;
+  std::optional<SavefileMetadata> getSavefileMetadata(std::string contentHash, int saveSlot) override;
 
   bool updateSavefileMetadata(SavefileMetadata metadata) override;
 
@@ -37,6 +37,8 @@ public:
 
   std::vector<SuspendPointMetadata> getSuspendPointMetadataForContent(std::string contentId,
                                                                       int saveSlotNumber) override;
+
+  bool transferContent(const std::string &fromContentHash, const std::string &toContentHash) override;
 
   bool deleteSuspendPointMetadata(int id) override;
 

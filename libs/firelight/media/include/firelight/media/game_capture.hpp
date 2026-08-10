@@ -19,7 +19,9 @@ struct GameCapture {
   CaptureType type = CaptureType::Screenshot;
   std::string filePath;
   std::string thumbnailPath;
-  int64_t timestamp = 0; // capture time (epoch ms)
+  // When the capture was taken, epoch milliseconds. Differs from createdAt for a
+  // capture found on disk and indexed later
+  int64_t capturedAt = 0;
   bool favorite = false;
   int64_t createdAt = 0; // index insert time (epoch ms)
 };

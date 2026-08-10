@@ -20,10 +20,10 @@ std::vector<char> bytesOf(const std::string &s) { return {s.begin(), s.end()}; }
 
 std::vector<uint8_t> uBytesOf(const std::string &s) { return {s.begin(), s.end()}; }
 
-SuspendPoint makeSuspendPoint(const std::string &contentHash, const int saveSlotNumber, const std::string &state) {
+SuspendPoint makeSuspendPoint(const std::string &contentHash, const int saveSlot, const std::string &state) {
   SuspendPoint point;
   point.contentHash = contentHash;
-  point.saveSlotNumber = saveSlotNumber;
+  point.saveSlot = saveSlot;
   point.state = uBytesOf(state);
   point.timestamp = 0;
   return point;
@@ -224,11 +224,11 @@ TEST_F(SaveManagerTest, SuspendPointTimestampComesFromTheStateFile) {
   EXPECT_GT(readBack->timestamp, 0);
 }
 
-// The saveSlotNumber parameter is authoritative; a disagreeing struct field must
+// The saveSlot parameter is authoritative; a disagreeing struct field must
 // not send the file to a different slot than the one the caller and the event use
 TEST_F(SaveManagerTest, SuspendPointUsesParameterSlotNotStructField) {
   auto point = makeSuspendPoint(m_hash, 5, "state");
-  point.saveSlotNumber = 9; // deliberately disagrees with the parameter
+  point.saveSlot = 9; // deliberately disagrees with the parameter
   m_saveManager->writeSuspendPoint(m_hash, 3, 0, point);
 
   const auto atParameterSlot = m_tempDir / m_hash / "slot3" / "suspendpoints" / "slot1" / "suspendpoint.state";
@@ -246,6 +246,46 @@ TEST_F(SaveManagerTest, RewritingSuspendPointReplacesState) {
   const auto readBack = m_saveManager->readSuspendPoint(m_hash, 1, 0);
   ASSERT_TRUE(readBack.has_value());
   EXPECT_EQ(readBack->state, uBytesOf("replacement"));
+}
+
+// Two library entries turning out to be one game must not cost anybody a save
+TEST_F(SaveManagerTest, TransferMovesSavesToTheSurvivingHash) {
+  const auto data = bytesOf("disc-two-save");
+  ASSERT_TRUE(m_saveManager->writeSaveData("discTwoHash", 1, Savefile(data)).get());
+
+  EXPECT_TRUE(m_saveManager->transferSaves("discTwoHash", "discOneHash"));
+
+  const auto moved = m_saveManager->readSaveData("discOneHash", 1);
+  ASSERT_TRUE(moved.has_value());
+  EXPECT_EQ(moved->getSaveRamData(), data);
+
+  // And it is no longer readable where it was
+  EXPECT_FALSE(m_saveManager->readSaveData("discTwoHash", 1).has_value());
+}
+
+// Overwriting a save to tidy up a merge is worse than leaving a duplicate behind
+TEST_F(SaveManagerTest, TransferDoesNotOverwriteAnExistingSlot) {
+  const auto keep = bytesOf("keep-me");
+  const auto other = bytesOf("other-save");
+  ASSERT_TRUE(m_saveManager->writeSaveData("discOneHash", 1, Savefile(keep)).get());
+  ASSERT_TRUE(m_saveManager->writeSaveData("discTwoHash", 1, Savefile(other)).get());
+
+  m_saveManager->transferSaves("discTwoHash", "discOneHash");
+
+  const auto survivor = m_saveManager->readSaveData("discOneHash", 1);
+  ASSERT_TRUE(survivor.has_value());
+  EXPECT_EQ(survivor->getSaveRamData(), keep);
+
+  // The one that could not move is still where it was, not deleted
+  const auto stranded = m_saveManager->readSaveData("discTwoHash", 1);
+  ASSERT_TRUE(stranded.has_value());
+  EXPECT_EQ(stranded->getSaveRamData(), other);
+}
+
+TEST_F(SaveManagerTest, TransferOfNothingIsHarmless) {
+  EXPECT_FALSE(m_saveManager->transferSaves("neverSeen", "alsoNeverSeen"));
+  EXPECT_FALSE(m_saveManager->transferSaves("sameHash", "sameHash"));
+  EXPECT_FALSE(m_saveManager->transferSaves("", "somewhere"));
 }
 
 } // namespace firelight::saves

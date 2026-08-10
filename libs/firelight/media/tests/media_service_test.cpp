@@ -105,7 +105,7 @@ TEST(MediaServiceTest, ReconcileIndexesOrphansAndPrunesMissing) {
   f.service->reconcile();
   auto rows = f.repo->listForGame("gameX");
   ASSERT_EQ(rows.size(), 1u);
-  EXPECT_EQ(rows[0].timestamp, 12345);
+  EXPECT_EQ(rows[0].capturedAt, 12345);
 
   // Delete the file behind the app's back; reconcile prunes the row
   std::filesystem::remove(file.toStdString());

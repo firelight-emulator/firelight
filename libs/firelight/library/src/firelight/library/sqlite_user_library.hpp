@@ -46,6 +46,28 @@ public:
 
   std::vector<int> getEntryIdsMissingArt(int limit) override;
 
+  bool createDiscSet(DiscSet &set) override;
+
+  bool updateDiscSet(const DiscSet &set) override;
+
+  bool deleteDiscSet(int setId) override;
+
+  std::optional<DiscSet> getDiscSet(int setId) override;
+
+  std::vector<DiscSet> getDiscSets() override;
+
+  std::optional<DiscSet> getDiscSetForContentFile(int contentFileId) override;
+
+  std::vector<ContentFile> getDiscsInSet(int setId) override;
+
+  bool setContentFileDiscSet(int contentFileId, std::optional<int> setId) override;
+
+  bool setEntryDiscSet(int entryId, std::optional<int> setId, bool isUserChoice) override;
+
+  std::optional<int> getLastDisc(int entryId, int saveSlot) override;
+
+  bool setLastDisc(int entryId, int saveSlot, int discNumber) override;
+
   bool createVariantGroup(VariantGroup &group) override;
 
   bool updateVariantGroup(const VariantGroup &group) override;
@@ -91,9 +113,17 @@ public:
 
   std::vector<RunConfiguration> getRunConfigurations(const std::string &contentHash) override;
 
+  bool deleteRunConfigurationsForContentFile(int contentFileId) override;
+
   std::vector<ContentFile> getContentFiles() override;
 
   std::optional<ContentFile> getContentFile(int id) override;
+
+  std::vector<ContentFile> getContentFilesWithContentHash(const std::string &contentHash) override;
+
+  std::optional<ContentFile> getContentFileWithPath(const std::string &filePath) override;
+
+  bool setContentFileIdentity(int contentFileId, const std::string &contentHash, size_t fileSizeBytes) override;
 
   std::optional<PatchFile> getPatchFile(int id) override;
 
@@ -109,8 +139,11 @@ public:
 
   bool createEntry(Entry &entry) override;
 
+  bool deleteEntry(int entryId) override;
+
   void createRunConfiguration(int contentFileId, const std::string &path, int platformId,
-                              const std::string &contentHash) override;
+                              const std::string &contentHash,
+                              std::string_view type = RunConfiguration::TYPE_ROM) override;
 
 private:
   void ensureColumnExists(const std::string &table, const std::string &column, const std::string &definition);

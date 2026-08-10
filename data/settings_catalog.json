@@ -385,6 +385,45 @@
       "step": 0.01
     },
     {
+      "key": "library-tile-size",
+      "label": "Game tile size",
+      "group": "appearance-surfaces",
+      "order": 30,
+      "description": "How large cover art is in the library grid.",
+      "keywords": [
+        "grid",
+        "tile",
+        "cover",
+        "art",
+        "size",
+        "library"
+      ],
+      "type": "slider",
+      "default": "160",
+      "min": 100,
+      "max": 240,
+      "step": 10
+    },
+    {
+      "key": "library-tile-spacing",
+      "label": "Game tile spacing",
+      "group": "appearance-surfaces",
+      "order": 40,
+      "description": "How much room sits between tiles in the library grid.",
+      "keywords": [
+        "grid",
+        "tile",
+        "gap",
+        "spacing",
+        "library"
+      ],
+      "type": "slider",
+      "default": "12",
+      "min": 0,
+      "max": 40,
+      "step": 2
+    },
+    {
       "key": "fullscreen",
       "label": "Fullscreen",
       "group": "system-display",
@@ -534,6 +573,25 @@
         "navigation",
         "click",
         "sound"
+      ],
+      "type": "slider",
+      "default": "100",
+      "min": 0,
+      "max": 100,
+      "step": 1
+    },
+    {
+      "key": "volume",
+      "label": "Game Volume",
+      "group": "system-audio",
+      "order": 10,
+      "description": "Loudness of game audio.",
+      "keywords": [
+        "volume",
+        "loud",
+        "audio",
+        "sound",
+        "game"
       ],
       "type": "slider",
       "default": "100",
@@ -729,6 +787,32 @@
       ],
       "type": "boolean",
       "default": "true"
+    },
+    {
+      "key": "library-playlist-location",
+      "label": "Where multi-disc playlists go",
+      "group": "system-library",
+      "order": 30,
+      "description": "A multi-disc game needs a playlist file to launch as one game with one memory card.",
+      "keywords": [
+        "disc",
+        "playlist",
+        "m3u",
+        "multi-disc",
+        "cd"
+      ],
+      "type": "options",
+      "default": "rom-folder",
+      "options": [
+        {
+          "label": "Next to the game",
+          "value": "rom-folder"
+        },
+        {
+          "label": "In Firelight's own folder",
+          "value": "app-data"
+        }
+      ]
     },
     {
       "key": "library-language-priority",

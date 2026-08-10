@@ -10,13 +10,13 @@ namespace firelight::saves {
 
 struct SuspendPointUpdatedEvent {
   std::string contentHash;
-  int saveSlotNumber = -1;
+  int saveSlot = -1;
   int index = -1;
 };
 
 struct SuspendPointDeletedEvent {
   std::string contentHash;
-  int saveSlotNumber = -1;
+  int saveSlot = -1;
   int index = -1;
 };
 

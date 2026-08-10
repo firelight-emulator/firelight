@@ -77,6 +77,7 @@
 #include "gui/qt_settings_catalog_proxy.hpp"
 #include "gui/qt_variant_group_proxy.hpp"
 #include "gui/settings_level_shim.hpp"
+#include "library/entry_merge_service.hpp"
 #include "library/variant_group_service.hpp"
 #include "libretro/core_registry.hpp"
 #include "metadata/cpr_http_client.hpp"
@@ -92,6 +93,7 @@
 #include <firelight/input/sdl_input_service.hpp>
 #include <firelight/input/shortcut_registry.hpp>
 #include <firelight/input/sqlite_controller_repository.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/library_events.hpp>
 #include <firelight/library/library_ingest_service.hpp>
@@ -319,6 +321,11 @@ int main(int argc, char *argv[]) {
   // repository's events. Must outlive scanning
   firelight::library::LibraryIngestService libIngestService(userLibrary);
 
+  // Folds the discs of one game into a single entry, so a three-disc game is one row with one
+  // memory card. Constructed alongside ingest, since a set forms as soon as metadata gives the
+  // entries a title to match on
+  firelight::library::DiscSetService discSetService(userLibrary, defaultAppDataPathString.toStdString());
+
   // Auto-populates entry name/metadata/art from the shipped offline metadata
   // DB when a game is added (and backfills existing entries). Constructed
   // before scanning so it catches the initial scan's new entries; the read-only
@@ -389,6 +396,14 @@ int main(int argc, char *argv[]) {
   // prefers. Constructed after the settings service because that is where the
   // ordering lives
   firelight::library::VariantGroupService variantGroupService(userLibraryService, settingsService);
+
+  // Carries saves and playtime across when one entry is folded into another, and tells the disc
+  // sets where playlists are allowed to go
+  firelight::library::EntryMergeService entryMergeService(saveManager, activityLog, discSetService, settingsService);
+
+  // Only now that the playlist location setting has been read: a set whose playlist was deleted
+  // or left behind by a moved games folder has no way in, and its game is hidden until this runs
+  discSetService.reconcilePlaylists();
 
   // Online play: direct-connection lobby (host shares their IP) + WebRTC
   // data plane + session. DiscordLobbyBackend can swap back in here once the
