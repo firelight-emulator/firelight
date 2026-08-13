@@ -4,15 +4,14 @@
 
 #include <cstdio>
 #include <cstring>
-#include <mutex>
-#include <set>
-#include <string>
-#include <vector>
-
 #include <libchdr/cdrom.h>
 #include <libchdr/chd.h>
+#include <mutex>
 #include <rcheevos/rc_hash.h>
+#include <set>
 #include <spdlog/spdlog.h>
+#include <string>
+#include <vector>
 
 namespace firelight::library {
 

@@ -96,6 +96,10 @@ SettingsSection {
                 delegate: keyBindingDelegate
             }
             DelegateChoice {
+                roleValue: "link"
+                delegate: linkDelegate
+            }
+            DelegateChoice {
                 delegate: comboBoxDelegate
             }
         }
@@ -106,6 +110,34 @@ SettingsSection {
             }
             if (index === settingsModel.rowCount() - 1) {
                 item.isLastInSection = true;
+            }
+        }
+    }
+
+    // TODO
+    // A row that goes somewhere instead of holding a value, so a page reached by drilling in is
+    // declared beside the settings it sits among rather than hand-written into a page
+    Component {
+        id: linkDelegate
+        BaseSettingItem {
+            required property var model
+            required property var index
+            shown: model.visible
+            subItem: model.subItem
+            enabled: model.enabled
+            label: model.label
+            description: model.description
+
+            control: Icon {
+                name: "chevron-forward"
+                size: AppStyle.iconSizeSm
+                color: Theme.textSecondary
+            }
+
+            onClicked: function () {
+                if (model.route) {
+                    Router.navigate(model.route);
+                }
             }
         }
     }

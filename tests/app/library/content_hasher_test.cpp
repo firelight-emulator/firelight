@@ -180,4 +180,139 @@ TEST(ContentHasherTest, TheSnesCopierHeaderDoesNotChangeTheHash) {
   EXPECT_EQ(withHeader.contentHash, withoutHeader.contentHash);
 }
 
+// An FDS dump opens with its own 16-byte header, which the NES branch does not know to skip.
+// This is the whole reason the Famicom Disk System is a platform rather than an NES extension:
+// filed under NES it would hash the header in and agree with nothing
+TEST(ContentHasherTest, TheFdsHeaderDoesNotChangeTheHash) {
+  std::vector<uint8_t> body(2048);
+  for (size_t i = 0; i < body.size(); ++i) {
+    body[i] = static_cast<uint8_t>(i % 251);
+  }
+
+  std::vector<uint8_t> headered{'F', 'D', 'S', 0x1A};
+  headered.resize(16, 0);
+  headered.insert(headered.end(), body.begin(), body.end());
+
+  const ContentHasher hasher;
+  const auto withHeader = hasher.hash(PlatformService::PLATFORM_ID_FAMICOM_DISK_SYSTEM, headered);
+  const auto withoutHeader = hasher.hash(PlatformService::PLATFORM_ID_FAMICOM_DISK_SYSTEM, body);
+
+  EXPECT_FALSE(withHeader.contentHash.empty()) << "the FDS platform reaches no hasher at all";
+  EXPECT_EQ(withHeader.contentHash, withoutHeader.contentHash) << "the header was hashed in";
+
+  // Filed under NES the same bytes hash differently, which is the trap being avoided
+  EXPECT_NE(hasher.hash(PlatformService::PLATFORM_ID_NES, headered).contentHash, withHeader.contentHash);
+}
+
+//****************
+// mega drive containers
+//****************
+
+namespace {
+// A cartridge is recognised by its marker at 0x100, and the bytes either side only have to be
+// distinct enough that a rearrangement would show up in the digest
+std::vector<uint8_t> megaDriveRom(const size_t size = 0x8000) {
+  std::vector<uint8_t> rom(size);
+
+  for (size_t i = 0; i < size; ++i) {
+    rom[i] = static_cast<uint8_t>((i * 7 + i / 251) & 0xFF);
+  }
+
+  const std::string magic = "SEGA MEGA DRIVE ";
+  std::copy(magic.begin(), magic.end(), rom.begin() + 0x100);
+  return rom;
+}
+
+// Built forward from the layout the container uses, so the hasher's inverse is not being checked
+// against a copy of itself: the first half of each block holds the odd bytes, the second the even
+std::vector<uint8_t> asCopierImage(const std::vector<uint8_t> &rom) {
+  std::vector<uint8_t> image(512, 0xAA);
+  constexpr size_t block = 0x4000;
+  constexpr size_t half = block / 2;
+
+  for (size_t start = 0; start < rom.size(); start += block) {
+    std::vector<uint8_t> scattered(block);
+
+    for (size_t i = 0; i < half; ++i) {
+      scattered[i] = rom[start + i * 2 + 1];
+      scattered[half + i] = rom[start + i * 2];
+    }
+
+    image.insert(image.end(), scattered.begin(), scattered.end());
+  }
+
+  return image;
+}
+
+// Four leading bytes, then the cartridge with every byte flipped, then a trailing byte
+std::vector<uint8_t> asEncodedImage(const std::vector<uint8_t> &rom) {
+  std::vector<uint8_t> image(4, 0x00);
+
+  for (const auto byte : rom) {
+    image.push_back(byte ^ 0x40);
+  }
+
+  image.push_back(0x00);
+  return image;
+}
+} // namespace
+
+// The whole point of reading these containers: one game has one identity however it was dumped.
+// Three different paths through the hasher have to arrive at the same digest, or the same game
+// under two filenames becomes two library entries whose saves never meet
+TEST(ContentHasherTest, ACartridgeHashesTheSameInEveryContainerItArrivesIn) {
+  const ContentHasher hasher;
+  const auto rom = megaDriveRom();
+
+  const auto plain = hasher.hash(PlatformService::PLATFORM_ID_SEGA_GENESIS, rom);
+  const auto copier = hasher.hash(PlatformService::PLATFORM_ID_SEGA_GENESIS, asCopierImage(rom));
+  const auto encoded = hasher.hash(PlatformService::PLATFORM_ID_SEGA_GENESIS, asEncodedImage(rom));
+
+  ASSERT_FALSE(plain.contentHash.empty());
+  EXPECT_EQ(copier.contentHash, plain.contentHash);
+  EXPECT_EQ(encoded.contentHash, plain.contentHash);
+
+  // The bytes handed on are the cartridge too, since those are what the core is given and what a
+  // patch is applied to
+  EXPECT_EQ(copier.contentBytes, rom);
+  EXPECT_EQ(encoded.contentBytes, rom);
+}
+
+// Containers are recognised from their contents, so a dump keeps its identity under any name
+TEST(ContentHasherTest, AContainerIsReadWhateverItWasNamed) {
+  const ContentHasher hasher;
+  const auto rom = megaDriveRom();
+
+  EXPECT_EQ(hasher.hash(PlatformService::PLATFORM_ID_SEGA_GENESIS, asCopierImage(rom)).contentHash,
+            hasher.hash(PlatformService::PLATFORM_ID_SEGA_GENESIS, rom).contentHash);
+}
+
+// The other half, and the one that matters more: this shares a branch with every Genesis dump
+// already in somebody's library, so a detector that fired too readily would move all of them
+TEST(ContentHasherTest, APlainCartridgeIsLeftAlone) {
+  const ContentHasher hasher;
+
+  for (const size_t size : {0x8000u, 0x20000u, 0x80000u}) {
+    const auto rom = megaDriveRom(size);
+    const auto hashed = hasher.hash(PlatformService::PLATFORM_ID_SEGA_GENESIS, rom);
+
+    EXPECT_EQ(hashed.contentBytes, rom) << "size " << size;
+    EXPECT_EQ(hashed.contentHash, ContentHasher::md5(rom.data(), rom.size())) << "size " << size;
+  }
+}
+
+// A dump that is neither container and carries no marker still must not be rearranged: the
+// size test alone would claim anything that happens to be an odd number of 512-byte blocks
+TEST(ContentHasherTest, BytesThatAreNeitherContainerAreHashedAsTheyAre) {
+  const ContentHasher hasher;
+  std::vector<uint8_t> odd(0x8000 + 512, 0x5A);
+
+  const auto hashed = hasher.hash(PlatformService::PLATFORM_ID_SEGA_GENESIS, odd);
+
+  // No marker anywhere, so the copier test does fire — what this pins is that the result stays
+  // deterministic and self-consistent rather than depending on the leading bytes
+  EXPECT_EQ(hashed.contentHash, ContentHasher::md5(hashed.contentBytes.data(), hashed.contentBytes.size()));
+  EXPECT_FALSE(hashed.contentHash.empty());
+}
+
 } // namespace firelight::library

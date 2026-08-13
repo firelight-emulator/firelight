@@ -13,6 +13,8 @@ FLPopup {
     closePolicy: Popup.CloseOnPressOutsideParent
     clip: true
 
+    modal: !InputMethodManager.usingMouse
+
     // TODO
     // A row owning a submenu has to register it, or Qt treats the two menus as
     // unrelated and closes this one when that one opens. Rows that need it say
@@ -62,7 +64,7 @@ FLPopup {
     contentItem: Flickable {
         id: contentFlickable
         implicitWidth: column.implicitWidth
-        implicitHeight: Math.min(400, column.implicitHeight)
+        implicitHeight: Math.min(600, column.implicitHeight)
         contentHeight: column.implicitHeight
 
         onActiveFocusChanged: {

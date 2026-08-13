@@ -49,8 +49,16 @@ public:
   std::vector<VariantGroup> getVariantGroups();
   std::optional<VariantGroup> getVariantGroup(int groupId);
   bool setEntryVariantGroup(int entryId, std::optional<int> groupId, bool isUserChoice);
-  std::vector<int> getEntryIdsWithNormalizedTitle(unsigned platformId, const std::string &normalizedTitle);
+  std::vector<int> getCandidateEntryIds(const GameIdentity &identity);
   std::vector<Entry> getEntriesInVariantGroup(int groupId);
+
+  // Disc sets
+  std::optional<DiscSet> getDiscSet(int setId);
+  std::vector<ContentFile> getDiscsInSet(int setId);
+
+  // TODO
+  // Only the discs of the set whose bytes are on disk
+  std::vector<ContentFile> getPresentDiscsInSet(int setId);
 
   // TODO
   // Pins a group's primary, so the preference ordering stops moving it

@@ -40,7 +40,7 @@ FocusScope {
     property bool resettable: false
     signal reset
 
-    property var onClicked: null
+    property var onClicked: function () {}
 
     // Rows always span their column; a row with no width renders nothing, and
     // callers shouldn't have to remember this at every use site
@@ -71,8 +71,17 @@ FocusScope {
     }
     TapHandler {
         enabled: root.onClicked !== null
-        onTapped: if (root.onClicked)
+        onTapped: if (root.onClicked) {
             root.onClicked()
+        }
+    }
+
+    Connections {
+        target: root
+
+        function onClicked() {
+            root.forceActiveFocus()
+        }
     }
 
     // Full-bleed hover / focus highlight behind the row

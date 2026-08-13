@@ -3,15 +3,16 @@
 #include <gtest/gtest.h>
 
 // The playlist is what gives a set one identity and one memory card, and its first line is
-// what that identity is read from. These pin the ordering and the path style
+// what that identity is read from. These pin the ordering and the derived path
 namespace firelight::library {
 
 namespace {
-ContentFile disc(const int number, const std::string &path) {
+ContentFile disc(const int number, const std::string &path, const std::string &contentHash = "") {
   ContentFile file;
   file.m_type = ContentType::Disc;
   file.m_discNumber = number;
   file.m_filePath = path;
+  file.m_contentHash = contentHash;
   return file;
 }
 
@@ -35,125 +36,118 @@ std::vector<std::string> linesOf(const std::string &contents) {
 }
 } // namespace
 
-TEST(DiscSetPlaylistTest, WritesRelativeLinesBesideTheDiscs) {
-  const std::vector<ContentFile> discs{disc(1, "C:/roms/FF7 (Disc 1).chd"), disc(2, "C:/roms/FF7 (Disc 2).chd")};
+// The file is ours and lives where we put it, so the lines say exactly where each disc is
+TEST(DiscSetPlaylistTest, WritesAbsoluteLinesUnderAppData) {
+  const std::vector<ContentFile> discs{disc(1, "C:/roms/FF7 (Disc 1).chd", "a"),
+                                       disc(2, "C:/roms/FF7 (Disc 2).chd", "b")};
 
-  const auto plan = planPlaylist(discs, 1, "Final Fantasy VII", PlaylistLocation::BesideDiscs, "C:/appdata");
+  const auto plan = planPlaylist(discs, "hash1", "C:/appdata");
 
   ASSERT_TRUE(plan.has_value());
-  EXPECT_EQ(plan->path, "C:/roms/Final Fantasy VII.m3u");
-  EXPECT_TRUE(plan->isPortable);
+  EXPECT_EQ(plan->path, "C:/appdata/playlists/hash1.m3u");
   EXPECT_EQ(linesOf(plan->contents),
-            (std::vector<std::string>{std::string(PLAYLIST_MARKER), "FF7 (Disc 1).chd", "FF7 (Disc 2).chd"}));
+            (std::vector<std::string>{"C:/roms/FF7 (Disc 1).chd", "C:/roms/FF7 (Disc 2).chd"}));
+}
+
+// A core that manages its own memory card names it after the file it was handed, so the name
+// has to survive a retitle and a rebuilt library
+TEST(DiscSetPlaylistTest, ThePathIsAPureFunctionOfTheIdentity) {
+  EXPECT_EQ(playlistPathFor("abc123", "C:/appdata"), "C:/appdata/playlists/abc123.m3u");
+
+  const std::vector<ContentFile> discs{disc(1, "C:/roms/a.chd", "a"), disc(2, "C:/roms/b.chd", "b")};
+
+  EXPECT_EQ(planPlaylist(discs, "abc123", "C:/appdata")->path, playlistPathFor("abc123", "C:/appdata"));
 }
 
 // The identity is read from the first line, so an order that followed the scan would move it
 TEST(DiscSetPlaylistTest, OrderIsByDiscNumberNotByTheOrderGiven) {
-  const std::vector<ContentFile> discs{disc(3, "C:/roms/c.chd"), disc(1, "C:/roms/a.chd"), disc(2, "C:/roms/b.chd")};
+  const std::vector<ContentFile> discs{disc(3, "C:/roms/c.chd", "c"), disc(1, "C:/roms/a.chd", "a"),
+                                       disc(2, "C:/roms/b.chd", "b")};
 
-  const auto plan = planPlaylist(discs, 1, "Game", PlaylistLocation::BesideDiscs, "C:/appdata");
-
-  ASSERT_TRUE(plan.has_value());
-  EXPECT_EQ(linesOf(plan->contents),
-            (std::vector<std::string>{std::string(PLAYLIST_MARKER), "a.chd", "b.chd", "c.chd"}));
-}
-
-// Discs split across folders have no shared parent, so relative lines cannot address them all
-TEST(DiscSetPlaylistTest, SplitDiscsFallBackToAbsoluteAndAreNotPortable) {
-  const std::vector<ContentFile> discs{disc(1, "C:/roms/a/FF7 (Disc 1).chd"), disc(2, "D:/elsewhere/FF7 (Disc 2).chd")};
-
-  const auto plan = planPlaylist(discs, 1, "Final Fantasy VII", PlaylistLocation::BesideDiscs, "C:/appdata");
+  const auto plan = planPlaylist(discs, "hash1", "C:/appdata");
 
   ASSERT_TRUE(plan.has_value());
-  // Beside disc 1, which is the only folder that is any better than the others
-  EXPECT_EQ(plan->path, "C:/roms/a/Final Fantasy VII.m3u");
-  EXPECT_FALSE(plan->isPortable);
-  EXPECT_EQ(linesOf(plan->contents),
-            (std::vector<std::string>{std::string(PLAYLIST_MARKER), "C:/roms/a/FF7 (Disc 1).chd",
-                                      "D:/elsewhere/FF7 (Disc 2).chd"}));
+  EXPECT_EQ(linesOf(plan->contents), (std::vector<std::string>{"C:/roms/a.chd", "C:/roms/b.chd", "C:/roms/c.chd"}));
 }
 
-TEST(DiscSetPlaylistTest, AppDataPlaylistsNeverTouchTheGamesFolder) {
-  const std::vector<ContentFile> discs{disc(1, "C:/roms/FF7 (Disc 1).chd"), disc(2, "C:/roms/FF7 (Disc 2).chd")};
+// One disc is not a set, and neither is a set nothing can identify
+TEST(DiscSetPlaylistTest, NothingToWriteForOneDiscOrNoIdentity) {
+  const std::vector<ContentFile> one{disc(1, "C:/roms/a.chd", "a")};
+  EXPECT_FALSE(planPlaylist(one, "hash1", "C:/appdata").has_value());
 
-  const auto plan = planPlaylist(discs, 7, "Final Fantasy VII", PlaylistLocation::AppData, "C:/appdata");
-
-  ASSERT_TRUE(plan.has_value());
-  EXPECT_EQ(plan->path, "C:/appdata/playlists/7 - Final Fantasy VII.m3u");
-  // Nothing beside the discs can be addressed relatively from there
-  EXPECT_FALSE(plan->isPortable);
-  EXPECT_EQ(linesOf(plan->contents), (std::vector<std::string>{std::string(PLAYLIST_MARKER), "C:/roms/FF7 (Disc 1).chd",
-                                                               "C:/roms/FF7 (Disc 2).chd"}));
+  const std::vector<ContentFile> two{disc(1, "C:/roms/a.chd", "a"), disc(2, "C:/roms/b.chd", "b")};
+  EXPECT_FALSE(planPlaylist(two, "", "C:/appdata").has_value());
 }
 
-TEST(DiscSetPlaylistTest, OneDiscGetsNoPlaylist) {
-  const std::vector<ContentFile> discs{disc(1, "C:/roms/FF7 (Disc 1).chd")};
-
-  EXPECT_FALSE(planPlaylist(discs, 1, "Final Fantasy VII", PlaylistLocation::BesideDiscs, "C:/appdata").has_value());
-  EXPECT_FALSE(planPlaylist({}, 1, "Final Fantasy VII", PlaylistLocation::BesideDiscs, "C:/appdata").has_value());
-}
-
-// A path inside an archive is not a path a core can open, so there is no playlist to write
-TEST(DiscSetPlaylistTest, ArchivedDiscsGetNoPlaylist) {
-  auto archived = disc(2, "FF7 (Disc 2).chd");
+// A path inside an archive is not a path the core can open
+TEST(DiscSetPlaylistTest, DiscsInsideAnArchiveHaveNoPlaylist) {
+  auto archived = disc(2, "b.chd", "b");
   archived.m_inArchive = true;
-  archived.m_archivePathName = "C:/roms/FF7.zip";
+  archived.m_archivePathName = "C:/roms/game.zip";
 
-  const std::vector<ContentFile> discs{disc(1, "C:/roms/FF7 (Disc 1).chd"), archived};
+  const std::vector<ContentFile> discs{disc(1, "C:/roms/a.chd", "a"), archived};
 
-  EXPECT_FALSE(planPlaylist(discs, 1, "Final Fantasy VII", PlaylistLocation::BesideDiscs, "C:/appdata").has_value());
+  EXPECT_FALSE(planPlaylist(discs, "hash1", "C:/appdata").has_value());
 }
 
-// A title becomes a filename, and titles carry characters filenames cannot
-TEST(DiscSetPlaylistTest, TitlesAreMadeSafeToUseAsAFilename) {
-  EXPECT_EQ(sanitizeFileName("Ratchet & Clank: Up Your Arsenal"), "Ratchet & Clank Up Your Arsenal");
-  EXPECT_EQ(sanitizeFileName("Where/Are\\We?"), "WhereAreWe");
-  EXPECT_EQ(sanitizeFileName("Trailing dots..."), "Trailing dots");
-  EXPECT_EQ(sanitizeFileName("   "), "");
+// One disc kept as both a cue and a chd is two files of identical bytes, so listing both would
+// hand the core the same disc under two indices
+TEST(DiscSetPlaylistTest, ADiscDumpedTwiceIsOneLine) {
+  const std::vector<ContentFile> discs{disc(1, "C:/roms/a.cue", "hashA"), disc(1, "C:/roms/a.chd", "hashA"),
+                                       disc(2, "C:/roms/b.cue", "hashB")};
 
-  const std::vector<ContentFile> discs{disc(1, "C:/roms/a.chd"), disc(2, "C:/roms/b.chd")};
-  const auto plan = planPlaylist(discs, 1, "A:B?C", PlaylistLocation::BesideDiscs, "C:/appdata");
+  const auto plan = planPlaylist(discs, "hashA", "C:/appdata");
 
   ASSERT_TRUE(plan.has_value());
-  EXPECT_EQ(plan->path, "C:/roms/ABC.m3u");
+  EXPECT_EQ(linesOf(plan->contents), (std::vector<std::string>{"C:/roms/a.chd", "C:/roms/b.cue"}));
 }
 
-// A set with no usable title still needs a playlist, so it borrows disc 1's filename
-TEST(DiscSetPlaylistTest, AnUntitledSetIsNamedAfterItsFirstDisc) {
-  const std::vector<ContentFile> discs{disc(1, "C:/roms/FF7 (Disc 1).chd"), disc(2, "C:/roms/FF7 (Disc 2).chd")};
+// Two containers of one disc are still one disc, and a set of one is not a set
+TEST(DiscSetPlaylistTest, OneDiscInTwoContainersIsNotAPlaylist) {
+  const std::vector<ContentFile> discs{disc(1, "C:/roms/a.cue", "hashA"), disc(1, "C:/roms/a.chd", "hashA")};
 
-  const auto plan = planPlaylist(discs, 1, "", PlaylistLocation::BesideDiscs, "C:/appdata");
-
-  ASSERT_TRUE(plan.has_value());
-  EXPECT_EQ(plan->path, "C:/roms/FF7 (Disc 1).m3u");
+  EXPECT_FALSE(planPlaylist(discs, "hashA", "C:/appdata").has_value());
 }
 
-// One folder per disc is a normal way to keep a multi-disc game, and burying the playlist
-// inside the first disc's folder is not where anybody would look for it
-TEST(DiscSetPlaylistTest, PerDiscFoldersPutThePlaylistBesideThoseFolders) {
-  const std::vector<ContentFile> discs{disc(1, "C:/roms/FF7 (Disc 1)/FF7 (Disc 1).cue"),
-                                       disc(2, "C:/roms/FF7 (Disc 2)/FF7 (Disc 2).cue"),
-                                       disc(3, "C:/roms/FF7 (Disc 3)/FF7 (Disc 3).cue")};
+// A path inside an archive is not one the core can open, so the loose copy is the one to name
+TEST(DiscSetPlaylistTest, TheOpenableCopyOfADiscWins) {
+  auto archived = disc(1, "a.cue", "hashA");
+  archived.m_inArchive = true;
+  archived.m_archivePathName = "C:/roms/a.zip";
 
-  const auto plan = planPlaylist(discs, 1, "Final Fantasy VII", PlaylistLocation::BesideDiscs, "C:/appdata");
+  const std::vector<ContentFile> discs{archived, disc(1, "C:/roms/a.cue", "hashA"), disc(2, "C:/roms/b.cue", "hashB")};
+
+  const auto plan = planPlaylist(discs, "hashA", "C:/appdata");
 
   ASSERT_TRUE(plan.has_value());
-  EXPECT_EQ(plan->path, "C:/roms/Final Fantasy VII.m3u");
-  // Relative lines reach into the per-disc folders, so the set survives being moved
-  EXPECT_TRUE(plan->isPortable);
-  EXPECT_EQ(linesOf(plan->contents),
-            (std::vector<std::string>{std::string(PLAYLIST_MARKER), "FF7 (Disc 1)/FF7 (Disc 1).cue",
-                                      "FF7 (Disc 2)/FF7 (Disc 2).cue", "FF7 (Disc 3)/FF7 (Disc 3).cue"}));
+  EXPECT_EQ(linesOf(plan->contents), (std::vector<std::string>{"C:/roms/a.cue", "C:/roms/b.cue"}));
 }
 
-// The marker is how a playlist of ours is recognised after the library database is thrown
-// away, which would otherwise leave us adopting our own orphan as somebody else's work
-TEST(DiscSetPlaylistTest, AGeneratedPlaylistIsRecognisableFromItsFirstLine) {
-  const std::vector<ContentFile> discs{disc(1, "C:/roms/a.chd"), disc(2, "C:/roms/b.chd")};
-  const auto plan = planPlaylist(discs, 1, "Game", PlaylistLocation::BesideDiscs, "C:/appdata");
+// A file nothing has hashed is not the same dump as every other unhashed file
+TEST(DiscSetPlaylistTest, UnhashedDiscsAreNotCollapsedTogether) {
+  const std::vector<ContentFile> discs{disc(1, "C:/roms/a.chd"), disc(2, "C:/roms/b.chd"), disc(3, "C:/roms/c.chd")};
+
+  const auto plan = planPlaylist(discs, "hash1", "C:/appdata");
 
   ASSERT_TRUE(plan.has_value());
-  EXPECT_TRUE(isGeneratedPlaylist(plan->contents));
+  EXPECT_EQ(linesOf(plan->contents), (std::vector<std::string>{"C:/roms/a.chd", "C:/roms/b.chd", "C:/roms/c.chd"}));
+}
+
+// Whether a core skips comment lines is not something we know, and the directory already says
+// the file is ours
+TEST(DiscSetPlaylistTest, GeneratedPlaylistsCarryNoCommentLine) {
+  const std::vector<ContentFile> discs{disc(1, "C:/roms/a.chd", "a"), disc(2, "C:/roms/b.chd", "b")};
+
+  const auto plan = planPlaylist(discs, "hash1", "C:/appdata");
+
+  ASSERT_TRUE(plan.has_value());
+  EXPECT_FALSE(plan->contents.starts_with("#"));
+}
+
+// Playlists written by older versions carry the marker, which is what tells one of ours from
+// one somebody made themselves
+TEST(DiscSetPlaylistTest, AnOlderGeneratedPlaylistIsStillRecognisable) {
+  EXPECT_TRUE(isGeneratedPlaylist(std::string(PLAYLIST_MARKER) + "\nGame (Disc 1).cue\n"));
   EXPECT_FALSE(isGeneratedPlaylist("Game (Disc 1).cue\nGame (Disc 2).cue\n"));
   EXPECT_FALSE(isGeneratedPlaylist(""));
 }

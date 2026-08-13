@@ -4,6 +4,9 @@
 #include "db/database_inspector.hpp"
 #include "libretro/core_registry.hpp"
 
+#include <firelight/library/accepted_extensions.hpp>
+#include <firelight/platforms/platform_service.hpp>
+
 #include <QCoreApplication>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -69,6 +72,92 @@ void checkCores(std::vector<Finding> &findings) {
   }
 }
 
+std::string joinNames(const std::vector<std::string> &names, const std::string &separator) {
+  std::string joined;
+
+  for (const auto &name : names) {
+    joined += (joined.empty() ? "" : separator) + name;
+  }
+
+  return joined;
+}
+
+/** System files the user has to supply themselves, and the extras a core can use if they do. */
+void checkBios(std::vector<Finding> &findings, const DataDirs &dirs) {
+  auto &registry = CoreRegistry::instance();
+  registry.setSystemDirectory(dirs.coreSystemPath.toStdString());
+
+  for (const auto platformId : registry.platformsWithBios()) {
+    for (const auto &status : registry.biosStatusForPlatform(platformId)) {
+      const auto &requirement = status.requirement;
+      const auto perRegion = requirement.necessity == BiosNecessity::PerRegion;
+
+      std::string gate;
+      if (!requirement.coreOption.empty()) {
+        gate = " (needs " + requirement.coreOption +
+               (requirement.coreOptionValue.empty() ? " turned on" : " = " + requirement.coreOptionValue) + ")";
+      }
+
+      if (requirement.necessity == BiosNecessity::Optional) {
+        const auto level = status.presentFiles.empty() ? Level::Info : Level::Ok;
+        const auto state = status.presentFiles.empty() ? " is not installed" : " is installed";
+        findings.push_back({level, "bios", requirement.description + state + " — optional" + gate});
+        continue;
+      }
+
+      if (!status.isSatisfied) {
+        // A core picks its region's file and never falls back, so joining these with "or" would
+        // read as any one of them doing the whole job
+        const auto detail =
+            perRegion && requirement.filenames.size() > 1
+                ? " — nothing will boot; it takes one per region: " + joinNames(requirement.filenames, ", ")
+                : " (" + joinNames(requirement.filenames, " or ") + ") — those games won't boot";
+
+        // Warn rather than Fail: these are the user's files, and only the platforms they own
+        // matter
+        findings.push_back({Level::Warn, "bios", requirement.description + " is missing" + detail});
+        continue;
+      }
+
+      // Owning one region's copy boots that region's games and no others, so the gap is worth
+      // naming even though nothing is blocked
+      if (!status.missingFiles.empty()) {
+        findings.push_back({Level::Info, "bios",
+                            requirement.description + ": have " + joinNames(status.presentFiles, ", ") +
+                                ", so games needing " + joinNames(status.missingFiles, " or ") + " won't boot"});
+        continue;
+      }
+
+      findings.push_back({Level::Ok, "bios", requirement.description});
+    }
+  }
+}
+
+/** Formats a shipped core can open that Firelight does not take files in for. */
+void checkFormatGaps(std::vector<Finding> &findings) {
+  const platforms::PlatformService platformService;
+  const auto accepted = library::acceptedExtensions(platformService);
+
+  for (const auto &core : CoreRegistry::instance().cores()) {
+    std::vector<std::string> unaccepted;
+
+    for (const auto &extension : core.fileExtensions) {
+      if (accepted.count(extension) == 0) {
+        unaccepted.push_back(extension);
+      }
+    }
+
+    if (unaccepted.empty()) {
+      continue;
+    }
+
+    // Info, not a warning: a core reading more than Firelight accepts is work to pick up rather
+    // than something broken, and each format needs its own decision about how it hashes
+    findings.push_back(
+        {Level::Info, "formats", core.displayName + " opens " + joinNames(unaccepted, ", ") + " — not scanned for"});
+  }
+}
+
 /** Shipped data files the app degrades silently without. */
 void checkShippedData(std::vector<Finding> &findings, const DataDirs &dirs) {
   namespace fs = std::filesystem;
@@ -84,7 +173,23 @@ void checkShippedData(std::vector<Finding> &findings, const DataDirs &dirs) {
     }
   };
 
-  require("settings_catalog.json", "friendly settings and core-option defaults are unavailable");
+  require("settings", "friendly settings and core-option defaults are unavailable");
+
+  // A present but empty folder loads nothing, which reads the same to the user as a missing one
+  if (std::error_code ec; fs::is_directory(appDir + "/system/settings", ec)) {
+    auto hasAny = false;
+
+    for (const auto &entry : fs::directory_iterator(appDir + "/system/settings", ec)) {
+      if (entry.path().extension() == ".json") {
+        hasAny = true;
+        break;
+      }
+    }
+
+    if (!hasAny) {
+      findings.push_back({Level::Fail, "data", "settings holds no .json files — no settings are declared"});
+    }
+  }
   require("shortcuts.json", "no hotkeys will work");
 
   // PPSSPP is seeded into the data directory on first GUI launch; this marker is
@@ -144,6 +249,8 @@ int runDoctor(int argc, char **argv, const CliOptions &options) {
 
   std::vector<Finding> findings;
   checkCores(findings);
+  checkBios(findings, dirs);
+  checkFormatGaps(findings);
   checkShippedData(findings, dirs);
   checkDatabases(findings, dirs);
 

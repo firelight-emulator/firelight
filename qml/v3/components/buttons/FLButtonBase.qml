@@ -48,14 +48,9 @@ Button {
     hoverEnabled: true
     opacity: canInteract ? 1 : 0.5
     implicitHeight: compact ? AppStyle.buttonHeightCompact : AppStyle.buttonHeight
+    implicitWidth: AppStyle.buttonStandardWidth
 
-    // TODO
-    // Focus as the controller cursor shows it; a mouse click also lands focus,
-    // and leaving that tinted reads as stuck
     readonly property bool cursorFocused: FocusCursor.isOn(control)
-
-    // TODO
-    // The keys that activate a button when it declared no action answering to them
     readonly property var activationKeys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
 
     // TODO
@@ -106,9 +101,6 @@ Button {
             anchors.fill: parent
             radius: parent.radius
             color: Theme.textPrimary
-            // TODO
-            // Flat carries no chrome at rest, but the cursor still needs a fill
-            // behind the ring; hover keeps signalling through the icon instead
             opacity: {
                 if (!control.canInteract) {
                     return 0;
@@ -133,8 +125,8 @@ Button {
     }
 
     FLToolTip {
-        x: control.width + AppStyle.spacingSm
-        y: control.height / 2 - height / 2 - verticalPadding / 2
+        x: control.width + AppStyle.spacingMd
+        y: control.height / 2 - height / 2
         visible: (hover.hovered || control.cursorFocused) && control.tooltipText !== ""
         text: control.tooltipText
     }

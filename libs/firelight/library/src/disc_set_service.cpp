@@ -1,5 +1,6 @@
 #include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/filename_tags.hpp>
+#include <firelight/library/game_identity.hpp>
 #include <firelight/library/library_events.hpp>
 
 #include <algorithm>
@@ -16,15 +17,17 @@ namespace {
 // call does not clear it on the way out
 class ApplyGuard {
 public:
-  explicit ApplyGuard(std::atomic_bool &flag) : m_flag(flag), m_previous(flag.exchange(true)) {}
+  explicit ApplyGuard(bool &flag) : m_flag(flag), m_previous(std::exchange(flag, true)) {}
 
   ~ApplyGuard() { m_flag = m_previous; }
 
 private:
-  std::atomic_bool &m_flag;
+  bool &m_flag;
   bool m_previous;
 };
 } // namespace
+
+thread_local bool DiscSetService::s_applying = false;
 
 DiscSetService::DiscSetService(IUserLibraryRepository &library, std::string appDataDirectory)
     : m_library(library), m_appDataDirectory(std::move(appDataDirectory)) {
@@ -32,51 +35,36 @@ DiscSetService::DiscSetService(IUserLibraryRepository &library, std::string appD
   // the content file arrived would have nothing to match on yet
   m_entryUpdatedConnection =
       EventDispatcher::instance().subscribe<EntryUpdatedEvent>([this](const EntryUpdatedEvent &event) {
-        if (m_applying) {
+        if (s_applying) {
           return;
         }
 
         autoGroupDiscs(event.entryId);
       });
-
-  // A set's only way in is its playlist, so losing that file hides the game. This is what
-  // notices, since the scan removes the catalogued playlist before the entry is hidden
-  m_runConfigurationDeletedConnection =
-      EventDispatcher::instance().subscribe<RunConfigurationDeletedEvent>([this](const RunConfigurationDeletedEvent &) {
-        if (m_applying) {
-          return;
-        }
-
-        reconcilePlaylists();
-      });
-}
-
-void DiscSetService::reconcilePlaylists() {
-  const ApplyGuard guard(m_applying);
-
-  for (const auto &set : m_library.getDiscSets()) {
-    if (m_library.getDiscsInSet(set.id).size() < 2) {
-      continue;
-    }
-
-    if (const auto survivor = survivorOf(set.id)) {
-      writePlaylist(set.id, *survivor);
-    }
-  }
 }
 
 bool DiscSetService::autoGroupDiscs(const int entryId) {
-  const ApplyGuard guard(m_applying);
+  const ApplyGuard guard(s_applying);
 
   const auto entry = m_library.getEntry(entryId);
 
-  if (!entry.has_value() || entry->discNumber == 0 || entry->normalizedTitle.empty() || entry->discSetUserSet) {
+  if (!entry.has_value() || entry->discNumber == 0 || entry->discSetUserSet) {
     return false;
   }
 
+  const auto identity = identityOf(*entry);
+
+  if (identity.isEmpty()) {
+    return false;
+  }
+
+  // Before grouping gives up: a set that has already formed reaches no further, and the count
+  // arrives with metadata long after
+  recordDiscCount(*entry);
+
   std::vector<Entry> members{*entry};
 
-  for (const auto peerId : m_library.getEntryIdsWithNormalizedTitle(entry->platformId, entry->normalizedTitle)) {
+  for (const auto peerId : m_library.getCandidateEntryIds(identity)) {
     if (peerId == entryId) {
       continue;
     }
@@ -89,9 +77,7 @@ bool DiscSetService::autoGroupDiscs(const int entryId) {
       continue;
     }
 
-    // A USA release and a JP one fold to the same title, and their discs are not each
-    // other's. Region is the only thing on hand that tells the two runs apart
-    if (peer->metadata.regions != entry->metadata.regions) {
+    if (!areDiscsOfOneRelease(identity, identityOf(*peer))) {
       continue;
     }
 
@@ -123,12 +109,34 @@ bool DiscSetService::autoGroupDiscs(const int entryId) {
     changed = absorb(member, survivor, *setId) || changed;
   }
 
+  auto anchorId = -1;
+
   for (const auto &file : m_library.getContentFilesWithContentHash(survivor.contentHash)) {
     // The set's own playlist carries the same hash as its first disc. It addresses the discs
     // rather than being one, so it must not join them
-    if (file.m_discNumber > 0) {
-      m_library.setContentFileDiscSet(file.m_id, *setId);
+    if (file.m_discNumber == 0) {
+      continue;
     }
+
+    m_library.setContentFileDiscSet(file.m_id, *setId);
+
+    if (anchorId < 0) {
+      anchorId = file.m_id;
+    }
+  }
+
+  // TODO
+  // The set's way in, anchored on the disc it takes its identity from. A database row rather
+  // than a consequence of a file write, so a folder we cannot write to still leaves the game
+  // launchable
+  if (anchorId >= 0) {
+    m_library.createRunConfigurationForSet(*setId, anchorId, survivor.contentHash);
+  }
+
+  // Every disc is reached through the set, so a disc's own way in would be a second thing for
+  // the resolver to choose between and a second memory card for the core to write
+  for (const auto &disc : m_library.getDiscsInSet(*setId)) {
+    m_library.deleteRunConfigurationsForContentFile(disc.m_id);
   }
 
   if (survivor.discSetId != setId) {
@@ -136,14 +144,12 @@ bool DiscSetService::autoGroupDiscs(const int entryId) {
     changed = true;
   }
 
-  if (writePlaylist(*setId, survivor)) {
+  if (materializePlaylist(*setId, survivor.contentHash)) {
     changed = true;
   }
 
   return changed;
 }
-
-void DiscSetService::setPlaylistLocation(const PlaylistLocation location) { m_playlistLocation = location; }
 
 bool DiscSetService::detachDisc(const int contentFileId) {
   const auto file = m_library.getContentFile(contentFileId);
@@ -154,14 +160,14 @@ bool DiscSetService::detachDisc(const int contentFileId) {
 
   const auto setId = *file->m_discSetId;
   const auto set = m_library.getDiscSet(setId);
-  const ApplyGuard guard(m_applying);
+  const ApplyGuard guard(s_applying);
 
   restoreOwnEntry(*file, set.has_value() ? set->title : "", true);
 
   if (!dissolveIfUndersized(setId)) {
     // The playlist still names the disc that just left
     if (const auto survivor = survivorOf(setId)) {
-      writePlaylist(setId, *survivor);
+      materializePlaylist(setId, survivor->contentHash);
     }
   }
 
@@ -181,6 +187,18 @@ bool DiscSetService::clearUserChoice(const int entryId) {
 
   autoGroupDiscs(entryId);
   return true;
+}
+
+void DiscSetService::recordDiscCount(const Entry &entry) {
+  if (!entry.discSetId.has_value() || entry.metadata.discCount <= 0) {
+    return;
+  }
+
+  if (auto set = m_library.getDiscSet(*entry.discSetId);
+      set.has_value() && set->discCount != entry.metadata.discCount) {
+    set->discCount = entry.metadata.discCount;
+    m_library.updateDiscSet(*set);
+  }
 }
 
 bool DiscSetService::areDiscNumbersUnambiguous(const std::vector<Entry> &members) {
@@ -235,6 +253,7 @@ std::optional<int> DiscSetService::resolveSet(const std::vector<Entry> &members,
 
   DiscSet set;
   set.title = survivor.displayName;
+  set.discCount = survivor.metadata.discCount;
 
   if (!m_library.createDiscSet(set)) {
     return std::nullopt;
@@ -260,6 +279,11 @@ bool DiscSetService::absorb(const Entry &absorbed, const Entry &survivor, const 
     m_library.deleteRunConfigurationsForContentFile(file.m_id);
   }
 
+  // TODO
+  // A playlist is named after the identity it launches under, so one named after an entry that
+  // no longer exists is a file nothing will ever open again
+  retirePlaylist(absorbed.contentHash);
+
   spdlog::info("Disc {} folded into entry {} as part of set {}", absorbed.discNumber, survivor.id, setId);
 
   EventDispatcher::instance().publish(EntryAbsorbedEvent{.survivingEntryId = survivor.id,
@@ -272,8 +296,12 @@ bool DiscSetService::restoreOwnEntry(const ContentFile &file, const std::string 
   m_library.setContentFileDiscSet(file.m_id, std::nullopt);
 
   const auto configurations = m_library.getRunConfigurations(file.m_contentHash);
-  const auto isLaunchable = std::ranges::any_of(
-      configurations, [&](const RunConfiguration &configuration) { return configuration.contentFileId == file.m_id; });
+
+  // A set's way in is anchored on one of its discs, so without the type this reads that as the
+  // disc already having one of its own
+  const auto isLaunchable = std::ranges::any_of(configurations, [&](const RunConfiguration &configuration) {
+    return configuration.contentFileId == file.m_id && configuration.type == RunConfiguration::TYPE_ROM;
+  });
 
   // A disc that was absorbed lost its way in along with its entry, and creating one is what
   // gives it an entry back
@@ -308,179 +336,87 @@ bool DiscSetService::dissolveIfUndersized(const int setId) {
   }
 
   const auto set = m_library.getDiscSet(setId);
+  const auto survivor = survivorOf(setId);
 
-  // Before the playlist's way in goes, so the entry is never left with none and hidden
+  // Before the discs get their own entries back, so the identity the playlist was named after
+  // is still there to be read
   for (const auto &disc : discs) {
     restoreOwnEntry(disc, set.has_value() ? set->title : "", false);
   }
 
-  if (set.has_value()) {
-    retirePlaylist(*set);
+  if (survivor.has_value()) {
+    retirePlaylist(survivor->contentHash);
   }
 
   return m_library.deleteDiscSet(setId);
 }
 
-void DiscSetService::retirePlaylist(const DiscSet &set) {
-  if (set.playlistPath.empty()) {
-    return;
-  }
-
+void DiscSetService::retirePlaylist(const std::string &contentHash) {
+  std::lock_guard lock(m_playlistMutex);
   std::error_code ec;
-  const auto size = std::filesystem::file_size(set.playlistPath, ec);
-
-  if (!ec) {
-    if (const auto file = m_library.getContentFileWithPathAndSize(set.playlistPath, size, false)) {
-      m_library.deleteContentFile(file->m_id);
-    }
-  }
-
-  // Only the one we wrote. Removing a file somebody made themselves is not ours to do
-  if (set.playlistOwned) {
-    std::filesystem::remove(set.playlistPath, ec);
-  }
+  std::filesystem::remove(playlistPathFor(contentHash, m_appDataDirectory), ec);
 }
 
 std::optional<Entry> DiscSetService::survivorOf(const int setId) {
-  for (const auto &disc : m_library.getDiscsInSet(setId)) {
-    if (const auto entry = m_library.getEntryWithContentHash(disc.m_contentHash);
-        entry.has_value() && entry->discSetId == setId) {
-      return entry;
-    }
+  // Asked of the entries rather than walked back from the discs: an absorbed disc has no entry,
+  // so a set whose surviving disc went missing would otherwise look like it had nobody at all
+  auto entries = m_library.getEntriesInDiscSet(setId);
+
+  if (entries.empty()) {
+    return std::nullopt;
   }
 
-  return std::nullopt;
+  std::ranges::sort(entries, [](const Entry &left, const Entry &right) {
+    return std::tie(left.discNumber, left.id) < std::tie(right.discNumber, right.id);
+  });
+
+  return entries.front();
 }
 
-bool DiscSetService::writePlaylist(const int setId, const Entry &survivor) {
-  auto set = m_library.getDiscSet(setId);
-
-  if (!set.has_value()) {
-    return false;
-  }
-
-  auto plan = planPlaylist(m_library.getDiscsInSet(setId), setId, set->title, m_playlistLocation, m_appDataDirectory);
+bool DiscSetService::materializePlaylist(const int setId, const std::string &contentHash) {
+  const auto plan = planPlaylist(m_library.getPresentDiscsInSet(setId), contentHash, m_appDataDirectory);
 
   if (!plan.has_value()) {
     return false;
   }
 
-  // Two releases of one game land on the same title in the same folder, and adopting the other
-  // one's playlist would launch its discs under this set's identity
-  if (const auto claimed = m_library.getContentFileWithPath(plan->path);
-      claimed.has_value() && claimed->m_contentHash != survivor.contentHash && set->playlistPath != plan->path) {
-    plan = planPlaylist(m_library.getDiscsInSet(setId), setId, set->title + " (" + std::to_string(setId) + ")",
-                        m_playlistLocation, m_appDataDirectory);
+  std::lock_guard lock(m_playlistMutex);
+  std::error_code ec;
 
-    if (!plan.has_value()) {
+  if (std::filesystem::exists(plan->path, ec)) {
+    std::ifstream existingPlaylist(plan->path, std::ios::binary);
+    const std::string existing((std::istreambuf_iterator<char>(existingPlaylist)), std::istreambuf_iterator<char>());
+
+    if (existing == plan->contents) {
       return false;
     }
   }
 
-  std::error_code ec;
-  const auto alreadyThere = std::filesystem::exists(plan->path, ec);
+  std::filesystem::create_directories(std::filesystem::path(plan->path).parent_path(), ec);
 
-  // Somebody's own playlist is the one they take to other frontends, so it is adopted whole
-  // rather than rewritten to say the same thing in our words. Read from the file rather than
-  // from the set, so a playlist of ours still reads as ours after the library was thrown away
-  auto isOurs = !alreadyThere;
-  auto isUpToDate = false;
+  // TODO
+  // Written alongside and moved into place, so a launch reading this file never catches it
+  // half-written
+  const auto stagedPath = plan->path + ".tmp";
 
-  if (alreadyThere) {
-    std::ifstream existingPlaylist(plan->path, std::ios::binary);
-    const std::string existing((std::istreambuf_iterator<char>(existingPlaylist)), std::istreambuf_iterator<char>());
-    isOurs = isGeneratedPlaylist(existing);
-    isUpToDate = isOurs && existing == plan->contents;
-  }
-
-  if (isOurs && !isUpToDate) {
-    std::filesystem::create_directories(std::filesystem::path(plan->path).parent_path(), ec);
-    std::ofstream out(plan->path, std::ios::binary | std::ios::trunc);
+  {
+    std::ofstream out(stagedPath, std::ios::binary | std::ios::trunc);
 
     if (!out) {
-      spdlog::warn("Could not write the playlist for set {} at {}", setId, plan->path);
+      spdlog::warn("Could not write the playlist for set {} at {}", setId, stagedPath);
       return false;
     }
 
     out << plan->contents;
-    out.close();
-
-    if (!out) {
-      spdlog::warn("Could not finish writing the playlist for set {}", setId);
-      return false;
-    }
   }
 
-  const auto size = std::filesystem::file_size(plan->path, ec);
+  std::filesystem::rename(stagedPath, plan->path, ec);
 
   if (ec) {
+    spdlog::warn("Could not put the playlist for set {} in place: {}", setId, ec.message());
+    std::filesystem::remove(stagedPath, ec);
     return false;
   }
-
-  // The set moved to a different playlist, so the one it used to launch through is not its
-  // way in any more
-  if (!set->playlistPath.empty() && set->playlistPath != plan->path) {
-    retirePlaylist(*set);
-  }
-
-  const auto existing = m_library.getContentFileWithPath(plan->path);
-  auto contentFileId = existing.has_value() ? existing->m_id : -1;
-  auto isAlreadyRegistered = false;
-
-  if (existing.has_value()) {
-    // A rewrite changes the size, and a late disc 1 changes whose identity it carries. Keeping
-    // the row means the way in survives with it
-    isAlreadyRegistered = existing->m_contentHash == survivor.contentHash;
-    m_library.setContentFileIdentity(existing->m_id, survivor.contentHash, size);
-  } else {
-    ContentFile playlist;
-    playlist.m_type = ContentType::Disc;
-    playlist.m_filePath = plan->path;
-    playlist.m_fileSizeBytes = size;
-    playlist.m_platformId = static_cast<int>(survivor.platformId);
-    // The identity of a playlist is its first disc's, so this attaches to the entry that
-    // already exists rather than making a second one
-    playlist.m_contentHash = survivor.contentHash;
-    playlist.m_contentDirectoryId = -1;
-
-    if (!m_library.create(playlist)) {
-      return false;
-    }
-
-    contentFileId = playlist.m_id;
-  }
-
-  const auto configurations = m_library.getRunConfigurations(survivor.contentHash);
-  const auto hasPlaylistWayIn =
-      isAlreadyRegistered && std::ranges::any_of(configurations, [&](const RunConfiguration &configuration) {
-        return configuration.contentFileId == contentFileId && configuration.type == RunConfiguration::TYPE_PLAYLIST;
-      });
-
-  // Cataloguing a file gives it an ordinary way in of its own, and the set wants the one that
-  // says it is a playlist. Left alone when it is already that, so the entry is never briefly
-  // left with no way in at all
-  if (!hasPlaylistWayIn) {
-    m_library.deleteRunConfigurationsForContentFile(contentFileId);
-    m_library.createRunConfiguration(contentFileId, plan->path, static_cast<int>(survivor.platformId),
-                                     survivor.contentHash, RunConfiguration::TYPE_PLAYLIST);
-  }
-
-  // Every disc is reached through the playlist, so a disc's own way in would be a second thing
-  // for the resolver to choose between and a second memory card for the core to write
-  for (const auto &disc : m_library.getDiscsInSet(setId)) {
-    m_library.deleteRunConfigurationsForContentFile(disc.m_id);
-  }
-
-  // Removing the last way in hides an entry, and the replacement arriving afterwards does not
-  // bring it back on its own
-  if (auto entry = m_library.getEntryWithContentHash(survivor.contentHash); entry.has_value() && entry->hidden) {
-    entry->hidden = false;
-    m_library.update(*entry);
-  }
-
-  set->playlistPath = plan->path;
-  set->playlistOwned = isOurs;
-  m_library.updateDiscSet(*set);
 
   spdlog::info("Set {} launches through {}", setId, plan->path);
   return true;

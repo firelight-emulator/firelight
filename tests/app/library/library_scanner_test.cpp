@@ -151,20 +151,53 @@ TEST_F(LibraryScannerTest, DetectsCartridgesRecursively) {
   }
 }
 
-// A raw disc track (.bin) sitting next to its cue sheet is pulled in via the
-// sheet, so the lone track is never catalogued on its own
-TEST_F(LibraryScannerTest, SkipsRawTrackWhenSheetPresent) {
+// A raw disc track (.bin) named by a cue sheet beside it is reached through the sheet, so the
+// lone track is not catalogued on its own. The disc has to actually identify, or the assertion
+// below passes by finding nothing at all
+TEST_F(LibraryScannerTest, SkipsRawTrackTheSheetNames) {
   ASSERT_TRUE(tempDir.isValid());
   ASSERT_TRUE(QDir(tempDir.path()).mkpath("disc"));
-  writeFile(path("disc/game.bin"), romBytes(2048, 5));
+
+  auto image = romBytes(65536, 5);
+  image.replace(0, 16, QByteArray("SEGADISCSYSTEM  "));
+  writeFile(path("disc/game.bin"), image);
   writeFile(path("disc/game.cue"), QByteArray("FILE \"game.bin\" BINARY\n  TRACK 01 MODE1/2048\n"
                                               "    INDEX 01 00:00:00\n"));
 
   scanTempDir();
 
-  for (const auto &f : m_repo->getContentFiles()) {
-    EXPECT_FALSE(endsWith(f.m_filePath, "game.bin")) << "raw track should not be catalogued while its cue sheet exists";
+  const auto files = m_repo->getContentFiles();
+  ASSERT_EQ(files.size(), 1u) << "the disc did not identify, so this proves nothing about suppression";
+  EXPECT_TRUE(endsWith(files.front().m_filePath, "game.cue"));
+}
+
+// Suppression used to fire when any sheet existed in the directory rather than when one named
+// the file, so a cartridge sharing a folder with an unrelated disc was hidden
+TEST_F(LibraryScannerTest, KeepsARawFileNoSheetNames) {
+  ASSERT_TRUE(tempDir.isValid());
+  ASSERT_TRUE(QDir(tempDir.path()).mkpath("mixed"));
+
+  auto image = romBytes(65536, 5);
+  image.replace(0, 16, QByteArray("SEGADISCSYSTEM  "));
+  writeFile(path("mixed/game.bin"), image);
+  writeFile(path("mixed/game.cue"), QByteArray("FILE \"game.bin\" BINARY\n  TRACK 01 MODE1/2048\n"
+                                               "    INDEX 01 00:00:00\n"));
+
+  // A Mega Drive cartridge that the cue says nothing about
+  auto cartridge = romBytes(524288, 9);
+  cartridge.replace(0x100, 16, QByteArray("SEGA MEGA DRIVE "));
+  writeFile(path("mixed/Sonic.bin"), cartridge);
+
+  scanTempDir();
+
+  const auto files = m_repo->getContentFiles();
+  ASSERT_EQ(files.size(), 2u) << "the cartridge was hidden by a cue sheet that never mentioned it";
+
+  auto sawCartridge = false;
+  for (const auto &file : files) {
+    sawCartridge = sawCartridge || endsWith(file.m_filePath, "Sonic.bin");
   }
+  EXPECT_TRUE(sawCartridge);
 }
 
 // A ROM stored inside a .zip is catalogued as archived content, recording the
@@ -271,6 +304,116 @@ TEST_F(LibraryScannerTest, SuspendedScannerDefersUntilResumed) {
 
   EXPECT_TRUE(finished);
   EXPECT_EQ(m_repo->getContentFiles().size(), 1u);
+}
+
+//****************
+// unreachable roots
+//****************
+
+// An unmounted drive answers exactly as a deleted file does, so a sweep that believes it wipes the
+// catalogue of everything on that drive: every content file, every way in, every disc membership,
+// unattended, on the periodic rescan
+TEST_F(LibraryScannerTest, AnUnreachableRootLosesNothing) {
+  const auto gamesDir = path("Games");
+  ASSERT_TRUE(QDir().mkpath(gamesDir));
+  writeFile(gamesDir + "/One.gb", romBytes(32768, 1));
+  writeFile(gamesDir + "/Two.gb", romBytes(32768, 2));
+
+  ContentDirectory dir;
+  dir.path = gamesDir.toStdString();
+  ASSERT_TRUE(m_repo->create(dir));
+
+  LibraryScanner2 scanner(*m_repo, m_platformService);
+  waitForScanIdle(scanner);
+
+  const auto catalogued = m_repo->getContentFiles();
+  ASSERT_EQ(catalogued.size(), 2u) << "nothing was catalogued, so the assertion below proves nothing";
+
+  // The whole root goes, which is what an unplugged drive looks like from here
+  ASSERT_TRUE(QDir(gamesDir).removeRecursively());
+
+  waitForScanIdle(scanner);
+
+  // Everything hangs off the content file: deleting one takes its run configurations and disc
+  // memberships with it, so the row surviving is what the rest survives by
+  const auto after = m_repo->getContentFiles();
+  EXPECT_EQ(after.size(), 2u) << "the catalogue was swept away with the drive";
+
+  for (const auto &file : catalogued) {
+    EXPECT_TRUE(std::ranges::any_of(after, [&](const ContentFile &kept) { return kept.m_id == file.m_id; }))
+        << file.m_filePath << " was deleted";
+  }
+}
+
+// The other half, and the one that keeps the fix honest: "never notice anything" would pass the
+// test above on its own. The row stays so the path can be named, but it stops counting as content
+TEST_F(LibraryScannerTest, AMissingFileUnderALiveRootIsMarkedMissing) {
+  writeFile(path("One.gb"), romBytes(32768, 1));
+  writeFile(path("Two.gb"), romBytes(32768, 2));
+
+  scanTempDir();
+  ASSERT_EQ(m_repo->getContentFiles().size(), 2u);
+
+  ASSERT_TRUE(QFile::remove(path("One.gb")));
+
+  LibraryScanner2 scanner(*m_repo, m_platformService);
+  waitForScanIdle(scanner);
+
+  const auto present = m_repo->getPresentContentFiles();
+  ASSERT_EQ(present.size(), 1u) << "a file that really did go still counts as content";
+  EXPECT_TRUE(endsWith(present.front().m_filePath, "Two.gb"));
+
+  const auto all = m_repo->getContentFiles();
+  ASSERT_EQ(all.size(), 2u) << "the row was destroyed, so nothing can say where the file was";
+
+  const auto gone =
+      std::ranges::find_if(all, [](const ContentFile &file) { return endsWith(file.m_filePath, "One.gb"); });
+  ASSERT_NE(gone, all.end());
+  EXPECT_NE(gone->m_missingSince, 0);
+}
+
+// Putting the file back is the other direction, and nothing else clears the mark
+TEST_F(LibraryScannerTest, AFileThatComesBackStopsBeingMissing) {
+  writeFile(path("One.gb"), romBytes(32768, 1));
+  scanTempDir();
+
+  const auto originalId = m_repo->getContentFiles().front().m_id;
+  ASSERT_TRUE(QFile::remove(path("One.gb")));
+
+  {
+    LibraryScanner2 scanner(*m_repo, m_platformService);
+    waitForScanIdle(scanner);
+  }
+  ASSERT_TRUE(m_repo->getPresentContentFiles().empty());
+
+  writeFile(path("One.gb"), romBytes(32768, 1));
+
+  LibraryScanner2 scanner(*m_repo, m_platformService);
+  waitForScanIdle(scanner);
+
+  const auto present = m_repo->getPresentContentFiles();
+  ASSERT_EQ(present.size(), 1u) << "the file came back and nothing noticed";
+  EXPECT_EQ(present.front().m_id, originalId) << "it was re-catalogued as a new row instead of revived";
+}
+
+// Nothing vouches for a file belonging to no content directory, so a root cannot shelter it
+TEST_F(LibraryScannerTest, AFileUnderNoContentDirectoryIsStillJudged) {
+  writeFile(path("One.gb"), romBytes(32768, 1));
+  scanTempDir();
+  ASSERT_EQ(m_repo->getPresentContentFiles().size(), 1u);
+
+  ContentFile orphan;
+  orphan.m_filePath = tempDir.filePath("Gone.gb").toStdString();
+  orphan.m_contentHash = "orphanhash";
+  orphan.m_fileSizeBytes = 32768;
+  orphan.m_contentDirectoryId = -1;
+  ASSERT_TRUE(m_repo->create(orphan));
+  ASSERT_EQ(m_repo->getPresentContentFiles().size(), 2u);
+
+  LibraryScanner2 scanner(*m_repo, m_platformService);
+  waitForScanIdle(scanner);
+
+  EXPECT_EQ(m_repo->getPresentContentFiles().size(), 1u) << "a file belonging to no directory was passed over";
 }
 
 } // namespace firelight::library

@@ -20,6 +20,11 @@ namespace {
 // deferred until the burst settles
 constexpr int REOPEN_DEBOUNCE_MS = 250;
 
+// TODO
+// An output that has genuinely gone would otherwise be reopened over and over. Each failure waits
+// longer, up to this
+constexpr int MAX_REOPEN_BACKOFF_MS = 10000;
+
 constexpr int FALLBACK_SAMPLE_RATE = 48000;
 constexpr int FALLBACK_CHANNEL_COUNT = 2;
 
@@ -68,7 +73,8 @@ UiSoundPlayer::UiSoundPlayer(settings::SettingsService &settingsService, QObject
   connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this, &UiSoundPlayer::onAudioOutputsChanged);
 
   m_reopenTimer.setSingleShot(true);
-  m_reopenTimer.setInterval(REOPEN_DEBOUNCE_MS);
+  m_reopenBackoffMs = REOPEN_DEBOUNCE_MS;
+  m_reopenTimer.setInterval(m_reopenBackoffMs);
   connect(&m_reopenTimer, &QTimer::timeout, this, [this] { reopen(); });
 
   const auto onKey = [this](const std::string &key) {
@@ -200,13 +206,24 @@ template <typename SampleType> void UiSoundPlayer::renderInto(QSpan<SampleType> 
 template <typename SampleType> void UiSoundPlayer::startSink(const QAudioDevice &device) {
   m_sink = std::make_unique<QAudioSink>(device, m_format);
   m_sink->setVolume(m_volume);
+
+  // TODO
+  // Queued so the handler never runs inside the sink's own emission, where the sink cannot be
+  // destroyed
+  connect(m_sink.get(), &QAudioSink::stateChanged, this, &UiSoundPlayer::onSinkStateChanged, Qt::QueuedConnection);
+
   m_sink->start([this](QSpan<SampleType> buffer) { renderInto(buffer); });
 
   if (m_sink->error() != QtAudio::NoError) {
     spdlog::warn("UI sound stream failed to start (error {}); UI sounds will be silent",
                  static_cast<int>(m_sink->error()));
     m_sink.reset();
+    return;
   }
+
+  // A stream is running again, so the next failure starts from the short wait
+  m_reopenBackoffMs = REOPEN_DEBOUNCE_MS;
+  m_reopenTimer.setInterval(m_reopenBackoffMs);
 }
 
 void UiSoundPlayer::reopen() {
@@ -368,7 +385,7 @@ void UiSoundPlayer::play(const int clipId, const qreal gain, const int voices, c
   // Without a stream nothing drains the mixer's queue, so a request now would
   // sit there and fire alongside every other one the moment a stream appears —
   // several copies of the same sound starting in the same buffer, in phase
-  if (m_sink == nullptr) {
+  if (!isRunning()) {
     return;
   }
 
@@ -376,20 +393,40 @@ void UiSoundPlayer::play(const int clipId, const qreal gain, const int voices, c
 }
 
 void UiSoundPlayer::stop(const int clipId) {
-  if (m_sink == nullptr) {
+  if (!isRunning()) {
     return;
   }
 
   m_mixer.stop(clipId);
 }
 
-bool UiSoundPlayer::isRunning() const { return m_sink != nullptr; }
+bool UiSoundPlayer::isRunning() const { return m_sink != nullptr && m_sink->state() != QtAudio::StoppedState; }
 
 void UiSoundPlayer::onAudioOutputsChanged() {
-  if (selectOutputDevice(m_settingsService).id() == m_deviceId) {
+  // A stopped stream is reopened whatever the list says: an output can be torn down and come back
+  // under the same id, which is what a driver restart or a sample rate changed in the system's
+  // sound settings looks like from here
+  if (isRunning() && selectOutputDevice(m_settingsService).id() == m_deviceId) {
     return;
   }
 
+  m_reopenTimer.start();
+}
+
+// TODO
+// The stream stops itself when the output it was running on goes away. Nothing else notices: the
+// machine's list of outputs is unchanged, the sink is still there, and every sound played into it
+// is silently dropped
+void UiSoundPlayer::onSinkStateChanged(const QtAudio::State state) {
+  if (state != QtAudio::StoppedState || m_sink == nullptr || m_sink->error() == QtAudio::NoError) {
+    return;
+  }
+
+  spdlog::warn("UI sound stream stopped with error {}; reopening in {}ms", static_cast<int>(m_sink->error()),
+               m_reopenBackoffMs);
+
+  m_reopenTimer.setInterval(m_reopenBackoffMs);
+  m_reopenBackoffMs = std::min(m_reopenBackoffMs * 2, MAX_REOPEN_BACKOFF_MS);
   m_reopenTimer.start();
 }
 

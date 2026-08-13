@@ -91,13 +91,22 @@ bool UserLibraryService::setEntryVariantGroup(const int entryId, const std::opti
   return m_repository.setEntryVariantGroup(entryId, groupId, isUserChoice);
 }
 
-std::vector<int> UserLibraryService::getEntryIdsWithNormalizedTitle(const unsigned platformId,
-                                                                    const std::string &normalizedTitle) {
-  return m_repository.getEntryIdsWithNormalizedTitle(platformId, normalizedTitle);
+std::vector<int> UserLibraryService::getCandidateEntryIds(const GameIdentity &identity) {
+  return m_repository.getCandidateEntryIds(identity);
 }
 
 std::vector<Entry> UserLibraryService::getEntriesInVariantGroup(const int groupId) {
   return m_repository.getEntriesInVariantGroup(groupId);
+}
+
+std::optional<DiscSet> UserLibraryService::getDiscSet(const int setId) { return m_repository.getDiscSet(setId); }
+
+std::vector<ContentFile> UserLibraryService::getPresentDiscsInSet(const int setId) {
+  return m_repository.getPresentDiscsInSet(setId);
+}
+
+std::vector<ContentFile> UserLibraryService::getDiscsInSet(const int setId) {
+  return m_repository.getDiscsInSet(setId);
 }
 
 bool UserLibraryService::setVariantGroupPrimary(const int groupId, const int entryId) {

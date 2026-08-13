@@ -14,6 +14,7 @@
 #include <atomic>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace firelight::platforms {
@@ -58,6 +59,22 @@ signals:
   void scanningChanged();
 
 private:
+  // TODO
+  // Content roots that cannot be read right now, which an unplugged drive and a deleted folder
+  // both look like. Ids for content files, which carry the directory they came from; paths for
+  // anything that only knows where it sits
+  struct UnreachableRoots {
+    std::unordered_set<int> ids;
+    std::vector<std::string> paths;
+  };
+
+  // TODO
+  // A root that cannot be read says nothing about the files under it: it answers exactly as a
+  // deleted file does, so judging them would throw away the record of everything on that drive
+  [[nodiscard]] UnreachableRoots unreachableRoots() const;
+
+  [[nodiscard]] static bool isUnderAnyRoot(const std::string &path, const std::vector<std::string> &roots);
+
   // Watching game folders (not the whole tree) keeps the count small; the
   // periodic rescan is the actual guarantee that changes are caught, so this is
   // just a rarely-hit backstop against exhausting OS watch handles
@@ -110,5 +127,11 @@ private:
 
   // Persists a disc set's member files against its primary ContentFile
   void persistDiscMembers(int contentFileId, const std::vector<IdentifiedDiscMember> &members);
+
+  // TODO
+  // Records a file that got this far and could not be catalogued, warning the first time each
+  // one is seen so a rescan of the same folder does not repeat itself
+  void recordDrop(const std::string &filePath, const std::string &archivePath, const std::string &extension,
+                  size_t fileSizeBytes, IdentifyOutcome outcome, const std::string &identifiedAs = "");
 };
 } // namespace firelight::library

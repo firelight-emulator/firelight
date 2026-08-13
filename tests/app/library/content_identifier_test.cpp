@@ -1,4 +1,5 @@
 #include <firelight/library/content_identifier.hpp>
+#include <firelight/library/disc_inspector.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
 #include <QByteArray>
@@ -63,7 +64,7 @@ TEST_F(ContentIdentifierTest, DetectsSegaCdFromMagic) {
 
   const auto result = identifier.identify(path.toStdString());
 
-  ASSERT_TRUE(result.valid);
+  ASSERT_TRUE(result.isIdentified());
   ASSERT_EQ(result.platformId, firelight::platforms::PlatformService::PLATFORM_ID_SEGA_CD);
   ASSERT_FALSE(result.contentHash.empty());
 }
@@ -76,7 +77,7 @@ TEST_F(ContentIdentifierTest, DetectsSaturnFromMagic) {
 
   const auto result = identifier.identify(path.toStdString());
 
-  ASSERT_TRUE(result.valid);
+  ASSERT_TRUE(result.isIdentified());
   ASSERT_EQ(result.platformId, firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN);
   ASSERT_FALSE(result.contentHash.empty());
 }
@@ -91,7 +92,7 @@ TEST_F(ContentIdentifierTest, DetectsDiscInsideArchive) {
   // detection re-opens the archive itself
   const auto result = identifier.identifyInArchive("saturn.iso", {}, 0, zipPath.toStdString());
 
-  ASSERT_TRUE(result.valid);
+  ASSERT_TRUE(result.isIdentified());
   ASSERT_EQ(result.platformId, firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN);
   ASSERT_FALSE(result.contentHash.empty());
 }
@@ -112,7 +113,7 @@ TEST_F(ContentIdentifierTest, ReportsDiscMembersForCueBinSet) {
 
   const auto result = identifier.identify(cuePath.toStdString());
 
-  ASSERT_TRUE(result.valid);
+  ASSERT_TRUE(result.isIdentified());
   ASSERT_EQ(result.platformId, firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN);
   ASSERT_EQ(result.discMembers.size(), 1u);
   ASSERT_TRUE(result.discMembers[0].path.ends_with("game.bin"));
@@ -126,6 +127,20 @@ TEST_F(ContentIdentifierTest, UnidentifiableDiscIsInvalid) {
 
   const auto result = identifier.identify(path.toStdString());
 
-  ASSERT_FALSE(result.valid);
+  ASSERT_FALSE(result.isIdentified());
+}
+
+// rcheevos has no handler for a raw sector image, so these consoles are asked outright. Every one
+// has to land on a platform, or a disc identifies here and then has nowhere to go — which is
+// exactly what 3DO did, hidden by a platform id invented on the spot for anything unmodeled
+TEST(DiscInspectorProbeTest, EveryConsoleTheProbeAsksAboutHasAPlatform) {
+  const firelight::platforms::PlatformService service;
+
+  ASSERT_GT(std::size(DiscInspector::RAW_SECTOR_CONSOLES), 0u);
+
+  for (const auto rcConsole : DiscInspector::RAW_SECTOR_CONSOLES) {
+    EXPECT_NE(service.platformIdForRcConsole(rcConsole), firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN)
+        << rc_console_name(rcConsole) << " is probed but has no platform";
+  }
 }
 } // namespace firelight::library

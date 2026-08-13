@@ -19,8 +19,8 @@ Dialog {
 
         delegate: ItemDelegate {
             width: ListView.view.width
-            visible: !model.hidden
-            height: model.hidden ? 0 : implicitHeight
+            visible: model.playable
+            height: model.playable ? implicitHeight : 0
 
             contentItem: RowLayout {
                 spacing: AppStyle.spacingMd

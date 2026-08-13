@@ -1,4 +1,5 @@
 #include <firelight/input/gamepad_input.hpp>
+#include <firelight/library/content_extensions.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
 #include <gtest/gtest.h>
@@ -38,9 +39,8 @@ protected:
 TEST_F(PlatformServiceTest, AllPlatformsPresent) {
   using PS = firelight::platforms::PlatformService;
   const PS service;
-  // Fully-modeled platforms (with controller data) plus the identity-only
-  // RetroAchievements-coverage consoles are all registered
-  EXPECT_GT(service.listPlatforms().size(), 60u);
+  // Exact, so adding a platform is a deliberate act rather than something that slips in
+  EXPECT_EQ(service.listPlatforms().size(), 25u);
   for (const int id : {PS::PLATFORM_ID_GAMEBOY, PS::PLATFORM_ID_N64, PS::PLATFORM_ID_SNES, PS::PLATFORM_ID_PS1,
                        PS::PLATFORM_ID_VIRTUAL_BOY}) {
     EXPECT_TRUE(service.getPlatform(id).has_value()) << "missing platform id " << id;
@@ -87,6 +87,65 @@ TEST_F(PlatformServiceTest, PlatformIdForExtensionMapsKnownExtensions) {
   // Lookup is case-insensitive
   EXPECT_EQ(service.platformIdForExtension("GB"), PS::PLATFORM_ID_GAMEBOY);
   EXPECT_EQ(service.platformIdForExtension("N64"), PS::PLATFORM_ID_N64);
+}
+
+// Extensions added because the platform's hasher already treats them identically to the ones
+// it had. An extension whose format needs different handling is a wrong hash, not a free win
+TEST_F(PlatformServiceTest, CopierAndVariantExtensionsResolve) {
+  using PS = firelight::platforms::PlatformService;
+  const PS service;
+
+  for (const auto *ext : {"swc", "fig", "bs", "st"}) {
+    EXPECT_EQ(service.platformIdForExtension(ext), PS::PLATFORM_ID_SNES) << ext;
+  }
+  for (const auto *ext : {"unf", "unif"}) {
+    EXPECT_EQ(service.platformIdForExtension(ext), PS::PLATFORM_ID_NES) << ext;
+  }
+  // pcv2 is deliberately absent: Beetle WonderSwan opens ws, wsc and pc2 only, so accepting it
+  // produced entries the core would refuse
+  EXPECT_EQ(service.platformIdForExtension("pc2"), PS::PLATFORM_ID_WONDERSWAN);
+  EXPECT_EQ(service.platformIdForExtension("pcv2"), PS::PLATFORM_ID_UNKNOWN);
+
+  // Containers holding a Mega Drive cartridge in a rearranged form
+  for (const auto *ext : {"smd", "mdx"}) {
+    EXPECT_EQ(service.platformIdForExtension(ext), PS::PLATFORM_ID_SEGA_GENESIS) << ext;
+  }
+  for (const auto *ext : {"ngpc", "npc"}) {
+    EXPECT_EQ(service.platformIdForExtension(ext), PS::PLATFORM_ID_NEOGEO_POCKET) << ext;
+  }
+  EXPECT_EQ(service.platformIdForExtension("bms"), PS::PLATFORM_ID_SEGA_MASTER_SYSTEM);
+  EXPECT_EQ(service.platformIdForExtension("dmg"), PS::PLATFORM_ID_GAMEBOY);
+}
+
+// The Famicom Disk System is its own platform rather than an NES extension, because an FDS dump
+// carries a header the NES branch does not know to skip
+TEST_F(PlatformServiceTest, FamicomDiskSystemIsItsOwnPlatform) {
+  using PS = firelight::platforms::PlatformService;
+  const PS service;
+
+  EXPECT_EQ(service.platformIdForExtension("fds"), PS::PLATFORM_ID_FAMICOM_DISK_SYSTEM);
+  EXPECT_NE(service.platformIdForExtension("fds"), PS::PLATFORM_ID_NES);
+  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_FAMICOM_DISK_SYSTEM), PS::PLATFORM_ID_FAMICOM_DISK_SYSTEM);
+
+  const auto fds = service.getPlatform(PS::PLATFORM_ID_FAMICOM_DISK_SYSTEM);
+  ASSERT_TRUE(fds.has_value());
+  EXPECT_EQ(fds->slug, "fds");
+  EXPECT_FALSE(fds->controllerTypes.empty()) << "identity-only, so the input screens have nothing to render";
+}
+
+// A bare disc extension names no platform: an .iso is as much a PS2 or a 3DO as it is a PSP,
+// which is why discs are identified by content. Claiming one anyway put two platforms on the
+// same key, and the answer was whichever happened to be constructed first
+TEST_F(PlatformServiceTest, DiscExtensionsNameNoPlatform) {
+  using PS = firelight::platforms::PlatformService;
+  const PS service;
+
+  ASSERT_FALSE(firelight::library::DISC_EXTENSIONS.empty());
+
+  for (const auto *ext : firelight::library::DISC_EXTENSIONS) {
+    EXPECT_EQ(service.platformIdForExtension(ext), PS::PLATFORM_ID_UNKNOWN)
+        << ext << " resolves to a platform on its own";
+  }
 
   // Unknown extensions fall through to PLATFORM_ID_UNKNOWN
   EXPECT_EQ(service.platformIdForExtension("xyz"), PS::PLATFORM_ID_UNKNOWN);
@@ -107,24 +166,10 @@ TEST_F(PlatformServiceTest, PlatformIdForRcConsoleMapsConsoles) {
   // Unknown maps to PLATFORM_ID_UNKNOWN
   EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_UNKNOWN), PS::PLATFORM_ID_UNKNOWN);
 
-  // Consoles Firelight doesn't fully model map to the provisional id
-  // (1000 + rc console id) that identifies them by name only
-  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_ATARI_LYNX), 1000 + RC_CONSOLE_ATARI_LYNX);
-  EXPECT_TRUE(service.getPlatform(1000 + RC_CONSOLE_ATARI_LYNX).has_value());
-}
-
-// RA-coverage consoles Firelight doesn't fully model still resolve to an
-// identity-only platform whose name renders in the library
-TEST_F(PlatformServiceTest, RaCoverageConsoleHasIdentityPlatform) {
-  const firelight::platforms::PlatformService service;
-
-  const auto lynx = service.getPlatform(1000 + RC_CONSOLE_ATARI_LYNX);
-  ASSERT_TRUE(lynx.has_value());
-  EXPECT_EQ(lynx->name, "Atari Lynx");
-  EXPECT_EQ(lynx->retroAchievementsId, static_cast<unsigned>(RC_CONSOLE_ATARI_LYNX));
-  // Identity-only: no controller/extension data
-  EXPECT_TRUE(lynx->controllerTypes.empty());
-  EXPECT_TRUE(lynx->fileAssociations.empty());
+  // A console Firelight does not model resolves to nothing at all, rather than to a platform
+  // invented on the spot that no core can ever run
+  EXPECT_EQ(service.platformIdForRcConsole(RC_CONSOLE_ATARI_LYNX), PS::PLATFORM_ID_UNKNOWN);
+  EXPECT_FALSE(service.getPlatform(1000 + RC_CONSOLE_ATARI_LYNX).has_value());
 }
 
 // The Discord large-image key defaults to the slug, except where a platform sets
@@ -540,43 +585,6 @@ TEST_F(PlatformServiceTest, PlatformJsonRoundTrip) {
 //   assertPlatformsEqual(actual.value(), expected);
 // }
 //
-// TEST_F(PlatformServiceTest, PlatformSuperGrafxIsCorrect) {
-//   const auto expected = firelight::platforms::Platform{
-//       .id = firelight::platforms::PlatformService::PLATFORM_ID_SUPERGRAFX,
-//       .name = "SuperGrafx",
-//       .abbreviation = "SuperGrafx",
-//       .slug = "sgx",
-//       .fileAssociations = {"sgx"},
-//       .controllerTypes = {
-//           {.id = 1,
-//            .name = "Retropad",
-//            .imageUrl = "qrc:/images/controllers/tgx-twobutton",
-//            .inputs = {
-//                {"I", firelight::input::GamepadInput::EastFace},
-//                {"II", firelight::input::GamepadInput::SouthFace},
-//                {"III (six-button mode)",
-//                 firelight::input::GamepadInput::WestFace},
-//                {"IV (six-button mode)",
-//                 firelight::input::GamepadInput::NorthFace},
-//                {"V (six-button mode)",
-//                 firelight::input::GamepadInput::LeftBumper},
-//                {"VI (six-button mode)",
-//                 firelight::input::GamepadInput::RightBumper},
-//                {"Toggle mode", firelight::input::GamepadInput::LeftTrigger},
-//                {"Run", firelight::input::GamepadInput::Start},
-//                {"Select", firelight::input::GamepadInput::Select},
-//                {"D-Pad Up", firelight::input::GamepadInput::DpadUp},
-//                {"D-Pad Down", firelight::input::GamepadInput::DpadDown},
-//                {"D-Pad Left", firelight::input::GamepadInput::DpadLeft},
-//                {"D-Pad Right", firelight::input::GamepadInput::DpadRight},
-//            }}}};
-//   const auto &service = firelight::platforms::PlatformService::getInstance();
-//   const auto actual = service.getPlatform(
-//       firelight::platforms::PlatformService::PLATFORM_ID_SUPERGRAFX);
-//   EXPECT_TRUE(actual.has_value());
-//   assertPlatformsEqual(actual.value(), expected);
-// }
-//
 // TEST_F(PlatformServiceTest, PlatformPokemonMiniIsCorrect) {
 //   const auto expected = firelight::platforms::Platform{
 //       .id = firelight::platforms::PlatformService::PLATFORM_ID_POKEMON_MINI,
@@ -643,3 +651,91 @@ TEST_F(PlatformServiceTest, PlatformJsonRoundTrip) {
 //   EXPECT_TRUE(actual.has_value());
 //   assertPlatformsEqual(actual.value(), expected);
 // }
+
+//****************
+// platform to rc console
+//****************
+
+// The relation used to be written out in four places and one of them had drifted, so eight
+// platforms loaded achievements that could never unlock. One table, checked both ways
+TEST_F(PlatformServiceTest, EveryPlatformRoundTripsThroughItsRcConsole) {
+  using PS = firelight::platforms::PlatformService;
+  const PS service;
+
+  const auto platforms = service.listPlatforms();
+  ASSERT_FALSE(platforms.empty());
+
+  for (const auto &platform : platforms) {
+    const auto platformId = static_cast<int>(platform.id);
+    const auto rcConsole = PS::rcConsoleForPlatform(platformId);
+
+    EXPECT_NE(rcConsole, RC_CONSOLE_UNKNOWN) << "platform " << platform.name << " maps to no console";
+    EXPECT_EQ(service.platformIdForRcConsole(rcConsole), platformId) << "platform " << platform.name;
+    EXPECT_EQ(platform.retroAchievementsId, static_cast<unsigned>(rcConsole)) << "platform " << platform.name;
+  }
+}
+
+// Pins every row against the per-platform switch this replaced. A transposed pair is invisible in
+// a diff that deletes fifty lines, and the content hash is the save key
+TEST_F(PlatformServiceTest, EveryPlatformKeepsTheConsoleItHashedUnder) {
+  using PS = firelight::platforms::PlatformService;
+
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_GAMEBOY), RC_CONSOLE_GAMEBOY);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_GAMEBOY_COLOR), RC_CONSOLE_GAMEBOY_COLOR);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_GAMEBOY_ADVANCE), RC_CONSOLE_GAMEBOY_ADVANCE);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_VIRTUAL_BOY), RC_CONSOLE_VIRTUAL_BOY);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_NES), RC_CONSOLE_NINTENDO);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_SNES), RC_CONSOLE_SUPER_NINTENDO);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_N64), RC_CONSOLE_NINTENDO_64);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_NINTENDO_DS), RC_CONSOLE_NINTENDO_DS);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_SEGA_MASTER_SYSTEM), RC_CONSOLE_MASTER_SYSTEM);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_SEGA_GENESIS), RC_CONSOLE_MEGA_DRIVE);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_SEGA_GAMEGEAR), RC_CONSOLE_GAME_GEAR);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_SEGA_SATURN), RC_CONSOLE_SATURN);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_SEGA_32X), RC_CONSOLE_SEGA_32X);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_SEGA_CD), RC_CONSOLE_SEGA_CD);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_PS1), RC_CONSOLE_PLAYSTATION);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_PS2), RC_CONSOLE_PLAYSTATION_2);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_PLAYSTATION_PORTABLE), RC_CONSOLE_PSP);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_TURBOGRAFX16), RC_CONSOLE_PC_ENGINE);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_PC_ENGINE_CD), RC_CONSOLE_PC_ENGINE_CD);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_POKEMON_MINI), RC_CONSOLE_POKEMON_MINI);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_WONDERSWAN), RC_CONSOLE_WONDERSWAN);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_SG1000), RC_CONSOLE_SG1000);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_FAMICOM_DISK_SYSTEM), RC_CONSOLE_FAMICOM_DISK_SYSTEM);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_NEOGEO_POCKET), RC_CONSOLE_NEOGEO_POCKET);
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_3DO), RC_CONSOLE_3DO);
+}
+
+// These eight sat past the end of a switch that stopped at platform 20, so their achievements
+// loaded against console 0 and no memory map was ever built for them
+TEST_F(PlatformServiceTest, ThePlatformsPastTwentyReachAConsole) {
+  using PS = firelight::platforms::PlatformService;
+
+  for (const int platformId : {PS::PLATFORM_ID_TURBOGRAFX16, PS::PLATFORM_ID_POKEMON_MINI, PS::PLATFORM_ID_WONDERSWAN,
+                               PS::PLATFORM_ID_SG1000, PS::PLATFORM_ID_FAMICOM_DISK_SYSTEM,
+                               PS::PLATFORM_ID_NEOGEO_POCKET, PS::PLATFORM_ID_PC_ENGINE_CD, PS::PLATFORM_ID_3DO}) {
+    EXPECT_NE(PS::rcConsoleForPlatform(platformId), RC_CONSOLE_UNKNOWN) << "platform " << platformId;
+  }
+}
+
+// Nothing outside the table maps anywhere, so a platform id that reaches the hasher by accident
+// cannot mint a hash under a console somebody guessed
+TEST_F(PlatformServiceTest, AnUnmodeledPlatformMapsToNoConsole) {
+  using PS = firelight::platforms::PlatformService;
+
+  EXPECT_EQ(PS::rcConsoleForPlatform(PS::PLATFORM_ID_UNKNOWN), RC_CONSOLE_UNKNOWN);
+  EXPECT_EQ(PS::rcConsoleForPlatform(1000 + RC_CONSOLE_ATARI_LYNX), RC_CONSOLE_UNKNOWN);
+  EXPECT_EQ(PS::rcConsoleForPlatform(22), RC_CONSOLE_UNKNOWN);
+}
+
+// RetroAchievements models one PC Engine, so Firelight does too. A SuperGrafx dump is a PC Engine
+// game that happens to need more hardware
+TEST_F(PlatformServiceTest, SuperGrafxIsPartOfPcEngine) {
+  using PS = firelight::platforms::PlatformService;
+  const PS service;
+
+  EXPECT_EQ(service.platformIdForExtension("sgx"), PS::PLATFORM_ID_TURBOGRAFX16);
+  EXPECT_EQ(service.platformIdForExtension("pce"), PS::PLATFORM_ID_TURBOGRAFX16);
+  EXPECT_FALSE(service.getPlatform(22).has_value());
+}

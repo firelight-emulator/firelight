@@ -56,6 +56,10 @@ GameMetadata GameMetadata::parse(const std::string &json) {
   readString(parsed, metadata_fields::PLAYERS, metadata.players);
   readString(parsed, metadata_fields::REVISION, metadata.revision);
 
+  if (parsed.contains(metadata_fields::DISC_COUNT) && parsed[metadata_fields::DISC_COUNT].is_number_integer()) {
+    metadata.discCount = parsed[metadata_fields::DISC_COUNT].get<int>();
+  }
+
   if (parsed.contains(metadata_fields::RELEASE_YEAR) && parsed[metadata_fields::RELEASE_YEAR].is_number_unsigned()) {
     metadata.releaseYear = parsed[metadata_fields::RELEASE_YEAR].get<unsigned>();
   }
@@ -77,6 +81,10 @@ std::string GameMetadata::toJson() const {
   writeString(out, metadata_fields::RELEASE_DATE, releaseDate);
   writeString(out, metadata_fields::PLAYERS, players);
   writeString(out, metadata_fields::REVISION, revision);
+
+  if (discCount != 0) {
+    out[metadata_fields::DISC_COUNT] = discCount;
+  }
 
   if (releaseYear != 0) {
     out[metadata_fields::RELEASE_YEAR] = releaseYear;

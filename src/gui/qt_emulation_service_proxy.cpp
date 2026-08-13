@@ -9,6 +9,14 @@ namespace firelight::gui {
 QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
     : QObject(parent), m_emulationService(emulation::EmulationService::getInstance()) {
 
+  // A load that fails has always been silent, so a tile that does nothing was the only sign
+  m_gameLoadFailedConnection = EventDispatcher::instance().subscribe<emulation::GameLoadFailedEvent>(
+      [this](const emulation::GameLoadFailedEvent &event) {
+        const auto reason = QString::fromStdString(event.reason);
+
+        QMetaObject::invokeMethod(this, [this, reason] { emit gameLoadFailed(reason); }, Qt::QueuedConnection);
+      });
+
   m_gameLoadedConnection =
       EventDispatcher::instance().subscribe<emulation::GameLoadedEvent>([this](emulation::GameLoadedEvent) {
         emit gameLoaded();

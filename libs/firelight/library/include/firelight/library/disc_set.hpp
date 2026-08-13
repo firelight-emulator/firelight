@@ -16,11 +16,9 @@ struct DiscSet {
   int id = -1;
   std::string title;
   bool titleUserSet = false;
-  // The playlist that addresses every disc. Empty until the set has two of them, because a
-  // one-line playlist buys nothing
-  std::string playlistPath;
-  // Whether we wrote it. A playlist the user wrote is adopted and never rewritten
-  bool playlistOwned = false;
+  // How many discs the game came on, 0 until something authoritative says. Nothing can infer
+  // it from the discs somebody happens to own
+  int discCount = 0;
   uint64_t createdAt = 0;
 };
 
@@ -63,9 +61,13 @@ enum class DiscSetState {
 
 /**
  * The disc numbers missing from the run, which is empty for a complete set. A set with no
- * disc 1 reports 1 as missing and nothing beyond its highest disc
+ * disc 1 reports 1 as missing
+ *
+ * @param knownDiscCount How many discs the game came on, when something authoritative says.
+ * Without it the run can only be checked for holes, so a set short of its last disc looks
+ * complete — owning 1 and 2 of three reports nothing until the count is known
  */
-[[nodiscard]] std::vector<int> missingDiscs(const std::vector<int> &discNumbers);
+[[nodiscard]] std::vector<int> missingDiscs(const std::vector<int> &discNumbers, int knownDiscCount = 0);
 
 /**
  * Whether a set can be launched at all. Playing disc 2 of an RPG without disc 1 is not a use

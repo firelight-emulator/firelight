@@ -7,7 +7,7 @@ Item {
     id: control
 
     property bool selected: false
-    property color activeColor: "#1bcbfd"
+    property color activeColor: Theme.switch2Color
     property color inactiveColor: Theme.border
 
     implicitWidth: AppStyle.iconSizeMd

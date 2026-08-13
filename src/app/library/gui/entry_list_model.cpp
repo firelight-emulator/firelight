@@ -6,6 +6,8 @@
 #include <firelight/platforms/platform_service.hpp>
 
 #include <QDateTime>
+#include <QDir>
+#include <QFileInfo>
 #include <algorithm>
 #include <emulation/emulation_service.hpp>
 #include <spdlog/spdlog.h>
@@ -13,6 +15,91 @@
 namespace firelight::library {
 
 namespace {
+// Everything a sentence needs that a bare problem cannot carry. Empty where it is unknown, and
+// every sentence below falls back to its plain form rather than naming a blank
+struct StatusDetail {
+  QString platformName;
+  QString missingBios;
+  QString unreachableRoot;
+  QList<int> missingDiscs;
+  // TODO
+  // Where the files were when they were last seen
+  QString lastKnownPath;
+  // TODO
+  // Whether the folder they were under was taken out of the library, rather than the files
+  // themselves going
+  bool wasFolderRemoved = false;
+};
+
+// Reads as a sentence rather than a list: "1", "1 and 2", "1, 2 and 4"
+QString joinNumbers(const QList<int> &numbers) {
+  QStringList parts;
+  for (const auto number : numbers) {
+    parts << QString::number(number);
+  }
+
+  if (parts.size() < 2) {
+    return parts.join(QString());
+  }
+
+  const auto last = parts.takeLast();
+  return QObject::tr("%1 and %2").arg(parts.join(QStringLiteral(", ")), last);
+}
+
+// What is wrong, in the order somebody can act on it. Built here rather than in QML because
+// assembling a sentence from a list of numbers is the view doing the model's job
+QString statusText(const EntryStatus &status, const StatusDetail &detail) {
+  QStringList sentences;
+
+  for (const auto problem : status.problems) {
+    switch (problem) {
+    // Both mean the same thing to somebody looking at the grid, and neither is theirs to fix
+    // today: no core can be installed by hand yet
+    case EntryProblem::PlatformNotSupported:
+    case EntryProblem::CoreNotInstalled:
+      sentences << (detail.platformName.isEmpty()
+                        ? QObject::tr("Launching this game is not yet supported.")
+                        : QObject::tr("Launching %1 games is not yet supported.").arg(detail.platformName));
+      break;
+    case EntryProblem::BiosMissing:
+      sentences << (detail.missingBios.isEmpty()
+                        ? QObject::tr("This system needs a BIOS file that Firelight can't provide.")
+                        : QObject::tr("This system needs a BIOS file that Firelight can't provide: %1.")
+                              .arg(detail.missingBios));
+      break;
+    case EntryProblem::ContentUnavailable:
+      sentences
+          << (detail.unreachableRoot.isEmpty()
+                  ? QObject::tr("This game's folder isn't available right now.")
+                  : QObject::tr("This game is in %1, which isn't available right now.").arg(detail.unreachableRoot));
+      break;
+    case EntryProblem::FilesMissing:
+      if (detail.lastKnownPath.isEmpty()) {
+        sentences << QObject::tr("The files for this game are missing.");
+      } else if (detail.wasFolderRemoved) {
+        sentences << QObject::tr("This game was in %1, which you removed from your library.").arg(detail.lastKnownPath);
+      } else {
+        sentences << QObject::tr("The files for this game are missing. They were in %1.").arg(detail.lastKnownPath);
+      }
+      break;
+    case EntryProblem::ContentInArchive:
+      sentences << QObject::tr("This disc is inside an archive and has to be extracted first.");
+      break;
+    case EntryProblem::DiscsMissing:
+      if (detail.missingDiscs.isEmpty()) {
+        sentences << QObject::tr("Some of this game's discs are missing.");
+      } else if (detail.missingDiscs.size() == 1) {
+        sentences << QObject::tr("Disc %1 is missing.").arg(detail.missingDiscs.front());
+      } else {
+        sentences << QObject::tr("Discs %1 are missing.").arg(joinNumbers(detail.missingDiscs));
+      }
+      break;
+    }
+  }
+
+  return sentences.join(QStringLiteral(" "));
+}
+
 // TODO
 // QML reads and writes these as one comma-separated string, so the list shape stops
 // at the model boundary
@@ -44,9 +131,29 @@ std::vector<std::string> splitList(const QString &value) {
 EntryListModel::EntryListModel(UserLibraryService &userLibrary, activity::IActivityLog &activityLog,
                                platforms::IPlatformService &platformService,
                                achievements::AchievementService &achievementService, VariantGroupService &variantGroups,
-                               QObject *parent)
+                               settings::SettingsService &settings, QObject *parent)
     : QAbstractListModel(parent), m_userLibrary(userLibrary), m_activityLog(activityLog),
-      m_platformService(platformService), m_achievementService(achievementService), m_variantGroups(variantGroups) {
+      m_platformService(platformService), m_achievementService(achievementService), m_variantGroups(variantGroups),
+      m_settings(settings) {
+  // Pointing a platform at a different core changes what every game on it can do
+  m_coreSettingChangedConnection = EventDispatcher::instance().subscribe<settings::PlatformSettingChangedEvent>(
+      [this](const settings::PlatformSettingChangedEvent &event) {
+        if (event.key != CoreRegistry::CORE_SETTING_KEY) {
+          return;
+        }
+
+        QMetaObject::invokeMethod(this, [this] { refreshStatuses(); }, Qt::QueuedConnection);
+      });
+
+  m_coreSettingResetConnection = EventDispatcher::instance().subscribe<settings::PlatformSettingResetEvent>(
+      [this](const settings::PlatformSettingResetEvent &event) {
+        if (event.key != CoreRegistry::CORE_SETTING_KEY) {
+          return;
+        }
+
+        QMetaObject::invokeMethod(this, [this] { refreshStatuses(); }, Qt::QueuedConnection);
+      });
+
   m_variantGroupUpdatedConnection =
       EventDispatcher::instance().subscribe<VariantGroupUpdatedEvent>([this](const VariantGroupUpdatedEvent &event) {
         const auto groupId = event.groupId;
@@ -87,6 +194,14 @@ EntryListModel::EntryListModel(UserLibraryService &userLibrary, activity::IActiv
       });
   m_entryUpdatedConnection =
       EventDispatcher::instance().subscribe<EntryUpdatedEvent>([this](const EntryUpdatedEvent &event) {
+        const int id = event.entryId;
+        QMetaObject::invokeMethod(this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
+      });
+
+  // Folding a disc set destroys the entries it absorbs, and syncEntry only takes a row away for an
+  // id it is handed
+  m_entryDeletedConnection =
+      EventDispatcher::instance().subscribe<EntryDeletedEvent>([this](const EntryDeletedEvent &event) {
         const int id = event.entryId;
         QMetaObject::invokeMethod(this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
       });
@@ -145,6 +260,8 @@ QHash<int, QByteArray> EntryListModel::roleNames() const {
   roles[IsVariantPrimary] = "isVariantPrimary";
   roles[VariantAutoLaunch] = "variantAutoLaunch";
   roles[Playable] = "playable";
+  roles[Problems] = "problems";
+  roles[StatusText] = "statusText";
   roles[SearchText] = "searchText";
   return roles;
 }
@@ -202,7 +319,18 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
   case VariantAutoLaunch:
     return item.variantAutoLaunch;
   case Playable:
-    return m_playablePlatformIds.contains(static_cast<int>(item.entry.platformId));
+    return item.status.isPlayable();
+  case Problems: {
+    QList<int> problems;
+
+    for (const auto problem : item.status.problems) {
+      problems.append(static_cast<int>(problem));
+    }
+
+    return QVariant::fromValue(problems);
+  }
+  case StatusText:
+    return item.statusText;
   case SearchText:
     return item.searchText;
   case Icon1x1SourceUrl:
@@ -568,8 +696,8 @@ void EntryListModel::applyVariantGrouping() {
   };
 
   // TODO
-  // Only the rows count. A hidden entry is one the user took out of their library, so it
-  // stops counting toward what the group played
+  // Every row counts, including one whose files have gone: the hours were still played, and
+  // the game is still owned
   std::unordered_map<int, Totals> totalsByGroup;
 
   for (auto &item : m_items) {
@@ -664,18 +792,170 @@ void EntryListModel::refreshVariantGroup(const int groupId) {
   }
 }
 
-void EntryListModel::refreshPlayablePlatforms() {
-  m_playablePlatformIds.clear();
+void EntryListModel::refreshStatuses() {
+  refreshPlatformProblems();
 
-  for (const auto &platform : m_platformService.listPlatforms()) {
-    if (CoreRegistry::instance().isPlatformPlayable(static_cast<int>(platform.id))) {
-      m_playablePlatformIds.insert(platform.id);
-    }
+  for (auto &item : m_items) {
+    applyStatus(item);
+  }
+
+  if (!m_items.empty()) {
+    emit dataChanged(createIndex(0, 0), createIndex(static_cast<int>(m_items.size()) - 1, 0),
+                     {Playable, Problems, StatusText});
   }
 }
 
+void EntryListModel::refreshPlatformProblems() {
+  m_problemByPlatformId.clear();
+  m_platformNameById.clear();
+  m_missingBiosByPlatformId.clear();
+  m_unreachableRoots.clear();
+  m_knownContentDirectoryIds.clear();
+
+  // TODO
+  // A root that cannot be read makes every game under it unplayable for as long as that lasts,
+  // which is a folder fact rather than an entry one
+  for (const auto &directory : m_userLibrary.getContentDirectories()) {
+    const auto path = QString::fromStdString(directory.path);
+    m_knownContentDirectoryIds.insert(directory.id);
+
+    if (!QFileInfo::exists(path)) {
+      m_unreachableRoots.append(QDir::cleanPath(path));
+    }
+  }
+
+  for (const auto &platform : m_platformService.listPlatforms()) {
+    const auto platformId = static_cast<int>(platform.id);
+    m_platformNameById.insert(platformId, QString::fromStdString(platform.name));
+
+    const auto problem = CoreRegistry::instance().coreProblemForPlatform(platformId, &m_settings);
+    if (!problem) {
+      continue;
+    }
+
+    m_problemByPlatformId.insert(platformId, *problem);
+
+    if (*problem != EntryProblem::BiosMissing) {
+      continue;
+    }
+
+    // Only the ones actually standing in the way. An optional file is never the reason a game
+    // will not start, so naming it here would send somebody after the wrong thing
+    QStringList names;
+    for (const auto &bios : CoreRegistry::instance().biosStatusForPlatform(platformId, &m_settings)) {
+      if (bios.isSatisfied) {
+        continue;
+      }
+
+      for (const auto &filename : bios.requirement.filenames) {
+        names << QString::fromStdString(filename);
+      }
+    }
+
+    m_missingBiosByPlatformId.insert(platformId, names.join(QStringLiteral(", ")));
+  }
+}
+
+EntryStatus EntryListModel::statusOf(const Entry &entry) const {
+  EntryStatusFacts facts;
+  facts.hasWayIn = entry.isContentAvailable;
+
+  if (const auto problem = m_problemByPlatformId.constFind(static_cast<int>(entry.platformId));
+      problem != m_problemByPlatformId.constEnd()) {
+    facts.isCoreRegistered = *problem != EntryProblem::PlatformNotSupported;
+    facts.isCoreInstalled = *problem != EntryProblem::CoreNotInstalled;
+    facts.hasRequiredBios = *problem != EntryProblem::BiosMissing;
+  }
+
+  facts.isContentReachable = unreachableRootFor(entry).isEmpty();
+
+  if (entry.discSetId.has_value()) {
+    const auto discs = m_userLibrary.getPresentDiscsInSet(*entry.discSetId);
+    facts.presentDiscCount = static_cast<int>(discs.size());
+    if (const auto set = m_userLibrary.getDiscSet(*entry.discSetId)) {
+      facts.expectedDiscCount = set->discCount;
+    }
+
+    facts.isDiscInArchive = std::ranges::any_of(discs, [](const ContentFile &disc) { return disc.m_inArchive; });
+  }
+
+  return evaluateEntryStatus(facts);
+}
+
+// TODO
+// Both halves in one place: the verdict and the sentence were assigned separately at three call
+// sites, and a new one only updated the first
+void EntryListModel::applyStatus(Item &item) const {
+  item.status = statusOf(item.entry);
+  item.statusText = describeStatus(item.entry, item.status);
+}
+
+QString EntryListModel::unreachableRootFor(const Entry &entry) const {
+  if (m_unreachableRoots.isEmpty() || entry.readableContentPaths.empty()) {
+    return {};
+  }
+
+  QString behindAnUnreachableRoot;
+
+  // One copy on an unplugged drive says nothing while another sits on a disk that is right here,
+  // so this answers only when every copy still on disk is somewhere that cannot be read
+  for (const auto &path : entry.readableContentPaths) {
+    const auto candidate = QDir::cleanPath(QString::fromStdString(path));
+    auto isBehindOne = false;
+
+    for (const auto &root : m_unreachableRoots) {
+      // A separator on the end, so D:/Games does not claim D:/GamesArchive
+      if (candidate == root || candidate.startsWith(root + QLatin1Char('/'))) {
+        isBehindOne = true;
+        behindAnUnreachableRoot = root;
+        break;
+      }
+    }
+
+    if (!isBehindOne) {
+      return {};
+    }
+  }
+
+  return behindAnUnreachableRoot;
+}
+
+QString EntryListModel::describeStatus(const Entry &entry, const EntryStatus &status) const {
+  const auto platformId = static_cast<int>(entry.platformId);
+
+  StatusDetail detail;
+  detail.platformName = m_platformNameById.value(platformId);
+  detail.missingBios = m_missingBiosByPlatformId.value(platformId);
+  detail.unreachableRoot = QDir::toNativeSeparators(unreachableRootFor(entry));
+
+  // TODO
+  // The rows outlive the files, so the path a game had is still there to be named. Which of the
+  // two sentences it gets turns on whether the folder it sat under is still in the library
+  if (!entry.contentPaths.empty()) {
+    detail.lastKnownPath = QDir::toNativeSeparators(QString::fromStdString(entry.contentPaths.front()));
+    detail.wasFolderRemoved = std::ranges::any_of(entry.contentDirectoryIds, [this](const int id) {
+      return id != -1 && !m_knownContentDirectoryIds.contains(id);
+    });
+  }
+
+  if (entry.discSetId.has_value() &&
+      std::ranges::any_of(status.problems, [](const EntryProblem p) { return p == EntryProblem::DiscsMissing; })) {
+    std::vector<int> present;
+    for (const auto &disc : m_userLibrary.getPresentDiscsInSet(*entry.discSetId)) {
+      present.push_back(disc.m_discNumber);
+    }
+
+    const auto set = m_userLibrary.getDiscSet(*entry.discSetId);
+    for (const auto number : missingDiscs(present, set ? set->discCount : 0)) {
+      detail.missingDiscs.append(number);
+    }
+  }
+
+  return statusText(status, detail);
+}
+
 void EntryListModel::reset() {
-  refreshPlayablePlatforms();
+  refreshPlatformProblems();
 
   emit beginResetModel();
   m_items.clear();
@@ -695,21 +975,22 @@ void EntryListModel::reset() {
     s.lastEndMillis = std::max(s.lastEndMillis, session.endedAt);
   }
 
+  // A game whose files are gone stays in the library and is badged. Taking the row away is
+  // what left somebody unable to find out why their game had disappeared
   for (const auto &entry : m_userLibrary.getEntries(0, 0)) {
-    if (!entry.hidden) {
-      auto item = Item{.entry = entry};
+    auto item = Item{.entry = entry};
 
-      if (const auto it = statsByHash.find(entry.contentHash); it != statsByHash.end()) {
-        item.numSecondsPlayed = it->second.totalMillis / 1000;
-        item.lastPlayedEpochMillis = it->second.lastEndMillis;
-      }
-
-      applyAchievementCounts(item);
-      item.groupKey = computeGroupKey(item);
-
-      m_indexByEntryId[item.entry.id] = static_cast<int>(m_items.size());
-      m_items.emplace_back(item);
+    if (const auto it = statsByHash.find(entry.contentHash); it != statsByHash.end()) {
+      item.numSecondsPlayed = it->second.totalMillis / 1000;
+      item.lastPlayedEpochMillis = it->second.lastEndMillis;
     }
+
+    applyAchievementCounts(item);
+    applyStatus(item);
+    item.groupKey = computeGroupKey(item);
+
+    m_indexByEntryId[item.entry.id] = static_cast<int>(m_items.size());
+    m_items.emplace_back(item);
   }
 
   applyVariantGrouping();
@@ -774,9 +1055,9 @@ void EntryListModel::syncEntry(const int entryId) {
   const auto entry = m_userLibrary.getEntry(entryId);
   const auto it = m_indexByEntryId.find(entryId);
   const bool present = it != m_indexByEntryId.end();
-  const bool visible = entry.has_value() && !entry->hidden;
+  const bool visible = entry.has_value();
 
-  // If gone or hidden, drop it from the model if necessary
+  // Only a row that is genuinely gone leaves the model
   if (!visible) {
     if (present) {
       const int row = it->second;
@@ -799,6 +1080,7 @@ void EntryListModel::syncEntry(const int entryId) {
   Item item{.entry = *entry};
   applyPlayStats(item);
   applyAchievementCounts(item);
+  applyStatus(item);
   item.groupKey = computeGroupKey(item);
 
   const auto joinedGroup = entry->variantGroupId.value_or(-1);

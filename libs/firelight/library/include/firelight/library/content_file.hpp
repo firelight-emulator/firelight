@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace firelight::library {
 
@@ -32,6 +34,21 @@ struct ContentFile {
   // time, so it is known before anything asynchronous runs
   int m_discNumber = 0;
 
+  // TODO
+  // Set when somebody said which disc this is by hand, so re-deriving leaves it alone
+  bool m_discNumberUserSet = false;
+
+  // TODO
+  // Where this dump was released, empty when nothing has said. Ordered most authoritative
+  // first. Held here rather than on the entry because folding a set deletes the entries of
+  // every disc but one
+  std::vector<std::string> m_regions;
+
+  // TODO
+  // The content database's id for the game this is a copy of, 0 when nothing has resolved
+  // one. One id spans a game's regional releases, so it never stands alone as identity
+  int m_gameId = 0;
+
   // The multi-disc game this file belongs to. This is the membership edge: the set is found
   // from its files, not from the entry
   std::optional<int> m_discSetId{};
@@ -40,6 +57,11 @@ struct ContentFile {
   // directory (e.g. imported before source tracking, and unmatched by the
   // backfill). This is the folder source for smart folders
   int m_contentDirectoryId = -1;
+
+  // TODO
+  // When the file stopped being on disk, 0 while it is there. The row outlives the file so the
+  // path, the hand-set disc number and the set membership survive it coming back
+  int64_t m_missingSince = 0;
 };
 
 } // namespace firelight::library

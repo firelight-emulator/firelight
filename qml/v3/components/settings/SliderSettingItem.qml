@@ -1,16 +1,19 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Firelight 1.0
 
 BaseSettingItem {
     id: root
 
-    controlBelow: false
+    controlBelow: true
 
     property real from: 0
     property real to: 10
     property real stepSize: 1
     property alias value: theControl.value
+
+    FLFocus.proxy: theControl
 
     signal moved(real value)
 

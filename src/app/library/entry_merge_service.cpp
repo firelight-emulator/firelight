@@ -6,18 +6,8 @@
 
 namespace firelight::library {
 
-EntryMergeService::EntryMergeService(saves::ISaveManager &saveManager, activity::IActivityLog &activityLog,
-                                     DiscSetService &discSets, settings::SettingsService &settings)
-    : m_saveManager(saveManager), m_activityLog(activityLog), m_discSets(discSets), m_settings(settings) {
-  applyPlaylistLocation();
-
-  m_settingChangedConnection = EventDispatcher::instance().subscribe<settings::GlobalSettingChangedEvent>(
-      [this](const settings::GlobalSettingChangedEvent &event) {
-        if (event.key == PLAYLIST_LOCATION_KEY) {
-          applyPlaylistLocation();
-        }
-      });
-
+EntryMergeService::EntryMergeService(saves::ISaveManager &saveManager, activity::IActivityLog &activityLog)
+    : m_saveManager(saveManager), m_activityLog(activityLog) {
   m_entryAbsorbedConnection =
       EventDispatcher::instance().subscribe<EntryAbsorbedEvent>([this](const EntryAbsorbedEvent &event) {
         if (event.absorbedContentHash == event.survivingContentHash) {
@@ -33,11 +23,6 @@ EntryMergeService::EntryMergeService(saves::ISaveManager &saveManager, activity:
                        event.absorbedContentHash, event.survivingEntryId);
         }
       });
-}
-
-void EntryMergeService::applyPlaylistLocation() {
-  const auto value = m_settings.getGlobalValue(PLAYLIST_LOCATION_KEY).value_or("rom-folder");
-  m_discSets.setPlaylistLocation(value == "app-data" ? PlaylistLocation::AppData : PlaylistLocation::BesideDiscs);
 }
 
 } // namespace firelight::library

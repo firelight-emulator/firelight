@@ -87,6 +87,55 @@ public:
   }
 
   /**
+   * Every action a press on item could reach: its own first, then each ancestor's, stopping at a
+   * barrier because navigation cannot leave one.
+   *
+   * A key appears once. The nearest declaration wins, which is the one a press would actually run,
+   * and a disabled action is left out because it would answer nothing
+   */
+  Q_INVOKABLE static QList<FocusAction *> collectActions(QQuickItem *item) {
+    QList<FocusAction *> actions;
+    QList<int> claimedKeys;
+
+    for (auto *current = item; current != nullptr; current = current->parentItem()) {
+      auto *info = find(current);
+
+      if (info == nullptr) {
+        continue;
+      }
+
+      for (auto *action : info->m_actions) {
+        if (action == nullptr || !action->isEnabled()) {
+          continue;
+        }
+
+        const auto keys = action->getKeys();
+        auto isClaimed = false;
+
+        for (const auto key : keys) {
+          if (claimedKeys.contains(key)) {
+            isClaimed = true;
+            break;
+          }
+        }
+
+        if (isClaimed) {
+          continue;
+        }
+
+        claimedKeys.append(keys);
+        actions.append(action);
+      }
+
+      if (info->isBarrier()) {
+        break;
+      }
+    }
+
+    return actions;
+  }
+
+  /**
    * @return Whether the global cursor draws on the attached item
    */
   [[nodiscard]] bool showsCursor() const { return m_showCursor; }

@@ -44,6 +44,24 @@ TEST(DiscSetTest, NamesTheMissingDiscs) {
   EXPECT_TRUE(missingDiscs({}).empty());
 }
 
+// A set short of its last disc has no hole to find, so the run alone reads as complete. Only a
+// count from somewhere authoritative can say otherwise
+TEST(DiscSetTest, AKnownCountNamesTheDiscsPastTheOnesOnHand) {
+  EXPECT_TRUE(missingDiscs({1, 2}).empty());
+  EXPECT_EQ(missingDiscs({1, 2}, 3), (std::vector<int>{3}));
+  EXPECT_EQ(missingDiscs({1}, 3), (std::vector<int>{2, 3}));
+
+  // Holes and the tail are the same question once the count is known
+  EXPECT_EQ(missingDiscs({2}, 3), (std::vector<int>{1, 3}));
+
+  // A count that claims less than is on hand does not take discs away
+  EXPECT_TRUE(missingDiscs({1, 2, 3}, 2).empty());
+  EXPECT_EQ(missingDiscs({1, 3}, 2), (std::vector<int>{2}));
+
+  // Owning nothing says nothing, whatever the count claims
+  EXPECT_TRUE(missingDiscs({}, 3).empty());
+}
+
 // Disc 1 is what makes a set launchable. Without it the identity could move when disc 1
 // arrived, and playing disc 2 of an RPG on its own is not a use case
 TEST(DiscSetTest, LaunchableOnlyWithDiscOne) {

@@ -54,7 +54,8 @@ void SearchResultsListModel::refreshItems() {
   m_allItems.clear();
 
   for (const auto &entry : m_library->getEntries(0, 0)) {
-    if (entry.hidden) {
+    // Searching turns up somewhere to go, and a game with no readable copy is nowhere
+    if (!entry.isContentAvailable || entry.hidden) {
       continue;
     }
 

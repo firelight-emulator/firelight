@@ -477,6 +477,15 @@ Item {
                 }
             }
 
+            // TODO
+            // While blinked the ring is fading out where it stood, so it must not be moved onto
+            // whatever took focus behind the popup — the fade would finish at the new place, which
+            // is the drag across the screen blinking exists to prevent. The clock, bump and scroll
+            // above still run, so nothing is stale when endBlink() puts the ring back
+            if (root._blinking) {
+                return;
+            }
+
             if (!root.gliding) {
                 const live = root.desiredRect();
                 const still = !root._scrollPending && !root._cruising && root._bumpPos === 0;

@@ -37,7 +37,11 @@ struct GameLoadStarted {};
 
 struct GameLoadedEvent {};
 
-struct GameLoadFailedEvent {};
+struct GameLoadFailedEvent {
+  // TODO
+  // Why it did not start, meant to be shown. Empty when nothing worked out a reason
+  std::string reason;
+};
 
 struct GamePausedChangedEvent {
   bool paused;

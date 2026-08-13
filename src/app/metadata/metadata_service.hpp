@@ -71,9 +71,10 @@ public:
   // manual "refresh metadata"; runs synchronously on the calling thread
   void populate(int entryId);
 
-  // Queues background population for every visible entry that still looks
-  // unpopulated (no icon art), so libraries that predate this feature fill in
-  void backfillMissing();
+  // TODO
+  // Queues background re-derivation for every entry. Which file an entry is named from
+  // depends on what is catalogued, and that changes between runs
+  void refreshAll();
 
   // --- User art management (backs the "change artwork" picker) --------------
   // Makes an existing stored asset the selection for its (game, type)

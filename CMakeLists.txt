@@ -180,6 +180,7 @@ foreach (QML_FILE ${QML_FILES})
     set_property(SOURCE ${QML_FILE} PROPERTY QT_RESOURCE_ALIAS "${QML_FILE_NAME}")
 endforeach ()
 
+set_source_files_properties(qml/v3/singletons/FLDimmer.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/singletons/AppStyle.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/singletons/GeneralSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/singletons/WindowGeometry.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
@@ -469,6 +470,7 @@ qt6_add_shaders(firelight "firelight_shaders"
         FILES qml/shaders/rounded_image.frag
         qml/shaders/focus_ring.frag
         qml/shaders/tile_surface.frag
+        qml/shaders/feathered_edge.frag
 )
 
 #target_include_directories(firelight PRIVATE ${SDL2_INCLUDE_DIRS})
@@ -532,21 +534,30 @@ endif ()
 
 # Friendly emulation settings + per-core option defaults (loaded at runtime by
 # EmulationService, resolved through CoreConfiguration).
-file(COPY ${CMAKE_SOURCE_DIR}/data/settings_catalog.json DESTINATION ${CMAKE_BINARY_DIR}/system)
+file(COPY ${CMAKE_SOURCE_DIR}/data/settings DESTINATION ${CMAKE_BINARY_DIR}/system)
 # Hotkey actions + their shipped bindings (loaded at runtime by ShortcutRegistry).
 file(COPY ${CMAKE_SOURCE_DIR}/data/shortcuts.json DESTINATION ${CMAKE_BINARY_DIR}/system)
 
-# The file(COPY) above only runs at configure time, so edits to the catalogs
-# wouldn't reach the running app until a reconfigure. Redeploy them on every build.
-add_custom_command(TARGET firelight POST_BUILD
+# The file(COPY) above only runs at configure time, so edits to the catalog wouldn't reach the
+# running app until a reconfigure. A custom target rather than a POST_BUILD on firelight: POST_BUILD
+# only fires when the target actually relinks, so editing or adding a catalog file on its own left
+# the deployed copy stale ("ninja: no work to do").
+#
+# The catalog directory is cleared before it is copied. copy_directory leaves behind files that no
+# longer exist in the source, and a stale one still loads and still merges — a setting you deleted
+# goes on working
+add_custom_target(deploy_runtime_data ALL
         COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:firelight>/system
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${CMAKE_SOURCE_DIR}/data/settings_catalog.json
-        $<TARGET_FILE_DIR:firelight>/system/settings_catalog.json
+        COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:firelight>/system/settings
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/data/settings
+        $<TARGET_FILE_DIR:firelight>/system/settings
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         ${CMAKE_SOURCE_DIR}/data/shortcuts.json
         $<TARGET_FILE_DIR:firelight>/system/shortcuts.json
-        COMMENT "Deploying settings_catalog.json + shortcuts.json")
+        COMMENT "Deploying data/settings + shortcuts.json")
+
+add_dependencies(deploy_runtime_data firelight)
 
 #if (DISCORD_SDK_RUNTIME_LIBRARY_FILE AND EXISTS "${DISCORD_SDK_RUNTIME_LIBRARY_FILE}")
 #    add_custom_command(TARGET firelight POST_BUILD
@@ -578,6 +589,7 @@ add_executable(fl_test
         tests/app/library/variant_group_service_test.cpp
         tests/app/library/disc_set_service_test.cpp
         tests/app/library/library_scanner_test.cpp
+        tests/app/library/ingestion_contract_test.cpp
         tests/app/library/library_e2e_test.cpp
         tests/app/library/chd_disc_test.cpp
         tests/app/metadata/metadata_service_test.cpp
@@ -688,7 +700,7 @@ add_dependencies(fl_test copy_resources)
 # The authored catalog, not the deployed copy: the shipped-catalog test should
 # guard the file a developer edits regardless of whether firelight was built.
 target_compile_definitions(fl_test PRIVATE
-        FL_SETTINGS_CATALOG_FILE="${CMAKE_SOURCE_DIR}/data/settings_catalog.json"
+        FL_SETTINGS_CATALOG_DIR="${CMAKE_SOURCE_DIR}/data/settings"
         FL_SHORTCUTS_FILE="${CMAKE_SOURCE_DIR}/data/shortcuts.json")
 
 target_include_directories(fl_test PRIVATE ${GTEST_INCLUDE_DIRS} include src libs/firelight/achievements/src libs/firelight/settings/src libs/firelight/input/src libs/firelight/library/src libs/firelight/saves/src libs/firelight/saves/tests libs/firelight/activity/src libs/firelight/activity/include)
@@ -802,8 +814,12 @@ install(
 install(
         FILES
         ${CMAKE_SOURCE_DIR}/content.db
-        ${CMAKE_SOURCE_DIR}/data/settings_catalog.json
         ${CMAKE_SOURCE_DIR}/data/shortcuts.json
+        DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
+)
+
+install(
+        DIRECTORY ${CMAKE_SOURCE_DIR}/data/settings
         DESTINATION ${CMAKE_INSTALL_BINDIR}/system/
 )
 

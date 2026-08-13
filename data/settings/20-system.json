@@ -1,0 +1,292 @@
+{
+  "app": [
+    {
+      "key": "fullscreen",
+      "label": "Fullscreen",
+      "group": "system-display",
+      "order": 10,
+      "keywords": [
+        "window",
+        "borderless",
+        "maximise",
+        "maximize",
+        "screen"
+      ],
+      "type": "boolean",
+      "default": "false"
+    },
+    {
+      "key": "interface-scale",
+      "label": "Interface scale",
+      "group": "system-display",
+      "order": 30,
+      "description": "Enlarges menus and text for readability. Some screens may not fit larger sizes perfectly yet.",
+      "keywords": [
+        "scale",
+        "zoom",
+        "size",
+        "text",
+        "font",
+        "bigger",
+        "larger",
+        "accessibility",
+        "readability"
+      ],
+      "type": "segmented",
+      "default": "1.0",
+      "options": [
+        {
+          "label": "100%",
+          "value": "1.0"
+        },
+        {
+          "label": "125%",
+          "value": "1.25"
+        },
+        {
+          "label": "150%",
+          "value": "1.5"
+        },
+        {
+          "label": "175%",
+          "value": "1.75"
+        },
+        {
+          "label": "200%",
+          "value": "2.0"
+        }
+      ]
+    },
+    {
+      "key": "interface-density",
+      "label": "Density",
+      "group": "system-display",
+      "order": 40,
+      "description": "How much breathing room to leave around controls and lists.",
+      "keywords": [
+        "density",
+        "compact",
+        "comfortable",
+        "spacious",
+        "spacing",
+        "padding",
+        "tight",
+        "roomy"
+      ],
+      "type": "segmented",
+      "default": "1.0",
+      "options": [
+        {
+          "label": "Compact",
+          "value": "0.9"
+        },
+        {
+          "label": "Comfortable",
+          "value": "1.0"
+        },
+        {
+          "label": "Spacious",
+          "value": "1.15"
+        }
+      ]
+    },
+    {
+      "key": "audio-output-device",
+      "label": "Audio output device",
+      "group": "system-audio",
+      "order": 10,
+      "keywords": [
+        "speaker",
+        "headphones",
+        "sound card",
+        "playback"
+      ],
+      "_note": "Options are the machine's audio outputs, enumerated at runtime by the app layer (the settings lib knows nothing about hardware). '' means the system default.",
+      "type": "audio-device",
+      "default": ""
+    },
+    {
+      "key": "master-volume",
+      "label": "Master Volume",
+      "group": "system-audio",
+      "order": 10,
+      "keywords": [
+        "loud",
+        "sound",
+        "gain",
+        "quiet"
+      ],
+      "type": "slider",
+      "default": "100",
+      "min": 0,
+      "max": 100,
+      "step": 1
+    },
+    {
+      "key": "audio-muted",
+      "label": "Mute audio",
+      "group": "system-audio",
+      "order": 20,
+      "description": "Silences all game audio. Applies to every game, not just the one you're playing.",
+      "keywords": [
+        "mute",
+        "silence",
+        "quiet",
+        "sound off"
+      ],
+      "type": "boolean",
+      "default": "false"
+    },
+    {
+      "key": "ui-sound-volume",
+      "label": "Interface Sound Volume",
+      "group": "system-audio",
+      "order": 30,
+      "description": "Loudness of menu and navigation sounds. Separate from game audio, so muting a game leaves menu feedback alone.",
+      "keywords": [
+        "ui",
+        "menu",
+        "interface",
+        "navigation",
+        "click",
+        "sound"
+      ],
+      "type": "slider",
+      "default": "100",
+      "min": 0,
+      "max": 100,
+      "step": 1
+    },
+    {
+      "key": "volume",
+      "label": "Game Volume",
+      "group": "system-audio",
+      "order": 10,
+      "description": "Loudness of game audio.",
+      "keywords": [
+        "volume",
+        "loud",
+        "audio",
+        "sound",
+        "game"
+      ],
+      "type": "slider",
+      "default": "100",
+      "min": 0,
+      "max": 100,
+      "step": 1
+    },
+    {
+      "key": "show-advanced-settings",
+      "label": "Show advanced settings",
+      "group": "system-general",
+      "order": 10,
+      "description": "Reveals settings most people won't need, including raw core options.",
+      "keywords": [
+        "expert",
+        "developer",
+        "core options",
+        "hidden"
+      ],
+      "type": "boolean",
+      "default": "false"
+    },
+    {
+      "key": "show-new-user-flow",
+      "label": "Show the welcome flow",
+      "group": "system-general",
+      "order": 30,
+      "description": "Shows first-run setup again the next time Firelight starts.",
+      "keywords": [
+        "onboarding",
+        "welcome",
+        "first run",
+        "tutorial"
+      ],
+      "type": "boolean",
+      "default": "true",
+      "advanced": true
+    },
+    {
+      "key": "auto-disable-keyboard-hotkeys",
+      "label": "Turn keyboard hotkeys off automatically",
+      "group": "system-general",
+      "order": 60,
+      "description": "When a system wants the keyboard to itself, stop keyboard hotkeys firing while it runs. Controller hotkeys keep working.",
+      "keywords": [
+        "shortcut",
+        "hotkey",
+        "keyboard",
+        "dos",
+        "amiga",
+        "automatic"
+      ],
+      "_note": "The core says so itself via RETRO_ENVIRONMENT_SET_KEYBOARD_CALLBACK, which is what makes this possible without anyone predicting which cores need it.",
+      "type": "boolean",
+      "default": "true"
+    },
+    {
+      "key": "only-player-one-hotkeys",
+      "label": "Only player one can use hotkeys",
+      "group": "system-general",
+      "order": 70,
+      "description": "Stops other players saving, exiting or changing speed. The keyboard counts as whichever player it holds.",
+      "keywords": [
+        "hotkey",
+        "shortcut",
+        "player",
+        "multiplayer",
+        "co-op"
+      ],
+      "type": "boolean",
+      "default": "false"
+    },
+    {
+      "key": "library-region-priority",
+      "label": "Preferred regions",
+      "group": "system-library",
+      "order": 10,
+      "description": "Which release a grouped game shows first, best to worst.",
+      "keywords": [
+        "region",
+        "variant",
+        "usa",
+        "europe",
+        "japan",
+        "group"
+      ],
+      "type": "text",
+      "default": "US,EU,JP,WORLD"
+    },
+    {
+      "key": "library-collapse-variants",
+      "label": "Group versions of a game",
+      "group": "system-library",
+      "order": 5,
+      "description": "Show one entry per game instead of one per regional release or revision.",
+      "keywords": [
+        "variant",
+        "region",
+        "revision",
+        "group",
+        "duplicate"
+      ],
+      "type": "boolean",
+      "default": "true"
+    },
+    {
+      "key": "library-language-priority",
+      "label": "Preferred languages",
+      "group": "system-library",
+      "order": 20,
+      "description": "Breaks a tie between grouped releases from the same region.",
+      "keywords": [
+        "language",
+        "variant",
+        "group"
+      ],
+      "type": "text",
+      "default": "en"
+    }
+  ]
+}

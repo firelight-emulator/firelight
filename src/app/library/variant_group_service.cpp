@@ -4,6 +4,8 @@
 
 namespace firelight::library {
 
+thread_local bool VariantGroupService::s_applying = false;
+
 VariantGroupService::VariantGroupService(UserLibraryService &library, settings::SettingsService &settings)
     : m_library(library), m_settings(settings) {
   m_settingChangedConnection = EventDispatcher::instance().subscribe<settings::GlobalSettingChangedEvent>(
@@ -20,11 +22,11 @@ VariantGroupService::VariantGroupService(UserLibraryService &library, settings::
         // TODO
         // Everything below writes, and a write publishes this event again. The guard is
         // what keeps that one level deep
-        if (m_applying) {
+        if (s_applying) {
           return;
         }
 
-        m_applying = true;
+        s_applying = true;
 
         if (const auto groupId = groupOf(event.entryId)) {
           reevaluate(*groupId);
@@ -32,7 +34,7 @@ VariantGroupService::VariantGroupService(UserLibraryService &library, settings::
           autoGroupByTitle(event.entryId);
         }
 
-        m_applying = false;
+        s_applying = false;
       });
 }
 
@@ -44,7 +46,7 @@ std::optional<int> pickFrom(const VariantGroup &group, const std::vector<Variant
                             const VariantPreference &preference) {
   if (group.primaryUserSet && group.primaryEntryId.has_value()) {
     const auto pinned = std::find_if(candidates.begin(), candidates.end(), [&](const VariantCandidate &candidate) {
-      return candidate.entryId == *group.primaryEntryId && !candidate.hidden;
+      return candidate.entryId == *group.primaryEntryId && candidate.isAvailable;
     });
 
     if (pinned != candidates.end()) {
@@ -62,7 +64,7 @@ VariantCandidate candidateFor(const Entry &entry) {
       .languages = entry.metadata.languages,
       .revision = entry.metadata.revision,
       .flags = entry.metadata.flags,
-      .hidden = entry.hidden,
+      .isAvailable = entry.isContentAvailable,
   };
 }
 } // namespace
@@ -117,7 +119,7 @@ std::optional<int> VariantGroupService::createGroup(const std::vector<int> &entr
 bool VariantGroupService::autoGroupByTitle(const int entryId) {
   const auto entry = m_library.getEntry(entryId);
 
-  if (!entry.has_value() || entry->normalizedTitle.empty() || entry->variantGroupId.has_value()) {
+  if (!entry.has_value() || entry->variantGroupId.has_value()) {
     return false;
   }
 
@@ -125,7 +127,13 @@ bool VariantGroupService::autoGroupByTitle(const int entryId) {
     return false;
   }
 
-  const auto peerIds = m_library.getEntryIdsWithNormalizedTitle(entry->platformId, entry->normalizedTitle);
+  const auto identity = identityOf(*entry);
+
+  if (identity.isEmpty()) {
+    return false;
+  }
+
+  const auto peerIds = m_library.getCandidateEntryIds(identity);
 
   std::vector<int> ungrouped;
   std::optional<int> existingGroup;
@@ -152,7 +160,7 @@ bool VariantGroupService::autoGroupByTitle(const int entryId) {
     // TODO
     // Discs of one game share a title once the disc tag is stripped, so without this they
     // read as alternate releases of each other and all but one disappears behind a primary
-    if (peer->discNumber != entry->discNumber) {
+    if (!areVariants(identity, identityOf(*peer))) {
       continue;
     }
 

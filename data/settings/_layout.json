@@ -1,0 +1,191 @@
+{
+  "pages": [
+    {
+      "id": "appearance",
+      "label": "Appearance",
+      "icon": "palette",
+      "route": "/settings/appearance",
+      "order": 10,
+      "keywords": [
+        "theme",
+        "color",
+        "colour",
+        "accent",
+        "background",
+        "wallpaper",
+        "blur",
+        "tint",
+        "glass"
+      ]
+    },
+    {
+      "id": "system",
+      "label": "System",
+      "icon": "display",
+      "route": "/settings/system",
+      "order": 20,
+      "keywords": [
+        "video",
+        "display",
+        "resolution",
+        "fullscreen",
+        "monitor",
+        "window",
+        "audio",
+        "sound",
+        "volume",
+        "output",
+        "device",
+        "general"
+      ]
+    },
+    {
+      "id": "emulation",
+      "label": "Emulation",
+      "icon": "controller",
+      "route": "/settings/emulation",
+      "order": 40,
+      "keywords": [
+        "core",
+        "game",
+        "performance",
+        "rewind",
+        "cores"
+      ]
+    },
+    {
+      "id": "notifications",
+      "label": "Notifications",
+      "icon": "bell",
+      "route": "/settings/notifications",
+      "order": 50,
+      "keywords": [
+        "alerts",
+        "toasts",
+        "popups"
+      ]
+    },
+    {
+      "id": "captures",
+      "label": "Captures",
+      "icon": "photo-library",
+      "route": "/settings/captures",
+      "order": 60,
+      "keywords": [
+        "screenshot",
+        "clip",
+        "recording",
+        "instant replay",
+        "gallery",
+        "video"
+      ]
+    },
+    {
+      "id": "retroachievements",
+      "label": "Achievements",
+      "icon": "trophy",
+      "route": "/settings/retroachievements",
+      "order": 70,
+      "keywords": [
+        "retroachievements",
+        "hardcore",
+        "account",
+        "login",
+        "trophies"
+      ]
+    },
+    {
+      "id": "about",
+      "label": "About",
+      "icon": "info",
+      "route": "/settings/about",
+      "order": 80,
+      "keywords": [
+        "version",
+        "license",
+        "credits",
+        "update"
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "id": "appearance-theme",
+      "page": "appearance",
+      "label": "Theme",
+      "order": 10
+    },
+    {
+      "id": "appearance-background",
+      "page": "appearance",
+      "label": "Background",
+      "order": 20
+    },
+    {
+      "id": "appearance-surfaces",
+      "page": "appearance",
+      "label": "Surfaces",
+      "order": 30
+    },
+    {
+      "id": "system-display",
+      "page": "system",
+      "label": "Display",
+      "order": 10
+    },
+    {
+      "id": "system-audio",
+      "page": "system",
+      "label": "Audio",
+      "order": 20
+    },
+    {
+      "id": "system-general",
+      "page": "system",
+      "label": "General",
+      "order": 30
+    },
+    {
+      "id": "system-library",
+      "page": "system",
+      "label": "Library",
+      "order": 40
+    },
+    {
+      "id": "notifications-achievements",
+      "page": "notifications",
+      "label": "Achievements",
+      "order": 10
+    },
+    {
+      "id": "notifications-controllers",
+      "page": "notifications",
+      "label": "Controllers",
+      "order": 20
+    },
+    {
+      "id": "emulation-general",
+      "page": "emulation",
+      "label": "Emulation",
+      "order": 10
+    },
+    {
+      "id": "emulation-video",
+      "page": "emulation",
+      "label": "Video",
+      "order": 20
+    },
+    {
+      "id": "emulation-input",
+      "page": "emulation",
+      "label": "Input",
+      "order": 30
+    },
+    {
+      "id": "emulation-hardware",
+      "page": "emulation",
+      "label": "Hardware",
+      "order": 40
+    }
+  ]
+}

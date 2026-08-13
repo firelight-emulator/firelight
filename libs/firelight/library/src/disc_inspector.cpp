@@ -85,6 +85,69 @@ private:
 };
 } // namespace
 
+namespace {
+// TODO
+// rcheevos ends some candidate lists with a console that hashes the whole file rather than
+// reading the format, so it matches anything. Taking one files the content under a hash that
+// means nothing, which is worse than not identifying it: the hash is what saves are keyed on
+bool isWholeFileFallback(const int rcConsole) {
+  return rcConsole == RC_CONSOLE_GAMEBOY || rcConsole == RC_CONSOLE_MEGA_DRIVE;
+}
+
+// Enough to reach the ISO9660 descriptor at 0x8001
+constexpr size_t HEADER_BYTES = 0x8010;
+
+std::vector<uint8_t> readHeader(const std::string &path) {
+  std::ifstream file(path, std::ios::binary);
+
+  if (!file) {
+    return {};
+  }
+
+  std::vector<uint8_t> header(HEADER_BYTES);
+  file.read(reinterpret_cast<char *>(header.data()), static_cast<std::streamsize>(header.size()));
+  header.resize(static_cast<size_t>(file.gcount()));
+  return header;
+}
+
+bool matchesAt(const std::vector<uint8_t> &bytes, const size_t offset, const std::string_view text) {
+  return bytes.size() >= offset + text.size() && std::memcmp(bytes.data() + offset, text.data(), text.size()) == 0;
+}
+
+// The 12-byte sync pattern every raw 2352-byte sector opens with
+bool hasRawSectorSync(const std::vector<uint8_t> &bytes) {
+  static constexpr uint8_t SYNC[12] = {0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00};
+  return bytes.size() >= sizeof(SYNC) && std::memcmp(bytes.data(), SYNC, sizeof(SYNC)) == 0;
+}
+} // namespace
+
+DiscIdentity DiscInspector::classifyByContent(const std::string &path, const IdentifyOutcome discOutcome) const {
+  DiscIdentity identity;
+  identity.outcome = discOutcome;
+
+  const auto header = readHeader(path);
+
+  // Disc structure, so the dump is a disc nothing could read rather than a cartridge. Checked
+  // first because a Mega CD boot sector also carries a cartridge header
+  if (hasRawSectorSync(header) || matchesAt(header, 0x000, "SEGADISCSYSTEM") ||
+      matchesAt(header, 0x010, "SEGADISCSYSTEM") || matchesAt(header, 0x8001, "CD001")) {
+    return identity;
+  }
+
+  if (!matchesAt(header, 0x100, "SEGA")) {
+    return identity;
+  }
+
+  identity.isCartridge = true;
+  identity.outcome = IdentifyOutcome::Identified;
+  identity.platformId = matchesAt(header, 0x100, "SEGA 32X")
+                            ? firelight::platforms::PlatformService::PLATFORM_ID_SEGA_32X
+                            : firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS;
+
+  spdlog::debug("Read {} as a cartridge dump for platform {}", path, identity.platformId);
+  return identity;
+}
+
 bool DiscInspector::isSaturn(rc_hash_iterator &iterator) {
   auto &cdreader = iterator.callbacks.cdreader;
   if (!cdreader.open_track_iterator || !cdreader.read_sector) {
@@ -187,51 +250,111 @@ DiscIdentity DiscInspector::detect(const std::string &discFilePath) const {
   while (rc_hash_iterate(hash, &iterator)) {
     const int rcConsole = iterator.consoles[iterator.index - 1];
 
-    // Game Boy is what rcheevos falls back to for an extension it has no handler for, and it
-    // whole-file hashes rather than reading the disc. A disc is never a Game Boy game, so this
-    // is the fallback firing rather than a match — taking it would scatter a compressed PSP or
-    // CloneCD image into the Game Boy platform under a hash that means nothing
-    if (rcConsole == RC_CONSOLE_GAMEBOY) {
-      spdlog::debug("Ignoring the Game Boy fallback for disc image: {}", discFilePath);
+    // Game Boy is what rcheevos falls back to for an extension it has no handler for, and Mega
+    // Drive is what it falls back to for a .bin it could not read. Both hash the whole file
+    // rather than reading the format, so they match anything and mean nothing
+    if (isWholeFileFallback(rcConsole)) {
+      spdlog::debug("Ignoring the whole-file fallback (rc console {}) for disc image: {}", rcConsole, discFilePath);
       continue;
     }
 
     int platformId = m_platformService.platformIdForRcConsole(rcConsole);
-    if (platformId != firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN) {
-      // rcheevos uses the Sega CD console as an umbrella that also matches Sega
-      // Saturn discs; disambiguate via the sector-0 magic
-      if (rcConsole == RC_CONSOLE_SEGA_CD && isSaturn(iterator)) {
-        platformId = firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN;
-      }
 
-      identity.valid = true;
-      identity.platformId = platformId;
-      identity.contentHash = std::string(hash);
-      spdlog::debug("Detected disc {} as platform {} (rc console {}), hash {}", discFilePath, platformId, rcConsole,
-                    hash);
-      break;
+    // TODO
+    // The format was read and named a system, so the file is fine and the dump is fine. Keeping
+    // the console's name is what turns "could not catalogue this" into "you own GameCube discs"
+    if (platformId == firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN) {
+      identity.outcome = IdentifyOutcome::PlatformNotSupported;
+      identity.identifiedAs = rc_console_name(rcConsole);
+      spdlog::debug("Detected disc {} as {} (rc console {}), which has no platform", discFilePath,
+                    identity.identifiedAs, rcConsole);
+      continue;
     }
+
+    // rcheevos uses the Sega CD console as an umbrella that also matches Sega
+    // Saturn discs; disambiguate via the sector-0 magic
+    if (rcConsole == RC_CONSOLE_SEGA_CD && isSaturn(iterator)) {
+      platformId = firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN;
+    }
+
+    identity.outcome = IdentifyOutcome::Identified;
+    identity.platformId = platformId;
+    identity.contentHash = std::string(hash);
+    // An earlier candidate may have been a console with no platform; this one won
+    identity.identifiedAs.clear();
+    spdlog::debug("Detected disc {} as platform {} (rc console {}), hash {}", discFilePath, platformId, rcConsole,
+                  hash);
+    break;
   }
 
   // rcheevos offers a .iso to PS2, PSP, 3DO, Sega CD, GameCube and Wii, and to no PlayStation
   // at all, so a PS1 disc dumped as a plain .iso matches nothing and disappears. Asking here
   // rather than adding a candidate, because the list is rebuilt on the first iteration
-  if (!identity.valid && strings::endsWithIgnoringCase(discFilePath, ".iso")) {
+  if (!identity.isIdentified() && strings::endsWithIgnoringCase(discFilePath, ".iso")) {
     char playstationHash[33] = {0};
 
     if (rc_hash_generate(playstationHash, RC_CONSOLE_PLAYSTATION, &iterator) != 0) {
-      identity.valid = true;
+      identity.outcome = IdentifyOutcome::Identified;
       identity.platformId = m_platformService.platformIdForRcConsole(RC_CONSOLE_PLAYSTATION);
       identity.contentHash = std::string(playstationHash);
       spdlog::debug("Detected iso {} as a PlayStation disc, hash {}", discFilePath, playstationHash);
     }
   }
 
+  // TODO
+  // .img and .mdf hold the same raw sector data a .bin does, and rcheevos has no handler for
+  // either, so each console has to be asked outright. RC_CONSOLE_MEGA_DRIVE is deliberately
+  // absent: it hashes the whole file and therefore cannot fail, which would file every
+  // unreadable image as a Genesis game under a hash that means nothing
+  if (!identity.isIdentified() &&
+      (strings::endsWithIgnoringCase(discFilePath, ".img") || strings::endsWithIgnoringCase(discFilePath, ".mdf"))) {
+    for (const auto rcConsole : RAW_SECTOR_CONSOLES) {
+      char rawHash[33] = {0};
+
+      if (rc_hash_generate(rawHash, rcConsole, &iterator) == 0) {
+        continue;
+      }
+
+      auto platformId = m_platformService.platformIdForRcConsole(rcConsole);
+
+      if (rcConsole == RC_CONSOLE_SEGA_CD && isSaturn(iterator)) {
+        platformId = firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN;
+      }
+
+      identity.outcome = IdentifyOutcome::Identified;
+      identity.platformId = platformId;
+      identity.contentHash = std::string(rawHash);
+      spdlog::debug("Detected raw image {} as platform {}, hash {}", discFilePath, platformId, rawHash);
+      break;
+    }
+  }
+
+  // TODO
+  // A console with no platform already says more than either of these: something read the format
+  // and named the system, so neither "nothing could read it" nor "the bytes matched nothing" is true
+  const auto isConsoleWithoutPlatform = identity.outcome == IdentifyOutcome::PlatformNotSupported;
+
+  // TODO
+  // rcheevos puts a lone Game Boy in the candidate list when it has no handler for the extension,
+  // so this says nothing could ever have read the file rather than that the dump did not match
+  if (!identity.isIdentified() && !isConsoleWithoutPlatform) {
+    const auto hasNoHandler = iterator.consoles[0] == RC_CONSOLE_GAMEBOY && iterator.consoles[1] == 0;
+    identity.outcome = hasNoHandler ? IdentifyOutcome::NoIdentifier : IdentifyOutcome::NotRecognized;
+  }
+
   rc_hash_destroy_iterator(&iterator);
 
-  if (!identity.valid) {
+  // Nothing read it as a disc, so the bytes get to say what they are. Only now, because a Mega
+  // CD boot sector carries a Mega Drive cartridge header at 0x100 by design and would claim a
+  // disc if it were asked first
+  if (!identity.isIdentified() && !isConsoleWithoutPlatform) {
+    identity = classifyByContent(discFilePath, identity.outcome);
+  }
+
+  if (!identity.isIdentified()) {
     spdlog::debug("Could not identify disc image: {}", discFilePath);
   }
+
   return identity;
 }
 
@@ -265,7 +388,7 @@ std::vector<IdentifiedDiscMember> DiscInspector::collectLooseMembers(const std::
 
 DiscIdentity DiscInspector::inspectFile(const std::string &path, std::vector<IdentifiedDiscMember> &outMembers) const {
   const DiscIdentity identity = detect(path);
-  if (identity.valid && firelight::library::isDiscSheetExtension(suffixOf(path))) {
+  if (identity.isIdentified() && firelight::library::isDiscSheetExtension(suffixOf(path))) {
     outMembers = collectLooseMembers(path);
   }
   return identity;

@@ -65,6 +65,7 @@ void MetadataService::populate(int entryId) {
     return;
   }
   auto entry = *entryOpt;
+  const auto before = entry;
 
   // TODO
   // The filename is the base layer and runs whether or not the database knows this
@@ -88,16 +89,18 @@ void MetadataService::populate(int entryId) {
   std::string derivedTitle;
 
   if (!entry.contentPaths.empty()) {
-    const auto tags = library::parseFilenameTags(entry.contentPaths.front());
+    // TODO
+    // Whichever name says the most, rather than whichever file happened to be catalogued
+    // first, so a richer copy arriving later moves the identity onto it
+    const auto tags = library::parseFilenameTags(library::chooseIdentityPath(entry.contentPaths));
     derivedTitle = tags.title;
 
     // TODO
     // The basename the entry was created with still carries its set index and every
     // tag group. The parsed title is what the game is actually called, so it becomes
     // the name unless the user picked one
-    if (!entry.nameUserSet && !tags.title.empty() && tags.title != entry.displayName) {
+    if (!entry.nameUserSet && !tags.title.empty()) {
       entry.displayName = tags.title;
-      m_library.updateEntryMetadata(entry);
     }
 
     overlay(metadata_fields::REGIONS, incoming.regions, tags.regions);
@@ -117,7 +120,6 @@ void MetadataService::populate(int entryId) {
 
     if (!entry.nameUserSet && !metadata->name.empty()) {
       entry.displayName = metadata->name;
-      m_library.updateEntryMetadata(entry);
     }
 
     // TODO
@@ -164,7 +166,17 @@ void MetadataService::populate(int entryId) {
   // Project the selected art onto the entry's denormalized columns
   reprojectSelectedMedia(entry);
 
-  m_library.updateEntryMetadata(entry);
+  // TODO
+  // Every write publishes an event that wakes both groupers, so a re-run that finds nothing
+  // new has to be silent rather than merely harmless
+  const auto moved = entry.displayName != before.displayName || entry.normalizedTitle != before.normalizedTitle ||
+                     entry.icon1x1SourceUrl != before.icon1x1SourceUrl ||
+                     entry.boxartFrontSourceUrl != before.boxartFrontSourceUrl ||
+                     entry.boxartBackSourceUrl != before.boxartBackSourceUrl;
+
+  if (moved) {
+    m_library.updateEntryMetadata(entry);
+  }
 }
 
 void MetadataService::reprojectSelectedMedia(library::Entry &entry) {
@@ -430,7 +442,7 @@ std::vector<ArtReviewItem> MetadataService::getArtReviewItems() {
   return items;
 }
 
-void MetadataService::backfillMissing() {
+void MetadataService::refreshAll() {
   m_pool.start([this] {
     if (m_shuttingDown) {
       return;
@@ -439,13 +451,7 @@ void MetadataService::backfillMissing() {
       if (m_shuttingDown) {
         return;
       }
-      // TODO
-      // An empty document is the "hasn't been populated yet" signal. Missing art is
-      // not: metadata now comes from the filename too, so an entry can be fully
-      // populated and still have no picture
-      if (entry.metadata.isEmpty()) {
-        populate(entry.id);
-      }
+      populate(entry.id);
     }
   });
 }

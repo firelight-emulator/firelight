@@ -57,9 +57,17 @@ int compareRevisions(const std::string &left, const std::string &right) {
 std::optional<int> choosePrimaryEntry(const std::vector<VariantCandidate> &candidates,
                                       const VariantPreference &preference) {
   const VariantCandidate *best = nullptr;
+  // A candidate that cannot be launched is a poor choice, not a disqualifying one. Returning
+  // nothing leaves a collapsed group with no row at all, so the whole game disappears instead
+  // of showing up unplayable
+  const VariantCandidate *fallback = nullptr;
 
   for (const auto &candidate : candidates) {
-    if (candidate.hidden) {
+    if (!candidate.isAvailable) {
+      if (fallback == nullptr || candidate.entryId < fallback->entryId) {
+        fallback = &candidate;
+      }
+
       continue;
     }
 
@@ -117,7 +125,7 @@ std::optional<int> choosePrimaryEntry(const std::vector<VariantCandidate> &candi
   }
 
   if (best == nullptr) {
-    return std::nullopt;
+    return fallback == nullptr ? std::nullopt : std::optional(fallback->entryId);
   }
 
   return best->entryId;

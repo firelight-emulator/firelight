@@ -25,7 +25,7 @@ TEST(EntryResolverTest, ResolvesRomEntry) {
   const auto entry = library.getEntryWithContentHash("hash123");
   ASSERT_TRUE(entry.has_value());
 
-  EntryResolver resolver(library);
+  EntryResolver resolver(library, "");
   const auto resolved = resolver.resolve(*entry);
 
   ASSERT_TRUE(resolved.valid);
@@ -34,11 +34,53 @@ TEST(EntryResolverTest, ResolvesRomEntry) {
   ASSERT_FALSE(resolved.patch.has_value());
 }
 
+// The way in outlives the file, so without checking, a copy that is gone is still offered to the
+// core and Play fails at load instead of the game running from the copy that is there
+TEST(EntryResolverTest, ResolvesThroughTheCopyThatIsStillOnDisk) {
+  SqliteUserLibraryRepository library(":memory:");
+  LibraryIngestService ingest(library);
+
+  ContentFile onDrive{
+      .m_fileSizeBytes = 100, .m_filePath = "E:/Games/game.rom", .m_platformId = 1, .m_contentHash = "hash123"};
+  ASSERT_TRUE(library.create(onDrive));
+
+  ContentFile backup{
+      .m_fileSizeBytes = 100, .m_filePath = "C:/Backup/game.rom", .m_platformId = 1, .m_contentHash = "hash123"};
+  ASSERT_TRUE(library.create(backup));
+
+  ASSERT_TRUE(library.markContentFileMissing(onDrive.m_id));
+
+  const auto entry = library.getEntryWithContentHash("hash123");
+  ASSERT_TRUE(entry.has_value());
+
+  EntryResolver resolver(library, "");
+  const auto resolved = resolver.resolve(*entry);
+
+  ASSERT_TRUE(resolved.valid);
+  EXPECT_EQ(resolved.contentFile.m_id, backup.m_id) << "the core was handed a path that is not there";
+}
+
+// Every copy being gone is the case that must not launch at all
+TEST(EntryResolverTest, InvalidWhenEveryCopyIsMissing) {
+  SqliteUserLibraryRepository library(":memory:");
+  LibraryIngestService ingest(library);
+
+  ContentFile romInfo{.m_fileSizeBytes = 100, .m_filePath = "game.rom", .m_platformId = 1, .m_contentHash = "hash123"};
+  ASSERT_TRUE(library.create(romInfo));
+  ASSERT_TRUE(library.markContentFileMissing(romInfo.m_id));
+
+  const auto entry = library.getEntryWithContentHash("hash123");
+  ASSERT_TRUE(entry.has_value());
+
+  EntryResolver resolver(library, "");
+  EXPECT_FALSE(resolver.resolve(*entry).valid);
+}
+
 // An entry with no run configurations cannot be resolved
 TEST(EntryResolverTest, InvalidWhenNoRunConfigurations) {
   SqliteUserLibraryRepository library(":memory:");
 
-  EntryResolver resolver(library);
+  EntryResolver resolver(library, "");
   Entry entry;
   entry.contentHash = "does-not-exist";
 

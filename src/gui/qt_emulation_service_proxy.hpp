@@ -58,6 +58,9 @@ public:
 signals:
   void gameLoadStarted();
   void gameLoaded();
+  // TODO
+  // Carries what stopped the launch, in words meant to be shown
+  void gameLoadFailed(QString reason);
   void emulationStopped();
   void gameRunningChanged(bool isGameRunning);
   void currentGameNameChanged();
@@ -72,6 +75,7 @@ private:
   emulation::EmulationService *m_emulationService;
 
   ScopedConnection m_gameLoadedConnection;
+  ScopedConnection m_gameLoadFailedConnection;
   ScopedConnection m_emulationStartedConnection;
   ScopedConnection m_emulationStoppedConnection;
 

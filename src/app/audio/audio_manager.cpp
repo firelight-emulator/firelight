@@ -5,6 +5,13 @@
 #include <cstring>
 #include <spdlog/spdlog.h>
 
+namespace {
+// How long to wait between attempts at rebuilding a lost output, doubling up to the cap so one
+// that is simply gone is not retried on every frame
+constexpr int REOPEN_DELAY_MS = 250;
+constexpr int MAX_REOPEN_BACKOFF_MS = 10000;
+} // namespace
+
 QAudioDevice AudioManager::selectedOutputDevice() const {
   return firelight::audio::selectOutputDevice(m_settingsService);
 }
@@ -14,6 +21,8 @@ AudioManager::AudioManager(firelight::settings::SettingsService &settingsService
     : m_settingsService(settingsService), m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
   m_mediaDevices = new QMediaDevices(this);
   connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this, &AudioManager::onAudioDevicesChanged);
+
+  m_reopenBackoffMs = REOPEN_DELAY_MS;
 
   refreshUserMuted();
   refreshVolume();
@@ -66,17 +75,26 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
   // buffer keeps draining at the device rate — the "audio" sync method paces the
   // emulation off this buffer's occupancy and must not stall when muted
   std::lock_guard lock(m_sinkMutex);
-  if (m_audioDevice && m_audioSink) {
-    // Added m_audioSink check
+
+  // Checked here rather than from the sink's own signal: this object lives on the render thread,
+  // and receive() is the one thing guaranteed to run there
+  recoverFromDeviceLoss();
+
+  if (m_audioDevice && isSinkWritable()) {
     const auto bufferTotalCapacity = m_audioSink->bufferSize();
     if (bufferTotalCapacity == 0) {
       return numFrames; // Avoid division by zero
     }
 
     const auto usedBytes = bufferTotalCapacity - m_audioSink->bytesFree();
-    m_currentBufferLevel = static_cast<float>(usedBytes) / bufferTotalCapacity;
-    if (m_onAudioBufferLevelChanged) {
-      m_onAudioBufferLevelChanged();
+
+    // Only while the reading means something: outside those states bytesFree() answers zero, which
+    // would publish a permanently full buffer and stall whatever is pacing off it
+    if (isSinkMeasurable()) {
+      m_currentBufferLevel = static_cast<float>(usedBytes) / bufferTotalCapacity;
+      if (m_onAudioBufferLevelChanged) {
+        m_onAudioBufferLevelChanged();
+      }
     }
 
     // Steer the buffer toward ~50% full by nudging the resample rate, unless the
@@ -151,6 +169,51 @@ void AudioManager::openAudioSink() {
   m_priming = true;
 }
 
+// TODO
+// The sink stops itself when the output it was running on goes away — a driver restarting, a rate
+// changed in the system's sound settings, another application taking the device. The machine's
+// list of outputs does not change, so nothing else notices, and the device start() handed back
+// dies with it
+void AudioManager::recoverFromDeviceLoss() {
+  if (!m_audioSink || m_audioSink->state() != QtAudio::StoppedState || m_audioSink->error() == QtAudio::NoError) {
+    return;
+  }
+
+  // Dropped first and unconditionally: writing to it is what this exists to prevent, whether or
+  // not the rebuild below is due yet
+  m_audioDevice = nullptr;
+
+  const auto now = std::chrono::steady_clock::now();
+  if (now < m_nextReopenAttempt) {
+    return;
+  }
+
+  spdlog::warn("Audio output stopped with error {}; reopening", static_cast<int>(m_audioSink->error()));
+
+  m_nextReopenAttempt = now + std::chrono::milliseconds(m_reopenBackoffMs);
+
+  m_audioSink->stop();
+  m_audioSink.reset();
+  openAudioSink();
+
+  if (isSinkWritable()) {
+    m_reopenBackoffMs = REOPEN_DELAY_MS;
+  } else {
+    m_reopenBackoffMs = std::min(m_reopenBackoffMs * 2, MAX_REOPEN_BACKOFF_MS);
+  }
+}
+
+bool AudioManager::isSinkWritable() const { return m_audioSink && m_audioSink->state() != QtAudio::StoppedState; }
+
+bool AudioManager::isSinkMeasurable() const {
+  if (!m_audioSink) {
+    return false;
+  }
+
+  const auto state = m_audioSink->state();
+  return state == QtAudio::ActiveState || state == QtAudio::IdleState;
+}
+
 void AudioManager::initialize(const double new_freq) {
   std::lock_guard lock(m_sinkMutex);
   m_sampleRate = static_cast<int>(new_freq);
@@ -182,7 +245,7 @@ float AudioManager::getBufferLevel() const {
   // stalling emulation. bytesFree()/bufferSize() are cheap reads, but the sink
   // isn't thread-safe, so serialize against receive()/reinit on other threads
   std::lock_guard lock(m_sinkMutex);
-  if (m_audioSink) {
+  if (isSinkMeasurable()) {
     const auto capacity = m_audioSink->bufferSize();
     if (capacity > 0) {
       const auto used = capacity - m_audioSink->bytesFree();
@@ -202,12 +265,15 @@ void AudioManager::reinitializeAudioDevice() {
     return; // Not initialized yet
   }
 
-  spdlog::info("Default audio output device changed, reinitializing audio device.");
+  spdlog::info("Reinitializing the audio output device.");
 
-  if (m_audioDevice) {
+  // Only while the sink is still running: once it has stopped, this pointer is already dead and
+  // touching it is what the rebuild exists to avoid
+  if (m_audioDevice && isSinkWritable()) {
     m_audioDevice->close();
-    m_audioDevice = nullptr;
   }
+
+  m_audioDevice = nullptr;
   m_audioSink->stop();
   m_audioSink.reset();
 

@@ -56,7 +56,7 @@ MainWindow {
     }
 
     onActiveFocusItemChanged: {
-        console.log("Active focus item changed to: " + activeFocusItem);
+        console.log("Active focus item changed to: " + activeFocusItem.FLFocus.collectActions(activeFocusItem).map(a => a.label).join(", "));
     }
 
     // Pane {
@@ -159,6 +159,21 @@ MainWindow {
         property bool deadHeld: false
 
         // TODO
+        // Runs an action and reports that it ran, so each lookup below reads as one line
+        function runAction(action: FLAction): bool {
+            if (action === null) {
+                return false;
+            }
+
+            if (action.sound) {
+                action.sound.play(false);
+            }
+
+            action.triggered();
+            return true;
+        }
+
+        // TODO
         // Runs whatever the focused item declared for this key. Falls back to
         // click() so an ordinary button needs no declaration at all
         function activate(key: int): bool {
@@ -169,14 +184,15 @@ MainWindow {
             }
 
             const info = contentContainer.FLFocus.find(focused);
-            const action = info !== null ? info.getActionFor(key) : null;
 
-            if (action !== null) {
-                if (action.sound) {
-                    action.sound.play(false);
-                }
+            if (contentContainer.runAction(info !== null ? info.getActionFor(key) : null)) {
+                return true;
+            }
 
-                action.triggered();
+            // TODO
+            // This handler is the container's own, so what the container declares answers here the
+            // way a button's own actions answer in its handler
+            if (contentContainer.runAction(contentContainer.FLFocus.getActionFor(key))) {
                 return true;
             }
 
@@ -294,6 +310,14 @@ MainWindow {
         //     id: gameplay
         //     z: 90
         // }
+
+        Item {
+            id: dimmer
+            anchors.fill: parent
+            Component.onCompleted: {
+                FLDimmer.target = dimmer;
+            }
+        }
 
         FLFocusHighlight {
             id: focusHighlight

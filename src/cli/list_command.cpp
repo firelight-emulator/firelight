@@ -48,8 +48,8 @@ void printSetting(const firelight::settings::SettingDefinition &s) {
 }
 
 bool loadCatalog() {
-  const auto path = (QCoreApplication::applicationDirPath() + "/system/settings_catalog.json").toStdString();
-  return firelight::settings::SettingsCatalog::instance().loadFromFile(path);
+  const auto path = (QCoreApplication::applicationDirPath() + "/system/settings").toStdString();
+  return firelight::settings::SettingsCatalog::instance().loadFromDirectory(path);
 }
 
 } // namespace

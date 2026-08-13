@@ -4,79 +4,62 @@
 #include <array>
 #include <cctype>
 #include <rcheevos/rc_consoles.h>
+#include <spdlog/spdlog.h>
 
 namespace firelight::platforms {
 namespace {
-// RA-supported consoles Firelight does not fully model (no controller/extension
-// data). Each becomes an identity-only Platform (id = 1000 + rcheevos console
-// id) so its name still renders in the library. Names mirror the previous
-// PlatformMetadata::getPlatformName mapping
-struct RaCoverageConsole {
+// The one mapping between Firelight platform ids and rcheevos console ids, read in both
+// directions. Rows are transcribed from the per-platform hashing switch this replaces
+struct PlatformRcConsole {
+  int platformId;
   int rcConsoleId;
-  const char *name;
 };
 
-constexpr std::array RA_COVERAGE_CONSOLES = {
-    RaCoverageConsole{RC_CONSOLE_ATARI_LYNX, "Atari Lynx"},
-    RaCoverageConsole{RC_CONSOLE_GAMECUBE, "Nintendo GameCube"},
-    RaCoverageConsole{RC_CONSOLE_ATARI_JAGUAR, "Atari Jaguar"},
-    RaCoverageConsole{RC_CONSOLE_WII, "Nintendo Wii"},
-    RaCoverageConsole{RC_CONSOLE_WII_U, "Nintendo Wii U"},
-    RaCoverageConsole{RC_CONSOLE_XBOX, "Xbox"},
-    RaCoverageConsole{RC_CONSOLE_MAGNAVOX_ODYSSEY2, "Magnavox Odyssey 2"},
-    RaCoverageConsole{RC_CONSOLE_ATARI_2600, "Atari 2600"},
-    RaCoverageConsole{RC_CONSOLE_MS_DOS, "MS-DOS"},
-    RaCoverageConsole{RC_CONSOLE_ARCADE, "Arcade"},
-    RaCoverageConsole{RC_CONSOLE_MSX, "MSX"},
-    RaCoverageConsole{RC_CONSOLE_COMMODORE_64, "Commodore 64"},
-    RaCoverageConsole{RC_CONSOLE_ZX81, "ZX81"},
-    RaCoverageConsole{RC_CONSOLE_ORIC, "Oric"},
-    RaCoverageConsole{RC_CONSOLE_VIC20, "Commodore VIC-20"},
-    RaCoverageConsole{RC_CONSOLE_AMIGA, "Amiga"},
-    RaCoverageConsole{RC_CONSOLE_ATARI_ST, "Atari ST"},
-    RaCoverageConsole{RC_CONSOLE_AMSTRAD_PC, "Amstrad CPC"},
-    RaCoverageConsole{RC_CONSOLE_APPLE_II, "Apple II"},
-    RaCoverageConsole{RC_CONSOLE_DREAMCAST, "Sega Dreamcast"},
-    RaCoverageConsole{RC_CONSOLE_CDI, "Philips CD-i"},
-    RaCoverageConsole{RC_CONSOLE_3DO, "3DO Interactive Multiplayer"},
-    RaCoverageConsole{RC_CONSOLE_COLECOVISION, "ColecoVision"},
-    RaCoverageConsole{RC_CONSOLE_INTELLIVISION, "Intellivision"},
-    RaCoverageConsole{RC_CONSOLE_VECTREX, "Vectrex"},
-    RaCoverageConsole{RC_CONSOLE_PC8800, "PC-8800"},
-    RaCoverageConsole{RC_CONSOLE_PC9800, "PC-9800"},
-    RaCoverageConsole{RC_CONSOLE_PCFX, "PC-FX"},
-    RaCoverageConsole{RC_CONSOLE_ATARI_5200, "Atari 5200"},
-    RaCoverageConsole{RC_CONSOLE_ATARI_7800, "Atari 7800"},
-    RaCoverageConsole{RC_CONSOLE_X68K, "Sharp X68000"},
-    RaCoverageConsole{RC_CONSOLE_CASSETTEVISION, "Cassette Vision"},
-    RaCoverageConsole{RC_CONSOLE_SUPER_CASSETTEVISION, "Super Cassette Vision"},
-    RaCoverageConsole{RC_CONSOLE_NEO_GEO_CD, "Neo Geo CD"},
-    RaCoverageConsole{RC_CONSOLE_FAIRCHILD_CHANNEL_F, "Fairchild Channel F"},
-    RaCoverageConsole{RC_CONSOLE_FM_TOWNS, "FM Towns"},
-    RaCoverageConsole{RC_CONSOLE_ZX_SPECTRUM, "ZX Spectrum"},
-    RaCoverageConsole{RC_CONSOLE_GAME_AND_WATCH, "Game & Watch"},
-    RaCoverageConsole{RC_CONSOLE_NOKIA_NGAGE, "Nokia N-Gage"},
-    RaCoverageConsole{RC_CONSOLE_NINTENDO_3DS, "Nintendo 3DS"},
-    RaCoverageConsole{RC_CONSOLE_SUPERVISION, "Watara Supervision"},
-    RaCoverageConsole{RC_CONSOLE_SHARPX1, "Sharp X1"},
-    RaCoverageConsole{RC_CONSOLE_TIC80, "TIC-80"},
-    RaCoverageConsole{RC_CONSOLE_THOMSONTO8, "Thomson TO8"},
-    RaCoverageConsole{RC_CONSOLE_PC6000, "PC-6000"},
-    RaCoverageConsole{RC_CONSOLE_PICO, "Sega Pico"},
-    RaCoverageConsole{RC_CONSOLE_MEGADUCK, "Mega Duck"},
-    RaCoverageConsole{RC_CONSOLE_ZEEBO, "Zeebo"},
-    RaCoverageConsole{RC_CONSOLE_ARDUBOY, "Arduboy"},
-    RaCoverageConsole{RC_CONSOLE_WASM4, "WASM-4"},
-    RaCoverageConsole{RC_CONSOLE_ARCADIA_2001, "Arcadia 2001"},
-    RaCoverageConsole{RC_CONSOLE_INTERTON_VC_4000, "Interton VC 4000"},
-    RaCoverageConsole{RC_CONSOLE_ELEKTOR_TV_GAMES_COMPUTER, "Elektor TV Games Computer"},
-    RaCoverageConsole{RC_CONSOLE_PC_ENGINE_CD, "PC Engine CD/TurboGrafx-CD"},
-    RaCoverageConsole{RC_CONSOLE_ATARI_JAGUAR_CD, "Atari Jaguar CD"},
-    RaCoverageConsole{RC_CONSOLE_NINTENDO_DSI, "Nintendo DSi"},
-    RaCoverageConsole{RC_CONSOLE_TI83, "TI-83"},
-    RaCoverageConsole{RC_CONSOLE_UZEBOX, "Uzebox"},
-    RaCoverageConsole{RC_CONSOLE_FAMICOM_DISK_SYSTEM, "Famicom Disk System"},
+constexpr std::array PLATFORM_RC_CONSOLES = {
+    PlatformRcConsole{PlatformService::PLATFORM_ID_GAMEBOY, RC_CONSOLE_GAMEBOY},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_GAMEBOY_COLOR, RC_CONSOLE_GAMEBOY_COLOR},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE, RC_CONSOLE_GAMEBOY_ADVANCE},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_VIRTUAL_BOY, RC_CONSOLE_VIRTUAL_BOY},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_NES, RC_CONSOLE_NINTENDO},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_SNES, RC_CONSOLE_SUPER_NINTENDO},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_N64, RC_CONSOLE_NINTENDO_64},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_NINTENDO_DS, RC_CONSOLE_NINTENDO_DS},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_SEGA_MASTER_SYSTEM, RC_CONSOLE_MASTER_SYSTEM},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_SEGA_GENESIS, RC_CONSOLE_MEGA_DRIVE},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_SEGA_GAMEGEAR, RC_CONSOLE_GAME_GEAR},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_SEGA_SATURN, RC_CONSOLE_SATURN},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_SEGA_32X, RC_CONSOLE_SEGA_32X},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_SEGA_CD, RC_CONSOLE_SEGA_CD},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_PS1, RC_CONSOLE_PLAYSTATION},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_PS2, RC_CONSOLE_PLAYSTATION_2},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_PLAYSTATION_PORTABLE, RC_CONSOLE_PSP},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_TURBOGRAFX16, RC_CONSOLE_PC_ENGINE},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_PC_ENGINE_CD, RC_CONSOLE_PC_ENGINE_CD},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_POKEMON_MINI, RC_CONSOLE_POKEMON_MINI},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_WONDERSWAN, RC_CONSOLE_WONDERSWAN},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_SG1000, RC_CONSOLE_SG1000},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_FAMICOM_DISK_SYSTEM, RC_CONSOLE_FAMICOM_DISK_SYSTEM},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_NEOGEO_POCKET, RC_CONSOLE_NEOGEO_POCKET},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_3DO, RC_CONSOLE_3DO},
 };
+
+// TODO
+// Neither a platform nor a console may appear twice: the reverse lookup would otherwise answer
+// with whichever row happened to come first
+constexpr bool isBijection() {
+  for (size_t i = 0; i < PLATFORM_RC_CONSOLES.size(); ++i) {
+    for (size_t j = i + 1; j < PLATFORM_RC_CONSOLES.size(); ++j) {
+      if (PLATFORM_RC_CONSOLES[i].platformId == PLATFORM_RC_CONSOLES[j].platformId ||
+          PLATFORM_RC_CONSOLES[i].rcConsoleId == PLATFORM_RC_CONSOLES[j].rcConsoleId) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
+static_assert(isBijection());
 } // namespace
 
 PlatformService::PlatformService() {
@@ -85,7 +68,7 @@ PlatformService::PlatformService() {
       .name = "Game Boy",
       .abbreviation = "Game Boy",
       .slug = "gb",
-      .fileAssociations = {"gb"},
+      .fileAssociations = {"gb", "dmg"},
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/gb",
@@ -153,7 +136,7 @@ PlatformService::PlatformService() {
       .name = "NES/Famicom",
       .abbreviation = "NES",
       .slug = "nes",
-      .fileAssociations = {"nes"},
+      .fileAssociations = {"nes", "unf", "unif"},
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/nes",
@@ -179,11 +162,32 @@ PlatformService::PlatformService() {
                                }}},
   });
   m_platforms.emplace_back(Platform{
+      .id = PLATFORM_ID_FAMICOM_DISK_SYSTEM,
+      .name = "Famicom Disk System",
+      .abbreviation = "FDS",
+      .slug = "fds",
+      .fileAssociations = {"fds"},
+      .controllerTypes = {{.id = 1,
+                           .name = "Retropad",
+                           .imageUrl = "qrc:/images/controllers/nes",
+                           .inputs =
+                               {
+                                   {"A", input::GamepadInput::EastFace},
+                                   {"B", input::GamepadInput::SouthFace},
+                                   {"Start", input::GamepadInput::Start},
+                                   {"Select", input::GamepadInput::Select},
+                                   {"D-Pad Up", input::GamepadInput::DpadUp},
+                                   {"D-Pad Down", input::GamepadInput::DpadDown},
+                                   {"D-Pad Left", input::GamepadInput::DpadLeft},
+                                   {"D-Pad Right", input::GamepadInput::DpadRight},
+                               }}},
+  });
+  m_platforms.emplace_back(Platform{
       .id = PLATFORM_ID_SNES,
       .name = "SNES/Super Famicom",
       .abbreviation = "SNES",
       .slug = "snes",
-      .fileAssociations = {"sfc", "smc"},
+      .fileAssociations = {"sfc", "smc", "swc", "fig", "bs", "st"},
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/snes",
@@ -316,7 +320,7 @@ PlatformService::PlatformService() {
       .name = "Master System",
       .abbreviation = "Master System",
       .slug = "sms",
-      .fileAssociations = {"sms"},
+      .fileAssociations = {"sms", "bms"},
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/sms",
@@ -344,7 +348,9 @@ PlatformService::PlatformService() {
       .name = "Genesis/Mega Drive",
       .abbreviation = "Genesis/MD",
       .slug = "gen",
-      .fileAssociations = {"md", "gen"},
+      // smd and mdx are containers rather than dumps, and ContentHasher normalises both back to
+      // the plain ROM so they carry the same identity as the .md of the same game
+      .fileAssociations = {"md", "gen", "smd", "mdx"},
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/gen-threebutton",
@@ -410,7 +416,7 @@ PlatformService::PlatformService() {
       .name = "PlayStation Portable",
       .abbreviation = "PSP",
       .slug = "psp",
-      .fileAssociations = {"iso", "cso", "pbp"},
+      .fileAssociations = {},
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/psp",
@@ -436,7 +442,7 @@ PlatformService::PlatformService() {
       .name = "PC Engine/TurboGrafx-16",
       .abbreviation = "PCE/TG-16",
       .slug = "pce",
-      .fileAssociations = {"pce"},
+      .fileAssociations = {"pce", "sgx"},
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/tgx-twobutton",
@@ -458,11 +464,10 @@ PlatformService::PlatformService() {
                                }}},
   });
   m_platforms.emplace_back(Platform{
-      .id = PLATFORM_ID_SUPERGRAFX,
-      .name = "SuperGrafx",
-      .abbreviation = "SuperGrafx",
-      .slug = "sgx",
-      .fileAssociations = {"sgx"},
+      .id = PLATFORM_ID_PC_ENGINE_CD,
+      .name = "PC Engine CD/TurboGrafx-CD",
+      .abbreviation = "PCE-CD/TG-CD",
+      .slug = "pcecd",
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/tgx-twobutton",
@@ -510,7 +515,7 @@ PlatformService::PlatformService() {
       .name = "WonderSwan",
       .abbreviation = "WonderSwan",
       .slug = "ws",
-      .fileAssociations = {"ws", "wsc"},
+      .fileAssociations = {"ws", "wsc", "pc2"},
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/ws-horizontal",
@@ -533,7 +538,7 @@ PlatformService::PlatformService() {
       .name = "NeoGeo Pocket",
       .abbreviation = "NeoGeo Pocket",
       .slug = "ngp",
-      .fileAssociations = {"ngp", "ngc"},
+      .fileAssociations = {"ngp", "ngc", "ngpc", "npc"},
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/ngp",
@@ -553,7 +558,7 @@ PlatformService::PlatformService() {
       .name = "PlayStation",
       .abbreviation = "PS1",
       .slug = "ps1",
-      .fileAssociations = {"iso", "cue"},
+      .fileAssociations = {},
       .controllerTypes = {{.id = 1,
                            .name = "Retropad",
                            .imageUrl = "qrc:/images/controllers/ngp",
@@ -571,34 +576,94 @@ PlatformService::PlatformService() {
 
   // Modeled with legacy ids but without full controller/extension data yet
   // (identity only, so names/abbreviations still render)
-  m_platforms.emplace_back(Platform{.id = PLATFORM_ID_VIRTUAL_BOY,
-                                    .name = "Virtual Boy",
-                                    .abbreviation = "Virtual Boy",
-                                    .retroAchievementsId = RC_CONSOLE_VIRTUAL_BOY});
-  m_platforms.emplace_back(Platform{.id = PLATFORM_ID_SEGA_SATURN,
-                                    .name = "Sega Saturn",
-                                    .abbreviation = "Saturn",
-                                    .retroAchievementsId = RC_CONSOLE_SATURN});
-  m_platforms.emplace_back(Platform{.id = PLATFORM_ID_SEGA_32X,
-                                    .name = "Sega 32X",
-                                    .abbreviation = "32X",
-                                    .retroAchievementsId = RC_CONSOLE_SEGA_32X});
-  m_platforms.emplace_back(Platform{.id = PLATFORM_ID_SEGA_CD,
-                                    .name = "Sega CD/Mega CD",
-                                    .abbreviation = "Sega CD",
-                                    .retroAchievementsId = RC_CONSOLE_SEGA_CD});
-  m_platforms.emplace_back(Platform{.id = PLATFORM_ID_PS2,
-                                    .name = "PlayStation 2",
-                                    .abbreviation = "PS2",
-                                    .retroAchievementsId = RC_CONSOLE_PLAYSTATION_2});
+  m_platforms.emplace_back(Platform{
+      .id = PLATFORM_ID_VIRTUAL_BOY,
+      .name = "Virtual Boy",
+      .abbreviation = "Virtual Boy",
+      .slug = "vb",
+      .fileAssociations = {"vb"},
+      .controllerTypes = {{.id = 1,
+                           .name = "Retropad",
+                           .imageUrl = "qrc:/images/controllers/placeholder",
+                           .inputs =
+                               {
+                                   {"A", input::GamepadInput::EastFace},
+                                   {"B", input::GamepadInput::SouthFace},
+                                   {"L", input::GamepadInput::LeftBumper},
+                                   {"R", input::GamepadInput::RightBumper},
+                                   {"Start", input::GamepadInput::Start},
+                                   {"Select", input::GamepadInput::Select},
+                                   {"Left D-Pad Up", input::GamepadInput::DpadUp},
+                                   {"Left D-Pad Down", input::GamepadInput::DpadDown},
+                                   {"Left D-Pad Left", input::GamepadInput::DpadLeft},
+                                   {"Left D-Pad Right", input::GamepadInput::DpadRight},
+                                   {"Right D-Pad Up", input::GamepadInput::RightStickUp},
+                                   {"Right D-Pad Down", input::GamepadInput::RightStickDown},
+                                   {"Right D-Pad Left", input::GamepadInput::RightStickLeft},
+                                   {"Right D-Pad Right", input::GamepadInput::RightStickRight},
+                               }}},
+  });
+  m_platforms.emplace_back(Platform{.id = PLATFORM_ID_SEGA_SATURN, .name = "Sega Saturn", .abbreviation = "Saturn"});
+  m_platforms.emplace_back(Platform{
+      .id = PLATFORM_ID_SEGA_32X,
+      .name = "Sega 32X",
+      .abbreviation = "32X",
+      .slug = "32x",
+      .fileAssociations = {"32x"},
+      .controllerTypes = {{.id = 1,
+                           .name = "Retropad",
+                           .imageUrl = "qrc:/images/controllers/gen-threebutton",
+                           .inputs =
+                               {
+                                   {"A", input::GamepadInput::WestFace},
+                                   {"B", input::GamepadInput::SouthFace},
+                                   {"C", input::GamepadInput::EastFace},
+                                   {"X", input::GamepadInput::LeftBumper},
+                                   {"Y", input::GamepadInput::NorthFace},
+                                   {"Z", input::GamepadInput::RightBumper},
+                                   {"Start", input::GamepadInput::Start},
+                                   {"Mode", input::GamepadInput::Select},
+                                   {"D-Pad Up", input::GamepadInput::DpadUp},
+                                   {"D-Pad Down", input::GamepadInput::DpadDown},
+                                   {"D-Pad Left", input::GamepadInput::DpadLeft},
+                                   {"D-Pad Right", input::GamepadInput::DpadRight},
+                               }}},
+  });
+  m_platforms.emplace_back(Platform{
+      .id = PLATFORM_ID_SEGA_CD,
+      .name = "Sega CD/Mega CD",
+      .abbreviation = "Sega CD",
+      .slug = "segacd",
+      .controllerTypes = {{.id = 1,
+                           .name = "Retropad",
+                           .imageUrl = "qrc:/images/controllers/gen-threebutton",
+                           .inputs =
+                               {
+                                   {"A", input::GamepadInput::WestFace},
+                                   {"B", input::GamepadInput::SouthFace},
+                                   {"C", input::GamepadInput::EastFace},
+                                   {"X", input::GamepadInput::LeftBumper},
+                                   {"Y", input::GamepadInput::NorthFace},
+                                   {"Z", input::GamepadInput::RightBumper},
+                                   {"Start", input::GamepadInput::Start},
+                                   {"Mode", input::GamepadInput::Select},
+                                   {"D-Pad Up", input::GamepadInput::DpadUp},
+                                   {"D-Pad Down", input::GamepadInput::DpadDown},
+                                   {"D-Pad Left", input::GamepadInput::DpadLeft},
+                                   {"D-Pad Right", input::GamepadInput::DpadRight},
+                               }}},
+  });
+  m_platforms.emplace_back(Platform{.id = PLATFORM_ID_PS2, .name = "PlayStation 2", .abbreviation = "PS2"});
+  m_platforms.emplace_back(
+      Platform{.id = PLATFORM_ID_3DO, .name = "3DO Interactive Multiplayer", .abbreviation = "3DO"});
 
-  // RA-coverage consoles Firelight doesn't fully model: id = 1000 + rc id
-  for (const auto &console : RA_COVERAGE_CONSOLES) {
-    m_platforms.emplace_back(Platform{.id = static_cast<unsigned>(1000 + console.rcConsoleId),
-                                      .name = console.name,
-                                      .abbreviation = console.name,
-                                      .retroAchievementsId = static_cast<unsigned>(console.rcConsoleId)});
+  // TODO
+  // A view of the table rather than a value anybody maintains by hand, so the two cannot disagree
+  for (auto &platform : m_platforms) {
+    platform.retroAchievementsId = static_cast<unsigned>(rcConsoleForPlatform(static_cast<int>(platform.id)));
   }
+
+  buildExtensionIndex();
 }
 
 std::optional<Platform> PlatformService::getPlatform(const unsigned id) const {
@@ -612,71 +677,47 @@ std::optional<Platform> PlatformService::getPlatform(const unsigned id) const {
 
 std::vector<Platform> PlatformService::listPlatforms() const { return m_platforms; }
 
-int PlatformService::platformIdForExtension(const std::string &extension) const {
-  std::string lower = extension;
-  std::transform(lower.begin(), lower.end(), lower.begin(), [](const unsigned char c) { return std::tolower(c); });
+void PlatformService::buildExtensionIndex() {
   for (const auto &platform : m_platforms) {
     for (const auto &association : platform.fileAssociations) {
-      if (association == lower) {
-        return static_cast<int>(platform.id);
+      const auto [it, inserted] = m_platformIdByExtension.emplace(association, static_cast<int>(platform.id));
+
+      // TODO
+      // Two platforms claiming one extension has no right answer, and a scan over the list
+      // would silently hand back whichever was constructed first
+      if (!inserted) {
+        spdlog::warn("Extension {} is claimed by platforms {} and {}; keeping {}", association, it->second, platform.id,
+                     it->second);
       }
     }
   }
-  return PLATFORM_ID_UNKNOWN;
+}
+
+int PlatformService::platformIdForExtension(const std::string &extension) const {
+  std::string lower = extension;
+  std::transform(lower.begin(), lower.end(), lower.begin(), [](const unsigned char c) { return std::tolower(c); });
+
+  const auto it = m_platformIdByExtension.find(lower);
+  return it == m_platformIdByExtension.end() ? PLATFORM_ID_UNKNOWN : it->second;
 }
 
 int PlatformService::platformIdForRcConsole(const int rcConsoleId) const {
-  // Consoles Firelight modeled with legacy ids keep them; every other
-  // RA-supported console maps to its provisional id (1000 + rc id)
-  switch (rcConsoleId) {
-  case RC_CONSOLE_GAMEBOY:
-    return PLATFORM_ID_GAMEBOY;
-  case RC_CONSOLE_GAMEBOY_COLOR:
-    return PLATFORM_ID_GAMEBOY_COLOR;
-  case RC_CONSOLE_GAMEBOY_ADVANCE:
-    return PLATFORM_ID_GAMEBOY_ADVANCE;
-  case RC_CONSOLE_VIRTUAL_BOY:
-    return PLATFORM_ID_VIRTUAL_BOY;
-  case RC_CONSOLE_NINTENDO:
-    return PLATFORM_ID_NES;
-  case RC_CONSOLE_SUPER_NINTENDO:
-    return PLATFORM_ID_SNES;
-  case RC_CONSOLE_NINTENDO_64:
-    return PLATFORM_ID_N64;
-  case RC_CONSOLE_NINTENDO_DS:
-    return PLATFORM_ID_NINTENDO_DS;
-  case RC_CONSOLE_MASTER_SYSTEM:
-    return PLATFORM_ID_SEGA_MASTER_SYSTEM;
-  case RC_CONSOLE_MEGA_DRIVE:
-    return PLATFORM_ID_SEGA_GENESIS;
-  case RC_CONSOLE_GAME_GEAR:
-    return PLATFORM_ID_SEGA_GAMEGEAR;
-  case RC_CONSOLE_SATURN:
-    return PLATFORM_ID_SEGA_SATURN;
-  case RC_CONSOLE_SEGA_32X:
-    return PLATFORM_ID_SEGA_32X;
-  case RC_CONSOLE_SEGA_CD:
-    return PLATFORM_ID_SEGA_CD;
-  case RC_CONSOLE_PLAYSTATION:
-    return PLATFORM_ID_PS1;
-  case RC_CONSOLE_PLAYSTATION_2:
-    return PLATFORM_ID_PS2;
-  case RC_CONSOLE_PSP:
-    return PLATFORM_ID_PLAYSTATION_PORTABLE;
-  case RC_CONSOLE_PC_ENGINE:
-    return PLATFORM_ID_TURBOGRAFX16;
-  case RC_CONSOLE_POKEMON_MINI:
-    return PLATFORM_ID_POKEMON_MINI;
-  case RC_CONSOLE_WONDERSWAN:
-    return PLATFORM_ID_WONDERSWAN;
-  case RC_CONSOLE_SG1000:
-    return PLATFORM_ID_SG1000;
-  case RC_CONSOLE_NEOGEO_POCKET:
-    return PLATFORM_ID_NEOGEO_POCKET;
-  case RC_CONSOLE_UNKNOWN:
-    return PLATFORM_ID_UNKNOWN;
-  default:
-    return 1000 + rcConsoleId;
+  for (const auto &[platformId, consoleId] : PLATFORM_RC_CONSOLES) {
+    if (consoleId == rcConsoleId) {
+      return platformId;
+    }
   }
+
+  return PLATFORM_ID_UNKNOWN;
+}
+
+int PlatformService::rcConsoleForPlatform(const int platformId) {
+  for (const auto &[id, consoleId] : PLATFORM_RC_CONSOLES) {
+    if (id == platformId) {
+      return consoleId;
+    }
+  }
+
+  return RC_CONSOLE_UNKNOWN;
 }
 } // namespace firelight::platforms

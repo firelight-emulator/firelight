@@ -43,15 +43,18 @@ struct VariantCandidate {
   std::vector<std::string> languages;
   std::string revision;
   std::vector<std::string> flags;
-  bool hidden = false;
+  // TODO
+  // Whether a readable copy of this release exists, which is what decides whether it can stand for
+  // the group
+  bool isAvailable = true;
 };
 
 /**
  * The entry that should stand for a group, or nothing when no candidate can.
  *
  * Ranks on released-before-unreleased, then preferred region, then preferred language, then highest
- * revision, and finally the lowest id so the answer never depends on the order asked. A hidden
- * candidate cannot be launched, so it is never chosen
+ * revision, and finally the lowest id so the answer never depends on the order asked. A candidate
+ * with no readable copy cannot be launched, so it is never chosen
  */
 [[nodiscard]] std::optional<int> choosePrimaryEntry(const std::vector<VariantCandidate> &candidates,
                                                     const VariantPreference &preference);

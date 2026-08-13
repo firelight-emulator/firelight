@@ -90,7 +90,8 @@ private:
     RequiresRestartRole,
     PlaceholderRole,    // text widget hint
     FileExtensionsRole, // file-picker filter (QStringList)
-    DirectoryModeRole   // file/folder picker: pick a directory
+    DirectoryModeRole,  // file/folder picker: pick a directory
+    RouteRole           // link widget: where the row goes
   };
 
   struct Item {
@@ -114,6 +115,7 @@ private:
     QString placeholder;        // text widget hint
     QStringList fileExtensions; // file-picker filter
     bool directoryMode = false; // file/folder picker: pick a directory
+    QString route;              // link widget: where the row goes
 
     // Reset clears this tier's override so the row falls back to what it
     // inherits. Only meaningful at a tier with something beneath it — the

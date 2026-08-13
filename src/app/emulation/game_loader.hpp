@@ -33,6 +33,10 @@ struct GameLoadResult {
   library::Entry entry;
   std::optional<platforms::Platform> platform;
   std::string contentHash;
+
+  // TODO
+  // What stopped the launch, in words meant for the person who pressed play. Empty on success
+  std::string failureReason;
 };
 
 // The load pipeline extracted from EmulationService: resolve entry -> content +

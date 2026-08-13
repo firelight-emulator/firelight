@@ -26,59 +26,85 @@ bool startsWith(const std::vector<uint8_t> &bytes, const uint8_t *signature, siz
   return bytes.size() >= n && std::memcmp(bytes.data(), signature, n) == 0;
 }
 
-// Maps a Firelight platform id to the rcheevos console id used for buffer-based
-// content hashing of cartridge systems that rcheevos handles directly
-uint32_t rcConsoleForPlatform(int platformId) {
-  switch (platformId) {
-  case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY:
-    return RC_CONSOLE_GAMEBOY;
-  case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_COLOR:
-    return RC_CONSOLE_GAMEBOY_COLOR;
-  case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE:
-    return RC_CONSOLE_GAMEBOY_ADVANCE;
-  case firelight::platforms::PlatformService::PLATFORM_ID_VIRTUAL_BOY:
-    return RC_CONSOLE_VIRTUAL_BOY;
-  case firelight::platforms::PlatformService::PLATFORM_ID_NES:
-    return RC_CONSOLE_NINTENDO;
-  case firelight::platforms::PlatformService::PLATFORM_ID_SNES:
-    return RC_CONSOLE_SUPER_NINTENDO;
-  case firelight::platforms::PlatformService::PLATFORM_ID_N64:
-    return RC_CONSOLE_NINTENDO_64;
-  case firelight::platforms::PlatformService::PLATFORM_ID_NINTENDO_DS:
-    return RC_CONSOLE_NINTENDO_DS;
-  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_MASTER_SYSTEM:
-    return RC_CONSOLE_MASTER_SYSTEM;
-  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS:
-    return RC_CONSOLE_MEGA_DRIVE;
-  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GAMEGEAR:
-    return RC_CONSOLE_GAME_GEAR;
-  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_SATURN:
-    return RC_CONSOLE_SATURN;
-  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_32X:
-    return RC_CONSOLE_SEGA_32X;
-  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_CD:
-    return RC_CONSOLE_SEGA_CD;
-  case firelight::platforms::PlatformService::PLATFORM_ID_PS1:
-    return RC_CONSOLE_PLAYSTATION;
-  case firelight::platforms::PlatformService::PLATFORM_ID_PS2:
-    return RC_CONSOLE_PLAYSTATION_2;
-  case firelight::platforms::PlatformService::PLATFORM_ID_PLAYSTATION_PORTABLE:
-    return RC_CONSOLE_PSP;
-  case firelight::platforms::PlatformService::PLATFORM_ID_SUPERGRAFX:
-  case firelight::platforms::PlatformService::PLATFORM_ID_TURBOGRAFX16:
-    return RC_CONSOLE_PC_ENGINE;
-  case firelight::platforms::PlatformService::PLATFORM_ID_POKEMON_MINI:
-    return RC_CONSOLE_POKEMON_MINI;
-  case firelight::platforms::PlatformService::PLATFORM_ID_WONDERSWAN:
-    return RC_CONSOLE_WONDERSWAN;
-  case firelight::platforms::PlatformService::PLATFORM_ID_SG1000:
-    return RC_CONSOLE_SG1000;
-  case firelight::platforms::PlatformService::PLATFORM_ID_NEOGEO_POCKET:
-    return RC_CONSOLE_NEOGEO_POCKET;
-  default:
-    return RC_CONSOLE_UNKNOWN;
-  }
+//****************
+// mega drive containers
+//****************
+
+// Where a Mega Drive cartridge carries its "SEGA" marker
+constexpr size_t SEGA_MAGIC_OFFSET = 0x100;
+constexpr size_t COPIER_HEADER_SIZE = 512;
+constexpr size_t INTERLEAVE_BLOCK_SIZE = 0x4000;
+
+bool hasSegaMagicAt(const std::vector<uint8_t> &bytes, const size_t offset) {
+  return bytes.size() >= offset + 4 && std::memcmp(bytes.data() + offset, "SEGA", 4) == 0;
 }
+
+// TODO
+// The same test Genesis Plus GX applies, so the two agree on what a file is: no marker where a
+// plain cartridge would have one, and a size that is an odd number of 512-byte blocks. Detected
+// from the bytes rather than the extension, so a dump that was renamed is still read correctly
+bool isCopierImage(const std::vector<uint8_t> &bytes) {
+  return !hasSegaMagicAt(bytes, SEGA_MAGIC_OFFSET) && bytes.size() % COPIER_HEADER_SIZE == 0 &&
+         (bytes.size() / COPIER_HEADER_SIZE) % 2 == 1;
+}
+
+// TODO
+// Drops the copier header, then un-scatters each 16KB block: the first half holds the odd bytes
+// and the second half the even ones. Yields the plain cartridge dump, so the same game carries
+// one identity whichever container it arrived in
+std::vector<uint8_t> deinterleaveCopierImage(const std::vector<uint8_t> &bytes) {
+  std::vector<uint8_t> rom(bytes.begin() + COPIER_HEADER_SIZE, bytes.end());
+  const auto blocks = rom.size() / INTERLEAVE_BLOCK_SIZE;
+
+  for (size_t block = 0; block < blocks; ++block) {
+    const auto start = block * INTERLEAVE_BLOCK_SIZE;
+    const std::vector<uint8_t> scattered(rom.begin() + start, rom.begin() + start + INTERLEAVE_BLOCK_SIZE);
+    const auto half = INTERLEAVE_BLOCK_SIZE / 2;
+
+    for (size_t i = 0; i < half; ++i) {
+      rom[start + i * 2] = scattered[half + i];
+      rom[start + i * 2 + 1] = scattered[i];
+    }
+  }
+
+  return rom;
+}
+
+// An mdx holds the cartridge from its fifth byte with every byte flipped, so the marker a plain
+// dump carries at 0x100 sits at 0x104
+bool isEncodedImage(const std::vector<uint8_t> &bytes) {
+  constexpr size_t offset = SEGA_MAGIC_OFFSET + 4;
+  constexpr uint8_t key = 0x40;
+
+  return bytes.size() > offset + 4 && (bytes[offset] ^ key) == 'S' && (bytes[offset + 1] ^ key) == 'E' &&
+         (bytes[offset + 2] ^ key) == 'G' && (bytes[offset + 3] ^ key) == 'A';
+}
+
+std::vector<uint8_t> decodeEncodedImage(const std::vector<uint8_t> &bytes) {
+  std::vector<uint8_t> rom;
+  rom.reserve(bytes.size() - 5);
+
+  for (size_t i = 4; i + 1 < bytes.size(); ++i) {
+    rom.push_back(bytes[i] ^ 0x40);
+  }
+
+  return rom;
+}
+
+// The plain cartridge inside whichever container arrived, or the bytes untouched when they already
+// are one
+std::vector<uint8_t> megaDriveCartridge(const std::vector<uint8_t> &bytes) {
+  if (isEncodedImage(bytes)) {
+    return decodeEncodedImage(bytes);
+  }
+
+  if (isCopierImage(bytes)) {
+    return deinterleaveCopierImage(bytes);
+  }
+
+  return bytes;
+}
+
 } // namespace
 
 std::string ContentHasher::md5(const uint8_t *data, const size_t len) {
@@ -154,10 +180,17 @@ HashedContent ContentHasher::hash(const int platformId, const std::vector<uint8_
     return result;
   }
 
+  // TODO
+  // Mega Drive dumps circulate in containers that hold the same cartridge in a rearranged form, so
+  // the plain one is taken out first and everything downstream sees a single representation
+  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS:
+    result.contentBytes = megaDriveCartridge(fileBytes);
+    result.contentHash = md5(result.contentBytes.data(), result.contentBytes.size());
+    return result;
+
   case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY:
   case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_COLOR:
   case firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE:
-  case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS:
   case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_GAMEGEAR:
   case firelight::platforms::PlatformService::PLATFORM_ID_SEGA_MASTER_SYSTEM:
     result.contentBytes = fileBytes;
@@ -166,7 +199,9 @@ HashedContent ContentHasher::hash(const int platformId, const std::vector<uint8_
 
   default: {
     char hash[33] = {0};
-    rc_hash_generate_from_buffer(hash, rcConsoleForPlatform(platformId), fileBytes.data(), fileBytes.size());
+    rc_hash_generate_from_buffer(hash,
+                                 static_cast<uint32_t>(platforms::PlatformService::rcConsoleForPlatform(platformId)),
+                                 fileBytes.data(), fileBytes.size());
     result.contentBytes = fileBytes;
     result.contentHash = std::string(hash);
     return result;

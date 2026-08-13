@@ -155,8 +155,9 @@ private:
 
   // TODO
   // Set while a write of this service's own is in flight, so the event that write
-  // publishes does not start another round
-  std::atomic_bool m_applying{false};
+  // publishes does not start another round. Per thread, because a write on one thread says
+  // nothing about whether an event arriving on another is re-entrant
+  static thread_local bool s_applying;
 
   ScopedConnection m_settingChangedConnection;
   ScopedConnection m_entryUpdatedConnection;

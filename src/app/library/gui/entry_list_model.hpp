@@ -1,8 +1,10 @@
 #pragma once
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/library/entry.hpp>
+#include <firelight/library/entry_status.hpp>
 #include <firelight/library/smart_folder.hpp>
 #include <firelight/library/user_library_service.hpp>
+#include <firelight/settings/settings_service.hpp>
 
 #include <QAbstractListModel>
 #include <QTimer>
@@ -70,18 +72,37 @@ public:
     VariantCount,
     IsVariantPrimary,
     VariantAutoLaunch,
-    // Whether this entry's platform has an installed core. False means the row is shown with a
-    // badge rather than hidden, so nobody has to guess why a game will not start
+    // Whether the game would start. False means the row is shown with a badge rather than
+    // hidden, so nobody has to guess why a game will not play
     Playable,
+    // Every EntryProblem that applies, worst first
+    Problems,
+    // What is wrong, in a sentence. Empty when nothing is
+    StatusText,
     SearchText
   };
 
   /**
-   * Re-reads which platforms have an installed core.
+   * Re-reads what stands between each platform and running anything.
    *
    * A platform fact rather than an entry one, so it is looked up once instead of per row
    */
-  void refreshPlayablePlatforms();
+  void refreshPlatformProblems();
+
+  /** Everything wrong with an entry, from the platform facts and the entry's own */
+  [[nodiscard]] EntryStatus statusOf(const Entry &entry) const;
+
+  /**
+   * The same verdict as a sentence, naming what a bare problem cannot: which system, which BIOS
+   * files, which discs
+   */
+  [[nodiscard]] QString describeStatus(const Entry &entry, const EntryStatus &status) const;
+
+  /** The unreadable content root this entry sits under, empty when it is reachable */
+  [[nodiscard]] QString unreachableRootFor(const Entry &entry) const;
+
+  /** Re-reads the platform facts and every row's verdict from them */
+  void refreshStatuses();
 
   struct Item {
     Entry entry;
@@ -94,6 +115,14 @@ public:
     // (read O(n log n) times by the proxy sorter) is a plain string return rather
     // than a per-call platform lookup
     QString groupKey;
+    // TODO
+    // Cached for the same reason as groupKey: data() reads it per row per role, and
+    // answering it for a disc set costs two queries
+    EntryStatus status;
+    // TODO
+    // Composed alongside the status, because naming the system, the BIOS files and the missing
+    // discs costs lookups that must not happen once per row per role
+    QString statusText;
     // TODO
     // An entry in no variant group reads as a group of one, so nothing downstream has
     // to branch on whether grouping applies
@@ -112,9 +141,12 @@ public:
     QString searchText;
   };
 
+  /** Puts both the verdict and its sentence on a row, so neither is refreshed without the other */
+  void applyStatus(Item &item) const;
+
   EntryListModel(UserLibraryService &userLibrary, activity::IActivityLog &activityLog,
                  platforms::IPlatformService &platformService, achievements::AchievementService &achievementService,
-                 VariantGroupService &variantGroups, QObject *parent = nullptr);
+                 VariantGroupService &variantGroups, settings::SettingsService &settings, QObject *parent = nullptr);
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
@@ -207,6 +239,7 @@ private:
   platforms::IPlatformService &m_platformService;
   achievements::AchievementService &m_achievementService;
   VariantGroupService &m_variantGroups;
+  settings::SettingsService &m_settings;
   QList<Item> m_items{};
   QString m_groupMode = "none";
 
@@ -223,8 +256,23 @@ private:
   // not O(n^2))
   std::unordered_map<int, int> m_indexByEntryId;
 
-  // The platforms with an installed core, read once per reset rather than per row
-  QSet<int> m_playablePlatformIds;
+  // What stands between each platform and running anything, read once per reset rather than
+  // per row. Absent means nothing does
+  QHash<int, EntryProblem> m_problemByPlatformId;
+
+  // What a sentence needs to name the platform's half of a problem, cached beside it because
+  // both come from the same pass over the platforms
+  QHash<int, QString> m_platformNameById;
+  QHash<int, QString> m_missingBiosByPlatformId;
+
+  // Content roots that cannot be read at the moment, resolved once per refresh for the same
+  // reason the platform problems are. Empty is the ordinary case
+  QStringList m_unreachableRoots;
+
+  // TODO
+  // The content directories still in the library, so a file whose directory is not among them
+  // reads as one whose folder was taken out rather than one that was deleted
+  QSet<int> m_knownContentDirectoryIds;
 
   // TODO
   // The entries of each group, so re-picking a primary after one member changes reads
@@ -248,9 +296,12 @@ private:
   ScopedConnection m_gamePlayedConnection;
   ScopedConnection m_entryCreatedConnection;
   ScopedConnection m_entryUpdatedConnection;
+  ScopedConnection m_entryDeletedConnection;
   ScopedConnection m_achievementSessionEndedConnection;
   ScopedConnection m_userLoggedInConnection;
   ScopedConnection m_variantGroupUpdatedConnection;
+  ScopedConnection m_coreSettingChangedConnection;
+  ScopedConnection m_coreSettingResetConnection;
 
   // Fires once (single-shot, 0ms) after a burst of syncEntry calls to emit the
   // count-property change signals a single time

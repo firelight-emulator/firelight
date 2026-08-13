@@ -1,6 +1,7 @@
 #include "firelight/settings/settings_catalog.hpp"
 
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <set>
@@ -100,6 +101,11 @@ bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
   } else if (typeStr == "key-binding") {
     s.type = SettingType::STRING;
     s.widget = "key-binding";
+  } else if (typeStr == "link") {
+    // A row that opens `route` rather than holding a value. STRING because the value semantics have
+    // to be something, and nothing ever reads it
+    s.type = SettingType::STRING;
+    s.widget = "link";
   } else if (typeStr == "options" || typeStr == "dropdown") {
     s.type = SettingType::OPTIONS;
     s.widget = "dropdown";
@@ -149,6 +155,7 @@ SettingDefinition parseSetting(const nlohmann::json &j, std::vector<std::string>
   }
 
   s.placeholder = j.value("placeholder", std::string{});
+  s.route = j.value("route", std::string{});
   parseStringArray(j, "extensions", s.fileExtensions);
   // A file-picker can opt into directory mode explicitly, too
   s.directoryMode = j.value("directory", s.directoryMode);
@@ -215,74 +222,85 @@ void sortByOrder(std::vector<SettingDefinition> &settings) {
 
 } // namespace
 
+void SettingsCatalog::parseInto(const std::string &json, Accumulator &into, const std::string &sourceName) {
+  const auto root = nlohmann::json::parse(json);
+
+  if (root.contains("pages")) {
+    for (const auto &p : root["pages"]) {
+      into.pages.push_back(parsePage(p));
+    }
+  }
+  if (root.contains("groups")) {
+    for (const auto &g : root["groups"]) {
+      into.groups.push_back(parseGroup(g));
+    }
+  }
+  if (root.contains("app")) {
+    for (const auto &s : root["app"]) {
+      into.app.push_back(parseAppSetting(s, into.problems));
+    }
+  }
+  if (root.contains("common")) {
+    for (const auto &s : root["common"]) {
+      into.common.push_back(parseSetting(s, into.problems));
+    }
+  }
+  if (root.contains("cores")) {
+    for (auto it = root["cores"].begin(); it != root["cores"].end(); ++it) {
+      const auto &coreName = it.key();
+      const auto &core = it.value();
+      if (core.contains("settings")) {
+        for (const auto &s : core["settings"]) {
+          into.perCore[coreName].push_back(parseSetting(s, into.problems));
+        }
+      }
+      if (core.contains("defaults")) {
+        for (auto d = core["defaults"].begin(); d != core["defaults"].end(); ++d) {
+          // TODO
+          // Nothing else notices a core default declared twice: the second silently wins and the
+          // core runs with an option nobody chose
+          auto &defaults = into.coreDefaults[coreName];
+
+          if (const auto existing = defaults.find(d.key());
+              existing != defaults.end() && existing->second != d.value().get<std::string>()) {
+            into.problems.push_back("core '" + coreName + "' default '" + d.key() + "' is declared twice (" +
+                                    sourceName + ")");
+          }
+
+          defaults[d.key()] = d.value().get<std::string>();
+        }
+      }
+    }
+  }
+}
+
+bool SettingsCatalog::commit(Accumulator &&accumulated) {
+  std::stable_sort(accumulated.pages.begin(), accumulated.pages.end(),
+                   [](const SettingsPage &a, const SettingsPage &b) { return a.order < b.order; });
+  std::stable_sort(accumulated.groups.begin(), accumulated.groups.end(),
+                   [](const SettingsGroup &a, const SettingsGroup &b) { return a.order < b.order; });
+
+  m_pages = std::move(accumulated.pages);
+  m_groups = std::move(accumulated.groups);
+  m_app = std::move(accumulated.app);
+  m_common = std::move(accumulated.common);
+  m_perCore = std::move(accumulated.perCore);
+  m_coreDefaults = std::move(accumulated.coreDefaults);
+
+  for (const auto &problem : accumulated.problems) {
+    spdlog::warn("Settings catalog: {}", problem);
+  }
+  for (const auto &problem : validate()) {
+    spdlog::warn("Settings catalog: {}", problem);
+  }
+  return true;
+}
+
 bool SettingsCatalog::loadFromJson(const std::string &json) {
   try {
-    const auto root = nlohmann::json::parse(json);
-
-    std::vector<SettingsPage> pages;
-    std::vector<SettingsGroup> groups;
-    std::vector<SettingDefinition> app;
-    std::vector<SettingDefinition> common;
-    std::map<std::string, std::vector<SettingDefinition>> perCore;
-    std::map<std::string, std::map<std::string, std::string>> coreDefaults;
-    std::vector<std::string> problems;
-
-    if (root.contains("pages")) {
-      for (const auto &p : root["pages"]) {
-        pages.push_back(parsePage(p));
-      }
-    }
-    if (root.contains("groups")) {
-      for (const auto &g : root["groups"]) {
-        groups.push_back(parseGroup(g));
-      }
-    }
-    if (root.contains("app")) {
-      for (const auto &s : root["app"]) {
-        app.push_back(parseAppSetting(s, problems));
-      }
-    }
-    if (root.contains("common")) {
-      for (const auto &s : root["common"]) {
-        common.push_back(parseSetting(s, problems));
-      }
-    }
-    if (root.contains("cores")) {
-      for (auto it = root["cores"].begin(); it != root["cores"].end(); ++it) {
-        const auto &coreName = it.key();
-        const auto &core = it.value();
-        if (core.contains("settings")) {
-          for (const auto &s : core["settings"]) {
-            perCore[coreName].push_back(parseSetting(s, problems));
-          }
-        }
-        if (core.contains("defaults")) {
-          for (auto d = core["defaults"].begin(); d != core["defaults"].end(); ++d) {
-            coreDefaults[coreName][d.key()] = d.value().get<std::string>();
-          }
-        }
-      }
-    }
-
-    std::stable_sort(pages.begin(), pages.end(),
-                     [](const SettingsPage &a, const SettingsPage &b) { return a.order < b.order; });
-    std::stable_sort(groups.begin(), groups.end(),
-                     [](const SettingsGroup &a, const SettingsGroup &b) { return a.order < b.order; });
-
-    m_pages = std::move(pages);
-    m_groups = std::move(groups);
-    m_app = std::move(app);
-    m_common = std::move(common);
-    m_perCore = std::move(perCore);
-    m_coreDefaults = std::move(coreDefaults);
-
-    for (const auto &problem : problems) {
-      spdlog::warn("Settings catalog: {}", problem);
-    }
-    for (const auto &problem : validate()) {
-      spdlog::warn("Settings catalog: {}", problem);
-    }
-    return true;
+    Accumulator accumulated;
+    parseInto(json, accumulated, "<json>");
+    return commit(std::move(accumulated));
   } catch (const std::exception &e) {
     spdlog::error("Failed to parse settings catalog: {}", e.what());
     return false;
@@ -298,6 +316,60 @@ bool SettingsCatalog::loadFromFile(const std::string &path) {
   std::stringstream buffer;
   buffer << stream.rdbuf();
   return loadFromJson(buffer.str());
+}
+
+bool SettingsCatalog::loadFromDirectory(const std::string &path) {
+  std::error_code ec;
+
+  if (!std::filesystem::is_directory(path, ec)) {
+    spdlog::error("Settings catalog directory does not exist: {}", path);
+    return false;
+  }
+
+  std::vector<std::filesystem::path> files;
+
+  for (const auto &entry : std::filesystem::recursive_directory_iterator(path, ec)) {
+    if (entry.is_regular_file(ec) && entry.path().extension() == ".json") {
+      files.push_back(entry.path());
+    }
+  }
+
+  if (ec) {
+    spdlog::error("Failed to read the settings catalog directory {}: {}", path, ec.message());
+    return false;
+  }
+
+  if (files.empty()) {
+    spdlog::error("No settings catalog files under {}", path);
+    return false;
+  }
+
+  // Ties in `order` keep declaration order, so the files have to be read the same way everywhere
+  std::ranges::sort(files);
+
+  Accumulator accumulated;
+
+  for (const auto &file : files) {
+    std::ifstream stream(file);
+
+    if (!stream.is_open()) {
+      spdlog::error("Failed to open settings catalog file: {}", file.string());
+      return false;
+    }
+
+    std::stringstream buffer;
+    buffer << stream.rdbuf();
+
+    try {
+      parseInto(buffer.str(), accumulated, file.filename().string());
+    } catch (const std::exception &e) {
+      spdlog::error("Failed to parse settings catalog file {}: {}", file.string(), e.what());
+      return false;
+    }
+  }
+
+  spdlog::debug("Loaded the settings catalog from {} file(s) under {}", files.size(), path);
+  return commit(std::move(accumulated));
 }
 
 std::vector<std::string> SettingsCatalog::validate() const {
@@ -340,6 +412,10 @@ std::vector<std::string> SettingsCatalog::validate() const {
     }
     if (s.type == SettingType::CUSTOM && s.widget.empty()) {
       problems.push_back("setting '" + s.key + "' is custom but names no widget");
+    }
+    // A link with nowhere to go renders as a row that swallows the press
+    if (s.widget == "link" && s.route.empty()) {
+      problems.push_back("setting '" + s.key + "' is a link but names no route");
     }
     // Runtime-sourced options are authored empty on purpose
     if (s.type == SettingType::OPTIONS && s.options.empty() && !s.libraryGameSource && !s.audioDeviceSource) {

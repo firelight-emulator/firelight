@@ -1,0 +1,196 @@
+{
+  "app": [
+    {
+      "key": "accent-color",
+      "label": "Accent color",
+      "group": "appearance-theme",
+      "order": 10,
+      "description": "Used for highlights, selection and focus throughout the app.",
+      "keywords": [
+        "highlight",
+        "primary",
+        "colour",
+        "theme"
+      ],
+      "type": "color",
+      "default": "#a55300"
+    },
+    {
+      "key": "background-mode",
+      "label": "Background type",
+      "group": "appearance-background",
+      "order": 10,
+      "keywords": [
+        "wallpaper",
+        "image",
+        "gradient",
+        "solid"
+      ],
+      "type": "segmented",
+      "default": "solid",
+      "options": [
+        {
+          "label": "Solid",
+          "value": "solid"
+        },
+        {
+          "label": "Gradient",
+          "value": "gradient"
+        },
+        {
+          "label": "Image",
+          "value": "image"
+        }
+      ]
+    },
+    {
+      "key": "background-color",
+      "label": "Color",
+      "group": "appearance-background",
+      "order": 20,
+      "keywords": [
+        "colour",
+        "wallpaper",
+        "solid",
+        "gradient"
+      ],
+      "type": "color",
+      "default": "#12131A",
+      "visibleWhen": [
+        {
+          "key": "background-mode",
+          "values": [
+            "solid",
+            "gradient"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "background-color-2",
+      "label": "Second color",
+      "group": "appearance-background",
+      "order": 30,
+      "description": "The gradient's second stop.",
+      "keywords": [
+        "colour",
+        "gradient"
+      ],
+      "type": "color",
+      "default": "#1b2333",
+      "visibleWhen": [
+        {
+          "key": "background-mode",
+          "values": [
+            "gradient"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "background-file",
+      "label": "Image file",
+      "group": "appearance-background",
+      "order": 40,
+      "description": "Choose an image or gif to use as your background.",
+      "keywords": [
+        "wallpaper",
+        "picture",
+        "photo"
+      ],
+      "type": "file-picker",
+      "default": "",
+      "extensions": [
+        "png",
+        "jpg",
+        "jpeg",
+        "gif",
+        "webp",
+        "bmp"
+      ],
+      "visibleWhen": [
+        {
+          "key": "background-mode",
+          "values": [
+            "image"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "background-blur",
+      "label": "Image blur",
+      "group": "appearance-background",
+      "order": 50,
+      "keywords": [
+        "wallpaper",
+        "focus"
+      ],
+      "type": "slider",
+      "default": "0",
+      "min": 0,
+      "max": 1,
+      "step": 0.01,
+      "visibleWhen": [
+        {
+          "key": "background-mode",
+          "values": [
+            "image"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "background-dim",
+      "label": "Background dimming",
+      "group": "appearance-background",
+      "order": 60,
+      "keywords": [
+        "wallpaper",
+        "darken",
+        "brightness",
+        "contrast"
+      ],
+      "type": "slider",
+      "default": "0.4",
+      "min": 0,
+      "max": 1,
+      "step": 0.01
+    },
+    {
+      "key": "theme-intensity",
+      "label": "Surface tint",
+      "group": "appearance-surfaces",
+      "order": 10,
+      "description": "How strongly solid surfaces take on the background's color.",
+      "keywords": [
+        "colour",
+        "tint",
+        "theme"
+      ],
+      "type": "slider",
+      "default": "0.12",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.01
+    },
+    {
+      "key": "glass-opacity",
+      "label": "Glass translucency",
+      "group": "appearance-surfaces",
+      "order": 20,
+      "description": "How much the background shows through translucent panels.",
+      "keywords": [
+        "transparency",
+        "frosted",
+        "blur",
+        "opacity"
+      ],
+      "type": "slider",
+      "default": "0.55",
+      "min": 0,
+      "max": 1,
+      "step": 0.01
+    }
+  ]
+}

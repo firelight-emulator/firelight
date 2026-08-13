@@ -1,13 +1,13 @@
 import QtQuick
 import QtQml
 import QtQuick.Controls
-import QtQuick.Layouts 1.0
+import QtQuick.Layouts
+import Qt.labs.synchronizer
+import Firelight 1.0
 
 Item {
     id: root
 
-    // --- Scope (the base set — one at a time, chosen in the sidebar) ---
-    property int filterPlatformId: -1
     // A folder scope matches the folder AND all its descendants. The sidebar
     // supplies the descendant ids split by kind (manual = membership, smart =
     // computed), so selecting a parent shows everything nested under it
@@ -37,6 +37,14 @@ Item {
     property string filterPlayTime: "any" // any / never / short / medium / long
     property int filterDecade: 0          // 0 = any; else the decade's start year
     property string filterGenre: ""
+
+    LibraryEntrySortFilterModel {
+        id: gameModel
+        sourceModel: LibraryEntryModel
+        collapseVariants: GeneralSettings.collapseVariants
+
+        onFiltersOrSortChanged: root.queueRefresh()
+    }
 
     // The advanced-filter bar under the toolbar is expanded
     property bool filtersExpanded: false
@@ -129,7 +137,7 @@ Item {
     property string viewMode: "grid"
     // Section grouping: "none" | "platform" | "decade" | "year" | "genre" | "title"
     property string groupBy: "none"
-    readonly property int gameCount: gameMirror.count
+    // readonly property int gameCount: gameMirror.count
 
     readonly property var groupOptions: [
         {
@@ -157,13 +165,6 @@ Item {
             value: "title"
         }
     ]
-
-    // Drives the model's derived groupKey role that the views section on
-    Binding {
-        target: LibraryEntryModel
-        property: "groupMode"
-        value: root.groupBy
-    }
 
     // --- Multi-select (drives bulk actions; independent of scope/refine) ---
     // entryId -> true. Reassigned wholesale on every change so bindings refresh
@@ -209,8 +210,6 @@ Item {
         return "";
     }
 
-    readonly property bool isDirty: filterPlatformId !== -1 || filterFolderId !== -1 || showOnlyFavorites || showOnlyUnplayed || filterText !== "" || anyAdvancedFilter
-
     signal folderCrumbClicked(int folderId)
 
     property bool _applyingFolderSort: false
@@ -233,7 +232,6 @@ Item {
     // The sidebar picks a scope; it clears only the other scope axis, never the
     // refine toggles — so "SNES" + "Favorites" combine instead of replacing
     function setScopeAll() {
-        filterPlatformId = -1;
         filterFolderId = -1;
         filterManualIds = [];
         filterSmartIds = [];
@@ -242,7 +240,6 @@ Item {
         scopeIconUrl = "";
         scopeIconName = "browse";
         scopeIconColor = Theme.textPrimary;
-        scopePlatformId = -1;
         scopeDescription = "";
         clearSelection();
     }
@@ -251,13 +248,11 @@ Item {
         filterFolderId = -1;
         filterManualIds = [];
         filterSmartIds = [];
-        filterPlatformId = platformId;
         scopeLabel = label;
         scopeCrumb = [];
         scopeIconUrl = "";
         scopeIconName = "";
         scopeIconColor = Theme.textPrimary;
-        scopePlatformId = platformId;
         scopeDescription = "";
         clearSelection();
     }
@@ -394,135 +389,10 @@ Item {
         }
     }
 
-    SortFilterProxyModel {
-        id: gameModel
-        model: LibraryEntryModel
+    LibraryFilters {
+        id: filters
 
-        filters: [
-            ValueFilter {
-                roleName: "favorite"
-                value: true
-                enabled: root.showOnlyFavorites
-            },
-            ValueFilter {
-                roleName: "lastPlayedAt"
-                value: 0
-                enabled: root.showOnlyUnplayed
-            },
-            ValueFilter {
-                roleName: "platformId"
-                value: root.filterPlatformId
-                enabled: root.filterPlatformId !== -1
-            },
-            FunctionFilter {
-                property var manualIds: root.filterManualIds
-                property var smartIds: root.filterSmartIds
-                enabled: root.filterFolderId !== -1
-                function filter(data: RoleData): bool {
-                    for (var i = 0; i < manualIds.length; i++) {
-                        if (data.folderIds.includes(manualIds[i])) {
-                            return true;
-                        }
-                    }
-                    for (var j = 0; j < smartIds.length; j++) {
-                        if (LibraryEntryModel.matchesSmartFolder(smartIds[j], data.entryId)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-                onManualIdsChanged: invalidate()
-                onSmartIdsChanged: invalidate()
-            },
-            FunctionFilter {
-                property string filterText: root.filterText
-                function filter(data: RoleData): bool {
-                    return data.displayName.toLowerCase().indexOf(root.filterText.toLowerCase()) !== -1;
-                }
-                onFilterTextChanged: invalidate()
-            },
-            FunctionFilter {
-                property bool on: root.filterHasAchievements
-                enabled: root.filterHasAchievements
-                function filter(data: RoleData): bool {
-                    return data.achievementsTotal > 0;
-                }
-                onOnChanged: invalidate()
-            },
-            FunctionFilter {
-                property bool on: root.filterCompleted
-                enabled: root.filterCompleted
-                function filter(data: RoleData): bool {
-                    return data.achievementsTotal > 0 && data.achievementsEarned >= data.achievementsTotal;
-                }
-                onOnChanged: invalidate()
-            },
-            FunctionFilter {
-                property string bucket: root.filterPlayTime
-                enabled: root.filterPlayTime !== "any"
-                function filter(data: RoleData): bool {
-                    var s = data.numSecondsPlayed;
-                    if (bucket === "never") {
-                        return !s || s <= 0;
-                    }
-                    if (bucket === "short") {
-                        return s > 0 && s < 3600;
-                    }
-                    if (bucket === "medium") {
-                        return s >= 3600 && s < 36000;
-                    }
-                    if (bucket === "long") {
-                        return s >= 36000;
-                    }
-                    return true;
-                }
-                onBucketChanged: invalidate()
-            },
-            FunctionFilter {
-                property int decade: root.filterDecade
-                enabled: root.filterDecade !== 0
-                function filter(data: RoleData): bool {
-                    return data.releaseYear >= decade && data.releaseYear < decade + 10;
-                }
-                onDecadeChanged: invalidate()
-            },
-            FunctionFilter {
-                property string g: root.filterGenre
-                enabled: root.filterGenre.trim().length > 0
-                function filter(data: RoleData): bool {
-                    return data.genres.toLowerCase().indexOf(g.toLowerCase().trim()) !== -1;
-                }
-                onGChanged: invalidate()
-            }
-        ]
-        sorters: [
-            // Primary sort by group so sections stay contiguous. When grouping is
-            // off the key is empty for every row, so this is a no-op and the
-            // sort role below decides the order
-            RoleSorter {
-                roleName: "groupKey"
-                sortOrder: Qt.AscendingOrder
-            },
-            RoleSorter {
-                roleName: root.sortRole
-                sortOrder: root.sortAscending ? Qt.AscendingOrder : Qt.DescendingOrder
-            }
-        ]
-    }
-
-    // A lightweight, ordered mirror of the filtered/sorted rows. Qt's tech-preview
-    // SortFilterProxyModel exposes neither get(row) nor count, so this Instantiator
-    // is how QML reads the result set in order — it backs the live count and
-    // shift-range selection (and later, group-by sections)
-    Instantiator {
-        id: gameMirror
-        model: gameModel
-        delegate: QtObject {
-            required property int entryId
-            required property string groupKey
-        }
-        onObjectAdded: Qt.callLater(root.rebuildGroupKeys)
-        onObjectRemoved: Qt.callLater(root.rebuildGroupKeys)
+        onPendingValuesChanged: root.queueRefresh()
     }
 
     // The distinct group-header labels in display order, derived from the sorted
@@ -558,6 +428,30 @@ Item {
         root.groupCounts = counts;
     }
 
+    FLDialog {
+        id: cannotLaunchGamePopup
+
+        property string text: "Cannot launch game"
+        openSound: null
+
+        function openWithText(dialogText) {
+            cannotLaunchGamePopup.text = dialogText;
+            cannotLaunchGamePopup.open();
+        }
+
+        Text {
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            text: cannotLaunchGamePopup.text
+            font.family: AppStyle.fontFamily
+            font.pixelSize: AppStyle.fontSizeMedium
+            font.weight: Font.Normal
+            color: Theme.textPrimary
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+
     // Shared, single-instance dialogs raised by the grid/list context menus and
     // the bulk bar
     // GameArtPickerDialog {
@@ -579,57 +473,57 @@ Item {
         width: 72
         spacing: AppStyle.spacingSm
 
-        FLIconButton {
-            Layout.alignment: Qt.AlignHCenter
-            iconName: "add"
-            tooltipText: "Add or create"
-            compact: false
-            onClicked: addPopup.opened ? addPopup.close() : addPopup.open()
-
-            // RightClickMenu {
-            //     id: addPopup
-            //     x: parent.width + AppStyle.spacingXs
-            //     y: 0
-            //
-            //     RightClickMenuItem {
-            //         text: "Add game"
-            //         onTriggered: {
-            //             // GameAddDialog.openForExisting();
-            //         }
-            //     }
-            //
-            //     RightClickMenuItem {
-            //         text: "Create folder"
-            //         onTriggered: {
-            //             // GameAddDialog.openForExisting();
-            //         }
-            //     }
-            //
-            //     enter: Transition {
-            //         NumberAnimation {
-            //             property: "opacity"
-            //             from: 0
-            //             to: 1
-            //             duration: AppStyle.durationFast
-            //             easing.type: Easing.InOutQuad
-            //         }
-            //         NumberAnimation {
-            //             property: "x"
-            //             from: gameSortPopup.x - 8
-            //             to: gameSortPopup.x
-            //             duration: AppStyle.durationFast
-            //             easing.type: Easing.InOutQuad
-            //         }
-            //     }
-            // }
-        }
-
-        FLIconButton {
-            Layout.alignment: Qt.AlignHCenter
-            iconName: "search"
-            tooltipText: "Search"
-            compact: false
-        }
+        // FLIconButton {
+        //     Layout.alignment: Qt.AlignHCenter
+        //     iconName: "add"
+        //     tooltipText: "Add or create"
+        //     compact: false
+        //     onClicked: addPopup.opened ? addPopup.close() : addPopup.open()
+        //
+        //     // RightClickMenu {
+        //     //     id: addPopup
+        //     //     x: parent.width + AppStyle.spacingXs
+        //     //     y: 0
+        //     //
+        //     //     RightClickMenuItem {
+        //     //         text: "Add game"
+        //     //         onTriggered: {
+        //     //             // GameAddDialog.openForExisting();
+        //     //         }
+        //     //     }
+        //     //
+        //     //     RightClickMenuItem {
+        //     //         text: "Create folder"
+        //     //         onTriggered: {
+        //     //             // GameAddDialog.openForExisting();
+        //     //         }
+        //     //     }
+        //     //
+        //     //     enter: Transition {
+        //     //         NumberAnimation {
+        //     //             property: "opacity"
+        //     //             from: 0
+        //     //             to: 1
+        //     //             duration: AppStyle.durationFast
+        //     //             easing.type: Easing.InOutQuad
+        //     //         }
+        //     //         NumberAnimation {
+        //     //             property: "x"
+        //     //             from: gameSortPopup.x - 8
+        //     //             to: gameSortPopup.x
+        //     //             duration: AppStyle.durationFast
+        //     //             easing.type: Easing.InOutQuad
+        //     //         }
+        //     //     }
+        //     // }
+        // }
+        //
+        // FLIconButton {
+        //     Layout.alignment: Qt.AlignHCenter
+        //     iconName: "search"
+        //     tooltipText: "Search"
+        //     compact: false
+        // }
 
         FLIconButton {
             id: filterButton
@@ -638,6 +532,180 @@ Item {
             tooltipText: "Filter"
             filled: false
             compact: false
+            iconColor: filterPopup.visible || gameModel.anyFiltersActive ? Theme.switch2Color : Theme.textPrimary
+            onClicked: filterPopup.opened ? filterPopup.close() : filterPopup.open()
+
+            Rectangle {
+                color: Theme.switch2Color
+                height: 6
+                width: 6
+                radius: width / 2
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.rightMargin: 8
+                anchors.bottomMargin: 8
+                visible: gameModel.anyFiltersActive
+            }
+
+            FLMenu {
+                id: filterPopup
+                x: filterButton.width + AppStyle.spacingXs
+                minWidth: 300
+
+                FLButton {
+                    id: clearButton
+                    text: "Clear all filters"
+                    Layout.fillWidth: true
+                    Layout.leftMargin: AppStyle.spacingSm
+                    Layout.rightMargin: AppStyle.spacingSm
+                    Layout.topMargin: AppStyle.spacingSm
+                    Layout.bottomMargin: AppStyle.spacingSm
+                    canInteract: gameModel.anyFiltersActive
+
+                    FLFocus.focusSound: SoundEffects.menuNavigate
+                    FLFocus.actions: [
+                        FLAction {
+                            keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
+                            label: qsTr("Select")
+                            sound: clearButton.canInteract ? SoundEffects.openPopup : SoundEffects.cursorBump
+                            onTriggered: gameModel.clearAllFilters()
+                        }
+                    ]
+
+                    onClicked: {
+                        gameModel.clearAllFilters();
+                    }
+
+                    // variant: "subtle"
+                }
+
+                FLToggleMenuItem {
+                    label: "Favorites"
+                    checked: gameModel.favoritesOnly
+                    onSelected: function (selected) {
+                        gameModel.favoritesOnly = selected;
+                    }
+                }
+
+                FLSubmenuItem {
+                    label: "Platform"
+                    model: PlatformModel
+                    textRole: "displayName"
+                    valueRole: "platformId"
+
+                    Synchronizer on currentValues {
+                        targetObject: gameModel
+                        targetProperty: "platformIds"
+                    }
+                }
+
+                FLToggleMenuItem {
+                    label: "Has achievements"
+                }
+
+                FLSubmenuItem {
+                    label: "Time played"
+                    model: []
+                }
+
+                FLSubmenuItem {
+                    label: "Developer"
+                    model: []
+                }
+
+                FLSubmenuItem {
+                    label: "Publisher"
+                    model: []
+                }
+
+                FLSubmenuItem {
+                    label: "Genre"
+                    model: []
+                }
+
+                FLSubmenuItem {
+                    label: "Tags"
+                    model: []
+                }
+
+                FLToggleMenuItem {
+                    label: "Hide unplayable"
+                    checked: gameModel.hideUnavailable
+                    onSelected: function (selected) {
+                        gameModel.hideUnavailable = selected;
+                    }
+                }
+
+                // FLToggleMenuItem {
+                //     label: "Title"
+                // }
+                //
+                // FLSubmenuItem {
+                //     label: "Playtime"
+                //     model: [
+                //         {
+                //             "text": "Up to 1 hour",
+                //             "value": "1h"
+                //         },
+                //         {
+                //             "text": "Up to 2 hours",
+                //             "value": "2h"
+                //         },
+                //         {
+                //             "text": "Up to 3 hours",
+                //             "value": "3h"
+                //         },
+                //         {
+                //             "text": "Up to 4 hours",
+                //             "value": "4h"
+                //         },
+                //         {
+                //             "text": "Up to 5 hours",
+                //             "value": "5h"
+                //         },
+                //         {
+                //             "text": "Up to 10 hours",
+                //             "value": "10h"
+                //         },
+                //         {
+                //             "text": "Up to 15 hours",
+                //             "value": "15h"
+                //         }
+                //     ]
+                //
+                //     onCurrentValuesChanged: function () {
+                //         console.log("Selected platforms: " + currentValues.join(", "));
+                //     }
+                // }
+                //
+                // FLToggleMenuItem {
+                //     label: "Number of players"
+                // }
+                //
+                // FLToggleMenuItem {
+                //     label: "Achievements"
+                // }
+                //
+                // FLToggleMenuItem {
+                //     label: "Developer"
+                // }
+                //
+                // FLToggleMenuItem {
+                //     label: "Publisher"
+                // }
+                //
+                // FLToggleMenuItem {
+                //     label: "Genre"
+                // }
+                //
+                // FLToggleMenuItem {
+                //     label: "Release year"
+                // }
+                //
+                // FLToggleMenuItem {
+                //     label: "Tags"
+                // }
+            }
         }
 
         FLIconButton {
@@ -646,22 +714,34 @@ Item {
             iconName: "list-arrow"
             tooltipText: "Sort"
             compact: false
-            iconColor: gameSortPopup.visible ? "#1bcbfd" : Theme.textPrimary
+            iconColor: gameSortPopup.visible ? Theme.switch2Color : Theme.textPrimary
             onClicked: gameSortPopup.opened ? gameSortPopup.close() : gameSortPopup.open()
 
-            FLRadioMenuPopup {
+            // FLMenu {
+            //     id: gameSortPopup
+            //     x: sortButton.width + AppStyle.spacingXs
+            //
+            //     FLRadioGroup {
+            //         model: root.sortOptions
+            //         valueRole: "role"
+            //         currentValue: root.sortRole
+            //
+            //         // // TODO: Put the close delay and auto close in FLMenu
+            //         // onClosed: {
+            //         //     if (gameSortPopup.currentValue !== root.sortRole) {
+            //         //         root._pendingSortRole = gameSortPopup.currentValue;
+            //         //     }
+            //         // }
+            //     }
+            // }
+            FLRadioMenu {
                 id: gameSortPopup
                 x: sortButton.width + AppStyle.spacingXs
 
-                model: root.sortOptions
-                valueRole: "role"
-                currentValue: root.sortRole
+                model: gameModel.sortOptions
+                currentValue: gameModel.sortRole
 
-                onClosed: {
-                    if (gameSortPopup.currentValue !== root.sortRole) {
-                        root._pendingSortRole = gameSortPopup.currentValue;
-                    }
-                }
+                onClosed: gameModel.sortRole = gameSortPopup.currentValue
             }
 
             // GameSortPopup {
@@ -733,11 +813,11 @@ Item {
 
                     model: [
                         {
-                            label: "Grid",
+                            text: "Grid",
                             value: "grid"
                         },
                         {
-                            label: "List",
+                            text: "List",
                             value: "list"
                         }
                     ]
@@ -894,22 +974,64 @@ Item {
         }
     }
 
-    on_PendingSortRoleChanged: {
-        sortAnimation.start();
+    Pane {
+        id: testing
+        width: 500
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        background: Rectangle {
+            color: Theme.surfaceElevated
+        }
+
+        FLColumnLayout {
+            anchors.fill: parent
+            spacing: AppStyle.spacingMd
+
+            SettingsGroup {
+                group: "library-grid-appearance"
+            }
+        }
     }
 
-    on_PendingViewTypeChanged: {
-        changeViewAnimation.start();
+    // TODO
+    // Whether the run in flight has already swapped the rows. A change arriving
+    // before that point is picked up by the same apply; one arriving after needs
+    // a pass of its own
+    property bool _refreshApplied: false
+    property bool _refreshQueued: false
+
+    // TODO
+    // Folds a change into the run in flight wherever it still can be, so several
+    // filters changed in quick succession hide the view once rather than each
+    // replaying the fade
+    function queueRefresh() {
+        if (refreshAnimation.running) {
+            if (root._refreshApplied) {
+                root._refreshQueued = true;
+            }
+
+            return;
+        }
+
+        root._refreshApplied = false;
+        refreshAnimation.start();
     }
 
     SequentialAnimation {
-        id: sortAnimation
+        id: refreshAnimation
+
         running: false
-        ScriptAction {
-            script: {
-                FocusCursor.startBlink();
+
+        onRunningChanged: {
+            if (running || !root._refreshQueued) {
+                return;
             }
+
+            root._refreshQueued = false;
+            root._refreshApplied = false;
+            refreshAnimation.start();
         }
+
         ParallelAnimation {
             NumberAnimation {
                 target: viewLoader
@@ -931,8 +1053,12 @@ Item {
 
         ScriptAction {
             script: {
+                root._refreshApplied = true;
+                gameModel.applyFilters();
                 root.sortRole = root._pendingSortRole;
-                viewLoader.item.positionViewAtBeginning();
+                if (viewLoader.item) {
+                    viewLoader.item.positionViewAtBeginning();
+                }
                 // root._pendingSortRole = "";
             }
         }
@@ -953,11 +1079,6 @@ Item {
                 to: 0
                 duration: AppStyle.durationBase
                 easing.type: Easing.InOutQuad
-            }
-        }
-        ScriptAction {
-            script: {
-                FocusCursor.endBlink();
             }
         }
     }
@@ -1095,6 +1216,11 @@ Item {
             onRequestAddToFolder: entryIds => addToFolderDialog.openFor(entryIds)
             onRequestChangeArt: (hash, name, platformId) => artPicker.openFor(hash, name, platformId)
             onRequestEditGame: (id, hash, platformId) => editGameDialog.loadAndOpen(id, hash, platformId)
+            onRequestLaunch: (id, hash, platformId, playable, statusText) => {
+                if (!playable) {
+                    cannotLaunchGamePopup.openWithText(statusText);
+                }
+            }
 
             header: GameViewHeader {
                 width: GridView.view.width - AppStyle.spacingSm * 2
@@ -1111,7 +1237,7 @@ Item {
             height: parent.height
 
             Text {
-                text: "Showing " + root.gameCount
+                text: "Showing " + gameModel.count
                 color: Theme.textMuted
                 font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
@@ -1125,7 +1251,7 @@ Item {
             }
 
             Text {
-                text: "By " + root.currentSortLabel + " (" + (root.sortAscending ? "ascending" : "descending") + ")"
+                text: "By " + gameModel.sortDisplayName + " (" + (root.sortAscending ? "ascending" : "descending") + ")"
                 color: Theme.textMuted
                 font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
@@ -1138,6 +1264,7 @@ Item {
     component RoleData: QtObject {
         property int entryId
         property string displayName
+        property int platformId
         property list<int> folderIds
         property int achievementsEarned
         property int achievementsTotal

@@ -53,6 +53,29 @@ QtObject {
     property SettingBinding densityBinding: SettingBinding {
         key: "interface-density"
     }
+    property SettingBinding libraryIconGridTileSizeBinding: SettingBinding {
+        key: "library-icon-grid-tile-size"
+    }
+
+    // property SettingBinding libraryIconGridTileSize: SettingBinding {
+    //     key: "library-icon-grid-tile-size"
+    //     defaultValue: "140"
+    // }
+    //
+    // property SettingBinding libraryIconGridTileSpacing: SettingBinding {
+    //     key: "library-icon-grid-tile-spacing"
+    //     defaultValue: "12"
+    // }
+    //
+    // property SettingBinding libraryIconGridShowFavorite: SettingBinding {
+    //     key: "library-icon-grid-show-favorite"
+    //     defaultValue: "true"
+    // }
+    //
+    // property SettingBinding libraryIconGridShowPlatform: SettingBinding {
+    //     key: "library-icon-grid-show-platform"
+    //     defaultValue: "true"
+    // }
 
     // Colors are "#rrggbb" strings, not `color`: that's what consumers were
     // built against, they coerce to `color` where used, and they round-trip the
@@ -89,6 +112,14 @@ QtObject {
     // to this and GameTile decodes to match
     readonly property int libraryTileSize: parseInt(tileSizeBinding.value) || 160
     readonly property int libraryTileSpacing: parseInt(tileSpacingBinding.value) || 12
+
+    readonly property int libraryIconGridTileSize: parseInt(libraryIconGridTileSizeBinding.value) || 140
+    // readonly property int libraryIconGridTileSpacing
+    // readonly property int libraryIconGridShowFavorite
+    // readonly property int libraryIconGridShowPlatform
+    // readonly property int
+
+
 
     // Accessibility scaling. AppStyle multiplies its metric tokens by these:
     // uiScale enlarges everything (fonts + dimensions), uiDensity only affects

@@ -30,6 +30,7 @@ Item {
     signal requestAddToFolder(var entryIds)
     signal requestChangeArt(string contentHash, string displayName, int platformId)
     signal requestEditGame(int entryId, string contentHash, int platformId)
+    signal requestLaunch(int entryId, string contentHash, int platformId, bool playable, string statusText)
 
     property alias header: root.header
 
@@ -92,9 +93,8 @@ Item {
         height: parent.height
         x: Math.round((parent.width - width) / 2)
 
-        // User-controlled tile size (Settings → System → Display)
-        cellWidth: AppearanceSettings.libraryTileSize
-        cellHeight: AppearanceSettings.libraryTileSize
+        cellWidth: AppearanceSettings.libraryIconGridTileSize
+        cellHeight: cellWidth + Math.round(60 * AppStyle.scale)
 
         Component.onCompleted: {
             initialContentY = contentY;
@@ -123,8 +123,8 @@ Item {
             required property var model
             required property int index
 
-            width: AppearanceSettings.libraryTileSize
-            height: AppearanceSettings.libraryTileSize
+            width: GridView.view.cellWidth
+            height: GridView.view.cellHeight
 
             readonly property bool selected: gridRoot.selectedIds[gameDelegate.model.entryId] === true
 
@@ -143,6 +143,8 @@ Item {
                 FLFocus.focusSound: SoundEffects.gameTileFocus
                 FLFocus.radius: gameTile.radius + Math.round(FLFocus.spacing / 2)
 
+                layer.enabled: true
+
                 TapHandler {
                     id: selectTap
                     acceptedButtons: Qt.LeftButton
@@ -153,11 +155,33 @@ Item {
                     onDoubleTapped: EmulationService.loadEntry(gameDelegate.model.entryId)
                 }
 
+                ContextMenu.menu: FLMenu {
+                    id: delegateContextMenu
+
+                    FLMenuItem {
+                        label: qsTr("Play")
+                    }
+
+                    FLMenuItem {
+                        label: qsTr("Add to favorites")
+                    }
+
+                    FLMenuItem {
+                        label: qsTr("Hide in library")
+                    }
+                }
+
                 FLFocus.actions: [
                     FLAction {
                         keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
                         label: qsTr("Play")
-                        onTriggered: activatedAnimation.start()
+                        sound: SoundEffects.activateGame
+                        onTriggered: activatedAnimation.restart()
+                    },
+                    FLAction {
+                        keys: [Qt.Key_Menu]
+                        label: qsTr("Menu")
+                        onTriggered: delegateContextMenu.popupFor(control, control.width + AppStyle.spacingSm, 0)
                     }
                 ]
 
@@ -172,11 +196,6 @@ Item {
                             duration: AppStyle.durationVeryFast
                             easing.type: Easing.InOutQuad
                         }
-                        ScriptAction {
-                            script: {
-                                SoundEffects.openPopup.play();
-                            }
-                        }
                     }
                     NumberAnimation {
                         target: control
@@ -185,6 +204,14 @@ Item {
                         to: 1.0
                         duration: AppStyle.durationVeryFast
                         easing.type: Easing.InOutQuad
+                    }
+                    PauseAnimation {
+                        duration: AppStyle.durationBase
+                    }
+                    ScriptAction {
+                        script: {
+                            gridRoot.requestLaunch(gameDelegate.model.entryId, gameDelegate.model.contentHash, gameDelegate.model.platformId, gameDelegate.model.playable, gameDelegate.model.statusText);
+                        }
                     }
                 }
 
@@ -212,13 +239,57 @@ Item {
                 }
 
                 background: Item {}
-                contentItem: GameTile {
-                    id: gameTile
-                    source: FLUtil.toUrl(gameDelegate.model.icon1x1SourceUrl)
-                    size: AppearanceSettings.libraryTileSize
-                    platformId: gameDelegate.model.platformId
-                    title: gameDelegate.model.displayName
-                    titleVisible: control.hovered || control.activeFocus
+                contentItem: Column {
+                    GameTile {
+                        id: gameTile
+                        source: FLUtil.toUrl(gameDelegate.model.icon1x1SourceUrl)
+                        size: control.width
+                        topLeftRadius: AppStyle.radiusMd
+                        topRightRadius: AppStyle.radiusMd
+                        bottomLeftRadius: 0
+                        bottomRightRadius: 0
+                        platformId: gameDelegate.model.platformId
+                        title: gameDelegate.model.displayName
+                        titleVisible: control.hovered || control.activeFocus
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: Math.round(60 * AppStyle.scale)
+                        color: Theme.surface
+                        topLeftRadius: 0
+                        topRightRadius: 0
+                        bottomRightRadius: AppStyle.radiusMd
+                        bottomLeftRadius: AppStyle.radiusMd
+
+                        Icon {
+                            id: favoriteIcon
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.margins: AppStyle.spacingSm
+                            name: "favorite"
+                            filled: true
+                            visible: gameDelegate.model.favorite
+                            size: Math.round(16 * AppStyle.scale)
+                            color: Theme.favorite
+                        }
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.right: favoriteIcon.visible ? favoriteIcon.left : parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.top: parent.top
+                            anchors.margins: AppStyle.spacingSm
+                            text: gameDelegate.model.displayName
+                            color: Theme.textPrimary
+                            font.family: AppStyle.fontFamily
+                            font.pixelSize: AppStyle.fontSizeSmall
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 2
+                        }
+                    }
                 }
 
                 // Status badges — always visible, so the wall of art carries
@@ -232,18 +303,6 @@ Item {
                         anchors.left: parent.left
                         anchors.top: parent.top
                         spacing: AppStyle.spacingXs
-
-                        // Unplayed dot
-                        Rectangle {
-                            visible: gameDelegate.model.lastPlayedAt === 0
-                            width: Math.round(9 * AppStyle.scale)
-                            height: width
-                            radius: width / 2
-                            anchors.verticalCenter: parent.verticalCenter
-                            color: Theme.accent
-                            border.color: "#66000000"
-                            border.width: 1
-                        }
 
                         // No core installed for this platform, so the game is here but
                         // cannot start

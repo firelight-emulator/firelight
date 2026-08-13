@@ -54,44 +54,41 @@ TEST_F(LibraryIngestServiceTest, AddingContentFileCreatesVisibleEntry) {
   EXPECT_FALSE(m_repo.getRunConfigurations("hashA").empty());
 }
 
-// A run configuration for content whose entry already exists (and is hidden)
-// unhides it instead of creating a duplicate
-TEST_F(LibraryIngestServiceTest, RunConfigForHiddenEntryUnhidesWithoutDuplicating) {
+// A second way in for content that already has an entry attaches to it rather than standing up
+// another one
+TEST_F(LibraryIngestServiceTest, RunConfigForExistingContentDoesNotDuplicateTheEntry) {
   auto cf = makeContentFile("/roms/Game.gba", 3, "hashB");
   ASSERT_TRUE(m_repo.create(cf));
 
-  auto entry = m_repo.getEntryWithContentHash("hashB");
-  ASSERT_TRUE(entry.has_value());
-  entry->hidden = true;
-  ASSERT_TRUE(m_repo.update(*entry));
-
-  // A second run configuration for the same content hash arrives
   EventDispatcher::instance().publish(
       RunConfigurationCreatedEvent{.id = 999, .filePath = "/roms/Game.gba", .platformId = 3, .contentHash = "hashB"});
 
-  const auto refreshed = m_repo.getEntryWithContentHash("hashB");
-  ASSERT_TRUE(refreshed.has_value());
-  EXPECT_FALSE(refreshed->hidden);
-  // No duplicate entry was created for the same content
   EXPECT_EQ(countEntriesWithHash(m_repo.getEntries(0, -1), "hashB"), 1);
 }
 
-// When the last run configuration for a content hash is removed, its entry is
-// hidden (it disappears from the library without losing user state)
-TEST_F(LibraryIngestServiceTest, RemovingLastRunConfigHidesEntry) {
-  // Create an entry via a run-config event without a backing run_configurations
-  // row, so getRunConfigurations() is empty for this hash
-  EventDispatcher::instance().publish(
-      RunConfigurationCreatedEvent{.id = 1, .filePath = "/roms/Solo.gba", .platformId = 3, .contentHash = "hashC"});
+// Availability follows the files, not the ways in, so it is the file being marked missing that
+// takes a game off the shelf — and hidden stays the user's to set
+TEST_F(LibraryIngestServiceTest, AvailabilityFollowsTheFileRatherThanTheRunConfiguration) {
+  auto cf = makeContentFile("/roms/Solo.gba", 3, "hashC");
+  ASSERT_TRUE(m_repo.create(cf));
+
   auto entry = m_repo.getEntryWithContentHash("hashC");
   ASSERT_TRUE(entry.has_value());
-  ASSERT_FALSE(entry->hidden);
+  EXPECT_TRUE(entry->isContentAvailable);
+  EXPECT_FALSE(entry->hidden);
 
-  EventDispatcher::instance().publish(RunConfigurationDeletedEvent{.contentHash = "hashC"});
+  ASSERT_TRUE(m_repo.markContentFileMissing(cf.m_id));
 
   entry = m_repo.getEntryWithContentHash("hashC");
   ASSERT_TRUE(entry.has_value());
-  EXPECT_TRUE(entry->hidden);
+  EXPECT_FALSE(entry->isContentAvailable);
+  EXPECT_FALSE(entry->hidden) << "availability wrote the field the user is supposed to own";
+
+  ASSERT_TRUE(m_repo.reviveContentFile(cf.m_id));
+
+  entry = m_repo.getEntryWithContentHash("hashC");
+  ASSERT_TRUE(entry.has_value());
+  EXPECT_TRUE(entry->isContentAvailable);
 }
 
 // The reason removal hides rather than deletes: everything the user built on top of
@@ -135,7 +132,7 @@ TEST_F(LibraryIngestServiceTest, RemovingAndReaddingAFileKeepsTheEntryIntact) {
 
   entry = m_repo.getEntryWithContentHash("hashKeep");
   ASSERT_TRUE(entry.has_value());
-  EXPECT_TRUE(entry->hidden);
+  EXPECT_FALSE(entry->isContentAvailable);
 
   // ...and comes back
   auto readded = makeContentFile("D:/elsewhere/Chrono Trigger (USA).sfc", 6, "hashKeep");
@@ -143,7 +140,7 @@ TEST_F(LibraryIngestServiceTest, RemovingAndReaddingAFileKeepsTheEntryIntact) {
 
   entry = m_repo.getEntryWithContentHash("hashKeep");
   ASSERT_TRUE(entry.has_value());
-  EXPECT_FALSE(entry->hidden);
+  EXPECT_TRUE(entry->isContentAvailable);
 
   EXPECT_EQ(entry->id, originalId);
   EXPECT_EQ(entry->displayName, "Chrono Trigger");

@@ -8,19 +8,22 @@ QtObject {
 
     readonly property FLSoundEffect cursorBump: FLSoundEffect {
         source: "qrc:/sfx/bump"
-        volume: 0.5
+        volume: 0.35
     }
 
     readonly property FLSoundEffect openPopup: FLSoundEffect {
         source: "qrc:/sfx/show-modal"
+        volume: 0.3
     }
 
     readonly property FLSoundEffect back: FLSoundEffect {
         source: "qrc:/sfx/back"
+        volume: 0.3
     }
 
     readonly property FLSoundEffect menuNavigate: FLSoundEffect {
         source: "qrc:/sfx/blip"
+        volume: 0.35
     }
 
     readonly property FLSoundEffect radioSelect: FLSoundEffect {
@@ -34,6 +37,7 @@ QtObject {
 
     readonly property FLSoundEffect gameTileFocus: FLSoundEffect {
         source: "qrc:/sfx/game-tile-focus"
+        volume: 0.35
     }
 
     readonly property FLSoundEffect check: FLSoundEffect {
@@ -44,5 +48,15 @@ QtObject {
     readonly property FLSoundEffect uncheck: FLSoundEffect {
         source: "qrc:/sfx/uncheck"
         volume: 0.8
+    }
+
+    readonly property FLSoundEffect activateGame: FLSoundEffect {
+        source: "qrc:/sfx/activate-game"
+        volume: 0.7
+    }
+
+    readonly property FLSoundEffect showDialog: FLSoundEffect {
+        source: "qrc:/sfx/show-dialog"
+        volume: 0.4
     }
 }

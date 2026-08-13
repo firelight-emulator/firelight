@@ -11,6 +11,7 @@
 #include <QAudioSink>
 #include <QMediaDevices>
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -122,10 +123,26 @@ private:
 
   QMediaDevices *m_mediaDevices = nullptr;
 
+  // When the next rebuild may be attempted, so an output that is simply gone is not reopened on
+  // every frame, and how long the wait after that is
+  std::chrono::steady_clock::time_point m_nextReopenAttempt{};
+  int m_reopenBackoffMs = 0;
+
   // Creates m_audioSink for the current device + sample rate and starts it
   void openAudioSink();
 
+  // Rebuilds the sink when the output it was running on has stopped it. Callers hold m_sinkMutex
+  void recoverFromDeviceLoss();
+
   void reinitializeAudioDevice();
+
+  // Whether the sink can still be written to. A stopped sink has already invalidated the QIODevice
+  // that start() handed back. Callers hold m_sinkMutex
+  [[nodiscard]] bool isSinkWritable() const;
+
+  // Whether the sink's occupancy can be read at all: bytesFree() answers zero outside these two
+  // states, which reads as a completely full buffer. Callers hold m_sinkMutex
+  [[nodiscard]] bool isSinkMeasurable() const;
 
 private slots:
   void onAudioDevicesChanged();

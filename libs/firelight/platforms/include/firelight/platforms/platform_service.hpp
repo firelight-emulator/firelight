@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace firelight::platforms {
@@ -57,11 +58,13 @@ public:
   static constexpr int PLATFORM_ID_PS2 = 19;
   static constexpr int PLATFORM_ID_PLAYSTATION_PORTABLE = 20;
   static constexpr int PLATFORM_ID_TURBOGRAFX16 = 21;
-  static constexpr int PLATFORM_ID_SUPERGRAFX = 22;
   static constexpr int PLATFORM_ID_POKEMON_MINI = 23;
   static constexpr int PLATFORM_ID_WONDERSWAN = 24;
   static constexpr int PLATFORM_ID_SG1000 = 25;
+  static constexpr int PLATFORM_ID_FAMICOM_DISK_SYSTEM = 26;
   static constexpr int PLATFORM_ID_NEOGEO_POCKET = 27;
+  static constexpr int PLATFORM_ID_PC_ENGINE_CD = 28;
+  static constexpr int PLATFORM_ID_3DO = 29;
 
   PlatformService();
   PlatformService(PlatformService const &) = delete;
@@ -71,8 +74,23 @@ public:
   [[nodiscard]] int platformIdForExtension(const std::string &extension) const override;
   [[nodiscard]] int platformIdForRcConsole(int rcConsoleId) const override;
 
+  /**
+   * @param platformId The platform ID to look up
+   * @return The RetroAchievements console ID this platform maps to, or RC_CONSOLE_UNKNOWN if it maps to none
+   *
+   * Static because it reads a compile-time table and needs no instance. Callers that hash content
+   * reach it without holding a service
+   */
+  [[nodiscard]] static int rcConsoleForPlatform(int platformId);
+
 private:
+  // TODO
+  // Built once from the platforms' file associations. A map rather than a scan so an extension
+  // claimed twice is reported instead of resolved by construction order
+  void buildExtensionIndex();
+
   std::vector<Platform> m_platforms;
+  std::unordered_map<std::string, int> m_platformIdByExtension;
 };
 
 } // namespace firelight::platforms

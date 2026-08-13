@@ -23,9 +23,7 @@ public:
   virtual std::vector<PlaySession> getPlaySessions() = 0;
 
   /**
-   * Re-keys every session from one content hash to another, for when two library entries turn
-   * out to be one game. Playtime follows the game rather than being stranded on a row that no
-   * longer exists
+   * Re-keys every session from one content hash to another, keeping all play sessions intact
    */
   virtual bool transferSessions(const std::string &fromContentHash, const std::string &toContentHash) = 0;
 };

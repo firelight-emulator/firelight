@@ -25,6 +25,14 @@ protected:
     m_settings.setGlobalValue(VariantGroupService::LANGUAGE_PRIORITY_KEY, "en");
   }
 
+  // A release is only a candidate to stand for a group if it has something to launch, so every
+  // fixture entry gets a file the way a scan would give it one
+  void catalogue(const std::string &hash) {
+    ContentFile file{
+        .m_fileSizeBytes = 1024, .m_filePath = "/roms/" + hash + ".sfc", .m_platformId = 6, .m_contentHash = hash};
+    ASSERT_TRUE(m_repo.create(file));
+  }
+
   // Creates an entry in a group with the given regions
   int makeMember(const int groupId, const std::string &name, const std::string &hash,
                  const std::vector<std::string> &regions) {
@@ -33,6 +41,7 @@ protected:
     entry.contentHash = hash;
     entry.platformId = 6;
     m_repo.createEntry(entry);
+    catalogue(hash);
 
     GameMetadata metadata;
     metadata.regions = regions;
@@ -50,6 +59,7 @@ protected:
     entry.contentHash = hash;
     entry.platformId = platformId;
     m_repo.createEntry(entry);
+    catalogue(hash);
 
     GameMetadata metadata;
     metadata.regions = regions;
@@ -66,6 +76,7 @@ protected:
     entry.contentHash = hash;
     entry.platformId = platformId;
     m_repo.createEntry(entry);
+    catalogue(hash);
 
     entry.normalizedTitle = normalizedTitle;
     m_repo.updateEntryMetadata(entry);
@@ -110,11 +121,18 @@ protected:
     return group.id;
   }
 
+  // Availability is read from the files, so making a release unplayable means taking its bytes away
   void setHidden(const int entryId, const bool hidden) {
-    auto entry = m_repo.getEntry(entryId);
+    const auto entry = m_repo.getEntry(entryId);
     ASSERT_TRUE(entry.has_value());
-    entry->hidden = hidden;
-    m_repo.update(*entry);
+
+    for (const auto &file : m_repo.getContentFilesWithContentHash(entry->contentHash)) {
+      if (hidden) {
+        ASSERT_TRUE(m_repo.markContentFileMissing(file.m_id));
+      } else {
+        ASSERT_TRUE(m_repo.reviveContentFile(file.m_id));
+      }
+    }
   }
 
   [[nodiscard]] std::optional<int> primaryOf(const int groupId) {
@@ -187,7 +205,9 @@ TEST_F(VariantGroupServiceTest, ChangingThePreferenceMovesAnAutomaticPrimary) {
   EXPECT_EQ(primaryOf(groupId), japan);
 }
 
-TEST_F(VariantGroupServiceTest, AGroupWithOnlyHiddenMembersHasNoPrimary) {
+// A group whose every release is unavailable still has to stand for something: with variants
+// collapsed, a group with no primary has no row and the game vanishes from the library
+TEST_F(VariantGroupServiceTest, AGroupWithOnlyUnavailableMembersStillHasAPrimary) {
   VariantGroupService service(m_library, m_settings);
 
   const auto groupId = makeGroup("Super Metroid");
@@ -196,7 +216,7 @@ TEST_F(VariantGroupServiceTest, AGroupWithOnlyHiddenMembersHasNoPrimary) {
   setHidden(japan, true);
   service.reevaluate(groupId);
 
-  EXPECT_FALSE(primaryOf(groupId).has_value());
+  EXPECT_EQ(primaryOf(groupId), japan);
 }
 
 // Grouping names the set after whichever entry comes to stand for it

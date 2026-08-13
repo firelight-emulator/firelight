@@ -26,8 +26,8 @@ int main(int argc, char **argv) {
   // the app (the catalog is the single source of truth for those defaults)
   // Resolve relative to the executable, not the cwd, so it works however the
   // test binary is launched
-  const auto catalogPath = QCoreApplication::applicationDirPath() + "/system/settings_catalog.json";
-  firelight::settings::SettingsCatalog::instance().loadFromFile(catalogPath.toStdString());
+  const auto catalogPath = QCoreApplication::applicationDirPath() + "/system/settings";
+  firelight::settings::SettingsCatalog::instance().loadFromDirectory(catalogPath.toStdString());
 
   // Needed by the tests that build QML declaring focus metadata
   qmlRegisterType<firelight::gui::FocusAction>("Firelight", 1, 0, "FLAction");

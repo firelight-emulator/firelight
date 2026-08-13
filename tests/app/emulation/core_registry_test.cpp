@@ -3,6 +3,8 @@
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
 #include <libretro/core_registry.hpp>
 
@@ -236,7 +238,7 @@ TEST(CoreRegistryTest, PlatformIsPlayableExactlyWhenItsCoreIsInstalled) {
 
   for (const auto &entry : registry.checkAvailability()) {
     for (const auto platformId : entry.defaultForPlatforms) {
-      EXPECT_EQ(registry.isPlatformPlayable(platformId), entry.present)
+      EXPECT_EQ(registry.hasInstalledCore(platformId), entry.present)
           << "platform " << platformId << " defaults to " << entry.coreId;
       checkedAny = true;
     }
@@ -248,7 +250,227 @@ TEST(CoreRegistryTest, PlatformIsPlayableExactlyWhenItsCoreIsInstalled) {
 // A platform nothing can run is not playable, rather than being reported as fine because no
 // core objected
 TEST(CoreRegistryTest, AnUnknownPlatformIsNotPlayable) {
-  EXPECT_FALSE(CoreRegistry::instance().isPlatformPlayable(999999));
+  EXPECT_FALSE(CoreRegistry::instance().hasInstalledCore(999999));
+}
+
+// A platform declares the formats its dumps come in; a core declares what it will open. Nothing
+// used to compare the two, so a platform could accept a file that the core running it refuses —
+// the entry appears, and the launch fails with nothing to explain it
+TEST(CoreRegistryTest, EveryDeclaredExtensionIsOpenedByACoreThatRunsThePlatform) {
+  const auto &registry = CoreRegistry::instance();
+  const platforms::PlatformService platformService;
+  auto checkedPlatforms = 0;
+
+  for (const auto &platform : platformService.listPlatforms()) {
+    const auto platformId = static_cast<int>(platform.id);
+    const auto cores = registry.coresForPlatform(platformId);
+
+    // A platform with no core has nothing to disagree with; those badge PlatformNotSupported,
+    // which is the designed answer rather than a mismatch
+    if (cores.empty() || platform.fileAssociations.empty()) {
+      continue;
+    }
+
+    ++checkedPlatforms;
+
+    for (const auto &extension : platform.fileAssociations) {
+      const auto opened = std::any_of(cores.begin(), cores.end(), [&](const PlatformCore &core) {
+        const auto &extensions = registry.fileExtensionsFor(core.id);
+        return std::find(extensions.begin(), extensions.end(), extension) != extensions.end();
+      });
+
+      EXPECT_TRUE(opened) << platform.name << " accepts ." << extension << " but no core that runs it opens that";
+    }
+  }
+
+  EXPECT_GT(checkedPlatforms, 0) << "no platform pairs a core with declared extensions, so nothing was checked";
+}
+
+TEST(CoreRegistryTest, TheDiscSystemsResolveToTheCoresThatCanReadThem) {
+  const auto &registry = CoreRegistry::instance();
+
+  EXPECT_EQ(registry.defaultCoreForPlatform(platforms::PlatformService::PLATFORM_ID_SEGA_CD),
+            "genesis_plus_gx_libretro");
+  EXPECT_EQ(registry.defaultCoreForPlatform(platforms::PlatformService::PLATFORM_ID_PC_ENGINE_CD),
+            "mednafen_supergrafx_libretro");
+}
+
+//****************
+// bios
+//****************
+
+// The system directory is process-wide, so every case here puts back what it found
+class CoreRegistryBiosTest : public testing::Test {
+protected:
+  void SetUp() override {
+    m_directory = std::filesystem::temp_directory_path() / "fl_bios_test";
+    std::filesystem::remove_all(m_directory);
+    std::filesystem::create_directories(m_directory);
+  }
+
+  void TearDown() override {
+    CoreRegistry::instance().setSystemDirectory("");
+    std::filesystem::remove_all(m_directory);
+  }
+
+  void placeFile(const std::string &filename) const { std::ofstream(m_directory / filename).put('\0'); }
+
+  void useDirectory() const { CoreRegistry::instance().setSystemDirectory(m_directory.string()); }
+
+  std::filesystem::path m_directory;
+};
+
+TEST_F(CoreRegistryBiosTest, APlatformThatBootsFromNothingNeedsNothing) {
+  useDirectory();
+
+  EXPECT_TRUE(CoreRegistry::instance().biosStatusForPlatform(platforms::PlatformService::PLATFORM_ID_GAMEBOY).empty());
+  EXPECT_TRUE(CoreRegistry::instance().hasRequiredBios(platforms::PlatformService::PLATFORM_ID_GAMEBOY));
+}
+
+// An extra a core can use is not a reason to tell somebody their game is broken
+TEST_F(CoreRegistryBiosTest, AnOptionalFileNeverHoldsAPlatformBack) {
+  auto &registry = CoreRegistry::instance();
+  const auto genesis = platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS;
+  useDirectory();
+
+  const auto statuses = registry.biosStatusForPlatform(genesis);
+
+  ASSERT_FALSE(statuses.empty()) << "the Genesis lock-on and bootrom files should be modelled";
+  EXPECT_TRUE(std::all_of(statuses.begin(), statuses.end(),
+                          [](const auto &s) { return s.requirement.necessity == BiosNecessity::Optional; }));
+
+  // Nothing at all in the directory, and the platform is still fine
+  EXPECT_TRUE(registry.hasRequiredBios(genesis));
+  EXPECT_FALSE(registry.coreProblemForPlatform(genesis, nullptr).has_value());
+}
+
+// The file alone does nothing, so anything offering to help has to say what else is needed
+TEST_F(CoreRegistryBiosTest, TheLockOnFilesCarryTheCoreOptionThatGatesThem) {
+  useDirectory();
+
+  const auto statuses =
+      CoreRegistry::instance().biosStatusForPlatform(platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS);
+
+  const auto gameGenie = std::find_if(statuses.begin(), statuses.end(), [](const auto &status) {
+    return status.requirement.filenames.front() == "ggenie.bin";
+  });
+
+  ASSERT_NE(gameGenie, statuses.end());
+  // The key and value the core actually reads, not the friendly category the docs group them by
+  EXPECT_EQ(gameGenie->requirement.coreOption, "genesis_plus_gx_lock_on");
+  EXPECT_EQ(gameGenie->requirement.coreOptionValue, "game genie");
+}
+
+// The Game Boy platforms resolve to Gambatte by default and to mGBA when overridden, and the two
+// want different files. Keying on the platform alone would answer for whichever core was written
+// down first
+TEST_F(CoreRegistryBiosTest, TheSamePlatformUnderADifferentCoreWantsDifferentFiles) {
+  const auto &registry = CoreRegistry::instance();
+  const auto gba = platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE;
+  useDirectory();
+
+  const auto underMgba = registry.biosStatusFor("mgba_libretro", gba);
+
+  ASSERT_EQ(underMgba.size(), 1u);
+  EXPECT_EQ(underMgba[0].requirement.filenames.front(), "gba_bios.bin");
+  EXPECT_EQ(underMgba[0].requirement.necessity, BiosNecessity::Optional);
+
+  EXPECT_TRUE(registry.biosStatusFor("gambatte_libretro", gba).empty());
+}
+
+// It had a BIOS entry and no core, so resolveCoreName came back empty and the platform reported
+// as unsupported before anything asked about the file
+TEST_F(CoreRegistryBiosTest, TheDiskSystemResolvesToACoreSoItsBiosIsReachedAtAll) {
+  const auto &registry = CoreRegistry::instance();
+  const auto fds = platforms::PlatformService::PLATFORM_ID_FAMICOM_DISK_SYSTEM;
+
+  ASSERT_EQ(registry.defaultCoreForPlatform(fds), "fceumm_libretro");
+  ASSERT_TRUE(registry.hasInstalledCore(fds));
+
+  useDirectory();
+  const auto problem = registry.coreProblemForPlatform(fds, nullptr);
+
+  ASSERT_TRUE(problem.has_value());
+  EXPECT_EQ(*problem, library::EntryProblem::BiosMissing) << "not PlatformNotSupported";
+
+  placeFile("disksys.rom");
+
+  EXPECT_FALSE(registry.coreProblemForPlatform(fds, nullptr).has_value());
+}
+
+// Owning the US BIOS boots US games and nothing else, so the ones still absent have to survive
+// into the result rather than being collapsed into a yes
+TEST_F(CoreRegistryBiosTest, OneRegionsBiosIsReportedAsTheGapItIs) {
+  auto &registry = CoreRegistry::instance();
+  const auto segaCd = platforms::PlatformService::PLATFORM_ID_SEGA_CD;
+  useDirectory();
+  placeFile("bios_CD_U.bin");
+
+  const auto statuses = registry.biosStatusForPlatform(segaCd);
+
+  ASSERT_EQ(statuses.size(), 1u);
+  EXPECT_EQ(statuses[0].requirement.necessity, BiosNecessity::PerRegion);
+  EXPECT_TRUE(statuses[0].isSatisfied);
+  EXPECT_EQ(statuses[0].presentFiles, std::vector<std::string>{"bios_CD_U.bin"});
+  EXPECT_EQ(statuses[0].missingFiles, (std::vector<std::string>{"bios_CD_E.bin", "bios_CD_J.bin"}));
+}
+
+// Filing every file as absent would read as a directory that was searched and came up empty
+TEST_F(CoreRegistryBiosTest, AnUnsetDirectoryReportsNeitherPresentNorMissing) {
+  CoreRegistry::instance().setSystemDirectory("");
+
+  const auto statuses = CoreRegistry::instance().biosStatusForPlatform(platforms::PlatformService::PLATFORM_ID_SEGA_CD);
+
+  ASSERT_EQ(statuses.size(), 1u);
+  EXPECT_TRUE(statuses[0].presentFiles.empty());
+  EXPECT_TRUE(statuses[0].missingFiles.empty());
+  EXPECT_TRUE(statuses[0].isSatisfied);
+}
+
+// Not knowing where to look is not the same as having looked and found nothing
+TEST_F(CoreRegistryBiosTest, AnUnsetSystemDirectoryReportsNothingMissing) {
+  CoreRegistry::instance().setSystemDirectory("");
+
+  EXPECT_TRUE(CoreRegistry::instance().hasRequiredBios(platforms::PlatformService::PLATFORM_ID_SEGA_CD));
+}
+
+TEST_F(CoreRegistryBiosTest, AnyOneRegionOfTheBiosSatisfiesIt) {
+  auto &registry = CoreRegistry::instance();
+  useDirectory();
+
+  ASSERT_FALSE(registry.hasRequiredBios(platforms::PlatformService::PLATFORM_ID_SEGA_CD));
+
+  placeFile("bios_CD_E.bin");
+
+  EXPECT_TRUE(registry.hasRequiredBios(platforms::PlatformService::PLATFORM_ID_SEGA_CD));
+}
+
+TEST_F(CoreRegistryBiosTest, ADifferentPlatformsBiosDoesNotCount) {
+  auto &registry = CoreRegistry::instance();
+  useDirectory();
+  placeFile("syscard3.pce");
+
+  EXPECT_TRUE(registry.hasRequiredBios(platforms::PlatformService::PLATFORM_ID_PC_ENGINE_CD));
+  EXPECT_FALSE(registry.hasRequiredBios(platforms::PlatformService::PLATFORM_ID_SEGA_CD));
+}
+
+// The whole chain: an installed core with nothing to boot from is a problem of its own rather
+// than passing as fine
+TEST_F(CoreRegistryBiosTest, AnInstalledCoreWithNoBiosIsReportedAsSuch) {
+  auto &registry = CoreRegistry::instance();
+  const auto segaCd = platforms::PlatformService::PLATFORM_ID_SEGA_CD;
+
+  ASSERT_TRUE(registry.hasInstalledCore(segaCd)) << "this case only means anything while the core is installed";
+
+  useDirectory();
+  const auto missing = registry.coreProblemForPlatform(segaCd, nullptr);
+
+  ASSERT_TRUE(missing.has_value());
+  EXPECT_EQ(*missing, library::EntryProblem::BiosMissing);
+
+  placeFile("bios_CD_U.bin");
+
+  EXPECT_FALSE(registry.coreProblemForPlatform(segaCd, nullptr).has_value());
 }
 
 } // namespace firelight

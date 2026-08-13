@@ -110,6 +110,11 @@ struct SettingDefinition {
   // Relationships to other settings. Empty => always visible/enabled
   std::vector<SettingCondition> visibleWhen;
   std::vector<SettingCondition> enabledWhen;
+
+  // TODO
+  // Where a `link` row goes. A link stores no value; it is a row shaped like a setting whose whole
+  // job is to open somewhere else, which is how a page reached by drilling in stays declarable
+  std::string route;
 };
 
 // A settings page: one entry in the settings nav, one route

@@ -36,7 +36,7 @@ protected:
     m_library = std::make_unique<library::SqliteUserLibraryRepository>(":memory:");
     m_ingest = std::make_unique<library::LibraryIngestService>(*m_library);
     m_service = std::make_unique<library::UserLibraryService>(*m_library, ".");
-    m_resolver = std::make_unique<library::EntryResolver>(*m_library);
+    m_resolver = std::make_unique<library::EntryResolver>(*m_library, "");
     m_settingsService =
         std::make_unique<settings::SettingsService>(*new settings::SqliteSettingsRepository(":memory:"));
     m_emulationService = std::make_unique<EmulationService>(

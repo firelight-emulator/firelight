@@ -96,7 +96,7 @@ ItemDelegate {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
             text: control.label
-            color: control.checked ? "#1bcbfd" : Theme.textPrimary
+            color: control.checked ? Theme.switch2Color : Theme.textPrimary
             font.pixelSize: AppStyle.fontSizeMedium
             font.family: AppStyle.fontFamily
             font.weight: Font.DemiBold

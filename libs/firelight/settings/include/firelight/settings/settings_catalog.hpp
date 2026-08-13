@@ -38,6 +38,16 @@ public:
   bool loadFromJson(const std::string &json);
   bool loadFromFile(const std::string &path);
 
+  // TODO
+  // Replaces the catalog from every .json under a directory, recursively, read in sorted path order
+  // so ties in `order` resolve the same way on every machine. Each file is the same shape as a whole
+  // catalog carrying only the keys it needs.
+  //
+  // One unreadable or unparseable file fails the whole load and leaves the previous catalog intact:
+  // a half-loaded catalog gives every missing key an empty default, which is indistinguishable from
+  // a setting the user never touched
+  bool loadFromDirectory(const std::string &path);
+
   // Authoring mistakes the parser can't otherwise catch: duplicate keys, a
   // setting pointing at a group that doesn't exist, a group pointing at a
   // missing page, a CUSTOM setting with no widget. Empty => the catalog is
@@ -91,6 +101,28 @@ public:
   [[nodiscard]] std::string defaultForCommonKey(const std::string &key) const;
 
 private:
+  // TODO
+  // One document's worth of catalog, before anything is committed. Several files accumulate into
+  // one of these so a load either lands whole or not at all
+  struct Accumulator {
+    std::vector<SettingsPage> pages;
+    std::vector<SettingsGroup> groups;
+    std::vector<SettingDefinition> app;
+    std::vector<SettingDefinition> common;
+    std::map<std::string, std::vector<SettingDefinition>> perCore;
+    std::map<std::string, std::map<std::string, std::string>> coreDefaults;
+    std::vector<std::string> problems;
+  };
+
+  // TODO
+  // Appends one document to the accumulator. Throws whatever nlohmann throws on malformed JSON, so
+  // the caller decides whether one bad file costs the whole load
+  static void parseInto(const std::string &json, Accumulator &into, const std::string &sourceName);
+
+  // TODO
+  // Sorts, takes ownership and logs whatever the parse and validation turned up
+  bool commit(Accumulator &&accumulated);
+
   std::vector<SettingsPage> m_pages;
   std::vector<SettingsGroup> m_groups;
   std::vector<SettingDefinition> m_app;

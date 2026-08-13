@@ -35,7 +35,14 @@ int runScan(int argc, char **argv, const CliOptions &opts) {
   library::UserLibraryService libraryService(repository, dirs.romsPath.toStdString());
 
   QEventLoop loop;
-  QObject::connect(&scanner, &library::LibraryScanner2::scanFinished, &loop, &QEventLoop::quit);
+  // TODO
+  // scanFinished is only emitted when the scan changed something, so waiting on it never returns
+  // for a rescan that finds nothing new. The scanning flag going back to false is true either way
+  QObject::connect(&scanner, &library::LibraryScanner2::scanningChanged, &loop, [&] {
+    if (!scanner.isScanning()) {
+      loop.quit();
+    }
+  });
 
   std::printf("Scanning content directories...\n");
   std::fflush(stdout);
@@ -43,7 +50,7 @@ int runScan(int argc, char **argv, const CliOptions &opts) {
   loop.exec();
 
   const auto entries = repository.getEntries(0, -1);
-  const auto contentFiles = repository.getContentFiles();
+  const auto contentFiles = repository.getPresentContentFiles();
   std::printf("Scan complete: %zu content file(s), %zu library entr%s.\n", contentFiles.size(), entries.size(),
               entries.size() == 1 ? "y" : "ies");
   return 0;

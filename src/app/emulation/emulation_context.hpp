@@ -53,6 +53,12 @@ struct EmulationContext {
   settings::ICoreOptionRepository *coreOptionRepository = nullptr;
   cheats::ICheatRepository *cheatRepository = nullptr;
   platforms::IPlatformService *platformService = nullptr;
+
+  // TODO
+  // Rebuilds the playlist a disc set launches through, called with the set and the identity it
+  // launches under before the core is handed the path. Unset means the path is used as-is
+  std::function<void(int, const std::string &)> materializePlaylist;
+
   std::string coreSystemDirectory;
 
   // Netplay seams. retropadProvider (when set) answers the core's per-port

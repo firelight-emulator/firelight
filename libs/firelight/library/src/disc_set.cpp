@@ -38,7 +38,7 @@ DiscSetState discSetState(const std::vector<int> &discNumbers) {
                                                                   : DiscSetState::MissingMiddleDisc;
 }
 
-std::vector<int> missingDiscs(const std::vector<int> &discNumbers) {
+std::vector<int> missingDiscs(const std::vector<int> &discNumbers, const int knownDiscCount) {
   const auto present = presentDiscs(discNumbers);
   std::vector<int> missing;
 
@@ -46,7 +46,11 @@ std::vector<int> missingDiscs(const std::vector<int> &discNumbers) {
     return missing;
   }
 
-  for (auto number = 1; number <= *present.rbegin(); ++number) {
+  // A known count reaches past the discs on hand, which is the only way to notice a set is short
+  // of its last one rather than merely holed in the middle
+  const auto highest = std::max(*present.rbegin(), knownDiscCount);
+
+  for (auto number = 1; number <= highest; ++number) {
     if (present.count(number) == 0) {
       missing.push_back(number);
     }

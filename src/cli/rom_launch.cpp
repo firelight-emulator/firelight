@@ -23,7 +23,7 @@ int resolveRomEntryId(const std::string &romPath, library::UserLibraryService &l
 
   const library::ContentIdentifier identifier(platformService);
   const auto identified = identifier.identify(romPath);
-  if (!identified.valid) {
+  if (!identified.isIdentified()) {
     spdlog::warn("Could not identify content at: {}", romPath);
     return -1;
   }

@@ -99,6 +99,7 @@ void SettingsModel::rebuildItems() {
     item.enabledWhen = setting.enabledWhen;
     item.placeholder = QString::fromStdString(setting.placeholder);
     item.directoryMode = setting.directoryMode;
+    item.route = QString::fromStdString(setting.route);
     for (const auto &ext : setting.fileExtensions) {
       item.fileExtensions.append(QString::fromStdString(ext));
     }
@@ -397,6 +398,8 @@ QVariant SettingsModel::data(const QModelIndex &index, int role) const {
     return item.fileExtensions;
   case DirectoryModeRole:
     return item.directoryMode;
+  case RouteRole:
+    return item.route;
   default:
     return {};
   }
@@ -420,7 +423,8 @@ QHash<int, QByteArray> SettingsModel::roleNames() const {
           {RequiresRestartRole, "requiresRestart"},
           {PlaceholderRole, "placeholder"},
           {FileExtensionsRole, "fileExtensions"},
-          {DirectoryModeRole, "directoryMode"}};
+          {DirectoryModeRole, "directoryMode"},
+          {RouteRole, "route"}};
 }
 
 Qt::ItemFlags SettingsModel::flags(const QModelIndex &index) const {

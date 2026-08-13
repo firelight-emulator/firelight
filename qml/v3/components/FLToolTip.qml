@@ -4,12 +4,12 @@ import QtQuick.Controls
 ToolTip {
     id: root
 
-    horizontalPadding: 8
-    verticalPadding: 6
+    horizontalPadding: AppStyle.spacingLg
+    verticalPadding: AppStyle.spacingMd
 
     background: Rectangle {
-        color: Theme.surfaceElevated
-        radius: 4
+        color: Theme.surface
+        radius: AppStyle.radiusMd
         border.color: Theme.border
         border.width: 1
     }
@@ -18,7 +18,10 @@ ToolTip {
         text: root.text
         font.pixelSize: AppStyle.fontSizeMedium
         font.family: AppStyle.fontFamily
-        color: Theme.textPrimary
+        color: Theme.switch2Color
+        font.weight: Font.DemiBold
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
     }
 
     enter: Transition {

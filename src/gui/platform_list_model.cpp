@@ -11,6 +11,8 @@ PlatformListModel::PlatformListModel(platforms::IPlatformService &platformServic
   for (const auto &platform : platformService.listPlatforms()) {
     m_items.push_back(platform);
   }
+
+  std::ranges::sort(m_items, [](const auto &a, const auto &b) { return a.name < b.name; });
 }
 
 int PlatformListModel::rowCount(const QModelIndex &parent) const { return m_items.length(); }

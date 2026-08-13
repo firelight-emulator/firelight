@@ -80,22 +80,29 @@ TEST(VariantPrimaryTest, TiesBreakOnTheLowestIdSoTheAnswerNeverDependsOnOrder) {
   EXPECT_EQ(choosePrimaryEntry(descending, defaultPreference()), 3);
 }
 
-// A hidden entry cannot be launched, so a group whose best variant is missing falls to the next one
-TEST(VariantPrimaryTest, SkipsHiddenCandidates) {
+// A release with no readable copy cannot be launched, so a group whose best variant is missing falls
+// to the next one
+TEST(VariantPrimaryTest, SkipsUnavailableCandidates) {
   auto missing = candidate(1, {"US"});
-  missing.hidden = true;
+  missing.isAvailable = false;
   const auto present = candidate(2, {"JP"});
 
   EXPECT_EQ(choosePrimaryEntry({missing, present}, defaultPreference()), 2);
 }
 
-TEST(VariantPrimaryTest, ReturnsNothingWhenThereIsNobodyToChoose) {
+TEST(VariantPrimaryTest, ReturnsNothingOnlyWhenThereIsNobodyAtAll) {
   EXPECT_FALSE(choosePrimaryEntry({}, defaultPreference()).has_value());
+}
 
-  auto missing = candidate(1, {"US"});
-  missing.hidden = true;
+// A group standing for nothing has no row once it is collapsed, so the whole game disappears
+// instead of showing up as unplayable. Somebody who cannot launch any copy still owns them
+TEST(VariantPrimaryTest, AGroupOfUnavailableReleasesStillPicksOne) {
+  auto missing = candidate(2, {"US"});
+  missing.isAvailable = false;
+  auto alsoMissing = candidate(1, {"JP"});
+  alsoMissing.isAvailable = false;
 
-  EXPECT_FALSE(choosePrimaryEntry({missing}, defaultPreference()).has_value());
+  EXPECT_EQ(choosePrimaryEntry({missing, alsoMissing}, defaultPreference()), 1);
 }
 
 TEST(VariantPrimaryTest, ParsesAPreferenceSetting) {

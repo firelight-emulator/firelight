@@ -1,0 +1,28 @@
+{
+  "cores": {
+    "mupen64plus_next_libretro": {
+      "_note": "Nintendo 64. 'transfer-pak-game' demonstrates a library-sourced game picker (the value is stored but not yet consumed by emulation).",
+      "settings": [
+        {
+          "key": "transfer-pak-game",
+          "label": "Transfer Pak cartridge",
+          "group": "emulation-hardware",
+          "order": 100,
+          "description": "The Game Boy / Game Boy Color cartridge inserted into the controller's Transfer Pak.",
+          "keywords": [
+            "gameboy",
+            "cartridge",
+            "accessory",
+            "pokemon"
+          ],
+          "type": "game-picker",
+          "eligiblePlatformIds": [
+            1,
+            2
+          ],
+          "default": ""
+        }
+      ]
+    }
+  }
+}

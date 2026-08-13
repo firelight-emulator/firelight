@@ -241,6 +241,11 @@ int main(int argc, char *argv[]) {
     spdlog::info("[Startup] Core system directory does not exist; creating: {}", coreSystemPath.toStdString());
   }
 
+  // TODO
+  // Before anything computes an entry status, or a platform whose BIOS is present still reads as
+  // missing one
+  firelight::CoreRegistry::instance().setSystemDirectory(coreSystemPath.toStdString());
+
   if (!QFileInfo::exists(docsPath) && QDir().mkpath(docsPath)) {
     spdlog::info("[Startup] Documents directory does not exist; creating: {}", docsPath.toStdString());
   }
@@ -349,7 +354,7 @@ int main(int argc, char *argv[]) {
   firelight::metadata::MetadataService metadataService(userLibrary, gameMetadataSource, mediaAssetRepository,
                                                        (defaultAppDataPathString + "/media").toStdString(),
                                                        &steamGridDbArtProvider);
-  metadataService.backfillMissing();
+  metadataService.refreshAll();
 
   // Fills in missing art in the background, one lookup at a time. No-ops while the
   // provider has no key, and leaves those entries unmarked so they are still
@@ -358,7 +363,7 @@ int main(int argc, char *argv[]) {
 
   firelight::library::LibraryScanner2 libScanner2(userLibrary, platformService);
 
-  firelight::library::EntryResolver entryResolver(userLibrary);
+  firelight::library::EntryResolver entryResolver(userLibrary, defaultAppDataPathString.toStdString());
   firelight::library::UserLibraryService userLibraryService(userLibrary, romsPath.toStdString());
 
   // Input service
@@ -397,13 +402,8 @@ int main(int argc, char *argv[]) {
   // ordering lives
   firelight::library::VariantGroupService variantGroupService(userLibraryService, settingsService);
 
-  // Carries saves and playtime across when one entry is folded into another, and tells the disc
-  // sets where playlists are allowed to go
-  firelight::library::EntryMergeService entryMergeService(saveManager, activityLog, discSetService, settingsService);
-
-  // Only now that the playlist location setting has been read: a set whose playlist was deleted
-  // or left behind by a moved games folder has no way in, and its game is hidden until this runs
-  discSetService.reconcilePlaylists();
+  // Carries saves and playtime across when one entry is folded into another
+  firelight::library::EntryMergeService entryMergeService(saveManager, activityLog);
 
   // Online play: direct-connection lobby (host shares their IP) + WebRTC
   // data plane + session. DiscordLobbyBackend can swap back in here once the
@@ -501,7 +501,7 @@ int main(int argc, char *argv[]) {
   // Set up the models for QML
   // ***********************************************
   firelight::library::EntryListModel entryListModel(userLibraryService, activityLog, platformService,
-                                                    achievementService, variantGroupService);
+                                                    achievementService, variantGroupService, settingsService);
 
   firelight::gui::LibraryEntrySortFilterModel entrySortFilterModel;
   entrySortFilterModel.setSourceModel(&entryListModel);
@@ -534,8 +534,8 @@ int main(int argc, char *argv[]) {
   // Resolve relative to the executable, not the working directory, so it loads
   // regardless of where the app is launched from (e.g. `firelight <rom>` from a
   // terminal in any directory)
-  const auto catalogPath = (QCoreApplication::applicationDirPath() + "/system/settings_catalog.json").toStdString();
-  if (!firelight::settings::SettingsCatalog::instance().loadFromFile(catalogPath)) {
+  const auto catalogPath = (QCoreApplication::applicationDirPath() + "/system/settings").toStdString();
+  if (!firelight::settings::SettingsCatalog::instance().loadFromDirectory(catalogPath)) {
     spdlog::warn("Could not load settings catalog from {}; using core "
                  "defaults only",
                  catalogPath);
@@ -597,6 +597,10 @@ int main(int argc, char *argv[]) {
       .coreOptionRepository = &settingsRepository,
       .cheatRepository = &cheatRepository,
       .platformService = &platformService,
+      .materializePlaylist =
+          [&discSetService](const int setId, const std::string &contentHash) {
+            discSetService.materializePlaylist(setId, contentHash);
+          },
       .coreSystemDirectory = dataDirs.coreSystemPath.toStdString(),
       .retropadProvider = &netplayService.retropadProvider(),
       .netplayStreamSink = &netplayService.streamSender(),

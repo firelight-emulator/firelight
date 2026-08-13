@@ -5,6 +5,7 @@
 
 #include <firelight/achievement_service.hpp>
 #include <firelight/activity/sqlite_activity_log.hpp>
+#include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_service.hpp>
 #include <firelight/platforms/platform_service.hpp>
@@ -45,6 +46,7 @@ library::Entry makeEntry(const std::string &name, const std::string &hash, const
 class LibraryEntrySortFilterModelTest : public testing::Test {
 protected:
   library::SqliteUserLibraryRepository m_repo{":memory:"};
+  library::LibraryIngestService m_ingest{m_repo};
   library::UserLibraryService m_service{m_repo, (QDir::tempPath() + "/fl_lesfm_test").toStdString()};
   activity::SqliteActivityLog m_activityLog{":memory:"};
   platforms::PlatformService m_platformService;
@@ -63,12 +65,37 @@ protected:
     ASSERT_TRUE(m_repo.createEntry(alpha));
     ASSERT_TRUE(m_repo.createEntry(bravo));
 
-    m_source.emplace(m_service, m_activityLog, m_platformService, m_achievementService, m_variantGroups);
+    // A game is only playable if it has something to launch, so the fixtures get files the way a
+    // scan would give them one
+    for (const auto &hash : {"hashC", "hashA", "hashB"}) {
+      ASSERT_TRUE(catalogue(hash));
+    }
+
+    m_source.emplace(m_service, m_activityLog, m_platformService, m_achievementService, m_variantGroups,
+                     m_settingsService);
     m_model.setSourceModel(&m_source.value());
   }
 
   std::optional<library::EntryListModel> m_source;
   LibraryEntrySortFilterModel m_model;
+
+  bool catalogue(const std::string &hash) {
+    library::ContentFile file{
+        .m_fileSizeBytes = 1024, .m_filePath = "/roms/" + hash + ".gb", .m_platformId = 7, .m_contentHash = hash};
+
+    return m_repo.create(file);
+  }
+
+  // Every copy of Bravo goes away, which is how a game becomes unavailable
+  bool takeBravosFilesAway() {
+    for (const auto &file : m_repo.getContentFilesWithContentHash("hashB")) {
+      if (!m_repo.markContentFileMissing(file.m_id)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   // Puts the two Zelda entries in a group, and returns whether it was made
   bool groupUsaAndJapan() {
@@ -98,6 +125,32 @@ protected:
     return result;
   }
 };
+
+// A game whose files went away is the one somebody most needs to see, because the row is the only
+// thing that can tell them where it was. Dropping it here is what made the tile disappear
+TEST_F(LibraryEntrySortFilterModelTest, AGameWithNoReachableFilesStillShows) {
+  ASSERT_TRUE(takeBravosFilesAway());
+  pump();
+
+  EXPECT_EQ(m_model.getCount(), 3) << "the row vanished instead of staying to be badged";
+
+  const auto shown = names();
+  EXPECT_NE(std::ranges::find(shown, QStringLiteral("Bravo")), shown.end());
+}
+
+// The user's own control for not wanting to look at them, which is off by default
+TEST_F(LibraryEntrySortFilterModelTest, HideUnavailableIsWhatTakesItAway) {
+  ASSERT_TRUE(takeBravosFilesAway());
+  pump();
+  ASSERT_EQ(m_model.getCount(), 3);
+
+  m_model.setHideUnavailable(true);
+  m_model.applyFilters();
+  pump();
+
+  EXPECT_EQ(m_model.getCount(), 2);
+  EXPECT_EQ(names(), (std::vector<QString>{"alpha", "Charlie"}));
+}
 
 // With nothing filtered, every entry shows, ordered by name and case-insensitively
 TEST_F(LibraryEntrySortFilterModelTest, SortsByDisplayNameIgnoringCase) {

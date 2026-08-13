@@ -18,6 +18,7 @@ inline constexpr auto PUBLISHER = "publisher";
 inline constexpr auto RELEASE_YEAR = "releaseYear";
 inline constexpr auto RELEASE_DATE = "releaseDate";
 inline constexpr auto PLAYERS = "players";
+inline constexpr auto DISC_COUNT = "discCount";
 inline constexpr auto REVISION = "revision";
 inline constexpr auto GENRES = "genres";
 inline constexpr auto REGIONS = "regions";
@@ -42,6 +43,8 @@ struct GameMetadata {
   unsigned releaseYear = 0;
   std::string releaseDate;
   std::string players;
+  // How many discs the game came on, 0 when nothing has said
+  int discCount = 0;
   std::string revision;
   std::vector<std::string> genres;
   std::vector<std::string> regions;

@@ -1,3 +1,5 @@
+#include <firelight/library/content_identifier.hpp>
+#include <firelight/library/content_loader.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -12,6 +14,7 @@
 #include <algorithm>
 #include <archive.h>
 #include <archive_entry.h>
+#include <cstring>
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
@@ -36,6 +39,17 @@ QByteArray seededSegaCdImage(const char seed) {
 }
 
 QByteArray discImageBytes(const QByteArray &image) { return image; }
+
+// A Mega Drive cartridge carries its console name at 0x100. rcheevos has no handler that reads
+// this, which is why a .bin of one used to fall through to a whole-file fallback
+QByteArray genesisCartridgeBytes(const char *consoleName, const char seed) {
+  QByteArray bytes(524288, Qt::Uninitialized);
+  for (int i = 0; i < bytes.size(); ++i) {
+    bytes[i] = static_cast<char>((i * 13 + seed) & 0xFF);
+  }
+  bytes.replace(0x100, static_cast<int>(std::strlen(consoleName)), consoleName);
+  return bytes;
+}
 
 QByteArray romBytes(const int size, const char seed) {
   QByteArray bytes(size, Qt::Uninitialized);
@@ -206,14 +220,15 @@ TEST_F(LibraryEndToEndTest, AMissingFileKeepsItsEntryAndReaddingRestoresIt) {
   remove("Metroid.nes");
   scan();
 
-  ASSERT_EQ(entries().size(), 1u) << "the entry was deleted rather than hidden";
-  EXPECT_TRUE(entries().front().hidden);
+  ASSERT_EQ(entries().size(), 1u) << "the entry was deleted rather than kept";
+  EXPECT_FALSE(entries().front().isContentAvailable);
+  EXPECT_FALSE(entries().front().hidden) << "losing a file put the entry away on the user's behalf";
 
   write("Metroid.nes", romBytes(40960, 5));
   scan();
 
   ASSERT_EQ(entries().size(), 1u);
-  EXPECT_FALSE(entries().front().hidden);
+  EXPECT_TRUE(entries().front().isContentAvailable);
   EXPECT_EQ(entries().front().id, originalId);
 }
 
@@ -260,6 +275,35 @@ TEST_F(LibraryEndToEndTest, ARomInsideAnArchiveBecomesAnEntry) {
   EXPECT_FALSE(entries().front().hidden);
 }
 
+// Inside an archive, any raw track extension was skipped whether or not a sheet named it, so a
+// zipped cartridge with a .bin name could never be catalogued at all
+TEST_F(LibraryEndToEndTest, AZippedCartridgeNamedBinIsCatalogued) {
+  const auto inner = genesisCartridgeBytes("SEGA MEGA DRIVE ", 4);
+  const auto zipPath = path("games.zip").toStdString();
+
+  {
+    archive *writer = archive_write_new();
+    archive_write_set_format_zip(writer);
+    ASSERT_EQ(archive_write_open_filename(writer, zipPath.c_str()), ARCHIVE_OK);
+    archive_entry *entry = archive_entry_new();
+    archive_entry_set_pathname(entry, "Sonic.bin");
+    archive_entry_set_size(entry, inner.size());
+    archive_entry_set_filetype(entry, AE_IFREG);
+    archive_entry_set_perm(entry, 0644);
+    archive_write_header(writer, entry);
+    archive_write_data(writer, inner.constData(), inner.size());
+    archive_entry_free(entry);
+    archive_write_close(writer);
+    archive_write_free(writer);
+  }
+
+  registerContentDirectory();
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "a zipped cartridge named .bin never reached the library";
+  EXPECT_EQ(entries().front().displayName, "Sonic.bin");
+}
+
 // A file nothing can identify must not become a game, and must not stop the ones that can
 TEST_F(LibraryEndToEndTest, UnknownFilesAreNotCatalogued) {
   write("readme.txt", QByteArray("notes"));
@@ -274,25 +318,179 @@ TEST_F(LibraryEndToEndTest, UnknownFilesAreNotCatalogued) {
   EXPECT_EQ(entries().front().displayName, "Tetris.gb");
 }
 
-// rcheevos has no handler for these, and its fallback is a whole-file Game Boy hash. Filing a
-// compressed PSP image as a Game Boy game scatters somebody's library into the wrong platform
-// and gives it a hash that means nothing. One test per format, so a failure names it
-class UnreadableDiscFormatTest : public LibraryEndToEndTest, public testing::WithParamInterface<const char *> {};
+// A format we accept and nothing can read. The file is taken in, fails, and is recorded per
+// path rather than dropped. One test per format, so a failure names it
+class AcceptedUnreadableFormatTest : public LibraryEndToEndTest, public testing::WithParamInterface<const char *> {};
 
-TEST_P(UnreadableDiscFormatTest, IsNotFiledAsGameBoy) {
+// An equality on a value that always exists, so it cannot pass by finding nothing
+TEST_P(AcceptedUnreadableFormatTest, DoesNotIdentify) {
+  const auto filePath = path(QString("Game.") + GetParam());
   write(QString("Game.") + GetParam(), romBytes(65536, 13));
+
+  const ContentIdentifier identifier(m_platformService);
+  const auto identified = identifier.identify(filePath.toStdString());
+
+  EXPECT_FALSE(identified.isIdentified());
+  EXPECT_NE(identified.platformId, platforms::PlatformService::PLATFORM_ID_GAMEBOY)
+      << "the whole-file Game Boy fallback was taken";
+}
+
+// The scanner half, with a game beside it that must survive. Without the control an empty
+// library would satisfy every assertion here
+TEST_P(AcceptedUnreadableFormatTest, IsRecordedRatherThanDropped) {
+  write(QString("Game.") + GetParam(), romBytes(65536, 13));
+  write("Tetris.gb", romBytes(32768, 7));
   registerContentDirectory();
 
   scan();
 
-  for (const auto &entry : entries()) {
-    EXPECT_NE(entry.platformId, platforms::PlatformService::PLATFORM_ID_GAMEBOY)
-        << entry.displayName << " was filed as a Game Boy game";
-  }
+  ASSERT_EQ(entries().size(), 1u) << "the readable game beside it did not survive the scan";
+  EXPECT_EQ(entries().front().displayName, "Tetris.gb");
+
+  // The whole point: the file is gone from the library but not from the record
+  const auto drops = m_repo->getScanDrops();
+  ASSERT_EQ(drops.size(), 1u) << "a file we accepted and could not read went unrecorded";
+  EXPECT_EQ(drops.front().extension, GetParam());
+  EXPECT_TRUE(drops.front().archivePath.empty());
 }
 
-INSTANTIATE_TEST_SUITE_P(DiscFormatsRcheevosCannotRead, UnreadableDiscFormatTest,
-                         testing::Values("cso", "ccd", "img", "mdf", "nrg"));
+// cso has no handler at all. img and mdf hold raw sector data and are asked outright, so junk
+// bytes reach them and fail on the content rather than on the format
+INSTANTIATE_TEST_SUITE_P(FormatsWeAcceptAndCannotRead, AcceptedUnreadableFormatTest,
+                         testing::Values("cso", "img", "mdf"));
+
+// cso is the honest gap: a real PSP library holds these, so accepting and reporting them beats
+// an invisible library. Nothing has read one yet, which is a different thing from a bad dump
+TEST_F(LibraryEndToEndTest, ACompressedPspImageSaysNothingCanReadIt) {
+  const auto filePath = path("Game.cso");
+  write("Game.cso", romBytes(65536, 13));
+
+  const ContentIdentifier identifier(m_platformService);
+
+  EXPECT_EQ(identifier.identify(filePath.toStdString()).outcome, IdentifyOutcome::NoIdentifier);
+}
+
+// ccd is a text descriptor we never parse and nrg carries layouts nothing reads, so neither is
+// accepted at all now. They are counted, not recorded per path
+class RejectedFormatTest : public LibraryEndToEndTest, public testing::WithParamInterface<const char *> {};
+
+TEST_P(RejectedFormatTest, IsCountedRatherThanAccepted) {
+  write(QString("Game.") + GetParam(), romBytes(65536, 13));
+  write("Tetris.gb", romBytes(32768, 7));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "the readable game beside it did not survive the scan";
+  EXPECT_TRUE(m_repo->getScanDrops().empty()) << "a format we do not accept became a per-path row";
+
+  const auto extensions = m_repo->getUnrecognizedExtensions();
+  ASSERT_EQ(extensions.size(), 1u) << "the format nobody accepts was not counted";
+  EXPECT_EQ(extensions.front().extension, GetParam());
+}
+
+INSTANTIATE_TEST_SUITE_P(FormatsWeNoLongerAccept, RejectedFormatTest, testing::Values("ccd", "nrg"));
+
+// A Genesis ROM named .bin was typed as a disc, which meant the loader handed the core no bytes
+// and it could never launch. The bytes decide the content type now, not the extension
+TEST_F(LibraryEndToEndTest, AGenesisCartridgeNamedBinIsACartridge) {
+  write("Sonic.bin", genesisCartridgeBytes("SEGA MEGA DRIVE ", 4));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "a Genesis cartridge named .bin did not reach the library";
+  EXPECT_EQ(entries().front().platformId, platforms::PlatformService::PLATFORM_ID_SEGA_GENESIS);
+
+  const auto files = m_repo->getContentFiles();
+  ASSERT_EQ(files.size(), 1u);
+  EXPECT_EQ(files.front().m_type, ContentType::Cartridge) << "typed as a disc, so the loader would hand over no bytes";
+}
+
+// The hash a scan records has to be the one the loader recomputes at launch, or saves are
+// written under a key nothing will look for again
+TEST_F(LibraryEndToEndTest, TheCartridgeHashIsTheOneTheLoaderWillCompute) {
+  write("Sonic.bin", genesisCartridgeBytes("SEGA MEGA DRIVE ", 4));
+  registerContentDirectory();
+  scan();
+
+  const auto files = m_repo->getContentFiles();
+  ASSERT_EQ(files.size(), 1u);
+
+  const ContentLoader loader;
+  const auto loaded = loader.load(files.front());
+
+  EXPECT_TRUE(loaded.valid);
+  EXPECT_EQ(loaded.contentHash, files.front().m_contentHash) << "the launch hash and the catalogued hash disagree";
+}
+
+// The false acceptance: rcheevos offers Mega Drive as a whole-file fallback for any .bin, so
+// junk used to become a Genesis game under a hash that means nothing
+TEST_F(LibraryEndToEndTest, AnUnreadableBinIsReportedRatherThanFiledAsGenesis) {
+  write("mystery.bin", romBytes(65536, 23));
+  write("Tetris.gb", romBytes(32768, 7));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "the .bin was accepted as a game";
+  EXPECT_EQ(entries().front().displayName, "Tetris.gb");
+
+  const auto drops = m_repo->getScanDrops();
+  ASSERT_EQ(drops.size(), 1u) << "the unreadable .bin was neither catalogued nor recorded";
+  EXPECT_EQ(drops.front().extension, "bin");
+}
+
+// A file nothing even accepts is counted rather than listed, so a folder of save files is one
+// row instead of thousands
+TEST_F(LibraryEndToEndTest, ExtensionsNothingAcceptsAreCountedNotListed) {
+  for (auto i = 0; i < 5; ++i) {
+    write(QString("save%1.srm").arg(i), romBytes(512, static_cast<char>(i)));
+  }
+  write("Tetris.gb", romBytes(32768, 7));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "the game beside them did not survive";
+  EXPECT_TRUE(m_repo->getScanDrops().empty()) << "a file nothing accepts must not become a per-path row";
+
+  const auto extensions = m_repo->getUnrecognizedExtensions();
+  ASSERT_EQ(extensions.size(), 1u);
+  EXPECT_EQ(extensions.front().extension, "srm");
+  EXPECT_EQ(extensions.front().count, 5);
+}
+
+// The record describes what is still wrong, so deleting the file it names has to end it. The
+// same sweep that prunes missing content files does this
+TEST_F(LibraryEndToEndTest, ADropStopsBeingReportedOnceItsFileIsGone) {
+  write("Game.cso", romBytes(65536, 21));
+  write("Tetris.gb", romBytes(32768, 7));
+  registerContentDirectory();
+  scan();
+
+  ASSERT_EQ(m_repo->getScanDrops().size(), 1u) << "the unreadable file was not recorded";
+
+  remove("Game.cso");
+  scan();
+
+  EXPECT_TRUE(m_repo->getScanDrops().empty()) << "the drop outlived the file it described";
+  EXPECT_EQ(entries().size(), 1u) << "pruning drops disturbed the library";
+}
+
+// Rescanning the same unreadable file must not pile up rows or keep announcing itself
+TEST_F(LibraryEndToEndTest, RescanningDoesNotRepeatADrop) {
+  write("Game.cso", romBytes(65536, 21));
+  registerContentDirectory();
+
+  scan();
+  scan();
+  scan();
+
+  const auto drops = m_repo->getScanDrops();
+  ASSERT_EQ(drops.size(), 1u) << "each rescan recorded the same file again";
+  EXPECT_GE(drops.front().lastSeenAt, drops.front().firstSeenAt);
+}
 
 // A .sbi sits beside a LibCrypt-protected PS1 disc. It is data the emulator needs, not a game
 TEST_F(LibraryEndToEndTest, DiscSidecarFilesAreNotCataloguedAsGames) {
@@ -339,7 +537,7 @@ TEST_F(LibraryEndToEndTest, ACueAndItsTrackAreOneDiscNotTwoEntries) {
 
 // The link nothing covered: the scanner parses the disc number off a real filename, and the
 // disc grouper reads it from the content file. Both halves are tested; the join was not
-TEST_F(LibraryEndToEndTest, DiscNumbersAreParsedFromRealFilenamesOntoContentFiles) {
+TEST_F(LibraryEndToEndTest, DiscNumbersAndRegionsAreParsedFromRealFilenamesOntoContentFiles) {
   write("Final Fantasy VII (USA) (Disc 1).cue",
         QByteArray("FILE \"ff7d1.bin\" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n"));
   write("ff7d1.bin", discImageBytes(seededSegaCdImage(51)));
@@ -353,6 +551,9 @@ TEST_F(LibraryEndToEndTest, DiscNumbersAreParsedFromRealFilenamesOntoContentFile
   std::vector<int> discNumbers;
   for (const auto &file : m_repo->getContentFiles()) {
     discNumbers.push_back(file.m_discNumber);
+
+    EXPECT_EQ(file.m_regions, (std::vector<std::string>{"US"}))
+        << "the scanner did not carry the region tag onto the content file: " << file.m_filePath;
   }
   std::ranges::sort(discNumbers);
 

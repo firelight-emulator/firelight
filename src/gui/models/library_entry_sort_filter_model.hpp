@@ -18,8 +18,10 @@ class LibraryEntrySortFilterModel : public QSortFilterProxyModel {
   Q_PROPERTY(int count READ getCount NOTIFY countChanged)
   Q_PROPERTY(QString filterText READ getFilterText WRITE setFilterText NOTIFY filterTextChanged)
   Q_PROPERTY(bool favoritesOnly READ isFavoritesOnly WRITE setFavoritesOnly NOTIFY favoritesOnlyChanged)
+  Q_PROPERTY(bool hideUnavailable READ isHideUnavailable WRITE setHideUnavailable NOTIFY hideUnavailableChanged)
   Q_PROPERTY(QVariantList platformIds READ getPlatformIds WRITE setPlatformIds NOTIFY platformIdsChanged)
   Q_PROPERTY(SortRole sortRole READ getSortRole WRITE setSortRole NOTIFY sortRoleChanged)
+  Q_PROPERTY(QString sortDisplayName READ getSortDisplayName NOTIFY sortRoleChanged)
   Q_PROPERTY(bool sortAscending READ isSortAscending WRITE setSortAscending NOTIFY sortAscendingChanged)
   Q_PROPERTY(QVariantMap countByPlatform READ getCountByPlatform NOTIFY countByPlatformChanged)
   Q_PROPERTY(bool anyFiltersActive READ anyFiltersActive NOTIFY filtersOrSortChanged)
@@ -49,11 +51,18 @@ public:
   [[nodiscard]] bool isFavoritesOnly() const;
   void setFavoritesOnly(bool favoritesOnly);
 
+  [[nodiscard]] bool isHideUnavailable() const;
+
+  // Hides only what cannot be launched. A set missing a disc still plays, so it stays
+  void setHideUnavailable(bool hideUnavailable);
+
   [[nodiscard]] QVariantList getPlatformIds() const;
   void setPlatformIds(const QVariantList &platformIds);
 
   [[nodiscard]] SortRole getSortRole() const;
   void setSortRole(SortRole sortRole);
+
+  [[nodiscard]] QString getSortDisplayName() const;
 
   [[nodiscard]] bool isSortAscending() const;
   void setSortAscending(bool sortAscending);
@@ -109,6 +118,8 @@ signals:
 
   void favoritesOnlyChanged();
 
+  void hideUnavailableChanged();
+
   void platformIdsChanged();
 
   void sortRoleChanged();
@@ -127,11 +138,9 @@ protected:
 private:
   library::EntryListModel *m_sourceModel{};
 
-  // TODO
-  // What the user has asked for but not yet committed. A setter writes only here, so a
-  // source change re-running the filter cannot apply a value nobody asked to apply
   QString m_pendingFilterText{};
   bool m_pendingFavoritesOnly{false};
+  bool m_pendingHideUnavailable{false};
   QVariantList m_pendingPlatformIds{};
   SortRole m_pendingSortRole{DisplayName};
   bool m_pendingSortAscending{true};
@@ -139,8 +148,11 @@ private:
   // What the current pass is filtering by
   QString m_filterText{};
   bool m_favoritesOnly{false};
+  bool m_hideUnavailable{false};
   QSet<int> m_acceptedPlatformIds{};
   bool m_collapseVariants{true};
+  SortRole m_sortRole{DisplayName};
+  bool m_sortAscending{true};
 };
 
 } // namespace firelight::gui

@@ -46,6 +46,39 @@ protected:
   }
 };
 
+// A console with no platform is not a failure to read the disc. The format was understood and the
+// dump is fine, so what it turned out to be is kept rather than being flattened into "could not
+// catalogue this" — which is the difference between telling somebody they own GameCube discs and
+// telling them four files went missing
+TEST_F(ChdDiscTest, ADiscForAnUnmodeledConsoleKeepsWhatItWasIdentifiedAs) {
+  // Answers as though Firelight modeled nothing, so a disc that really does identify still has
+  // nowhere to land. Cheaper and more exact than committing an image for a console we cannot run
+  class NoPlatforms final : public platforms::IPlatformService {
+  public:
+    [[nodiscard]] std::optional<platforms::Platform> getPlatform(unsigned) const override { return {}; }
+
+    [[nodiscard]] std::vector<platforms::Platform> listPlatforms() const override { return {}; }
+
+    [[nodiscard]] int platformIdForExtension(const std::string &) const override {
+      return platforms::PlatformService::PLATFORM_ID_UNKNOWN;
+    }
+
+    [[nodiscard]] int platformIdForRcConsole(int) const override {
+      return platforms::PlatformService::PLATFORM_ID_UNKNOWN;
+    }
+  };
+
+  NoPlatforms service;
+  const DiscInspector inspector(service);
+  std::vector<IdentifiedDiscMember> members;
+
+  const auto identity = inspector.inspectFile(TEST_DISC_PATH, members);
+
+  EXPECT_FALSE(identity.isIdentified());
+  EXPECT_EQ(identity.outcome, IdentifyOutcome::PlatformNotSupported);
+  EXPECT_FALSE(identity.identifiedAs.empty()) << "the console it identified as was thrown away";
+}
+
 // The reader shim end to end: open the CHD, walk its track metadata, read sectors and identify
 TEST_F(ChdDiscTest, AChdIdentifiesAsItsRealPlatformWithAStableHash) {
   const DiscInspector inspector(m_platformService);
@@ -53,7 +86,7 @@ TEST_F(ChdDiscTest, AChdIdentifiesAsItsRealPlatformWithAStableHash) {
 
   const auto identity = inspector.inspectFile(TEST_DISC_PATH, members);
 
-  ASSERT_TRUE(identity.valid) << "the CHD reader could not identify a real disc image";
+  ASSERT_TRUE(identity.isIdentified()) << "the CHD reader could not identify a real disc image";
   EXPECT_EQ(identity.platformId, platforms::PlatformService::PLATFORM_ID_PS1);
   EXPECT_EQ(identity.contentHash, TEST_DISC_HASH);
 }
@@ -88,7 +121,7 @@ TEST_F(ChdDiscTest, APlaylistNamingAChdHashesToThatChd) {
   std::vector<IdentifiedDiscMember> members;
   const auto viaPlaylist = inspector.inspectFile(playlistPath.toStdString(), members);
 
-  ASSERT_TRUE(viaPlaylist.valid);
+  ASSERT_TRUE(viaPlaylist.isIdentified());
   EXPECT_EQ(viaPlaylist.contentHash, TEST_DISC_HASH);
 }
 
@@ -141,7 +174,7 @@ TEST_F(ChdDiscTest, ACueAndAChdOfOneDiscHashTheSame) {
   const auto cueIdentity = inspector.inspectFile(TEST_DISC_CUE_PATH, fromCue);
   const auto chdIdentity = inspector.inspectFile(TEST_DISC_PATH, fromChd);
 
-  ASSERT_TRUE(cueIdentity.valid) << "the cue+bin pair did not identify";
+  ASSERT_TRUE(cueIdentity.isIdentified()) << "the cue+bin pair did not identify";
   EXPECT_EQ(cueIdentity.platformId, chdIdentity.platformId);
   EXPECT_EQ(cueIdentity.contentHash, chdIdentity.contentHash);
   EXPECT_EQ(cueIdentity.contentHash, TEST_DISC_HASH);
@@ -177,7 +210,7 @@ TEST_F(ChdDiscTest, APlayStationDiscDumpedAsAnIsoStillIdentifies) {
   std::vector<IdentifiedDiscMember> members;
   const auto identity = inspector.inspectFile(isoPath, members);
 
-  ASSERT_TRUE(identity.valid) << "a PlayStation disc as a plain .iso was not identified at all";
+  ASSERT_TRUE(identity.isIdentified()) << "a PlayStation disc as a plain .iso was not identified at all";
   EXPECT_EQ(identity.platformId, platforms::PlatformService::PLATFORM_ID_PS1);
   // Identity is the content, so the format it arrived in must not move it
   EXPECT_EQ(identity.contentHash, TEST_DISC_HASH);

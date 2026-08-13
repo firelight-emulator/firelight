@@ -5,7 +5,7 @@
 #include <firelight/library/disc_set_playlist.hpp>
 #include <firelight/library/user_library_repository.hpp>
 
-#include <atomic>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <vector>
@@ -29,17 +29,21 @@ public:
   ~DiscSetService() = default;
 
   /**
-   * Where playlists are written from now on. Existing ones are left where they are, since
-   * moving a file somebody's other frontend is pointed at is not ours to do
-   */
-  void setPlaylistLocation(PlaylistLocation location);
-
-  /**
    * Finds the discs of the same game as this entry and folds them together.
    *
    * @return True when anything moved
    */
   bool autoGroupDiscs(int entryId);
+
+  /**
+   * Writes the set's playlist when it is missing or says the wrong thing.
+   *
+   * The file is a render of what the database already knows, so it is safe to lose: nothing
+   * refers to it and it costs a write to rebuild
+   *
+   * @return True when the file on disk changed
+   */
+  bool materializePlaylist(int setId, const std::string &contentHash);
 
   /**
    * Takes a disc out of its set and gives it its own entry back. Records that a person decided
@@ -52,16 +56,10 @@ public:
    */
   bool clearUserChoice(int entryId);
 
-  /**
-   * Rewrites the playlist of any set whose one has gone or fallen out of date.
-   *
-   * A set launches through a file we generate, so a game whose playlist is deleted, moved or
-   * left behind by a games folder that moved would otherwise disappear from the library while
-   * every one of its discs is still sitting there
-   */
-  void reconcilePlaylists();
-
 private:
+  /** Keeps a set's disc count in step with what metadata says the game came on */
+  void recordDiscCount(const Entry &entry);
+
   /**
    * Whether these discs and the ones already in their sets number off without repeating.
    *
@@ -85,17 +83,8 @@ private:
   /** Removes a set once it is down to one disc, since one disc is not a set */
   bool dissolveIfUndersized(int setId);
 
-  /**
-   * Writes the set's playlist and makes it the way in, so the core is handed one path for the
-   * whole game and writes one memory card.
-   *
-   * A playlist somebody wrote themselves is adopted rather than overwritten, and a folder that
-   * cannot be written to is left alone
-   */
-  bool writePlaylist(int setId, const Entry &survivor);
-
-  /** Takes a retired set's playlist out of the library, and off disk when we wrote it */
-  void retirePlaylist(const DiscSet &set);
+  /** Takes a retired set's playlist off disk */
+  void retirePlaylist(const std::string &contentHash);
 
   /** The entry a set launches through */
   std::optional<Entry> survivorOf(int setId);
@@ -104,11 +93,15 @@ private:
 
   std::string m_appDataDirectory;
 
-  std::atomic<PlaylistLocation> m_playlistLocation{PlaylistLocation::BesideDiscs};
+  // TODO
+  // Held across the compare and the write, so two threads deciding at once cannot both write
+  std::mutex m_playlistMutex;
 
+  // TODO
   // Set while a write of this service's own is in flight, so the event that write publishes
-  // does not start another round
-  std::atomic_bool m_applying{false};
+  // does not start another round. Per thread, because a write on one thread says nothing about
+  // whether an event arriving on another is re-entrant
+  static thread_local bool s_applying;
 
   ScopedConnection m_entryUpdatedConnection;
 

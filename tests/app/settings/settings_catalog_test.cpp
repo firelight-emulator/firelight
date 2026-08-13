@@ -3,7 +3,13 @@
 #include <firelight/settings/settings_catalog.hpp>
 
 #include <algorithm>
+#include <atomic>
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
+#include <spdlog/sinks/ostream_sink.h>
+#include <spdlog/spdlog.h>
+#include <sstream>
 
 namespace firelight::settings {
 
@@ -534,7 +540,7 @@ TEST(SettingsCatalogValidationTest, ParsesTypeAliasesForEveryDelegate) {
 // load-bearing, so a typo silently orphans a setting rather than erroring
 TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
   SettingsCatalog c;
-  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE)) << "could not read " << FL_SETTINGS_CATALOG_FILE;
+  ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR)) << "could not read " << FL_SETTINGS_CATALOG_DIR;
 
   const auto problems = c.validate();
   for (const auto &problem : problems) {
@@ -561,7 +567,7 @@ TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
 // the game volume, so the two are pinned separately
 TEST(ShippedSettingsCatalogTest, DeclaresTheUiSoundVolumeKey) {
   SettingsCatalog c;
-  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
+  ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
   const auto *setting = c.findByKey(firelight::audio::UI_SOUND_VOLUME_KEY);
   ASSERT_NE(setting, nullptr) << "UiSoundPlayer reads '" << firelight::audio::UI_SOUND_VOLUME_KEY
@@ -582,7 +588,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheUiSoundVolumeKey) {
 // key and its declaration are pinned together
 TEST(ShippedSettingsCatalogTest, DeclaresTheAudioOutputKeyAudioManagerReads) {
   SettingsCatalog c;
-  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
+  ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
   const auto *setting = c.findByKey(AudioManager::OUTPUT_DEVICE_KEY);
   ASSERT_NE(setting, nullptr) << "AudioManager reads '" << AudioManager::OUTPUT_DEVICE_KEY
@@ -601,7 +607,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheAudioOutputKeyAudioManagerReads) {
 // reason muting one game leaves the next one muted too
 TEST(ShippedSettingsCatalogTest, DeclaresTheMuteKeyAudioManagerReads) {
   SettingsCatalog c;
-  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
+  ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
   const auto *setting = c.findByKey(AudioManager::MUTED_KEY);
   ASSERT_NE(setting, nullptr) << "AudioManager reads '" << AudioManager::MUTED_KEY
@@ -617,7 +623,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheMuteKeyAudioManagerReads) {
 // anything if it went missing — the slider would just stop doing anything
 TEST(ShippedSettingsCatalogTest, DeclaresTheVolumeKeyAudioManagerReads) {
   SettingsCatalog c;
-  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
+  ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
   const auto *setting = c.findByKey(AudioManager::VOLUME_KEY);
   ASSERT_NE(setting, nullptr) << "AudioManager reads '" << AudioManager::VOLUME_KEY
@@ -638,7 +644,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheVolumeKeyAudioManagerReads) {
 // pin the keys here
 TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
   SettingsCatalog c;
-  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
+  ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
   const std::vector<std::string> facadeKeys = {"accent-color",       "background-mode", "background-color",
                                                "background-color-2", "background-file", "background-blur",
@@ -664,7 +670,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
 // declaring reads as empty rather than as an error
 TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheGeneralFacadeBinds) {
   SettingsCatalog c;
-  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
+  ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
   // TODO
   // library-sort-method is left out: the facade still binds it but the catalog has never
@@ -688,7 +694,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheGeneralFacadeBinds) {
 // The variant settings back the grouping rules, which have no meaning without them
 TEST(ShippedSettingsCatalogTest, DeclaresTheVariantGroupingKeys) {
   SettingsCatalog c;
-  ASSERT_TRUE(c.loadFromFile(FL_SETTINGS_CATALOG_FILE));
+  ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
   const auto *collapse = c.findByKey("library-collapse-variants");
   ASSERT_NE(collapse, nullptr);
@@ -701,6 +707,202 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheVariantGroupingKeys) {
   const auto *languages = c.findByKey("library-language-priority");
   ASSERT_NE(languages, nullptr);
   EXPECT_FALSE(languages->defaultValue.empty());
+}
+
+namespace {
+// A folder of catalog files that cleans up after itself, so each case gets its own
+class TempCatalog {
+public:
+  TempCatalog() : m_root(std::filesystem::temp_directory_path() / uniqueName()) {
+    std::filesystem::create_directories(m_root);
+  }
+
+  ~TempCatalog() {
+    std::error_code ec;
+    std::filesystem::remove_all(m_root, ec);
+  }
+
+  TempCatalog(const TempCatalog &) = delete;
+  TempCatalog &operator=(const TempCatalog &) = delete;
+
+  void write(const std::string &relative, const std::string &contents) const {
+    const auto path = m_root / relative;
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    out << contents;
+  }
+
+  [[nodiscard]] std::string path() const { return m_root.string(); }
+
+private:
+  static std::string uniqueName() {
+    static std::atomic<int> counter{0};
+    return "fl-catalog-test-" + std::to_string(counter++);
+  }
+
+  std::filesystem::path m_root;
+};
+
+// What the loader logged, so a warning nothing returns can still be asserted on
+class LogCapture {
+public:
+  LogCapture() : m_sink(std::make_shared<spdlog::sinks::ostream_sink_mt>(m_stream)) {
+    m_previous = spdlog::default_logger();
+    auto logger = std::make_shared<spdlog::logger>("catalog-test", m_sink);
+    logger->set_level(spdlog::level::trace);
+    spdlog::set_default_logger(logger);
+  }
+
+  ~LogCapture() { spdlog::set_default_logger(m_previous); }
+
+  LogCapture(const LogCapture &) = delete;
+  LogCapture &operator=(const LogCapture &) = delete;
+
+  [[nodiscard]] bool contains(const std::string &needle) { return m_stream.str().find(needle) != std::string::npos; }
+
+  [[nodiscard]] std::string text() { return m_stream.str(); }
+
+private:
+  std::ostringstream m_stream;
+  std::shared_ptr<spdlog::sinks::ostream_sink_mt> m_sink;
+  std::shared_ptr<spdlog::logger> m_previous;
+};
+} // namespace
+
+// The point of the folder: a page's settings can live beside that page's other settings
+TEST(CatalogDirectoryTest, SettingsFromEveryFileAreLoaded) {
+  const TempCatalog dir;
+  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
+                                "groups":[{"id":"g","page":"p","label":"G"}]})");
+  dir.write("10-first.json", R"({"app":[{"key":"a","label":"A","group":"g","type":"boolean","default":"true"}]})");
+  dir.write("20-second.json", R"({"app":[{"key":"b","label":"B","group":"g","type":"boolean","default":"false"}]})");
+  dir.write("cores/some_core.json",
+            R"({"cores":{"some_core":{"settings":[{"key":"c","label":"C","type":"boolean","default":"true"}],
+                                      "defaults":{"raw":"1"}}}})");
+
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromDirectory(dir.path()));
+
+  EXPECT_EQ(c.appSettings().size(), 2u);
+  EXPECT_EQ(c.pages().size(), 1u);
+  EXPECT_EQ(c.groups().size(), 1u);
+  EXPECT_NE(c.findByKey("a"), nullptr);
+  EXPECT_NE(c.findByKey("b"), nullptr);
+  EXPECT_EQ(c.coreSpecificSettings("some_core").size(), 1u);
+  EXPECT_EQ(c.coreDefaults("some_core").at("raw"), "1");
+}
+
+// Ties in `order` keep declaration order, so which file was read first has to be the same everywhere
+TEST(CatalogDirectoryTest, FilesAreReadInNameOrder) {
+  const TempCatalog dir;
+  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
+                                "groups":[{"id":"g","page":"p","label":"G"}]})");
+  dir.write("20-second.json", R"({"app":[{"key":"second","label":"S","group":"g","type":"boolean"}]})");
+  dir.write("10-first.json", R"({"app":[{"key":"first","label":"F","group":"g","type":"boolean"}]})");
+
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromDirectory(dir.path()));
+
+  const auto inGroup = c.settingsForGroup("g", "");
+  ASSERT_EQ(inGroup.size(), 2u);
+  EXPECT_EQ(inGroup[0].key, "first") << "the folder was read in whatever order the filesystem gave";
+  EXPECT_EQ(inGroup[1].key, "second");
+}
+
+// One key declared in two files is the mistake the split makes possible, and nothing else catches it
+TEST(CatalogDirectoryTest, AKeyDeclaredTwiceAcrossFilesIsReported) {
+  const TempCatalog dir;
+  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
+                                "groups":[{"id":"g","page":"p","label":"G"}]})");
+  dir.write("10-a.json", R"({"app":[{"key":"same","label":"A","group":"g","type":"boolean"}]})");
+  dir.write("20-b.json", R"({"app":[{"key":"same","label":"B","group":"g","type":"boolean"}]})");
+
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromDirectory(dir.path()));
+
+  const auto problems = c.validate();
+  EXPECT_TRUE(std::ranges::any_of(problems, [](const std::string &p) {
+    return p.find("duplicate setting key 'same'") != std::string::npos;
+  })) << "a key declared in two files loaded silently";
+}
+
+// A half-loaded catalog gives every missing key an empty default, which reads exactly like a
+// setting the user never touched — so one bad file must cost nothing rather than most things
+TEST(CatalogDirectoryTest, AMalformedFileFailsTheLoadAndKeepsThePreviousCatalog) {
+  const TempCatalog good;
+  good.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
+                                 "groups":[{"id":"g","page":"p","label":"G"}]})");
+  good.write("10-a.json", R"({"app":[{"key":"kept","label":"A","group":"g","type":"boolean","default":"true"}]})");
+
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromDirectory(good.path()));
+  ASSERT_NE(c.findByKey("kept"), nullptr);
+
+  const TempCatalog bad;
+  bad.write("10-fine.json", R"({"app":[{"key":"never","label":"N","type":"boolean"}]})");
+  bad.write("20-broken.json", "{ this is not json");
+
+  EXPECT_FALSE(c.loadFromDirectory(bad.path()));
+  EXPECT_NE(c.findByKey("kept"), nullptr) << "a bad file threw away the catalog that was already loaded";
+  EXPECT_EQ(c.findByKey("never"), nullptr) << "half of the bad folder was committed";
+}
+
+TEST(CatalogDirectoryTest, AMissingOrEmptyDirectoryFails) {
+  SettingsCatalog c;
+  EXPECT_FALSE(c.loadFromDirectory((std::filesystem::temp_directory_path() / "fl-catalog-does-not-exist").string()));
+
+  const TempCatalog empty;
+  EXPECT_FALSE(c.loadFromDirectory(empty.path())) << "an empty folder loaded as an empty catalog";
+}
+
+// A row that opens somewhere instead of holding a value, so a page reached by drilling in can be
+// declared beside the settings it sits among
+TEST(CatalogLinkTest, ALinkKeepsItsRouteAndReportsTheLinkWidget) {
+  const TempCatalog dir;
+  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
+                                "groups":[{"id":"g","page":"p","label":"G"}]})");
+  dir.write("10-a.json", R"({"app":[{"key":"open-grid","label":"Grid view","group":"g",
+                                     "type":"link","route":"/settings/grid-view"}]})");
+
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromDirectory(dir.path()));
+
+  const auto *link = c.findByKey("open-grid");
+  ASSERT_NE(link, nullptr);
+  EXPECT_EQ(link->widget, "link") << "a link fell through to a dropdown";
+  EXPECT_EQ(link->route, "/settings/grid-view");
+
+  EXPECT_TRUE(c.validate().empty()) << "a well-formed link was reported as a problem";
+}
+
+// A link with nowhere to go renders as a row that swallows the press
+TEST(CatalogLinkTest, ALinkWithNoRouteIsReported) {
+  const TempCatalog dir;
+  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
+                                "groups":[{"id":"g","page":"p","label":"G"}]})");
+  dir.write("10-a.json", R"({"app":[{"key":"goes-nowhere","label":"Nowhere","group":"g","type":"link"}]})");
+
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromDirectory(dir.path()));
+
+  const auto problems = c.validate();
+  EXPECT_TRUE(std::ranges::any_of(problems, [](const std::string &p) {
+    return p.find("'goes-nowhere' is a link but names no route") != std::string::npos;
+  })) << "a link with no destination loaded silently";
+}
+
+// Two files setting the same core option to different values: the second silently wins, and the
+// core runs with an option nobody chose
+TEST(CatalogDirectoryTest, ACollidingCoreDefaultWarns) {
+  const TempCatalog dir;
+  dir.write("cores/a.json", R"({"cores":{"core_x":{"defaults":{"opt":"1"}}}})");
+  dir.write("cores/b.json", R"({"cores":{"core_x":{"defaults":{"opt":"2"}}}})");
+
+  LogCapture log;
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromDirectory(dir.path()));
+
+  EXPECT_TRUE(log.contains("is declared twice")) << "a conflicting core default loaded silently: " << log.text();
 }
 
 } // namespace firelight::settings

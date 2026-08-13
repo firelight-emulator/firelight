@@ -2,9 +2,7 @@
 
 #include <firelight/activity/activity_log.hpp>
 #include <firelight/event_dispatcher.hpp>
-#include <firelight/library/disc_set_service.hpp>
 #include <firelight/saves/isave_manager.hpp>
-#include <firelight/settings/settings_service.hpp>
 
 namespace firelight::library {
 
@@ -18,24 +16,15 @@ namespace firelight::library {
  */
 class EntryMergeService {
 public:
-  static constexpr auto PLAYLIST_LOCATION_KEY = "library-playlist-location";
-
-  EntryMergeService(saves::ISaveManager &saveManager, activity::IActivityLog &activityLog, DiscSetService &discSets,
-                    settings::SettingsService &settings);
+  EntryMergeService(saves::ISaveManager &saveManager, activity::IActivityLog &activityLog);
 
   ~EntryMergeService() = default;
 
 private:
-  /** Points the disc sets at wherever playlists are meant to go */
-  void applyPlaylistLocation();
-
   saves::ISaveManager &m_saveManager;
   activity::IActivityLog &m_activityLog;
-  DiscSetService &m_discSets;
-  settings::SettingsService &m_settings;
 
   ScopedConnection m_entryAbsorbedConnection;
-  ScopedConnection m_settingChangedConnection;
 };
 
 } // namespace firelight::library

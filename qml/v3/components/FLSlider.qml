@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import Firelight 1.0
 
 Slider {
     id: control
@@ -13,6 +14,15 @@ Slider {
     implicitWidth: AppStyle.inputWidth
     implicitHeight: Math.max(AppStyle.minTarget, AppStyle.controlHeight)
     opacity: control.enabled ? 1 : 0.4
+
+    Keys.onPressed: event => {
+        if (event.key === Qt.Key_Left || event.key === Qt.Key_Right) {
+            console.log("Key pressed: " + event.key);
+            event.accepted = true;
+        }
+    }
+
+    FLFocus.proxy: theHandle
 
     HoverHandler {
         id: sliderHover
@@ -37,6 +47,7 @@ Slider {
     }
 
     handle: Rectangle {
+        id: theHandle
         x: control.leftPadding + control.visualPosition * (control.availableWidth - width)
         y: control.topPadding + control.availableHeight / 2 - height / 2
         width: control.pressed ? Math.round(control._handle * 1.15) : control._handle

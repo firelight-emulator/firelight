@@ -1,3 +1,4 @@
+find_package(spdlog REQUIRED)
 cmake_minimum_required(VERSION 3.22.1)
 set(CMAKE_CXX_STANDARD 20)
 
@@ -14,4 +15,5 @@ target_include_directories(firelight_platforms
 
 target_link_libraries(firelight_platforms
         PUBLIC nlohmann_json::nlohmann_json
+        PRIVATE spdlog::spdlog
 )

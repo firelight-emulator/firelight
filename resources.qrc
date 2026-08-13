@@ -21,6 +21,8 @@
         <file alias="game-tile-focus">assets/sfx/switch2/game_view_nav.wav</file>
         <file alias="show-modal">assets/sfx/switch2/deck_ui_into_game_detail.wav</file>
         <file alias="back">assets/sfx/switch2/deck_ui_hide_modal.wav</file>
+        <file alias="activate-game">assets/sfx/switch2/activategame.wav</file>
+        <file alias="show-dialog">assets/sfx/switch2/show_dialog.wav</file>
         <file alias="check">assets/sfx/switch2/User Interface, Click, UI Buttons, Select, Menu SND115479 - Pitch 356_4.wav</file>
         <file alias="uncheck">assets/sfx/switch2/User Interface, Click, UI Buttons, Select, Menu SND115479 - Pitch 282_8.wav</file>
     </qresource>
@@ -121,6 +123,11 @@
         <file alias="power">assets/img/icons/filled-rounded/power.svg</file>
         <file alias="ws">assets/img/platform-icons/wonderswanicon.svg</file>
         <file alias="ps1">assets/img/platform-icons/unknown.svg</file>
+        <file alias="vb">assets/img/platform-icons/unknown.svg</file>
+        <file alias="32x">assets/img/platform-icons/unknown.svg</file>
+        <file alias="fds">assets/img/platform-icons/unknown.svg</file>
+        <file alias="segacd">assets/img/platform-icons/unknown.svg</file>
+        <file alias="pcecd">assets/img/platform-icons/unknown.svg</file>
         <file alias="unknown">assets/img/platform-icons/unknown.svg</file>
     </qresource>
     <qresource prefix="/icons/empty">

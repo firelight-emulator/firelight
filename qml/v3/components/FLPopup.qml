@@ -7,9 +7,23 @@ import Firelight 1.0
 Menu {
     id: control
     property int minWidth: AppStyle.defaultPopupMinimumWidth
+    property FLSoundEffect openSound: SoundEffects.openPopup
 
     padding: AppStyle.spacingMd
     implicitWidth: Math.max(minWidth, contentItem.implicitWidth + padding * 2)
+    implicitHeight: contentItem.implicitHeight + padding * 2
+
+    Overlay.modal: Item {}
+    property Item caller: null
+
+    // TODO
+    // Whether this popup is the one holding a dim up, so the two calls stay paired
+    property bool isDimming: false
+
+    function popupFor(caller: Item, x, y) {
+        control.caller = caller;
+        control.popup(x, y);
+    }
 
     Connections {
         target: control
@@ -17,6 +31,15 @@ Menu {
         // TODO
         // Opening moves focus inside, and this already sounds for itself
         function onAboutToShow() {
+            // TODO
+            // Remembered rather than re-tested on the way out, so a popup that stops being modal
+            // while open does not take away a dim it never put up
+            control.isDimming = control.modal;
+
+            if (control.isDimming) {
+                FLDimmer.show(control.caller);
+            }
+
             FocusCursor.startBlink();
         }
 
@@ -24,7 +47,23 @@ Menu {
             control.contentItem.FLFocus.barrier = true;
 
             control.contentItem.forceActiveFocus();
-            SoundEffects.openPopup.play();
+            if (control.openSound) {
+                control.openSound.play();
+            }
+            Qt.callLater(() => FocusCursor.endBlink());
+        }
+
+        function onAboutToHide() {
+            console.log("onAboutToHide in FLPopup");
+            FocusCursor.startBlink();
+        }
+
+        function onClosed() {
+            if (control.isDimming) {
+                control.isDimming = false;
+                FLDimmer.hide();
+            }
+
             Qt.callLater(() => FocusCursor.endBlink());
         }
     }
@@ -72,6 +111,21 @@ Menu {
         }
     }
 
+    // TODO
+    // Runs an action and reports that it ran, so each lookup below reads as one line
+    function runAction(action: FLAction): bool {
+        if (action === null) {
+            return false;
+        }
+
+        if (action.sound) {
+            action.sound.play(false);
+        }
+
+        action.triggered();
+        return true;
+    }
+
     function activate(key: int): bool {
         const focused = control.contentItem.Window.activeFocusItem;
 
@@ -80,15 +134,15 @@ Menu {
         }
 
         const info = control.contentItem.FLFocus.find(focused);
-        const action = info !== null ? info.getActionFor(key) : null;
 
-        console.log("action: " + action + ", info: " + info);
-        if (action !== null) {
-            if (action.sound) {
-                action.sound.play(false);
-            }
+        if (control.runAction(info !== null ? info.getActionFor(key) : null)) {
+            return true;
+        }
 
-            action.triggered();
+        // TODO
+        // This handler is the content item's own, so what the content item declares answers here
+        // the way a button's own actions answer in its handler
+        if (control.runAction(control.contentItem.FLFocus.getActionFor(key))) {
             return true;
         }
 
@@ -106,18 +160,6 @@ Menu {
 
         focused.click();
         return true;
-    }
-
-    Connections {
-        target: control
-
-        function onAboutToHide() {
-            FocusCursor.startBlink();
-        }
-
-        function onClosed() {
-            Qt.callLater(() => FocusCursor.endBlink());
-        }
     }
 
     background: Rectangle {

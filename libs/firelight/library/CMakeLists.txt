@@ -11,6 +11,8 @@ add_library(firelight_library STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/smart_folder.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/metadata_overrides.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/filename_tags.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/game_identity.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/accepted_extensions.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/variant_group.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/library_scanner2.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/archive_reader.cpp
@@ -21,6 +23,7 @@ add_library(firelight_library STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/rc_hash_logging.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/disc_inspector.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/disc_set.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/entry_status.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/disc_set_playlist.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/disc_set_service.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/entry_resolver.cpp
@@ -64,7 +67,9 @@ add_executable(firelight_library_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/metadata_overrides_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/filename_tags_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/disc_set_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/entry_status_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/disc_set_playlist_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/game_identity_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/variant_primary_test.cpp
 )
 target_include_directories(firelight_library_test

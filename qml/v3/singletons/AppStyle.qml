@@ -24,7 +24,7 @@ Item {
     // Overline / section-label size (uppercase group headers)
     readonly property int fontSizeXSmall: Math.round(12 * scale)  // section labels, overlines
     readonly property int fontSizeSmall: Math.round(14 * scale)  // captions, muted/secondary labels
-    readonly property int fontSizeMedium: Math.round(15 * scale)  // body / default
+    readonly property int fontSizeMedium: Math.round(16 * scale)  // body / default
     readonly property int fontSizeLarge: Math.round(22 * scale)   // subtitles, section headers
     readonly property int fontSizeXLarge: Math.round(32 * scale)  // page / hero titles
 
@@ -118,6 +118,13 @@ Item {
 
 
     readonly property int defaultPopupMinimumWidth: Math.round(240 * scale)
+    readonly property int defaultDialogMinimumWidth: Math.round(500 * scale)
+
+    // TODO
+    // The dialog's scrollable content area, floored so a one-line dialog is not a sliver and
+    // capped as a fraction of the window so a long one scrolls instead of growing off screen
+    readonly property int dialogContentMinHeight: Math.round(100 * scale * density)
+    readonly property real dialogContentMaxHeightFraction: 0.6
 
     // TODO
     //*************************************************************
@@ -155,7 +162,7 @@ Item {
     // TODO
     // One full revolution of the focus ring's rotating gradient
     readonly property int durationSpin: 6600
-    readonly property int easingStandard: Easing.OutCubic
+    readonly property int easingStandard: Easing.InOutCubic
 
     // TODO
     //*************************************************************

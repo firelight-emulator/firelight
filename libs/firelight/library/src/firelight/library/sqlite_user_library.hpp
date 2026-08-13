@@ -37,6 +37,8 @@ public:
 
   bool update(Entry &entry) override;
 
+  bool setEntryHidden(int entryId, bool hidden) override;
+
   bool updateEntryMetadata(const Entry &entry) override;
 
   bool applyEntryMetadata(int entryId, const GameMetadata &incoming, const std::set<std::string> &changedFields,
@@ -60,6 +62,8 @@ public:
 
   std::vector<ContentFile> getDiscsInSet(int setId) override;
 
+  std::vector<Entry> getEntriesInDiscSet(int setId) override;
+
   bool setContentFileDiscSet(int contentFileId, std::optional<int> setId) override;
 
   bool setEntryDiscSet(int entryId, std::optional<int> setId, bool isUserChoice) override;
@@ -80,7 +84,7 @@ public:
 
   bool setEntryVariantGroup(int entryId, std::optional<int> groupId, bool isUserChoice) override;
 
-  std::vector<int> getEntryIdsWithNormalizedTitle(unsigned platformId, const std::string &normalizedTitle) override;
+  std::vector<int> getCandidateEntryIds(const GameIdentity &identity) override;
 
   std::vector<Entry> getEntriesInVariantGroup(int groupId) override;
 
@@ -102,6 +106,14 @@ public:
 
   std::optional<ContentFile> getContentFileWithPathAndSize(const std::string &filePath, size_t fileSizeBytes,
                                                            bool inArchive) override;
+
+  std::vector<ContentFile> getPresentContentFiles() override;
+
+  std::vector<ContentFile> getPresentDiscsInSet(int setId) override;
+
+  bool markContentFileMissing(int id) override;
+
+  bool reviveContentFile(int id) override;
 
   bool deleteContentFile(int id) override;
 
@@ -145,7 +157,29 @@ public:
                               const std::string &contentHash,
                               std::string_view type = RunConfiguration::TYPE_ROM) override;
 
+  void createRunConfigurationForSet(int setId, int anchorContentFileId, const std::string &contentHash) override;
+
+  bool deleteRunConfigurationsForDiscSet(int setId) override;
+
+  bool recordScanDrop(const ScanDrop &drop) override;
+
+  bool clearScanDrop(const std::string &filePath, const std::string &archivePath) override;
+
+  std::vector<ScanDrop> getScanDrops() override;
+
+  void countUnrecognizedExtension(const std::string &extension) override;
+
+  std::vector<UnrecognizedExtension> getUnrecognizedExtensions() override;
+
 private:
+  // TODO
+  // The listing behind getContentFiles and getPresentContentFiles
+  [[nodiscard]] std::vector<ContentFile> contentFiles(bool presentOnly);
+
+  // TODO
+  // The listing behind getDiscsInSet and getPresentDiscsInSet
+  [[nodiscard]] std::vector<ContentFile> discsInSet(int setId, bool presentOnly);
+
   void ensureColumnExists(const std::string &table, const std::string &column, const std::string &definition);
 
   [[nodiscard]] int resolveContentDirectoryId(const std::string &onDiskPath);

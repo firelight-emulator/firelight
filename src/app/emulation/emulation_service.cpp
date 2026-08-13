@@ -85,10 +85,10 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
   // Every failure path returns a *ready* future holding nullptr (never a
   // default-constructed, invalid future that would be UB to .get()) and
   // announces the failure so the UI can react
-  const auto failed = [] {
+  const auto failed = [](std::string reason = {}) {
     std::promise<EmulatorInstance *> promise;
     promise.set_value(nullptr);
-    EventDispatcher::instance().publish(GameLoadFailedEvent{});
+    EventDispatcher::instance().publish(GameLoadFailedEvent{.reason = std::move(reason)});
     return promise.get_future();
   };
 
@@ -103,7 +103,7 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
 
   auto result = m_loader->load(entryId, launch, m_coreFactory);
   if (!result.success) {
-    return failed();
+    return failed(std::move(result.failureReason));
   }
 
   m_currentEntry = result.entry;

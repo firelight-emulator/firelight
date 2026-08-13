@@ -170,4 +170,6 @@ QtObject {
     // TODO
     // Pickable folder / label swatch colours (data values, not theme roles)
     readonly property var folderColors: ["#e5484d", "#f76b15", "#f5d90a", "#46a758", "#0091ff", "#8e4ec6", "#e93d82"]
+
+    readonly property color switch2Color: "#1bcbfd"
 }

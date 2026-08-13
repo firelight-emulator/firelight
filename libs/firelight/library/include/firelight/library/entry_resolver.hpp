@@ -6,6 +6,7 @@
 #include <firelight/library/run_configuration.hpp>
 
 #include <optional>
+#include <string>
 
 namespace firelight::library {
 class IUserLibraryRepository;
@@ -16,13 +17,18 @@ struct ResolvedContent {
   bool valid = false;
   ContentFile contentFile;
   std::optional<PatchFile> patch;
+
+  // TODO
+  // The set this launches, unset for a single file. The path in contentFile is a playlist that
+  // is rendered from the database rather than kept, so a caller has to be able to ask for it
+  std::optional<int> discSetId{};
 };
 
 // Chooses the "most correct" content to launch for a library entry from among
 // its run configurations
 class EntryResolver {
 public:
-  explicit EntryResolver(IUserLibraryRepository &library);
+  EntryResolver(IUserLibraryRepository &library, std::string appDataDirectory);
 
   [[nodiscard]] ResolvedContent resolve(const Entry &entry) const;
 
@@ -31,6 +37,11 @@ private:
   static int scoreConfig(const RunConfiguration &config, const ContentFile &contentFile);
 
   IUserLibraryRepository &m_library;
+
+  // TODO
+  // Holds the playlists a disc set launches through, which are derived from the identity
+  // rather than recorded anywhere
+  std::string m_appDataDirectory;
 };
 
 } // namespace firelight::library

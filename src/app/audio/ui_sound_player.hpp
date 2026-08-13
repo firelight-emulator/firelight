@@ -74,6 +74,11 @@ private slots:
    */
   void onAudioOutputsChanged();
 
+  /**
+   * Reopens the stream after the output it was running on stopped it with an error
+   */
+  void onSinkStateChanged(QtAudio::State state);
+
 private:
   /**
    * Picks a format the device actually supports, preferring its own preferred format
@@ -134,6 +139,10 @@ private:
   QByteArray m_deviceId;
   QAudioFormat m_format;
   QTimer m_reopenTimer;
+
+  // Grows each time a reopen fails so an output that is simply gone is not retried on a loop,
+  // and resets as soon as a stream starts
+  int m_reopenBackoffMs = 0;
 
   ScopedConnection m_settingChangedConnection;
   ScopedConnection m_settingResetConnection;

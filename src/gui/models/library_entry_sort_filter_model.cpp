@@ -74,6 +74,18 @@ void LibraryEntrySortFilterModel::setFavoritesOnly(const bool favoritesOnly) {
   emit filtersOrSortChanged();
 }
 
+bool LibraryEntrySortFilterModel::isHideUnavailable() const { return m_pendingHideUnavailable; }
+
+void LibraryEntrySortFilterModel::setHideUnavailable(const bool hideUnavailable) {
+  if (m_pendingHideUnavailable == hideUnavailable) {
+    return;
+  }
+
+  m_pendingHideUnavailable = hideUnavailable;
+  emit hideUnavailableChanged();
+  emit filtersOrSortChanged();
+}
+
 QVariantList LibraryEntrySortFilterModel::getPlatformIds() const { return m_pendingPlatformIds; }
 
 void LibraryEntrySortFilterModel::setPlatformIds(const QVariantList &platformIds) {
@@ -86,7 +98,7 @@ void LibraryEntrySortFilterModel::setPlatformIds(const QVariantList &platformIds
   emit filtersOrSortChanged();
 }
 
-LibraryEntrySortFilterModel::SortRole LibraryEntrySortFilterModel::getSortRole() const { return m_pendingSortRole; }
+LibraryEntrySortFilterModel::SortRole LibraryEntrySortFilterModel::getSortRole() const { return m_sortRole; }
 
 void LibraryEntrySortFilterModel::setSortRole(const SortRole sortRole) {
   if (m_pendingSortRole == sortRole) {
@@ -96,6 +108,16 @@ void LibraryEntrySortFilterModel::setSortRole(const SortRole sortRole) {
   m_pendingSortRole = sortRole;
   emit sortRoleChanged();
   emit filtersOrSortChanged();
+}
+
+QString LibraryEntrySortFilterModel::getSortDisplayName() const {
+  for (const auto &option : getSortOptions()) {
+    if (option.toMap().value("value").toInt() == m_sortRole) {
+      return option.toMap().value("text").toString();
+    }
+  }
+
+  return {};
 }
 
 bool LibraryEntrySortFilterModel::isSortAscending() const { return m_pendingSortAscending; }
@@ -111,7 +133,8 @@ void LibraryEntrySortFilterModel::setSortAscending(const bool sortAscending) {
 }
 
 bool LibraryEntrySortFilterModel::anyFiltersActive() const {
-  return !m_pendingFilterText.isEmpty() || m_pendingFavoritesOnly || !m_pendingPlatformIds.isEmpty();
+  return !m_pendingFilterText.isEmpty() || m_pendingFavoritesOnly || m_pendingHideUnavailable ||
+         !m_pendingPlatformIds.isEmpty();
 }
 
 void LibraryEntrySortFilterModel::applyFilters() {
@@ -120,6 +143,7 @@ void LibraryEntrySortFilterModel::applyFilters() {
   // is not case-folding both sides on every row
   m_filterText = m_pendingFilterText.toLower();
   m_favoritesOnly = m_pendingFavoritesOnly;
+  m_hideUnavailable = m_pendingHideUnavailable;
 
   // TODO
   // Converted once here rather than per row in filterAcceptsRow
@@ -131,6 +155,10 @@ void LibraryEntrySortFilterModel::applyFilters() {
 
   QSortFilterProxyModel::setSortRole(m_pendingSortRole);
   sort(0, m_pendingSortAscending ? Qt::AscendingOrder : Qt::DescendingOrder);
+
+  m_sortRole = m_pendingSortRole;
+  m_sortAscending = m_pendingSortAscending;
+  emit sortRoleChanged();
   invalidateFilter();
 }
 
@@ -142,6 +170,10 @@ bool LibraryEntrySortFilterModel::filterAcceptsRow(const int sourceRow, const QM
   const auto sourceIndex = m_sourceModel->index(sourceRow, 0, sourceParent);
 
   if (m_favoritesOnly && !m_sourceModel->data(sourceIndex, library::EntryListModel::Favorite).toBool()) {
+    return false;
+  }
+
+  if (m_hideUnavailable && !m_sourceModel->data(sourceIndex, library::EntryListModel::Playable).toBool()) {
     return false;
   }
 

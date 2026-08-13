@@ -2,6 +2,7 @@
 
 #include <firelight/library/content_hasher.hpp>
 #include <firelight/library/disc_inspector.hpp>
+#include <firelight/library/identify_outcome.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -15,16 +16,21 @@ class IPlatformService;
 namespace firelight::library {
 
 // The result of identifying a content file: its platform, canonical content
-// hash, and file-level metadata. `valid` is false when the file could not be
-// recognized as a supported ROM or disc image
+// hash, and file-level metadata. Anything but Identified is a file we accepted
+// and could not catalogue, which the scanner records rather than dropping
 struct IdentifiedContent {
-  bool valid = false;
+  IdentifyOutcome outcome = IdentifyOutcome::NotRecognized;
   bool isDisc = false;
   int platformId = -1; // PlatformService::PLATFORM_ID_UNKNOWN
   std::string contentHash;
   std::string fileMd5;
   size_t fileSizeBytes = 0;
+  // The system the format named, when Firelight models no platform for it
+  std::string identifiedAs;
   std::vector<IdentifiedDiscMember> discMembers;
+
+  /** Whether this names a real platform and hash */
+  [[nodiscard]] bool isIdentified() const { return outcome == IdentifyOutcome::Identified; }
 };
 
 // Identifies the platform and computes the canonical content hash of ROM and

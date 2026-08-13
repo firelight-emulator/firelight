@@ -2,7 +2,27 @@
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/user_library_repository.hpp>
 
+#include <algorithm>
+#include <utility>
+
 namespace firelight::library {
+
+namespace {
+// Holds the re-entrancy flag for the length of a write, restoring whatever it was so a nested call
+// does not clear it on the way out
+class ApplyGuard {
+public:
+  explicit ApplyGuard(bool &flag) : m_flag(flag), m_previous(std::exchange(flag, true)) {}
+
+  ~ApplyGuard() { m_flag = m_previous; }
+
+private:
+  bool &m_flag;
+  bool m_previous;
+};
+} // namespace
+
+thread_local bool LibraryIngestService::s_applying = false;
 
 LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library) : m_library(library) {
   // A newly added content file gets a run configuration. These events are
@@ -13,15 +33,11 @@ LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library) : m_
         m_library.createRunConfiguration(event.id, event.filePath, event.platformId, event.contentHash);
       });
 
-  // A run configuration implies a playable entry: create it, or unhide an
-  // existing one for the same content
+  // A run configuration implies a library entry, so create one for content nothing stands for yet
   m_runConfigurationCreatedConnection = EventDispatcher::instance().subscribe<RunConfigurationCreatedEvent>(
       [this](const RunConfigurationCreatedEvent &event) {
-        if (auto entry = m_library.getEntryWithContentHash(event.contentHash)) {
-          if (entry->hidden) {
-            entry->hidden = false;
-            m_library.update(*entry);
-          }
+        if (const auto entry = m_library.getEntryWithContentHash(event.contentHash)) {
+          EventDispatcher::instance().publish(EntryUpdatedEvent{.entryId = entry->id});
         } else {
           // Display name is the final path segment (basename)
           const auto slash = event.filePath.find_last_of('/');
@@ -34,17 +50,40 @@ LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library) : m_
         }
       });
 
-  // When the last run configuration for a content hash is removed, hide its
-  // entry so it disappears from the library without losing user state
+  // Losing a way in changes what the entry can do, and the grid only learns that from an entry event
   m_runConfigurationDeletedConnection = EventDispatcher::instance().subscribe<RunConfigurationDeletedEvent>(
       [this](const RunConfigurationDeletedEvent &event) {
-        if (const auto runConfigs = m_library.getRunConfigurations(event.contentHash); runConfigs.empty()) {
-          if (auto entry = m_library.getEntryWithContentHash(event.contentHash)) {
-            entry->hidden = true;
-            m_library.update(*entry);
-          }
+        if (const auto entry = m_library.getEntryWithContentHash(event.contentHash)) {
+          EventDispatcher::instance().publish(EntryUpdatedEvent{.entryId = entry->id});
         }
       });
+
+  // A file going away leaves its ways in alone, so nothing else would say the entry changed
+  m_contentFileMissingConnection = EventDispatcher::instance().subscribe<ContentFileMissingEvent>(
+      [this](const ContentFileMissingEvent &event) { announceContentChange(event.contentHash, event.discSetId); });
+
+  m_contentFileRestoredConnection = EventDispatcher::instance().subscribe<ContentFileRestoredEvent>(
+      [this](const ContentFileRestoredEvent &event) { announceContentChange(event.contentHash, event.discSetId); });
+}
+
+void LibraryIngestService::announceContentChange(const std::string &contentHash, const std::optional<int> discSetId) {
+  if (s_applying) {
+    return;
+  }
+
+  const ApplyGuard guard(s_applying);
+
+  if (const auto entry = m_library.getEntryWithContentHash(contentHash)) {
+    EventDispatcher::instance().publish(EntryUpdatedEvent{.entryId = entry->id});
+  }
+
+  // An absorbed disc has no entry of its own, so nothing else would tell the set its disc count
+  // changed
+  if (discSetId.has_value()) {
+    for (const auto &entry : m_library.getEntriesInDiscSet(*discSetId)) {
+      EventDispatcher::instance().publish(EntryUpdatedEvent{.entryId = entry.id});
+    }
+  }
 }
 
 } // namespace firelight::library

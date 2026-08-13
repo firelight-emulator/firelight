@@ -21,31 +21,47 @@ GameLoader::GameLoader(library::UserLibraryService &library, library::EntryResol
 GameLoadResult GameLoader::load(const int entryId, LaunchOverrides launch, const CoreFactory &factory) {
   spdlog::info("[GameLoader] Loading entry with id {}", entryId);
 
+  // Says what stopped the launch in words worth showing, rather than leaving the caller with
+  // nothing but a null
+  const auto failed = [](std::string reason) {
+    GameLoadResult result;
+    result.failureReason = std::move(reason);
+    return result;
+  };
+
   auto entry = m_library.getEntry(entryId);
   if (!entry.has_value()) {
     spdlog::warn("[GameLoader] Entry with id {} does not exist", entryId);
-    return {};
+    return failed("That game is not in the library any more.");
   }
 
   const auto resolved = m_resolver.resolve(*entry);
   if (!resolved.valid) {
     spdlog::warn("[GameLoader] No usable content for entry with id {}", entryId);
-    return {};
+    return failed("Nothing left to launch this game with.");
   }
 
   const auto &contentFile = resolved.contentFile;
 
+  // A set's playlist is a render of what the database already holds, so it is rebuilt here
+  // rather than depended on: whatever happened to the file since the last launch, the core is
+  // handed a current one
+  if (resolved.discSetId.has_value() && m_context.materializePlaylist) {
+    m_context.materializePlaylist(*resolved.discSetId, contentFile.m_contentHash);
+  }
+
   const auto contentPath = contentFile.m_inArchive ? contentFile.m_archivePathName : contentFile.m_filePath;
   if (!std::filesystem::exists(contentPath)) {
     spdlog::error("[GameLoader] Content path doesn't exist: {}", contentPath);
-    return {};
+    return failed(resolved.discSetId.has_value() ? "Could not write the playlist this game launches through."
+                                                 : "The file for this game is not where the library expects it.");
   }
 
   library::ContentLoader contentLoader;
   auto loaded = contentLoader.load(contentFile);
   if (!loaded.valid) {
     spdlog::error("[GameLoader] Failed to load content for entry {}", entryId);
-    return {};
+    return failed("Could not read this game's files.");
   }
 
   if (resolved.patch.has_value()) {
@@ -54,7 +70,7 @@ GameLoadResult GameLoader::load(const int entryId, LaunchOverrides launch, const
       // The entry resolved to a patched version; running it unpatched would be
       // wrong (and could corrupt saves), so treat this as a load failure
       spdlog::error("[GameLoader] Failed to load patch {} for entry {}", patch.m_filePath, entryId);
-      return {};
+      return failed("Could not read the patch this game is set up to use.");
     }
     contentLoader.applyPatch(loaded, contentFile.m_platformId, patch);
   }
@@ -106,11 +122,11 @@ GameLoadResult GameLoader::load(const int entryId, LaunchOverrides launch, const
                                                       .saveDirectory = saveDirectory});
   } catch (const std::exception &e) {
     spdlog::error("[GameLoader] Failed to load core for entry {}: {}", entryId, e.what());
-    return {};
+    return failed("The emulator core for this system could not be started.");
   }
   if (!core) {
     spdlog::error("[GameLoader] Core factory returned null for entry {}", entryId);
-    return {};
+    return failed("No emulator core is installed for this system.");
   }
 
   result.instance = std::make_unique<EmulatorInstance>(

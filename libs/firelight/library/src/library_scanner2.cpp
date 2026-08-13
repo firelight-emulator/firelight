@@ -1,9 +1,12 @@
+#include <firelight/library/accepted_extensions.hpp>
 #include <firelight/library/archive_reader.hpp>
 #include <firelight/library/content_extensions.hpp>
 #include <firelight/library/content_identifier.hpp>
+#include <firelight/library/file_bytes.hpp>
 #include <firelight/library/filename_tags.hpp>
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/platforms/platform_service.hpp>
+#include <firelight/util/strings.hpp>
 
 #include <QDateTime>
 #include <QDir>
@@ -15,6 +18,57 @@
 
 namespace firelight::library {
 
+namespace {
+// The sheets whose contents say which raw tracks belong to a disc
+const QStringList &sheetGlobs() {
+  static const QStringList globs{"*.cue", "*.gdi", "*.ccd", "*.m3u"};
+  return globs;
+}
+
+// Windows-authored cue sheets carry backslashes, and a sheet may name a track by a path
+std::string baseNameOfToken(const std::string &token) {
+  const auto separator = token.find_last_of("/\\");
+  return strings::toLower(separator == std::string::npos ? token : token.substr(separator + 1));
+}
+
+// TODO
+// Every track name the directory's sheets actually mention. Built once per directory: reading
+// each sheet per track turns a folder of a few hundred games into tens of thousands of reads
+std::set<std::string> referencedTrackNames(const QDir &directory) {
+  std::set<std::string> names;
+
+  for (const auto &sheetName : directory.entryList(sheetGlobs(), QDir::Files)) {
+    const auto bytes = readAllBytes(directory.absoluteFilePath(sheetName).toStdString());
+
+    for (const auto &candidate : DiscInspector::sheetFilenameCandidates(bytes)) {
+      names.insert(baseNameOfToken(candidate));
+    }
+  }
+
+  return names;
+}
+
+// The same question for an archive, whose sheets have to be read out of it first
+std::set<std::string> referencedTrackNamesInArchive(const std::string &archivePath) {
+  std::set<std::string> names;
+  const ArchiveReader reader(archivePath);
+
+  for (const auto &entry : reader.listEntries()) {
+    const auto dot = entry.baseName.find_last_of('.');
+
+    if (dot == std::string::npos || !isDiscSheetExtension(strings::toLower(entry.baseName.substr(dot + 1)))) {
+      continue;
+    }
+
+    for (const auto &candidate : DiscInspector::sheetFilenameCandidates(reader.readEntryByPath(entry.pathName))) {
+      names.insert(baseNameOfToken(candidate));
+    }
+  }
+
+  return names;
+}
+} // namespace
+
 void LibraryScanner2::persistDiscMembers(const int contentFileId, const std::vector<IdentifiedDiscMember> &members) {
   for (size_t i = 0; i < members.size(); ++i) {
     DiscMember member{.m_contentFileId = contentFileId,
@@ -22,6 +76,24 @@ void LibraryScanner2::persistDiscMembers(const int contentFileId, const std::vec
                       .m_role = members[i].role,
                       .m_sortIndex = static_cast<int>(i)};
     m_library.create(member);
+  }
+}
+
+void LibraryScanner2::recordDrop(const std::string &filePath, const std::string &archivePath,
+                                 const std::string &extension, const size_t fileSizeBytes,
+                                 const IdentifyOutcome outcome, const std::string &identifiedAs) {
+  const ScanDrop drop{.filePath = filePath,
+                      .archivePath = archivePath,
+                      .extension = extension,
+                      .fileSizeBytes = fileSizeBytes,
+                      .outcome = outcome,
+                      .identifiedAs = identifiedAs};
+
+  // TODO
+  // Deliberately not counted as a change: a drop does not alter the grid, and treating it as one
+  // would make every periodic rescan of a folder holding one bad file reset the user's place
+  if (m_library.recordScanDrop(drop)) {
+    spdlog::warn("Could not catalogue {}{}", archivePath.empty() ? "" : archivePath + " -> ", filePath);
   }
 }
 
@@ -56,7 +128,19 @@ LibraryScanner2::LibraryScanner2(IUserLibraryRepository &library, platforms::IPl
 LibraryScanner2::~LibraryScanner2() { m_shuttingDown = true; }
 
 void LibraryScanner2::watchPath(const QString &path) {
-  if (path.isEmpty() || m_watchedDirs.contains(path)) {
+  if (path.isEmpty()) {
+    return;
+  }
+
+  // TODO
+  // Qt drops the watch itself when a directory goes away, so a folder on a drive that was
+  // unplugged is remembered here as watched while nothing is watching it. Left alone it is never
+  // watched again for the life of the process, and still counts against the cap
+  if (m_watchedDirs.contains(path) && !m_watcher.directories().contains(path)) {
+    m_watchedDirs.remove(path);
+  }
+
+  if (m_watchedDirs.contains(path)) {
     return;
   }
   if (m_watchedDirs.size() >= MAX_WATCHED_DIRECTORIES) {
@@ -97,6 +181,31 @@ void LibraryScanner2::setScanningSuspended(const bool suspended) {
   }
 }
 
+LibraryScanner2::UnreachableRoots LibraryScanner2::unreachableRoots() const {
+  UnreachableRoots roots;
+
+  for (const auto &directory : m_library.getContentDirectories()) {
+    if (!QFileInfo::exists(QString::fromStdString(directory.path))) {
+      spdlog::info("Content directory is not available, leaving its files alone: {}", directory.path);
+      roots.ids.insert(directory.id);
+      roots.paths.push_back(directory.path);
+    }
+  }
+
+  return roots;
+}
+
+bool LibraryScanner2::isUnderAnyRoot(const std::string &path, const std::vector<std::string> &roots) {
+  const auto candidate = QDir::cleanPath(QString::fromStdString(path));
+
+  return std::ranges::any_of(roots, [&candidate](const std::string &root) {
+    const auto prefix = QDir::cleanPath(QString::fromStdString(root));
+
+    // A separator on the end, so D:/Games does not claim D:/GamesArchive
+    return candidate == prefix || candidate.startsWith(prefix + QLatin1Char('/'));
+  });
+}
+
 QFuture<bool> LibraryScanner2::startScan() {
   if (m_scanRunning || m_suspended) {
     return QtConcurrent::run([] { return false; });
@@ -115,17 +224,45 @@ QFuture<bool> LibraryScanner2::startScan() {
       spdlog::debug("Finished scanning directory: {}", nextDirectory.value().toStdString());
     }
 
+    const auto unreachable = unreachableRoots();
+
     auto allRoms = m_library.getContentFiles();
     for (auto &romFile : allRoms) {
+      if (unreachable.ids.contains(romFile.m_contentDirectoryId)) {
+        continue;
+      }
+
       auto filePath = romFile.m_filePath;
       if (romFile.m_inArchive) {
         filePath = romFile.m_archivePathName;
       }
 
-      if (!QFileInfo::exists(QString::fromStdString(filePath))) {
-        spdlog::debug("Removing missing file: {}", filePath);
-        m_library.deleteContentFile(romFile.m_id);
+      const auto isOnDisk = QFileInfo::exists(QString::fromStdString(filePath));
+
+      if (!isOnDisk && romFile.m_missingSince == 0) {
+        spdlog::debug("Marking missing file: {}", filePath);
+        m_library.markContentFileMissing(romFile.m_id);
         ++m_changesInScan;
+      } else if (isOnDisk && romFile.m_missingSince != 0) {
+        spdlog::debug("File is back: {}", filePath);
+        m_library.reviveContentFile(romFile.m_id);
+        ++m_changesInScan;
+      }
+    }
+
+    // TODO
+    // The record describes what is still wrong, so a file somebody deleted stops being reported
+    // rather than being complained about forever
+    for (const auto &drop : m_library.getScanDrops()) {
+      const auto &onDisk = drop.archivePath.empty() ? drop.filePath : drop.archivePath;
+
+      // A drop has no directory of its own, so its root is the one its path sits under
+      if (isUnderAnyRoot(onDisk, unreachable.paths)) {
+        continue;
+      }
+
+      if (!QFileInfo::exists(QString::fromStdString(onDisk))) {
+        m_library.clearScanDrop(drop.filePath, drop.archivePath);
       }
     }
 
@@ -189,6 +326,11 @@ void LibraryScanner2::scanDirectory(const QString &path) {
   // Whether this directory holds at least one game (so it's worth watching)
   bool dirHasContent = false;
 
+  // Only read when the directory turns out to hold a raw track
+  std::optional<std::set<std::string>> looseTrackNames;
+
+  const auto accepted = acceptedExtensions(m_platformService);
+
   QDirIterator iter(path, QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
   while (iter.hasNext()) {
     if (m_shuttingDown) {
@@ -219,11 +361,15 @@ void LibraryScanner2::scanDirectory(const QString &path) {
     // so the size cap only applies to other files
     if (fileInfo.size() > 1024LL * 1024 * 1024 && !isDisc && !isArchive) {
       spdlog::info("Skipping large file: {}", fileInfo.filePath().toStdString());
+      recordDrop(fileInfo.filePath().toStdString(), "", extensionStd, static_cast<size_t>(fileInfo.size()),
+                 IdentifyOutcome::Unreadable);
       continue;
     }
 
     if (isArchive) {
       const std::string archivePath = fileInfo.filePath().toStdString();
+      // Only read when the archive turns out to hold a raw track
+      std::optional<std::set<std::string>> archiveTrackNames;
 
       ArchiveReader(archivePath)
           .forEachEntry([&](const ArchiveReader::Entry &entry, const std::function<std::vector<uint8_t>()> &readBytes) {
@@ -237,10 +383,16 @@ void LibraryScanner2::scanDirectory(const QString &path) {
             const std::string ext = QString::fromStdString(entry.pathName.substr(dotPos + 1)).toLower().toStdString();
 
             if (firelight::library::isDiscExtension(ext)) {
-              // Raw track files are pulled in via their cue/gdi sheet, so don't
-              // classify them on their own
+              // A raw track is reached through the sheet naming it. One nothing names is a file
+              // in its own right, and skipping it is how a zipped cartridge went missing
               if (firelight::library::isDiscTrackExtension(ext)) {
-                return;
+                if (!archiveTrackNames.has_value()) {
+                  archiveTrackNames = referencedTrackNamesInArchive(archivePath);
+                }
+
+                if (archiveTrackNames->count(baseNameOfToken(entry.pathName)) > 0) {
+                  return;
+                }
               }
               if (m_library.getContentFileWithPathAndSize(entry.pathName, entry.size, true)) {
                 dirHasContent = true;
@@ -251,7 +403,8 @@ void LibraryScanner2::scanDirectory(const QString &path) {
               // we don't buffer the (potentially multi-GB) entry here
               const auto identified =
                   identifier.identifyInArchive(entry.pathName, {}, static_cast<size_t>(entry.size), archivePath);
-              if (identified.valid) {
+              if (identified.isIdentified()) {
+                const auto tags = parseFilenameTags(entry.pathName);
                 auto romInfo =
                     ContentFile{.m_type = ContentType::Disc,
                                 .m_fileSizeBytes = identified.fileSizeBytes,
@@ -263,11 +416,15 @@ void LibraryScanner2::scanDirectory(const QString &path) {
                                 .m_archivePathName = archivePath,
                                 .m_platformId = identified.platformId,
                                 .m_contentHash = identified.contentHash,
-                                .m_discNumber = parseFilenameTags(entry.pathName).discNumber};
+                                .m_discNumber = tags.discNumber,
+                                .m_regions = tags.regions};
                 m_library.create(romInfo);
                 persistDiscMembers(romInfo.m_id, identified.discMembers);
                 dirHasContent = true;
                 ++m_changesInScan;
+              } else {
+                recordDrop(entry.pathName, archivePath, ext, static_cast<size_t>(entry.size), identified.outcome,
+                           identified.identifiedAs);
               }
               return;
             }
@@ -281,7 +438,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
 
               const std::vector<uint8_t> bytes = readBytes();
               const auto identified = identifier.identifyInArchive(entry.pathName, bytes, bytes.size(), archivePath);
-              if (identified.valid) {
+              if (identified.isIdentified()) {
                 auto romInfo =
                     ContentFile{.m_type = ContentType::Cartridge,
                                 .m_fileSizeBytes = identified.fileSizeBytes,
@@ -296,7 +453,11 @@ void LibraryScanner2::scanDirectory(const QString &path) {
                 m_library.create(romInfo);
                 dirHasContent = true;
                 ++m_changesInScan;
+              } else {
+                recordDrop(entry.pathName, archivePath, ext, bytes.size(), identified.outcome, identified.identifiedAs);
               }
+            } else {
+              m_library.countUnrecognizedExtension(ext);
             }
           });
       continue;
@@ -332,14 +493,16 @@ void LibraryScanner2::scanDirectory(const QString &path) {
       continue;
     }
 
-    if (m_platformService.platformIdForExtension(extensionStd) !=
-            firelight::platforms::PlatformService::PLATFORM_ID_UNKNOWN ||
-        firelight::library::isDiscExtension(extensionStd)) {
-      // A raw disc track (bin/img/...) is classified via its sibling cue/gdi
-      // sheet; skip the lone track when such a sheet exists in the directory
+    if (accepted.count(extensionStd) > 0) {
+      // A raw disc track is reached through the sheet naming it. Asking whether any sheet
+      // exists rather than whether one names this file hid every loose track in a folder that
+      // happened to hold one unrelated cue
       if (firelight::library::isDiscTrackExtension(extensionStd)) {
-        const auto sheets = fileInfo.absoluteDir().entryList({"*.cue", "*.gdi", "*.ccd", "*.m3u"}, QDir::Files);
-        if (!sheets.isEmpty()) {
+        if (!looseTrackNames.has_value()) {
+          looseTrackNames = referencedTrackNames(fileInfo.absoluteDir());
+        }
+
+        if (looseTrackNames->count(fileInfo.fileName().toLower().toStdString()) > 0) {
           continue;
         }
       }
@@ -350,8 +513,13 @@ void LibraryScanner2::scanDirectory(const QString &path) {
         continue;
       }
 
+      // The table holds only what is still wrong, so a path that used to fail and now does not
+      // stops being reported
+      m_library.clearScanDrop(fileInfo.filePath().toStdString(), "");
+
       const auto identified = identifier.identify(fileInfo.filePath().toStdString());
-      if (identified.valid) {
+      if (identified.isIdentified()) {
+        const auto tags = parseFilenameTags(fileInfo.filePath().toStdString());
         auto romInfo =
             ContentFile{.m_type = identified.isDisc ? ContentType::Disc : ContentType::Cartridge,
                         .m_fileSizeBytes = identified.fileSizeBytes,
@@ -363,12 +531,21 @@ void LibraryScanner2::scanDirectory(const QString &path) {
                         .m_archivePathName = "",
                         .m_platformId = identified.platformId,
                         .m_contentHash = identified.contentHash,
-                        .m_discNumber = parseFilenameTags(fileInfo.filePath().toStdString()).discNumber};
+                        .m_discNumber = tags.discNumber,
+                        .m_regions = tags.regions};
         m_library.create(romInfo);
         persistDiscMembers(romInfo.m_id, identified.discMembers);
         dirHasContent = true;
         ++m_changesInScan;
+      } else {
+        recordDrop(fileInfo.filePath().toStdString(), "", extensionStd, static_cast<size_t>(fileInfo.size()),
+                   identified.outcome);
       }
+    } else if (!extensionStd.empty()) {
+      // TODO
+      // Counted rather than listed: this is the answer to which formats people own, and a folder
+      // of save files must not become a folder of rows
+      m_library.countUnrecognizedExtension(extensionStd);
     }
   }
 

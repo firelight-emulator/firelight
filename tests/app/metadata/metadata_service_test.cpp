@@ -332,6 +332,10 @@ TEST_F(MetadataServiceTest, TheSweepWorksThroughEveryEntryAndThenStops) {
   const int first = makeEntry("Alpha", "hashOne", 6);
   const int second = makeEntry("Bravo", "hashTwo", 6);
 
+  // Art is only looked up for a game there is something to launch
+  giveContentFile("hashOne", "/roms/Alpha.sfc");
+  giveContentFile("hashTwo", "/roms/Bravo.sfc");
+
   ASSERT_EQ(library.getEntryIdsMissingArt(10).size(), 2u);
 
   FakeArtProvider provider;
@@ -350,8 +354,7 @@ TEST_F(MetadataServiceTest, TheSweepSkipsHiddenEntries) {
 
   auto entry = library.getEntry(id);
   ASSERT_TRUE(entry.has_value());
-  entry->hidden = true;
-  ASSERT_TRUE(library.update(*entry));
+  ASSERT_TRUE(library.setEntryHidden(entry->id, true));
 
   EXPECT_TRUE(library.getEntryIdsMissingArt(10).empty());
 }
@@ -551,6 +554,49 @@ TEST_F(MetadataServiceTest, ImportLocalImageCopiesAndSelects) {
   EXPECT_EQ(entry->icon1x1SourceUrl, selected->localPath);
 
   std::filesystem::remove_all(mediaDir, ec);
+}
+
+// Populating is a repeatable operation now, and every write wakes both groupers. A re-run that
+// finds nothing new has to be silent rather than merely harmless
+TEST_F(MetadataServiceTest, PopulatingTwiceWritesNothingTheSecondTime) {
+  const auto id = makeEntry("Grandia (USA).cue", "hash-grandia", 7);
+  giveContentFile("hash-grandia", "C:/roms/Grandia (USA).cue");
+
+  MetadataService service(library, source, media, mediaDir, nullptr);
+
+  auto updates = 0;
+  ScopedConnection connection = EventDispatcher::instance().subscribe<library::EntryUpdatedEvent>(
+      [&updates](const library::EntryUpdatedEvent &) { ++updates; });
+
+  service.populate(id);
+  EXPECT_GE(updates, 1) << "the first run wrote nothing at all";
+
+  updates = 0;
+  service.populate(id);
+  EXPECT_EQ(updates, 0) << "a re-run with nothing new to say still published a change";
+}
+
+// The first answer is no longer permanent: a file that says more arriving later moves the
+// identity onto it
+TEST_F(MetadataServiceTest, ARicherFileArrivingLaterRederivesTheIdentity) {
+  const auto id = makeEntry("grandia.cue", "hash-grandia", 7);
+  giveContentFile("hash-grandia", "C:/roms/grandia.cue");
+
+  MetadataService service(library, source, media, mediaDir, nullptr);
+  service.populate(id);
+
+  const auto bare = library.getEntry(id);
+  ASSERT_TRUE(bare.has_value());
+  EXPECT_TRUE(bare->metadata.regions.empty());
+
+  // A second copy of the same dump, named the way a No-Intro set names it
+  giveContentFile("hash-grandia", "C:/roms/Grandia (USA).cue");
+  service.populate(id);
+
+  const auto rederived = library.getEntry(id);
+  ASSERT_TRUE(rederived.has_value());
+  EXPECT_EQ(rederived->metadata.regions, (std::vector<std::string>{"US"}));
+  EXPECT_EQ(rederived->normalizedTitle, "grandia");
 }
 
 } // namespace firelight::metadata

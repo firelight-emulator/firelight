@@ -59,4 +59,18 @@ struct FilenameTags {
  */
 [[nodiscard]] std::string normalizeTitle(const std::string &title);
 
+/**
+ * How much of a dump a name accounts for. Only useful for comparing two names of the same dump
+ */
+[[nodiscard]] int filenameInformationScore(const FilenameTags &tags);
+
+/**
+ * Which of the paths holding one dump an entry reads its name and tags from.
+ *
+ * Files sharing a content hash are copies of one dump, so the only thing to choose between is
+ * how much their names say. Ties break on the path so the same files give the same answer
+ * whatever order they were catalogued in
+ */
+[[nodiscard]] std::string chooseIdentityPath(const std::vector<std::string> &paths);
+
 } // namespace firelight::library
