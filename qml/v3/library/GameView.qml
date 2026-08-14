@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQml
 import QtQuick.Controls
@@ -777,10 +778,10 @@ Item {
             compact: false
             onClicked: displayPopup.opened ? displayPopup.close() : displayPopup.open()
 
-            FLPopup {
+            FLMenu {
                 id: displayPopup
                 x: viewAsButton.width + AppStyle.spacingXs
-                minWidth: 240
+                minWidth: 360
 
                 // TODO
                 // The choice shown in the list, which leads the applied sort by
@@ -806,7 +807,7 @@ Item {
                     onTriggered: displayPopup.close()
                 }
 
-                contentItem: FLRadioGroup {
+                FLRadioGroup {
                     Keys.onPressed: event => {
                         event.accepted = displayPopup.navigate(event.key, event.isAutoRepeat);
                     }
@@ -825,6 +826,28 @@ Item {
                     onActivated: value => {
                         displayPopup.chosenViewMode = value;
                         viewModeConfirmTimer.restart();
+                    }
+                }
+                SettingsGroup {
+                    group: "library-grid-appearance"
+                    inMenu: true
+
+                    // TODO
+                    // The grid follows the handle while it moves and goes back to the stored value once
+                    // it stops, so dragging the size around costs no writes
+                    onSlid: function (key, value) {
+                        if (key === "library-icon-grid-tile-size") {
+                            AppearanceSettings.libraryIconGridTileSizePreview = value;
+                        } else if (key === "library-icon-grid-tile-spacing") {
+                            AppearanceSettings.libraryIconGridTileSpacingPreview = value;
+                        }
+                    }
+                    onSettled: function (key) {
+                        if (key === "library-icon-grid-tile-size") {
+                            AppearanceSettings.libraryIconGridTileSizePreview = -1;
+                        } else if (key === "library-icon-grid-tile-spacing") {
+                            AppearanceSettings.libraryIconGridTileSpacingPreview = -1;
+                        }
                     }
                 }
             }
@@ -970,7 +993,17 @@ Item {
             // clip: true
             Layout.fillHeight: true
             Layout.fillWidth: true
-            sourceComponent: root.viewMode === "grid" ? gridView : listView
+            sourceComponent: {
+                if (gameModel.count === 0) {
+                    if (gameModel.anyFiltersActive) {
+                        return noMatchingFiltersView
+                    }
+
+                    return noGamesView
+                }
+
+                return root.viewMode === "grid" ? gridView : listView
+            }
         }
     }
 
@@ -981,6 +1014,17 @@ Item {
         anchors.bottom: parent.bottom
         background: Rectangle {
             color: Theme.surfaceElevated
+
+            // TODO
+            // A panel laid over the grid has to swallow what the rows above it do not. Nothing
+            // else here consumes a press: a Rectangle does not, and the rows use TapHandlers,
+            // which take a passive grab by design and let the press carry on to the grid
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.AllButtons
+                hoverEnabled: true
+                onWheel: wheel => wheel.accepted = true
+            }
         }
 
         FLColumnLayout {
@@ -989,6 +1033,24 @@ Item {
 
             SettingsGroup {
                 group: "library-grid-appearance"
+
+                // TODO
+                // The grid follows the handle while it moves and goes back to the stored value once
+                // it stops, so dragging the size around costs no writes
+                onSlid: function (key, value) {
+                    if (key === "library-icon-grid-tile-size") {
+                        AppearanceSettings.libraryIconGridTileSizePreview = value;
+                    } else if (key === "library-icon-grid-tile-spacing") {
+                        AppearanceSettings.libraryIconGridTileSpacingPreview = value;
+                    }
+                }
+                onSettled: function (key) {
+                    if (key === "library-icon-grid-tile-size") {
+                        AppearanceSettings.libraryIconGridTileSizePreview = -1;
+                    } else if (key === "library-icon-grid-tile-spacing") {
+                        AppearanceSettings.libraryIconGridTileSpacingPreview = -1;
+                    }
+                }
             }
         }
     }
@@ -1228,6 +1290,106 @@ Item {
                 horizontalPadding: AppStyle.spacingSm
             }
         }
+    }
+
+    Component {
+        id: noMatchingFiltersView
+        ColumnLayout {
+            spacing: AppStyle.spacingXl
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+
+            Text {
+                Layout.preferredWidth: 400
+                Layout.alignment: Qt.AlignHCenter
+                text: "Uh-oh! No games match the current filters"
+                color: Theme.textPrimary
+                font.family: AppStyle.fontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
+                font.weight: Font.Normal
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            FLButton {
+                id: clearAllFiltersButton
+                text: "Clear all filters"
+                Layout.alignment: Qt.AlignHCenter
+
+                FLFocus.focusSound: SoundEffects.menuNavigate
+                FLFocus.actions: [
+                    FLAction {
+                        keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
+                        label: qsTr("Select")
+                        sound: SoundEffects.openPopup
+                        onTriggered: gameModel.clearAllFilters()
+                    }
+                ]
+
+                onClicked: {
+                    gameModel.clearAllFilters()
+                }
+            }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+        }
+
+    }
+
+    Component {
+        id: noGamesView
+        ColumnLayout {
+            spacing: AppStyle.spacingXl
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+
+            Text {
+                Layout.preferredWidth: 400
+                Layout.alignment: Qt.AlignHCenter
+                text: "You don't have any games in your library yet"
+                color: Theme.textPrimary
+                font.family: AppStyle.fontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
+                font.weight: Font.Normal
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            // FLButton {
+            //     id: clearAllFiltersButton
+            //     text: "Clear all filters"
+            //     Layout.alignment: Qt.AlignHCenter
+            //
+            //     FLFocus.focusSound: SoundEffects.menuNavigate
+            //     FLFocus.actions: [
+            //         FLAction {
+            //             keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
+            //             label: qsTr("Select")
+            //             sound: SoundEffects.openPopup
+            //             onTriggered: gameModel.clearAllFilters()
+            //         }
+            //     ]
+            //
+            //     onClicked: {
+            //         gameModel.clearAllFilters()
+            //     }
+            // }
+
+            Item {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+        }
+
     }
 
     component GameViewHeader: Pane {

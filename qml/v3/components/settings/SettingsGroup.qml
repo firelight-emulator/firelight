@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Layouts
 import Firelight 1.0
@@ -28,6 +29,12 @@ SettingsSection {
     Layout.fillWidth: true
 
     property alias model: settingsModel
+
+    // TODO
+    // A control in the group is being moved, reporting where it is without writing it. Anything
+    // showing the value as it moves follows this and hands back on `settled`
+    signal slid(string key, real value)
+    signal settled(string key)
 
     SettingsModel {
         id: settingsModel
@@ -193,12 +200,16 @@ SettingsSection {
             from: model.minimumValue
             to: model.maximumValue
             stepSize: model.stepValue
-            value: parseFloat(model.value)
+            storedValue: parseFloat(model.value)
 
             onReset: settingsModel.resetValue(index)
             onMoved: function (v) {
                 model.value = v.toString();
             }
+            onSlid: function (v) {
+                root.slid(model.key, v);
+            }
+            onSettled: root.settled(model.key)
         }
     }
 

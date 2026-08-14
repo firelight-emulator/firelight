@@ -1,3 +1,4 @@
+# TODO: NEEDS REVIEW
 cmake_minimum_required(VERSION 3.24.0...3.31.6)
 project(firelight
         VERSION 0.12.2
@@ -174,6 +175,8 @@ file(GLOB QML_FILES
 list(APPEND QML_FILES qml/v3/routing/routing.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/focus_nav.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/folder_tree.js)
+list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/slider_slide.js)
+list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/focus_bump.js)
 
 foreach (QML_FILE ${QML_FILES})
     get_filename_component(QML_FILE_NAME ${QML_FILE} NAME)
@@ -654,7 +657,13 @@ file(GLOB QML_TEST_FILES
         qml_tests/tst_focus_navigator.qml
         qml_tests/tst_focus_return.qml
         qml_tests/tst_root_keys.qml
+        qml_tests/tst_click_blocking.qml
+        qml_tests/tst_setting_row_focus.qml
+        qml_tests/tst_slider_keys.qml
         qml/v3/focus_nav.js
+        qml/v3/slider_slide.js
+        qml/v3/focus_bump.js
+        qml_tests/tst_focus_bump.qml
         qml_tests/FocusBase.qml
         qml_tests/FocusDerived.qml
         #        qml/components/IconButton.qml

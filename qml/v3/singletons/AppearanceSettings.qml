@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 pragma Singleton
 
 import QtQuick
@@ -56,6 +57,15 @@ QtObject {
     property SettingBinding libraryIconGridTileSizeBinding: SettingBinding {
         key: "library-icon-grid-tile-size"
     }
+    property SettingBinding libraryIconGridTileSpacingBinding: SettingBinding {
+        key: "library-icon-grid-tile-spacing"
+    }
+    property SettingBinding libraryIconGridShowTitleBoxBinding: SettingBinding {
+        key: "library-icon-grid-show-title-box"
+    }
+    property SettingBinding libraryIconGridShowFavoriteIconBinding: SettingBinding {
+        key: "library-icon-grid-show-favorite-icon"
+    }
 
     // property SettingBinding libraryIconGridTileSize: SettingBinding {
     //     key: "library-icon-grid-tile-size"
@@ -113,7 +123,24 @@ QtObject {
     readonly property int libraryTileSize: parseInt(tileSizeBinding.value) || 160
     readonly property int libraryTileSpacing: parseInt(tileSpacingBinding.value) || 12
 
-    readonly property int libraryIconGridTileSize: parseInt(libraryIconGridTileSizeBinding.value) || 140
+    // TODO
+    // A tile size being previewed while a control is dragged, or -1 when none is. Following it
+    // rather than the stored value is what lets a preview cost no database write
+    property int libraryIconGridTileSizePreview: -1
+    property real libraryIconGridTileSpacingPreview: -1
+
+    // TODO
+    // Zero is a value a stored setting is allowed to hold, so a not-yet-loaded binding is told apart
+    // by failing to parse rather than by being falsy
+    function storedInt(value: string, fallback: int): int {
+        const parsed = parseInt(value);
+        return isNaN(parsed) ? fallback : parsed;
+    }
+
+    readonly property int libraryIconGridTileSize: libraryIconGridTileSizePreview >= 0 ? libraryIconGridTileSizePreview : root.storedInt(libraryIconGridTileSizeBinding.value, 140)
+    readonly property int libraryIconGridTileSpacing: libraryIconGridTileSpacingPreview >= 0 ? libraryIconGridTileSpacingPreview : root.storedInt(libraryIconGridTileSpacingBinding.value, 12)
+    readonly property bool libraryIconGridShowTitleBox: libraryIconGridShowTitleBoxBinding.value === "true"
+    readonly property bool libraryIconGridShowFavoriteIcon: libraryIconGridShowFavoriteIconBinding.value === "true"
     // readonly property int libraryIconGridTileSpacing
     // readonly property int libraryIconGridShowFavorite
     // readonly property int libraryIconGridShowPlatform

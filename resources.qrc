@@ -25,6 +25,7 @@
         <file alias="show-dialog">assets/sfx/switch2/show_dialog.wav</file>
         <file alias="check">assets/sfx/switch2/User Interface, Click, UI Buttons, Select, Menu SND115479 - Pitch 356_4.wav</file>
         <file alias="uncheck">assets/sfx/switch2/User Interface, Click, UI Buttons, Select, Menu SND115479 - Pitch 282_8.wav</file>
+        <file alias="sticky-small">assets/sfx/switch2/Water, Splash, Splat, Single, Small SND58962.wav</file>
     </qresource>
     <qresource prefix="/fonts">
         <file alias="lexend">assets/fonts/Lexend-VariableFont_wght.ttf</file>

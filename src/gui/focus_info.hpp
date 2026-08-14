@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include "focus_action.hpp"
@@ -25,6 +26,11 @@ class FocusInfo : public QObject {
   Q_PROPERTY(QQuickItem *proxy READ getProxy WRITE setProxy NOTIFY proxyChanged)
   Q_PROPERTY(qreal spacing READ getSpacing WRITE setSpacing NOTIFY spacingChanged)
   Q_PROPERTY(qreal radius READ getRadius WRITE setRadius NOTIFY radiusChanged)
+  Q_PROPERTY(qreal topLeftRadius READ getTopLeftRadius WRITE setTopLeftRadius NOTIFY topLeftRadiusChanged)
+  Q_PROPERTY(qreal topRightRadius READ getTopRightRadius WRITE setTopRightRadius NOTIFY topRightRadiusChanged)
+  Q_PROPERTY(qreal bottomLeftRadius READ getBottomLeftRadius WRITE setBottomLeftRadius NOTIFY bottomLeftRadiusChanged)
+  Q_PROPERTY(
+      qreal bottomRightRadius READ getBottomRightRadius WRITE setBottomRightRadius NOTIFY bottomRightRadiusChanged)
   Q_PROPERTY(QColor fill READ getFill WRITE setFill NOTIFY fillChanged)
   Q_PROPERTY(QObject *focusSound READ getFocusSound WRITE setFocusSound NOTIFY focusSoundChanged)
   Q_PROPERTY(QQmlListProperty<firelight::gui::FocusAction> actions READ getActions)
@@ -156,6 +162,26 @@ public:
   [[nodiscard]] qreal getRadius() const { return m_radius; }
 
   /**
+   * @return The radius that corner of the cursor should take, or NaN to follow `radius`
+   */
+  [[nodiscard]] qreal getTopLeftRadius() const { return m_topLeftRadius; }
+
+  /**
+   * @return The radius that corner of the cursor should take, or NaN to follow `radius`
+   */
+  [[nodiscard]] qreal getTopRightRadius() const { return m_topRightRadius; }
+
+  /**
+   * @return The radius that corner of the cursor should take, or NaN to follow `radius`
+   */
+  [[nodiscard]] qreal getBottomLeftRadius() const { return m_bottomLeftRadius; }
+
+  /**
+   * @return The radius that corner of the cursor should take, or NaN to follow `radius`
+   */
+  [[nodiscard]] qreal getBottomRightRadius() const { return m_bottomRightRadius; }
+
+  /**
    * @return What to paint between the item and the cursor, or transparent for nothing
    */
   [[nodiscard]] QColor getFill() const { return m_fill; }
@@ -244,6 +270,34 @@ public:
     }
   }
 
+  void setTopLeftRadius(const qreal radius) {
+    if (!qFuzzyCompare(m_topLeftRadius, radius)) {
+      m_topLeftRadius = radius;
+      emit topLeftRadiusChanged();
+    }
+  }
+
+  void setTopRightRadius(const qreal radius) {
+    if (!qFuzzyCompare(m_topRightRadius, radius)) {
+      m_topRightRadius = radius;
+      emit topRightRadiusChanged();
+    }
+  }
+
+  void setBottomLeftRadius(const qreal radius) {
+    if (!qFuzzyCompare(m_bottomLeftRadius, radius)) {
+      m_bottomLeftRadius = radius;
+      emit bottomLeftRadiusChanged();
+    }
+  }
+
+  void setBottomRightRadius(const qreal radius) {
+    if (!qFuzzyCompare(m_bottomRightRadius, radius)) {
+      m_bottomRightRadius = radius;
+      emit bottomRightRadiusChanged();
+    }
+  }
+
   void setFill(const QColor &fill) {
     if (m_fill != fill) {
       m_fill = fill;
@@ -295,6 +349,14 @@ signals:
 
   void radiusChanged();
 
+  void topLeftRadiusChanged();
+
+  void topRightRadiusChanged();
+
+  void bottomLeftRadiusChanged();
+
+  void bottomRightRadiusChanged();
+
   void fillChanged();
 
   void focusSoundChanged();
@@ -328,6 +390,10 @@ private:
   QQuickItem *m_proxy = nullptr;
   qreal m_spacing = qQNaN();
   qreal m_radius = qQNaN();
+  qreal m_topLeftRadius = qQNaN();
+  qreal m_topRightRadius = qQNaN();
+  qreal m_bottomLeftRadius = qQNaN();
+  qreal m_bottomRightRadius = qQNaN();
   QColor m_fill = Qt::transparent;
   QObject *m_focusSound = nullptr;
   QList<FocusAction *> m_actions;

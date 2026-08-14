@@ -1,6 +1,9 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
+
+import "slider_slide.js" as Slide
 
 Slider {
     id: control
@@ -9,20 +12,166 @@ Slider {
     // where they are, so the ring is suppressed for them
     readonly property bool _focusRing: activeFocus && !InputMethodManager.usingMouse
 
-    readonly property int _handle: Math.max(AppStyle.minTarget / 2, Math.round(16 * AppStyle.scale))
+    readonly property int _handle: Math.max(AppStyle.minTarget / 2, Math.round(26 * AppStyle.scale))
 
     implicitWidth: AppStyle.inputWidth
     implicitHeight: Math.max(AppStyle.minTarget, AppStyle.controlHeight)
     opacity: control.enabled ? 1 : 0.4
 
+    FLFocus.proxy: theHandle
+    FLFocus.showCursor: true
+    FLFocus.spacing: -1
+
+    // TODO
+    // Which way a held arrow is carrying the handle, and whether the hold has lasted long enough to
+    // slide rather than step
+    property int _direction: 0
+    property bool _sliding: false
+
+    // TODO
+    // Both arrows tracked separately, so releasing one hands back to the other rather than stopping
+    property bool _leftHeld: false
+    property bool _rightHeld: false
+    property int _lastPressed: 0
+
+    // TODO
+    // Whether this arrival at an end has already shown itself, so holding against one bumps once
+    property bool _bumped: false
+
+    // TODO
+    // Shows the handle going nowhere when it is carried past an end, once per arrival
+    function bumpAtEnd(direction: int) {
+        if (Slide.shouldBump(control._bumped, control.value, control.from, control.to, direction)) {
+            control._bumped = true;
+            FocusCursor.bump(direction < 0 ? Qt.Key_Left : Qt.Key_Right);
+            return;
+        }
+
+        control._bumped = Slide.atEnd(control.value, control.from, control.to, direction);
+    }
+
+    // TODO
+    // Puts the handle at `target` without reporting it, for a value that came from elsewhere
+    function seat(target: real) {
+        control.value = Math.max(control.from, Math.min(control.to, target));
+    }
+
+    // TODO
+    // Moves the handle one step from the step it is in
+    function nudge(direction: int) {
+        control.value = Slide.nudged(control.value, control.from, control.to, control.stepSize, direction);
+        control.moved();
+    }
+
+    // TODO
+    // Carries the handle `seconds` further, at the rate that crosses the whole track in
+    // AppStyle.sliderTraverse whatever the range is
+    function advance(seconds: real) {
+        const delta = Slide.delta(control._direction, control.from, control.to, seconds, AppStyle.sliderTraverse);
+
+        control.value = Math.max(control.from, Math.min(control.to, control.value + delta));
+        control.moved();
+        control.bumpAtEnd(control._direction);
+    }
+
+    // TODO
+    // Stops the arrows reaching the slider's own key handling, which moves by a step per press
+    Keys.priority: Keys.BeforeItem
+
     Keys.onPressed: event => {
-        if (event.key === Qt.Key_Left || event.key === Qt.Key_Right) {
-            console.log("Key pressed: " + event.key);
-            event.accepted = true;
+        if (event.key !== Qt.Key_Left && event.key !== Qt.Key_Right) {
+            event.accepted = false;
+            return;
+        }
+
+        event.accepted = true;
+
+        // TODO
+        // A held key repeats; the slide runs off the frame clock, so the repeats are dropped
+        if (event.isAutoRepeat) {
+            return;
+        }
+
+        const pressed = event.key === Qt.Key_Left ? -1 : 1;
+
+        if (pressed === -1) {
+            control._leftHeld = true;
+        } else {
+            control._rightHeld = true;
+        }
+
+        SoundEffects.startSliderMove.play();
+
+        control._lastPressed = pressed;
+        control._direction = pressed;
+        control.nudge(pressed);
+        control.bumpAtEnd(pressed);
+        holdTimer.restart();
+    }
+
+    Keys.onReleased: event => {
+        if (event.key !== Qt.Key_Left && event.key !== Qt.Key_Right) {
+            event.accepted = false;
+            return;
+        }
+
+        event.accepted = true;
+
+        if (event.isAutoRepeat) {
+            return;
+        }
+
+        if (event.key === Qt.Key_Left) {
+            control._leftHeld = false;
+        } else {
+            control._rightHeld = false;
+        }
+
+        const remaining = Slide.heldDirection(control._leftHeld, control._rightHeld, control._lastPressed);
+
+        // TODO
+        // The other arrow is still down, so the slide carries on its way rather than ending
+        if (remaining !== 0) {
+            control._direction = remaining;
+            return;
+        }
+
+        control.rest();
+    }
+
+    // TODO
+    // Emitted when the handle stops moving, whether it was held, tapped or dragged
+    signal settled
+
+    // TODO
+    // Ends a hold, leaving the handle where it stopped
+    function rest() {
+        holdTimer.stop();
+        control._leftHeld = false;
+        control._rightHeld = false;
+        control._lastPressed = 0;
+        control._bumped = false;
+        control._sliding = false;
+        control._direction = 0;
+        control.settled();
+    }
+
+    onActiveFocusChanged: {
+        if (!control.activeFocus) {
+            control.rest();
         }
     }
 
-    FLFocus.proxy: theHandle
+    Timer {
+        id: holdTimer
+        interval: AppStyle.sliderHoldDelay
+        onTriggered: control._sliding = true
+    }
+
+    FrameAnimation {
+        running: control._sliding && control._direction !== 0
+        onTriggered: control.advance(frameTime)
+    }
 
     HoverHandler {
         id: sliderHover
@@ -34,7 +183,7 @@ Slider {
         x: control.leftPadding
         y: control.topPadding + control.availableHeight / 2 - height / 2
         width: control.availableWidth
-        height: Math.round(4 * AppStyle.scale)
+        height: Math.round(6 * AppStyle.scale)
         radius: height / 2
         color: Theme.backgroundInset
 
@@ -42,7 +191,7 @@ Slider {
             width: control.visualPosition * parent.width
             height: parent.height
             radius: height / 2
-            color: Theme.accent
+            color: Theme.switch2Color
         }
     }
 
@@ -50,12 +199,23 @@ Slider {
         id: theHandle
         x: control.leftPadding + control.visualPosition * (control.availableWidth - width)
         y: control.topPadding + control.availableHeight / 2 - height / 2
-        width: control.pressed ? Math.round(control._handle * 1.15) : control._handle
+        // width: control.pressed ? Math.round(control._handle * 1.15) : control._handle
+        width: control._handle
         height: width
         radius: width / 2
-        color: Theme.onAccent
-        border.width: control._focusRing ? 2 : 1
-        border.color: control._focusRing || control.pressed || sliderHover.hovered ? Theme.accent : Theme.border
+        color: Theme.textPrimary
+        border.width: 1
+        border.color: control._focusRing || control.pressed || sliderHover.hovered ? "transparent" : Theme.textMuted
+
+        Rectangle {
+            width: parent.width + 6
+            height: parent.height + 6
+            radius: width / 2
+            anchors.centerIn: parent
+            z: theHandle.z - 1
+            color: "black"
+            visible: control._focusRing
+        }
 
         Behavior on width {
             NumberAnimation {

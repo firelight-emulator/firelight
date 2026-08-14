@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -24,6 +25,11 @@ Item {
     function positionViewAtBeginning() {
         root.positionViewAtBeginning();
     }
+
+    // TODO
+    // Room under the art for the title strip. Counted once, because the cell reserves it and the
+    // strip fills it, and the two disagreeing takes the difference out of the gap between rows
+    readonly property int labelHeight: Math.round(60 * AppStyle.scale)
 
     signal gameClicked(int entryId, int rowIndex, int modifiers)
     signal gameFocused(var data)
@@ -93,8 +99,18 @@ Item {
         height: parent.height
         x: Math.round((parent.width - width) / 2)
 
-        cellWidth: AppearanceSettings.libraryIconGridTileSize
-        cellHeight: cellWidth + Math.round(60 * AppStyle.scale)
+        readonly property bool _showTitleBox: AppearanceSettings.libraryIconGridShowTitleBox
+        property real _titleBoxHeight: _showTitleBox ? gridRoot.labelHeight : 0
+
+        cellWidth: AppearanceSettings.libraryIconGridTileSize + Math.round(AppearanceSettings.libraryIconGridTileSpacing)
+        cellHeight: cellWidth + _titleBoxHeight
+
+        Behavior on _titleBoxHeight {
+            NumberAnimation {
+                duration: AppStyle.durationBase
+                easing.type: Easing.InOutQuad
+            }
+        }
 
         Component.onCompleted: {
             initialContentY = contentY;
@@ -131,7 +147,10 @@ Item {
             Button {
                 id: control
                 anchors.fill: parent
-                anchors.margins: 6
+                // TODO
+                // Half the gap on each side, so two neighbours make one whole gap between them and
+                // the tile itself keeps the size it was asked for whatever the spacing is
+                anchors.margins: AppearanceSettings.libraryIconGridTileSpacing / 2
                 padding: 0
                 horizontalPadding: 0
                 hoverEnabled: true
@@ -142,8 +161,6 @@ Item {
                 FLFocus.fill: "black"
                 FLFocus.focusSound: SoundEffects.gameTileFocus
                 FLFocus.radius: gameTile.radius + Math.round(FLFocus.spacing / 2)
-
-                layer.enabled: true
 
                 TapHandler {
                     id: selectTap
@@ -163,11 +180,33 @@ Item {
                     }
 
                     FLMenuItem {
-                        label: qsTr("Add to favorites")
+                        label: "Resume last session"
+                    }
+
+                    FLMenuSeparator {}
+
+                    FLMenuItem {
+                        label: "View details"
+                    }
+
+                    FLToggleMenuItem {
+                        label: "Favorite"
+                        checked: gameDelegate.model.favorite
+                        onSelected: function (selected) {
+                            gameDelegate.model.favorite = selected;
+                        }
+                    }
+
+                    FLToggleMenuItem {
+                        label: "Hidden"
+                        checked: gameDelegate.model.hidden
+                        onSelected: function (selected) {
+                            gameDelegate.model.hidden = selected;
+                        }
                     }
 
                     FLMenuItem {
-                        label: qsTr("Hide in library")
+                        label: "Manage game"
                     }
                 }
 
@@ -182,6 +221,7 @@ Item {
                         keys: [Qt.Key_Menu]
                         label: qsTr("Menu")
                         onTriggered: delegateContextMenu.popupFor(control, control.width + AppStyle.spacingSm, 0)
+
                     }
                 ]
 
@@ -246,16 +286,25 @@ Item {
                         size: control.width
                         topLeftRadius: AppStyle.radiusMd
                         topRightRadius: AppStyle.radiusMd
-                        bottomLeftRadius: 0
-                        bottomRightRadius: 0
+                        bottomLeftRadius: titleBox.height > 0 ? 0 : AppStyle.radiusMd
+                        bottomRightRadius: titleBox.height > 0 ? 0 : AppStyle.radiusMd
                         platformId: gameDelegate.model.platformId
                         title: gameDelegate.model.displayName
                         titleVisible: control.hovered || control.activeFocus
                     }
 
                     Rectangle {
+                        id: titleBox
                         width: parent.width
-                        height: Math.round(60 * AppStyle.scale)
+                        height: root._showTitleBox ? gridRoot.labelHeight : 0
+
+                        Behavior on height {
+                            NumberAnimation {
+                                duration: AppStyle.durationBase
+                                easing.type: Easing.InOutQuad
+                            }
+                        }
+
                         color: Theme.surface
                         topLeftRadius: 0
                         topRightRadius: 0
@@ -269,7 +318,7 @@ Item {
                             anchors.margins: AppStyle.spacingSm
                             name: "favorite"
                             filled: true
-                            visible: gameDelegate.model.favorite
+                            visible: gameDelegate.model.favorite && AppearanceSettings.libraryIconGridShowFavoriteIcon
                             size: Math.round(16 * AppStyle.scale)
                             color: Theme.favorite
                         }
@@ -319,22 +368,6 @@ Item {
                                 color: Theme.textMuted
                             }
                         }
-
-                        // Favorite heart chip
-                        Rectangle {
-                            visible: gameDelegate.model.favorite
-                            width: Math.round(22 * AppStyle.scale)
-                            height: width
-                            radius: AppStyle.radiusSm
-                            color: "#99000000"
-                            Icon {
-                                anchors.centerIn: parent
-                                name: "favorite"
-                                filled: true
-                                size: Math.round(14 * AppStyle.scale)
-                                color: Theme.favorite
-                            }
-                        }
                     }
 
                     // Achievement progress pill (top-right)
@@ -361,15 +394,15 @@ Item {
                 }
 
                 // Multi-select ring
-                Rectangle {
-                    z: 3
-                    anchors.fill: parent
-                    visible: gameDelegate.selected
-                    color: "transparent"
-                    radius: AppStyle.radiusLg
-                    border.color: Theme.accent
-                    border.width: Math.max(2, Math.round(2 * AppStyle.scale))
-                }
+                // Rectangle {
+                //     z: 3
+                //     anchors.fill: parent
+                //     visible: gameDelegate.selected
+                //     color: "transparent"
+                //     radius: AppStyle.radiusLg
+                //     border.color: Theme.accent
+                //     border.width: Math.max(2, Math.round(2 * AppStyle.scale))
+                // }
             }
         }
     }

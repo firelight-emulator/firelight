@@ -59,4 +59,9 @@ QtObject {
         source: "qrc:/sfx/show-dialog"
         volume: 0.4
     }
+
+    readonly property FLSoundEffect startSliderMove: FLSoundEffect {
+        source: "qrc:/sfx/sticky-small"
+        volume: 0.75
+    }
 }

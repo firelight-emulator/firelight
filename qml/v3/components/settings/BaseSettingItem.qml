@@ -1,6 +1,8 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Firelight 1.0
 
 // One settings row inside a section card: the label with its description beneath
 // it, the control to the right (or full-width below when `controlBelow`), and a
@@ -17,6 +19,8 @@ FocusScope {
     property bool isFirstInSection: false
     property bool isLastInSection: false
 
+    property bool inMenu: false
+
     // Place the control full-width below the label instead of to its right
     property bool controlBelow: false
 
@@ -25,7 +29,7 @@ FocusScope {
 
     // The between-rows divider. SettingsSection turns it off for a group's last
     // row so the card doesn't end with a line
-    property bool showDivider: true
+    property bool showDivider: !inMenu
 
     // Marks this row as a dependent sub-setting of the one above it: indented
     // with a quieter label, so two cues carry the relationship rather than one
@@ -41,6 +45,22 @@ FocusScope {
     signal reset
 
     property var onClicked: function () {}
+
+    readonly property bool _drawTopRadius: isFirstInSection && !inMenu
+    readonly property bool _drawBottomRadius: isLastInSection && !inMenu
+
+    FLFocus.focusSound: SoundEffects.menuNavigate
+    FLFocus.showCursor: true
+    FLFocus.topRightRadius: _drawTopRadius ? AppStyle.radiusLg : 0
+    FLFocus.topLeftRadius: _drawTopRadius ? AppStyle.radiusLg : 0
+    FLFocus.bottomRightRadius: _drawBottomRadius ? AppStyle.radiusLg : 0
+    FLFocus.bottomLeftRadius: _drawBottomRadius ? AppStyle.radiusLg : 0
+
+    // TODO
+    // The row is what takes focus, not the control inside it, so the arrows a control reads reach
+    // it. A FocusScope refuses focus unless it says otherwise, and a row that refuses it is skipped
+    // by the cursor entirely
+    focusPolicy: Qt.StrongFocus
 
     // Rows always span their column; a row with no width renders nothing, and
     // callers shouldn't have to remember this at every use site
@@ -69,18 +89,18 @@ FocusScope {
         id: hover
         cursorShape: root.onClicked ? Qt.PointingHandCursor : Qt.ArrowCursor
     }
+    // TODO
+    // Enabled whether or not the row does anything when tapped, because a row the cursor can land
+    // on has to be reachable by clicking it too — a slider takes its arrows from having focus, and
+    // clicking it is how a mouse user gets there
     TapHandler {
-        enabled: root.onClicked !== null
-        onTapped: if (root.onClicked) {
-            root.onClicked()
-        }
-    }
+        enabled: root.enabled
+        onTapped: {
+            root.forceActiveFocus(Qt.MouseFocusReason);
 
-    Connections {
-        target: root
-
-        function onClicked() {
-            root.forceActiveFocus()
+            if (root.onClicked) {
+                root.onClicked();
+            }
         }
     }
 
@@ -126,9 +146,9 @@ FocusScope {
                 Layout.alignment: Qt.AlignVCenter
                 text: root.label
                 color: root.subItem ? Theme.textMuted : Theme.textPrimary
-                font.pixelSize: AppStyle.fontSizeMedium
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.family: AppStyle.fontFamily
-                font.weight: Font.DemiBold
+                font.weight: Font.Medium
                 wrapMode: Text.WordWrap
             }
 

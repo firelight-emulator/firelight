@@ -1,5 +1,8 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import Firelight 1.0
+
+import "focus_bump.js" as Bump
 
 // Global controller-focus ring: one overlay-positioned FLFocusRing that glides
 // between focused items and tracks 1:1 while content scrolls under it. Item
@@ -93,14 +96,27 @@ Item {
     property real _bumpDirX: 0
     property real _bumpDirY: 0
 
+    // TODO
+    // How far this bump was asked to carry, which is what tells it when it has finished
+    property real _bumpPeak: 0
+
     function _bump(dx: real, dy: real) {
         if (cursorItem === null) {
             return;
         }
 
+        // TODO
+        // A bump the other way starts over: an offset left over from the last one would be read
+        // along the new axis and jump the ring
+        if (dx !== _bumpDirX || dy !== _bumpDirY) {
+            _bumpPos = 0;
+            _bumpVel = 0;
+        }
+
         _bumpDirX = dx;
         _bumpDirY = dy;
-        _bumpVel = AppStyle.focusBumpKick;
+        _bumpPeak = Bump.peakFor(cursorItem.width, cursorItem.height, AppStyle.focusBumpPeak);
+        _bumpVel = Bump.kickFor(_bumpPeak);
         SoundEffects.cursorBump.play();
     }
 
@@ -269,6 +285,45 @@ Item {
         return gap;
     }
 
+    // TODO
+    // One corner of the ring: what the focus target declared for that corner, else what the item
+    // rounds it by itself, else whatever the other three fall back to
+    function cornerRadiusFor(item: Item, info: FLFocus, name: string, fallback: real): real {
+        if (info !== null && !isNaN(info[name])) {
+            return info[name] + root.ringOffsetFor(item);
+        }
+
+        if (item !== null && item[name] !== undefined) {
+            return item[name] + root.ringOffsetFor(item);
+        }
+
+        return fallback;
+    }
+
+    // TODO
+    // The four corners the ring is drawn with, each growing by the same gap the single radius does.
+    // An item that rounds its corners separately gets a ring that follows them
+    function cornerRadiiFor(item: Item): var {
+        const info = root.targetInfo();
+        const base = root.radiusFor(item);
+
+        return {
+            topLeft: root.cornerRadiusFor(item, info, "topLeftRadius", base),
+            topRight: root.cornerRadiusFor(item, info, "topRightRadius", base),
+            bottomLeft: root.cornerRadiusFor(item, info, "bottomLeftRadius", base),
+            bottomRight: root.cornerRadiusFor(item, info, "bottomRightRadius", base)
+        };
+    }
+
+    // TODO
+    // Puts the four corners on a ring, which is the only way they are ever set
+    function applyRadii(ring: FLFocusRing, radii: var) {
+        ring.topLeftPx = radii.topLeft;
+        ring.topRightPx = radii.topRight;
+        ring.bottomLeftPx = radii.bottomLeft;
+        ring.bottomRightPx = radii.bottomRight;
+    }
+
     // Desired ring geometry in overlay space. Mapping the full rect (not just
     // the origin) keeps the ring correct under ancestor scale — focus pop etc.
     function desiredRect() {
@@ -296,7 +351,7 @@ Item {
         activeRing.y = r.y;
         activeRing.width = r.width;
         activeRing.height = r.height;
-        activeRing.radiusPx = radiusFor(cursorItem);
+        root.applyRadii(activeRing, root.cornerRadiiFor(cursorItem));
         gliding = false;
     }
 
@@ -423,15 +478,16 @@ Item {
             root._clock += frameTime;
 
             // TODO
-            // Underdamped bump spring, constants fitted to the measured Switch 2
-            // bump (peak ~17ms, 12% undershoot, settled ~110ms); dt is clamped so
-            // a slow frame can't destabilise the integration
+            // The bump spring, sampled at this frame rather than integrated toward it, so the curve
+            // does not depend on how often it is asked
             if (root._bumpPos !== 0 || root._bumpVel !== 0) {
-                const sdt = Math.min(frameTime, 0.02);
-                root._bumpVel += (-5700 * root._bumpPos - 84 * root._bumpVel) * sdt;
-                root._bumpPos += root._bumpVel * sdt;
+                const next = Bump.step(root._bumpPos, root._bumpVel, frameTime);
+                root._bumpPos = next.pos;
+                root._bumpVel = next.vel;
 
-                if (Math.abs(root._bumpPos) < 0.1 && Math.abs(root._bumpVel) < 4) {
+                // TODO
+                // A bump this far out is not a bump; drop it rather than carry the ring off screen
+                if (Math.abs(root._bumpPos) > 100 || Bump.settled(root._bumpPos, root._bumpVel, root._bumpPeak)) {
                     root._bumpPos = 0;
                     root._bumpVel = 0;
                 }
@@ -496,7 +552,7 @@ Item {
                 root.activeRing.y = r0.y + root._bumpPos * root._bumpDirY - (root._bumpDirY < 0 ? bwy : 0);
                 root.activeRing.width = r0.width + bwx;
                 root.activeRing.height = r0.height + bwy;
-                root.activeRing.radiusPx = root.radiusFor(root.cursorItem);
+                root.applyRadii(root.activeRing, root.cornerRadiiFor(root.cursorItem));
                 return;
             }
 
@@ -510,13 +566,16 @@ Item {
             r.y += root._bumpPos * root._bumpDirY - (root._bumpDirY < 0 ? gbwy : 0);
             r.width += gbwx;
             r.height += gbwy;
-            const rad = root.radiusFor(root.cursorItem);
+            const radii = root.cornerRadiiFor(root.cursorItem);
 
             root.activeRing.x += (r.x - root.activeRing.x) * k;
             root.activeRing.y += (r.y - root.activeRing.y) * k;
             root.activeRing.width += (r.width - root.activeRing.width) * k;
             root.activeRing.height += (r.height - root.activeRing.height) * k;
-            root.activeRing.radiusPx += (rad - root.activeRing.radiusPx) * k;
+            root.activeRing.topLeftPx += (radii.topLeft - root.activeRing.topLeftPx) * k;
+            root.activeRing.topRightPx += (radii.topRight - root.activeRing.topRightPx) * k;
+            root.activeRing.bottomLeftPx += (radii.bottomLeft - root.activeRing.bottomLeftPx) * k;
+            root.activeRing.bottomRightPx += (radii.bottomRight - root.activeRing.bottomRightPx) * k;
 
             const remaining = Math.max(Math.abs(r.x - root.activeRing.x), Math.abs(r.y - root.activeRing.y), Math.abs(r.width - root.activeRing.width), Math.abs(r.height - root.activeRing.height), root._scrollPending || root._cruising ? Math.abs(root._scrollTo - root._flick.contentY) : 0);
 

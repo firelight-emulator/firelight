@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtTest
@@ -134,5 +135,64 @@ TestCase {
 
         compare(setFromJs.FLFocus.barrier, true);
         verify(declared.FLFocus.find(setFromJs) !== null);
+    }
+
+    // The focus ring reads each corner by name, so the four have to be reachable that way and read
+    // as unset until something declares one
+    Item {
+        id: cornered
+
+        FLFocus.showCursor: true
+        FLFocus.radius: 10
+        FLFocus.bottomLeftRadius: 0
+    }
+
+    Rectangle {
+        id: plainRect
+        width: 40
+        height: 40
+        radius: 6
+    }
+
+    Rectangle {
+        id: corneredRect
+        width: 40
+        height: 40
+        radius: 6
+        topLeftRadius: 20
+    }
+
+    function test_cornersAreUnsetUntilDeclared() {
+        const info = FLFocus.find(cornered);
+        verify(info !== null);
+
+        verify(isNaN(info.topLeftRadius), "an undeclared corner did not read as unset");
+        verify(isNaN(info.topRightRadius));
+        verify(isNaN(info.bottomRightRadius));
+        compare(info.bottomLeftRadius, 0, "a corner declared as square did not keep 0");
+    }
+
+    // Zero has to survive as a real value: a square corner is the whole reason per-corner exists,
+    // and NaN is what "unset" means
+    function test_aSquareCornerIsNotTheSameAsAnUnsetOne() {
+        const info = FLFocus.find(cornered);
+
+        verify(!isNaN(info.bottomLeftRadius), "a corner set to 0 read as unset");
+        compare(info.radius, 10);
+    }
+
+    // The ring looks corners up by name rather than by property, so this is the access it relies on
+    function test_cornersCanBeReadByName() {
+        const info = FLFocus.find(cornered);
+
+        compare(info["bottomLeftRadius"], info.bottomLeftRadius, "reading a corner by name gave something else");
+        verify(isNaN(info["topLeftRadius"]), "reading an unset corner by name did not read as unset");
+    }
+
+    // What an item says about its own corners, which the ring falls back to
+    function test_anItemsOwnCornersReadByName() {
+        compare(corneredRect["topLeftRadius"], 20, "a declared corner did not read back");
+        compare(plainRect["topLeftRadius"], plainRect.radius, "an undeclared corner did not follow radius");
+        compare(cornered["topLeftRadius"], undefined, "a plain Item claimed to have corners");
     }
 }

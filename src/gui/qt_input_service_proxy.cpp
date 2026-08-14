@@ -10,6 +10,7 @@
 #include <firelight/input/shortcut_action.hpp>
 
 #include <QApplication>
+#include <spdlog/spdlog.h>
 
 #ifdef _WIN32
 // clang-format off
@@ -51,20 +52,13 @@ bool steamClientRunning() {
 }
 } // namespace
 
-static QMap<input::GamepadInput, Qt::Key> gamepadToQtKeyMap = {{input::DpadRight, Qt::Key_Right},
-                                                               {input::DpadLeft, Qt::Key_Left},
-                                                               {input::DpadUp, Qt::Key_Up},
-                                                               {input::DpadDown, Qt::Key_Down},
-                                                               {input::LeftStickRight, Qt::Key_Right},
-                                                               {input::LeftStickLeft, Qt::Key_Left},
-                                                               {input::LeftStickUp, Qt::Key_Up},
-                                                               {input::LeftStickDown, Qt::Key_Down},
-                                                               {input::WestFace, Qt::Key_Menu},
-                                                               {input::SouthFace, Qt::Key_Select},
-                                                               {input::EastFace, Qt::Key_Back},
-                                                               {input::LeftBumper, Qt::Key_PageDown},
-                                                               {input::RightBumper, Qt::Key_PageUp},
-                                                               {input::Home, Qt::Key_Home}};
+static QMap<input::GamepadInput, Qt::Key> gamepadToQtKeyMap = {
+    {input::DpadRight, Qt::Key_Right},    {input::DpadLeft, Qt::Key_Left},        {input::DpadUp, Qt::Key_Up},
+    {input::DpadDown, Qt::Key_Down},      {input::LeftStickRight, Qt::Key_Right}, {input::LeftStickLeft, Qt::Key_Left},
+    {input::LeftStickUp, Qt::Key_Up},     {input::LeftStickDown, Qt::Key_Down},   {input::WestFace, Qt::Key_Menu},
+    {input::SouthFace, Qt::Key_Enter},    {input::EastFace, Qt::Key_Back},        {input::LeftBumper, Qt::Key_PageDown},
+    {input::RightBumper, Qt::Key_PageUp}, {input::Start, Qt::Key_Menu},           {input::Select, Qt::Key_Home},
+    {input::Home, Qt::Key_Home}};
 
 QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService) {
   m_inputService = &inputService;

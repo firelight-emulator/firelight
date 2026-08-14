@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -10,6 +11,11 @@ FocusScope {
 
     property string title: ""
     property bool showTopPadding: true
+    property bool inMenu: false
+
+    // TODO
+    // A card that refuses focus is skipped whole by the column above it, taking its rows with it
+    focusPolicy: Qt.StrongFocus
 
     default property alias content: rows.data
 
@@ -23,6 +29,7 @@ FocusScope {
         // skipped: a line either side of nothing is still a line
         const visible = [];
         for (let i = 0; i < kids.length; i++) {
+            kids[i].inMenu = root.inMenu;
             if (kids[i].showDivider !== undefined && kids[i].visible) {
                 visible.push(kids[i]);
             } else if (kids[i].showDivider !== undefined) {
@@ -74,9 +81,9 @@ FocusScope {
             contentItem: Text {
                 text: root.title
                 color: Theme.textPrimary
-                font.pixelSize: AppStyle.fontSizeLarge
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.family: AppStyle.fontFamily
-                font.weight: Font.DemiBold
+                font.weight: Font.Normal
                 verticalAlignment: Text.AlignVCenter
             }
         }
@@ -85,12 +92,15 @@ FocusScope {
             Layout.fillWidth: true
             implicitHeight: rows.implicitHeight
             radius: AppStyle.radiusLg
-            color: Theme.surface
-            border.width: 1
-            border.color: Theme.border
+            color: root.inMenu ? "transparent" : Theme.surface
+            border.width: root.inMenu ? 0 : 1
+            border.color: root.inMenu ? "transparent" : Theme.border
             clip: true
 
-            ColumnLayout {
+            // TODO
+            // The rows are what the cursor walks with Up and Down, so the column that holds them is
+            // the one that knows how
+            FLColumnLayout {
                 id: rows
                 anchors.top: parent.top
                 anchors.left: parent.left

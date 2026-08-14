@@ -20,9 +20,25 @@ Menu {
     // Whether this popup is the one holding a dim up, so the two calls stay paired
     property bool isDimming: false
 
-    function popupFor(caller: Item, x, y) {
+    function popupFor(caller: Item, desiredX, desiredY) {
         control.caller = caller;
-        control.popup(x, y);
+
+        let finalX = desiredX;
+        let finalY = desiredY;
+
+        let windowItem = caller.Window.window.contentItem;
+        let mappedPoint = caller.mapToItem(windowItem, desiredX, desiredY);
+
+        // If X is > 0 and Y is 0, we assume the popup wants to be directly to the right of the caller
+        if (desiredX > 0 && desiredY === 0) {
+            let roomToRight = windowItem.width - mappedPoint.x;
+
+            if (roomToRight < control.width) {
+                finalX = -(control.width + AppStyle.spacingSm);
+            }
+        }
+
+        control.popup(finalX, finalY);
     }
 
     Connections {

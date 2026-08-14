@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 pragma Singleton
 import QtQuick
 
@@ -157,8 +158,17 @@ Item {
     // the selection is seen before the surface goes away
     readonly property int confirmPause: 180
     // TODO
-    // Outward velocity impulse of the focus cursor's edge bump
-    readonly property real focusBumpKick: 1200
+    // How far the focus cursor's edge bump carries on a game-tile-sized item, in px at its furthest.
+    // Smaller items bump less, as the square root of their shorter side, so this is the one number
+    // to tune. Unscaled: the law reads a measured size, which already carries scale
+    readonly property real focusBumpPeak: 5
+    // TODO
+    // Time a held arrow takes to carry a slider's handle across its whole track, whatever its range
+    // or step
+    readonly property int sliderTraverse: 1400
+    // TODO
+    // How long an arrow is held before a slider slides rather than stepping
+    readonly property int sliderHoldDelay: 20
     // TODO
     // One full revolution of the focus ring's rotating gradient
     readonly property int durationSpin: 6600
