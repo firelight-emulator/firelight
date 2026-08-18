@@ -14,9 +14,11 @@ var Right = 0x8;
 // 0 is Qt.NoFocus, which is not reachable from a pragma-library script
 var NO_FOCUS = 0;
 
-// A child that can hold the cursor
+// A child that can hold the cursor. `focusPolicy` has to exist before it is compared: a Repeater is a
+// child like any other and has none, so an undefined policy would read as "not NoFocus" and hand the
+// cursor to something with no size
 function isFocusable(child) {
-    return !!child && child.visible && child.enabled && child.focusPolicy !== NO_FOCUS;
+    return !!child && child.visible && child.enabled && child.focusPolicy !== undefined && child.focusPolicy !== NO_FOCUS;
 }
 
 // Where the cursor actually is among `children`, or -1 when it is elsewhere.

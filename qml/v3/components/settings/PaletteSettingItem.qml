@@ -35,8 +35,10 @@ ComboBoxSettingItem {
         }
     }
 
-    // Lands in BaseSettingItem's nested slot, indented under the row
-    Image {
+    // TODO
+    // Named rather than left to the default slot, which is now the trailing one — a 240px preview
+    // squeezed in beside the label renders wrong without erroring
+    nestedContent: Image {
         Layout.alignment: Qt.AlignHCenter
         Layout.preferredWidth: 240
         Layout.preferredHeight: 240

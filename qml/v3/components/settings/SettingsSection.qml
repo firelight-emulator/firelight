@@ -10,11 +10,15 @@ FocusScope {
     id: root
 
     property string title: ""
+    property bool showHeader: true
     property bool showTopPadding: true
-    property bool inMenu: false
+    property int surface: FLMenuItem.Surface.Page
 
-    // TODO
-    // A card that refuses focus is skipped whole by the column above it, taking its rows with it
+    readonly property bool _onPage: root.surface === FLMenuItem.Surface.Page
+    readonly property bool _showHeader: root.title !== "" && root.showHeader
+
+    property bool _anyVisibleChildren: true
+
     focusPolicy: Qt.StrongFocus
 
     default property alias content: rows.data
@@ -22,40 +26,62 @@ FocusScope {
     implicitWidth: layout.implicitWidth
     implicitHeight: layout.implicitHeight
 
+    Behavior on implicitWidth {
+        NumberAnimation {
+            duration: AppStyle.durationFast
+            easing.type: Easing.InOutQuad
+        }
+    }
+
+    Behavior on implicitHeight {
+        NumberAnimation {
+            duration: AppStyle.durationFast
+            easing.type: Easing.InOutQuad
+        }
+    }
+
     function updateRows() {
         const kids = rows.children;
 
-        // The visible rows that can carry a divider, in order. Hidden rows are
-        // skipped: a line either side of nothing is still a line
         const visible = [];
         for (let i = 0; i < kids.length; i++) {
-            kids[i].inMenu = root.inMenu;
-            if (kids[i].showDivider !== undefined && kids[i].visible) {
+            if (kids[i].surface === undefined) {
+                continue;
+            }
+
+            kids[i].surface = root.surface;
+
+            if (kids[i].visible) {
                 visible.push(kids[i]);
-            } else if (kids[i].showDivider !== undefined) {
+            } else {
                 kids[i].showDivider = false;
             }
         }
 
         for (let i = 0; i < visible.length; i++) {
             const next = (i + 1 < visible.length) ? visible[i + 1] : null;
-            // No line after the card's last row, and none between a row and
-            // whatever depends on it: a sub-setting welds to the setting above
-            // it, so they read as one block
             const weldsToNext = next !== null && next.subItem === true;
-            visible[i].showDivider = (next !== null) && !weldsToNext;
+            visible[i].showDivider = root._onPage && next !== null && !weldsToNext;
+
+            visible[i].isFirstInSection = i === 0;
+            visible[i].isLastInSection = next === null;
         }
     }
 
-    // Reading every row's `visible` makes this re-evaluate whenever rows are
-    // added, removed, shown or hidden — which is the trigger for updateRows()
-    // Rows arrive from a Repeater long after Component.onCompleted, and
-    // dependent rows come and go, so the layout can't be decided just once
+    // TODO
+    // The column above this hands focus in through here, the way it does for any other row. Without
+    // it the column forces focus on the FocusScope and lets Qt pick a descendant, which two of these
+    // on screen at once turn into a race
+    function enterFrom(step: int) {
+        rows.enterFrom(step);
+    }
+
     readonly property var rowVisibility: {
         const out = [];
         for (let i = 0; i < rows.children.length; i++) {
             out.push(rows.children[i].visible === true);
         }
+
         return out;
     }
     onRowVisibilityChanged: updateRows()
@@ -71,7 +97,7 @@ FocusScope {
 
         Pane {
             Layout.fillWidth: true
-            visible: root.title !== ""
+            visible: root._showHeader
             topPadding: root.showTopPadding ? 22 : 2
             bottomPadding: AppStyle.spacingMd
             leftPadding: 2
@@ -92,14 +118,11 @@ FocusScope {
             Layout.fillWidth: true
             implicitHeight: rows.implicitHeight
             radius: AppStyle.radiusLg
-            color: root.inMenu ? "transparent" : Theme.surface
-            border.width: root.inMenu ? 0 : 1
-            border.color: root.inMenu ? "transparent" : Theme.border
+            color: root._onPage ? Theme.surface : "transparent"
+            border.width: root._onPage ? 1 : 0
+            border.color: root._onPage ? Theme.border : "transparent"
             clip: true
 
-            // TODO
-            // The rows are what the cursor walks with Up and Down, so the column that holds them is
-            // the one that knows how
             FLColumnLayout {
                 id: rows
                 anchors.top: parent.top

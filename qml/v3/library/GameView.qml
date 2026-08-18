@@ -50,8 +50,8 @@ Item {
     // The advanced-filter bar under the toolbar is expanded
     property bool filtersExpanded: false
 
-    property string _pendingSortRole: ""
-    property string _pendingViewType: ""
+    property string _pendingSortRole: "displayName"
+    property string _pendingViewType: "grid"
 
     readonly property var playTimeOptions: [
         {
@@ -135,10 +135,36 @@ Item {
     // --- Sort / view ---
     property string sortRole: "displayName"
     property bool sortAscending: true
+
     property string viewMode: "grid"
+
+    Component.onCompleted: root.viewMode = AppearanceSettings.libraryViewMode
+
+    // TODO
+    // The stored choice can resolve after this builds, or change from the settings page; the view
+    // follows it in place. A change made in the menu instead runs the fade (see displayPopup), so
+    // that path is gated on the menu being open
+    Connections {
+        target: AppearanceSettings
+
+        function onLibraryViewModeChanged() {
+            if (displayPopup.opened) {
+                root._pendingViewType = AppearanceSettings.libraryViewMode;
+                refreshAnimation.restart();
+            } else {
+                root.viewMode = AppearanceSettings.libraryViewMode;
+            }
+        }
+    }
+
+    // TODO
+    // The fade commits these and is shared with filter changes, so at rest they must equal what is on
+    // screen or a filter refresh would apply an empty view or sort
+    onViewModeChanged: root._pendingViewType = root.viewMode
+    onSortRoleChanged: root._pendingSortRole = root.sortRole
+
     // Section grouping: "none" | "platform" | "decade" | "year" | "genre" | "title"
     property string groupBy: "none"
-    // readonly property int gameCount: gameMirror.count
 
     readonly property var groupOptions: [
         {
@@ -783,54 +809,31 @@ Item {
                 x: viewAsButton.width + AppStyle.spacingXs
                 minWidth: 360
 
-                // TODO
-                // The choice shown in the list, which leads the applied sort by
-                // the confirm beat
-                property string chosenViewMode: root.viewMode
-
-                onAboutToShow: displayPopup.chosenViewMode = root.viewMode
-
-                // TODO
-                // The grid transition starts once the popup is gone, so the two
-                // motions read as one sequence instead of overlapping
-                onClosed: {
-                    // FocusCursor.blink(AppStyle.durationSlow)
-                    viewModeConfirmTimer.stop();
-                    if (displayPopup.chosenViewMode !== root.viewMode) {
-                        root._pendingViewType = displayPopup.chosenViewMode;
-                    }
-                }
-
-                Timer {
-                    id: viewModeConfirmTimer
-                    interval: InputMethodManager.usingMouse ? 0 : AppStyle.confirmPause
-                    onTriggered: displayPopup.close()
-                }
-
-                FLRadioGroup {
-                    Keys.onPressed: event => {
-                        event.accepted = displayPopup.navigate(event.key, event.isAutoRepeat);
-                    }
-
-                    model: [
-                        {
-                            text: "Grid",
-                            value: "grid"
-                        },
-                        {
-                            text: "List",
-                            value: "list"
-                        }
-                    ]
-                    currentValue: displayPopup.chosenViewMode
-                    onActivated: value => {
-                        displayPopup.chosenViewMode = value;
-                        viewModeConfirmTimer.restart();
-                    }
-                }
                 SettingsGroup {
+                    title: "View as"
+                    showHeader: false
+                    group: "library-view-mode"
+                    surface: FLMenuItem.Surface.InMenu
+                }
+
+                FLMenuSeparator {}
+
+                SettingsGroup {
+                    visible: root.viewMode === "list"
+                    showHeader: false
+                    showTopPadding: false
+                    title: "List settings"
+                    group: "library-list-appearance"
+                    surface: FLMenuItem.Surface.InMenu
+                }
+
+                SettingsGroup {
+                    visible: root.viewMode === "grid"
+                    showHeader: false
+                    showTopPadding: false
+                    title: "Grid settings"
                     group: "library-grid-appearance"
-                    inMenu: true
+                    surface: FLMenuItem.Surface.InMenu
 
                     // TODO
                     // The grid follows the handle while it moves and goes back to the stored value once
@@ -996,61 +999,13 @@ Item {
             sourceComponent: {
                 if (gameModel.count === 0) {
                     if (gameModel.anyFiltersActive) {
-                        return noMatchingFiltersView
+                        return noMatchingFiltersView;
                     }
 
-                    return noGamesView
+                    return noGamesView;
                 }
 
-                return root.viewMode === "grid" ? gridView : listView
-            }
-        }
-    }
-
-    Pane {
-        id: testing
-        width: 500
-        anchors.left: parent.left
-        anchors.bottom: parent.bottom
-        background: Rectangle {
-            color: Theme.surfaceElevated
-
-            // TODO
-            // A panel laid over the grid has to swallow what the rows above it do not. Nothing
-            // else here consumes a press: a Rectangle does not, and the rows use TapHandlers,
-            // which take a passive grab by design and let the press carry on to the grid
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.AllButtons
-                hoverEnabled: true
-                onWheel: wheel => wheel.accepted = true
-            }
-        }
-
-        FLColumnLayout {
-            anchors.fill: parent
-            spacing: AppStyle.spacingMd
-
-            SettingsGroup {
-                group: "library-grid-appearance"
-
-                // TODO
-                // The grid follows the handle while it moves and goes back to the stored value once
-                // it stops, so dragging the size around costs no writes
-                onSlid: function (key, value) {
-                    if (key === "library-icon-grid-tile-size") {
-                        AppearanceSettings.libraryIconGridTileSizePreview = value;
-                    } else if (key === "library-icon-grid-tile-spacing") {
-                        AppearanceSettings.libraryIconGridTileSpacingPreview = value;
-                    }
-                }
-                onSettled: function (key) {
-                    if (key === "library-icon-grid-tile-size") {
-                        AppearanceSettings.libraryIconGridTileSizePreview = -1;
-                    } else if (key === "library-icon-grid-tile-spacing") {
-                        AppearanceSettings.libraryIconGridTileSpacingPreview = -1;
-                    }
-                }
+                return root.viewMode === "grid" ? gridView : listView;
             }
         }
     }
@@ -1118,6 +1073,7 @@ Item {
                 root._refreshApplied = true;
                 gameModel.applyFilters();
                 root.sortRole = root._pendingSortRole;
+                root.viewMode = root._pendingViewType;
                 if (viewLoader.item) {
                     viewLoader.item.positionViewAtBeginning();
                 }
@@ -1141,66 +1097,6 @@ Item {
                 to: 0
                 duration: AppStyle.durationBase
                 easing.type: Easing.InOutQuad
-            }
-        }
-    }
-
-    SequentialAnimation {
-        id: changeViewAnimation
-        running: false
-        ScriptAction {
-            script: {
-                FocusCursor.startBlink();
-            }
-        }
-        ParallelAnimation {
-            NumberAnimation {
-                target: viewLoader
-                property: "opacity"
-                from: 1
-                to: 0
-                duration: AppStyle.durationSlow
-                easing.type: Easing.InOutQuad
-            }
-            NumberAnimation {
-                target: viewLoader
-                property: "y"
-                from: 0
-                to: 12
-                duration: AppStyle.durationBase
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        ScriptAction {
-            script: {
-                root.viewMode = root._pendingViewType;
-                viewLoader.item.positionViewAtBeginning();
-                // root._pendingSortRole = "";
-            }
-        }
-
-        ParallelAnimation {
-            NumberAnimation {
-                target: viewLoader
-                property: "opacity"
-                from: 0
-                to: 1
-                duration: AppStyle.durationSlow
-                easing.type: Easing.InOutQuad
-            }
-            NumberAnimation {
-                target: viewLoader
-                property: "y"
-                from: 12
-                to: 0
-                duration: AppStyle.durationBase
-                easing.type: Easing.InOutQuad
-            }
-        }
-        ScriptAction {
-            script: {
-                FocusCursor.endBlink();
             }
         }
     }
@@ -1234,6 +1130,14 @@ Item {
     //         onRequestAddToFolder: entryId => addToFolderDialog.openFor([entryId])
     //     }
     // }
+
+    Connections {
+        target: EmulationService
+
+        function onGameLoaded() {
+            console.log("Game loaded!");
+        }
+    }
 
     Component {
         id: listView
@@ -1281,7 +1185,10 @@ Item {
             onRequestLaunch: (id, hash, platformId, playable, statusText) => {
                 if (!playable) {
                     cannotLaunchGamePopup.openWithText(statusText);
+                    return
                 }
+
+                EmulationService.loadEntry(id);
             }
 
             header: GameViewHeader {
@@ -1330,7 +1237,7 @@ Item {
                 ]
 
                 onClicked: {
-                    gameModel.clearAllFilters()
+                    gameModel.clearAllFilters();
                 }
             }
 
@@ -1339,7 +1246,6 @@ Item {
                 Layout.fillHeight: true
             }
         }
-
     }
 
     Component {
@@ -1389,7 +1295,6 @@ Item {
                 Layout.fillHeight: true
             }
         }
-
     }
 
     component GameViewHeader: Pane {

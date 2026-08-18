@@ -1,90 +1,41 @@
+// TODO: NEEDS REVIEW
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
+import Firelight 1.0
 
-// A vertical list of mutually exclusive options, rendered full-width below the
-// label. `options` is [{label, value, note?}]; `currentValue` is the selected
-// value; emits `changed` on selection
-BaseSettingItem {
+// A catalog radio setting rendered as its options: one row each, carrying its own selection
+// indicator and laid out among the rows around it rather than boxed inside one of them.
+//
+// `label` and `description` are accepted and unused. The only radio in the catalog shows in a menu,
+// where the options are the whole row; a radio on a settings page needs a header row adding here
+FLRadioGroup {
     id: root
 
-    controlBelow: true
-
     property var options: []
-    property string currentValue: ""
+    property string label: ""
+    property string description: ""
+    property bool shown: true
+    property bool resettable: false
+
+    // TODO
+    // The value as stored. Selecting an option writes currentValue, which would drop a binding the
+    // caller had put on it, so the stored value arrives on its own property and drives that one
+    property string storedValue: ""
+
     signal changed(string value)
+    signal reset
 
-    control: ColumnLayout {
-        spacing: 0
+    visible: shown
 
-        Repeater {
-            model: root.options
-            delegate: AbstractButton {
-                id: opt
-                required property var modelData
-                readonly property bool on: root.currentValue === modelData.value
+    model: root.options
+    textRole: "label"
+    valueRole: "value"
 
-                Layout.fillWidth: true
-                implicitHeight: 40
-                enabled: root.enabled
-                focusPolicy: Qt.NoFocus
-                onClicked: root.changed(modelData.value)
-
-                HoverHandler {
-                    id: optHover
-                    cursorShape: Qt.PointingHandCursor
-                }
-
-                background: Rectangle {
-                    color: optHover.hovered ? Theme.surfaceHover : "transparent"
-                    radius: AppStyle.radiusMd
-                }
-
-                contentItem: RowLayout {
-                    spacing: AppStyle.spacingMd
-
-                    Rectangle {
-                        Layout.leftMargin: AppStyle.spacingXs
-                        implicitWidth: 18
-                        implicitHeight: 18
-                        radius: 9
-                        color: "transparent"
-                        border.width: 2
-                        border.color: opt.on ? Theme.accent : Theme.borderStrong
-
-                        Rectangle {
-                            visible: opt.on
-                            anchors.centerIn: parent
-                            width: 10
-                            height: 10
-                            radius: 5
-                            color: Theme.accent
-                        }
-                    }
-
-                    Text {
-                        text: opt.modelData.label
-                        color: Theme.textPrimary
-                        font.family: AppStyle.fontFamily
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.weight: Font.Medium
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    Text {
-                        visible: opt.modelData.note !== undefined && opt.modelData.note !== ""
-                        text: opt.modelData.note !== undefined ? opt.modelData.note : ""
-                        color: Theme.textMuted
-                        font.family: AppStyle.fontFamily
-                        font.pixelSize: AppStyle.fontSizeSmall
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
-            }
-        }
+    Binding {
+        target: root
+        property: "currentValue"
+        value: root.storedValue
+        restoreMode: Binding.RestoreNone
     }
+
+    onActivated: value => root.changed(value)
 }

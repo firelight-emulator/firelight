@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "settings_model.hpp"
 
 #include "libretro/core_registry.hpp"
@@ -97,6 +98,7 @@ void SettingsModel::rebuildItems() {
     item.appScope = catalog.isAppSetting(setting.key);
     item.visibleWhen = setting.visibleWhen;
     item.enabledWhen = setting.enabledWhen;
+    item.subItemOverride = setting.subItem;
     item.placeholder = QString::fromStdString(setting.placeholder);
     item.directoryMode = setting.directoryMode;
     item.route = QString::fromStdString(setting.route);
@@ -138,6 +140,11 @@ void SettingsModel::markSubItems() {
   };
 
   for (auto &item : m_items) {
+    if (item.subItemOverride.has_value()) {
+      item.subItem = *item.subItemOverride;
+      continue;
+    }
+
     item.subItem = dependsOnAShownRow(item.visibleWhen) || dependsOnAShownRow(item.enabledWhen);
   }
 }
@@ -234,7 +241,7 @@ QVector<QVariantHash> SettingsModel::buildAudioDeviceOptions() const {
   return options;
 }
 
-std::optional<std::string> SettingsModel::resolveValue(const std::string &key, const SettingsLevel level) {
+std::optional<std::string> SettingsModel::resolveValue(const std::string &key, const SettingsLevel level) const {
   if (!m_settingsService) {
     return std::nullopt;
   }
@@ -264,6 +271,23 @@ std::string SettingsModel::currentValueOf(const std::string &key) const {
       return item.stringValue.toStdString();
     }
   }
+
+  // TODO
+  // A condition can name a setting from another group, which this model does not hold. Reading the
+  // store and then the catalog answers it anyway; returning nothing would match no `values` list, so
+  // every row depending on a setting outside its own group would stay hidden for good
+  const auto &catalog = SettingsCatalog::instance();
+
+  if (m_settingsService) {
+    if (const auto stored = resolveValue(key, catalog.isAppSetting(key) ? Global : m_level)) {
+      return *stored;
+    }
+  }
+
+  if (const auto *setting = catalog.findByKey(key)) {
+    return setting->defaultValue;
+  }
+
   return {};
 }
 

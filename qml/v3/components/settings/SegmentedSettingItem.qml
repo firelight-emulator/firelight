@@ -1,6 +1,6 @@
 import QtQuick
 
-BaseSettingItem {
+FLMenuItem {
     id: root
 
     property var options: []
@@ -11,7 +11,7 @@ BaseSettingItem {
 
     controlBelow: (options ? options.length : 0) >= 5
 
-    control: FLSegmentedControl {
+    controlItem: FLSegmentedControl {
         segments: root.options
         compact: root.compact
         currentValue: root.currentValue

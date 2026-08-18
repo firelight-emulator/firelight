@@ -1,8 +1,10 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -110,6 +112,11 @@ struct SettingDefinition {
   // Relationships to other settings. Empty => always visible/enabled
   std::vector<SettingCondition> visibleWhen;
   std::vector<SettingCondition> enabledWhen;
+
+  // TODO
+  // Whether the row draws indented beneath the setting it depends on. Unset means derived from
+  // visibleWhen and enabledWhen
+  std::optional<bool> subItem;
 
   // TODO
   // Where a `link` row goes. A link stores no value; it is a row shaped like a setting whose whole

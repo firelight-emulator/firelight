@@ -26,6 +26,7 @@
         <file alias="check">assets/sfx/switch2/User Interface, Click, UI Buttons, Select, Menu SND115479 - Pitch 356_4.wav</file>
         <file alias="uncheck">assets/sfx/switch2/User Interface, Click, UI Buttons, Select, Menu SND115479 - Pitch 282_8.wav</file>
         <file alias="sticky-small">assets/sfx/switch2/Water, Splash, Splat, Single, Small SND58962.wav</file>
+        <file alias="snap-medium">assets/sfx/switch2/Toys, Misc, Sticky Hand, Impact, Hit Human Hand SND79065 - Pitch 126_0.wav</file>
     </qresource>
     <qresource prefix="/fonts">
         <file alias="lexend">assets/fonts/Lexend-VariableFont_wght.ttf</file>

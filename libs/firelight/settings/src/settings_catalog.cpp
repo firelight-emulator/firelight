@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "firelight/settings/settings_catalog.hpp"
 
 #include <algorithm>
@@ -175,6 +176,10 @@ SettingDefinition parseSetting(const nlohmann::json &j, std::vector<std::string>
 
   parseConditions(j, "visibleWhen", s.visibleWhen);
   parseConditions(j, "enabledWhen", s.enabledWhen);
+
+  if (j.contains("subItem")) {
+    s.subItem = j.value("subItem", false);
+  }
   return s;
 }
 

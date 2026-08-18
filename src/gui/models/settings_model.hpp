@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 #include "service_accessor.hpp"
 
@@ -132,6 +133,7 @@ private:
     bool appScope = false;
     std::vector<SettingCondition> visibleWhen;
     std::vector<SettingCondition> enabledWhen;
+    std::optional<bool> subItemOverride;
   };
 
   void rebuildItems();
@@ -160,7 +162,7 @@ private:
   // content hash, a Platform-tier row needs a platform)
   [[nodiscard]] bool canResolve(const Item &item) const;
   // First override at `level` or a lower tier (toward Global); nullopt if none
-  std::optional<std::string> resolveValue(const std::string &key, SettingsLevel level);
+  [[nodiscard]] std::optional<std::string> resolveValue(const std::string &key, SettingsLevel level) const;
   // Current effective value of a sibling setting (for condition evaluation)
   std::string currentValueOf(const std::string &key) const;
 

@@ -56,8 +56,6 @@ FLPopup {
                 event.accepted = true;
                 return;
             }
-
-            event.accepted = root.navigate(event.key, event.isAutoRepeat);
         }
         FLColumnLayout {
             id: contentLayout

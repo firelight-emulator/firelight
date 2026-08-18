@@ -492,6 +492,46 @@ TestCase {
         compare(Slide.heldDirection(false, false, 1), 0);
     }
 
+    // The shape FLSlider uses to decide when the two slider sounds play: one notion of the handle being
+    // worked, with a sound on each edge of it. Counters stand in for the sounds
+    Component {
+        id: motionSlider
+
+        Item {
+            width: 400
+            height: 200
+
+            property alias slider: theSlider
+            property int starts: 0
+            property int stops: 0
+
+            // Stands in for the direction a held arrow is carrying the handle
+            property int direction: 0
+
+            readonly property bool inMotion: direction !== 0 || theSlider.pressed
+
+            onInMotionChanged: {
+                if (inMotion) {
+                    starts++;
+                    return;
+                }
+
+                stops++;
+            }
+
+            Slider {
+                id: theSlider
+                anchors.fill: parent
+                focus: true
+                focusPolicy: Qt.StrongFocus
+                from: 0
+                to: 10
+                stepSize: 1
+                value: 5
+            }
+        }
+    }
+
     //****************
     // re-seating
     //****************
@@ -508,5 +548,69 @@ TestCase {
     function test_halfAStepIsTheBoundary() {
         verify(!Slide.shouldReseat(137, 135, 5), "moved for less than half a step");
         verify(Slide.shouldReseat(138, 135, 5), "did not move for more than half a step");
+    }
+
+    //****************
+    // when the slider sounds
+    //****************
+
+    function test_leavingASliderNobodyTouchedStaysQuiet() {
+        const item = createTemporaryObject(motionSlider, testCase);
+        verify(item);
+
+        // What losing focus does: end any hold. Nothing was held, so nothing stopped
+        item.direction = 0;
+
+        compare(item.starts, 0, "started on a slider nobody touched");
+        compare(item.stops, 0, "stopped on a slider nobody touched");
+    }
+
+    function test_aHeldArrowStartsThenStops() {
+        const item = createTemporaryObject(motionSlider, testCase);
+        verify(item);
+
+        item.direction = 1;
+        compare(item.starts, 1);
+        compare(item.stops, 0);
+
+        item.direction = 0;
+        compare(item.starts, 1);
+        compare(item.stops, 1);
+    }
+
+    function test_handingBetweenArrowsDoesNotStartAgain() {
+        const item = createTemporaryObject(motionSlider, testCase);
+        verify(item);
+
+        item.direction = 1;
+        item.direction = -1;
+
+        compare(item.starts, 1, "the handoff sounded like a fresh start");
+        compare(item.stops, 0, "the handoff sounded like a stop");
+    }
+
+    function test_theMouseSoundsTheSameAsAHold() {
+        const item = createTemporaryObject(motionSlider, testCase);
+        verify(item);
+
+        mousePress(item.slider, item.slider.width / 2, item.slider.height / 2);
+        compare(item.starts, 1, "a drag made no sound");
+        compare(item.stops, 0);
+
+        mouseRelease(item.slider, item.slider.width / 2, item.slider.height / 2);
+        compare(item.starts, 1);
+        compare(item.stops, 1, "letting go of a drag made no sound");
+    }
+
+    function test_focusLeavingMidHoldStillStops() {
+        const item = createTemporaryObject(motionSlider, testCase);
+        verify(item);
+
+        item.direction = 1;
+        compare(item.starts, 1);
+
+        // Focus moving away ends the hold
+        item.direction = 0;
+        compare(item.stops, 1, "an interrupted hold never stopped");
     }
 }

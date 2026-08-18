@@ -284,6 +284,7 @@ MainWindow {
             anchors.right: parent.right
             height: AppStyle.titleBarHeight
             padding: AppStyle.titleBarPadding
+            z: 10001
 
             background: Rectangle {
                 color: "transparent"
@@ -326,10 +327,33 @@ MainWindow {
             target: window.activeFocusItem
             usingMouse: InputMethodManager.usingMouse
 
-            // TODO
-            // Publishes the ring so anything in the app can drive it through the
-            // FocusCursor singleton
             Component.onCompleted: FocusCursor.register(focusHighlight)
+        }
+    }
+
+    Connections {
+        target: EmulationService
+        function onGameLoaded() {
+            // gameStartAnimation.start();
+        }
+    }
+
+    Rectangle {
+        id: overlay
+        anchors.fill: parent
+        color: "black"
+        z: 10000
+        opacity: 0
+    }
+
+    SequentialAnimation {
+        id: gameStartAnimation
+        PropertyAnimation {
+            target: overlay
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 400
         }
     }
 

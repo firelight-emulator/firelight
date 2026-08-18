@@ -5,7 +5,7 @@ import QtQuick.Layouts
 // Multi-select setting: a full-width wrap of toggleable chips over `options`
 // ({label, value}). `value` is a JSON array of the selected option values;
 // emits `changed` with the new JSON array string when the selection changes
-BaseSettingItem {
+FLMenuItem {
     id: root
 
     controlBelow: true
@@ -41,7 +41,7 @@ BaseSettingItem {
         root.changed(JSON.stringify(copy));
     }
 
-    control: Flow {
+    controlItem: Flow {
         spacing: AppStyle.spacingSm
 
         Repeater {

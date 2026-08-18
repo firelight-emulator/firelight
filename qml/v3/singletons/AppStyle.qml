@@ -104,6 +104,15 @@ Item {
 
     readonly property int listRowHeight: Math.max(minTarget, Math.round(46 * scale * density))
 
+    // TODO
+    // One row style, read by every row wherever it is shown, so a settings page and a menu cannot drift
+    readonly property int rowLabelSize: fontSizeMedium
+    readonly property var rowLabelWeight: Font.Medium
+    readonly property int rowHighlightDuration: durationSnap
+    // TODO
+    // Breathing room under a row on a settings page; a menu row does without it
+    readonly property int rowSpacerPage: Math.round(13 * scale * density)
+
 
 
     //*************************************************************

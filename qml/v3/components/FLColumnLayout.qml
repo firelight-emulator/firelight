@@ -52,6 +52,26 @@ ColumnLayout {
     }
 
     // TODO
+    // Entered directionally from the column above or below: land on the child at the matching end and
+    // pass the direction on, so a nested column lands at that same end rather than always its top
+    function enterFrom(step: int) {
+        const index = step < 0 ? Nav.nextFocusable(root.children, root.children.length, -1) : Nav.nextFocusable(root.children, -1, 1);
+
+        if (index < 0) {
+            return;
+        }
+
+        root.currentIndex = index;
+        const child = root.children[index];
+
+        if (child.enterFrom !== undefined) {
+            child.enterFrom(step);
+        } else {
+            child.forceActiveFocus();
+        }
+    }
+
+    // TODO
     // Focus arriving on the column itself is handed to a child: the one the
     // cursor was last on, else the nearest that can take it
     function focusFirstChild(from: int) {
@@ -62,7 +82,17 @@ ColumnLayout {
         }
 
         root.currentIndex = index;
-        root.children[index].forceActiveFocus();
+
+        // TODO
+        // A child that says how to be entered is entered at its top, rather than by forcing focus on
+        // it and leaving Qt to choose a descendant
+        const child = root.children[index];
+
+        if (child.enterFrom !== undefined) {
+            child.enterFrom(1);
+        } else {
+            child.forceActiveFocus();
+        }
     }
 
     Keys.onPressed: event => {

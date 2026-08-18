@@ -66,6 +66,9 @@ QtObject {
     property SettingBinding libraryIconGridShowFavoriteIconBinding: SettingBinding {
         key: "library-icon-grid-show-favorite-icon"
     }
+    property SettingBinding libraryViewModeBinding: SettingBinding {
+        key: "library-view-mode"
+    }
 
     // property SettingBinding libraryIconGridTileSize: SettingBinding {
     //     key: "library-icon-grid-tile-size"
@@ -141,6 +144,11 @@ QtObject {
     readonly property int libraryIconGridTileSpacing: libraryIconGridTileSpacingPreview >= 0 ? libraryIconGridTileSpacingPreview : root.storedInt(libraryIconGridTileSpacingBinding.value, 12)
     readonly property bool libraryIconGridShowTitleBox: libraryIconGridShowTitleBoxBinding.value === "true"
     readonly property bool libraryIconGridShowFavoriteIcon: libraryIconGridShowFavoriteIconBinding.value === "true"
+
+    // TODO
+    // Which view the library renders in. Anything but the two known values reads as the grid, so a
+    // setting that has never been written cannot leave the library with no view at all
+    readonly property string libraryViewMode: libraryViewModeBinding.value === "list" ? "list" : "grid"
     // readonly property int libraryIconGridTileSpacing
     // readonly property int libraryIconGridShowFavorite
     // readonly property int libraryIconGridShowPlatform

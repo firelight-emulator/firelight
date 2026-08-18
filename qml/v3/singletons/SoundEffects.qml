@@ -64,4 +64,9 @@ QtObject {
         source: "qrc:/sfx/sticky-small"
         volume: 0.75
     }
+
+    readonly property FLSoundEffect stopSliderMove: FLSoundEffect {
+        source: "qrc:/sfx/snap-medium"
+        volume: 0.4
+    }
 }

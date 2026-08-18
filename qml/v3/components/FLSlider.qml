@@ -39,6 +39,21 @@ Slider {
     property bool _bumped: false
 
     // TODO
+    // Whether the handle is being worked right now, by a held arrow or by the pointer. The two slider
+    // sounds are the edges of this rather than of any one input, so a drag sounds like a hold and
+    // leaving a slider nobody touched stays quiet
+    readonly property bool _inMotion: control._direction !== 0 || control.pressed
+
+    on_InMotionChanged: {
+        if (control._inMotion) {
+            SoundEffects.startSliderMove.play();
+            return;
+        }
+
+        SoundEffects.stopSliderMove.play();
+    }
+
+    // TODO
     // Shows the handle going nowhere when it is carried past an end, once per arrival
     function bumpAtEnd(direction: int) {
         if (Slide.shouldBump(control._bumped, control.value, control.from, control.to, direction)) {
@@ -78,21 +93,21 @@ Slider {
     // Stops the arrows reaching the slider's own key handling, which moves by a step per press
     Keys.priority: Keys.BeforeItem
 
-    Keys.onPressed: event => {
-        if (event.key !== Qt.Key_Left && event.key !== Qt.Key_Right) {
-            event.accepted = false;
-            return;
+    // TODO
+    // Works the slider from a key and reports whether it did. Functions rather than handlers because the
+    // row this sits in is what holds the focus, so the keys arrive there
+    function pressKey(key: int, isAutoRepeat: bool): bool {
+        if (key !== Qt.Key_Left && key !== Qt.Key_Right) {
+            return false;
         }
-
-        event.accepted = true;
 
         // TODO
         // A held key repeats; the slide runs off the frame clock, so the repeats are dropped
-        if (event.isAutoRepeat) {
-            return;
+        if (isAutoRepeat) {
+            return true;
         }
 
-        const pressed = event.key === Qt.Key_Left ? -1 : 1;
+        const pressed = key === Qt.Key_Left ? -1 : 1;
 
         if (pressed === -1) {
             control._leftHeld = true;
@@ -100,28 +115,24 @@ Slider {
             control._rightHeld = true;
         }
 
-        SoundEffects.startSliderMove.play();
-
         control._lastPressed = pressed;
         control._direction = pressed;
         control.nudge(pressed);
         control.bumpAtEnd(pressed);
         holdTimer.restart();
+        return true;
     }
 
-    Keys.onReleased: event => {
-        if (event.key !== Qt.Key_Left && event.key !== Qt.Key_Right) {
-            event.accepted = false;
-            return;
+    function releaseKey(key: int, isAutoRepeat: bool): bool {
+        if (key !== Qt.Key_Left && key !== Qt.Key_Right) {
+            return false;
         }
 
-        event.accepted = true;
-
-        if (event.isAutoRepeat) {
-            return;
+        if (isAutoRepeat) {
+            return true;
         }
 
-        if (event.key === Qt.Key_Left) {
+        if (key === Qt.Key_Left) {
             control._leftHeld = false;
         } else {
             control._rightHeld = false;
@@ -133,10 +144,19 @@ Slider {
         // The other arrow is still down, so the slide carries on its way rather than ending
         if (remaining !== 0) {
             control._direction = remaining;
-            return;
+            return true;
         }
 
         control.rest();
+        return true;
+    }
+
+    Keys.onPressed: event => {
+        event.accepted = control.pressKey(event.key, event.isAutoRepeat);
+    }
+
+    Keys.onReleased: event => {
+        event.accepted = control.releaseKey(event.key, event.isAutoRepeat);
     }
 
     // TODO

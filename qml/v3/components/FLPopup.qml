@@ -19,7 +19,6 @@ Menu {
     // TODO
     // Whether this popup is the one holding a dim up, so the two calls stay paired
     property bool isDimming: false
-
     function popupFor(caller: Item, desiredX, desiredY) {
         control.caller = caller;
 

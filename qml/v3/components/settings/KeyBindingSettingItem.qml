@@ -3,7 +3,7 @@ import QtQuick
 // Shows the current binding as a pill and requests a rebind when clicked. The
 // owner sets `listening` while capturing and updates `binding` when done; this
 // component is purely presentational
-BaseSettingItem {
+FLMenuItem {
     id: root
 
     property string binding: ""
@@ -14,7 +14,7 @@ BaseSettingItem {
         root.rebindRequested();
     }
 
-    control: Rectangle {
+    controlItem: Rectangle {
         implicitHeight: 34
         implicitWidth: Math.max(72, keyText.implicitWidth + 24)
         radius: AppStyle.radiusMd

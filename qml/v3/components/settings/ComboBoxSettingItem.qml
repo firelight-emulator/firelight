@@ -1,6 +1,6 @@
 import QtQuick
 
-BaseSettingItem {
+FLMenuItem {
     property alias currentIndex: comboBox.currentIndex
     property alias currentValue: comboBox.currentValue
     property alias comboBoxModel: comboBox.model
@@ -8,7 +8,7 @@ BaseSettingItem {
     property alias textRole: comboBox.textRole
     property alias valueRole: comboBox.valueRole
 
-    control: MyComboBox {
+    controlItem: MyComboBox {
         id: comboBox
         focusPolicy: Qt.NoFocus
     }

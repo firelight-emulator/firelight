@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "gui/models/settings_model.hpp"
 
 #include "service_accessor.hpp"
@@ -19,7 +20,8 @@ constexpr int GBA_PLATFORM_ID = 3;
 
 const char *CATALOG = R"JSON(
 {
-  "groups": [{"id": "emulation", "label": "Emulation"}],
+  "groups": [{"id": "emulation", "label": "Emulation"},
+             {"id": "rowstyle", "label": "Row style"}],
   "common": [
     {"key": "rewind-enabled", "label": "Rewind", "group": "emulation",
      "type": "boolean", "default": "true"},
@@ -37,7 +39,20 @@ const char *CATALOG = R"JSON(
          "type": "slider", "default": "0", "min": 0, "max": 10, "step": 1,
          "visibleWhen": [{"key": "solar-sensor", "values": ["true"]}]},
         {"key": "adv-opt", "label": "Advanced option", "group": "emulation",
-         "type": "boolean", "default": "false", "advanced": true}
+         "type": "boolean", "default": "false", "advanced": true},
+        {"key": "rowstyle-parent", "label": "Row style parent", "group": "rowstyle",
+         "type": "boolean", "default": "true"},
+        {"key": "rowstyle-inferred", "label": "Inferred", "group": "rowstyle",
+         "type": "boolean", "default": "false",
+         "visibleWhen": [{"key": "rowstyle-parent", "values": ["true"]}]},
+        {"key": "rowstyle-optout", "label": "Opted out", "group": "rowstyle",
+         "type": "boolean", "default": "false", "subItem": false,
+         "visibleWhen": [{"key": "rowstyle-parent", "values": ["true"]}]},
+        {"key": "rowstyle-optin", "label": "Opted in", "group": "rowstyle",
+         "type": "boolean", "default": "false", "subItem": true},
+        {"key": "rowstyle-crossgroup", "label": "Cross group", "group": "rowstyle",
+         "type": "boolean", "default": "false",
+         "visibleWhen": [{"key": "rewind-enabled", "values": ["true"]}]}
       ]
     }
   }
@@ -204,6 +219,50 @@ TEST_F(SettingsModelTest, MarksRowsThatDependOnAnotherShownRow) {
   EXPECT_FALSE(value(model, independent, "subItem").toBool());
 }
 
+TEST_F(SettingsModelTest, AnExplicitSubItemBeatsWhatTheDependencyImplies) {
+  SettingsModel model;
+  model.setGroup("rowstyle");
+  model.setPlatformId(GBA_PLATFORM_ID);
+  model.setContentHash("hash1");
+  model.setLevel(Game);
+
+  // The dependency on its own still decides, so the opt-out below is the field talking
+  const int inferred = findRow(model, "rowstyle-inferred");
+  ASSERT_NE(inferred, -1);
+  EXPECT_TRUE(value(model, inferred, "subItem").toBool());
+
+  // Same dependency, opted out
+  const int optedOut = findRow(model, "rowstyle-optout");
+  ASSERT_NE(optedOut, -1);
+  EXPECT_FALSE(value(model, optedOut, "subItem").toBool());
+
+  // Asks to be one while depending on nothing
+  const int optedIn = findRow(model, "rowstyle-optin");
+  ASSERT_NE(optedIn, -1);
+  EXPECT_TRUE(value(model, optedIn, "subItem").toBool());
+}
+
+TEST_F(SettingsModelTest, AConditionCanNameASettingFromAnotherGroup) {
+  SettingsModel model;
+  model.setGroup("rowstyle");
+  model.setPlatformId(GBA_PLATFORM_ID);
+  model.setContentHash("hash1");
+  model.setLevel(Game);
+
+  // rewind-enabled is in the emulation group, so this model does not hold it. It defaults true, which
+  // is what the condition wants, so the row belongs on screen
+  const int row = findRow(model, "rowstyle-crossgroup");
+  ASSERT_NE(row, -1);
+  EXPECT_TRUE(value(model, row, "visible").toBool());
+
+  // And it follows that setting afterwards, wherever it was changed from
+  m_service.setGlobalValue("rewind-enabled", "false");
+  EXPECT_FALSE(value(model, row, "visible").toBool());
+
+  m_service.setGlobalValue("rewind-enabled", "true");
+  EXPECT_TRUE(value(model, row, "visible").toBool());
+}
+
 TEST_F(SettingsModelTest, ResetFallsBackToInherited) {
   m_service.setPlatformValue(GBA_PLATFORM_ID, "aspect-ratio", "pixel");
 
@@ -315,7 +374,8 @@ TEST_F(SettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatform) {
 
 const char *NEW_WIDGETS_CATALOG = R"JSON(
 {
-  "groups": [{"id": "emulation", "label": "Emulation"}],
+  "groups": [{"id": "emulation", "label": "Emulation"},
+             {"id": "rowstyle", "label": "Row style"}],
   "common": [],
   "cores": {
     "mgba_libretro": {

@@ -117,4 +117,78 @@ TestCase {
         verify(slider.handle !== null, "a Slider did not expose its handle");
         verify(slider.handle.width > 0, "the handle has no size to draw a cursor around");
     }
+
+    //****************
+    // what a row loses by not being a focus scope
+    //****************
+
+    // The row a settings item used to be: activeFocus covers a focused descendant
+    Component {
+        id: scopeRow
+
+        FocusScope {
+            width: 200
+            height: 40
+            focusPolicy: Qt.StrongFocus
+
+            property alias inner: scopeSlider
+
+            Slider {
+                id: scopeSlider
+                anchors.fill: parent
+                focusPolicy: Qt.StrongFocus
+            }
+        }
+    }
+
+    // The row it is now: an AbstractButton, which does not
+    Component {
+        id: delegateRow
+
+        ItemDelegate {
+            width: 200
+            height: 40
+
+            property alias inner: delegateSlider
+
+            Slider {
+                id: delegateSlider
+                anchors.fill: parent
+                focusPolicy: Qt.StrongFocus
+            }
+        }
+    }
+
+    function test_aFocusScopeCoversItsChildsFocus() {
+        const row = createTemporaryObject(scopeRow, testCase);
+        verify(row !== null);
+
+        row.inner.forceActiveFocus();
+
+        verify(row.inner.activeFocus, "the child never took focus");
+        verify(row.activeFocus, "a FocusScope did not report activeFocus while its child held it");
+    }
+
+    // The reason a row that hands focus to its control needs a proxy term in its highlight: an
+    // ItemDelegate goes dark the moment the control takes over
+    function test_anItemDelegateDoesNotCoverItsChildsFocus() {
+        const row = createTemporaryObject(delegateRow, testCase);
+        verify(row !== null);
+
+        row.inner.forceActiveFocus();
+
+        verify(row.inner.activeFocus, "the child never took focus");
+        verify(!row.activeFocus, "an ItemDelegate reported activeFocus for its child, so the proxy term is dead code");
+    }
+
+    // And the row still reports focus for itself, which is what `rowHoldsFocus` now means
+    function test_anItemDelegateStillReportsItsOwnFocus() {
+        const row = createTemporaryObject(delegateRow, testCase);
+        verify(row !== null);
+
+        row.forceActiveFocus();
+
+        verify(row.activeFocus, "the row could not take focus itself");
+        verify(!row.inner.activeFocus, "focus leaked into the control");
+    }
 }

@@ -55,6 +55,10 @@ SettingsSection {
                 delegate: toggleDelegate
             }
             DelegateChoice {
+                roleValue: "checkbox"
+                delegate: toggleDelegate
+            }
+            DelegateChoice {
                 roleValue: "slider"
                 delegate: sliderDelegate
             }
@@ -110,15 +114,6 @@ SettingsSection {
                 delegate: comboBoxDelegate
             }
         }
-
-        onItemAdded: function (index, item) {
-            if (index === 0) {
-                item.isFirstInSection = true;
-            }
-            if (index === settingsModel.rowCount() - 1) {
-                item.isLastInSection = true;
-            }
-        }
     }
 
     // TODO
@@ -126,7 +121,7 @@ SettingsSection {
     // declared beside the settings it sits among rather than hand-written into a page
     Component {
         id: linkDelegate
-        BaseSettingItem {
+        FLMenuItem {
             required property var model
             required property var index
             shown: model.visible
@@ -135,7 +130,7 @@ SettingsSection {
             label: model.label
             description: model.description
 
-            control: Icon {
+            controlItem: Icon {
                 name: "chevron-forward"
                 size: AppStyle.iconSizeSm
                 color: Theme.textSecondary
@@ -169,6 +164,26 @@ SettingsSection {
     Component {
         id: toggleDelegate
         ToggleSettingItem {
+            required property var model
+            required property var index
+            shown: model.visible
+            subItem: model.subItem
+            enabled: model.enabled
+            label: model.label
+            description: model.description
+            checked: model.value
+            resettable: model.resettable
+
+            onReset: settingsModel.resetValue(index)
+            onClicked: function () {
+                model.value = !checked;
+            }
+        }
+    }
+
+    Component {
+        id: checkboxDelegate
+        FLToggleMenuItem {
             required property var model
             required property var index
             shown: model.visible
@@ -269,7 +284,7 @@ SettingsSection {
             description: model.description
             resettable: model.resettable
             options: model.options
-            currentValue: model.value
+            storedValue: model.value
 
             onReset: settingsModel.resetValue(index)
             onChanged: function (v) {

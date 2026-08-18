@@ -4,7 +4,7 @@ import QtQuick.Layouts
 // Color setting: a row of preset swatches plus a hex entry for arbitrary
 // colors. `value` is a hex string (e.g. "#ff8800"); `presets` is an optional
 // list of {label, value} swatches (from the setting's `options`)
-BaseSettingItem {
+FLMenuItem {
     id: root
 
     controlBelow: false
@@ -25,7 +25,7 @@ BaseSettingItem {
         return Theme.folderColors.concat(["#ffffff"]);
     }
 
-    control: RowLayout {
+    controlItem: RowLayout {
         spacing: AppStyle.spacingSm
 
         Repeater {

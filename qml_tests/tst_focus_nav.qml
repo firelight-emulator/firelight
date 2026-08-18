@@ -128,4 +128,36 @@ TestCase {
         compare(Nav.firstFocusable(children, 0), 1);
         compare(Nav.firstFocusable(children, 3), 4);
     }
+
+    // A Repeater is a child of the column like any other and has no focusPolicy at all. Comparing an
+    // undefined policy against NoFocus reads as "focusable", which hands the cursor to something with
+    // no size sitting at children[0]
+    function test_aChildWithNoFocusPolicyIsNotFocusable() {
+        const repeaterLike = {
+            visible: true,
+            enabled: true
+        };
+
+        verify(!Nav.isFocusable(repeaterLike), "a child with no focusPolicy reported as focusable");
+    }
+
+    function test_aRealControlIsStillFocusable() {
+        const control = {
+            visible: true,
+            enabled: true,
+            focusPolicy: Qt.StrongFocus
+        };
+
+        verify(Nav.isFocusable(control), "a StrongFocus control stopped being focusable");
+    }
+
+    function test_anExplicitlyUnfocusableControlIsStillSkipped() {
+        const control = {
+            visible: true,
+            enabled: true,
+            focusPolicy: Qt.NoFocus
+        };
+
+        verify(!Nav.isFocusable(control), "a NoFocus control reported as focusable");
+    }
 }

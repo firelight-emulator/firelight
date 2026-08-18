@@ -6,7 +6,7 @@ import Firelight 1.0
 
 import "slider_slide.js" as Slide
 
-BaseSettingItem {
+FLMenuItem {
     id: root
 
     controlBelow: true
@@ -76,14 +76,19 @@ BaseSettingItem {
         root.settled();
     }
 
-    control: RowLayout {
+    // TODO
+    // The row holds the focus and the cursor draws on the handle, so there is one stop here rather than
+    // a row and a slider the cursor visits in turn
+    FLFocus.proxy: theControl.handle
+
+    controlItem: RowLayout {
         spacing: AppStyle.spacingMd
 
         FLSlider {
             id: theControl
             Layout.fillWidth: true
             enabled: root.enabled
-            focusPolicy: Qt.StrongFocus
+            focusPolicy: Qt.NoFocus
             from: root.from
             to: root.to
             stepSize: root.stepSize
@@ -136,15 +141,19 @@ BaseSettingItem {
     }
 
     // TODO
-    // The row is holding focus itself rather than having handed it on. Bound rather than checked
-    // when activeFocus changes, because the row can be given focus again while it already had it
-    readonly property bool rowHoldsFocus: root.activeFocus && !theControl.activeFocus
-
     // TODO
-    // The slider is what holds focus, so the cursor lands on its handle and the arrows reach it
-    onRowHoldsFocusChanged: {
-        if (root.rowHoldsFocus && theControl.enabled) {
-            theControl.forceActiveFocus();
+    // The arrows arrive at the row, so the row is what works the slider
+    Keys.onPressed: event => {
+        event.accepted = theControl.pressKey(event.key, event.isAutoRepeat);
+    }
+
+    Keys.onReleased: event => {
+        event.accepted = theControl.releaseKey(event.key, event.isAutoRepeat);
+    }
+
+    onActiveFocusChanged: {
+        if (!root.activeFocus) {
+            theControl.rest();
         }
     }
 }

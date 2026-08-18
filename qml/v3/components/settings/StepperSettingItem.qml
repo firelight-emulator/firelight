@@ -5,7 +5,7 @@ import QtQuick.Layouts
 // A precise number nudged up or down. `value` is the current number; emits
 // `changed` with the new value, clamped to [from, to]. `suffix` is an optional
 // unit (e.g. "s")
-BaseSettingItem {
+FLMenuItem {
     id: root
 
     property real from: 0
@@ -23,7 +23,7 @@ BaseSettingItem {
         }
     }
 
-    control: Rectangle {
+    controlItem: Rectangle {
         implicitHeight: AppStyle.controlHeight
         implicitWidth: Math.round(128 * AppStyle.scale)
         radius: AppStyle.radiusMd

@@ -33,10 +33,6 @@ FLPopup {
         width: parent.width
         implicitHeight: contentLayout.implicitHeight
 
-        Keys.onPressed: event => {
-            event.accepted = root.navigate(event.key, event.isAutoRepeat);
-        }
-
         FLColumnLayout {
             id: contentLayout
             width: parent.width

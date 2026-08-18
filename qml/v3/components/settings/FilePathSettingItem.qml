@@ -5,7 +5,7 @@ import QtQuick.Dialogs
 // File / folder path setting. `value` is a filesystem path; `directoryMode`
 // picks a folder instead of a file; `extensions` (no dot) filters files. Emits
 // `chosen` when a path is picked or cleared
-BaseSettingItem {
+FLMenuItem {
     id: root
 
     controlBelow: true
@@ -35,7 +35,7 @@ BaseSettingItem {
         return ["Supported files (" + globs.join(" ") + ")", "All files (*)"];
     }
 
-    control: RowLayout {
+    controlItem: RowLayout {
         spacing: AppStyle.spacingSm
 
         Text {

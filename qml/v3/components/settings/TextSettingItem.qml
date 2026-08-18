@@ -3,7 +3,7 @@ import QtQuick
 // Free-text setting. Emits `edited` on commit (focus loss / Enter) rather than
 // on every keystroke; stays in sync with external value changes when not being
 // edited (so a Reset refreshes it)
-BaseSettingItem {
+FLMenuItem {
     id: root
 
     controlBelow: true
@@ -12,7 +12,7 @@ BaseSettingItem {
     property string placeholder: ""
     signal edited(string newValue)
 
-    control: FLTextField {
+    controlItem: FLTextField {
         id: field
         implicitWidth: Math.round(260 * AppStyle.scale)
         enabled: root.enabled

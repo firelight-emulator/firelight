@@ -146,6 +146,20 @@ Item {
         return root.target ? root.FLFocus.find(root.target) : null;
     }
 
+    // TODO
+    // What the ring should look like, which is the business of the item it is drawn around. Pointing the
+    // cursor at a proxy hands over shape as well as position, so a row's own corners do not end up drawn
+    // around someone else's handle
+    function cursorInfo(): FLFocus {
+        const info = root.targetInfo();
+
+        if (info !== null && info.proxy !== null) {
+            return root.FLFocus.find(info.proxy);
+        }
+
+        return info;
+    }
+
     // The item the ring should surround: the focus target (or its opted-in
     // proxy), or null when nothing focusable is focused or the mouse is in use
     readonly property Item cursorItem: {
@@ -230,7 +244,7 @@ Item {
     // border. Taken from whatever declared it rather than from `item`, since the
     // ring may be drawn around a proxy that declared nothing
     function spacingFor(item: Item): real {
-        const info = root.targetInfo();
+        const info = root.cursorInfo();
 
         if (info !== null && !isNaN(info.spacing)) {
             return info.spacing;
@@ -251,7 +265,7 @@ Item {
     // What to paint between the item and the ring, from whatever declared it,
     // else the theme's default. Transparent means there is nothing to paint
     function fillFor(item: Item): color {
-        const info = root.targetInfo();
+        const info = root.cursorInfo();
 
         if (info !== null && info.fill.a > 0) {
             return info.fill;
@@ -264,7 +278,7 @@ Item {
     // far the band sits outside it, which is the offset curve of that shape
     function radiusFor(item: Item): real {
         const gap = ringOffsetFor(item);
-        const info = root.targetInfo();
+        const info = root.cursorInfo();
 
         if (info !== null && !isNaN(info.radius)) {
             return info.radius + gap;
@@ -304,7 +318,7 @@ Item {
     // The four corners the ring is drawn with, each growing by the same gap the single radius does.
     // An item that rounds its corners separately gets a ring that follows them
     function cornerRadiiFor(item: Item): var {
-        const info = root.targetInfo();
+        const info = root.cursorInfo();
         const base = root.radiusFor(item);
 
         return {

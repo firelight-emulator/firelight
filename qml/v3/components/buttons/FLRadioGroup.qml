@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -52,6 +53,17 @@ FocusScope {
     // The selected option's row, or null while nothing is selected
     readonly property Item currentItem: currentIndex >= 0 && currentIndex < repeater.count ? repeater.itemAt(currentIndex) : null
 
+    // TODO
+    // Where the group is being shown, and where it sits in the run of rows around it. Forwarded to the
+    // options, because they are the rows a section lays out rather than the group itself
+    property int surface: FLMenuItem.Surface.InMenu
+    property bool subItem: false
+    property bool isFirstInSection: false
+    property bool isLastInSection: false
+    property bool showDivider: false
+
+    readonly property bool _onPage: root.surface === FLMenuItem.Surface.Page
+
     signal activated(var value)
 
     implicitWidth: column.implicitWidth
@@ -101,9 +113,14 @@ FocusScope {
             return;
         }
 
+        // TODO
+        // Announces what was picked rather than re-reading currentValue, which an owner is allowed to
+        // be driving from somewhere else
+        const chosen = root.valueFor(root.model[index]);
+
         SoundEffects.radioSelect.play();
-        root.currentValue = root.valueFor(root.model[index]);
-        root.activated(root.currentValue);
+        root.currentValue = chosen;
+        root.activated(chosen);
     }
 
     // TODO
@@ -131,7 +148,8 @@ FocusScope {
     FLColumnLayout {
         id: column
         anchors.fill: parent
-        spacing: AppStyle.spacingXs
+        // spacing: root._onPage ? 0 : AppStyle.spacingXs
+        spacing: 0
 
         Repeater {
             id: repeater
@@ -148,6 +166,16 @@ FocusScope {
                 objectName: "FLRadioOption|" + root.labelFor(modelData)
                 label: root.labelFor(modelData)
                 checked: selected
+
+                surface: root.surface
+                subItem: root.subItem
+                isFirstInSection: root.isFirstInSection && option.index === 0
+                isLastInSection: root.isLastInSection && option.index === repeater.count - 1
+
+                // TODO
+                // Lines run between options only on a page; the last option carries whatever line the
+                // section wanted after the group
+                showDivider: option.index < repeater.count - 1 ? root._onPage : root.showDivider
 
                 // TODO
                 // Up/Down are the surrounding FLColumnLayout's; Space arrives as
