@@ -497,99 +497,99 @@ Pane {
                                 resetGameDialog.open();
                             }
                         }
-                        FirelightMenuItem {
-                            id: rewindButton
-                            labelText: "Rewind"
-                            KeyNavigation.down: suspendPointButton
-                            Layout.fillWidth: true
-                            // Layout.preferredWidth: parent.width / 2
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                            Layout.preferredHeight: 40
-                            checkable: false
-                            enabled: EmulationService.rewindEnabled
-                            alignRight: true
-                            onClicked: {
-                                root.rewindPressed();
-                            }
-                        }
-                        FirelightMenuItem {
-                            id: suspendPointButton
-                            labelText: "Suspend Points"
-                            Layout.fillWidth: true
-                            KeyNavigation.down: controlsButton.visible ? controlsButton : backToMenuButton
-                            // Layout.preferredWidth: parent.width / 2
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                            Layout.preferredHeight: 40
-                            checkable: false
-                            alignRight: true
-                            // enabled: false
-                            onClicked: {
-                                quickMenuStack.replaceCurrentItem(suspendPointMenu, {}, StackView.Immediate);
-                                quickMenuStack.forceActiveFocus();
-                            }
-                        }
-                        // These route through the dispatcher rather than doing the
-                        // work here, so the menu and the hotkey can't drift: same
-                        // save slot, same hardcore gate, same toast
-                        FirelightMenuItem {
-                            id: screenshotButton
-                            labelText: "Screenshot"
-                            Layout.fillWidth: true
-                            KeyNavigation.down: muteButton
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                            Layout.preferredHeight: 40
-                            checkable: false
-                            alignRight: true
-                            onClicked: ShortcutDispatcher.trigger("screenshot")
-                        }
-                        SettingBinding {
-                            id: muteBinding
-                            key: "audio-muted"
-                        }
-
-                        FirelightMenuItem {
-                            id: muteButton
-                            // Follows the setting, so it stays right when the
-                            // hotkey is what changed it
-                            labelText: muteBinding.value === "true" ? "Unmute" : "Mute"
-                            Layout.fillWidth: true
-                            KeyNavigation.down: controlsButton.visible ? controlsButton : backToMenuButton
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                            Layout.preferredHeight: 40
-                            checkable: false
-                            alignRight: true
-                            onClicked: ShortcutDispatcher.trigger("toggle_mute")
-                        }
-                        FirelightMenuItem {
-                            id: controlsButton
-                            labelText: "Controls"
-                            Layout.fillWidth: true
-                            KeyNavigation.down: backToMenuButton
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                            Layout.preferredHeight: 40
-                            checkable: false
-                            alignRight: true
-                            // Only when the game offers a real device choice
-                            // (Gamepad / Mouse / Light Gun)
-                            visible: emuMenuScope.deviceChoicePorts.length > 0
-                            onClicked: {
-                                quickMenuStack.replaceCurrentItem(controlsMenu, {}, StackView.Immediate);
-                                quickMenuStack.forceActiveFocus();
-                            }
-                        }
-                        FirelightMenuItem {
-                            id: backToMenuButton
-                            labelText: "Back to Menu"
-                            Layout.fillWidth: true
-                            KeyNavigation.down: closeGameButton
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                            Layout.preferredHeight: 40
-                            checkable: false
-                            alignRight: true
-                            onClicked: {
-                                root.backToMenu();
-                            }
-                        }
+                        // FirelightMenuItem {
+                        //     id: rewindButton
+                        //     labelText: "Rewind"
+                        //     KeyNavigation.down: suspendPointButton
+                        //     Layout.fillWidth: true
+                        //     // Layout.preferredWidth: parent.width / 2
+                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        //     Layout.preferredHeight: 40
+                        //     checkable: false
+                        //     enabled: EmulationService.rewindEnabled
+                        //     alignRight: true
+                        //     onClicked: {
+                        //         root.rewindPressed();
+                        //     }
+                        // }
+                        // FirelightMenuItem {
+                        //     id: suspendPointButton
+                        //     labelText: "Suspend Points"
+                        //     Layout.fillWidth: true
+                        //     KeyNavigation.down: controlsButton.visible ? controlsButton : backToMenuButton
+                        //     // Layout.preferredWidth: parent.width / 2
+                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        //     Layout.preferredHeight: 40
+                        //     checkable: false
+                        //     alignRight: true
+                        //     // enabled: false
+                        //     onClicked: {
+                        //         quickMenuStack.replaceCurrentItem(suspendPointMenu, {}, StackView.Immediate);
+                        //         quickMenuStack.forceActiveFocus();
+                        //     }
+                        // }
+                        // // These route through the dispatcher rather than doing the
+                        // // work here, so the menu and the hotkey can't drift: same
+                        // // save slot, same hardcore gate, same toast
+                        // FirelightMenuItem {
+                        //     id: screenshotButton
+                        //     labelText: "Screenshot"
+                        //     Layout.fillWidth: true
+                        //     KeyNavigation.down: muteButton
+                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        //     Layout.preferredHeight: 40
+                        //     checkable: false
+                        //     alignRight: true
+                        //     onClicked: ShortcutDispatcher.trigger("screenshot")
+                        // }
+                        // SettingBinding {
+                        //     id: muteBinding
+                        //     key: "audio-muted"
+                        // }
+                        //
+                        // FirelightMenuItem {
+                        //     id: muteButton
+                        //     // Follows the setting, so it stays right when the
+                        //     // hotkey is what changed it
+                        //     labelText: muteBinding.value === "true" ? "Unmute" : "Mute"
+                        //     Layout.fillWidth: true
+                        //     KeyNavigation.down: controlsButton.visible ? controlsButton : backToMenuButton
+                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        //     Layout.preferredHeight: 40
+                        //     checkable: false
+                        //     alignRight: true
+                        //     onClicked: ShortcutDispatcher.trigger("toggle_mute")
+                        // }
+                        // FirelightMenuItem {
+                        //     id: controlsButton
+                        //     labelText: "Controls"
+                        //     Layout.fillWidth: true
+                        //     KeyNavigation.down: backToMenuButton
+                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        //     Layout.preferredHeight: 40
+                        //     checkable: false
+                        //     alignRight: true
+                        //     // Only when the game offers a real device choice
+                        //     // (Gamepad / Mouse / Light Gun)
+                        //     visible: emuMenuScope.deviceChoicePorts.length > 0
+                        //     onClicked: {
+                        //         quickMenuStack.replaceCurrentItem(controlsMenu, {}, StackView.Immediate);
+                        //         quickMenuStack.forceActiveFocus();
+                        //     }
+                        // }
+                        // FirelightMenuItem {
+                        //     id: backToMenuButton
+                        //     labelText: "Back to Menu"
+                        //     Layout.fillWidth: true
+                        //     KeyNavigation.down: closeGameButton
+                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        //     Layout.preferredHeight: 40
+                        //     checkable: false
+                        //     alignRight: true
+                        //     onClicked: {
+                        //         root.backToMenu();
+                        //     }
+                        // }
                         FirelightMenuItem {
                             id: closeGameButton
                             labelText: "Close Game"

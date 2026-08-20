@@ -146,7 +146,7 @@ int QtEmulationServiceProxy::getIntegerScale() const {
 
 void QtEmulationServiceProxy::loadEntry(const int entryId) {
   emit gameLoadStarted();
-  // QThreadPool::globalInstance()->start([this, entryId] { m_emulationService->loadEntry(entryId); });
+  QThreadPool::globalInstance()->start([this, entryId] { m_emulationService->loadEntry(entryId); });
 }
 
 void QtEmulationServiceProxy::stopEmulation() { m_emulationService->stopEmulation(); }
