@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
@@ -759,7 +760,7 @@ Pane {
                 SuspendPoints {
                     id: suspendData
                     contentHash: emulatorLoader.item ? emulatorLoader.item.contentHash : ""
-                    saveSlotNumber: EmulationService.currentSaveSlotNumber
+                    saveSlot: EmulationService.currentSaveSlotNumber
                 }
 
                 FirelightDialog {

@@ -145,10 +145,8 @@ int QtEmulationServiceProxy::getIntegerScale() const {
 }
 
 void QtEmulationServiceProxy::loadEntry(const int entryId) {
-  // Fired immediately on the GUI thread so the UI can react to the launch (e.g.
-  // fade to black) before the load runs on the pool
   emit gameLoadStarted();
-  QThreadPool::globalInstance()->start([this, entryId] { m_emulationService->loadEntry(entryId); });
+  // QThreadPool::globalInstance()->start([this, entryId] { m_emulationService->loadEntry(entryId); });
 }
 
 void QtEmulationServiceProxy::stopEmulation() { m_emulationService->stopEmulation(); }

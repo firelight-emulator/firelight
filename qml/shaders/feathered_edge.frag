@@ -12,6 +12,7 @@ layout(std140, binding = 0) uniform buf {
     float widthPx;
     float heightPx;
     float featherPx;
+    float thicknessPx;
 };
 
 // The same rounded-box SDF the crisp mask uses, with the edge ramped inward over
@@ -32,5 +33,8 @@ void main() {
     float edge = max(featherPx, fwidth(dist));
     float coverage = smoothstep(0.0, edge, -dist);
 
-    fragColor = texture(source, qt_TexCoord0) * coverage * qt_Opacity;
+    // thicknessPx > 0 ramps the fill inward from the edge, reaching clear that far in
+    float inner = thicknessPx > 0.0 ? smoothstep(0.0, thicknessPx, thicknessPx + dist) : 1.0;
+
+    fragColor = texture(source, qt_TexCoord0) * min(coverage, inner) * qt_Opacity;
 }

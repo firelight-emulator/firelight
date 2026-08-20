@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 
 // The running game as a full-window layer above the router (not a route). It is
@@ -93,21 +94,48 @@ Item {
     // notably Esc → quick menu — reach the emulator when it's foregrounded
     onModeChanged: {
         if (mode === "playing") {
+            FocusCursor.endBlink();
             Qt.callLater(function () {
                 emulatorLoader.forceActiveFocus();
             });
         } else if (mode === "quickMenu") {
+            FocusCursor.endBlink();
             Qt.callLater(function () {
                 quickMenu.forceActiveFocus();
             });
+        } else if (mode === "launching") {
+            FocusCursor.startBlink();
+        } else {
+            FocusCursor.endBlink();
         }
     }
 
+    // TODO
+    // Tab is the window's own focus walk, not the menu's
+    Keys.onPressed: event => {
+        if (gameplay.foregrounded && (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab)) {
+            event.accepted = true;
+        }
+    }
+
+    function markBlackFull() {
+        _blackFull = true;
+        _maybeReveal();
+    }
+
+    signal readyToReveal
+
     function _maybeReveal() {
         if (_blackFull && _gameReady) {
+            if (emulatorLoader.status !== Loader.Ready) {
+                emulatorLoader.setSource("NewEmulatorPage.qml", {});
+            }
+            emulatorLoader.startGame();
+
             _blackFull = false;
             _gameReady = false;
             mode = "playing";
+            gameplay.readyToReveal();
         }
     }
 
@@ -150,6 +178,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: Theme.background
+        visible: !gameplay.launching
     }
 
     EmulatorLoader {
@@ -213,27 +242,6 @@ Item {
         }
     }
 
-    // Fade-to-black cover for launch. Sits over everything
-    Rectangle {
-        id: blackCover
-        anchors.fill: parent
-        color: "black"
-        z: 100
-        opacity: gameplay.launching ? 1 : 0
-        visible: opacity > 0
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 260
-                easing.type: Easing.InOutQuad
-            }
-        }
-        onOpacityChanged: {
-            if (opacity >= 1.0) {
-                gameplay._blackFull = true;
-                gameplay._maybeReveal();
-            }
-        }
-    }
 
     Connections {
         target: EmulationService
@@ -241,14 +249,13 @@ Item {
         function onGameLoadStarted() {
             gameplay._blackFull = false;
             gameplay._gameReady = false;
+
+            emulatorLoader.source = "";
+
             gameplay.mode = "launching";
         }
 
         function onGameLoaded() {
-            if (emulatorLoader.status !== Loader.Ready) {
-                emulatorLoader.setSource("NewEmulatorPage.qml", {});
-            }
-            emulatorLoader.startGame();
             gameplay._gameReady = true;
             gameplay._maybeReveal();
         }

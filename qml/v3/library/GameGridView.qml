@@ -172,55 +172,6 @@ Item {
                     onDoubleTapped: EmulationService.loadEntry(gameDelegate.model.entryId)
                 }
 
-                property string launchOverlaySource: ""
-
-                Loader {
-                    id: overlayImageLoader
-                    active: false
-                    anchors.fill: parent
-
-                    onActiveChanged: {
-                        console.log("Overlay image loader active changed to " + active + " for " + gameDelegate.model.displayName);
-                    }
-                    
-                    sourceComponent: Component {
-                         Image {
-                             source: control.launchOverlaySource
-                             fillMode: Image.PreserveAspectCrop
-                         }
-                    }
-
-                    onLoaded: {
-                        console.log("Loaded overlay image for " + gameDelegate.model.displayName + " from " + control.launchOverlaySource);
-                        hoverScaleAnimation.restart();
-                    }
-                }
-
-                NumberAnimation {
-                    id: hoverScaleAnimation
-                    target: overlayImageLoader
-                    property: "scale"
-                    from: 1
-                    to: 1.3
-                    duration: AppStyle.durationFast
-                }
-
-                SequentialAnimation {
-                    id: launchAnimation
-                    running: false
-
-                    ScriptAction {
-                        script: {
-                            control.grabToImage(function (result) {
-                                console.log("Grabbed image for " + gameDelegate.model.displayName + " to " + result.url);
-                                launchOverlaySource.source = result.url;
-                                overlayImageLoader.active = true;
-                            });
-                        }
-                    }
-
-                }
-
                 HoverHandler {
                     cursorShape: Qt.PointingHandCursor
                 }
@@ -268,7 +219,7 @@ Item {
                         keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
                         label: qsTr("Play")
                         sound: SoundEffects.activateGame
-                        onTriggered: launchAnimation.restart()
+                        onTriggered: activatedAnimation.restart();
                     },
                     FLAction {
                         keys: [Qt.Key_Menu]

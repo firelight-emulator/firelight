@@ -21,8 +21,13 @@ ShaderEffect {
     // item, so a growing item's edge softens in proportion
     property real feather: 0
 
+    // How far in from the edge the fill fades to clear; 0 keeps the whole shape. Half the shorter side
+    // fades all the way to the middle
+    property real thickness: 0
+
     property real radiusPx: radius
     property real featherPx: feather
+    property real thicknessPx: thickness
     property real widthPx: width
     property real heightPx: height
 

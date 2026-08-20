@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
@@ -56,6 +57,10 @@ MainWindow {
     }
 
     onActiveFocusItemChanged: {
+        if (!activeFocusItem) {
+            return;
+        }
+
         console.log("Active focus item changed to: " + activeFocusItem.FLFocus.collectActions(activeFocusItem).map(a => a.label).join(", "));
     }
 
@@ -213,6 +218,10 @@ MainWindow {
         }
 
         Keys.onPressed: event => {
+            if (gameplay.foregrounded) {
+                return;
+            }
+
             // TODO
             // Holding a face button repeats ~33 times a second, so only the
             // press itself activates
@@ -307,10 +316,10 @@ MainWindow {
         // The running game + quick menu, layered above the router. It grows to full
         // screen when foregrounded and shrinks into a bottom bar when backgrounded —
         // the game render itself becomes the "now playing" bar
-        // GameplayLayer {
-        //     id: gameplay
-        //     z: 90
-        // }
+        GameplayLayer {
+            id: gameplay
+            z: 90
+        }
 
         Item {
             id: dimmer
@@ -331,29 +340,35 @@ MainWindow {
         }
     }
 
+    LaunchCinematic {
+        id: launchCinematic
+        parent: Overlay.overlay
+        z: 200000
+    }
+
     Connections {
         target: EmulationService
-        function onGameLoaded() {
-            // gameStartAnimation.start();
+
+        function onGameLoadStarted() {
+            launchCinematic.launchFrom(FocusCursor.highlight ? FocusCursor.highlight.cursorItem : null);
+        }
+
+        function onGameLoadFailed(message) {
+            launchCinematic.reveal();
         }
     }
 
-    Rectangle {
-        id: overlay
-        anchors.fill: parent
-        color: "black"
-        z: 10000
-        opacity: 0
+    Connections {
+        target: launchCinematic
+        function onBlackFull() {
+            gameplay.markBlackFull();
+        }
     }
 
-    SequentialAnimation {
-        id: gameStartAnimation
-        PropertyAnimation {
-            target: overlay
-            property: "opacity"
-            from: 0
-            to: 1
-            duration: 400
+    Connections {
+        target: gameplay
+        function onReadyToReveal() {
+            launchCinematic.reveal();
         }
     }
 
