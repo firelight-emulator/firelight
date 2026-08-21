@@ -1,22 +1,21 @@
 
 #include "input_mappings_model.hpp"
 
-#include "platforms/models/platform.hpp"
-#include "platforms/platform_service.hpp"
+#include <firelight/input/controller_repository.hpp>
+#include <firelight/input/gamepad_input.hpp>
+#include <firelight/input/keyboard_input_handler.hpp>
+#include <firelight/platforms/platform.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
-#include <input/keyboard_input_handler.hpp>
-#include <platform_metadata.hpp>
+#include <spdlog/spdlog.h>
 
 namespace firelight::input {
-InputMappingsModel::InputMappingsModel(QObject *parent)
-    : QAbstractListModel(parent) {
+InputMappingsModel::InputMappingsModel(QObject *parent) : QAbstractListModel(parent) {
   m_inputService = getInputService();
   refreshMappings();
 }
 
-int InputMappingsModel::rowCount(const QModelIndex &parent) const {
-  return m_items.size();
-}
+int InputMappingsModel::rowCount(const QModelIndex &parent) const { return m_items.size(); }
 
 QVariant InputMappingsModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
@@ -61,19 +60,21 @@ QHash<int, QByteArray> InputMappingsModel::roleNames() const {
 }
 
 int InputMappingsModel::getProfileId() const { return m_profileId; }
+
 void InputMappingsModel::setProfileId(const int profileId) {
   if (profileId == m_profileId) {
     return;
   }
 
   m_profileId = profileId;
-  m_currentProfile = m_inputService->getProfile(m_profileId);
-  m_isKeyboard = m_currentProfile->isKeyboardProfile();
+  m_currentProfile = getControllerProfileRepository()->getProfile(m_profileId);
+  m_isKeyboard = m_currentProfile && m_currentProfile->isKeyboardProfile();
   emit profileIdChanged();
   refreshMappings();
 }
 
 int InputMappingsModel::getPlatformId() const { return m_platformId; }
+
 void InputMappingsModel::setPlatformId(const int platformId) {
   if (platformId == m_platformId) {
     return;
@@ -84,9 +85,7 @@ void InputMappingsModel::setPlatformId(const int platformId) {
   refreshMappings();
 }
 
-int InputMappingsModel::getControllerTypeId() const {
-  return m_controllerTypeId;
-}
+int InputMappingsModel::getControllerTypeId() const { return m_controllerTypeId; }
 
 void InputMappingsModel::setControllerTypeId(const int controllerTypeId) {
   if (controllerTypeId == m_controllerTypeId) {
@@ -108,13 +107,11 @@ void InputMappingsModel::setMapping(const int originalInput, int mappedInput) {
     item.mappedInput = mappedInput;
 
     if (m_isKeyboard) {
-      item.mappedInputName = KeyboardInputHandler::getKeyLabel(
-          static_cast<Qt::Key>(item.mappedInput));
+      item.mappedInputName = KeyboardInputHandler::getKeyLabel(static_cast<Qt::Key>(item.mappedInput));
       item.isDefault = false;
     } else {
       item.mappedInputName =
-          QString::fromStdString(PlatformMetadata::getInputName(
-              static_cast<GamepadInput>(item.mappedInput)));
+          QString::fromStdString(firelight::input::displayName(static_cast<GamepadInput>(item.mappedInput)));
       item.isDefault = item.originalInput == item.mappedInput;
     }
 
@@ -132,8 +129,7 @@ void InputMappingsModel::resetToDefault(int originalInput) {
     return;
   }
 
-  auto platform =
-      platforms::PlatformService::getInstance().getPlatform(m_platformId);
+  auto platform = getPlatformService()->getPlatform(m_platformId);
   if (!platform.has_value()) {
     spdlog::warn("Platform with ID {} not found", m_platformId);
     return;
@@ -148,8 +144,7 @@ void InputMappingsModel::resetToDefault(int originalInput) {
   }
 
   if (inputs.empty()) {
-    spdlog::warn("No inputs found for controller type ID {}",
-                 m_controllerTypeId);
+    spdlog::warn("No inputs found for controller type ID {}", m_controllerTypeId);
     return;
   }
 
@@ -159,22 +154,18 @@ void InputMappingsModel::resetToDefault(int originalInput) {
       for (const auto &input : inputs) {
         if (input.virtualInput == originalInput) {
           item.mappedInput =
-              m_isKeyboard
-                  ? KeyboardInputHandler::getDefaultKey(input.virtualInput)
-                  : static_cast<int>(input.virtualInput);
+              m_isKeyboard ? KeyboardInputHandler::getDefaultKey(input.virtualInput)
+                           : static_cast<int>(defaultPhysicalBinding(static_cast<GamepadInput>(input.virtualInput)));
 
           if (m_isKeyboard) {
-            item.mappedInputName = KeyboardInputHandler::getKeyLabel(
-                static_cast<Qt::Key>(item.mappedInput));
+            item.mappedInputName = KeyboardInputHandler::getKeyLabel(static_cast<Qt::Key>(item.mappedInput));
           } else {
             item.mappedInputName =
-                QString::fromStdString(PlatformMetadata::getInputName(
-                    static_cast<GamepadInput>(item.mappedInput)));
+                QString::fromStdString(firelight::input::displayName(static_cast<GamepadInput>(item.mappedInput)));
           }
           item.isDefault = true;
 
-          m_inputMapping->removeMapping(
-              static_cast<GamepadInput>(originalInput));
+          m_inputMapping->removeMapping(static_cast<GamepadInput>(originalInput));
           m_inputMapping->sync();
 
           checkForConflicts();
@@ -185,13 +176,13 @@ void InputMappingsModel::resetToDefault(int originalInput) {
     }
   }
 }
+
 void InputMappingsModel::resetAllToDefault() {
   if (!m_currentProfile || m_platformId == -1 || m_controllerTypeId == -1) {
     return;
   }
 
-  auto platform =
-      platforms::PlatformService::getInstance().getPlatform(m_platformId);
+  auto platform = getPlatformService()->getPlatform(m_platformId);
   if (!platform.has_value()) {
     spdlog::warn("Platform with ID {} not found", m_platformId);
     return;
@@ -206,8 +197,7 @@ void InputMappingsModel::resetAllToDefault() {
   }
 
   if (inputs.empty()) {
-    spdlog::warn("No inputs found for controller type ID {}",
-                 m_controllerTypeId);
+    spdlog::warn("No inputs found for controller type ID {}", m_controllerTypeId);
     return;
   }
 
@@ -252,8 +242,7 @@ void InputMappingsModel::checkForConflicts() {
         if (!m_isKeyboard && item.mappedInput == None) {
           continue;
         }
-        spdlog::info("Conflict found: {} <-> {}",
-                     item.originalInputName.toStdString(),
+        spdlog::info("Conflict found: {} <-> {}", item.originalInputName.toStdString(),
                      otherItem.originalInputName.toStdString());
         item.hasConflict = true;
         item.conflictingInputNames.append(otherItem.originalInputName);
@@ -268,8 +257,7 @@ void InputMappingsModel::refreshMappings() {
     return;
   }
 
-  auto platform =
-      platforms::PlatformService::getInstance().getPlatform(m_platformId);
+  auto platform = getPlatformService()->getPlatform(m_platformId);
   if (!platform.has_value()) {
     spdlog::warn("Platform with ID {} not found", m_platformId);
     return;
@@ -284,13 +272,11 @@ void InputMappingsModel::refreshMappings() {
   }
 
   if (inputs.empty()) {
-    spdlog::warn("No inputs found for controller type ID {}",
-                 m_controllerTypeId);
+    spdlog::warn("No inputs found for controller type ID {}", m_controllerTypeId);
     return;
   }
 
-  m_inputMapping = m_currentProfile->getMappingForPlatformAndController(
-      m_platformId, m_controllerTypeId);
+  m_inputMapping = m_currentProfile->getMappingForPlatformAndController(m_platformId, m_controllerTypeId);
   if (!m_inputMapping) {
     return;
   }
@@ -306,7 +292,7 @@ void InputMappingsModel::refreshMappings() {
     auto value = mapped.has_value() ? mapped.value()
                  : m_isKeyboard
                      ? KeyboardInputHandler::getDefaultKey(input.virtualInput)
-                     : static_cast<int>(input.virtualInput);
+                     : static_cast<int>(defaultPhysicalBinding(static_cast<GamepadInput>(input.virtualInput)));
 
     if (!mapped.has_value()) {
       item.isDefault = true;
@@ -315,11 +301,9 @@ void InputMappingsModel::refreshMappings() {
     item.mappedInput = value;
 
     if (m_isKeyboard) {
-      item.mappedInputName = KeyboardInputHandler::getKeyLabel(
-          static_cast<Qt::Key>(item.mappedInput));
+      item.mappedInputName = KeyboardInputHandler::getKeyLabel(static_cast<Qt::Key>(item.mappedInput));
     } else {
-      item.mappedInputName = QString::fromStdString(
-          PlatformMetadata::getInputName(static_cast<GamepadInput>(value)));
+      item.mappedInputName = QString::fromStdString(firelight::input::displayName(static_cast<GamepadInput>(value)));
     }
 
     m_items.append(item);

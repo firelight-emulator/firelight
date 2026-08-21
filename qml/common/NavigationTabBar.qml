@@ -26,7 +26,7 @@ TabBar {
 
         Behavior on x {
             NumberAnimation {
-                duration: 120
+                duration: AppStyle.durationFast
                 easing.type: Easing.InOutQuad
             }
         }
@@ -49,15 +49,14 @@ TabBar {
                 height: control.height
                 text: modelData
                 color: parent.enabled ? parent.checked ? "#ffffff" : "#f0f0f0" : "#666666"
-                font.family: Constants.regularFontFamily
-                font.pixelSize: 15
+                font.family: AppStyle.fontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: parent.enabled && parent.checked ? Font.Bold : Font.Normal
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
 
-            background: Item {
-            }
+            background: Item {}
 
             HoverHandler {
                 objectName: "hoverHandler"

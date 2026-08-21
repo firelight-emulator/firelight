@@ -1,0 +1,97 @@
+{
+  "cores": {
+    "mgba_libretro": {
+      "_note": "Game Boy Advance. Demonstrates a friendly setting that MAPS to a core key with value translation, plus a dependency.",
+      "settings": [
+        {
+          "key": "gba-color-correction",
+          "label": "Color correction",
+          "group": "emulation-video",
+          "order": 100,
+          "description": "Simulate the GBA screen's washed-out colors.",
+          "keywords": [
+            "colour",
+            "saturation",
+            "washed out"
+          ],
+          "type": "options",
+          "default": "Off",
+          "options": [
+            {
+              "label": "Off",
+              "value": "Off"
+            },
+            {
+              "label": "Accurate (GBA)",
+              "value": "GBA"
+            }
+          ],
+          "mapping": [
+            {
+              "coreKey": "mgba_color_correction",
+              "values": {
+                "Off": "OFF",
+                "GBA": "GBA"
+              }
+            }
+          ]
+        },
+        {
+          "key": "gba-solar-sensor",
+          "label": "Solar sensor",
+          "group": "emulation-hardware",
+          "order": 100,
+          "description": "Emulate the Boktai solar sensor.",
+          "keywords": [
+            "boktai",
+            "sunlight",
+            "sensor"
+          ],
+          "type": "boolean",
+          "default": "false"
+        },
+        {
+          "key": "gba-solar-level",
+          "label": "Solar sensor level",
+          "group": "emulation-hardware",
+          "order": 110,
+          "type": "slider",
+          "default": "0",
+          "keywords": [
+            "boktai",
+            "sunlight",
+            "brightness"
+          ],
+          "min": 0,
+          "max": 10,
+          "step": 1,
+          "mapping": [
+            {
+              "coreKey": "mgba_solar_sensor_level"
+            }
+          ],
+          "visibleWhen": [
+            {
+              "key": "gba-solar-sensor",
+              "values": [
+                "true"
+              ]
+            }
+          ]
+        }
+      ],
+      "defaults": {
+        "mgba_solar_sensor_level": "0",
+        "mgba_gb_model": "Autodetect",
+        "mgba_sgb_borders": "ON",
+        "mgba_use_bios": "ON",
+        "mgba_skip_bios": "OFF",
+        "mgba_frameskip": "disabled",
+        "mgba_audio_low_pass_filter": "disabled",
+        "mgba_idle_optimization": "Remove Known",
+        "mgba_color_correction": "OFF",
+        "mgba_interframe_blending": "mix_smart"
+      }
+    }
+  }
+}

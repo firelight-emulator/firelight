@@ -1,5 +1,6 @@
 #pragma once
 #include <firelight/libretro/retropad.hpp>
+
 #include <string>
 
 namespace firelight::input {

@@ -14,20 +14,31 @@
         <file alias="open-quick">assets/sfx/openquick.wav</file>
         <file alias="nope">assets/sfx/nope.wav</file>
         <file alias="click">assets/sfx/click.wav</file>
+        <file alias="blip">assets/sfx/switch2/deck_ui_misc_10.wav</file>
+        <file alias="select-radio">assets/sfx/switch2/bubble.wav</file>
+        <file alias="bump">assets/sfx/switch2/deck_ui_bumper_end.wav</file>
+        <file alias="button-nav">assets/sfx/switch2/button_nav.wav</file>
+        <file alias="game-tile-focus">assets/sfx/switch2/game_view_nav.wav</file>
+        <file alias="show-modal">assets/sfx/switch2/deck_ui_into_game_detail.wav</file>
+        <file alias="back">assets/sfx/switch2/deck_ui_hide_modal.wav</file>
+        <file alias="activate-game">assets/sfx/switch2/activategame.wav</file>
+        <file alias="show-dialog">assets/sfx/switch2/show_dialog.wav</file>
+        <file alias="check">assets/sfx/switch2/User Interface, Click, UI Buttons, Select, Menu SND115479 - Pitch 356_4.wav</file>
+        <file alias="uncheck">assets/sfx/switch2/User Interface, Click, UI Buttons, Select, Menu SND115479 - Pitch 282_8.wav</file>
+        <file alias="sticky-small">assets/sfx/switch2/Water, Splash, Splat, Single, Small SND58962.wav</file>
+        <file alias="snap-medium">assets/sfx/switch2/Toys, Misc, Sticky Hand, Impact, Hit Human Hand SND79065 - Pitch 126_0.wav</file>
     </qresource>
     <qresource prefix="/fonts">
-        <!--        <file alias="lexend">assets/Lexend-Regular.ttf</file>-->
-        <!--        <file alias="lexend-light">assets/Lexend-Light.ttf</file>-->
-        <file alias="lexend">assets/fonts/Inter-VariableFont_opsz,wght.ttf</file>
-        <file alias="lexend-light">assets/fonts/NunitoSans_10pt-Regular.ttf</file>
-        <file alias="font-semibold">assets/fonts/Lexend-Medium.ttf</file>
-        <file alias="lexend-black">assets/fonts/NunitoSans_10pt_SemiCondensed-Black.ttf</file>
+        <file alias="lexend">assets/fonts/Lexend-VariableFont_wght.ttf</file>
+        <file alias="noto-sans">assets/fonts/NotoSans-VariableFont_wdth,wght.ttf</file>
         <file alias="symbols">assets/fonts/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf</file>
-        <file alias="main">assets/fonts/Lexend-VariableFont_wght.ttf</file>
     </qresource>
     <qresource prefix="/images">
+        <file alias="app-icon">assets/img/icon.ico</file>
         <file alias="retroachievements-banner">assets/img/retroachievements_banner.png</file>
-        <file alias="firelight-logo">assets/img/firelight_logo1 (1).svg</file>
+        <file alias="firelight-logo">assets/img/firelight_logo.svg</file>
+        <file alias="firelight-logo-inverted">assets/img/white-logo-orange-bg.png</file>
+        <file alias="firelight-logo-white">assets/img/firelight-logo-white.png</file>
     </qresource>
     <qresource prefix="/images/controllers">
         <file alias="placeholder">assets/img/controllers/placeholder.svg</file>
@@ -57,15 +68,22 @@
     <qresource prefix="/icons">
         <file alias="add">assets/img/icons/filled-rounded/add.svg</file>
         <file alias="add-circle">assets/img/icons/filled-rounded/add-circle.svg</file>
+        <file alias="arrow">assets/img/icons/filled-rounded/arrow.svg</file>
         <file alias="arrow-back">assets/img/icons/filled-rounded/arrow-back.svg</file>
         <file alias="arrow-forward">assets/img/icons/filled-rounded/arrow-forward.svg</file>
+        <file alias="arrow-down">assets/img/icons/filled-rounded/down-arrow.svg</file>
+        <file alias="arrow-up">assets/img/icons/filled-rounded/up-arrow.svg</file>
         <file alias="bar-chart">assets/img/icons/filled-rounded/bar-chart.svg</file>
         <file alias="bell">assets/img/icons/filled-rounded/bell.svg</file>
         <file alias="book">assets/img/icons/filled-rounded/book2.svg</file>
         <file alias="bookmark-star">assets/img/icons/filled-rounded/bookmark-star.svg</file>
         <file alias="browse">assets/img/icons/filled-rounded/browse.svg</file>
+        <file alias="cancel">assets/img/icons/filled-rounded/cancel.svg</file>
         <file alias="controller">assets/img/icons/filled-rounded/controller.svg</file>
+        <file alias="chevron-back">assets/img/icons/filled-rounded/chevron-arrow-back.svg</file>
+        <file alias="chevron-forward">assets/img/icons/filled-rounded/chevron-arrow-forward.svg</file>
         <file alias="delete">assets/img/icons/filled-rounded/delete.svg</file>
+        <file alias="favorite">assets/img/icons/filled-rounded/favorite.svg</file>
         <file alias="folder">assets/img/icons/filled-rounded/folder.svg</file>
         <file alias="history">assets/img/icons/filled-rounded/history.svg</file>
         <file alias="home">assets/img/icons/filled-rounded/home.svg</file>
@@ -73,7 +91,11 @@
         <file alias="kid-star">assets/img/icons/filled-rounded/kid-star.svg</file>
         <file alias="left-panel-close">assets/img/icons/filled-rounded/left-panel-close.svg</file>
         <file alias="left-panel-open">assets/img/icons/filled-rounded/left-panel-open.svg</file>
+        <file alias="menu">assets/img/icons/filled-rounded/menu.svg</file>
+        <file alias="more-vertical">assets/img/icons/filled-rounded/more-vertical.svg</file>
+        <file alias="more-horizontal">assets/img/icons/filled-rounded/more-horizontal.svg</file>
         <file alias="new-folder">assets/img/icons/filled-rounded/new-folder.svg</file>
+        <file alias="online">assets/img/icons/filled-rounded/online.svg</file>
         <file alias="photo-library">assets/img/icons/filled-rounded/photo-library.svg</file>
         <file alias="search">assets/img/icons/filled-rounded/search.svg</file>
         <file alias="settings">assets/img/icons/filled-rounded/settings.svg</file>
@@ -102,6 +124,12 @@
         <file alias="play-circle">assets/img/icons/filled-rounded/play-circle.svg</file>
         <file alias="power">assets/img/icons/filled-rounded/power.svg</file>
         <file alias="ws">assets/img/platform-icons/wonderswanicon.svg</file>
+        <file alias="ps1">assets/img/platform-icons/unknown.svg</file>
+        <file alias="vb">assets/img/platform-icons/unknown.svg</file>
+        <file alias="32x">assets/img/platform-icons/unknown.svg</file>
+        <file alias="fds">assets/img/platform-icons/unknown.svg</file>
+        <file alias="segacd">assets/img/platform-icons/unknown.svg</file>
+        <file alias="pcecd">assets/img/platform-icons/unknown.svg</file>
         <file alias="unknown">assets/img/platform-icons/unknown.svg</file>
     </qresource>
     <qresource prefix="/icons/empty">
@@ -109,6 +137,7 @@
         <file alias="book">assets/img/icons/notfilled-rounded/book2-notfilled.svg</file>
         <file alias="controller">assets/img/icons/notfilled-rounded/controller-notfilled.svg</file>
         <file alias="delete">assets/img/icons/notfilled-rounded/delete-notfilled.svg</file>
+        <file alias="favorite">assets/img/icons/notfilled-rounded/favorite.svg</file>
         <file alias="folder">assets/img/icons/notfilled-rounded/folder.svg</file>
         <file alias="info">assets/img/icons/notfilled-rounded/info-notfilled.svg</file>
         <file alias="left-panel-close">assets/img/icons/filled-rounded/left-panel-close.svg</file>
@@ -120,6 +149,18 @@
         <file alias="trophy">assets/img/icons/notfilled-rounded/trophy-notfilled.svg</file>
         <file alias="undo">assets/img/icons/notfilled-rounded/undo-notfilled.svg</file>
         <file alias="power">assets/img/icons/notfilled-rounded/power.svg</file>
+    </qresource>
+    <qresource prefix="/help">
+        <file alias="getting-started.md">assets/help/getting-started.md</file>
+        <file alias="the-library.md">assets/help/the-library.md</file>
+        <file alias="playing-games.md">assets/help/playing-games.md</file>
+        <file alias="controllers.md">assets/help/controllers.md</file>
+        <file alias="achievements.md">assets/help/achievements.md</file>
+        <file alias="artwork-and-metadata.md">assets/help/artwork-and-metadata.md</file>
+        <file alias="cheats.md">assets/help/cheats.md</file>
+        <file alias="captures.md">assets/help/captures.md</file>
+        <file alias="settings.md">assets/help/settings.md</file>
+        <file alias="troubleshooting.md">assets/help/troubleshooting.md</file>
     </qresource>
     <qresource prefix="/images/platform-icons">
         <file alias="nes">assets/img/nes.svg</file>

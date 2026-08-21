@@ -1,6 +1,4 @@
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
 
 FocusScope {
     id: root
@@ -14,9 +12,11 @@ FocusScope {
     //     }
     // }
 
-    Component.onCompleted: function() {
+    Component.onCompleted: function () {
         for (let i = 0; i < imageUrls.length; i++) {
-            listModel.append({source: imageUrls[i]})
+            listModel.append({
+                source: imageUrls[i]
+            });
         }
     }
 
@@ -52,9 +52,6 @@ FocusScope {
 
         clip: true
         orientation: ListView.Horizontal
-        // Layout.fillWidth: true
-        // Layout.preferredHeight: 80
-        // model: 10
         delegate: Rectangle {
             required property var model
             required property var index
@@ -64,7 +61,7 @@ FocusScope {
             radius: 4
             TapHandler {
                 onTapped: {
-                    previewList.currentIndex = index
+                    previewList.currentIndex = index;
                 }
             }
             Image {
@@ -80,13 +77,5 @@ FocusScope {
         model: ListModel {
             id: listModel
         }
-        // delegate: Image {
-        //     required property var model
-        //     height: 70
-        //     width: 93
-        //     mipmap: true
-        //     source: model.source
-        //     fillMode: Image.PreserveAspectFit
-        // }
     }
 }

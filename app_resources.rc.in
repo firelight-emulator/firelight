@@ -1,0 +1,39 @@
+// Application icon (also used by the taskbar/Explorer for firelight.exe).
+IDI_APP_ICON ICON "@CMAKE_CURRENT_SOURCE_DIR@/assets/img/icon.ico"
+
+// Embed the application manifest (asInvoker, DPI awareness, Win10/11 support).
+// 1 = CREATEPROCESS_MANIFEST_RESOURCE_ID, 24 = RT_MANIFEST.
+1 24 "@CMAKE_CURRENT_SOURCE_DIR@/firelight.manifest"
+
+// Version + publisher metadata shown in Properties > Details and read by
+// installers / anti-malware reputation. Injected from PROJECT_VERSION.
+// (Numeric FILEOS/FILETYPE avoid needing <windows.h>, which windres can't
+//  preprocess here: 0x40004 = VOS_NT_WINDOWS32, 0x1 = VFT_APP.)
+1 VERSIONINFO
+ FILEVERSION @FL_VER_MAJOR@,@FL_VER_MINOR@,@FL_VER_PATCH@,0
+ PRODUCTVERSION @FL_VER_MAJOR@,@FL_VER_MINOR@,@FL_VER_PATCH@,0
+ FILEFLAGSMASK 0x3fL
+ FILEFLAGS 0x0L
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0" // U.S. English, Unicode
+        BEGIN
+            VALUE "CompanyName", "BiscuitCakes"
+            VALUE "FileDescription", "Firelight"
+            VALUE "FileVersion", "@FL_VER_FULL@"
+            VALUE "InternalName", "firelight"
+            VALUE "LegalCopyright", "Copyright (C) 2025 BiscuitCakes"
+            VALUE "OriginalFilename", "firelight.exe"
+            VALUE "ProductName", "Firelight"
+            VALUE "ProductVersion", "@FL_VER_FULL@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

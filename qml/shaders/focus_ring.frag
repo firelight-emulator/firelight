@@ -1,0 +1,144 @@
+#version 440
+
+layout(location = 0) in vec2 qt_TexCoord0;
+layout(location = 0) out vec4 fragColor;
+
+layout(std140, binding = 0) uniform buf {
+    mat4 qt_Matrix;
+    float qt_Opacity;
+    float topLeftPx;
+    float topRightPx;
+    float bottomLeftPx;
+    float bottomRightPx;
+    float ringWidthPx;
+    float widthPx;
+    float heightPx;
+    float phase;
+    float padPx;
+    float fillPx;
+    vec4 colorA;
+    vec4 colorB;
+    vec4 colorC;
+    vec4 colorD;
+    vec4 fillColor;
+};
+
+const float HALF_PI = 1.57079632679;
+
+// Distance travelled clockwise through one quadrant: along the straight run it
+// entered by, around the corner, then out along the next run
+float quadrantAt(float first, float second, float firstRun, float secondRun, float r, float arc) {
+    float a = first - firstRun;
+    float b = second - secondRun;
+
+    // The run out of the corner is tested first: a square corner leaves both runs sitting at a == 0,
+    // and giving the first run priority there hands it the whole quadrant and strands the sweep
+    if (b <= 0.0 && a >= 0.0) {
+        return firstRun + arc + (secondRun - second);
+    }
+
+    if (a <= 0.0) {
+        return first;
+    }
+
+    return firstRun + r * (HALF_PI - atan(b, a));
+}
+
+// How far around the outline a point lies, 0..1, measured as distance travelled
+// rather than as an angle from the centre. Straight runs count their length and
+// corners their arc, so the sweep holds one speed the whole way round whatever
+// the shape: an angle races through the ends of a long thin rect, and a
+// rectangle's corners break the speed on a circle, which is all corner
+//
+// `rr` is (topLeft, topRight, bottomRight, bottomLeft), clockwise from the top
+// left. Each corner eats into the two runs beside it, so the four quadrants are
+// no longer the same length and each carries its own share of the sweep
+float perimeterAt(vec2 p, vec2 ext, vec4 rr) {
+    float topRight = max(ext.x - rr.y, 0.0);
+    float rightTop = max(ext.y - rr.y, 0.0);
+    float rightBottom = max(ext.y - rr.z, 0.0);
+    float bottomRight = max(ext.x - rr.z, 0.0);
+    float bottomLeft = max(ext.x - rr.w, 0.0);
+    float leftBottom = max(ext.y - rr.w, 0.0);
+    float leftTop = max(ext.y - rr.x, 0.0);
+    float topLeft = max(ext.x - rr.x, 0.0);
+
+    float arcTL = HALF_PI * rr.x;
+    float arcTR = HALF_PI * rr.y;
+    float arcBR = HALF_PI * rr.z;
+    float arcBL = HALF_PI * rr.w;
+
+    // Each quadrant runs from the middle of one side to the middle of the next
+    float qTR = topRight + arcTR + rightTop;
+    float qBR = rightBottom + arcBR + bottomRight;
+    float qBL = bottomLeft + arcBL + leftBottom;
+    float qTL = leftTop + arcTL + topLeft;
+
+    float u = abs(p.x);
+    float v = abs(p.y);
+
+    float d;
+    if (p.x >= 0.0 && p.y <= 0.0) {
+        d = quadrantAt(u, v, topRight, rightTop, rr.y, arcTR);
+    } else if (p.x >= 0.0) {
+        d = qTR + quadrantAt(v, u, rightBottom, bottomRight, rr.z, arcBR);
+    } else if (p.y >= 0.0) {
+        d = qTR + qBR + quadrantAt(u, v, bottomLeft, leftBottom, rr.w, arcBL);
+    } else {
+        d = qTR + qBR + qBL + quadrantAt(v, u, leftTop, topLeft, rr.x, arcTL);
+    }
+
+    return d / max(qTR + qBR + qBL + qTL, 0.0001);
+}
+
+// A rounded-rect ring whose four colors travel around it. The band is inset by
+// padPx from the item bounds so it and its antialiasing never clip the edges.
+// fillColor paints the gap between the surrounded item and the band, which is
+// fillPx wide measured in from the band's centreline
+void main() {
+    vec2 sizePx = vec2(widthPx, heightPx);
+    vec2 halfSize = sizePx * 0.5;
+    vec2 innerHalf = halfSize - vec2(padPx);
+
+    // Clockwise from the top left, each capped at what the shape can hold
+    vec4 rr = clamp(vec4(topLeftPx, topRightPx, bottomRightPx, bottomLeftPx), 0.0, min(innerHalf.x, innerHalf.y));
+
+    vec2 centered = qt_TexCoord0 * sizePx - halfSize;
+
+    // Every quadrant folds onto the same corner, so picking its radius first
+    // gives four independent corners out of one distance function
+    float r = centered.y < 0.0
+        ? (centered.x < 0.0 ? rr.x : rr.y)
+        : (centered.x < 0.0 ? rr.w : rr.z);
+
+    vec2 q = abs(centered) - (innerHalf - r);
+    float dist = length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0) - r;
+
+    float halfW = ringWidthPx * 0.5;
+
+    // A full derivative rather than half of one: the band is only a few pixels
+    // wide, and on a tight curve — an icon button is a circle — half a pixel of
+    // fade is not enough to hide the steps
+    float aa = fwidth(dist);
+    float alpha = 1.0 - smoothstep(halfW - aa, halfW + aa, abs(dist));
+
+    // Four stops, a quarter of the way round each, every one blending into the
+    // next — so colorA sits opposite colorC and the two quarters between them
+    // differ, which a palindrome cannot do. Subtracting the phase runs it clockwise
+    float t = fract(perimeterAt(centered, innerHalf, rr) - phase);
+    float seg = t * 4.0;
+    int stop = int(seg);
+    float f = seg - float(stop);
+
+    vec4 col = stop == 0 ? mix(colorA, colorB, f)
+             : stop == 1 ? mix(colorB, colorC, f)
+             : stop == 2 ? mix(colorC, colorD, f)
+                         : mix(colorD, colorA, f);
+
+    // The surrounded item's own edge. Running the fill under the band as well
+    // keeps a hairline of background from showing between the two
+    float inner = -fillPx;
+    float fillA = smoothstep(inner - aa, inner + aa, dist) * (1.0 - smoothstep(halfW - aa, halfW + aa, dist));
+
+    fragColor = (fillColor * fillA * (1.0 - alpha) + col * alpha) * qt_Opacity;
+}

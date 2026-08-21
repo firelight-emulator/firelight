@@ -1,0 +1,504 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Effects
+import QtQuick.Layouts
+
+Pane {
+    id: root
+
+    property color startingColor: "#330000"
+    property int currentIndex: 0
+
+    background: Rectangle {
+        color: Theme.glass
+        radius: AppStyle.radiusMd
+    }
+
+    Flickable {
+        anchors.fill: parent
+        contentHeight: flickableContentColumn.implicitHeight
+        boundsBehavior: Flickable.StopAtBounds
+
+        ColumnLayout {
+            id: flickableContentColumn
+            width: parent.width
+
+            FlexboxLayout {
+                Layout.preferredHeight: 500
+                Layout.preferredWidth: 800
+                Layout.alignment: Qt.AlignHCenter
+                Pane {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    background: Rectangle {
+                        color: Theme.surface
+                        radius: AppStyle.radiusMd
+                    }
+
+                    ColumnLayout {
+                        anchors.fill: parent
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 36
+
+                            Text {
+                                Layout.leftMargin: AppStyle.spacingSm
+                                Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+                                text: "Activity"
+                                color: Theme.textPrimary
+                                font.pixelSize: AppStyle.fontSizeMedium
+                                font.weight: Font.DemiBold
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignLeft
+                                font.family: AppStyle.fontFamily
+                            }
+
+                            Item {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 1
+                            }
+
+                            // Nothing reads the range yet — it still always
+                            // renders as a day
+                            FLSegmentedControl {
+                                segments: [
+                                    {
+                                        label: "Day",
+                                        value: "day"
+                                    },
+                                    {
+                                        label: "Week",
+                                        value: "week"
+                                    },
+                                    {
+                                        label: "Month",
+                                        value: "month"
+                                    },
+                                    {
+                                        label: "Year",
+                                        value: "year"
+                                    }
+                                ]
+                                currentValue: "day"
+                                onActivated: function (value) {
+                                    currentValue = value;
+                                }
+                            }
+                        }
+
+                        Item {
+                            id: buttonBar
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 48
+                            Layout.topMargin: AppStyle.spacingSm
+
+                            Button {
+                                anchors.right: bucketRangeLabelText.left
+                                width: 34
+                                height: 34
+                                anchors.verticalCenter: parent.verticalCenter
+                                enabled: root.currentIndex > 0
+
+                                background: Rectangle {
+                                    color: Theme.surfaceElevated
+                                    radius: AppStyle.radiusMd
+                                    border.color: Theme.border
+                                    border.width: 1
+                                }
+
+                                Image {
+                                    anchors.centerIn: parent
+                                    source: "qrc:/icons/chevron-back"
+                                    width: AppStyle.iconSizeSm
+                                    height: AppStyle.iconSizeSm
+                                    fillMode: Image.PreserveAspectFit
+                                }
+
+                                onClicked: {
+                                    var newIndex = root.currentIndex - 1;
+                                    var playtimeAtNewIndex = ActivityBucketsModel.get(newIndex).playtimeSeconds;
+                                    while (playtimeAtNewIndex === 0 && newIndex > 0) {
+                                        newIndex--;
+                                        playtimeAtNewIndex = ActivityBucketsModel.get(newIndex).playtimeSeconds;
+                                    }
+
+                                    root.currentIndex = newIndex;
+                                }
+                            }
+
+                            Text {
+                                id: bucketRangeLabelText
+                                anchors.centerIn: parent
+                                width: 180
+                                text: ActivityBucketsModel.get(root.currentIndex).label ?? ""
+                                color: Theme.textPrimary
+                                font.pixelSize: AppStyle.fontSizeMedium
+                                font.weight: Font.Medium
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignHCenter
+                                font.family: AppStyle.fontFamily
+                            }
+
+                            Button {
+                                anchors.left: bucketRangeLabelText.right
+                                width: 34
+                                height: 34
+                                anchors.verticalCenter: parent.verticalCenter
+                                enabled: root.currentIndex < ActivityBucketsModel.count - 1
+
+                                background: Rectangle {
+                                    color: Theme.surfaceElevated
+                                    radius: AppStyle.radiusMd
+                                    border.color: Theme.border
+                                    border.width: 1
+                                }
+
+                                Image {
+                                    anchors.centerIn: parent
+                                    source: "qrc:/icons/chevron-forward"
+                                    width: AppStyle.iconSizeSm
+                                    height: AppStyle.iconSizeSm
+                                    fillMode: Image.PreserveAspectFit
+                                }
+                                onClicked: {
+                                    var newIndex = root.currentIndex + 1;
+                                    var playtimeAtNewIndex = ActivityBucketsModel.get(newIndex).playtimeSeconds;
+                                    while (playtimeAtNewIndex === 0 && newIndex < ActivityBucketsModel.count - 1) {
+                                        newIndex++;
+                                        playtimeAtNewIndex = ActivityBucketsModel.get(newIndex).playtimeSeconds;
+                                    }
+
+                                    root.currentIndex = newIndex;
+                                }
+                            }
+                        }
+
+                        Item {
+                            id: activityDisplay
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+
+                            property int displayedIndex: root.currentIndex
+                            property var dayData: ActivityBucketsModel.get(displayedIndex)
+
+                            Text {
+                                anchors.top: parent.top
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                color: "lime"
+                                text: "playtime=" + activityDisplay.dayData.playtimeSeconds + "s | buckets=" + activityDisplay.dayData.numberOfBuckets
+                                z: 99
+                            }
+
+                            Item {
+                                id: yAxisBars
+                                anchors.fill: parent
+
+                                property var sectionHeight: activityDisplay.height / activityDisplay.dayData.yAxisValues.length
+
+                                Repeater {
+                                    model: activityDisplay.dayData.yAxisValues
+                                    delegate: Item {
+                                        required property var modelData
+                                        required property int index
+
+                                        width: parent.width
+                                        height: yAxisBars.sectionHeight
+                                        y: parent.height - (yAxisBars.sectionHeight * index) - height
+
+                                        Text {
+                                            anchors.left: parent.left
+                                            anchors.leftMargin: AppStyle.spacingXs
+                                            anchors.bottom: parent.top
+                                            anchors.bottomMargin: AppStyle.spacingXs
+                                            color: Theme.textPrimary
+                                            opacity: 0.5
+                                            font.family: AppStyle.fontFamily
+                                            font.weight: Font.Normal
+                                            font.pixelSize: AppStyle.fontSizeMedium
+                                            text: modelData
+                                        }
+
+                                        Rectangle {
+                                            anchors.left: parent.left
+                                            width: parent.width
+                                            height: 1
+                                            color: "white"
+                                            opacity: 0.5
+                                        }
+                                    }
+                                }
+                            }
+
+                            Row {
+                                anchors.fill: parent
+
+                                Repeater {
+                                    model: activityDisplay.dayData.buckets
+                                    delegate: Item {
+                                        id: hourItem
+                                        required property var modelData
+                                        required property int index
+                                        width: activityDisplay.width / 24
+                                        height: activityDisplay.height
+
+                                        readonly property real barHeight: activityDisplay.dayData.maxPlaytimeSeconds > 0 ? activityDisplay.height / activityDisplay.dayData.maxPlaytimeSeconds : 0
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            color: "white"
+                                            opacity: barHoverHandler.hovered ? 0.05 : 0
+                                        }
+
+                                        Text {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            anchors.top: parent.bottom
+                                            color: Theme.textPrimary
+                                            text: modelData.label
+                                        }
+
+                                        HoverHandler {
+                                            id: barHoverHandler
+                                        }
+
+                                        ToolTip {
+                                            parent: Overlay.overlay
+                                            visible: barHoverHandler.hovered
+                                            height: hoverGameList.height + padding * 2
+                                            padding: AppStyle.spacingSm
+                                            x: barHoverHandler.point.scenePosition.x + 16
+                                            y: barHoverHandler.point.scenePosition.y + 16
+
+                                            background: Rectangle {
+                                                color: Theme.surfaceElevated
+                                                radius: AppStyle.radiusSm
+                                                border.color: Theme.border
+                                                border.width: 1
+
+                                                layer.enabled: true
+                                                layer.effect: MultiEffect {
+                                                    shadowEnabled: true
+                                                    shadowColor: Theme.shadow
+                                                    shadowBlur: AppStyle.elevationBlur
+                                                    shadowVerticalOffset: AppStyle.elevationOffset
+                                                    shadowHorizontalOffset: AppStyle.elevationOffset
+                                                }
+                                            }
+
+                                            ColumnLayout {
+                                                id: hoverGameList
+                                                width: parent.width
+                                                spacing: AppStyle.spacingSm
+
+                                                Text {
+                                                    text: "Games played during this hour:"
+                                                    font.pixelSize: AppStyle.fontSizeMedium
+                                                    font.family: AppStyle.fontFamily
+                                                    font.weight: Font.DemiBold
+                                                    verticalAlignment: Text.AlignVCenter
+                                                    color: Theme.textPrimary
+                                                    Layout.fillWidth: true
+                                                    Layout.bottomMargin: AppStyle.spacingSm
+                                                }
+
+                                                Repeater {
+                                                    model: hourItem.modelData.gameActivityRecords
+                                                    delegate: RowLayout {
+                                                        required property int index
+                                                        required property var modelData
+                                                        implicitHeight: 50
+                                                        spacing: AppStyle.spacingMd
+                                                        Text {
+                                                            text: "#" + (index + 1)
+                                                            font.pixelSize: AppStyle.fontSizeMedium
+                                                            font.family: AppStyle.fontFamily
+                                                            font.weight: Font.DemiBold
+                                                            verticalAlignment: Text.AlignVCenter
+                                                            color: Theme.textPrimary
+                                                            Layout.fillHeight: true
+                                                            Layout.preferredWidth: 24
+                                                        }
+                                                        Image {
+                                                            Layout.fillHeight: true
+                                                            Layout.preferredWidth: height
+                                                            sourceSize.width: 32
+                                                            sourceSize.height: 32
+                                                            source: modelData.iconSourceUrl
+                                                            fillMode: Image.PreserveAspectFit
+                                                            visible: modelData.iconSourceUrl !== undefined && modelData.iconSourceUrl !== ""
+                                                        }
+
+                                                        Rectangle {
+                                                            color: "grey"
+                                                            Layout.fillHeight: true
+                                                            Layout.preferredWidth: height
+                                                            visible: modelData.iconSourceUrl === undefined || modelData.iconSourceUrl === ""
+                                                        }
+
+                                                        ColumnLayout {
+                                                            Layout.fillHeight: true
+                                                            Layout.fillWidth: true
+
+                                                            Text {
+                                                                text: modelData.displayName
+                                                                font.pixelSize: AppStyle.fontSizeMedium
+                                                                font.family: AppStyle.fontFamily
+                                                                font.weight: Font.DemiBold
+                                                                verticalAlignment: Text.AlignVCenter
+                                                                color: Theme.textPrimary
+                                                                Layout.fillHeight: true
+                                                                Layout.fillWidth: true
+                                                                Layout.verticalStretchFactor: 1
+                                                            }
+
+                                                            Text {
+                                                                text: modelData.platformName
+                                                                font.pixelSize: AppStyle.fontSizeMedium
+                                                                font.family: AppStyle.fontFamily
+                                                                font.weight: Font.Medium
+                                                                verticalAlignment: Text.AlignVCenter
+                                                                color: Theme.textMuted
+                                                                Layout.fillHeight: true
+                                                                Layout.fillWidth: true
+                                                                Layout.verticalStretchFactor: 1
+                                                            }
+                                                        }
+
+                                                        Text {
+                                                            text: {
+                                                                const seconds = modelData.secondsPlayed;
+                                                                const hours = Math.floor(seconds / 3600);
+                                                                const minutes = Math.floor((seconds % 3600) / 60);
+
+                                                                let result = "";
+                                                                if (hours > 0) {
+                                                                    result += hours + "h ";
+                                                                }
+                                                                if (minutes > 0) {
+                                                                    result += minutes + "m";
+                                                                }
+                                                                if (result === "") {
+                                                                    result = seconds + "s";
+                                                                }
+                                                                return result;
+                                                            }
+                                                            font.pixelSize: AppStyle.fontSizeMedium
+                                                            font.family: AppStyle.fontFamily
+                                                            font.weight: Font.DemiBold
+                                                            verticalAlignment: Text.AlignVCenter
+                                                            color: Theme.textPrimary
+                                                            Layout.fillHeight: true
+                                                        }
+
+                                                        Item {
+                                                            Layout.fillWidth: true
+                                                            Layout.fillHeight: true
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Column {
+                                            anchors.bottom: parent.bottom
+                                            width: parent.width
+                                            spacing: 0
+
+                                            Repeater {
+                                                model: hourItem.modelData.gameActivityRecords
+                                                delegate: Rectangle {
+                                                    id: gameSegment
+                                                    required property var modelData
+                                                    required property int index
+                                                    width: hourItem.width
+                                                    height: modelData.secondsPlayed * hourItem.barHeight
+                                                    // height: modelData.percentPlayed * hourItem.barHeight
+                                                    color: Qt.hsla(index * 0.3, 0.7, 0.5, 1)
+
+                                                    HoverHandler {
+                                                        id: gameHoverHandler
+                                                        blocking: true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Pane {
+                    Layout.preferredWidth: 500
+                    Layout.minimumWidth: 400
+                    Layout.fillHeight: true
+                    background: Rectangle {
+                        color: Theme.surface
+                        radius: AppStyle.radiusMd
+                    }
+
+                    ListView {
+                        anchors.fill: parent
+                        model: ActivityBucketsModel.get(root.currentIndex).gameActivityRecords
+                        delegate: Item {
+                            required property var modelData
+                            required property int index
+                            width: parent.width
+                            height: 50
+
+                            RowLayout {
+                                anchors.fill: parent
+                                spacing: AppStyle.spacingSm
+
+                                Image {
+                                    Layout.preferredWidth: AppStyle.iconSizeLg
+                                    Layout.fillHeight: true
+                                    sourceSize.width: AppStyle.iconSizeLg
+                                    sourceSize.height: AppStyle.iconSizeLg
+                                    source: modelData.iconSourceUrl
+                                    fillMode: Image.PreserveAspectFit
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    text: modelData.displayName + " (" + modelData.platformName + ")"
+                                    color: Theme.textPrimary
+                                    font.pixelSize: AppStyle.fontSizeMedium
+                                    font.family: AppStyle.fontFamily
+                                    font.weight: Font.Medium
+                                }
+
+                                Text {
+                                    Layout.preferredWidth: 60
+                                    Layout.fillHeight: true
+                                    text: {
+                                        const seconds = modelData.secondsPlayed;
+                                        const hours = Math.floor(seconds / 3600);
+                                        const minutes = Math.floor((seconds % 3600) / 60);
+
+                                        let result = "";
+                                        if (hours > 0) {
+                                            result += hours + "h ";
+                                        }
+                                        if (minutes > 0) {
+                                            result += minutes + "m";
+                                        }
+                                        if (result === "") {
+                                            result = seconds + "s";
+                                        }
+                                        return result;
+                                    }
+                                    color: Theme.textPrimary
+                                    font.pixelSize: AppStyle.fontSizeMedium
+                                    font.family: AppStyle.fontFamily
+                                    font.weight: Font.Medium
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

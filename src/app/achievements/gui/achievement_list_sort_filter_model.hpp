@@ -5,8 +5,7 @@
 namespace firelight::gui {
 class AchievementListSortFilterModel final : public QSortFilterProxyModel {
   Q_OBJECT
-  Q_PROPERTY(QString sortMethod READ sortMethod WRITE setSortMethod NOTIFY
-                 sortMethodChanged)
+  Q_PROPERTY(QString sortMethod READ sortMethod WRITE setSortMethod NOTIFY sortMethodChanged)
 
 public:
   explicit AchievementListSortFilterModel(QObject *parent = nullptr);
@@ -19,24 +18,12 @@ signals:
   void sortMethodChanged();
 
 protected:
-  [[nodiscard]] bool
-  filterAcceptsRow(int source_row,
-                   const QModelIndex &sourceParent) const override;
+  [[nodiscard]] bool filterAcceptsRow(int source_row, const QModelIndex &sourceParent) const override;
 
-  [[nodiscard]] bool lessThan(const QModelIndex &source_left,
-                              const QModelIndex &source_right) const override;
+  [[nodiscard]] bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
 
 private:
-  enum class SortType {
-    Default,
-    AToZ,
-    ZToA,
-    EarnedDate,
-    PointsMost,
-    PointsLeast,
-    Type,
-    NotEarned
-  };
+  enum class SortType { Default, AToZ, ZToA, EarnedDate, PointsMost, PointsLeast, Type, NotEarned };
 
   enum class Mode { Hardcore, Softcore, Both };
 

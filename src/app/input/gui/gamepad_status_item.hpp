@@ -1,26 +1,20 @@
 #pragma once
-#include "event_dispatcher.hpp"
+#include "firelight/event_dispatcher.hpp"
 #include "service_accessor.hpp"
+
+#include <firelight/input/igamepad.hpp>
 
 #include <QQuickItem>
 
-#include "../../manager_accessor.hpp"
-
-#include <input2/gamepad.hpp>
-
 namespace firelight::input {
-class GamepadStatusItem : public QQuickItem,
-                          public ManagerAccessor,
-                          public ServiceAccessor {
+class GamepadStatusItem : public QQuickItem, public ServiceAccessor {
   Q_OBJECT
-  Q_PROPERTY(int playerNumber READ getPlayerNumber WRITE setPlayerNumber NOTIFY
-                 playerNumberChanged)
+  Q_PROPERTY(int playerNumber READ getPlayerNumber WRITE setPlayerNumber NOTIFY playerNumberChanged)
   Q_PROPERTY(QString name READ getName NOTIFY nameChanged)
   Q_PROPERTY(int profileId READ getProfileId NOTIFY profileIdChanged)
   Q_PROPERTY(bool connected READ isConnected NOTIFY isConnectedChanged)
   Q_PROPERTY(bool northFaceDown READ northFaceDown NOTIFY northFaceDownChanged)
-  Q_PROPERTY(
-      QVariantMap inputLabels READ getInputLabels NOTIFY inputLabelsChanged)
+  Q_PROPERTY(QVariantMap inputLabels READ getInputLabels NOTIFY inputLabelsChanged)
 
 public:
   explicit GamepadStatusItem(QQuickItem *parent = nullptr);
@@ -68,4 +62,5 @@ private:
   ScopedConnection m_gamepadInputHandler;
 };
 } // namespace firelight::input
+
 // firelight

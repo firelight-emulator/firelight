@@ -1,0 +1,461 @@
+╌ Modularize Firelight Services into libs/
+
+ Context
+
+ firelight_lib is currently a monolith: ~80 .cpp files in a single add_library() call, with
+ src/app fully public on the include path. Two services are already partially extracted
+ (firelight_achievements, firelight_activity) but activity has build bugs and both have scope
+ issues.
+
+ The goal is to give each service its own libs/firelight/<service>/ module with:
+ - include/firelight/<service>/ — public API only (interfaces + value types)
+ - src/ — private implementation (concrete classes, SQLite repos, etc.)
+ - Own CMakeLists.txt creating a STATIC library with proper PRIVATE/INTERFACE include scopes
+
+ GUI models (QAbstractListModel subclasses) stay in src/gui/ — they're Qt bridge code, not
+ domain logic.
+
+ firelight_lib becomes a thin glue target: QML proxies, list models, event handlers, and
+ main.cpp wiring.
+
+ ---
+ Conventions to Enforce Across All Modules
+
+ - Abstract interfaces in include/ (e.g., IActivityLog, ISettingsRepository)
+ - Concrete implementations in src/ (e.g., SqliteSettingsRepository)
+ - Value types / structs in include/ (e.g., PlaySession, Savefile)
+ - No third-party types (SQLite, SDL, discordpp types) in any public header
+ - No ManagerAccessor usage inside module implementations — dependencies injected via
+ constructors
+
+ ---
+ Phase 0: Fix Existing Activity Module (Quick)
+
+ The firelight_activity library was partially created but has bugs and isn't actually used in
+ the build.
+
+ Bugs:
+ - libs/firelight/activity/CMakeLists.txt — both target_include_directories and
+ target_link_libraries reference firelight_achievements instead of firelight_activity
+ - sqlite_activity_log.hpp is in public include/firelight/activity/ but is an implementation
+ detail
+
+ Changes:
+ 1. Fix both wrong target names in libs/firelight/activity/CMakeLists.txt
+ 2. Move sqlite_activity_log.hpp from include/firelight/activity/ → src/
+ 3. Add firelight_activity to firelight_lib's target_link_libraries
+ 4. Remove the duplicate libs/firelight/activity/src/sqlite_activity_log.cpp line from the
+ firelight_lib source list
+
+ IActivityLog interface (already clean, keep as-is):
+ // include/firelight/activity/activity_log.hpp
+ class IActivityLog {
+   virtual bool createPlaySession(PlaySession &session) = 0;
+   virtual std::optional<PlaySession> getLatestPlaySession(std::string contentHash) = 0;
+   virtual std::vector<PlaySession> getPlaySessions(std::string contentHash) = 0;
+   virtual std::vector<PlaySession> getPlaySessions() = 0;
+ };
+
+ Note: IActivityLog destructor is currently protected — change to public virtual for
+ consistency with other interfaces.
+
+ ---
+ Phase 1: Settings Module → libs/firelight/settings/
+
+ No internal service dependencies. Clean interface already exists.
+
+ Public include/firelight/settings/:
+ - settings_repository.hpp — ISettingsRepository
+ - settings_service.hpp — SettingsService (concrete, thin enough to be public)
+ - emulation_setting.hpp — EmulationSetting value type (used by emulation module)
+
+ Private src/:
+ - sqlite_settings_repository.hpp + .cpp
+ - settings_service.cpp
+
+ ISettingsRepository interface (keep existing, but remove the "Remove below" comment and drop
+ getEffectiveValue — move that logic into SettingsService):
+ // include/firelight/settings/settings_repository.hpp
+ class ISettingsRepository {
+   virtual SettingsLevel getSettingsLevel(std::string contentHash) = 0;
+   virtual bool setSettingsLevel(std::string contentHash, SettingsLevel level) = 0;
+   virtual std::optional<std::string> getPlatformValue(int platformId, const std::string &key)
+ = 0;
+   virtual bool setPlatformValue(int platformId, const std::string &key, const std::string
+ &value) = 0;
+   virtual bool resetPlatformValue(int platformId, const std::string &key) = 0;
+   virtual std::optional<std::string> getGameValue(const std::string &contentHash, const
+ std::string &key) = 0;
+   virtual bool setGameValue(const std::string &contentHash, const std::string &key, const
+ std::string &value) = 0;
+   virtual bool resetGameValue(const std::string &contentHash, const std::string &key) = 0;
+   // getEffectiveValue removed — logic belongs in SettingsService
+ };
+
+ SettingsService (concrete, unchanged API, but remove static s_instance singleton — inject via
+ constructor everywhere):
+ // include/firelight/settings/settings_service.hpp
+ class SettingsService {
+   explicit SettingsService(ISettingsRepository &repo);
+   SettingsLevel getSettingsLevel(const std::string &contentHash) const;
+   bool setSettingsLevel(const std::string &contentHash, SettingsLevel level);
+   std::optional<std::string> getPlatformValue(int platformId, const std::string &key);
+   bool setPlatformValue(int platformId, const std::string &key, const std::string &value);
+   bool resetPlatformValue(int platformId, const std::string &key);
+   std::optional<std::string> getGameValue(const std::string &contentHash, const std::string
+ &key);
+   bool setGameValue(const std::string &contentHash, const std::string &key, const std::string
+ &value);
+   bool resetGameValue(const std::string &contentHash, const std::string &key);
+   std::optional<std::string> getValue(SettingsLevel level, const std::string &contentHash,
+                                       int platformId, const std::string &key);
+   bool setValue(SettingsLevel level, const std::string &contentHash,
+                 int platformId, const std::string &key, const std::string &value);
+ };
+
+ CMakeLists deps: SQLiteCpp, sqlite3, spdlog::spdlog, Qt6::Sql
+
+ ---
+ Phase 2: Platforms Module → libs/firelight/platforms/
+
+ Stateless, no dependencies on other internal services. Remove the getInstance() singleton —
+ callers get it injected.
+
+ Public include/firelight/platforms/:
+ - platform_service.hpp — IPlatformService (new interface) + PlatformService (concrete)
+ - platform.hpp, controller_type.hpp, controller_input_descriptor.hpp
+
+ IPlatformService interface (extracted from concrete class):
+ // include/firelight/platforms/platform_service.hpp
+ class IPlatformService {
+   virtual std::optional<Platform> getPlatform(unsigned id) const = 0;
+   virtual std::vector<Platform> listPlatforms() const = 0;
+ };
+ // Platform ID constants move to platform.hpp as a constexpr enum or namespace
+
+ Private src/:
+ - platform_service.cpp (removes getInstance() singleton, implements IPlatformService)
+
+ CMakeLists deps: None beyond standard library.
+
+ ---
+ Phase 3: Mods Module → libs/firelight/mods/
+
+ Public include/firelight/mods/:
+ - mod_repository.hpp — IModRepository
+ - mod_info.hpp — ModInfo value type
+
+ IModRepository interface (keep existing, it's already clean):
+ // include/firelight/mods/mod_repository.hpp
+ class IModRepository {
+   virtual std::optional<ModInfo> getModInfo(int modId) = 0;
+ };
+
+ Private src/:
+ - sqlite_mod_repository.hpp + .cpp (rename SqliteModRepository → SqliteModRepository for
+ consistency)
+
+ CMakeLists deps: SQLiteCpp, sqlite3, spdlog::spdlog
+
+ ---
+ Phase 4: Input Module → libs/firelight/input/
+
+ Replaces input2/. Delete input/ (old) — migrate needed pieces first.
+
+ Pieces to migrate from old input/ before deletion:
+ - keyboard_input_handler.hpp/cpp → new module's src/
+ - sqlite_controller_repository.hpp/cpp → new module's src/
+ - input/profiles/input_mapping.hpp/cpp → new module's src/ (used internally for profile
+ mapping)
+ - input/shortcuts.hpp → new module's include/ (Shortcut enum is part of public API)
+ - input/gamepad_type.hpp → new module's include/
+ - GUI models (controller_list_model, input_mappings_model, gamepad_status_item) → stay in
+ src/gui/
+
+ Public include/firelight/input/:
+ - input_service.hpp — InputService abstract class
+ - gamepad.hpp — IGamepad abstract class
+ - gamepad_profile.hpp — GamepadProfile value type
+ - device_identifier.hpp, device_info.hpp
+ - shortcuts.hpp — Shortcut enum
+ - gamepad_type.hpp — GamepadType enum
+ - Event structs: GamepadConnectedEvent, GamepadDisconnectedEvent, GamepadInputEvent,
+ ShortcutToggledEvent, GamepadOrderChangedEvent
+
+ InputService interface (keep existing, already clean):
+ // include/firelight/input/input_service.hpp
+ class InputService : public libretro::IRetropadProvider,
+                      public libretro::IPointerInputProvider {
+   virtual int addGamepad(std::shared_ptr<IGamepad> gamepad) = 0;
+   virtual bool removeGamepadByInstanceId(int instanceId) = 0;
+   virtual bool removeGamepadByPlayerIndex(int playerIndex) = 0;
+   virtual std::vector<std::shared_ptr<IGamepad>> listGamepads() = 0;
+   virtual std::shared_ptr<IGamepad> getPlayerGamepad(int playerIndex) = 0;
+   virtual std::shared_ptr<GamepadProfile> getProfile(int id) = 0;
+   virtual void changeGamepadOrder(const std::map<int, int> &oldToNewIndex) = 0;
+   virtual bool preferGamepadOverKeyboard() const = 0;
+   virtual void setPreferGamepadOverKeyboard(bool prefer) = 0;
+   virtual void updateMouseState(double x, double y, bool mousePressed) = 0;
+   virtual void updateMousePressed(bool mousePressed) = 0;
+   // Remove static s_instance from interface definition
+ };
+
+ Private src/:
+ - sdl/sdl_input_service.hpp/cpp, sdl/sdl_controller.hpp/cpp
+ - gamepad_profile.cpp, input_service.cpp
+ - keyboard_input_handler.hpp/cpp
+ - sqlite_controller_repository.hpp/cpp
+ - profiles/input_mapping.hpp/cpp, profiles/shortcut_mapping.hpp/cpp
+
+ CMakeLists deps: SDL2::SDL2, SQLiteCpp, sqlite3, spdlog::spdlog, Qt6::Core
+
+ ---
+ Phase 5: Database Module → libs/firelight/db/
+
+ Interfaces already live in include/firelight/. Just create a module to house the concrete
+ implementations.
+
+ Public: The existing headers in include/firelight/ are the public API — no changes to the
+ interfaces.
+
+ IUserdataDatabase (keep existing, already clean):
+ // Already in include/firelight/userdata_database.hpp
+ class IUserdataDatabase {
+   virtual bool tableExists(std::string tableName) = 0;
+   virtual bool createSavefileMetadata(SavefileMetadata &metadata) = 0;
+   virtual std::optional<SavefileMetadata> getSavefileMetadata(std::string contentId, int
+ slotNumber) = 0;
+   virtual bool updateSavefileMetadata(SavefileMetadata metadata) = 0;
+   virtual std::vector<SavefileMetadata> getSavefileMetadataForContent(std::string contentId) =
+ 0;
+   virtual bool createSuspendPointMetadata(SuspendPointMetadata &metadata) = 0;
+   virtual std::optional<SuspendPointMetadata> getSuspendPointMetadata(std::string contentId,
+ int saveSlotNumber, int slotNumber) = 0;
+   virtual bool updateSuspendPointMetadata(const SuspendPointMetadata &metadata) = 0;
+   virtual std::vector<SuspendPointMetadata> getSuspendPointMetadataForContent(std::string
+ contentId, int saveSlotNumber) = 0;
+   virtual bool deleteSuspendPointMetadata(int id) = 0;
+   // Note: platform setting methods below are a concern — settings belong in
+ ISettingsRepository.
+   // These should be removed from IUserdataDatabase and handled solely through
+ ISettingsRepository.
+   virtual std::optional<std::string> getPlatformSettingValue(int platformId, std::string key)
+ = 0;
+   virtual std::map<std::string, std::string> getAllPlatformSettings(int platformId) = 0;
+   virtual void setPlatformSettingValue(int platformId, std::string key, std::string value) =
+ 0;
+ };
+
+ IContentDatabase (keep existing, already clean — read-only game catalog data).
+
+ New libs/firelight/db/src/:
+ - sqlite_userdata_database.hpp + .cpp
+ - sqlite_content_database.hpp + .cpp
+
+ CMakeLists deps: SQLiteCpp, sqlite3, spdlog::spdlog, Qt6::Sql
+
+ ---
+ Phase 6: Library Module → libs/firelight/library/
+
+ Move from src/app/library/ (has a CMakeLists but in the wrong location).
+
+ Public include/firelight/library/:
+ - user_library.hpp — IUserLibrary
+ - entry.hpp, folder_info.hpp, folder_entry_info.hpp
+ - run_configuration.hpp, watched_directory.hpp
+ - rom_file_info.hpp (value type used in interface methods)
+
+ IUserLibrary interface (keep existing, but clean up stub methods):
+ // include/firelight/library/user_library.hpp
+ class IUserLibrary {
+   // Creation
+   virtual bool create(RomFileInfo &romFileInfo) = 0;
+   virtual void create(PatchFile &file) = 0;
+   virtual bool create(FolderInfo &folder) = 0;
+   virtual bool create(FolderEntryInfo &folderEntry) = 0;
+   virtual bool create(WatchedDirectory &directory) = 0;
+   // Folders
+   virtual bool update(FolderInfo &folder) = 0;
+   virtual std::vector<FolderInfo> listFolders(FolderInfo filter) = 0;
+   virtual bool deleteFolder(int folderId) = 0;
+   virtual bool deleteFolderEntry(FolderEntryInfo &info) = 0;
+   // Entries
+   virtual bool update(Entry &entry) = 0;
+   virtual std::vector<Entry> getEntries(int offset, int limit) = 0;
+   virtual std::optional<Entry> getEntry(int entryId) = 0;
+   virtual std::optional<Entry> getEntryWithContentHash(const QString &contentHash) = 0;
+   // ROM files
+   virtual std::optional<RomFileInfo> getRomFileWithPathAndSize(const QString &filePath, size_t
+ fileSizeBytes, bool inArchive) = 0;
+   virtual std::vector<RomFileInfo> getRomFiles() = 0;
+   virtual std::optional<RomFileInfo> getRomFile(int id) = 0;
+   virtual bool deleteRomFile(int id) = 0;
+   virtual std::vector<RomFileInfo> getRomFilesWithContentHash(const QString &contentHash) = 0;
+   // Patch files
+   virtual std::optional<PatchFile> getPatchFile(int id) = 0;
+   // Run configurations
+   virtual std::vector<RunConfiguration> getRunConfigurations(const QString &contentHash) = 0;
+   // Watched dirs
+   virtual std::vector<WatchedDirectory> getWatchedDirectories() = 0;
+   virtual bool update(const WatchedDirectory &directory) = 0;
+   virtual bool deleteContentDirectory(int id) = 0;
+   // Remove doStuffWithRunConfigurations() — it's a stub
+ };
+
+ Private src/:
+ - sqlite_user_library.hpp/cpp, library_scanner2.hpp/cpp
+ - rom_file.hpp/cpp, patch_file.hpp/cpp, archive_file.hpp
+
+ Note: The patching library (src/app/patching/) can also move to libs/firelight/patching/ in
+ this phase — library scanning depends on it.
+
+ CMakeLists deps: LibArchive::LibArchive, SQLiteCpp, sqlite3, rcheevos, firelight_patching,
+ Qt6::Concurrent, Qt6::Sql, spdlog::spdlog
+
+ ---
+ Phase 7: Saves Module → libs/firelight/saves/
+
+ Requires creating ISaveManager. Also breaks the GameImageProvider dependency: introduce
+ IScreenshotProvider in the public API, implemented by GameImageProvider in src/gui/.
+
+ Public include/firelight/saves/:
+ - save_manager.hpp — ISaveManager (new interface)
+ - screenshot_provider.hpp — IScreenshotProvider (new, replaces GameImageProvider dependency)
+ - savefile.hpp, savefile_info.hpp, savefile_metadata.hpp
+ - suspend_point.hpp, suspend_point_metadata.hpp
+
+ ISaveManager interface (extracted from current SaveManager public API):
+ // include/firelight/saves/save_manager.hpp
+ class ISaveManager {
+   virtual std::vector<SavefileInfo> getSaveFileInfoList(const QString &contentHash) const = 0;
+   virtual std::future<bool> writeSaveData(const QString &contentHash, int saveSlotNumber,
+                                           const Savefile &saveData) = 0;
+   virtual std::optional<Savefile> readSaveData(const QString &contentHash,
+                                                int saveSlotNumber) const = 0;
+   virtual QFuture<bool> writeSuspendPoint(const QString &contentHash, int saveSlotNumber,
+                                           int index, const SuspendPoint &suspendPoint) = 0;
+   virtual std::optional<SuspendPoint> readSuspendPoint(const QString &contentHash,
+                                                        int saveSlotNumber, int index) = 0;
+   virtual void deleteSuspendPoint(const QString &contentHash, int saveSlotNumber, int index) =
+ 0;
+ };
+
+ IScreenshotProvider interface (new, breaks GameImageProvider coupling):
+ // include/firelight/saves/screenshot_provider.hpp
+ class IScreenshotProvider {
+   virtual QImage captureCurrentFrame() = 0;
+ };
+ // GameImageProvider in src/gui/ implements this
+
+ Private src/:
+ - save_manager.hpp/cpp (concrete SaveManager, takes IUserdataDatabase &, IScreenshotProvider &
+ instead of GameImageProvider &)
+ - savefile.cpp
+
+ CMakeLists deps: SQLiteCpp, sqlite3, spdlog::spdlog, Qt6::Core, Qt6::Sql, firelight_db
+
+ ---
+ Phase 8: Discord Module → libs/firelight/discord/
+
+ The libs/discord/ wrapper already exists for the SDK. Move discord_manager there and add an
+ interface.
+
+ Public include/firelight/discord/:
+ - discord_manager.hpp — IDiscordManager (new interface)
+
+ IDiscordManager interface (extracted from current concrete class):
+ // include/firelight/discord/discord_manager.hpp
+ class IDiscordManager {
+   virtual void initialize() = 0;
+   virtual void runCallbacks() = 0;
+   virtual void startGameActivity(const std::string &contentHash, const std::string
+ &displayName,
+                                   int platformId, const std::string &iconUrl) = 0;
+   virtual void clearActivity() = 0;
+ };
+
+ Private src/:
+ - discord_manager_impl.hpp/cpp (concrete impl, uses discordpp:: types internally — never in
+ public headers)
+
+ CMakeLists deps: discord (existing SDK wrapper lib)
+
+ ---
+ Phase 9: Emulation Module → libs/firelight/emulation/
+
+ Most complex — touches almost everything. Do last.
+
+ Public include/firelight/emulation/:
+ - emulation_service.hpp — IEmulationService (new interface)
+ - Event types: GameLoadedEvent, GameLoadFailedEvent, GamePausedChangedEvent,
+ EmulationStartedEvent, EmulationStoppedEvent
+
+ IEmulationService interface (extracted from concrete EmulationService):
+ // include/firelight/emulation/emulation_service.hpp
+ class IEmulationService {
+   virtual std::future<bool> loadEntry(int entryId) = 0;
+   virtual void stopEmulation() = 0;
+   virtual bool isGameRunning() const = 0;
+   virtual std::optional<std::string> getCurrentGameName() const = 0;
+   virtual std::optional<library::Entry> getCurrentEntry() = 0;
+   virtual std::optional<platforms::Platform> getCurrentPlatform() const = 0;
+ };
+ // EmulatorInstance stays private — callers never interact with it directly
+
+ Constructor injection (replacing ManagerAccessor / ServiceAccessor usage):
+ // Private EmulationService constructor
+ EmulationService(
+   library::IUserLibrary &library,
+   settings::SettingsService &settings,
+   saves::ISaveManager &saveManager,
+   activity::IActivityLog &activityLog,
+   input::InputService &inputService,
+   platforms::IPlatformService &platformService,
+   achievements::AchievementService &achievementService  // or RAClient
+ );
+
+ Private src/:
+ - emulation_service.hpp/cpp (concrete, no longer extends ManagerAccessor)
+ - emulator_instance.hpp/cpp (all deps injected, no ManagerAccessor/ServiceAccessor)
+ - emulator_config_manager.hpp/cpp
+ - Migrated: libretro/core.hpp/cpp, libretro/game.hpp/cpp (private impl details of
+ EmulatorInstance)
+
+ CMakeLists deps: firelight_input, firelight_saves, firelight_achievements, firelight_activity,
+ firelight_library, firelight_settings, firelight_platforms, SDL2::SDL2, Qt6::Gui, Qt6::Quick
+
+ ---
+ Root CMakeLists.txt Changes (Applied Incrementally)
+
+ Per phase:
+ 1. add_subdirectory(libs/firelight/<module>)
+ 2. Remove migrated .cpp files from firelight_lib source list
+ 3. Add target_link_libraries(firelight_lib ... firelight_<module>)
+
+ After all phases:
+ - Change target_include_directories(firelight_lib PUBLIC ... ${CMAKE_SOURCE_DIR}/src/app) →
+ PRIVATE
+ - firelight_lib shrinks to: QML proxies, list models, event handlers, manager_accessor.cpp,
+ service_accessor.cpp
+
+ ---
+ ManagerAccessor / ServiceAccessor Cleanup
+
+ As each service migrates away from ManagerAccessor::get*() calls in their implementation,
+ remove that service's getter from ManagerAccessor. By Phase 9, these classes should only be
+ used in main.cpp (for wiring) and src/gui/ (for QML proxies that still bridge to services).
+ Eventually they can be deleted entirely once QML proxies also take their deps via constructor.
+
+ ---
+ Verification
+
+ After each phase:
+ 1. cmake -B build -G "MinGW Makefiles" — confirm clean configuration
+ 2. cmake --build build — confirm no link errors
+ 3. cd build && ctest --output-on-failure — confirm all tests still pass
+ 4. Run the app and exercise the affected feature
+
+ After all phases:
+ - Confirm src/app include path is no longer PUBLIC in firelight_lib
+ - Confirm no module's include/ contains implementation headers or third-party types
+ - Confirm ManagerAccessor and ServiceAccessor are used only in src/gui/ and main.cpp

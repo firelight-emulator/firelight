@@ -5,34 +5,28 @@
 #include <spdlog/spdlog.h>
 
 namespace firelight::gui {
-ControllerListModel::ControllerListModel(QObject *parent)
-    : QAbstractListModel(parent) {
+ControllerListModel::ControllerListModel(QObject *parent) : QAbstractListModel(parent) {
   m_inputService = getInputService();
 
-  m_connectedHandler =
-      EventDispatcher::instance().subscribe<input::GamepadConnectedEvent>(
-          [this](const input::GamepadConnectedEvent &event) {
-            this->refreshControllerList();
-          });
+  // These events are published on the SDL input thread; refreshControllerList
+  // resets the model, so hop to the GUI thread first
+  const auto refreshOnGuiThread = [this] {
+    QMetaObject::invokeMethod(this, [this] { refreshControllerList(); }, Qt::QueuedConnection);
+  };
 
-  m_disconnectedHandler =
-      EventDispatcher::instance().subscribe<input::GamepadDisconnectedEvent>(
-          [this](const input::GamepadDisconnectedEvent &event) {
-            this->refreshControllerList();
-          });
+  m_connectedHandler = EventDispatcher::instance().subscribe<input::GamepadConnectedEvent>(
+      [refreshOnGuiThread](const input::GamepadConnectedEvent &) { refreshOnGuiThread(); });
 
-  m_gamepadOrderChangedHandler =
-      EventDispatcher::instance().subscribe<input::GamepadOrderChangedEvent>(
-          [this](const input::GamepadOrderChangedEvent &) {
-            this->refreshControllerList();
-          });
+  m_disconnectedHandler = EventDispatcher::instance().subscribe<input::GamepadDisconnectedEvent>(
+      [refreshOnGuiThread](const input::GamepadDisconnectedEvent &) { refreshOnGuiThread(); });
+
+  m_gamepadOrderChangedHandler = EventDispatcher::instance().subscribe<input::GamepadOrderChangedEvent>(
+      [refreshOnGuiThread](const input::GamepadOrderChangedEvent &) { refreshOnGuiThread(); });
 
   refreshControllerList();
 }
 
-int ControllerListModel::rowCount(const QModelIndex &parent) const {
-  return m_items.size();
-}
+int ControllerListModel::rowCount(const QModelIndex &parent) const { return m_items.size(); }
 
 QVariant ControllerListModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
@@ -72,52 +66,11 @@ QHash<int, QByteArray> ControllerListModel::roleNames() const {
 
 void ControllerListModel::changeGamepadOrder(const QVariantMap &oldToNewIndex) {
   std::map<int, int> map;
-  for (auto it = oldToNewIndex.constBegin(); it != oldToNewIndex.constEnd();
-       ++it) {
+  for (auto it = oldToNewIndex.constBegin(); it != oldToNewIndex.constEnd(); ++it) {
     map[it.value().toInt()] = it.key().toInt();
   }
 
   m_inputService->changeGamepadOrder(map);
-}
-
-void ControllerListModel::onGamepadConnected(
-    const input::GamepadConnectedEvent &event) {
-  const auto gamepad = event.gamepad;
-  const auto playerIndex = gamepad->getPlayerIndex();
-  if (playerIndex > 3 || playerIndex < 0) {
-    return;
-  }
-  m_items[playerIndex] = {
-      playerIndex,
-      true,
-      gamepad->getProfile()->getId(),
-      QString::fromStdString(gamepad->getName()),
-      "None",
-      gamepad->isWired(),
-      ControllerIcons::sourceUrlFromType(gamepad->getType())};
-  emit dataChanged(createIndex(playerIndex, 0), createIndex(playerIndex, 0),
-                   {});
-}
-
-void ControllerListModel::onGamepadDisconnected(
-    const input::GamepadDisconnectedEvent &event) {
-  const auto playerIndex = event.playerIndex;
-  if (playerIndex > 3 || playerIndex < 0) {
-    return;
-  }
-
-  m_items[playerIndex] = {playerIndex, false, -1, "Default", "None", true};
-  emit dataChanged(createIndex(playerIndex, 0), createIndex(playerIndex, 0),
-                   {});
-}
-void ControllerListModel::validateAll() {
-  for (int i = 0; i < 4; i++) {
-    const auto con = m_inputService->getPlayerGamepad(i);
-    if (!con || m_items[i].playerIndex != i) {
-      refreshControllerList();
-      break;
-    }
-  }
 }
 
 void ControllerListModel::refreshControllerList() {
@@ -128,10 +81,8 @@ void ControllerListModel::refreshControllerList() {
     auto con = m_inputService->getPlayerGamepad(i);
     if (con) {
       spdlog::info(" Adding controller {}: {}", i, con->getName());
-      m_items.push_back({i, true, con->getProfile()->getId(),
-                         QString::fromStdString(con->getName()), "None",
-                         con->isWired(),
-                         ControllerIcons::sourceUrlFromType(con->getType())});
+      m_items.push_back({i, true, con->getProfile()->getId(), QString::fromStdString(con->getName()), "None",
+                         con->isWired(), ControllerIcons::sourceUrlFromType(con->getType())});
     } else {
       spdlog::info("Got no controller for {}", i);
       m_items.push_back({i, false, -1, "Default", "None", true});

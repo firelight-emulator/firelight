@@ -1,0 +1,41 @@
+{
+  "cores": {
+    "melondsds_libretro": {
+      "_note": "Nintendo DS.",
+      "settings": [
+        {
+          "key": "melonds_screen_gap",
+          "label": "Screen gap",
+          "group": "emulation-video",
+          "order": 100,
+          "type": "options",
+          "default": "0",
+          "keywords": [
+            "dual screen",
+            "spacing",
+            "layout"
+          ],
+          "options": [
+            {
+              "label": "0px",
+              "value": "0"
+            },
+            {
+              "label": "5px",
+              "value": "5"
+            },
+            {
+              "label": "10px",
+              "value": "10"
+            }
+          ]
+        }
+      ],
+      "defaults": {
+        "melonds_homebrew_sdcard": "disabled",
+        "melonds_sysfile_mode": "builtin",
+        "melonds_number_of_screen_layouts": "8"
+      }
+    }
+  }
+}

@@ -1,25 +1,25 @@
 #pragma once
 
-#include "platforms/models/platform.hpp"
+#include <firelight/platforms/platform.hpp>
 
 #include <QAbstractListModel>
-#include <firelight/db/platform.hpp>
+
+namespace firelight::platforms {
+class IPlatformService;
+}
 
 namespace firelight::gui {
 class PlatformListModel : public QAbstractListModel {
   Q_OBJECT
 
 public:
-  PlatformListModel();
+  explicit PlatformListModel(platforms::IPlatformService &platformService);
 
   [[nodiscard]] int rowCount(const QModelIndex &parent) const override;
 
-  [[nodiscard]] QVariant data(const QModelIndex &index,
-                              int role) const override;
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
-
-  Q_INVOKABLE QString getPlatformIconName(int platformId) const;
 
   Q_INVOKABLE QString getPlatformDisplayName(int platformId) const;
 
@@ -30,6 +30,7 @@ private:
     IconName,
     NumControllerTypes,
     ControllerTypeNames,
+    ControllerTypeIds,
     ControllerImages
   };
 

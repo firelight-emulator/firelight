@@ -1,42 +1,40 @@
-#include "settings/sqlite_settings_repository.hpp"
+#include <firelight/saves/save_manager_impl.hpp>
+#include <firelight/saves/sqlite_save_database.hpp>
+#include <firelight/settings/settings_catalog.hpp>
+#include <firelight/settings/settings_service.hpp>
+#include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <QApplication>
 #include <QTest>
 #include <QtQuickTest>
-#include <db/sqlite_userdata_database.hpp>
 #include <gtest/gtest.h>
-#include <manager_accessor.hpp>
-#include <settings/settings_service.hpp>
-#include <settings/sqlite_settings_repository.hpp>
+#include <gui/focus_info.hpp>
+#include <service_accessor.hpp>
 
 int main(int argc, char **argv) {
   QApplication app(argc, argv);
 
-  firelight::db::SqliteUserdataDatabase userdata(":memory:");
-  firelight::gui::GameImageProvider gameImageProvider;
-  firelight::ManagerAccessor::setSaveManager(new firelight::saves::SaveManager(
-      QString::fromStdString(std::filesystem::temp_directory_path().string()),
-      userdata, gameImageProvider));
+  firelight::saves::SqliteSaveDatabase userdata(":memory:");
+  firelight::ServiceAccessor::setSaveManager(
+      new firelight::saves::SaveManager(std::filesystem::temp_directory_path().string(), userdata));
 
   firelight::settings::SqliteSettingsRepository settings(":memory:");
-  auto settingsService =
-      std::make_shared<firelight::settings::SettingsService>(settings);
+  auto settingsService = std::make_shared<firelight::settings::SettingsService>(settings);
   firelight::settings::SettingsService::setInstance(settingsService.get());
 
-  auto emulatorConfigManager =
-      std::make_shared<EmulatorConfigManager>(userdata);
-  firelight::ManagerAccessor::setEmulatorConfigManager(emulatorConfigManager);
+  // Load the friendly-settings catalog so emulation-default resolution matches
+  // the app (the catalog is the single source of truth for those defaults)
+  // Resolve relative to the executable, not the cwd, so it works however the
+  // test binary is launched
+  const auto catalogPath = QCoreApplication::applicationDirPath() + "/system/settings";
+  firelight::settings::SettingsCatalog::instance().loadFromDirectory(catalogPath.toStdString());
+
+  // Needed by the tests that build QML declaring focus metadata
+  qmlRegisterType<firelight::gui::FocusAction>("Firelight", 1, 0, "FLAction");
+  qmlRegisterType<firelight::gui::FocusInfo>("Firelight", 1, 0, "FLFocus");
 
   ::testing::InitGoogleTest(&argc, argv);
   auto result = RUN_ALL_TESTS();
-  //
-  // QQuickView view;
-  // view.setSource(QUrl("qrc:/tests.qml"));
-  // view.show();
-
-  // Enter the Qt event loop to run QML tests
-  // QApplication::exec();
-  // QUICK_TEST_MAIN(example);
 
   return result;
 }

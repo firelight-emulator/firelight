@@ -1,19 +1,21 @@
 #include "content_directory_model.hpp"
 
+#include <spdlog/spdlog.h>
+
 namespace firelight::gui {
 
-bool ContentDirectoryModel::setData(const QModelIndex &index,
-                                    const QVariant &value, int role) {
-  if (index.row() < 0 || index.row() >= m_items.size())
+bool ContentDirectoryModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+  if (index.row() < 0 || index.row() >= m_items.size()) {
     return false;
+  }
 
-  library::WatchedDirectory &item = m_items[index.row()];
+  library::ContentDirectory &item = m_items[index.row()];
 
   switch (role) {
   case DirectoryId:
     return false;
   case Path:
-    item.path = value.toString();
+    item.path = value.toString().toStdString();
     // TODO: Persist to db
     break;
   default:
@@ -43,9 +45,10 @@ void ContentDirectoryModel::deleteItem(const int id) {
     }
   }
 }
+
 void ContentDirectoryModel::addItem(QString path) {
-  library::WatchedDirectory item;
-  item.path = std::move(path);
+  library::ContentDirectory item;
+  item.path = path.toStdString();
 
   if (!m_library.create(item)) {
     return;
@@ -56,14 +59,11 @@ void ContentDirectoryModel::addItem(QString path) {
   endInsertRows();
 }
 
-ContentDirectoryModel::ContentDirectoryModel(library::IUserLibrary &library)
-    : m_library(library) {
-  m_items = m_library.getWatchedDirectories();
+ContentDirectoryModel::ContentDirectoryModel(library::UserLibraryService &library) : m_library(library) {
+  m_items = m_library.getContentDirectories();
 }
 
-int ContentDirectoryModel::rowCount(const QModelIndex &parent) const {
-  return m_items.size();
-}
+int ContentDirectoryModel::rowCount(const QModelIndex &parent) const { return m_items.size(); }
 
 QVariant ContentDirectoryModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
@@ -76,7 +76,7 @@ QVariant ContentDirectoryModel::data(const QModelIndex &index, int role) const {
   case DirectoryId:
     return item.id;
   case Path:
-    return item.path;
+    return QString::fromStdString(item.path);
   default:
     return QVariant{};
   }

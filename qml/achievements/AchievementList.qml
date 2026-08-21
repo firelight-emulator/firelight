@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
-import Firelight 1.0
 
 FocusScope {
     id: control
@@ -20,17 +19,9 @@ FocusScope {
         anchors.fill: parent
         focus: true
 
-        // section.property: root.achievements.sortType === "title" ? "name" : "earned"
-        // section.criteria: ViewSection.FirstCharacter
-        // section.delegate: ListViewSectionDelegate {
-        //     required property string section
-        //     text: section === "t" || section === "f" ? (section === "t" ? "Earned" : "Not earned") : section
-        // }
-
         header: Pane {
             width: parent.width
-            background: Item {
-            }
+            background: Item {}
             verticalPadding: 12
             horizontalPadding: 0
             contentItem: RowLayout {
@@ -43,8 +34,8 @@ FocusScope {
                     verticalAlignment: Text.AlignVCenter
                     text: "Sort by:"
                     color: "white"
-                    font.family: Constants.regularFontFamily
-                    font.pointSize: 10
+                    font.family: AppStyle.fontFamily
+                    font.pixelSize: AppStyle.fontSizeSmall
                 }
 
                 MyComboBox {
@@ -55,20 +46,23 @@ FocusScope {
                     valueRole: "value"
 
                     model: [
-                        {text: "Default", value: "default"},
-                        {text: "A-Z", value: "title"},
-                        {text: "Earned date", value: "earned_date"},
-                        {text: "Points", value: "points"}
+                        {
+                            text: "Default",
+                            value: "default"
+                        },
+                        {
+                            text: "A-Z",
+                            value: "title"
+                        },
+                        {
+                            text: "Earned date",
+                            value: "earned_date"
+                        },
+                        {
+                            text: "Points",
+                            value: "points"
+                        }
                     ]
-
-                    // Connections {
-                    //     target: root
-                    //
-                    //     function onAchievementsChanged() {
-                    //         console.log("current sort type: " + root.achievements.sortType)
-                    //         sortBox.currentIndex = sortBox.indexOfValue(root.achievements.sortType)
-                    //     }
-                    // }
 
                     // onActivated: function () {
                     //     root.achievements.sortType = currentValue
@@ -95,8 +89,8 @@ FocusScope {
         Text {
             text: "Log in blah blah"
             color: "white"
-            font.family: Constants.regularFontFamily
-            font.pointSize: 10
+            font.family: AppStyle.fontFamily
+            font.pixelSize: AppStyle.fontSizeSmall
             Layout.alignment: Qt.AlignCenter
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -113,14 +107,14 @@ FocusScope {
             hoverEnabled: true
             contentItem: Text {
                 text: qsTr("Log in")
-                color: Constants.colorTestBackground
-                font.family: Constants.regularFontFamily
+                color: Theme.surface
+                font.family: AppStyle.fontFamily
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                font.pointSize: 12
+                font.pixelSize: AppStyle.fontSizeMedium
             }
             onClicked: {
-                Router.navigateTo("settings/achievements")
+                Router.navigate("/settings/achievements");
             }
         }
         Item {

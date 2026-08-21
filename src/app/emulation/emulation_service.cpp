@@ -1,206 +1,174 @@
 #include "emulation_service.hpp"
 
-#include "event_dispatcher.hpp"
-#include "input2/input_service.hpp"
-#include "platforms/platform_service.hpp"
+#include "firelight/event_dispatcher.hpp"
+#include "game_loader.hpp"
 
-#include <audio/audio_manager.hpp>
-#include <library/rom_file.hpp>
+#include <firelight/input/input_service.hpp>
+#include <firelight/library/content_loader.hpp>
+#include <firelight/library/entry_resolver.hpp>
+#include <firelight/library/user_library_service.hpp>
+#include <firelight/platforms/platform_service.hpp>
+#include <firelight/saves/isave_manager.hpp>
+#include <firelight/settings/core_option_repository.hpp>
+#include <firelight/settings/settings_catalog.hpp>
+
 #include <libretro/core.hpp>
-#include <platform_metadata.hpp>
+#include <libretro/core_configuration.hpp>
+#include <libretro/core_registry.hpp>
+#include <qfile.h>
 #include <spdlog/spdlog.h>
 
-firelight::emulation::EmulationService
-    *firelight::emulation::EmulationService::s_emuServiceInstance = nullptr;
+firelight::emulation::EmulationService *firelight::emulation::EmulationService::s_emuServiceInstance = nullptr;
 
 namespace firelight::emulation {
-EmulationService::EmulationService(library::IUserLibrary &library,
-                                   settings::SettingsService &settingsService)
-    : m_settingsService(settingsService), m_library(library) {}
-EmulationService::~EmulationService() {
-  spdlog::info("[EmulationService] Stopping EmulationService");
+EmulationService::EmulationService(library::UserLibraryService &library, library::EntryResolver &entryResolver,
+                                   settings::SettingsService &settingsService, EmulationContext context,
+                                   CoreFactory coreFactory)
+    : m_settingsService(settingsService), m_context(std::move(context)), m_coreFactory(std::move(coreFactory)) {
+  // The EmulatorInstance created below inherits this context; make sure it
+  // carries the same settings service the service was constructed with,
+  // regardless of whether the caller pre-populated the field
+  m_context.settingsService = &m_settingsService;
+  // Default factory builds the real dlopen'd Core; tests inject a fake
+  if (!m_coreFactory) {
+    m_coreFactory = [](const firelight::libretro::CoreRunConfig &config) -> std::unique_ptr<::libretro::ICore> {
+      return std::make_unique<::libretro::Core>(config);
+    };
+  }
+
+  m_loader = std::make_unique<GameLoader>(library, entryResolver, m_settingsService, m_context);
+
+  // Core options are only known once the core declares them during
+  // EmulatorInstance::initialize (render thread). That publishes
+  // EmulationStartedEvent, at which point we cache the declared options so the
+  // advanced editor can list them before the next launch
+  m_emulationStartedConnection = EventDispatcher::instance().subscribe<EmulationStartedEvent>(
+      [this](const EmulationStartedEvent &) { persistCoreOptions(); });
 }
+
+void EmulationService::persistCoreOptions() {
+  const auto repository = m_context.coreOptionRepository;
+  if (!repository || !m_currentCoreConfig) {
+    return;
+  }
+  // Persist under the core actually resolved for this entry (honors any
+  // per-platform / per-game core override), so the cache matches what ran
+  const auto coreName =
+      CoreRegistry::instance().resolveCoreName(m_currentEntry.platformId, m_currentContentHash, &m_settingsService);
+  if (coreName.empty()) {
+    return;
+  }
+
+  std::vector<settings::CoreOption> definitions;
+  for (const auto &option : m_currentCoreConfig->getOptions()) {
+    settings::CoreOption def;
+    def.key = option.key;
+    def.label = option.label;
+    def.description = option.description;
+    def.defaultValue = option.defaultValueKey;
+    def.category = option.category;
+    def.categoryLabel = option.categoryLabel;
+    for (const auto &value : option.possibleValues) {
+      def.values.push_back({value.key, value.label});
+    }
+    definitions.push_back(std::move(def));
+  }
+
+  if (!definitions.empty()) {
+    repository->upsertCoreOptions(coreName, definitions);
+  }
+}
+
+EmulationService::~EmulationService() { spdlog::info("[EmulationService] Stopping EmulationService"); }
+
 std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
+  // Every failure path returns a *ready* future holding nullptr (never a
+  // default-constructed, invalid future that would be UB to .get()) and
+  // announces the failure so the UI can react
+  const auto failed = [](std::string reason = {}) {
+    std::promise<EmulatorInstance *> promise;
+    promise.set_value(nullptr);
+    EventDispatcher::instance().publish(GameLoadFailedEvent{.reason = std::move(reason)});
+    return promise.get_future();
+  };
+
   if (m_emulatorInstance) {
     stopEmulation();
   }
 
-  spdlog::info("[EmulationService] Loading entry with id {}", entryId);
+  // The one-shot CLI launch overrides apply to this launch only, then are
+  // consumed so later launches use the entry's own defaults
+  const LaunchOverrides launch = m_pendingLaunch;
+  m_pendingLaunch = {};
 
-  auto entry = m_library.getEntry(entryId);
-
-  if (!entry.has_value()) {
-    spdlog::warn("[EmulationService] Entry with id {} does not exist", entryId);
-    EventDispatcher::instance().publish(GameLoadFailedEvent{});
-
-    std::promise<EmulatorInstance *> promise;
-    promise.set_value(nullptr);
-    return promise.get_future();
+  auto result = m_loader->load(entryId, launch, m_coreFactory);
+  if (!result.success) {
+    return failed(std::move(result.failureReason));
   }
 
-  auto runConfigurations = m_library.getRunConfigurations(entry->contentHash);
-
-  if (runConfigurations.empty()) {
-    spdlog::warn("[EmulationService] No run configuration found for "
-                 "entry with id {}",
-                 entryId);
-    return {};
+  m_currentEntry = result.entry;
+  m_currentContentHash = result.contentHash;
+  if (result.platform) {
+    m_currentPlatform = *result.platform;
+  }
+  m_currentCoreConfig = result.coreConfig;
+  {
+    std::lock_guard lock(m_instanceMutex);
+    m_emulatorInstance = std::move(result.instance);
   }
 
-  auto runConfig = runConfigurations[0];
-  spdlog::info("[EmulationService] Got run configuration for entry with "
-               "contentHash {}: {}",
-               entry->contentHash.toStdString(), runConfig.id);
+  EventDispatcher::instance().publish(GameLoadedEvent{});
 
-  if (runConfig.type == library::RunConfiguration::TYPE_ROM) {
-    auto romId = runConfig.romId;
-    auto romInfo = m_library.getRomFile(romId);
-
-    if (!romInfo.has_value()) {
-      return {};
-    }
-
-    auto filePath = QString::fromStdString(romInfo->m_filePath);
-    if (romInfo->m_inArchive) {
-      filePath = QString::fromStdString(romInfo->m_archivePathName);
-    }
-
-    auto file = QFile(filePath);
-    if (!file.exists()) {
-      spdlog::error("[EmulationService] Content path doesn't exist: {}",
-                    filePath.toStdString());
-      return {};
-    }
-
-    file.open(QIODevice::ReadOnly);
-    auto bytes = file.readAll();
-    file.close();
-
-    auto rom = library::RomFile(
-        QString::fromStdString(romInfo->m_filePath), bytes.data(), bytes.size(),
-        QString::fromStdString(romInfo->m_archivePathName));
-
-    if (rom.inArchive() &&
-        !std::filesystem::exists(rom.getArchivePathName().toStdString())) {
-      spdlog::error("[EmulationService] Content path doesn't exist: {}",
-                    rom.getArchivePathName().toStdString());
-      return {};
-    }
-
-    if (!rom.inArchive() &&
-        !std::filesystem::exists(rom.getFilePath().toStdString())) {
-      spdlog::error("[EmulationService] Content path doesn't exist: {}",
-                    rom.getFilePath().toStdString());
-      return {};
-    }
-
-    rom.load();
-
-    std::string corePath = PlatformMetadata::getCoreDllPath(entry->platformId);
-
-    QByteArray saveDataBytes;
-    const auto saveData = getSaveManager()->readSaveData(rom.getContentHash(),
-                                                         entry->activeSaveSlot);
-    if (saveData.has_value()) {
-      saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
-                                 saveData->getSaveRamData().size());
-    }
-
-    m_currentEntry = entry.value();
-    m_currentContentHash = m_currentEntry.contentHash.toStdString();
-
-    auto platform = platforms::PlatformService::getInstance().getPlatform(
-        m_currentEntry.platformId);
-    if (platform) {
-      m_currentPlatform = platform.value();
-    }
-
-    auto coreConfig = std::make_shared<CoreConfiguration>(
-        m_currentEntry.contentHash.toStdString(), m_currentPlatform,
-        m_settingsService);
-
-    auto m_core = std::make_unique<::libretro::Core>(m_currentEntry.platformId,
-                                                     corePath, coreConfig,
-                                                     getCoreSystemDirectory());
-
-    auto contentBytes = rom.getContentBytes();
-
-    m_emulatorInstance = std::make_unique<EmulatorInstance>(
-        std::move(m_core), rom.getFilePath().toStdString(),
-        m_currentContentHash, entry->platformId, entry->activeSaveSlot,
-        std::vector<uint8_t>(contentBytes.begin(), contentBytes.end()),
-        std::vector<uint8_t>(saveDataBytes.begin(), saveDataBytes.end()));
-
-    EventDispatcher::instance().publish(GameLoadedEvent{});
-    // return m_emulatorInstance.get();
-  }
-
-  // if (runConfig.type == library::RunConfiguration::TYPE_PATCH) {
-  //   auto romId = runConfig.romId;
-  //   auto romInfo = m_library.getRomFile(romId);
-  //
-  //   if (!romInfo.has_value()) {
-  //     return {};
-  //   }
-  //
-  //   auto rom = library::RomFile(QString::fromStdString(romInfo->m_filePath));
-  //
-  //   rom.load();
-  //
-  //   if (!rom.isValid()) {
-  //     return {};
-  //   }
-  //
-  //   auto patchId = runConfig.patchId;
-  //   auto patch = m_library.getPatchFile(patchId);
-  //
-  //   if (!patch.has_value()) {
-  //     return {};
-  //   }
-  //
-  //   patch->load();
-  //   rom.applyPatchToContentBytes(*patch);
-  //
-  //   std::string corePath =
-  //   PlatformMetadata::getCoreDllPath(entry->platformId);
-  //
-  //   QByteArray saveDataBytes;
-  //   const auto saveData =
-  //   getSaveManager()->readSaveData(rom.getContentHash(),
-  //                                                        entry->activeSaveSlot);
-  //   if (saveData.has_value()) {
-  //     saveDataBytes = QByteArray(saveData->getSaveRamData().data(),
-  //                                saveData->getSaveRamData().size());
-  //   }
-  //
-  //   return {};
-  // }
-
-  return std::async(std::launch::async, [this]() -> EmulatorInstance * {
-    return m_emulatorInstance.get();
-  });
+  std::promise<EmulatorInstance *> promise;
+  promise.set_value(m_emulatorInstance.get());
+  return promise.get_future();
 }
+
 void EmulationService::stopEmulation() {
-  m_emulatorInstance.reset();
+  {
+    std::lock_guard lock(m_instanceMutex);
+    m_emulatorInstance.reset();
+  }
   EventDispatcher::instance().publish(EmulationStoppedEvent{});
 }
-EmulatorInstance *EmulationService::getCurrentEmulatorInstance() {
-  return m_emulatorInstance.get();
+
+float EmulationService::currentAudioBufferLevel() {
+  std::lock_guard lock(m_instanceMutex);
+  return m_emulatorInstance ? m_emulatorInstance->getAudioBufferLevel() : -1.0f;
 }
 
-bool EmulationService::isGameRunning() const {
-  return m_emulatorInstance != nullptr;
+void EmulationService::resetGame() {
+  std::lock_guard lock(m_instanceMutex);
+  if (m_emulatorInstance) {
+    m_emulatorInstance->reset();
+  }
 }
+
+void EmulationService::setCurrentAudioMuted(const bool muted) {
+  std::lock_guard lock(m_instanceMutex);
+  if (m_emulatorInstance) {
+    m_emulatorInstance->setMuted(muted);
+  }
+}
+
+bool EmulationService::currentAudioMuted() {
+  std::lock_guard lock(m_instanceMutex);
+  return m_emulatorInstance && m_emulatorInstance->isMuted();
+}
+
+void EmulationService::setPendingLaunchOverrides(LaunchOverrides overrides) { m_pendingLaunch = overrides; }
+
+EmulatorInstance *EmulationService::getCurrentEmulatorInstance() { return m_emulatorInstance.get(); }
+
+bool EmulationService::isGameRunning() const { return m_emulatorInstance != nullptr; }
 
 std::optional<std::string> EmulationService::getCurrentGameName() const {
-  return isGameRunning() ? m_currentEntry.displayName.toStdString() : "";
+  return isGameRunning() ? m_currentEntry.displayName : "";
 }
+
 std::optional<library::Entry> EmulationService::getCurrentEntry() {
   return isGameRunning() ? std::optional(m_currentEntry) : std::nullopt;
 }
 
-std::optional<platforms::Platform>
-EmulationService::getCurrentPlatform() const {
-  return m_currentPlatform;
-}
+std::optional<platforms::Platform> EmulationService::getCurrentPlatform() const { return m_currentPlatform; }
 } // namespace firelight::emulation

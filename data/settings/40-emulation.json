@@ -1,0 +1,248 @@
+{
+  "common": [
+    {
+      "key": "rewind-enabled",
+      "label": "Rewind",
+      "group": "emulation-general",
+      "order": 10,
+      "description": "Allow rewinding gameplay. Disabled in RetroAchievements hardcore mode.",
+      "keywords": [
+        "undo",
+        "time",
+        "back"
+      ],
+      "type": "boolean",
+      "default": "true"
+    },
+    {
+      "key": "auto-save",
+      "label": "Automatic save",
+      "group": "emulation-general",
+      "order": 20,
+      "description": "Periodically write battery/SRAM to disk while playing.",
+      "keywords": [
+        "autosave",
+        "battery",
+        "sram",
+        "backup"
+      ],
+      "type": "boolean",
+      "default": "true"
+    },
+    {
+      "key": "instant-replay-enabled",
+      "label": "Instant replay recording",
+      "group": "emulation-general",
+      "order": 30,
+      "description": "Continuously records the last several seconds of gameplay in the background so you can save a clip of a moment that already happened with the clip shortcut. Clips are recorded at normal speed regardless of fast-forward or slow-motion. Uses extra CPU while a game is running; leave off if you don't capture clips.",
+      "keywords": [
+        "clip",
+        "capture",
+        "record",
+        "replay",
+        "video"
+      ],
+      "type": "boolean",
+      "default": "false",
+      "advanced": true
+    },
+    {
+      "key": "picture-mode",
+      "label": "Picture mode",
+      "group": "emulation-video",
+      "order": 10,
+      "keywords": [
+        "scaling",
+        "stretch",
+        "fill",
+        "integer"
+      ],
+      "type": "options",
+      "default": "aspect-ratio-fill",
+      "options": [
+        {
+          "label": "Fill (keep aspect)",
+          "value": "aspect-ratio-fill"
+        },
+        {
+          "label": "Integer scale",
+          "value": "integer-scale"
+        },
+        {
+          "label": "Stretch",
+          "value": "stretch"
+        }
+      ]
+    },
+    {
+      "key": "aspect-ratio",
+      "label": "Aspect ratio",
+      "group": "emulation-video",
+      "order": 20,
+      "keywords": [
+        "widescreen",
+        "4:3",
+        "pixel",
+        "stretch"
+      ],
+      "type": "options",
+      "default": "emulator-corrected",
+      "options": [
+        {
+          "label": "Pixel perfect",
+          "value": "pixel-perfect"
+        },
+        {
+          "label": "Emulator corrected",
+          "value": "emulator-corrected"
+        }
+      ]
+    },
+    {
+      "key": "sync-method",
+      "label": "Sync method",
+      "group": "emulation-video",
+      "order": 30,
+      "description": "How gameplay is paced. Audio keeps the sound buffer full (smoothest audio, low CPU, works on any display); Sync to monitor matches your display's refresh rate when it's close to the game's and resamples audio to it (smoothest video); Native timer paces to the core's native rate; Fixed framerate paces to a rate you choose.",
+      "keywords": [
+        "vsync",
+        "v-sync",
+        "refresh rate",
+        "pacing",
+        "stutter",
+        "tearing",
+        "framerate"
+      ],
+      "type": "options",
+      "default": "audio",
+      "options": [
+        {
+          "label": "Audio",
+          "value": "audio"
+        },
+        {
+          "label": "Sync to monitor",
+          "value": "monitor"
+        },
+        {
+          "label": "Native timer",
+          "value": "native"
+        },
+        {
+          "label": "Fixed framerate",
+          "value": "fixed"
+        }
+      ]
+    },
+    {
+      "key": "target-framerate",
+      "label": "Target framerate",
+      "group": "emulation-video",
+      "order": 40,
+      "description": "Frames per second to target when using Fixed framerate sync.",
+      "keywords": [
+        "fps",
+        "hz",
+        "refresh rate"
+      ],
+      "type": "spinbox",
+      "default": "60",
+      "min": 30,
+      "max": 240,
+      "step": 1,
+      "advanced": true,
+      "enabledWhen": [
+        {
+          "key": "sync-method",
+          "values": [
+            "fixed"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "dynamic-rate-control",
+      "label": "Dynamic rate control",
+      "group": "emulation-video",
+      "order": 50,
+      "description": "Continuously micro-adjusts the audio resample rate to keep the sound buffer near half full, correcting slow drift so audio doesn't gradually crackle or desync over long sessions. Turn off to let the emulation pacer manage the buffer on its own.",
+      "keywords": [
+        "drc",
+        "audio",
+        "crackle",
+        "desync",
+        "resample",
+        "buffer"
+      ],
+      "type": "boolean",
+      "default": "true",
+      "advanced": true
+    },
+    {
+      "key": "analog-pointer-speed",
+      "label": "Pointer speed (gamepad aim)",
+      "group": "emulation-input",
+      "order": 10,
+      "description": "How fast the left analog stick glides the on-screen cursor when a controller is used as a mouse or light gun.",
+      "keywords": [
+        "cursor",
+        "sensitivity",
+        "stick",
+        "aim",
+        "light gun",
+        "mouse"
+      ],
+      "type": "options",
+      "default": "medium",
+      "advanced": true,
+      "options": [
+        {
+          "label": "Slow",
+          "value": "slow"
+        },
+        {
+          "label": "Medium",
+          "value": "medium"
+        },
+        {
+          "label": "Fast",
+          "value": "fast"
+        }
+      ]
+    },
+    {
+      "key": "mouse-controls-lightgun",
+      "label": "Aim light guns with the mouse",
+      "group": "emulation-input",
+      "order": 20,
+      "description": "When on, the mouse aims and fires any light-gun or mouse device a game uses, even if a gamepad is selected for that player. Turn off to use only the selected controller.",
+      "keywords": [
+        "light gun",
+        "zapper",
+        "aim",
+        "cursor",
+        "pointer"
+      ],
+      "type": "boolean",
+      "default": "true"
+    },
+    {
+      "key": "hotkeys-disabled",
+      "label": "Turn hotkeys off",
+      "group": "emulation-input",
+      "order": 90,
+      "description": "Hands every button and key straight to the game. Some systems need the whole keyboard for themselves, and there's no way to know in advance which keys they'll want.",
+      "keywords": [
+        "shortcut",
+        "hotkey",
+        "keyboard",
+        "dos",
+        "game focus",
+        "disable"
+      ],
+      "_note": "An emulation setting, so it resolves game -> platform -> global like the rest: set it on the DOS platform and every DOS game inherits it. The per-device toggle_hotkeys shortcut is the instant escape hatch on top.",
+      "type": "boolean",
+      "default": "false"
+    }
+  ]
+}

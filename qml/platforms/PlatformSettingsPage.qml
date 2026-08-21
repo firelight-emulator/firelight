@@ -5,461 +5,144 @@ import QtQuick.Layouts
 FocusScope {
     id: root
 
+    // One generic, catalog-driven page for every console; pushed with the
+    // target platform's id + name
     Component {
-        id: n64Settings
-        Nintendo64Settings {
-        }
+        id: platformPage
+        PlatformEmulationSettingsPage {}
     }
 
-    Component {
-        id: snesSettings
-        SnesSettings {
+    readonly property var platforms: [
+        {
+            platformId: 1,
+            name: "Game Boy",
+            icon: "gb"
+        },
+        {
+            platformId: 2,
+            name: "Game Boy Color",
+            icon: "gbc"
+        },
+        {
+            platformId: 3,
+            name: "Game Boy Advance",
+            icon: "gba"
+        },
+        {
+            platformId: 5,
+            name: "NES",
+            icon: "nes"
+        },
+        {
+            platformId: 6,
+            name: "SNES",
+            icon: "snes"
+        },
+        {
+            platformId: 7,
+            name: "Nintendo 64",
+            icon: "n64"
+        },
+        {
+            platformId: 10,
+            name: "Nintendo DS",
+            icon: "ds"
+        },
+        {
+            platformId: 12,
+            name: "Master System",
+            icon: "master-system"
+        },
+        {
+            platformId: 13,
+            name: "Genesis/Mega Drive",
+            icon: "genesis"
+        },
+        {
+            platformId: 14,
+            name: "Game Gear",
+            icon: "gamegear"
         }
-    }
-
-    Component {
-        id: nesSettings
-        NesSettings {
-        }
-    }
-
-    Component {
-        id: gbaSettings
-        GbaSettings {
-        }
-    }
-
-    Component {
-        id: gbcSettings
-        GameBoyColorSettings {
-        }
-    }
-
-    Component {
-        id: gbSettings
-        GameBoySettings {
-        }
-    }
-
-    Component {
-        id: genesisSettings
-        GenesisSettings {
-        }
-    }
-
-    Component {
-        id: nintendoDsSettings
-        NintendoDsSettings {
-        }
-    }
-
-    Component {
-        id: gamegearSettings
-        GameGearSettings {
-        }
-    }
-
-    Component {
-        id: masterSystemSettings
-        MasterSystemSettings {
-        }
-    }
-
+    ]
 
     Flickable {
         anchors.fill: parent
         contentHeight: col.height
         ColumnLayout {
-            spacing: 0
             id: col
+            spacing: 0
             width: parent.width
 
             Text {
                 Layout.fillWidth: true
                 text: qsTr("Platform settings")
-                font.pixelSize: 26
-                font.family: Constants.regularFontFamily
+                font.pixelSize: AppStyle.fontSizeLarge
+                font.family: AppStyle.fontFamily
                 font.weight: Font.Bold
-                Layout.bottomMargin: 8
-                color: "white"
+                Layout.bottomMargin: AppStyle.spacingSm
+                color: Theme.textPrimary
             }
 
             Text {
                 Layout.fillWidth: true
-                // text: qsTr("Here's where you can change settings for each platform. You can change settings on a per-game basis by selecting the game in your library and going to 'Settings'.")
                 text: qsTr("Here's where you can change the default settings for each platform. Later you'll be able to change them on a per-game basis.")
-                font.pixelSize: 15
-                font.family: Constants.regularFontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
+                font.family: AppStyle.fontFamily
                 font.weight: Font.Normal
                 wrapMode: Text.WordWrap
-                color: ColorPalette.neutral300
-                Layout.bottomMargin: 8
+                color: Theme.textMuted
+                Layout.bottomMargin: AppStyle.spacingSm
             }
 
             Rectangle {
-                Layout.topMargin: 8
-                Layout.bottomMargin: 8
+                Layout.topMargin: AppStyle.spacingSm
+                Layout.bottomMargin: AppStyle.spacingSm
                 Layout.fillWidth: true
                 Layout.preferredHeight: 1
-                color: "#333333"
+                color: Theme.border
             }
 
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 80
+            Repeater {
+                model: root.platforms
 
-                onClicked: function () {
-                    root.StackView.view.push(gbSettings)
-                }
-                hoverEnabled: true
-                background: Rectangle {
-                    color: parent.hovered ? "#333333" : "transparent"
-                    radius: 8
-                }
-                contentItem: Row {
-                    spacing: 8
-                    Image {
-                        source: "qrc:images/platform-icons/gb"
-                        width: parent.height
-                        height: parent.height
-                        fillMode: Image.PreserveAspectFit
-                        sourceSize.height: 128
+                delegate: Button {
+                    id: platformButton
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Math.round(80 * AppStyle.scale)
+                    hoverEnabled: true
+
+                    onClicked: root.StackView.view.push(platformPage, {
+                        platformId: platformButton.modelData.platformId,
+                        platformName: platformButton.modelData.name
+                    })
+
+                    background: Rectangle {
+                        color: platformButton.hovered ? Theme.surfaceHover : "transparent"
+                        radius: AppStyle.radiusMd
                     }
-                    Text {
-                        text: qsTr("Game Boy")
-                        font.pointSize: 14
-                        height: parent.height
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        color: "white"
+                    contentItem: Row {
+                        spacing: AppStyle.spacingSm
+                        Image {
+                            source: "qrc:images/platform-icons/" + platformButton.modelData.icon
+                            width: parent.height
+                            height: parent.height
+                            fillMode: Image.PreserveAspectFit
+                            sourceSize.height: 128
+                        }
+                        Text {
+                            text: platformButton.modelData.name
+                            height: parent.height
+                            font.pixelSize: AppStyle.fontSizeMedium
+                            font.family: AppStyle.fontFamily
+                            font.weight: Font.Normal
+                            verticalAlignment: Text.AlignVCenter
+                            horizontalAlignment: Text.AlignLeft
+                            color: Theme.textPrimary
+                        }
                     }
-
                 }
-
-            }
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 80
-
-                onClicked: function () {
-                    root.StackView.view.push(gbcSettings)
-                }
-                hoverEnabled: true
-                background: Rectangle {
-                    color: parent.hovered ? "#333333" : "transparent"
-                    radius: 8
-                }
-                contentItem: Row {
-                    spacing: 8
-                    Image {
-                        source: "qrc:images/platform-icons/gbc"
-                        width: parent.height
-                        height: parent.height
-                        fillMode: Image.PreserveAspectFit
-                        sourceSize.height: 128
-                    }
-                    Text {
-                        text: qsTr("Game Boy Color")
-                        font.pointSize: 14
-                        height: parent.height
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        color: "white"
-                    }
-
-                }
-
-            }
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 80
-
-                onClicked: function () {
-                    root.StackView.view.push(gbaSettings)
-                }
-                hoverEnabled: true
-                background: Rectangle {
-                    color: parent.hovered ? "#333333" : "transparent"
-                    radius: 8
-                }
-                contentItem: Row {
-                    spacing: 8
-                    Image {
-                        source: "qrc:images/platform-icons/gba"
-                        width: parent.height
-                        height: parent.height
-                        fillMode: Image.PreserveAspectFit
-                        sourceSize.height: 128
-                    }
-                    Text {
-                        text: qsTr("Game Boy Advance")
-                        font.pointSize: 14
-                        height: parent.height
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        color: "white"
-                    }
-
-                }
-
-            }
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 80
-
-                onClicked: function () {
-                    root.StackView.view.push(nesSettings)
-                }
-                hoverEnabled: true
-                background: Rectangle {
-                    color: parent.hovered ? "#333333" : "transparent"
-                    radius: 8
-                }
-                contentItem: Row {
-                    spacing: 8
-                    Image {
-                        source: "qrc:images/platform-icons/nes"
-                        width: parent.height
-                        height: parent.height
-                        fillMode: Image.PreserveAspectFit
-                        sourceSize.height: 128
-                    }
-                    Text {
-                        text: qsTr("NES")
-                        font.pointSize: 14
-                        height: parent.height
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        color: "white"
-                    }
-
-                }
-
-            }
-
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 80
-
-                onClicked: function () {
-                    root.StackView.view.push(snesSettings)
-                }
-
-                hoverEnabled: true
-                background: Rectangle {
-                    color: parent.hovered ? "#333333" : "transparent"
-                    radius: 8
-                }
-                contentItem: Row {
-                    spacing: 8
-                    Image {
-                        source: "qrc:images/platform-icons/snes"
-                        width: parent.height
-                        height: parent.height
-                        fillMode: Image.PreserveAspectFit
-                        sourceSize.height: 128
-                    }
-                    Text {
-                        text: qsTr("SNES")
-                        height: parent.height
-                        font.pointSize: 14
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        color: "white"
-                    }
-
-                }
-
-            }
-
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 80
-
-                onClicked: function () {
-                    root.StackView.view.push(n64Settings)
-                }
-                hoverEnabled: true
-                background: Rectangle {
-                    color: parent.hovered ? "#333333" : "transparent"
-                    radius: 8
-                }
-                contentItem: Row {
-                    spacing: 8
-                    Image {
-                        source: "qrc:images/platform-icons/n64"
-                        width: parent.height
-                        height: parent.height
-                        fillMode: Image.PreserveAspectFit
-                        sourceSize.height: 128
-                    }
-                    Text {
-                        text: qsTr("Nintendo 64")
-                        height: parent.height
-                        font.pointSize: 14
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        color: "white"
-                    }
-
-                }
-
-            }
-
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 80
-
-                onClicked: function () {
-                    root.StackView.view.push(nintendoDsSettings)
-                }
-                hoverEnabled: true
-                background: Rectangle {
-                    color: parent.hovered ? "#333333" : "transparent"
-                    radius: 8
-                }
-                contentItem: Row {
-                    spacing: 8
-                    Image {
-                        source: "qrc:images/platform-icons/ds"
-                        width: parent.height
-                        height: parent.height
-                        fillMode: Image.PreserveAspectFit
-                        sourceSize.height: 128
-                    }
-                    Text {
-                        text: qsTr("Nintendo DS")
-                        height: parent.height
-                        font.pointSize: 14
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        color: "white"
-                    }
-
-                }
-
-            }
-
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 80
-
-                onClicked: function () {
-                    root.StackView.view.push(masterSystemSettings)
-                }
-                hoverEnabled: true
-                background: Rectangle {
-                    color: parent.hovered ? "#333333" : "transparent"
-                    radius: 8
-                }
-                contentItem: Row {
-                    spacing: 8
-                    Image {
-                        source: "qrc:images/platform-icons/master-system"
-                        width: parent.height
-                        height: parent.height
-                        fillMode: Image.PreserveAspectFit
-                        sourceSize.height: 128
-                    }
-                    Text {
-                        text: qsTr("Master System")
-                        height: parent.height
-                        font.pointSize: 14
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        color: "white"
-                    }
-
-                }
-
-            }
-
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 80
-
-                onClicked: function () {
-                    root.StackView.view.push(genesisSettings)
-                }
-                hoverEnabled: true
-                background: Rectangle {
-                    color: parent.hovered ? "#333333" : "transparent"
-                    radius: 8
-                }
-                contentItem: Row {
-                    spacing: 8
-                    Image {
-                        source: "qrc:images/platform-icons/genesis"
-                        width: parent.height
-                        height: parent.height
-                        fillMode: Image.PreserveAspectFit
-                        sourceSize.height: 128
-                    }
-                    Text {
-                        text: qsTr("Genesis/Mega Drive")
-                        height: parent.height
-                        font.pointSize: 14
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        color: "white"
-                    }
-
-                }
-
-            }
-
-            Button {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 80
-
-                onClicked: function () {
-                    root.StackView.view.push(gamegearSettings)
-                }
-                hoverEnabled: true
-                background: Rectangle {
-                    color: parent.hovered ? "#333333" : "transparent"
-                    radius: 8
-                }
-                contentItem: Row {
-                    spacing: 8
-                    Image {
-                        source: "qrc:images/platform-icons/gamegear"
-                        width: parent.height
-                        height: parent.height
-                        fillMode: Image.PreserveAspectFit
-                        sourceSize.height: 128
-                    }
-                    Text {
-                        text: qsTr("Game Gear")
-                        height: parent.height
-                        font.pointSize: 14
-                        font.family: Constants.regularFontFamily
-                        font.weight: Font.Normal
-                        verticalAlignment: Text.AlignVCenter
-                        horizontalAlignment: Text.AlignLeft
-                        color: "white"
-                    }
-
-                }
-
             }
 
             Item {

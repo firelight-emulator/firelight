@@ -18,9 +18,9 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        color: ColorPalette.neutral100
-        font.family: Constants.regularFontFamily
-        font.pixelSize: 36
+        color: Theme.textPrimary
+        font.family: AppStyle.fontFamily
+        font.pixelSize: AppStyle.fontSizeXLarge
         font.weight: Font.Black
         horizontalAlignment: Text.AlignLeft
         text: modInfo.modName
@@ -31,9 +31,9 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         Layout.bottomMargin: 12
-        color: ColorPalette.neutral300
-        font.family: Constants.regularFontFamily
-        font.pixelSize: 15
+        color: Theme.textMuted
+        font.family: AppStyle.fontFamily
+        font.pixelSize: AppStyle.fontSizeMedium
         font.weight: Font.Normal
         text: modInfo.platformName
         wrapMode: Text.WordWrap
@@ -52,9 +52,9 @@ ColumnLayout {
         Text {
             Layout.fillWidth: true
             Layout.topMargin: 16
-            color: ColorPalette.neutral400
-            font.family: Constants.regularFontFamily
-            font.pixelSize: 15
+            color: Theme.textMuted
+            font.family: AppStyle.fontFamily
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             leftPadding: 12
             text: "Author"
@@ -64,33 +64,24 @@ ColumnLayout {
             Layout.fillWidth: true
 
             background: Rectangle {
-                color: ColorPalette.neutral800
+                color: Theme.surface
                 radius: 12
             }
             contentItem: Text {
-                color: ColorPalette.neutral100
-                font.family: Constants.regularFontFamily
-                font.pixelSize: 16
+                color: Theme.textPrimary
+                font.family: AppStyle.fontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
                 text: modInfo.authorName
                 // font.weight: Font.DemiBold
                 wrapMode: Text.WordWrap
             }
         }
-        // FirelightButton {
-        //     Layout.alignment: Qt.AlignHCenter
-        //     focus: true
-        //     label: "Install"
-        //
-        //     onClicked: {
-        //         console.log("Install button clicked");
-        //     }
-        // }
         Text {
             Layout.fillWidth: true
             bottomPadding: 24
-            color: "white"
-            font.family: Constants.regularFontFamily
-            font.pixelSize: 20
+            color: Theme.textPrimary
+            font.family: AppStyle.fontFamily
+            font.pixelSize: AppStyle.fontSizeLarge
             font.weight: Font.DemiBold
             lineHeight: 1.2
             text: modInfo.tagline
@@ -99,9 +90,9 @@ ColumnLayout {
         }
         Text {
             Layout.fillWidth: true
-            color: ColorPalette.neutral400
-            font.family: Constants.regularFontFamily
-            font.pixelSize: 16
+            color: Theme.textMuted
+            font.family: AppStyle.fontFamily
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignLeft
             lineHeight: 1.2
@@ -131,9 +122,9 @@ ColumnLayout {
             Text {
                 Layout.fillWidth: true
                 bottomPadding: 24
-                color: "white"
-                font.family: Constants.regularFontFamily
-                font.pixelSize: 20
+                color: Theme.textPrimary
+                font.family: AppStyle.fontFamily
+                font.pixelSize: AppStyle.fontSizeLarge
                 font.weight: Font.DemiBold
                 lineHeight: 1.2
                 text: modInfo.tagline
@@ -142,9 +133,9 @@ ColumnLayout {
             }
             Text {
                 Layout.fillWidth: true
-                color: ColorPalette.neutral400
-                font.family: Constants.regularFontFamily
-                font.pixelSize: 16
+                color: Theme.textMuted
+                font.family: AppStyle.fontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.DemiBold
                 horizontalAlignment: Text.AlignLeft
                 lineHeight: 1.2
@@ -167,21 +158,12 @@ ColumnLayout {
                 fillMode: Image.PreserveAspectFit
                 source: modInfo.clearLogoUrl
             }
-            // FirelightButton {
-            //     Layout.alignment: Qt.AlignHCenter
-            //     label: "Install"
-            //     focus: true
-            //
-            //     onClicked: {
-            //         console.log("Install button clicked");
-            //     }
-            // }
             Text {
                 Layout.fillWidth: true
                 Layout.topMargin: 16
-                color: ColorPalette.neutral400
-                font.family: Constants.regularFontFamily
-                font.pixelSize: 15
+                color: Theme.textMuted
+                font.family: AppStyle.fontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.DemiBold
                 leftPadding: 12
                 text: "Author"
@@ -191,13 +173,13 @@ ColumnLayout {
                 Layout.fillWidth: true
 
                 background: Rectangle {
-                    color: ColorPalette.neutral800
+                    color: Theme.surface
                     radius: 12
                 }
                 contentItem: Text {
-                    color: ColorPalette.neutral100
-                    font.family: Constants.regularFontFamily
-                    font.pixelSize: 16
+                    color: Theme.textPrimary
+                    font.family: AppStyle.fontFamily
+                    font.pixelSize: AppStyle.fontSizeMedium
                     text: modInfo.authorName
                     // font.weight: Font.DemiBold
                     wrapMode: Text.WordWrap
@@ -215,12 +197,11 @@ ColumnLayout {
         Layout.topMargin: 24
         Layout.bottomMargin: 24
 
-        background: Item {
-        }
+        background: Item {}
         contentItem: Text {
-            color: ColorPalette.neutral400
-            font.family: Constants.regularFontFamily
-            font.pixelSize: 14
+            color: Theme.textMuted
+            font.family: AppStyle.fontFamily
+            font.pixelSize: AppStyle.fontSizeSmall
             font.weight: Font.DemiBold
             horizontalAlignment: Text.AlignHCenter
             text: "Trademarks, tradenames, and copyrights are property of their respective owners."

@@ -1,28 +1,8 @@
 import QtQuick
-import QtQuick.Controls
 
 FocusScope {
     id: page
     property alias model: gridView.model
-
-    // readonly property var Mods: [
-    //     {
-    //         name: "Super Mario 64: Beyond the Cursed Mirror",
-    //         platformName: "Nintendo 64",
-    //         tagline: "Greetings Superstar, did you know that your nemesis hid in the decrepit castle all this time? It appears he fosters his strength in a hidden compartment behind one cursed mirror. I implore you to defeat him, once and for all – for the sake of the kingdom. -Yours truly, The Showrunner",
-    //         author: "Rovertronic",
-    //         description: "SM64: Beyond the Cursed Mirror is a major Super Mario 64 ROM hack created by Rovert, which contains 15 custom-made courses and 120 stars waiting to be collected. With a unique in-depth story, original characters, and new mechanics, this SM64 ROM hack will provide a traditional yet unique experience.",
-    //         clearLogoImageUrl: "file:system/_img/cursedmirrorclear.png",
-    //         images: [
-    //             "file:system/_img/cursedmirror1.png",
-    //             "file:system/_img/cursedmirror2.png",
-    //             "file:system/_img/cursedmirror3.png",
-    //             "file:system/_img/cursedmirror4.png",
-    //             "file:system/_img/cursedmirror5.png",
-    //             "file:system/_img/cursedmirror6.png"
-    //         ]
-    //     }
-    // ]
 
     GridView {
         id: gridView
@@ -31,11 +11,11 @@ FocusScope {
         header: Text {
             id: introText
             text: "The Mod Shop is where you'll be able to easily find and download mods for your games.\n\nIt's not ready yet, but here are some of the awesome mods you can look forward to!"
-            color: ColorPalette.neutral100
-            font.pixelSize: 16
+            color: Theme.textPrimary
+            font.pixelSize: AppStyle.fontSizeMedium
             font.weight: Font.Normal
             width: gridView.width
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -100,24 +80,14 @@ FocusScope {
             cellSpacing: gridView.cellSpacing
 
             onDoTheThing: {
-                Router.navigateTo("/shop/mods/" + delegate.model.id)
+                Router.navigateTo("/shop/mods/" + delegate.model.id);
                 // page.StackView.view.push(shopItemPage, {model: delegate.model})
             }
-
-            // Button {
-            //     anchors.centerIn: parent
-            //
-            //     onClicked: function() {
-            //         page.StackView.view.push(shopItemPage)
-            //     }
-            // }
         }
     }
 
     Component {
         id: shopItemPage
-        ShopItemPage {
-        }
+        ShopItemPage {}
     }
 }
-

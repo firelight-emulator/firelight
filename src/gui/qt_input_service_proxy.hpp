@@ -1,7 +1,7 @@
 #pragma once
-#include "event_dispatcher.hpp"
-#include "input2/input_service.hpp"
-#include "service_accessor.hpp"
+#include "firelight/event_dispatcher.hpp"
+
+#include <firelight/input/input_service.hpp>
 
 #include <QObject>
 #include <QTimer>
@@ -10,29 +10,33 @@
 
 namespace firelight::gui {
 
-class QtInputServiceProxy final : public QObject, public ServiceAccessor {
+class QtInputServiceProxy final : public QObject {
   Q_OBJECT
-  Q_PROPERTY(bool prioritizeControllerOverKeyboard READ
-                 prioritizeControllerOverKeyboard WRITE
-                     setPrioritizeControllerOverKeyboard NOTIFY
-                         prioritizeControllerOverKeyboardChanged)
-  Q_PROPERTY(
-      bool onlyPlayerOneCanNavigateMenus READ getOnlyPlayerOneCanNavigateMenus
-          WRITE setOnlyPlayerOneCanNavigateMenus NOTIFY
-              onlyPlayerOneCanNavigateMenusChanged)
+  Q_PROPERTY(bool prioritizeControllerOverKeyboard READ prioritizeControllerOverKeyboard WRITE
+                 setPrioritizeControllerOverKeyboard NOTIFY prioritizeControllerOverKeyboardChanged)
+  Q_PROPERTY(bool onlyPlayerOneCanNavigateMenus READ getOnlyPlayerOneCanNavigateMenus WRITE
+                 setOnlyPlayerOneCanNavigateMenus NOTIFY onlyPlayerOneCanNavigateMenusChanged)
 public:
-  QtInputServiceProxy();
+  explicit QtInputServiceProxy(input::InputService &inputService);
 
-  void
-  setPrioritizeControllerOverKeyboard(bool prioritizeControllerOverKeyboard);
+  void setPrioritizeControllerOverKeyboard(bool prioritizeControllerOverKeyboard);
 
   [[nodiscard]] bool prioritizeControllerOverKeyboard() const;
 
   void setOnlyPlayerOneCanNavigateMenus(bool onlyPlayerOneCanNavigateMenus);
 
   [[nodiscard]] bool getOnlyPlayerOneCanNavigateMenus() const;
+
+  // Switches shortcut scope between in-game and menu contexts (driven by the UI)
+  Q_INVOKABLE void setShortcutsInGame(bool inGame);
+
+  // Whether the Steam client is running. Steam reads gamepads globally through
+  // its own filter driver, and its "Guide button focuses Steam" option fires
+  // even for games it didn't launch — nothing in this process can pre-empt it,
+  // so the Controllers page warns instead. Asked on demand rather than exposed
+  // as a property: Steam can come and go, and a cached answer would be a lie
+  [[nodiscard]] Q_INVOKABLE bool isSteamRunning() const;
 signals:
-  void shortcutToggled(int playerIndex, int shortcut);
   void prioritizeControllerOverKeyboardChanged();
   void onlyPlayerOneCanNavigateMenusChanged();
 
@@ -43,7 +47,6 @@ private:
 
   bool m_onlyPlayerOneCanNavigateMenus = true;
 
-  ScopedConnection shortcutToggledConnection;
   ScopedConnection gamepadInputConnection;
 
   // Auto-repeat functionality
@@ -54,6 +57,7 @@ private:
     int playerIndex;
     input::GamepadInput input;
   };
+
   std::map<std::pair<int, input::GamepadInput>, AutoRepeatState> m_autoRepeatStates;
 
   QTimer *m_autoRepeatTimer;

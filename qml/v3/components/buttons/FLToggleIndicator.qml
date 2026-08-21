@@ -1,0 +1,49 @@
+import QtQuick
+
+Item {
+    id: control
+
+    property bool checked: false
+    property color activeColor: Theme.switch2Color
+    property color inactiveColor: Theme.border
+
+    implicitWidth: AppStyle.iconSizeMd
+    implicitHeight: AppStyle.iconSizeMd
+
+    onCheckedChanged: {
+        if (checked) {
+            SoundEffects.check.play();
+        } else {
+            SoundEffects.uncheck.play();
+        }
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: AppStyle.radiusSm
+        color: "transparent"
+        border.width: Math.max(1, Math.round(1 * AppStyle.scale))
+        border.color: control.selected ? control.activeColor : control.inactiveColor
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        radius: AppStyle.radiusSm
+        color: control.activeColor
+        scale: control.checked ? 1 : 0
+
+        Behavior on scale {
+            NumberAnimation {
+                duration: AppStyle.durationVeryFast
+                easing: Easing.InOutQuad
+            }
+        }
+
+        Icon {
+            anchors.centerIn: parent
+            name: "check"
+            size: AppStyle.iconSizeMd
+            color: Theme.textPrimary
+        }
+    }
+}

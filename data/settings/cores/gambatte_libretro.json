@@ -1,0 +1,156 @@
+{
+  "cores": {
+    "gambatte_libretro": {
+      "_note": "Game Boy / Game Boy Color. These friendly settings use the core key directly (identity); no 'mapping' needed.",
+      "settings": [
+        {
+          "key": "gambatte_mix_frames",
+          "label": "Simulate LCD ghosting effects",
+          "group": "emulation-video",
+          "order": 100,
+          "type": "options",
+          "default": "disabled",
+          "keywords": [
+            "blur",
+            "motion",
+            "lcd",
+            "ghosting"
+          ],
+          "options": [
+            {
+              "label": "None",
+              "value": "disabled"
+            },
+            {
+              "label": "Simple (Accurate)",
+              "value": "mix"
+            },
+            {
+              "label": "Simple (Fast)",
+              "value": "mix_fast"
+            },
+            {
+              "label": "LCD Ghosting (Accurate)",
+              "value": "lcd_ghosting"
+            },
+            {
+              "label": "LCD Ghosting (Fast)",
+              "value": "lcd_ghosting_fast"
+            }
+          ]
+        },
+        {
+          "key": "gambatte_up_down_allowed",
+          "label": "Allow opposing D-Pad directions",
+          "group": "emulation-input",
+          "order": 100,
+          "type": "boolean",
+          "keywords": [
+            "dpad",
+            "diagonal",
+            "glitch"
+          ],
+          "default": "disabled",
+          "trueValue": "enabled",
+          "falseValue": "disabled"
+        },
+        {
+          "key": "gambatte_gbc_color_correction",
+          "label": "Color correction",
+          "group": "emulation-video",
+          "order": 110,
+          "type": "options",
+          "default": "GBC only",
+          "keywords": [
+            "colour",
+            "saturation",
+            "washed out"
+          ],
+          "options": [
+            {
+              "label": "Off",
+              "value": "disabled"
+            },
+            {
+              "label": "GBC only",
+              "value": "GBC only"
+            },
+            {
+              "label": "Always",
+              "value": "always"
+            }
+          ]
+        },
+        {
+          "key": "gambatte_gbc_frontlight_position",
+          "label": "Frontlight position",
+          "group": "emulation-video",
+          "order": 120,
+          "type": "options",
+          "default": "central",
+          "keywords": [
+            "brightness",
+            "backlight",
+            "screen"
+          ],
+          "options": [
+            {
+              "label": "Central",
+              "value": "central"
+            },
+            {
+              "label": "Above screen",
+              "value": "above screen"
+            },
+            {
+              "label": "Below screen",
+              "value": "below screen"
+            }
+          ]
+        },
+        {
+          "key": "gambatte_gb_internal_palette",
+          "label": "Color palette",
+          "group": "emulation-video",
+          "order": 130,
+          "description": "Palette used for original Game Boy games.",
+          "keywords": [
+            "colour",
+            "dmg",
+            "green",
+            "monochrome"
+          ],
+          "type": "custom",
+          "widget": "gbc-palette",
+          "default": "GB - DMG",
+          "options": [
+            {
+              "label": "DMG",
+              "value": "GB - DMG"
+            },
+            {
+              "label": "Pocket",
+              "value": "GB - Pocket"
+            },
+            {
+              "label": "Light",
+              "value": "GB - Light"
+            }
+          ]
+        }
+      ],
+      "defaults": {
+        "gambatte_gbc_color_correction": "GBC only",
+        "gambatte_gbc_color_correction_mode": "accurate",
+        "gambatte_gbc_frontlight_position": "central",
+        "gambatte_dark_filter_level": "0",
+        "gambatte_up_down_allowed": "disabled",
+        "gambatte_mix_frames": "disabled",
+        "gambatte_gb_colorization": "auto",
+        "gambatte_gb_internal_palette": "GB - DMG",
+        "gambatte_gb_bootloader": "disabled",
+        "gambatte_gb_hwmode": "auto"
+      }
+    }
+  }
+}

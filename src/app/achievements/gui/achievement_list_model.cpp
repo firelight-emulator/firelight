@@ -4,9 +4,7 @@
 #include <utility>
 
 namespace firelight::gui {
-AchievementListModel::AchievementListModel(const QVector<Item> &items,
-                                           QObject *parent)
-    : QAbstractListModel(parent) {
+AchievementListModel::AchievementListModel(const QVector<Item> &items, QObject *parent) : QAbstractListModel(parent) {
   m_items = items;
 }
 
@@ -25,9 +23,7 @@ QHash<int, QByteArray> AchievementListModel::roleNames() const {
   return roles;
 }
 
-int AchievementListModel::rowCount(const QModelIndex &parent) const {
-  return m_items.size();
-}
+int AchievementListModel::rowCount(const QModelIndex &parent) const { return m_items.size(); }
 
 QVariant AchievementListModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
@@ -40,26 +36,20 @@ QVariant AchievementListModel::data(const QModelIndex &index, int role) const {
   case Id:
     return QVariant::fromValue(item.achievement.id);
   case Name:
-    return QVariant::fromValue(QString::fromStdString(item.achievement.name));
+    return QVariant::fromValue(QString::fromStdString(item.achievement.title));
   case Description:
-    return QVariant::fromValue(
-        QString::fromStdString(item.achievement.description));
+    return QVariant::fromValue(QString::fromStdString(item.achievement.description));
   case ImageUrl:
-    return QVariant::fromValue(
-        QString::fromStdString(item.achievement.imageUrl));
+    return QVariant::fromValue(QString::fromStdString(item.achievement.badgeUrl));
   case Earned:
-    return QVariant::fromValue(m_hardcore ? item.unlockState.earnedHardcore
-                                          : item.unlockState.earned);
+    return QVariant::fromValue(m_hardcore ? item.unlockState.earnedHardcore : item.unlockState.earned);
   case EarnedDate:
-    return QVariant::fromValue(
-        QDateTime::fromSecsSinceEpoch(
-            m_hardcore ? item.unlockState.unlockTimestampHardcore
-                       : item.unlockState.unlockTimestamp)
-            .toString("MM/dd/yyyy hh:mm ap"));
+    return QVariant::fromValue(QDateTime::fromSecsSinceEpoch(m_hardcore ? item.unlockState.unlockTimestampHardcore
+                                                                        : item.unlockState.unlockTimestamp)
+                                   .toString("MM/dd/yyyy hh:mm ap"));
   case EarnedTimestamp:
-    return QVariant::fromValue(m_hardcore
-                                   ? item.unlockState.unlockTimestampHardcore
-                                   : item.unlockState.unlockTimestamp);
+    return QVariant::fromValue(m_hardcore ? item.unlockState.unlockTimestampHardcore
+                                          : item.unlockState.unlockTimestamp);
   case Points:
     return QVariant::fromValue(item.achievement.points);
   case Type: {
@@ -85,6 +75,7 @@ QVariant AchievementListModel::data(const QModelIndex &index, int role) const {
 }
 
 int AchievementListModel::size() const { return m_items.size(); }
+
 void AchievementListModel::setHardcore(const bool hardcore) {
   emit beginResetModel();
   m_hardcore = hardcore;

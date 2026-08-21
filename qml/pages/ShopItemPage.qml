@@ -1,10 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls
-import QtQuick.Layouts
-import QtQuick.Effects
-import Firelight 1.0
 
 Flickable {
     id: page
@@ -29,26 +25,4 @@ Flickable {
         modId: page.modId
         width: Math.min(parent.width, 1200)
     }
-
-    // Pane {
-    //     id: contentPane
-    //
-    //     horizontalPadding: 20
-    //     // height: parent.height
-    //     width: Math.min(parent.width, 1600)
-    //
-    //
-    //     background: Item {
-    //     }
-    //
-    //     contentItem: FLModShopItemPanel {
-    //         id: contentColumn
-    //
-    //         // width: parent.width
-    //         anchors.horizontalCenter: parent.horizontalCenter
-    //         modId: 0
-    //         // width: Math.min(parent.width, 1600)
-    //     }
-    // }
 }
-

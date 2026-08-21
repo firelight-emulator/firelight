@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 import Firelight 1.0
 
 FirelightDialog {
@@ -11,54 +10,63 @@ FirelightDialog {
     required property var shortcut
     required property string shortcutName
     required property bool isKeyboard
+    // Input codes that count as a modifier when held. Comes from the model, so
+    // this list and the shipped presets can't drift apart
+    property var modifierCandidates: []
 
     showButtons: false
     closePolicy: Popup.NoAutoClose
 
     signal mappingAdded(var shortcut, var modifiers, var input)
 
+    // Inputs held right now, in the order they went down
+    property var heldInputs: []
+
     onAboutToShow: {
-        frameAnimation.reset()
+        frameAnimation.reset();
+        heldInputs = [];
     }
 
     onOpened: function () {
-        timer.start()
+        timer.start();
     }
 
     onClosed: function () {
-        timer.stop()
+        timer.stop();
     }
 
     Connections {
         target: gamepad
         enabled: root.visible && !root.isKeyboard
+        // The combo is read on release, not on press: any input can be a
+        // modifier, so while a button is going down there is no way to know
+        // whether it is the trigger or something being held for the next one
+        // Waiting means "hold Select, press X" records Select+X rather than
+        // firing the instant Select goes down
         function onInputChanged(input, activated) {
-            if (input === 12 || input === 13) { // GamepadInput enum
-                // Ignore Left Trigger and Right Trigger
+            if (activated) {
+                // They've started entering one; the give-up countdown is for
+                // deciding, not for how long a combo may be held
+                timer.stop();
+                if (!root.heldInputs.includes(input)) {
+                    root.heldInputs = root.heldInputs.concat([input]);
+                }
                 return;
             }
-            if (activated) {
-                let modifiers = [];
-                if (gamepad.isButtonPressed(12)) {
-                    modifiers.push(12);
-                }
-                if (gamepad.isButtonPressed(13)) {
-                    modifiers.push(13);
-                }
 
-                console.log("Modifiers: " + modifiers)
-                mappingAdded(root.shortcut, modifiers, input);
-                root.accept()
-                // root.mappingAdded(root.buttons[root.currentIndex].retropad_button, input)
-                // if (root.buttons.length > root.currentIndex + 1) {
-                //     root.currentIndex++
-                //     timer.stop()
-                //     frameAnimation.reset()
-                //     timer.restart()
-                // } else {
-                //     root.accept()
-                // }
+            if (root.heldInputs.length === 0) {
+                return;
             }
+
+            // Last one down is the trigger; anything held alongside it modifies
+            // it. Sticks are excluded as modifiers — they drift, and a drifting
+            // axis would silently join the combo
+            const trigger = root.heldInputs[root.heldInputs.length - 1];
+            const modifiers = root.heldInputs.slice(0, -1).filter(held => root.modifierCandidates.includes(held));
+
+            root.heldInputs = [];
+            mappingAdded(root.shortcut, modifiers, trigger);
+            root.accept();
         }
     }
 
@@ -69,8 +77,8 @@ FirelightDialog {
 
         Keys.onPressed: function (event) {
             if (!root.visible || !root.isKeyboard || event.isAutoRepeat) {
-                event.accept = false
-                return
+                event.accept = false;
+                return;
             }
 
             if (event.key === Qt.Key_Escape || event.key === Qt.Key_Alt || event.key === Qt.Key_Control || event.key === Qt.Key_Shift || event.key === Qt.Key_Meta) {
@@ -91,71 +99,43 @@ FirelightDialog {
                 modifiers.push(Qt.Key_Alt);
             }
 
-            console.log("Modifiers: " + modifiers)
             mappingAdded(root.shortcut, modifiers, event.key);
-            root.accept()
+            root.accept();
 
-            // if (input === 12 || input === 13) { // GamepadInput enum
-            //     // Ignore Left Trigger and Right Trigger
-            //     return;
-            // }
-            // if (activated) {
-            //     let modifiers = [];
-            //     if (gamepad.isButtonPressed(12)) {
-            //         modifiers.push(12);
-            //     }
-            //     if (gamepad.isButtonPressed(13)) {
-            //         modifiers.push(13);
-            //     }
-            //
-            //     console.log("Modifiers: " + modifiers)
-            //     mappingAdded(root.shortcut, modifiers, input);
-            //     root.accept()
-            //     // root.mappingAdded(root.buttons[root.currentIndex].retropad_button, input)
-            //     // if (root.buttons.length > root.currentIndex + 1) {
-            //     //     root.currentIndex++
-            //     //     timer.stop()
-            //     //     frameAnimation.reset()
-            //     //     timer.restart()
-            //     // } else {
-            //     //     root.accept()
-            //     // }
-            // }
-
-            // root.mappingAdded(root.buttons[root.currentIndex].retropad_button, event.key)
+        // root.mappingAdded(root.buttons[root.currentIndex].retropad_button, event.key)
         }
 
         Keys.onReleased: function (event) {
-            event.accept = false
+            event.accept = false;
         }
 
         Text {
             text: {
                 if (!root.isKeyboard) {
-                    "Press a button while holding Left Trigger and/or Right Trigger (optional) to assign it to:"
+                    "Press a button — hold others first to make a combo, like Select + X. Release to assign it to:";
                 } else {
-                    "Press a key while holding Shift, Control, Alt, or Windows (optional) to assign it to:"
+                    "Press a key while holding Shift, Control, Alt, or Windows (optional) to assign it to:";
                 }
             }
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: parent.width * 5 / 6
 
-            color: "white"
-            font.family: Constants.regularFontFamily
+            color: Theme.textPrimary
+            font.family: AppStyle.fontFamily
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            font.pixelSize: 18
+            font.pixelSize: AppStyle.fontSizeMedium
         }
 
         Text {
             text: root.shortcutName
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            color: ColorPalette.neutral200
-            font.pixelSize: 20
+            color: Theme.textPrimary
+            font.pixelSize: AppStyle.fontSizeLarge
             font.weight: Font.Bold
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
@@ -166,7 +146,7 @@ FirelightDialog {
             running: false
             repeat: false
             onTriggered: {
-                root.reject()
+                root.reject();
             }
         }
 
@@ -183,8 +163,5 @@ FirelightDialog {
             Layout.preferredHeight: 10
             color: "green"
         }
-
-
     }
-
 }

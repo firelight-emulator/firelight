@@ -12,14 +12,6 @@ Button {
     horizontalPadding: 12
     verticalPadding: 12
 
-    // onClicked: {
-    //     if (root.checked) {
-    //         sfx_player.play("switchon")
-    //     } else {
-    //         sfx_player.play("switchoff")
-    //     }
-    // }
-
     // implicitHeight: Math.max(72, theColumn.)
     hoverEnabled: true
 
@@ -40,10 +32,10 @@ Button {
                 id: labelText
                 Layout.fillWidth: true
                 text: root.label
-                color: ColorPalette.neutral100
-                font.pixelSize: 16
+                color: Theme.textPrimary
+                font.pixelSize: AppStyle.fontSizeMedium
                 Layout.alignment: Qt.AlignLeft
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
             }
             Text {
@@ -52,13 +44,13 @@ Button {
                 Layout.fillWidth: true
                 visible: root.description !== ""
                 text: root.description
-                font.pixelSize: 15
+                font.pixelSize: AppStyle.fontSizeMedium
                 lineHeight: 1.2
                 Layout.alignment: Qt.AlignLeft
-                font.family: Constants.regularFontFamily
-                // font.weight: Font.
+                font.family: AppStyle.fontFamily
+                // font.weight: Font
                 wrapMode: Text.WordWrap
-                color: ColorPalette.neutral300
+                color: Theme.textMuted
             }
         }
 
@@ -70,7 +62,7 @@ Button {
             checked: root.checked
 
             onCheckedChanged: {
-                root.checked = theControl.checked
+                root.checked = theControl.checked;
             }
 
             indicator: Rectangle {
@@ -84,7 +76,7 @@ Button {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 200
+                        duration: AppStyle.durationBase
                         easing.type: Easing.InOutQuad
                     }
                 }
@@ -95,7 +87,7 @@ Button {
 
                     Behavior on x {
                         NumberAnimation {
-                            duration: 200
+                            duration: AppStyle.durationBase
                             easing.type: Easing.InOutQuad
                         }
                     }

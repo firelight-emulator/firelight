@@ -1,11 +1,10 @@
 #pragma once
 #include <QAbstractListModel>
-#include <manager_accessor.hpp>
+#include <service_accessor.hpp>
 
 namespace firelight::activity {
 
-class GameActivityListModel : public QAbstractListModel,
-                              public ManagerAccessor {
+class GameActivityListModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
 
 public:
@@ -24,14 +23,7 @@ private:
     int numSecondsPlayed = 0;
   };
 
-  enum Roles {
-    DisplayName = Qt::UserRole + 1,
-    ContentHash,
-    PlatformName,
-    PlatformSlug,
-    IconUrl1x1,
-    NumSecondsPlayed
-  };
+  enum Roles { DisplayName = Qt::UserRole + 1, ContentHash, PlatformName, PlatformSlug, IconUrl1x1, NumSecondsPlayed };
 
   QVector<Item> m_items;
 };

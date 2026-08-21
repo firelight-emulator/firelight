@@ -1,5 +1,15 @@
 #pragma once
 
+#include "audio/audio_manager.hpp"
+#include "emulation/emulator_instance.hpp"
+#include "emulator_vulkan_renderer.hpp"
+#include "libretro/core.hpp"
+#include "libretro/core_configuration.hpp"
+
+#include <firelight/activity/activity_log.hpp>
+#include <firelight/libretro/video_data_receiver.hpp>
+
+#include <QElapsedTimer>
 #include <QImage>
 #include <QMediaCaptureSession>
 #include <QMediaRecorder>
@@ -9,52 +19,61 @@
 #include <QQuickRhiItemRenderer>
 #include <QSGRenderNode>
 #include <QVideoFrameInput>
-#include <firelight/libretro/video_data_receiver.hpp>
+#include <libretro/libretro_vulkan.h>
+#include <memory>
+#include <mutex>
+#include <qchronotimer.h>
 #include <qsgrendererinterface.h>
 #include <rhi/qrhi.h>
 
-#include "audio/audio_manager.hpp"
-#include "emulation/emulator_instance.hpp"
-#include "libretro/core.hpp"
-#include "libretro/core_configuration.hpp"
-#include "manager_accessor.hpp"
-
-#include <libretro/libretro_vulkan.h>
-#include <qchronotimer.h>
-// #include "../later/video_decoder.h"
-// #include "video_encoder.h"
-
 class EmulatorItem;
+
+namespace firelight {
+namespace achievements {
+class RAClient;
+}
+
+namespace gui {
+class GameImageProvider;
+}
+
+namespace saves {
+class ISaveManager;
+}
+
+namespace media {
+class MediaService;
+class ClipRecorder;
+} // namespace media
+} // namespace firelight
+
+// Threading: created, used, and destroyed on the QML render thread — Qt drives
+// initialize()/synchronize()/render() there, which is also where the
+// EmulatorCommand queue (incl. RunFrame -> EmulatorInstance) is drained
+// submitCommand() enqueues from the GUI and pacing threads while the render
+// thread drains it in synchronize(), so all access goes through
+// m_commandQueueMutex (QQueue isn't thread-safe — a concurrent enqueue realloc
+// racing a dequeue corrupts the heap)
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
-                             public firelight::libretro::IVideoDataReceiver,
-                             public firelight::ManagerAccessor {
+                             public firelight::libretro::IVideoDataReceiver {
 public:
-  explicit EmulatorItemRenderer(
-      QSGRendererInterface::GraphicsApi api, QWindow *window,
-      firelight::emulation::EmulatorInstance *emulatorInstance);
+  EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api, QWindow *window,
+                       firelight::emulation::EmulatorInstance *emulatorInstance,
+                       firelight::activity::IActivityLog *activityLog,
+                       firelight::achievements::RAClient *achievementManager,
+                       firelight::gui::GameImageProvider *gameImageProvider,
+                       firelight::saves::ISaveManager *saveManager, firelight::media::MediaService *mediaService);
+
   void setHwRenderInterface(retro_hw_render_callback *iface) override;
 
-  void onGeometryChanged(
-      const std::function<void(int, int, float, double)> &callback) {
+  void onGeometryChanged(const std::function<void(int, int, float, double)> &callback) {
     m_geometryChangedCallback = callback;
   }
 
-  void receive(const void *data, unsigned width, unsigned height,
-               size_t pitch) override;
+  void receive(const void *data, unsigned width, unsigned height, size_t pitch) override;
 
   retro_hw_context_type getPreferredHwRender() override;
-
-  void getHwRenderContext(retro_hw_context_type &contextType,
-                          unsigned int &major, unsigned int &minor) override;
-
-  proc_address_t getProcAddress(const char *sym) override;
-
-  void setResetContextFunc(context_reset_func contextResetFunc) override;
-
-  void setDestroyContextFunc(context_destroy_func contextDestroyFunc) override;
-
-  uintptr_t getCurrentFramebufferId() override;
 
   void setSystemAVInfo(retro_system_av_info *info) override;
 
@@ -62,19 +81,16 @@ public:
 
   void setScreenRotation(unsigned rotation) override;
 
-  void setHwRenderContextNegotiationInterface(
-      retro_hw_render_context_negotiation_interface *iface) override;
+  void setHwRenderContextNegotiationInterface(retro_hw_render_context_negotiation_interface *iface) override;
 
-  void setHwRenderInterface(retro_hw_render_interface **iface) override;
+  void getHwRenderInterface(retro_hw_render_interface **iface) override;
 
   QByteArray m_gameData;
   QByteArray m_saveData;
   QString m_corePath;
   QString m_contentHash;
   int m_saveSlotNumber;
-  int m_platformId;
   QString m_contentPath;
-  bool m_gameReady;
   float m_playbackMultiplier = 1;
 
   enum EmulatorCommandType {
@@ -85,6 +101,8 @@ public:
     LoadSuspendPoint,
     UndoLoadSuspendPoint,
     SetPlaybackMultiplier,
+    CaptureScreenshot,
+    CaptureVideoClip,
     RunFrame
   };
 
@@ -93,6 +111,9 @@ public:
     int suspendPointIndex;
     int rewindPointIndex;
     float playbackMultiplier;
+    // Set when a capture command was held back a frame to force a fresh
+    // framebuffer readback (HW cores that were idle). Prevents re-deferral
+    bool deferred = false;
   };
 
   void submitCommand(EmulatorCommand command);
@@ -108,22 +129,44 @@ protected:
 
 private:
   QWindow *m_window = nullptr;
-  EmulatorItem *m_emulatorItem;
-  // firelight::av::VideoEncoder *m_encoder = nullptr;
-  // firelight::av::VideoDecoder *m_decoder = nullptr;
+  EmulatorItem *m_emulatorItem = nullptr;
   const QSGRendererInterface::GraphicsApi m_graphicsApi;
-
   firelight::emulation::EmulatorInstance *m_emulatorInstance;
 
-  QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
+  // Services, injected by EmulatorItem (which is the ServiceAccessor). The
+  // renderer is one level removed from QML, so it takes its dependencies rather
+  // than reaching into the locator itself
+  firelight::activity::IActivityLog *m_activityLog;
+  firelight::achievements::RAClient *m_achievementManager;
+  firelight::gui::GameImageProvider *m_gameImageProvider;
+  firelight::saves::ISaveManager *m_saveManager;
+  firelight::media::MediaService *m_mediaService;
 
+  // Instant-replay recorder: fed the software-rendered frames in receive(); its
+  // rolling window is snapshotted + muxed to mp4 on CaptureVideoClip. Software
+  // cores only — HW (Vulkan) cores don't deliver pixels to receive()
+  std::unique_ptr<firelight::media::ClipRecorder> m_clipRecorder;
+  double m_clipFps = 60.0;
+  int m_clipWidth = 0;
+  int m_clipHeight = 0;
+  int64_t m_clipFrameIndex = 0;
+  int64_t m_streamFrameIndex = 0;
+
+  QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
   QQueue<EmulatorCommand> m_commandQueue;
+  // Guards m_commandQueue against concurrent enqueue (GUI/pacing threads) and
+  // drain (render thread)
+  std::mutex m_commandQueueMutex;
+  // Capture commands deferred one frame to wait for a fresh readback. Only ever
+  // touched on the render thread (in synchronize), so it needs no lock
+  QQueue<EmulatorCommand> m_deferredCommands;
+  // Forces a single framebuffer readback next frame (idle HW cores)
+  bool m_captureNextFrame = false;
 
   QImage m_overlayImage;
   QImage m_currentImage;
 
   SuspendPoint m_beforeLastLoadSuspendPoint;
-
   QList<QString> m_rewindImageUrls{};
 
   QElapsedTimer m_playSessionTimer;
@@ -131,11 +174,6 @@ private:
 
   bool m_quitting = false;
   bool m_shouldRunFrame = true;
-
-  QElapsedTimer m_emulationTimer{};
-  long m_emulationTimingTargetNs = 1000000;
-  long m_totalTargetDeviation = 0;
-  bool m_runNextFrame = false;
 
   QThread m_emulatorThread;
   QChronoTimer m_emulatorTimer{};
@@ -150,32 +188,30 @@ private:
   int64_t m_averageEmulationTime = 0;
 
   int m_frameNumber = 0;
-
   int m_currentWaitFrames = 0;
   int m_waitFrames = 0;
 
   QList<SuspendPoint> m_rewindPoints;
 
-  std::function<void(int, int, float, double)> m_geometryChangedCallback =
-      nullptr;
+  std::function<void(int, int, float, double)> m_geometryChangedCallback = nullptr;
 
-  // firelight::media::Image *m_currentCoolImage;
-
-  // HW rendering members
-  bool m_openGlInitialized = false;
-  GLint m_currentFramebufferId = 0;
+  // ── HW render callbacks (all APIs) ──────────────────────────────────────
   std::function<void()> m_resetContextFunction = nullptr;
   std::function<void()> m_destroyContextFunction = nullptr;
-  retro_vulkan_create_device_t m_vulkanCreateDeviceFunc = nullptr;
-  retro_vulkan_image m_vulkanImage;
 
-  // Default according to libretro docs
+  // ── OpenGL ──────────────────────────────────────────────────────────────
+  bool m_openGlInitialized = false;
+  GLint m_currentFramebufferId = 0;
+
+  proc_address_t getProcAddress(const char *sym);
+
+  uintptr_t getCurrentFramebufferId();
+
+  // ── Common display state ─────────────────────────────────────────────────
   QImage::Format m_pixelFormat = QImage::Format_RGB16;
-
-  // Rotation is equal to value x 90 degrees
   unsigned m_screenRotation = 0;
-
   bool m_paused = false;
+  bool m_shouldSave = false;
 
   uint m_coreBaseWidth = 0;
   uint m_coreBaseHeight = 0;
@@ -184,5 +220,41 @@ private:
   float m_coreAspectRatio = 0.0f;
   float m_calculatedAspectRatio = 0.0f;
 
-  bool m_shouldSave = false;
+  void initializeEmulatorInstance(QRhiCommandBuffer *cb);
+
+  void displayPauseImage(QRhiCommandBuffer *cb);
+
+  // Reads the composited colorTexture() back to a CPU QImage (m_currentImage)
+  // and feeds it to the clip recorder and netplay stream. Works for software
+  // and hardware cores alike, since both fill colorTexture()
+  void scheduleFrameReadback(QRhiResourceUpdateBatch *batch);
+
+  // Whether anything needs a per-frame CPU copy right now (instant replay on,
+  // host stream armed, or a one-shot capture pending). HW cores skip the
+  // readback when nothing does
+  [[nodiscard]] bool anyFrameConsumerActive() const;
+
+  // Holds a capture command back one frame so a fresh readback can land first
+  // (HW cores that were idle). Returns true if the command was deferred
+  bool deferCaptureUntilFrameReady(const EmulatorCommand &command);
+
+  // Pushes the latest frame into the instant-replay recorder
+  void feedClipRecorder(const QImage &frame);
+  // Pushes the latest frame into the netplay host stream
+  void feedNetplayStream(const QImage &frame);
+
+  bool m_usingHardwareRenderer = false;
+
+  // ── Vulkan ───────────────────────────────────────────────────────────────
+  // Stored here because setHwRenderContextNegotiationInterface() may be called
+  // before the first render() where initialize() is invoked
+  const retro_hw_render_context_negotiation_interface_vulkan *m_negotiation = nullptr;
+
+  std::unique_ptr<EmulatorVulkanRenderer> m_vulkanRenderer;
+
+  void destroyHwContext() override {
+    if (m_vulkanRenderer) {
+      m_vulkanRenderer->destroy();
+    }
+  }
 };

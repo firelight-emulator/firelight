@@ -1,1 +1,26 @@
+# LLVM is the base; only the keys below are overridden, so everything not
+# listed keeps its LLVM value. Deliberately inherited: IndentWidth 2,
+# NamespaceIndentation None, PointerAlignment Right, BreakBeforeBraces Attach,
+# AllowShortIfStatementsOnASingleLine Never, AllowShortFunctionsOnASingleLine
+# All, ReflowComments Always, FixNamespaceComments true.
 BasedOnStyle: LLVM
+
+ColumnLimit: 120
+InsertBraces: true
+SeparateDefinitionBlocks: Always
+
+# Quotes for headers in the same target, angles for the include path. The
+# suffixes let a .cpp claim its *_impl / *_test header as the main one. Note
+# that clang-format only applies main-header detection when no quoted include
+# competes for it, so a .cpp with same-target quoted includes keeps its own
+# header sorted into the group instead of above them.
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeIsMainRegex: '(_impl|_test|_tests|Test)?$'
+IncludeCategories:
+  - Regex: '^"'
+    Priority: 1
+  - Regex: '^<firelight/'
+    Priority: 2
+  - Regex: '^<'
+    Priority: 3

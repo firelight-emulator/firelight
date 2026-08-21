@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 
 FocusScope {
@@ -37,18 +36,18 @@ FocusScope {
                     checked: achievement_manager.defaultToHardcore
 
                     onCheckedChanged: {
-                        achievement_manager.defaultToHardcore = checked
+                        achievement_manager.defaultToHardcore = checked;
                     }
                 }
 
                 FirelightButton {
                     id: learnMoreButton
-                    Layout.topMargin: 8
+                    Layout.topMargin: AppStyle.spacingSm
                     label: "Learn more"
                     KeyNavigation.down: achievementUnlockToggle
                     Layout.alignment: Qt.AlignHCenter
                     onClicked: {
-                        Qt.openUrlExternally("https://docs.retroachievements.org/general/faq.html#what-is-hardcore-mode")
+                        Qt.openUrlExternally("https://docs.retroachievements.org/general/faq.html#what-is-hardcore-mode");
                     }
                 }
 
@@ -56,11 +55,11 @@ FocusScope {
                     Layout.topMargin: 30
                     Layout.fillWidth: true
                     text: qsTr("Notifications")
-                    font.pointSize: 11
-                    font.family: Constants.regularFontFamily
+                    font.pixelSize: AppStyle.fontSizeMedium
+                    font.family: AppStyle.fontFamily
                     font.weight: Font.DemiBold
-                    Layout.bottomMargin: 8
-                    color: "#a6a6a6"
+                    Layout.bottomMargin: AppStyle.spacingSm
+                    color: Theme.textMuted
                 }
 
                 ToggleOption {
@@ -73,7 +72,7 @@ FocusScope {
                     checked: achievement_manager.unlockNotificationsEnabled
 
                     onCheckedChanged: {
-                        achievement_manager.unlockNotificationsEnabled = checked
+                        achievement_manager.unlockNotificationsEnabled = checked;
                     }
                 }
 
@@ -88,7 +87,7 @@ FocusScope {
                     checked: achievement_manager.progressNotificationsEnabled
 
                     onCheckedChanged: {
-                        achievement_manager.progressNotificationsEnabled = checked
+                        achievement_manager.progressNotificationsEnabled = checked;
                     }
                 }
 
@@ -102,7 +101,7 @@ FocusScope {
                     checked: achievement_manager.challengeIndicatorsEnabled
 
                     onCheckedChanged: {
-                        achievement_manager.challengeIndicatorsEnabled = checked
+                        achievement_manager.challengeIndicatorsEnabled = checked;
                     }
                 }
             }
@@ -110,9 +109,7 @@ FocusScope {
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-
             }
         }
     }
 }
-

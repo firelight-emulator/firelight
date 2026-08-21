@@ -1,0 +1,457 @@
+import QtQuick
+import QtQuick.Controls
+// import QtQuick.Controls.Material
+import Firelight 1.0
+
+FocusScope {
+    id: root
+
+    objectName: "emulatorPage"
+
+    // Only the shortcuts that need the UI arrive here; ShortcutActions does the
+    // rest in C++, including deciding what's allowed in hardcore mode
+    Connections {
+        target: ShortcutDispatcher
+
+        function onOpenRewindMenuRequested() {
+            root.createRewindPoints();
+        }
+    }
+
+    property alias audioBufferLevel: emulator.audioBufferLevel
+
+    property bool paused
+
+    // Start muted for this session only (CLI `--mute`); OR-ed into the emulator's
+    // muted state so it doesn't fight the derived pause/fast-forward muting
+    property bool startMuted: false
+
+    signal closing
+    signal aboutToRunFrame
+
+    focus: true
+
+    // In-game shortcut scope while this page is the active stack item; an
+    // overlay pushed on top (or leaving) drops back to menu scope. Without this
+    // the engine stays in menu scope and only ScopeAlways shortcuts (e.g.
+    // screenshot) fire — in-game ones like capture_clip never trigger
+    // In-game shortcut scope: only while the game is actually the live, focused
+    // thing — not while paused (quick menu / backgrounded) or under an in-game
+    // overlay (e.g. the rewind menu on overlayStack)
+    property bool shortcutsInGame: !root.paused && overlayStack.depth === 0
+    onShortcutsInGameChanged: InputService.setShortcutsInGame(shortcutsInGame)
+    Component.onDestruction: InputService.setShortcutsInGame(false)
+
+    // Consume any per-launch start knobs (CLI --mute / --pause). These are
+    // one-shot on StartupOptions, so only the CLI-launched game is affected
+    Component.onCompleted: {
+        InputService.setShortcutsInGame(shortcutsInGame);
+        root.startMuted = StartupOptions.consumeStartMuted();
+        if (StartupOptions.consumeStartPaused()) {
+            root.paused = true;
+        }
+    }
+
+    Timer {
+        id: ctrlTimer
+        interval: 500
+        repeat: false
+
+        onTriggered: {
+            redThing.opacity = 0.7;
+        }
+    }
+
+    Keys.onDigit9Pressed: {
+        emulator.incrementPlaybackMultiplier();
+    }
+
+    Keys.onDigit8Pressed: {
+        emulator.decrementPlaybackMultiplier();
+    }
+
+    // Keys.onPressed: function(event) {
+    //     console.log("pressed: " + event.key)
+    //     if (event.key === Qt.Key_Control) {
+    //         ctrlTimer.start()
+    //     }
+    // }
+    //
+    // Keys.onReleased: function(event) {
+    //     console.log("released: " + event.key)
+    //     if (event.key === Qt.Key_Control) {
+    //         if (redThing.visible) {
+    //             redThing.opacity = 0
+    //         }
+    //
+    //         ctrlTimer.stop()
+    //     }
+    // }
+    property bool windowResizing
+    Connections {
+        target: window_resize_handler
+
+        function onWindowResizeStarted() {
+            root.windowResizing = true;
+        }
+        function onWindowResizeFinished() {
+            root.windowResizing = false;
+        }
+    }
+
+    property alias videoAspectRatio: emulator.videoAspectRatio
+    property alias contentHash: emulator.contentHash
+    property alias gameName: emulator.gameName
+    property alias platformId: emulator.platformId
+    property alias saveSlotNumber: emulator.saveSlotNumber
+    property alias canUndoLoadSuspendPoint: emulator.canUndoLoadSuspendPoint
+
+    function startGame() {
+        emulator.startGame();
+    }
+
+    signal rewindPointsReady(var points)
+
+    signal gameReady
+
+    function createRewindPoints() {
+        if (!EmulationService.rewindEnabled) {
+            return;
+        }
+        emulator.createRewindPoints();
+    }
+
+    function loadRewindPoint(index) {
+        emulator.loadRewindPoint(index);
+    }
+
+    function loadSuspendPoint(index) {
+        emulator.loadSuspendPoint(index);
+    }
+
+    function writeSuspendPoint(index) {
+        emulator.writeSuspendPoint(index);
+    }
+
+    function undoLoadSuspendPoint() {
+        emulator.undoLastLoadSuspendPoint();
+    }
+
+    Rectangle {
+        id: background
+        color: "black"
+        anchors.fill: root
+    }
+
+    EmulatorItem {
+        id: emulator
+        focus: true
+        anchors.centerIn: root
+
+        paused: root.paused || root.windowResizing
+        muted: root.startMuted || paused || playbackMultiplier !== 1
+
+        layer.enabled: true
+
+        property real aspectRatio: {
+            let mode = EmulationService.aspectRatioMode;
+            if (mode === "emulator-corrected") {
+                return emulator.videoAspectRatio;
+            } else {
+                return emulator.trueAspectRatio;
+            }
+        }
+
+        property real fitScale: {
+            if (!emulator.videoWidth || !emulator.videoHeight) {
+                return 1.0; // Avoid division by zero
+            }
+
+            // Calculate the ratio of the container itself
+            const containerRatio = root.width / root.height;
+
+            // If the container is wider than the target aspect ratio, fit to height
+            // Otherwise, fit to width
+            if (containerRatio > aspectRatio) {
+                return root.height / (emulator.videoWidth / aspectRatio);
+            } else {
+                return root.width / emulator.videoWidth;
+            }
+        }
+
+        property real sourceHeight: emulator.videoHeight
+        property real sourceWidth: sourceHeight * aspectRatio
+
+        property int integerScale: {
+            if (!sourceWidth || !sourceHeight) {
+                return 1; // Avoid division by zero
+            }
+            // Find how many times our correct shape fits into the container
+            const widthScale = root.width / sourceWidth;
+            const heightScale = root.height / sourceHeight;
+
+            let intScale = EmulationService.integerScale;
+            if (intScale === 0) {
+                intScale = Math.max(widthScale, heightScale); // If integer scale is 0, treat it as "unlimited"
+            }
+
+            // Take the smaller of the two, and floor it to get the largest whole number scale
+            return Math.floor(Math.min(intScale, Math.min(widthScale, heightScale)));
+        }
+
+        width: {
+            if (EmulationService.pictureMode === "stretch") {
+                return root.width;
+            } else if (EmulationService.pictureMode === "aspect-ratio-fill") {
+                return emulator.videoWidth * fitScale;
+            } else if (EmulationService.pictureMode === "integer-scale") {
+                return sourceWidth * integerScale;
+            }
+
+            return emulator.videoWidth;
+        }
+        height: {
+            if (EmulationService.pictureMode === "stretch") {
+                return root.height;
+            } else if (EmulationService.pictureMode === "aspect-ratio-fill") {
+                return (emulator.videoWidth * fitScale) / aspectRatio;
+            } else if (EmulationService.pictureMode === "integer-scale") {
+                return sourceHeight * integerScale;
+            }
+
+            return emulator.videoHeight;
+        }
+
+        rewindEnabled: EmulationService.rewindEnabled
+
+        smooth: false
+
+        onAboutToRunFrame: {
+            root.aboutToRunFrame();
+        }
+
+        onRewindPointsReady: function (points) {
+            overlayStack.pushItem(rewindPage, {
+                model: points,
+                aspectRatio: emulator.aspectRatio
+            }, StackView.Immediate);
+            overlayStack.forceActiveFocus();
+        }
+
+        onPlaybackMultiplierChanged: function () {
+            if (emulator.playbackMultiplier === 1) {
+                timer.running = true;
+            } else {
+                speedIndicator.opacity = 1;
+            }
+        }
+    }
+
+    Pane {
+        id: speedIndicator
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 16
+        width: 100
+        height: 40
+        padding: 12
+
+        opacity: 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                easing.type: Easing.InOutQuad
+                duration: AppStyle.durationBase
+            }
+        }
+
+        Timer {
+            id: timer
+            interval: 1200
+            running: false
+            repeat: false
+            onTriggered: {
+                speedIndicator.opacity = 0;
+            }
+        }
+
+        background: Rectangle {
+            color: Theme.surface
+        }
+
+        contentItem: Text {
+            text: emulator.playbackMultiplier + "x"
+            color: "white"
+            font.pixelSize: AppStyle.fontSizeLarge
+            font.family: AppStyle.fontFamily
+            anchors.centerIn: parent
+            verticalAlignment: Text.AlignVCenter
+            horizontalAlignment: Text.AlignHCenter
+        }
+    }
+
+    Rectangle {
+        id: redThing
+        color: "red"
+        opacity: 0
+        width: 600
+        height: 400
+        anchors.centerIn: parent
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: AppStyle.durationBase
+                easing.type: Easing.InOutQuad
+            }
+        }
+    }
+
+    GameLaunchPopup {
+        id: gameLaunchPopup
+        objectName: "Game Launch Popup"
+
+        Connections {
+            target: achievement_manager
+
+            function onGameLoadSucceeded(imageUrl, title, numEarned, numTotal) {
+                gameLaunchPopup.openWith(imageUrl, title, numEarned, numTotal, achievement_manager.defaultToHardcore);
+            }
+        }
+    }
+
+    Item {
+        id: achievementPopupQueue
+
+        property var popups: []
+        property bool isPopupVisible: false
+
+        function add(popup) {
+            popups.push(popup);
+            if (!isPopupVisible) {
+                displayNext();
+            }
+        }
+
+        function displayNext() {
+            if (isPopupVisible || popups.length === 0) {
+                return;
+            }
+            isPopupVisible = true;
+            const popup = popups[0];
+            popup.onClosed.connect(onPopupClosed);
+            popup.open();
+        }
+
+        function onPopupClosed() {
+            const closedPopup = popups.shift();
+            if (closedPopup) {
+                closedPopup.onClosed.disconnect(onPopupClosed);
+                closedPopup.destroy();
+            }
+            isPopupVisible = false;
+            if (popups.length > 0) {
+                displayNext();
+            }
+        }
+
+        Connections {
+            target: achievement_manager
+
+            function onAchievementUnlocked(imageUrl, name, description) {
+                if (!achievement_manager.unlockNotificationsEnabled) {
+                    return;
+                }
+
+                // This component ID should point to a Component object
+                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
+                const popup = achievementUnlockIndicatorComponent.createObject(root, {
+                    url: imageUrl,
+                    title: name,
+                    description: description
+                });
+
+                achievementPopupQueue.add(popup);
+            }
+
+            function onGameBeaten(imageUrl, name, description) {
+                if (!achievement_manager.unlockNotificationsEnabled) {
+                    return;
+                }
+
+                // This component ID should point to a Component object
+                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
+                const popup = achievementUnlockIndicatorComponent.createObject(root, {
+                    url: imageUrl,
+                    title: name,
+                    description: description,
+                    splashText: "All achievements unlocked!"
+                });
+
+                achievementPopupQueue.add(popup);
+            }
+
+            function onGameMastered(imageUrl, name, description) {
+                if (!achievement_manager.unlockNotificationsEnabled) {
+                    return;
+                }
+
+                // This component ID should point to a Component object
+                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
+                const popup = achievementUnlockIndicatorComponent.createObject(root, {
+                    url: imageUrl,
+                    title: name,
+                    description: description,
+                    splashText: "Game mastered!"
+                });
+
+                achievementPopupQueue.add(popup);
+            }
+        }
+    }
+
+    Component {
+        id: achievementUnlockIndicatorComponent
+        AchievementUnlockIndicator {}
+    }
+
+    AchievementProgressIndicator {
+        id: achievementProgressIndicator
+
+        Connections {
+            target: achievement_manager
+
+            function onAchievementProgressUpdated(imageUrl, id, name, description, current, desired) {
+                if (achievement_manager.progressNotificationsEnabled) {
+                    achievementProgressIndicator.openWith(imageUrl, name, description, current, desired);
+                }
+            }
+        }
+    }
+
+    ChallengeIndicatorList {
+        id: challengeIndicators
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: 12
+        anchors.rightMargin: 12
+    }
+
+    // Transient in-game overlays (e.g. the rewind menu) live here, so the page is
+    // self-contained and needs no external stack. Empty (depth 0) while playing
+    StackView {
+        id: overlayStack
+        anchors.fill: parent
+        visible: depth > 0
+    }
+
+    Component {
+        id: rewindPage
+        RewindMenu {
+            onRewindPointSelected: function (index) {
+                emulator.loadRewindPoint(index);
+                overlayStack.popCurrentItem();
+                root.forceActiveFocus();
+            }
+        }
+    }
+}

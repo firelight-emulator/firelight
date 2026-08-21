@@ -1,0 +1,78 @@
+#pragma once
+
+#include <firelight/input/igamepad.hpp>
+#include <firelight/libretro/retropad.hpp>
+
+#include <QEvent>
+#include <QMap>
+#include <QPointF>
+#include <QTimer>
+#include <mutex>
+
+namespace firelight::input {
+class KeyboardInputHandler final : public QObject, public IGamepad {
+  Q_OBJECT
+
+public:
+  KeyboardInputHandler();
+
+  // The keys a console input falls back to when the profile has no binding
+  // Built on first use rather than in the constructor, so callers that only want
+  // to know the defaults (the shortcut catalog, validating that a shipped
+  // keyboard shortcut doesn't sit on a gameplay key) don't need a handler to
+  // exist first
+  static const QMap<GamepadInput, Qt::Key> &defaultKeyMap();
+  static Qt::Key getDefaultKey(GamepadInput input);
+  static QString getKeyLabel(Qt::Key key);
+
+  [[nodiscard]] std::shared_ptr<GamepadProfile> getProfile() const override;
+  void setProfile(const std::shared_ptr<GamepadProfile> &profile) override;
+
+  [[nodiscard]] int16_t evaluateRawInput(GamepadInput input) const override;
+
+  bool isButtonPressed(int platformId, int controllerTypeId, Input t_button) override;
+
+  int16_t getLeftStickXPosition(int platformId, int controllerTypeId) override;
+
+  int16_t getLeftStickYPosition(int platformId, int controllerTypeId) override;
+
+  int16_t getRightStickXPosition(int platformId, int controllerTypeId) override;
+
+  int16_t getRightStickYPosition(int platformId, int controllerTypeId) override;
+
+  void setStrongRumble(int platformId, uint16_t t_strength) override;
+
+  void setWeakRumble(int platformId, uint16_t t_strength) override;
+
+  [[nodiscard]] std::string getName() const override;
+
+  [[nodiscard]] int getPlayerIndex() const override;
+
+  void setPlayerIndex(int playerIndex) override;
+
+  [[nodiscard]] bool isWired() const override;
+
+  [[nodiscard]] GamepadType getType() const override;
+
+  [[nodiscard]] DeviceType getDeviceType() const override;
+
+  int getInstanceId() const override;
+  bool disconnect() override;
+  [[nodiscard]] DeviceIdentifier getDeviceIdentifier() const override;
+
+protected:
+  bool eventFilter(QObject *obj, QEvent *event) override;
+
+private:
+  QMap<Input, bool> m_buttonStates;
+  QMap<Qt::Key, bool> m_keyStates;
+  // m_keyStates is written on the GUI thread (eventFilter) and read on the render
+  // thread (input poll during core->run). QMap isn't thread-safe and operator[]
+  // mutates the tree, so every access is serialized here
+  std::mutex m_keyStatesMutex;
+
+  std::shared_ptr<GamepadProfile> m_profile;
+
+  int m_playerIndex = -1;
+};
+} // namespace firelight::input

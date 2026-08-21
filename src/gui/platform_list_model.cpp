@@ -1,22 +1,21 @@
 #include "platform_list_model.hpp"
 
-#include <QJsonObject>
 #include <firelight/libretro/retropad.hpp>
+#include <firelight/platforms/platform_service.hpp>
 
-#include "../app/platform_metadata.hpp"
-#include "platforms/platform_service.hpp"
+#include <QJsonObject>
+#include <QVariant>
 
 namespace firelight::gui {
-PlatformListModel::PlatformListModel() {
-  auto platforms = platforms::PlatformService::getInstance().listPlatforms();
-  for (const auto &platform : platforms) {
+PlatformListModel::PlatformListModel(platforms::IPlatformService &platformService) {
+  for (const auto &platform : platformService.listPlatforms()) {
     m_items.push_back(platform);
   }
+
+  std::ranges::sort(m_items, [](const auto &a, const auto &b) { return a.name < b.name; });
 }
 
-int PlatformListModel::rowCount(const QModelIndex &parent) const {
-  return m_items.length();
-}
+int PlatformListModel::rowCount(const QModelIndex &parent) const { return m_items.length(); }
 
 QVariant PlatformListModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
@@ -39,14 +38,21 @@ QVariant PlatformListModel::data(const QModelIndex &index, int role) const {
     }
     return controllerTypeNames;
   }
+  case ControllerTypeIds: {
+    QVariantList controllerTypeIds;
+    for (const auto &controllerType : item.controllerTypes) {
+      controllerTypeIds.append(static_cast<int>(controllerType.id));
+    }
+    return controllerTypeIds;
+  }
   case ControllerImages: {
+    // Aligned 1:1 with ControllerTypeIds / ControllerTypeNames: index i is
+    // the image for controllerTypes[i]. Types without an image get an empty
+    // placeholder so callers can index via controllerTypeIds.indexOf(type)
+    // instead of assuming contiguous 1-based ids
     QStringList controllerImageUrls;
     for (const auto &controllerType : item.controllerTypes) {
-      if (controllerType.imageUrl.empty()) {
-        continue;
-      }
-      controllerImageUrls.append(
-          QString::fromStdString(controllerType.imageUrl));
+      controllerImageUrls.append(QString::fromStdString(controllerType.imageUrl));
     }
     return controllerImageUrls;
   }
@@ -59,35 +65,23 @@ QVariant PlatformListModel::data(const QModelIndex &index, int role) const {
 
 QHash<int, QByteArray> PlatformListModel::roleNames() const {
   QHash<int, QByteArray> roles;
-  roles[PlatformId] = "platform_id";
-  roles[DisplayName] = "display_name";
-  roles[IconName] = "icon_name";
-  roles[NumControllerTypes] = "num_controller_types";
-  roles[ControllerTypeNames] = "controller_type_names";
-  roles[ControllerImages] = "controller_images";
+  roles[PlatformId] = "platformId";
+  roles[DisplayName] = "displayName";
+  roles[IconName] = "iconName";
+  roles[NumControllerTypes] = "numControllerTypes";
+  roles[ControllerTypeNames] = "controllerTypeNames";
+  roles[ControllerTypeIds] = "controllerTypeIds";
+  roles[ControllerImages] = "controllerImages";
   return roles;
 }
 
-Q_INVOKABLE QString
-PlatformListModel::getPlatformIconName(int platformId) const {
+QString PlatformListModel::getPlatformDisplayName(int platformId) const {
   for (const auto &item : m_items) {
     if (item.id == platformId) {
-      // return item.iconName;
+      return QString::fromStdString(item.name);
     }
   }
 
   return {};
 }
-
-Q_INVOKABLE QString
-PlatformListModel::getPlatformDisplayName(int platformId) const {
-  for (const auto &item : m_items) {
-    if (item.id == platformId) {
-      // return item.displayName;
-    }
-  }
-
-  return {};
-}
-
 } // namespace firelight::gui

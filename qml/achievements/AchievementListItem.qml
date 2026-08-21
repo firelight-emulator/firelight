@@ -14,8 +14,6 @@ Pane {
             anchors.fill: parent
             color: paneHover.hovered ? "#323232" : "#292929"
             radius: 8
-            // border.color: model.earned ? "#cfa912" : "transparent"
-            // border.width: 2
         }
         Rectangle {
             anchors.fill: parent
@@ -32,10 +30,8 @@ Pane {
                     color: "#6c5312"
                     // color: "#7e7d7d"
                 }
-
             }
         }
-
     }
 
     HoverHandler {
@@ -45,7 +41,7 @@ Pane {
     TapHandler {
         acceptedButtons: Qt.RightButton
         onTapped: {
-            rightClickMenu.popup()
+            rightClickMenu.popup();
         }
     }
 
@@ -56,7 +52,7 @@ Pane {
             text: "Open at RetroAchievements.org"
             externalLink: true
             onTriggered: {
-                Qt.openUrlExternally("https://retroachievements.org/achievement/" + row.model.achievement_id)
+                Qt.openUrlExternally("https://retroachievements.org/achievement/" + row.model.achievement_id);
             }
         }
     }
@@ -81,8 +77,8 @@ Pane {
                 id: titleText
                 Layout.fillWidth: true
                 text: row.model.name
-                font.pointSize: 12
-                font.family: Constants.regularFontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
                 maximumLineCount: 2
@@ -94,8 +90,8 @@ Pane {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 text: row.model.description
-                font.pointSize: 11
-                font.family: Constants.regularFontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
+                font.family: AppStyle.fontFamily
                 wrapMode: Text.WordWrap
                 elide: Text.ElideRight
                 maximumLineCount: 3
@@ -107,7 +103,6 @@ Pane {
             Layout.fillHeight: true
             Layout.preferredWidth: 1
             color: row.model.earned ? "#aeaeae" : "#4c4c4c"
-
         }
         ColumnLayout {
             Layout.fillHeight: true
@@ -117,9 +112,9 @@ Pane {
 
             Text {
                 text: "Not earned"
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 visible: !row.model.earned
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 font.weight: Font.Normal
                 color: "#c1c1c1"
             }
@@ -127,8 +122,8 @@ Pane {
             Text {
                 text: "Earned on"
                 visible: row.model.earned
-                font.pointSize: 10
-                font.family: Constants.regularFontFamily
+                font.pixelSize: AppStyle.fontSizeSmall
+                font.family: AppStyle.fontFamily
                 font.weight: Font.Normal
                 color: "white"
             }
@@ -136,8 +131,8 @@ Pane {
             Text {
                 text: row.model.earned_date_hardcore
                 visible: row.model.earned
-                font.pointSize: 11
-                font.family: Constants.regularFontFamily
+                font.pixelSize: AppStyle.fontSizeMedium
+                font.family: AppStyle.fontFamily
                 font.weight: Font.DemiBold
                 color: "white"
             }
@@ -146,7 +141,7 @@ Pane {
         DetailsButton {
             Layout.alignment: Qt.AlignRight | Qt.AlignTop
             onClicked: function () {
-                rightClickMenu.popup()
+                rightClickMenu.popup();
             }
         }
     }

@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 import Firelight 1.0
 
 FirelightDialog {
@@ -25,20 +24,18 @@ FirelightDialog {
     signal mappingAdded(var original, var mapped)
 
     onAboutToShow: {
-        currentIndex = 0
-        numButtons = buttons.length
-        frameAnimation.reset()
+        currentIndex = 0;
+        numButtons = buttons.length;
+        frameAnimation.reset();
     }
 
     onOpened: function () {
-        timer.start()
-        console.log(dialog.buttons.length)
-        console.log(dialog.currentIndex)
+        timer.start();
     }
 
     onClosed: function () {
-        timer.stop()
-        dialog.buttons = []
+        timer.stop();
+        dialog.buttons = [];
     }
 
     Connections {
@@ -46,15 +43,15 @@ FirelightDialog {
         enabled: root.visible && !root.isKeyboard
         function onInputChanged(input, activated) {
             if (activated && root.canAcceptAxisInput) {
-                axisDebounceTimer.restart()
-                root.mappingAdded(root.buttons[root.currentIndex].retropad_button, input)
+                axisDebounceTimer.restart();
+                root.mappingAdded(root.buttons[root.currentIndex].retropad_button, input);
                 if (root.buttons.length > root.currentIndex + 1) {
-                    root.currentIndex++
-                    timer.stop()
-                    frameAnimation.reset()
-                    timer.restart()
+                    root.currentIndex++;
+                    timer.stop();
+                    frameAnimation.reset();
+                    timer.restart();
                 } else {
-                    root.accept()
+                    root.accept();
                 }
             }
         }
@@ -73,23 +70,23 @@ FirelightDialog {
 
         Keys.onPressed: function (event) {
             if (!root.visible || !root.isKeyboard || event.isAutoRepeat) {
-                event.accept = false
-                return
+                event.accept = false;
+                return;
             }
 
-            root.mappingAdded(root.buttons[root.currentIndex].retropad_button, event.key)
+            root.mappingAdded(root.buttons[root.currentIndex].retropad_button, event.key);
             if (root.buttons.length > root.currentIndex + 1) {
-                root.currentIndex++
-                timer.stop()
-                frameAnimation.reset()
-                timer.restart()
+                root.currentIndex++;
+                timer.stop();
+                frameAnimation.reset();
+                timer.restart();
             } else {
-                root.accept()
+                root.accept();
             }
         }
 
         Keys.onReleased: function (event) {
-            event.accept = false
+            event.accept = false;
         }
 
         Image {
@@ -104,31 +101,31 @@ FirelightDialog {
         Text {
             text: {
                 if (!root.isKeyboard) {
-                    return "Press a button on your controller to assign it to this " + platformList.currentItem.model.display_name + " input:"
+                    return "Press a button on your controller to assign it to this " + platformList.currentItem.model.display_name + " input:";
                 } else {
-                    return "Press a key on your keyboard to assign it to this " + platformList.currentItem.model.display_name + " input:"
+                    return "Press a key on your keyboard to assign it to this " + platformList.currentItem.model.display_name + " input:";
                 }
             }
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: parent.width * 5 / 6
 
-            color: "white"
-            font.family: Constants.regularFontFamily
+            color: Theme.textPrimary
+            font.family: AppStyle.fontFamily
             font.weight: Font.Normal
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            font.pixelSize: 18
+            font.pixelSize: AppStyle.fontSizeMedium
         }
 
         Text {
             text: root.visible ? root.numButtons > 0 && dialog.currentIndex < root.numButtons ? dialog.buttons[dialog.currentIndex].display_name : "Nothing" : "Nothing"
             wrapMode: Text.WordWrap
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            color: ColorPalette.neutral200
-            font.pixelSize: 20
+            color: Theme.textPrimary
+            font.pixelSize: AppStyle.fontSizeLarge
             font.weight: Font.Bold
-            font.family: Constants.regularFontFamily
+            font.family: AppStyle.fontFamily
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
@@ -139,7 +136,7 @@ FirelightDialog {
             running: false
             repeat: false
             onTriggered: {
-                dialog.reject()
+                dialog.reject();
                 // dialog.close()
                 // saveMapping()
             }
@@ -158,8 +155,5 @@ FirelightDialog {
             Layout.preferredHeight: 10
             color: "green"
         }
-
-
     }
-
 }

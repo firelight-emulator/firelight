@@ -1,63 +1,15 @@
 #include "gamepad_status_item.hpp"
 
-#include "input2/input_service.hpp"
+#include <firelight/input/input_service.hpp>
 
 namespace firelight::input {
 GamepadStatusItem::GamepadStatusItem(QQuickItem *parent) : QQuickItem(parent) {
   m_gamepadInputHandler =
-      EventDispatcher::instance().subscribe<GamepadInputEvent>(
-          [this](const GamepadInputEvent &event) {
-            if (event.playerIndex == m_playerNumber) {
-              emit inputChanged(event.input, event.pressed);
-            }
-          });
-  // auto controllerManager = getControllerManager();
-  //
-  // connect(controllerManager, &input::ControllerManager::controllerConnected,
-  //         this, [this](int playerNumber) {
-  //           if (playerNumber == m_playerNumber) {
-  //             m_controller =
-  //                 getControllerManager()
-  //                     ->getControllerForPlayerIndex(m_playerNumber - 1)
-  //                     .value_or(nullptr);
-  //             if (m_controller) {
-  //               m_name = QString::fromStdString(m_controller->getName());
-  //               emit nameChanged();
-  //               emit profileIdChanged();
-  //
-  //               m_isConnected = true;
-  //               emit isConnectedChanged();
-  //             } else {
-  //               m_isConnected = false;
-  //               emit isConnectedChanged();
-  //             }
-  //           }
-  //         });
-  // connect(controllerManager,
-  // &input::ControllerManager::controllerDisconnected,
-  //         this, [this](int playerNumber) {
-  //           if (playerNumber == m_playerNumber) {
-  //             m_controller = nullptr;
-  //             m_name.clear();
-  //             m_isConnected = false;
-  //             emit isConnectedChanged();
-  //             emit profileIdChanged();
-  //           }
-  //         });
-  // connect(controllerManager, &input::ControllerManager::buttonStateChanged,
-  //         this, [this](int playerNumber, int button, bool pressed) {
-  //           if (playerNumber == m_playerNumber) {
-  //             if (button == SDL_CONTROLLER_BUTTON_Y) {
-  //               if (pressed && !m_northFaceDown) {
-  //                 m_northFaceDown = true;
-  //                 emit northFaceDownChanged();
-  //               } else if (!pressed && m_northFaceDown) {
-  //                 m_northFaceDown = false;
-  //                 emit northFaceDownChanged();
-  //               }
-  //             }
-  //           }
-  //         });
+      EventDispatcher::instance().subscribe<GamepadInputEvent>([this](const GamepadInputEvent &event) {
+        if (event.playerIndex == m_playerNumber) {
+          emit inputChanged(event.input, event.pressed);
+        }
+      });
 }
 
 void GamepadStatusItem::setPlayerNumber(const int playerNumber) {
@@ -67,14 +19,16 @@ void GamepadStatusItem::setPlayerNumber(const int playerNumber) {
 
   m_playerNumber = playerNumber;
   m_controller = getInputService()->getPlayerGamepad(playerNumber).get();
-  if (m_controller != nullptr) {
-    if (!m_isConnected) {
-      m_isConnected = true;
-      emit isConnectedChanged();
-    }
+
+  // An empty slot is normal — asking about player 2 with one pad plugged in, or
+  // about any player with none
+  const bool connected = m_controller != nullptr;
+  if (m_isConnected != connected) {
+    m_isConnected = connected;
+    emit isConnectedChanged();
   }
 
-  m_name = QString::fromStdString(m_controller->getName());
+  m_name = connected ? QString::fromStdString(m_controller->getName()) : QString();
   emit nameChanged();
 
   emit profileIdChanged();
@@ -107,33 +61,25 @@ QVariantMap GamepadStatusItem::getInputLabels() const {
       {QString::number(libretro::IRetroPad::Input::DpadLeft), "D-Pad Left"},
       {QString::number(libretro::IRetroPad::Input::DpadRight), "D-Pad Right"},
       {QString::number(libretro::IRetroPad::Input::DpadUp), "D-Pad Up"},
-      {QString::number(libretro::IRetroPad::Input::LeftStickLeft),
-       "Left Stick Left"},
-      {QString::number(libretro::IRetroPad::Input::LeftStickRight),
-       "Left Stick Right"},
-      {QString::number(libretro::IRetroPad::Input::LeftStickUp),
-       "Left Stick Up"},
-      {QString::number(libretro::IRetroPad::Input::LeftStickDown),
-       "Left Stick Down"},
-      {QString::number(libretro::IRetroPad::Input::RightStickLeft),
-       "Right Stick Left"},
-      {QString::number(libretro::IRetroPad::Input::RightStickRight),
-       "Right Stick Right"},
-      {QString::number(libretro::IRetroPad::Input::RightStickUp),
-       "Right Stick Up"},
-      {QString::number(libretro::IRetroPad::Input::RightStickDown),
-       "Right Stick Down"},
+      {QString::number(libretro::IRetroPad::Input::LeftStickLeft), "Left Stick Left"},
+      {QString::number(libretro::IRetroPad::Input::LeftStickRight), "Left Stick Right"},
+      {QString::number(libretro::IRetroPad::Input::LeftStickUp), "Left Stick Up"},
+      {QString::number(libretro::IRetroPad::Input::LeftStickDown), "Left Stick Down"},
+      {QString::number(libretro::IRetroPad::Input::RightStickLeft), "Right Stick Left"},
+      {QString::number(libretro::IRetroPad::Input::RightStickRight), "Right Stick Right"},
+      {QString::number(libretro::IRetroPad::Input::RightStickUp), "Right Stick Up"},
+      {QString::number(libretro::IRetroPad::Input::RightStickDown), "Right Stick Down"},
   };
 }
 
 int GamepadStatusItem::getProfileId() const {
-  if (m_isConnected) {
-    return m_controller->getProfile()->getId();
+  if (!m_controller) {
+    return 0;
   }
-
-  return 0;
-  // return m_controller->getProfileId();
+  const auto profile = m_controller->getProfile();
+  return profile ? profile->getId() : 0;
 }
+
 bool GamepadStatusItem::isButtonPressed(int input) const {
   if (!m_controller) {
     return false;
@@ -142,4 +88,5 @@ bool GamepadStatusItem::isButtonPressed(int input) const {
   return m_controller->evaluateRawInput(static_cast<GamepadInput>(input));
 }
 } // namespace firelight::input
+
 // firelight

@@ -4,16 +4,10 @@ import QtQuick.Layouts
 
 FocusScope {
     id: myDelegate
-    //
-    // signal startGame(entryId: int)
-    //
-    // signal openDetails(entryId: int)
-    //
-    // signal manageSaveData(entryId: int)
 
-    signal doTheThing()
+    signal doTheThing
 
-    signal click()
+    signal click
 
     required property var index
     required property var model
@@ -34,7 +28,7 @@ FocusScope {
         focus: true
 
         onClicked: function () {
-            myDelegate.doTheThing()
+            myDelegate.doTheThing();
         }
 
         hoverEnabled: false
@@ -54,13 +48,12 @@ FocusScope {
                 fillMode: Image.Stretch
 
                 source: myDelegate.model.capsule_image_url
-
             }
             Text {
                 text: myDelegate.model.title
-                font.pointSize: 11
+                font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Bold
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 color: "white"
                 Layout.fillWidth: true
                 leftPadding: 4
@@ -72,9 +65,9 @@ FocusScope {
             Text {
                 // text: myDelegate.model.platform_name
                 text: myDelegate.model.target_game_name + " (" + myDelegate.model.platform_name + ")"
-                font.pointSize: 10
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.Medium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 leftPadding: 4
                 color: "#C2BBBB"
                 Layout.fillWidth: true
@@ -84,25 +77,15 @@ FocusScope {
             Text {
                 // text: myDelegate.model.platform_name
                 text: "by " + myDelegate.model.creator_name
-                font.pointSize: 10
+                font.pixelSize: AppStyle.fontSizeSmall
                 font.weight: Font.Medium
-                font.family: Constants.regularFontFamily
+                font.family: AppStyle.fontFamily
                 leftPadding: 4
                 color: "#C2BBBB"
                 Layout.fillWidth: true
                 // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
             }
 
-            // Text {
-            //     text: "Mario Kart 64 (Nintendo 64)"
-            //     font.pointSize: 10
-            //     font.weight: Font.Medium
-            //     font.family: Constants.regularFontFamily
-            //     leftPadding: 4
-            //     color: "#C2BBBB"
-            //     Layout.fillWidth: true
-            //     // Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
-            // }
             Item {
                 Layout.fillHeight: true
                 Layout.fillWidth: true

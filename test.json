@@ -1,0 +1,529 @@
+{
+  "id": 262307,
+  "name": "Final Fantasy VII",
+  "platform": {
+    "name": "Sony PlayStation",
+    "metadata": [
+      {
+        "objectType": "Platform",
+        "id": "7",
+        "immutableId": "7",
+        "status": "Mapped",
+        "matchMethod": "ManualByAdmin",
+        "source": "IGDB",
+        "link": "https://www.igdb.com/platforms/ps",
+        "lastSearch": "2024-04-29T11:18:44",
+        "nextSearch": "2024-05-29T11:18:44",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      },
+      {
+        "objectType": "Platform",
+        "id": "10",
+        "immutableId": "10",
+        "status": "Mapped",
+        "matchMethod": "ManualByAdmin",
+        "source": "TheGamesDb",
+        "link": "https://thegamesdb.net/platform.php?id=10",
+        "lastSearch": "2024-12-12T01:25:31",
+        "nextSearch": "2025-01-12T01:25:31",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      },
+      {
+        "objectType": "Platform",
+        "id": "12",
+        "immutableId": "12",
+        "status": "Mapped",
+        "matchMethod": "ManualByAdmin",
+        "source": "RetroAchievements",
+        "link": "https://retroachievements.org/system/12/games",
+        "lastSearch": "2025-05-06T21:46:00",
+        "nextSearch": "2025-06-06T21:46:00",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      },
+      {
+        "objectType": "Platform",
+        "id": "22",
+        "immutableId": "22",
+        "status": "Mapped",
+        "matchMethod": "ManualByAdmin",
+        "source": "GiantBomb",
+        "link": "https://www.giantbomb.com/platforms/3045-22/",
+        "lastSearch": "2025-06-20T15:32:12",
+        "nextSearch": "2025-07-20T15:32:12",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      },
+      {
+        "objectType": "Platform",
+        "id": "",
+        "immutableId": "",
+        "status": "NotMapped",
+        "matchMethod": "NoMatch",
+        "source": "Steam",
+        "link": "",
+        "lastSearch": "2026-05-09T13:20:30",
+        "nextSearch": "2026-10-30T13:20:30",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      },
+      {
+        "objectType": "Platform",
+        "id": "",
+        "immutableId": "",
+        "status": "NotMapped",
+        "matchMethod": "NoMatch",
+        "source": "GOG",
+        "link": "",
+        "lastSearch": "2026-05-09T13:20:30",
+        "nextSearch": "2026-10-30T13:20:30",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      },
+      {
+        "objectType": "Platform",
+        "id": "",
+        "immutableId": "",
+        "status": "NotMapped",
+        "matchMethod": "NoMatch",
+        "source": "EpicGameStore",
+        "link": "",
+        "lastSearch": "2026-05-09T13:20:30",
+        "nextSearch": "2026-10-30T13:20:30",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      },
+      {
+        "objectType": "Platform",
+        "id": "https://en.wikipedia.org/wiki/PlayStation_(console)",
+        "immutableId": "https://en.wikipedia.org/wiki/PlayStation_(console)",
+        "status": "Mapped",
+        "matchMethod": "ManualByAdmin",
+        "source": "Wikipedia",
+        "link": "https://en.wikipedia.org/wiki/PlayStation_(console)",
+        "lastSearch": "2025-12-21T10:28:07",
+        "nextSearch": "2026-01-21T10:28:07",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      },
+      {
+        "objectType": "Platform",
+        "id": "5327251",
+        "immutableId": "5327251",
+        "status": "Mapped",
+        "matchMethod": "Automatic",
+        "source": "SteamGridDb",
+        "link": "https://www.steamgriddb.com/game/5327251",
+        "lastSearch": "2026-05-09T13:20:30",
+        "nextSearch": "2027-02-02T13:20:30",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      },
+      {
+        "objectType": "Platform",
+        "id": "57",
+        "immutableId": "57",
+        "status": "Mapped",
+        "matchMethod": "Automatic",
+        "source": "ScreenScraper",
+        "link": "https://www.screenscraper.fr/systemeinfos.php?plateforme=57",
+        "lastSearch": "2026-05-09T13:20:30",
+        "nextSearch": "2027-02-02T13:20:30",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      },
+      {
+        "objectType": "Platform",
+        "id": "47-sony-playstation",
+        "immutableId": "47-sony-playstation",
+        "status": "Mapped",
+        "matchMethod": "ManualByAdmin",
+        "source": "LaunchBox",
+        "link": "https://gamesdb.launchbox-app.com/platforms/games/47-sony-playstation",
+        "lastSearch": "2026-02-24T09:49:32",
+        "nextSearch": "2026-04-24T09:49:32",
+        "winningVoteCount": 0,
+        "totalVoteCount": 0,
+        "winningVotePercent": 0
+      }
+    ]
+  },
+  "signature": {
+    "game": {
+      "countries": {
+        "DE": "Germany",
+        "ES": "Spain",
+        "EU": "Europe",
+        "FR": "France",
+        "JP": "Japan",
+        "US": "United States"
+      },
+      "languages": {},
+      "systemId": 691,
+      "publisherId": 0,
+      "metadataSource": 5,
+      "score": 23,
+      "id": "598177",
+      "category": "Games",
+      "name": "Final Fantasy VII",
+      "sortingName": "Final Fantasy VII (DE, ES, EU, FR, JP, US)",
+      "description": "Final Fantasy VII",
+      "year": "",
+      "publisher": "",
+      "demo": "NotDemo",
+      "system": "Sony - PlayStation",
+      "systemVariant": "",
+      "video": "",
+      "country": {
+        "DE": "Germany",
+        "ES": "Spain",
+        "EU": "Europe",
+        "FR": "France",
+        "JP": "Japan",
+        "US": "United States"
+      },
+      "language": {},
+      "copyright": "",
+      "roms": [],
+      "flags": {},
+      "romCount": 0
+    },
+    "rom": {
+      "score": 33,
+      "id": "2354506",
+      "name": "Final Fantasy VII (USA) (Disc 1).bin",
+      "size": 747435024,
+      "crc": "1459cbef",
+      "md5": "cce4e76d020b47847fe8e2f81ff613db",
+      "sha1": "1f890164ac4daeba07def64bb5b636bfaa1d3ab9",
+      "sha256": "",
+      "status": "",
+      "country": {
+        "US": "United States"
+      },
+      "language": {},
+      "developmentStatus": "",
+      "attributes": {
+        "serial": "SCUS-94163"
+      },
+      "romType": "Disc",
+      "romTypeMedia": "Disc 1",
+      "mediaDetail": {
+        "media": "Disc",
+        "number": 1
+      },
+      "mediaLabel": "",
+      "signatureSource": "Redump"
+    }
+  },
+  "metadata": [
+    {
+      "objectType": "Game",
+      "id": "427",
+      "immutableId": "427",
+      "status": "Mapped",
+      "matchMethod": "Automatic",
+      "source": "IGDB",
+      "link": "https://www.igdb.com/games/final-fantasy-vii",
+      "lastSearch": "2025-07-21T09:24:19",
+      "nextSearch": "2026-09-19T01:58:26",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    },
+    {
+      "objectType": "Game",
+      "id": "525",
+      "immutableId": "525",
+      "status": "Mapped",
+      "matchMethod": "Automatic",
+      "source": "TheGamesDb",
+      "link": "https://thegamesdb.net/game.php?id=525",
+      "lastSearch": "2025-07-21T09:24:20",
+      "nextSearch": "2026-09-19T01:58:26",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    },
+    {
+      "objectType": "Game",
+      "id": "11242",
+      "immutableId": "11242",
+      "status": "Mapped",
+      "matchMethod": "Automatic",
+      "source": "RetroAchievements",
+      "link": "https://retroachievements.org/game/11242",
+      "lastSearch": "2025-07-21T09:24:20",
+      "nextSearch": "2026-09-19T01:58:26",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    },
+    {
+      "objectType": "Game",
+      "id": "13053",
+      "immutableId": "13053",
+      "status": "Mapped",
+      "matchMethod": "Automatic",
+      "source": "GiantBomb",
+      "link": "https://www.giantbomb.com/games/3030-13053/",
+      "lastSearch": "2025-07-21T09:24:20",
+      "nextSearch": "2026-09-19T01:58:26",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    },
+    {
+      "objectType": "Game",
+      "id": "",
+      "immutableId": "",
+      "status": "NotMapped",
+      "matchMethod": "NoMatch",
+      "source": "Steam",
+      "link": "",
+      "lastSearch": "2025-07-21T09:24:26",
+      "nextSearch": "2026-06-12T01:58:26",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    },
+    {
+      "objectType": "Game",
+      "id": "",
+      "immutableId": "",
+      "status": "NotMapped",
+      "matchMethod": "NoMatch",
+      "source": "GOG",
+      "link": "",
+      "lastSearch": "2025-07-21T09:24:26",
+      "nextSearch": "2026-06-12T01:58:26",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    },
+    {
+      "objectType": "Game",
+      "id": "",
+      "immutableId": "",
+      "status": "NotMapped",
+      "matchMethod": "NoMatch",
+      "source": "EpicGameStore",
+      "link": "",
+      "lastSearch": "2025-07-21T09:24:26",
+      "nextSearch": "2026-06-12T01:58:26",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    },
+    {
+      "objectType": "Game",
+      "id": "https://en.wikipedia.org/wiki/Final_Fantasy_VII",
+      "immutableId": "https://en.wikipedia.org/wiki/Final_Fantasy_VII",
+      "status": "Mapped",
+      "matchMethod": "Automatic",
+      "source": "Wikipedia",
+      "link": "https://en.wikipedia.org/wiki/Final_Fantasy_VII",
+      "lastSearch": "2025-07-21T09:24:26",
+      "nextSearch": "2026-07-28T01:58:26",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    },
+    {
+      "objectType": "Game",
+      "id": "",
+      "immutableId": "",
+      "status": "NotMapped",
+      "matchMethod": "NoMatch",
+      "source": "SteamGridDb",
+      "link": "",
+      "lastSearch": "2025-04-23T17:10:31",
+      "nextSearch": "2026-06-12T01:58:26",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    },
+    {
+      "objectType": "Game",
+      "id": "",
+      "immutableId": "",
+      "status": "NotMapped",
+      "matchMethod": "NoMatch",
+      "source": "ScreenScraper",
+      "link": "",
+      "lastSearch": "2026-01-03T13:25:17",
+      "nextSearch": "2026-03-03T13:25:17",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    },
+    {
+      "objectType": "Game",
+      "id": "",
+      "immutableId": "",
+      "status": "NotMapped",
+      "matchMethod": "NoMatch",
+      "source": "LaunchBox",
+      "link": "",
+      "lastSearch": "2026-02-24T14:32:10",
+      "nextSearch": "2026-04-24T14:32:10",
+      "winningVoteCount": 0,
+      "totalVoteCount": 0,
+      "winningVotePercent": 0
+    }
+  ],
+  "attributes": [
+    {
+      "id": 877033,
+      "attributeType": "LongString",
+      "attributeName": "AIDescription",
+      "attributeRelationType": "None",
+      "value": "Final Fantasy VII redefined console role-playing games with its groundbreaking 3D graphics and compelling narrative. Players assume the role of Cloud Strife, a mercenary embroiled in a conflict against the powerful Shinra Corporation, which is draining the planet's life force, known as Mako. Alongside a diverse party of allies, including the skilled fighter Tifa Lockhart and the enigmatic Aerith Gainsborough, Cloud joins AVALANCHE, an eco-terrorist group fighting to stop Shinra’s destructive practices.\n\nThe game seamlessly blends exploration with strategic, turn-based battles utilizing the Active Time Battle (ATB) system. A unique Materia system allows for extensive character customization, granting new abilities, spells, and statistical boosts. Players navigate a vast world, traversing environments via vehicles and chocobos, uncovering secrets, and engaging in memorable event games. The game’s narrative explores themes of environmentalism, identity, and loss, culminating in a deeply emotional and impactful storyline, including a pivotal character death that remains iconic in gaming history. Final Fantasy VII offers a rich, immersive experience that set a new standard for the RPG genre."
+    },
+    {
+      "attributeType": "ImageAttribution",
+      "attributeName": "LogoAttribution",
+      "attributeRelationType": "None",
+      "value": "IGDB"
+    },
+    {
+      "link": "/api/v1/images/B8F22DB8077DCF046D19143FEDE8B46E0F160402",
+      "id": 508379,
+      "attributeType": "ImageId",
+      "attributeName": "Logo",
+      "attributeRelationType": "None",
+      "value": "B8F22DB8077DCF046D19143FEDE8B46E0F160402"
+    },
+    {
+      "attributeType": "LongString",
+      "attributeName": "SearchAliases",
+      "attributeRelationType": "None",
+      "value": "Final Fantasy VII, Final-Fantasy-VII, Final Fantasy 7, Final-Fantasy-7, Final Fantasy Seven, Final-Fantasy-Seven"
+    },
+    {
+      "attributeType": "EmbeddedList",
+      "attributeName": "Tags",
+      "attributeRelationType": "None",
+      "value": {
+        "GameGenre": {
+          "Type": 0,
+          "Tags": [
+            {
+              "Id": 976,
+              "Text": "action-adventure",
+              "AIGenerated": true
+            },
+            {
+              "Id": 1296,
+              "Text": "fantasy",
+              "AIGenerated": true
+            },
+            {
+              "Id": 1773,
+              "Text": "role-playing",
+              "AIGenerated": true
+            }
+          ]
+        },
+        "GameFeature": {
+          "Type": 2,
+          "Tags": [
+            {
+              "Id": 27297,
+              "Text": "cinematic storytelling",
+              "AIGenerated": true
+            },
+            {
+              "Id": 40238,
+              "Text": "multiple discs",
+              "AIGenerated": true
+            },
+            {
+              "Id": 35112,
+              "Text": "pre-rendered cutscenes",
+              "AIGenerated": true
+            }
+          ]
+        },
+        "GameTheme": {
+          "Type": 3,
+          "Tags": [
+            {
+              "Id": 9088,
+              "Text": "corporate corruption",
+              "AIGenerated": true
+            },
+            {
+              "Id": 44159,
+              "Text": "eco-terrorism",
+              "AIGenerated": true
+            },
+            {
+              "Id": 5912,
+              "Text": "environmentalism",
+              "AIGenerated": true
+            }
+          ]
+        },
+        "GamePerspective": {
+          "Type": 4,
+          "Tags": [
+            {
+              "Id": 887,
+              "Text": "isometric",
+              "AIGenerated": true
+            },
+            {
+              "Id": 813,
+              "Text": "overhead",
+              "AIGenerated": true
+            },
+            {
+              "Id": 799,
+              "Text": "third-person",
+              "AIGenerated": true
+            }
+          ]
+        },
+        "GameGameplay": {
+          "Type": 1,
+          "Tags": [
+            {
+              "Id": 44158,
+              "Text": "materia system",
+              "AIGenerated": true
+            },
+            {
+              "Id": 1254,
+              "Text": "party system",
+              "AIGenerated": true
+            },
+            {
+              "Id": 1004,
+              "Text": "turn-based combat",
+              "AIGenerated": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "attributeType": "ShortString",
+      "attributeName": "Language",
+      "attributeRelationType": "None",
+      "value": "German, English, Spanish, French, Japanese"
+    }
+  ]
+}

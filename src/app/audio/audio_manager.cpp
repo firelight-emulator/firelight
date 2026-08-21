@@ -1,312 +1,294 @@
 #include "audio_manager.hpp"
 
+#include "audio_device_selection.hpp"
+
+#include <cstring>
 #include <spdlog/spdlog.h>
 
-extern "C" {
-#include <libswresample/swresample.h>
+namespace {
+// How long to wait between attempts at rebuilding a lost output, doubling up to the cap so one
+// that is simply gone is not retried on every frame
+constexpr int REOPEN_DELAY_MS = 250;
+constexpr int MAX_REOPEN_BACKOFF_MS = 10000;
+} // namespace
+
+QAudioDevice AudioManager::selectedOutputDevice() const {
+  return firelight::audio::selectOutputDevice(m_settingsService);
 }
 
-void AudioManager::initializeResampler(int64_t in_channel_layout,
-                                       int in_sample_rate,
-                                       enum AVSampleFormat in_sample_fmt,
-                                       int64_t out_channel_layout,
-                                       int out_sample_rate,
-                                       AVSampleFormat out_sample_fmt) {
-  m_swrContext = swr_alloc();
-
-  av_channel_layout_default(m_channelLayout, 2);
-  char thing[256];
-
-  av_channel_layout_describe(m_channelLayout, thing, sizeof(thing));
-
-  // Set options for input and output
-  // av_opt_set_int(m_swrContext, "in_channel_layout", in_channel_layout, 0);
-  av_opt_set_chlayout(m_swrContext, "ichl", m_channelLayout, 0);
-  av_opt_set_int(m_swrContext, "in_sample_rate", in_sample_rate, 0);
-  av_opt_set_sample_fmt(m_swrContext, "in_sample_fmt", in_sample_fmt, 0);
-
-  av_opt_set_chlayout(m_swrContext, "ochl", m_channelLayout, 0);
-  av_opt_set_int(m_swrContext, "out_sample_rate", out_sample_rate, 0);
-  av_opt_set_sample_fmt(m_swrContext, "out_sample_fmt", out_sample_fmt, 0);
-
-  if (const int returnCode = swr_init(m_swrContext) < 0) {
-    spdlog::error("Failed to initialize the resampling context: {}",
-                  av_err2str(returnCode));
-    swr_free(&m_swrContext);
-  }
-}
-
-AudioManager::AudioManager(std::function<void()> onAudioBufferLevelChanged)
-    : m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
-  m_elapsedTimer.start();
-
+AudioManager::AudioManager(firelight::settings::SettingsService &settingsService,
+                           std::function<void()> onAudioBufferLevelChanged)
+    : m_settingsService(settingsService), m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
   m_mediaDevices = new QMediaDevices(this);
-  connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this,
-          &AudioManager::onAudioDevicesChanged);
+  connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this, &AudioManager::onAudioDevicesChanged);
+
+  m_reopenBackoffMs = REOPEN_DELAY_MS;
+
+  refreshUserMuted();
+  refreshVolume();
+
+  // Picking a different output (or muting, or moving the slider) applies
+  // straight away, the same as the device list changing under us
+  const auto onKey = [this](const std::string &key) {
+    if (key == OUTPUT_DEVICE_KEY) {
+      reinitializeAudioDevice();
+    } else if (key == MUTED_KEY) {
+      refreshUserMuted();
+    } else if (key == VOLUME_KEY) {
+      refreshVolume();
+    }
+  };
+  m_settingChangedConnection = EventDispatcher::instance().subscribe<firelight::settings::GlobalSettingChangedEvent>(
+      [onKey](const firelight::settings::GlobalSettingChangedEvent &e) { onKey(e.key); });
+  m_settingResetConnection = EventDispatcher::instance().subscribe<firelight::settings::GlobalSettingResetEvent>(
+      [onKey](const firelight::settings::GlobalSettingResetEvent &e) { onKey(e.key); });
+}
+
+void AudioManager::refreshUserMuted() {
+  m_userMuted = m_settingsService.getGlobalValue(MUTED_KEY).value_or("false") == "true";
+}
+
+void AudioManager::refreshVolume() {
+  auto percent = 100;
+  try {
+    percent = std::stoi(m_settingsService.getGlobalValue(VOLUME_KEY).value_or("100"));
+  } catch (const std::exception &) {
+    percent = 100; // missing or non-numeric -> full, not silent
+  }
+  m_volume = std::clamp(percent, 0, 100) / 100.0f;
+
+  std::lock_guard lock(m_sinkMutex);
+  if (m_audioSink) {
+    // Perceptual, not linear: halfway along the slider should sound halfway,
+    // and a linear 0.5 doesn't
+    m_audioSink->setVolume(
+        QtAudio::convertVolume(m_volume.load(), QtAudio::LogarithmicVolumeScale, QtAudio::LinearVolumeScale));
+  }
 }
 
 size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
-  // TODO: REALLY BAD SOLUTION for mupen sometimes sending very small number of
-  // frames
-  if (numFrames < 30) {
+  if (numFrames == 0) {
     return numFrames;
   }
 
-  m_numSamples += numFrames;
-  if (m_elapsedTimer.elapsed() > 1000) {
-    m_elapsedTimer.restart();
-    m_numSamples = 0;
-  }
+  // Note: we run this path even when muted (writing silence below) so the audio
+  // buffer keeps draining at the device rate — the "audio" sync method paces the
+  // emulation off this buffer's occupancy and must not stall when muted
+  std::lock_guard lock(m_sinkMutex);
 
-  if (!m_isMuted && m_audioDevice && m_audioSink) { // Added m_audioSink check
+  // Checked here rather than from the sink's own signal: this object lives on the render thread,
+  // and receive() is the one thing guaranteed to run there
+  recoverFromDeviceLoss();
+
+  if (m_audioDevice && isSinkWritable()) {
     const auto bufferTotalCapacity = m_audioSink->bufferSize();
-    if (bufferTotalCapacity == 0)
+    if (bufferTotalCapacity == 0) {
       return numFrames; // Avoid division by zero
+    }
 
     const auto usedBytes = bufferTotalCapacity - m_audioSink->bytesFree();
-    m_currentBufferLevel = static_cast<float>(usedBytes) / bufferTotalCapacity;
-    if (m_onAudioBufferLevelChanged) {
-      m_onAudioBufferLevelChanged();
-    }
 
-    // --- Moving Average Calculation for Buffer Usage ---
-    static constexpr int AVG_WINDOW_SIZE =
-        10; // Number of observations to average over
-    static int avg_buffer_usage_bytes[AVG_WINDOW_SIZE] =
-        {}; // Circular buffer for past buffer usages (bytes)
-    static int avg_buffer_idx = 0;
-    static int avg_buffer_populated_count =
-        0; // To correctly average when buffer isn't full yet
-    static double previous_avg_fill_ratio =
-        -1.0; // Previous cycle's average fill ratio, -1.0 indicates
-              // uninitialized
-
-    // Insert the current usedBytes into the circular buffer
-    avg_buffer_usage_bytes[avg_buffer_idx] = usedBytes;
-    avg_buffer_idx = (avg_buffer_idx + 1) % AVG_WINDOW_SIZE;
-
-    if (avg_buffer_populated_count < AVG_WINDOW_SIZE) {
-      avg_buffer_populated_count++;
-    }
-
-    long long sum_used_bytes =
-        0; // Use long long for sum to avoid overflow if usedBytes can be large
-    for (int i = 0; i < avg_buffer_populated_count; ++i) {
-      sum_used_bytes += avg_buffer_usage_bytes[i];
-    }
-    const double current_average_used_bytes =
-        static_cast<double>(sum_used_bytes) / avg_buffer_populated_count;
-    const double current_avg_fill_ratio =
-        current_average_used_bytes / bufferTotalCapacity;
-
-    // --- Trend Analysis & Resampling Decision ---
-    const double TARGET_FILL_RATIO = 0.5;
-    const double TARGET_FILL_BYTES = bufferTotalCapacity * TARGET_FILL_RATIO;
-
-    // Deviation of current average from target
-    double bufferDeviation =
-        (current_average_used_bytes - TARGET_FILL_BYTES) / TARGET_FILL_BYTES;
-
-    int delta = 0; // Default to no compensation
-    bool allowResamplingAdjustment = true;
-
-    // Only perform trend analysis if we have a stable previous average
-    if (previous_avg_fill_ratio >= 0.0 &&
-        avg_buffer_populated_count == AVG_WINDOW_SIZE) {
-      const double current_error_ratio =
-          current_avg_fill_ratio - TARGET_FILL_RATIO;
-      const double previous_error_ratio =
-          previous_avg_fill_ratio - TARGET_FILL_RATIO;
-
-      const double WITHIN_TARGET_TOLERANCE_RATIO = 0.05; // e.g., 45%-55% fill
-      const double EXTREME_DEVIATION_THRESHOLD_RATIO =
-          0.25; // e.g., <25% or >75% fill
-
-      bool isTrendingWell =
-          (std::abs(current_error_ratio) < std::abs(previous_error_ratio));
-      bool isNearTarget =
-          (std::abs(current_error_ratio) <= WITHIN_TARGET_TOLERANCE_RATIO);
-      bool isExtremelyDeviated =
-          (std::abs(current_error_ratio) > EXTREME_DEVIATION_THRESHOLD_RATIO);
-
-      if (isNearTarget) {
-        allowResamplingAdjustment =
-            false; // Already close to target, no need to intervene
-        // spdlog::debug("Buffer near target ({:.2f}%), no resampling.",
-        // current_avg_fill_ratio * 100);
-      } else if (isTrendingWell && !isExtremelyDeviated) {
-        allowResamplingAdjustment =
-            false; // Trending correctly and not in an extreme state
-        // spdlog::debug("Buffer trending well ({:.2f}%), error reducing, no
-        // resampling.", current_avg_fill_ratio * 100);
+    // Only while the reading means something: outside those states bytesFree() answers zero, which
+    // would publish a permanently full buffer and stall whatever is pacing off it
+    if (isSinkMeasurable()) {
+      m_currentBufferLevel = static_cast<float>(usedBytes) / bufferTotalCapacity;
+      if (m_onAudioBufferLevelChanged) {
+        m_onAudioBufferLevelChanged();
       }
-      // Else, allowResamplingAdjustment remains true (either not trending well,
-      // or trending well but still extremely deviated)
     }
 
-    // Update previous average fill ratio for the next call,
-    // only after the circular buffer is fully populated for consistent average
-    // comparison.
-    if (avg_buffer_populated_count == AVG_WINDOW_SIZE) {
-      previous_avg_fill_ratio = current_avg_fill_ratio;
+    // Steer the buffer toward ~50% full by nudging the resample rate, unless the
+    // user has disabled Dynamic Rate Control (advanced setting)
+    const int delta = m_drcEnabled.load() ? m_rateController.computeCompensation(static_cast<int>(usedBytes),
+                                                                                 static_cast<int>(bufferTotalCapacity))
+                                          : 0;
+
+    std::vector<int16_t> output = m_resampler.process(data, numFrames, delta);
+    if (output.empty()) {
+      return numFrames; // input consumed, nothing produced this call
     }
 
-    if (allowResamplingAdjustment) {
-      // Calculate delta based on current buffer deviation
-      // This is your existing logic for determining delta
-      if (bufferDeviation > 0.6) { // >80% full (target is 50%)
-        delta = -5;
-      } else if (bufferDeviation > 0.3) { // >65%
-        delta = -4;
-      } else if (bufferDeviation > 0.1) { // >55%
-        delta = -3;
-      } else if (bufferDeviation > -0.1) { // 45%-55% (This will be overridden
-                                           // by isNearTarget usually)
-        delta = 0;
-      } else if (bufferDeviation > -0.3) { // 35%-45%
-        // Original logic had delta = 0 here. If buffer is consistently too low
-        // and not trending up, we might want to add samples.
-        // Consider if this should be delta = 1 or if deadband is intentional.
-        // For now, keeping original logic unless overridden by trend:
-        delta = 0; // Maintained original logic for this band if adjustment is
-                   // allowed but if it's stuck here and not trending well, this
-                   // might need to be positive. However, the
-                   // EXTREME_DEVIATION_THRESHOLD_RATIO for allowing adjustment
-                   // helps.
-      } else if (bufferDeviation > -0.6) { // 20%-35%
-        delta = 1;
-      } else { // <20%
-        delta = 2;
+    if (m_isMuted || m_userMuted) {
+      // Keep the buffer flowing (for pacing) but play silence
+      std::memset(output.data(), 0, output.size() * sizeof(int16_t));
+    }
+    m_audioDevice->write(reinterpret_cast<const char *>(output.data()),
+                         output.size() * sizeof(int16_t)); // stereo, s16
+
+    // Once we've pre-buffered ~half the sink, begin playback. Writes above fill
+    // the sink while it's suspended, so playback starts from a healthy buffer
+    if (m_priming) {
+      const auto filled = bufferTotalCapacity - m_audioSink->bytesFree();
+      if (filled >= bufferTotalCapacity / 2) {
+        m_audioSink->resume();
+        m_priming = false;
       }
-      // spdlog::debug("Resampling allowed. BufferDev: {:.2f}, Delta: {}",
-      // bufferDeviation, delta);
-    } else {
-      delta = 0; // Trend is good or near target, so force no compensation
     }
-
-    // Apply resampling if delta is non-zero OR if numFrames is large (original
-    // condition)
-    if (numFrames > 300 || delta != 0) {
-      swr_set_compensation(m_swrContext, delta, numFrames);
-    }
-
-    const int max_output_samples = swr_get_out_samples(m_swrContext, numFrames);
-    if (max_output_samples < 0) {
-      spdlog::error("Error calculating maximum output samples: {}",
-                    av_err2str(max_output_samples));
-      // av_freep(&outputBuffer[0]); // This would be an error, outputBuffer not
-      // allocated yet
-      return 0; // Or handle error appropriately
-    }
-    if (max_output_samples == 0 && numFrames > 0) {
-      // This can happen if delta causes all samples to be dropped.
-      // Or if numFrames is very small and context cannot produce output.
-      // No data to write, but not necessarily an error if intended.
-      // spdlog::debug("Max output samples is 0 for numFrames: {}", numFrames);
-      return numFrames; // Input consumed, no output produced.
-    }
-
-    uint8_t *outputBuffer[2] = {nullptr, nullptr}; // Initialize to nullptr
-    // Assuming stereo (2 channels), AV_SAMPLE_FMT_S16
-    if (av_samples_alloc(outputBuffer, NULL, 2, max_output_samples,
-                         AV_SAMPLE_FMT_S16, 0) < 0) {
-      spdlog::error("Failed to allocate output buffer for resampling.");
-      return 0;
-    }
-
-    const int output_samples =
-        swr_convert(m_swrContext, outputBuffer, max_output_samples,
-                    (const uint8_t **)&data, numFrames);
-
-    if (output_samples < 0) {
-      spdlog::error("Error during swr_convert: {}", av_err2str(output_samples));
-      av_freep(&outputBuffer[0]);
-      return 0; // Or handle error
-    }
-
-    if (output_samples > 0 && m_audioDevice) {
-      m_audioDevice->write(reinterpret_cast<char *>(outputBuffer[0]),
-                           output_samples * 2 * sizeof(int16_t)); // stereo, s16
-    }
-
-    av_freep(&outputBuffer[0]); // Frees the entire buffer allocated by
-                                // av_samples_alloc
   }
 
-  return numFrames; // Return original number of frames consumed
+  return numFrames;
 }
 
-void AudioManager::initialize(const double new_freq) {
-  m_sampleRate = new_freq;
-  initializeResampler(AV_CH_LAYOUT_STEREO, m_sampleRate, AV_SAMPLE_FMT_S16,
-                      AV_CH_LAYOUT_STEREO, m_sampleRate, AV_SAMPLE_FMT_S16);
+// Callers (initialize / reinitializeAudioDevice) hold m_sinkMutex
+void AudioManager::openAudioSink() {
+  const QAudioDevice dev = selectedOutputDevice();
+
+  int deviceRate = dev.preferredFormat().sampleRate();
+  if (deviceRate <= 0) {
+    deviceRate = m_sampleRate;
+  }
 
   QAudioFormat format;
   format.setChannelCount(2);
   format.setSampleFormat(QAudioFormat::Int16);
-  format.setSampleRate(m_sampleRate);
+  format.setSampleRate(deviceRate);
 
-  m_audioSink = new QAudioSink(format);
-
-  auto mult = 2;
-  if (m_sampleRate > 44000) {
-    mult = 4;
+  if (!dev.isFormatSupported(format)) {
+    deviceRate = m_sampleRate;
+    format.setSampleRate(deviceRate);
   }
-  m_audioSink->setBufferSize(8192 * mult);
+
+  m_deviceSampleRate = deviceRate;
+  spdlog::info("Audio: resampling core {} Hz -> device {} Hz", m_sampleRate, m_deviceSampleRate);
+
+  // Initialize the resampler to convert from the core's sample rate to the device's sample rate
+  m_resampler.initialize(m_sampleRate, m_deviceSampleRate);
+
+  m_audioSink = std::make_unique<QAudioSink>(dev, format);
+  m_audioSink->setVolume(
+      QtAudio::convertVolume(m_volume.load(), QtAudio::LogarithmicVolumeScale, QtAudio::LinearVolumeScale));
+
+  // Set a larger buffer for higher sample rates
+  const int bufferMultiplier = m_deviceSampleRate > 44000 ? 4 : 2;
+  m_audioSink->setBufferSize(8192 * bufferMultiplier);
+
   m_audioDevice = m_audioSink->start();
+
+  // Suspend the sink until we've pre-buffered to around 50% full
+  m_audioSink->suspend();
+  m_priming = true;
+}
+
+// TODO
+// The sink stops itself when the output it was running on goes away — a driver restarting, a rate
+// changed in the system's sound settings, another application taking the device. The machine's
+// list of outputs does not change, so nothing else notices, and the device start() handed back
+// dies with it
+void AudioManager::recoverFromDeviceLoss() {
+  if (!m_audioSink || m_audioSink->state() != QtAudio::StoppedState || m_audioSink->error() == QtAudio::NoError) {
+    return;
+  }
+
+  // Dropped first and unconditionally: writing to it is what this exists to prevent, whether or
+  // not the rebuild below is due yet
+  m_audioDevice = nullptr;
+
+  const auto now = std::chrono::steady_clock::now();
+  if (now < m_nextReopenAttempt) {
+    return;
+  }
+
+  spdlog::warn("Audio output stopped with error {}; reopening", static_cast<int>(m_audioSink->error()));
+
+  m_nextReopenAttempt = now + std::chrono::milliseconds(m_reopenBackoffMs);
+
+  m_audioSink->stop();
+  m_audioSink.reset();
+  openAudioSink();
+
+  if (isSinkWritable()) {
+    m_reopenBackoffMs = REOPEN_DELAY_MS;
+  } else {
+    m_reopenBackoffMs = std::min(m_reopenBackoffMs * 2, MAX_REOPEN_BACKOFF_MS);
+  }
+}
+
+bool AudioManager::isSinkWritable() const { return m_audioSink && m_audioSink->state() != QtAudio::StoppedState; }
+
+bool AudioManager::isSinkMeasurable() const {
+  if (!m_audioSink) {
+    return false;
+  }
+
+  const auto state = m_audioSink->state();
+  return state == QtAudio::ActiveState || state == QtAudio::IdleState;
+}
+
+void AudioManager::initialize(const double new_freq) {
+  std::lock_guard lock(m_sinkMutex);
+  m_sampleRate = static_cast<int>(new_freq);
+  openAudioSink();
 }
 
 void AudioManager::setMuted(bool muted) { m_isMuted = muted; }
+
 bool AudioManager::isMuted() const { return m_isMuted; }
 
-float AudioManager::getBufferLevel() const { return m_currentBufferLevel; }
+void AudioManager::setPaused(const bool paused) {
+  std::lock_guard lock(m_sinkMutex);
+  if (!m_audioSink) {
+    return;
+  }
+  if (paused) {
+    m_audioSink->suspend(); // halt playback, keep the buffered audio
+  } else if (!m_priming) {
+    // While priming the sink is intentionally suspended until pre-buffered;
+    // receive() resumes it. Don't let an early unpause start it underrunning
+    m_audioSink->resume();
+  }
+}
+
+float AudioManager::getBufferLevel() const {
+  // Live read of the sink's occupancy. The "audio" sync method paces frames off
+  // this value from another thread; a cached value only refreshed while we're
+  // feeding the sink would freeze once the buffer fills and we stop feeding it,
+  // stalling emulation. bytesFree()/bufferSize() are cheap reads, but the sink
+  // isn't thread-safe, so serialize against receive()/reinit on other threads
+  std::lock_guard lock(m_sinkMutex);
+  if (isSinkMeasurable()) {
+    const auto capacity = m_audioSink->bufferSize();
+    if (capacity > 0) {
+      const auto used = capacity - m_audioSink->bytesFree();
+      return static_cast<float>(used) / static_cast<float>(capacity);
+    }
+  }
+  return m_currentBufferLevel.load();
+}
+
+void AudioManager::setPlaybackRateRatio(double ratio) { m_resampler.setPlaybackRateRatio(ratio); }
+
+void AudioManager::setDynamicRateControlEnabled(const bool enabled) { m_drcEnabled.store(enabled); }
 
 void AudioManager::reinitializeAudioDevice() {
+  std::lock_guard lock(m_sinkMutex);
   if (!m_audioSink) {
     return; // Not initialized yet
   }
 
-  spdlog::info(
-      "Default audio output device changed, reinitializing audio device.");
+  spdlog::info("Reinitializing the audio output device.");
 
-  // Stop current audio
-  if (m_audioDevice) {
+  // Only while the sink is still running: once it has stopped, this pointer is already dead and
+  // touching it is what the rebuild exists to avoid
+  if (m_audioDevice && isSinkWritable()) {
     m_audioDevice->close();
-    m_audioDevice = nullptr;
-  }
-  if (m_audioSink) {
-    m_audioSink->stop();
-    delete m_audioSink;
-    m_audioSink = nullptr;
   }
 
-  // Recreate with same format
-  QAudioFormat format;
-  format.setChannelCount(2);
-  format.setSampleFormat(QAudioFormat::Int16);
-  format.setSampleRate(m_sampleRate);
+  m_audioDevice = nullptr;
+  m_audioSink->stop();
+  m_audioSink.reset();
 
-  m_audioSink = new QAudioSink(format);
-
-  auto mult = 2;
-  if (m_sampleRate > 44000) {
-    mult = 4;
-  }
-  m_audioSink->setBufferSize(8192 * mult);
-  m_audioDevice = m_audioSink->start();
+  openAudioSink();
 }
 
 void AudioManager::onAudioDevicesChanged() { reinitializeAudioDevice(); }
 
 AudioManager::~AudioManager() {
+  std::lock_guard lock(m_sinkMutex);
   if (m_audioDevice) {
     m_audioDevice->close();
   }
   if (m_audioSink) {
     m_audioSink->stop();
-    delete m_audioSink;
-  }
-  if (m_swrContext) {
-    av_free(m_swrContext);
+    m_audioSink.reset();
   }
 }

@@ -6,10 +6,10 @@ import QMLFirelightTest 1.0
 TestCase {
     id: testCase
     name: "IconButtonTests"
-    
+
     width: 400
     height: 300
-    
+
     // Component {
     //     id: iconButtonComponent
     //     IconButton {
@@ -21,7 +21,7 @@ TestCase {
     //     id: signalSpy
     //     SignalSpy {}
     // }
-    
+
     // function test_defaultProperties() {
     //     let button = createTemporaryObject(iconButtonComponent, testCase)
     //     verify(button !== null, "Button should be created")

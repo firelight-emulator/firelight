@@ -1,15 +1,27 @@
 #pragma once
 
 #include "audio/audio_manager.hpp"
+#include "emulation/emulator_controller.hpp"
 #include "emulator_item_renderer.hpp"
 #include "libretro/core_configuration.hpp"
-#include "manager_accessor.hpp"
+#include "service_accessor.hpp"
 
+#include <firelight/event_dispatcher.hpp>
+
+#include <QThreadPool>
+#include <atomic>
+#include <cstdint>
 #include <qchronotimer.h>
+#include <rcheevos/ra_client.hpp>
+#include <string>
 
+// Threading: a QML item — constructed and driven (properties/slots) on the GUI
+// thread. Owns the frame-pacing thread (m_emulationThread), whose timer fires
+// there and enqueues RunFrame onto the renderer (drained on the render thread)
+// m_paused is atomic because the pacing thread reads it each tick
 class EmulatorItem : public QQuickRhiItem,
-                     public firelight::ManagerAccessor,
-                     public firelight::ServiceAccessor {
+                     public firelight::ServiceAccessor,
+                     public firelight::emulation::IEmulatorController {
 protected:
   void mouseMoveEvent(QMouseEvent *event) override;
 
@@ -19,28 +31,26 @@ private:
   Q_PROPERTY(int platformId MEMBER m_platformId NOTIFY platformIdChanged)
   Q_PROPERTY(QString contentHash MEMBER m_contentHash NOTIFY contentHashChanged)
   Q_PROPERTY(QString gameName MEMBER m_gameName NOTIFY gameNameChanged)
-  Q_PROPERTY(
-      int saveSlotNumber MEMBER m_saveSlotNumber NOTIFY saveSlotNumberChanged)
+  Q_PROPERTY(int saveSlotNumber MEMBER m_saveSlotNumber NOTIFY saveSlotNumberChanged)
   Q_PROPERTY(bool started MEMBER m_started NOTIFY startedChanged)
   Q_PROPERTY(int videoWidth MEMBER m_coreBaseWidth NOTIFY videoWidthChanged)
   Q_PROPERTY(int videoHeight MEMBER m_coreBaseHeight NOTIFY videoHeightChanged)
-  Q_PROPERTY(float videoAspectRatio MEMBER m_coreAspectRatio NOTIFY
-                 videoAspectRatioChanged)
-  Q_PROPERTY(float trueAspectRatio MEMBER m_calculatedAspectRatio NOTIFY
-                 videoAspectRatioChanged)
-  Q_PROPERTY(float canUndoLoadSuspendPoint MEMBER m_canUndoLoadSuspendPoint
-                 NOTIFY canUndoLoadSuspendPointChanged)
+  Q_PROPERTY(float videoAspectRatio MEMBER m_coreAspectRatio NOTIFY videoAspectRatioChanged)
+  Q_PROPERTY(float trueAspectRatio MEMBER m_calculatedAspectRatio NOTIFY videoAspectRatioChanged)
+  Q_PROPERTY(float canUndoLoadSuspendPoint MEMBER m_canUndoLoadSuspendPoint NOTIFY canUndoLoadSuspendPointChanged)
   Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
-  Q_PROPERTY(float audioBufferLevel READ audioBufferLevel NOTIFY
-                 audioBufferLevelChanged)
-  Q_PROPERTY(float playbackMultiplier READ playbackMultiplier WRITE
-                 setPlaybackMultiplier NOTIFY playbackMultiplierChanged)
+  Q_PROPERTY(float audioBufferLevel READ audioBufferLevel NOTIFY audioBufferLevelChanged)
+  Q_PROPERTY(
+      float playbackMultiplier READ playbackMultiplier WRITE setPlaybackMultiplier NOTIFY playbackMultiplierChanged)
   Q_PROPERTY(bool muted READ isMuted WRITE setMuted NOTIFY mutedChanged)
-  Q_PROPERTY(bool rewindEnabled READ isRewindEnabled WRITE setRewindEnabled
-                 NOTIFY rewindEnabledChanged)
+  Q_PROPERTY(bool rewindEnabled READ isRewindEnabled WRITE setRewindEnabled NOTIFY rewindEnabledChanged)
 
 public:
   explicit EmulatorItem(QQuickItem *parent = nullptr);
+
+  // FLDIAG (temporary instrumentation — remove with the rest of the FLDIAG code)
+  static void fldiagRecordRunFrame();
+  static void fldiagRecordSkippedRender();
 
   ~EmulatorItem() override;
 
@@ -65,8 +75,9 @@ public:
 
   bool m_canUndoLoadSuspendPoint = false;
 
-  // Emulator state
-  bool m_paused = false;
+  // Emulator state. Atomic: written on the GUI thread (setPaused), read on the
+  // frame-pacing thread
+  std::atomic<bool> m_paused = false;
 
   uint m_coreBaseWidth = 0;
   uint m_coreBaseHeight = 0;
@@ -76,12 +87,14 @@ public:
   float m_calculatedAspectRatio = 0.0f;
 
   // std::shared_ptr<libretro::Core> m_core = nullptr;
-  std::shared_ptr<AudioManager> m_audioManager = nullptr;
   std::shared_ptr<CoreConfiguration> m_coreConfiguration = nullptr;
 
-  [[nodiscard]] bool paused() const;
+  [[nodiscard]] bool paused() const override;
 
-  void setPaused(bool paused);
+  void setPaused(bool paused) override;
+
+  // Runs a single frame and pauses again, so a paused game can be stepped
+  Q_INVOKABLE void advanceOneFrame() override;
 
   bool isRewindEnabled() const;
 
@@ -93,9 +106,14 @@ public:
 
   [[nodiscard]] float audioBufferLevel() const;
 
-  Q_INVOKABLE void writeSuspendPoint(int index);
+  Q_INVOKABLE void writeSuspendPoint(int index) override;
 
-  Q_INVOKABLE void loadSuspendPoint(int index);
+  // Captures the current frame to disk (bound to the "screenshot" shortcut)
+  Q_INVOKABLE void captureScreenshot() override;
+
+  Q_INVOKABLE void captureVideoClip() override;
+
+  Q_INVOKABLE void loadSuspendPoint(int index) override;
 
   Q_INVOKABLE void undoLastLoadSuspendPoint();
 
@@ -103,10 +121,9 @@ public:
 
   Q_INVOKABLE void loadRewindPoint(int index);
 
-  [[nodiscard]] float playbackMultiplier() const {
-    return m_playbackMultiplier;
-  }
-  void setPlaybackMultiplier(float playbackMultiplier);
+  [[nodiscard]] float playbackMultiplier() const override { return m_playbackMultiplier; }
+
+  void setPlaybackMultiplier(float playbackMultiplier) override;
 
   Q_INVOKABLE void incrementPlaybackMultiplier() {
     if (m_playbackMultiplier >= 1) {
@@ -127,12 +144,19 @@ public:
 protected:
   void hoverMoveEvent(QHoverEvent *event) override;
 
+  void hoverLeaveEvent(QHoverEvent *event) override;
+
   void mousePressEvent(QMouseEvent *event) override;
 
   void mouseReleaseEvent(QMouseEvent *event) override;
 
 public slots:
   void startGame();
+
+  // Recomputes the frame-pacing target/mode from the current sync-method /
+  // target-framerate settings, the core fps, and the display refresh rate
+  // Must run on the GUI thread (reads window()/screen())
+  void reconfigurePacing();
 
 signals:
   void aboutToRunFrame();
@@ -184,10 +208,45 @@ private:
 
   QThread m_emulationThread;
   QChronoTimer m_emulationTimer{};
-  int64_t m_emulationTimingTargetNs = 16666667;
+  // Wall-clock target interval for native/monitor/fixed pacing. Written on the
+  // GUI thread (reconfigurePacing), read on the emulation thread
+  std::atomic<int64_t> m_emulationTimingTargetNs = 16666667;
+  // When true, pace off audio buffer occupancy instead of the wall clock
+  std::atomic<bool> m_audioSyncActive = false;
+  // Core's native fps, cached from the renderer geometry callback
+  std::atomic<double> m_coreFps = 60.0;
+
+  ScopedConnection m_settingChangedConnection;
 
   bool m_mousePressed = false;
+  bool m_mouseRightPressed = false;
+  bool m_mouseMiddlePressed = false;
+  // Last pointer position (item pixels) for computing relative mouse motion
+  QPointF m_lastMousePos;
+  bool m_hasLastMousePos = false;
 
-  void updateGeometry(unsigned int width, unsigned int height,
-                      float aspectRatio);
+  // Normalizes a pointer position, feeds absolute + relative motion to the
+  // input service, and clears the light-gun off-screen flag
+  void feedPointer(const QPointF &pos);
+
+  void updateGeometry(unsigned int width, unsigned int height, float aspectRatio);
+
+  // Frame-pacing strategy (maps to the "sync-method" emulation setting)
+  enum class SyncMethod { Native, Monitor, Fixed, Audio };
+  static SyncMethod syncMethodFromString(const std::string &method);
+
+  // Wall-clock frame interval (ns) for native/fixed pacing:
+  //   Native -> 1e9 / coreFps
+  //   Fixed  -> 1e9 / targetFramerate
+  // Returns 0 for Audio (audio-driven) and Monitor (resolved via
+  // monitorPacingRate, which needs the refresh/content-rate relationship), or
+  // when the input is non-positive
+  static int64_t computeTargetIntervalNs(SyncMethod method, double coreFps, int targetFramerate, double refreshHz);
+
+  // The rate to pace at for "sync to monitor", or 0 if the display doesn't line
+  // up with the content rate (caller falls back to native). Divides the refresh
+  // rate down to the nearest integer fraction and only matches when that lands
+  // within tolerance of coreFps — so 60/120/240 Hz match a 60 fps game but 144 Hz
+  // (2.4x) does not, avoiding a sped-up game on high-refresh displays
+  static double monitorPacingRate(double coreFps, double refreshHz);
 };

@@ -6,9 +6,7 @@ namespace firelight::saves {
 
 SavefileListModel::SavefileListModel() = default;
 
-int SavefileListModel::rowCount(const QModelIndex &parent) const {
-  return m_items.size();
-}
+int SavefileListModel::rowCount(const QModelIndex &parent) const { return m_items.size(); }
 
 QVariant SavefileListModel::data(const QModelIndex &index, int role) const {
   if (role < Qt::UserRole || index.row() >= m_items.size()) {
@@ -25,7 +23,7 @@ QVariant SavefileListModel::data(const QModelIndex &index, int role) const {
   case ContentHash:
     return QString::fromStdString(item.contentHash);
   case SlotNumber:
-    return item.slotNumber;
+    return item.saveSlot;
   case SavefileMd5:
     return QString::fromStdString(item.savefileMd5);
   case Name:
@@ -33,8 +31,7 @@ QVariant SavefileListModel::data(const QModelIndex &index, int role) const {
   case Description:
     return QString::fromStdString(item.description);
   case LastModified:
-    return QDateTime::fromSecsSinceEpoch(item.lastModifiedEpochSeconds)
-        .toString("yyyy-MM-dd hh:mm:ss");
+    return QDateTime::fromMSecsSinceEpoch(item.lastModifiedAt).toString("yyyy-MM-dd hh:mm:ss");
   default:
     return QVariant{};
   }
@@ -58,6 +55,7 @@ QHash<int, QByteArray> SavefileListModel::roleNames() const {
   roles[LastModified] = "lastModified";
   return roles;
 }
+
 void SavefileListModel::reset(std::vector<SavefileInfo> items) {
   emit beginResetModel();
   m_items = std::move(items);

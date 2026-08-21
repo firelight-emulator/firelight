@@ -23,16 +23,23 @@ public:
     std::string description;
     std::vector<OptionValue> possibleValues;
     std::string defaultValueKey;
+    // Core-options v2 groups options into categories (e.g. a "Parallel" renderer
+    // subsection). Empty for uncategorized / top-level options
+    std::string category;      // category key
+    std::string categoryLabel; // human-readable category name
   };
 
   // TODO: Option categories
 
   virtual void registerOption(Option option) = 0;
 
+  // All options the core has declared so far (via registerOption). Lets the
+  // frontend cache/persist a core's option definitions for pre-launch editing
+  [[nodiscard]] virtual std::vector<Option> getOptions() const = 0;
+
   virtual bool anyOptionValueHasChanged() = 0;
 
-  virtual void setDefaultValue(const std::string &key,
-                               const std::string &value) = 0;
+  virtual void setDefaultValue(const std::string &key, const std::string &value) = 0;
 
   virtual std::optional<std::string> getOptionValue(const std::string &key) = 0;
 
