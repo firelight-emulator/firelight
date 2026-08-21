@@ -660,6 +660,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
   // The renderer hasn't been told to run a frame yet, so skip running a frame
   if (!m_shouldRunFrame) {
+    EmulatorItem::fldiagRecordSkippedRender(); // FLDIAG (temporary)
     return;
   }
 
@@ -669,6 +670,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   }
   m_currentWaitFrames = m_waitFrames;
   m_shouldRunFrame = false;
+
+  EmulatorItem::fldiagRecordRunFrame(); // FLDIAG (temporary)
 
   // ------------------------------------------------------------
   // If we made it here, we're going to run at least one frame

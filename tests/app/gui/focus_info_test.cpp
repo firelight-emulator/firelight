@@ -14,10 +14,12 @@ FocusInfo *attach(QObject *object) {
   return qobject_cast<FocusInfo *>(qmlAttachedPropertiesObject<FocusInfo>(object, true));
 }
 
-FocusAction *addAction(FocusInfo *info, const QList<int> &keys, const bool enabled = true) {
+FocusAction *addAction(FocusInfo *info, const QList<int> &keys, const bool enabled = true,
+                       const int modifiers = Qt::NoModifier) {
   auto *action = new FocusAction(info);
   action->setKeys(keys);
   action->setEnabled(enabled);
+  action->setModifiers(modifiers);
 
   auto list = info->getActions();
   list.append(&list, action);
@@ -140,6 +142,61 @@ TEST(FocusInfoTest, FirstDeclaredActionWinsWhenKeysOverlap) {
   addAction(info, {Qt::Key_Select});
 
   EXPECT_EQ(info->getActionFor(Qt::Key_Select), first);
+}
+
+// A press with a modifier held is a different press. Without this a bare action answers everything
+// and no modified one could ever be reached
+TEST(FocusInfoTest, ABareActionDoesNotAnswerAModifiedPress) {
+  QObject object;
+  auto *info = attach(&object);
+  auto *play = addAction(info, {Qt::Key_Return});
+
+  EXPECT_EQ(info->getActionFor(Qt::Key_Return), play);
+  EXPECT_EQ(info->getActionFor(Qt::Key_Return, Qt::ShiftModifier), nullptr);
+}
+
+TEST(FocusInfoTest, AModifiedActionAnswersOnlyItsOwnCombination) {
+  QObject object;
+  auto *info = attach(&object);
+  auto *selectRange = addAction(info, {Qt::Key_Return}, true, Qt::ShiftModifier);
+
+  EXPECT_EQ(info->getActionFor(Qt::Key_Return, Qt::ShiftModifier), selectRange);
+  EXPECT_EQ(info->getActionFor(Qt::Key_Return), nullptr);
+  EXPECT_EQ(info->getActionFor(Qt::Key_Return, Qt::ControlModifier), nullptr);
+  EXPECT_EQ(info->getActionFor(Qt::Key_Return, Qt::ShiftModifier | Qt::ControlModifier), nullptr);
+}
+
+// The point of the whole property: one key, two outcomes
+TEST(FocusInfoTest, ModifiersSeparateTwoActionsOnOneKey) {
+  QObject object;
+  auto *info = attach(&object);
+  auto *play = addAction(info, {Qt::Key_Return});
+  auto *selectRange = addAction(info, {Qt::Key_Return}, true, Qt::ShiftModifier);
+
+  EXPECT_EQ(info->getActionFor(Qt::Key_Return), play);
+  EXPECT_EQ(info->getActionFor(Qt::Key_Return, Qt::ShiftModifier), selectRange);
+}
+
+// Neither shadows the other, so the order they were declared in cannot matter
+TEST(FocusInfoTest, ModifiersSeparateTwoActionsDeclaredTheOtherWayRound) {
+  QObject object;
+  auto *info = attach(&object);
+  auto *selectRange = addAction(info, {Qt::Key_Return}, true, Qt::ShiftModifier);
+  auto *play = addAction(info, {Qt::Key_Return});
+
+  EXPECT_EQ(info->getActionFor(Qt::Key_Return), play);
+  EXPECT_EQ(info->getActionFor(Qt::Key_Return, Qt::ShiftModifier), selectRange);
+}
+
+// Qt reports the numpad's Enter with the keypad bit set. It says which key was pressed rather than
+// what was held with it, so a bare action still has to answer
+TEST(FocusInfoTest, WhereAKeyCameFromDoesNotDecideAMatch) {
+  QObject object;
+  auto *info = attach(&object);
+  auto *play = addAction(info, {Qt::Key_Enter});
+
+  EXPECT_EQ(info->getActionFor(Qt::Key_Enter, Qt::KeypadModifier), play);
+  EXPECT_EQ(info->getActionFor(Qt::Key_Enter, Qt::KeypadModifier | Qt::ShiftModifier), nullptr);
 }
 
 TEST(FocusInfoTest, ActionsAreReadableByIndexInDeclarationOrder) {

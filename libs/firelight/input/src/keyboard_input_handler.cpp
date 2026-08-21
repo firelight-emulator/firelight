@@ -1,5 +1,6 @@
 #include "firelight/event_dispatcher.hpp"
 
+#include <firelight/input/gamepad_key_event.hpp>
 #include <firelight/input/input_service.hpp>
 #include <firelight/input/keyboard_input_handler.hpp>
 
@@ -243,10 +244,11 @@ DeviceIdentifier KeyboardInputHandler::getDeviceIdentifier() const {
 
 bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
   if (event->type() == QEvent::KeyPress) {
-    const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
-    if (keyEvent->modifiers() == Qt::KeyboardModifier::KeyboardModifierMask) {
+    if (GamepadKeyEvent::isGamepad(event)) {
       return false;
     }
+
+    const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
     const auto key = static_cast<Qt::Key>(keyEvent->key());
     bool rising = false;
     {
@@ -262,10 +264,11 @@ bool KeyboardInputHandler::eventFilter(QObject *obj, QEvent *event) {
           KeyboardKeyEvent{.playerIndex = m_playerIndex, .key = keyEvent->key(), .pressed = true});
     }
   } else if (event->type() == QEvent::KeyRelease) {
-    const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
-    if (keyEvent->modifiers() == Qt::KeyboardModifier::KeyboardModifierMask) {
+    if (GamepadKeyEvent::isGamepad(event)) {
       return false;
     }
+
+    const auto keyEvent = dynamic_cast<QKeyEvent *>(event);
     const auto key = static_cast<Qt::Key>(keyEvent->key());
     {
       std::lock_guard lock(m_keyStatesMutex);

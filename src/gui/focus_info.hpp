@@ -6,6 +6,7 @@
 #include <QColor>
 #include <QList>
 #include <QObject>
+#include <QPair>
 #include <QQmlListProperty>
 #include <QQuickItem>
 #include <QtNumeric>
@@ -96,12 +97,13 @@ public:
    * Every action a press on item could reach: its own first, then each ancestor's, stopping at a
    * barrier because navigation cannot leave one.
    *
-   * A key appears once. The nearest declaration wins, which is the one a press would actually run,
-   * and a disabled action is left out because it would answer nothing
+   * A key appears once per set of modifiers, so a key and the same key under Shift are both listed.
+   * The nearest declaration wins, which is the one a press would actually run, and a disabled action
+   * is left out because it would answer nothing
    */
   Q_INVOKABLE static QList<FocusAction *> collectActions(QQuickItem *item) {
     QList<FocusAction *> actions;
-    QList<int> claimedKeys;
+    QList<QPair<int, int>> claimedKeys;
 
     for (auto *current = item; current != nullptr; current = current->parentItem()) {
       auto *info = find(current);
@@ -116,10 +118,11 @@ public:
         }
 
         const auto keys = action->getKeys();
+        const auto modifiers = action->getModifiers();
         auto isClaimed = false;
 
         for (const auto key : keys) {
-          if (claimedKeys.contains(key)) {
+          if (claimedKeys.contains({key, modifiers})) {
             isClaimed = true;
             break;
           }
@@ -129,7 +132,10 @@ public:
           continue;
         }
 
-        claimedKeys.append(keys);
+        for (const auto key : keys) {
+          claimedKeys.append({key, modifiers});
+        }
+
         actions.append(action);
       }
 
@@ -214,11 +220,11 @@ public:
   }
 
   /**
-   * @return The first enabled action answering to key, or null when none does
+   * @return The first enabled action answering to key pressed with modifiers held, or null when none does
    */
-  Q_INVOKABLE FocusAction *getActionFor(const int key) const {
+  Q_INVOKABLE FocusAction *getActionFor(const int key, const int modifiers = Qt::NoModifier) const {
     for (auto *action : m_actions) {
-      if (action != nullptr && action->handles(key)) {
+      if (action != nullptr && action->handles(key, modifiers)) {
         return action;
       }
     }

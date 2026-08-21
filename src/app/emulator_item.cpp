@@ -12,8 +12,12 @@
 #include <QQuickWindow>
 #include <QScreen>
 #include <algorithm>
+#include <array>
+#include <atomic>
+#include <chrono>
 #include <cmath>
 #include <deque>
+#include <mutex>
 #include <patching/bps_patch.hpp>
 #include <patching/ups_patch.hpp>
 #include <rhi/qrhi_platform.h>
@@ -44,12 +48,115 @@ void EmulatorItem::feedPointer(const QPointF &pos) {
 
 void EmulatorItem::mouseMoveEvent(QMouseEvent *event) { feedPointer(event->position()); }
 
+// FLDIAG (temporary instrumentation — remove before the real change lands)
+// Counts the gaps between repeated events into 0.5ms buckets, so a cadence can be read as a shape
+// rather than a stream of per-frame lines
+namespace fldiag {
+class IntervalHistogram {
+public:
+  IntervalHistogram(const char *name, std::atomic<int> *extra = nullptr) : m_name(name), m_extra(extra) {}
+
+  void record() {
+    const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+    std::lock_guard lock(m_mutex);
+
+    if (m_lastNs != 0) {
+      const auto ms = static_cast<double>(now - m_lastNs) / 1e6;
+      m_buckets[std::clamp(static_cast<int>(ms * 2.0), 0, BUCKETS - 1)]++;
+      m_count++;
+      m_sumMs += ms;
+      m_minMs = std::min(m_minMs, ms);
+      m_maxMs = std::max(m_maxMs, ms);
+    }
+
+    m_lastNs = now;
+
+    if (m_dumpAtNs == 0) {
+      m_dumpAtNs = now + 5000000000LL;
+    } else if (now >= m_dumpAtNs) {
+      m_dumpAtNs = now + 5000000000LL;
+      dump();
+    }
+  }
+
+private:
+  void dump() {
+    if (m_count == 0) {
+      return;
+    }
+
+    std::string shape;
+    for (auto i = 0; i < BUCKETS; ++i) {
+      if (m_buckets[i] > 0) {
+        shape += fmt::format(" {:.1f}:{}", i * 0.5, m_buckets[i]);
+      }
+    }
+
+    const auto extra = m_extra != nullptr ? m_extra->exchange(0) : -1;
+
+    spdlog::info("FLDIAG {} n={} mean={:.2f}ms min={:.2f} max={:.2f}{} |{}", m_name, m_count, m_sumMs / m_count,
+                 m_minMs, m_maxMs, extra >= 0 ? fmt::format(" skipped-renders={}", extra) : std::string(), shape);
+
+    m_buckets.fill(0);
+    m_count = 0;
+    m_sumMs = 0.0;
+    m_minMs = 1e9;
+    m_maxMs = 0.0;
+  }
+
+  static constexpr int BUCKETS = 81; // 0-40ms in 0.5ms steps, last bucket catches everything above
+
+  const char *m_name;
+  std::atomic<int> *m_extra;
+  std::mutex m_mutex;
+  std::array<int, BUCKETS> m_buckets{};
+  int64_t m_lastNs = 0;
+  int64_t m_dumpAtNs = 0;
+  int m_count = 0;
+  double m_sumMs = 0.0;
+  double m_minMs = 1e9;
+  double m_maxMs = 0.0;
+};
+
+std::atomic<int> skippedRenders{0};
+
+IntervalHistogram presentIntervals("present   ");
+IntervalHistogram submitIntervals("submit    ");
+IntervalHistogram runFrameIntervals("runframe  ", &skippedRenders);
+} // namespace fldiag
+
+void EmulatorItem::fldiagRecordRunFrame() { fldiag::runFrameIntervals.record(); }
+
+void EmulatorItem::fldiagRecordSkippedRender() { fldiag::skippedRenders++; }
+
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   // The emulator a hotkey acts on. Registered from here rather than when the
   // game starts, because the ScopeAlways actions can fire before then
   if (const auto actions = getShortcutActions()) {
     actions->setController(this);
   }
+
+  // FLDIAG (temporary): watch what the display is actually doing, and when frames reach it
+  connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow *w) {
+    if (w == nullptr) {
+      return;
+    }
+
+    connect(w, &QQuickWindow::frameSwapped, this, [] { fldiag::presentIntervals.record(); }, Qt::DirectConnection);
+
+    if (auto *screen = w->screen()) {
+      spdlog::info("FLDIAG screen '{}' refreshRate={:.3f}Hz", screen->name().toStdString(), screen->refreshRate());
+      connect(screen, &QScreen::refreshRateChanged, this,
+              [](const qreal rate) { spdlog::info("FLDIAG refreshRate changed to {:.3f}Hz", rate); });
+    }
+
+    connect(w, &QWindow::screenChanged, this, [](QScreen *screen) {
+      if (screen != nullptr) {
+        spdlog::info("FLDIAG moved to screen '{}' refreshRate={:.3f}Hz", screen->name().toStdString(),
+                     screen->refreshRate());
+      }
+    });
+  });
 
   setFlag(ItemHasContents);
   setAcceptHoverEvents(true);
@@ -100,6 +207,7 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
       const float level = firelight::emulation::EmulationService::getInstance()->currentAudioBufferLevel();
       // Keep the buffer around half full; below that, room for another frame
       if (m_renderer && level >= 0.0f && level < 0.5f) {
+        fldiag::submitIntervals.record();
         m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
         QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
       }

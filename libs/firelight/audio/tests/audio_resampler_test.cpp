@@ -6,6 +6,7 @@
 namespace {
 constexpr int DEVICE_RATE = 48000;
 constexpr int CD_RATE = 44100;
+constexpr int GAME_BOY_RATE = 32768;
 
 // Interleaved stereo silence; only the frame count matters to these tests
 std::vector<int16_t> silence(const size_t frameCount) { return std::vector<int16_t>(frameCount * 2, 0); }
@@ -100,6 +101,20 @@ TEST(AudioResamplerTest, NonPositiveRatioIsClampedToOne) {
   EXPECT_NEAR(static_cast<double>(convert(resampler, 1024)), 1024.0, 8.0);
 }
 
+// The shape this went wrong in: a core rate that divides into neither the device rate nor the
+// callback size. Every call has to carry its own share, rather than alternating between one that
+// comes up short and one that dumps the arrears
+TEST(AudioResamplerTest, UpsamplingIsSteadyFromCallToCall) {
+  AudioResampler resampler;
+  resampler.initialize(GAME_BOY_RATE, DEVICE_RATE);
+  settle(resampler, 549);
+
+  // 549 frames at 32768 is 804 frames at 48000
+  for (auto i = 0; i < 8; ++i) {
+    EXPECT_NEAR(static_cast<double>(convert(resampler, 549)), 804.0, 8.0);
+  }
+}
+
 // A positive delta spreads that many extra samples over the call's window
 TEST(AudioResamplerTest, PositiveCompensationDeltaRaisesOutputCount) {
   AudioResampler resampler;
@@ -128,8 +143,8 @@ TEST(AudioResamplerTest, NegativeCompensationDeltaReducesOutputCount) {
   EXPECT_LT(compensated, baseline);
 }
 
-// A short buffer with no compensation skips swr_set_compensation entirely
-TEST(AudioResamplerTest, HandlesBuffersBelowTheCompensationThreshold) {
+// A buffer far smaller than one callback's worth still converts rather than being held back
+TEST(AudioResamplerTest, HandlesTinyBuffers) {
   AudioResampler resampler;
   resampler.initialize(DEVICE_RATE, DEVICE_RATE);
   settle(resampler, 64);

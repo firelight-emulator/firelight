@@ -39,6 +39,20 @@ Item {
     property int filterDecade: 0          // 0 = any; else the decade's start year
     property string filterGenre: ""
 
+    // TODO
+    // Where the cursor lands when the page is entered: the games themselves, or the rail beside
+    // them when the view holds nothing to land on
+    function enterFocus() {
+        const view = viewLoader.item;
+
+        if (view !== null && view.focusCurrentItem !== undefined) {
+            view.focusCurrentItem();
+            return;
+        }
+
+        toolbarColumn.focusFirstChild(toolbarColumn.currentIndex);
+    }
+
     LibraryEntrySortFilterModel {
         id: gameModel
         sourceModel: LibraryEntryModel

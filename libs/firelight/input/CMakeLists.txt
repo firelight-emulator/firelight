@@ -53,6 +53,7 @@ add_executable(firelight_input_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/analog_cursor_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/input_frame_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/gamepad_input_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/keyboard_input_handler_test.cpp
 )
 target_include_directories(firelight_input_test
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src

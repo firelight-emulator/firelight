@@ -54,9 +54,9 @@ public:
    *
    * @param data Pointer to the input audio data (interleaved stereo S16)
    * @param numFrames Number of frames in the input data (each frame consists of 2 samples: left and right)
-   * @param compensationDelta The number of samples to adjust the output by, to keep the audio sink buffer near 50%
-   *   full. Positive values raise the output sample count, while negative values lower it, so a buffer that is too
-   *   full is drained by passing a negative delta
+   * @param compensationDelta The number of samples to add to or remove from this call's output. Positive values
+   *   raise the output sample count and negative values lower it; what the number should be is the caller's to
+   *   decide (see AudioRateController)
    *
    * @return Vector containing the resampled audio data (interleaved stereo S16)
    */
@@ -72,8 +72,9 @@ private:
 
   SwrContext *m_swrContext = nullptr;
   AVChannelLayout m_channelLayout{};
-  int m_sampleRate = 0;       // input (core) rate
-  int m_outputSampleRate = 0; // output (device) rate before the playback ratio
+  int m_sampleRate = 0;          // input (core) rate
+  int m_outputSampleRate = 0;    // output (device) rate before the playback ratio
+  int m_effectiveOutputRate = 0; // output rate the context was built with, after the playback ratio
 
   // Requested from any thread; the active value is only changed on the
   // process()/initialize() thread

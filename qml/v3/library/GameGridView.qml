@@ -26,6 +26,10 @@ Item {
         root.positionViewAtBeginning();
     }
 
+    function focusCurrentItem() {
+        root.focusCurrentItem();
+    }
+
     // TODO
     // Room under the art for the title strip. Counted once, because the cell reserves it and the
     // strip fills it, and the two disagreeing takes the difference out of the gap between rows

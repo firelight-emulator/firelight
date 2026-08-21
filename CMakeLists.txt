@@ -653,6 +653,7 @@ file(GLOB QML_TEST_FILES
         qml/v3/routing/routing.js
         qml_tests/tst_routing.qml
         qml_tests/tst_focus_info.qml
+        qml_tests/tst_action_modifiers.qml
         qml_tests/tst_focus_nav.qml
         qml_tests/tst_focus_navigator.qml
         qml_tests/tst_focus_return.qml

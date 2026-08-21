@@ -133,7 +133,7 @@ ItemDelegate {
                 return;
             }
 
-            const action = root.FLFocus.getActionFor(event.key);
+            const action = root.FLFocus.getActionFor(event.key, event.modifiers);
 
             if (action !== null) {
                 if (action.sound) {

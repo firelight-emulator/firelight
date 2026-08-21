@@ -438,7 +438,7 @@ int main(int argc, char *argv[]) {
   // destroyed first, and that call would hit freed memory (Discord SDK assert
   // / crash). `initialize()` still runs later, once the window exists
 
-  QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+  // QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 
   auto gameImageProvider = new firelight::gui::GameImageProvider();
   firelight::ServiceAccessor::setGameImageProvider(gameImageProvider);

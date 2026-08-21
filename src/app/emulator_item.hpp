@@ -48,6 +48,10 @@ private:
 public:
   explicit EmulatorItem(QQuickItem *parent = nullptr);
 
+  // FLDIAG (temporary instrumentation — remove with the rest of the FLDIAG code)
+  static void fldiagRecordRunFrame();
+  static void fldiagRecordSkippedRender();
+
   ~EmulatorItem() override;
 
   float m_playbackMultiplier = 1;

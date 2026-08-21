@@ -18,6 +18,12 @@ import QtQuick.Controls
 StackView {
     id: stack
 
+    // TODO
+    // Puts the route subtree in the window's focus chain. Without it the pages below are a
+    // focus branch nothing ever activates: the cursor has nowhere to land and directional keys
+    // never reach the containers that answer them
+    focus: true
+
     padding: 0
     initialItem: Item {}
 
@@ -292,6 +298,7 @@ StackView {
         }
         if (stack.currentItem === item) {
             _setActive(item, true);
+            item.forceActiveFocus();
             return;
         }
         var previous = stack.currentItem;
@@ -299,6 +306,11 @@ StackView {
         stack.replaceCurrentItem(item, {}, op);
         _setActive(previous, false);
         _setActive(item, true);
+
+        // TODO
+        // The cursor follows the route. A page that is a focus scope hands this on to whatever it
+        // last had focused, or to its own entry point
+        item.forceActiveFocus();
     }
 
     Connections {

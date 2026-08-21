@@ -89,7 +89,7 @@ Menu {
         target: control.contentItem.Keys
 
         function onPressed(event) {
-            if (!event.isAutoRepeat && control.activate(event.key)) {
+            if (!event.isAutoRepeat && control.activate(event.key, event.modifiers)) {
                 event.accepted = true;
                 return;
             }
@@ -141,7 +141,7 @@ Menu {
         return true;
     }
 
-    function activate(key: int): bool {
+    function activate(key: int, modifiers: int): bool {
         const focused = control.contentItem.Window.activeFocusItem;
 
         if (focused === null) {
@@ -150,14 +150,14 @@ Menu {
 
         const info = control.contentItem.FLFocus.find(focused);
 
-        if (control.runAction(info !== null ? info.getActionFor(key) : null)) {
+        if (control.runAction(info !== null ? info.getActionFor(key, modifiers) : null)) {
             return true;
         }
 
         // TODO
         // This handler is the content item's own, so what the content item declares answers here
         // the way a button's own actions answer in its handler
-        if (control.runAction(control.contentItem.FLFocus.getActionFor(key))) {
+        if (control.runAction(control.contentItem.FLFocus.getActionFor(key, modifiers))) {
             return true;
         }
 
@@ -165,6 +165,9 @@ Menu {
             return false;
         }
 
+        // TODO
+        // The fallback ignores modifiers on purpose: a modified press no declared action answered
+        // still presses the thing, the way a modified click does
         if (key !== Qt.Key_Select && key !== Qt.Key_Return && key !== Qt.Key_Enter) {
             return false;
         }

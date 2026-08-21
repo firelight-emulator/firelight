@@ -6,6 +6,7 @@
 
 #include "EventEmitter.h"
 
+#include <firelight/input/gamepad_key_event.hpp>
 #include <firelight/input/input_service.hpp>
 #include <firelight/input/shortcut_action.hpp>
 
@@ -94,10 +95,10 @@ QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService) {
           QMetaObject::invokeMethod(
               QApplication::instance(),
               [key, event]() {
-                QApplication::postEvent(QApplication::focusWindow(),
-                                        new QKeyEvent(event.pressed ? QEvent::KeyPress : QEvent::KeyRelease, key,
-                                                      Qt::KeyboardModifier::KeyboardModifierMask, QString(),
-                                                      event.autoRepeat));
+                QApplication::postEvent(
+                    QApplication::focusWindow(),
+                    new input::GamepadKeyEvent(event.pressed ? QEvent::KeyPress : QEvent::KeyRelease, key,
+                                               event.autoRepeat));
               },
               Qt::QueuedConnection);
         }

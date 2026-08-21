@@ -28,6 +28,31 @@ TestCase {
         ]
     }
 
+    // A modified variant declared above the item claiming the bare key, which is what a prompt bar
+    // has to list separately rather than fold into one
+    Item {
+        id: parentScope
+
+        FLFocus.actions: [
+            FLAction {
+                keys: [Qt.Key_Return]
+                modifiers: Qt.ShiftModifier
+                label: "Select range"
+            }
+        ]
+
+        Item {
+            id: childInScope
+
+            FLFocus.actions: [
+                FLAction {
+                    keys: [Qt.Key_Return]
+                    label: "Play"
+                }
+            ]
+        }
+    }
+
     // Never mentions FLFocus, so it must carry no metadata
     Item {
         id: undeclared
@@ -74,6 +99,19 @@ TestCase {
         compare(declared.FLFocus.getActionFor(Qt.Key_Return).label, "Play");
         compare(declared.FLFocus.getActionFor(Qt.Key_Menu).label, "Options");
         compare(declared.FLFocus.getActionFor(Qt.Key_Escape), null);
+    }
+
+    // A modifier makes it a different press, so the bare declaration cannot answer it
+    function test_modifiers_separate_two_actions_on_one_key() {
+        compare(declared.FLFocus.getActionFor(Qt.Key_Select).label, "Play");
+        compare(declared.FLFocus.getActionFor(Qt.Key_Select, Qt.ShiftModifier), null);
+    }
+
+    // The nearest declaration still wins per key, but only against the same modifiers
+    function test_collect_lists_a_key_once_per_set_of_modifiers() {
+        const labels = declared.FLFocus.collectActions(childInScope).map(a => a.label);
+
+        compare(labels, ["Play", "Select range"]);
     }
 
     function test_actions_outlive_the_binding() {

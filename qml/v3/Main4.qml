@@ -181,7 +181,7 @@ MainWindow {
         // TODO
         // Runs whatever the focused item declared for this key. Falls back to
         // click() so an ordinary button needs no declaration at all
-        function activate(key: int): bool {
+        function activate(key: int, modifiers: int): bool {
             const focused = window.activeFocusItem;
 
             if (focused === null) {
@@ -190,14 +190,14 @@ MainWindow {
 
             const info = contentContainer.FLFocus.find(focused);
 
-            if (contentContainer.runAction(info !== null ? info.getActionFor(key) : null)) {
+            if (contentContainer.runAction(info !== null ? info.getActionFor(key, modifiers) : null)) {
                 return true;
             }
 
             // TODO
             // This handler is the container's own, so what the container declares answers here the
             // way a button's own actions answer in its handler
-            if (contentContainer.runAction(contentContainer.FLFocus.getActionFor(key))) {
+            if (contentContainer.runAction(contentContainer.FLFocus.getActionFor(key, modifiers))) {
                 return true;
             }
 
@@ -205,6 +205,9 @@ MainWindow {
                 return false;
             }
 
+            // TODO
+            // The fallback ignores modifiers on purpose: a modified press no declared action
+            // answered still presses the thing, the way a modified click does
             if (key !== Qt.Key_Select && key !== Qt.Key_Return && key !== Qt.Key_Enter) {
                 return false;
             }
@@ -225,7 +228,7 @@ MainWindow {
             // TODO
             // Holding a face button repeats ~33 times a second, so only the
             // press itself activates
-            if (!event.isAutoRepeat && contentContainer.activate(event.key)) {
+            if (!event.isAutoRepeat && contentContainer.activate(event.key, event.modifiers)) {
                 event.accepted = true;
                 return;
             }
