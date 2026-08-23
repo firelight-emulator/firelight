@@ -212,7 +212,15 @@ int main(int argc, char *argv[]) {
 
   // ===== Set up QApplication ===============================================================
   QSurfaceFormat format;
+#ifdef Q_OS_MACOS
+  // Windowed surfaces composite on the display link whatever this says, so asking for anything else
+  // only misleads the code that reads it back
+  format.setSwapInterval(1);
+#else
+  // Presenting as soon as a frame is ready is what lets emulation timing be the truth rather than
+  // the display's, at the cost of tearing
   format.setSwapInterval(0);
+#endif
   QSurfaceFormat::setDefaultFormat(format);
 
   QApplication app(argc, argv);

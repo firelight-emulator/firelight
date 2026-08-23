@@ -54,13 +54,14 @@ public:
    *
    * @param data Pointer to the input audio data (interleaved stereo S16)
    * @param numFrames Number of frames in the input data (each frame consists of 2 samples: left and right)
-   * @param compensationDelta The number of samples to add to or remove from this call's output. Positive values
-   *   raise the output sample count and negative values lower it; what the number should be is the caller's to
-   *   decide (see AudioRateController)
+   * @param compensationRatio How much to stretch or shorten this call's output, as a fraction of the output rate.
+   *   Positive raises the output sample count and negative lowers it; what the number should be is the caller's to
+   *   decide (see AudioRateController). A rate rather than a count, so a core that hands over uneven batches gets
+   *   the same correction on each of them
    *
    * @return Vector containing the resampled audio data (interleaved stereo S16)
    */
-  std::vector<int16_t> process(const int16_t *data, size_t numFrames, int compensationDelta);
+  std::vector<int16_t> process(const int16_t *data, size_t numFrames, double compensationRatio);
 
   /**
    * @return true if the resampler has been initialized with a sample rate, false otherwise

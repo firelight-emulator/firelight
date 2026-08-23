@@ -120,6 +120,52 @@ private:
 
 std::atomic<int> skippedRenders{0};
 
+// FLDIAG (temporary)
+// How long each frame stays on screen, counted in refreshes. This is what smoothness actually is:
+// an even number every time looks right, a mix of 1 and 2 is judder however evenly the frames were
+// produced
+class DisplayDurations {
+public:
+  void recordPresent(const uint64_t frameId) {
+    std::lock_guard lock(m_mutex);
+
+    if (frameId == m_currentId) {
+      m_refreshes++;
+      return;
+    }
+
+    if (m_currentId != 0 && m_refreshes > 0) {
+      m_counts[std::min<size_t>(m_refreshes, m_counts.size() - 1)]++;
+      m_total++;
+    }
+
+    m_currentId = frameId;
+    m_refreshes = 1;
+
+    if (m_total >= 300) {
+      std::string shape;
+      for (size_t i = 0; i < m_counts.size(); ++i) {
+        if (m_counts[i] > 0) {
+          shape += fmt::format(" {}x:{}", i, m_counts[i]);
+        }
+      }
+      spdlog::info("FLDIAG shown-for  {} frames |{}", m_total, shape);
+      m_counts.fill(0);
+      m_total = 0;
+    }
+  }
+
+private:
+  std::mutex m_mutex;
+  std::array<int, 9> m_counts{};
+  uint64_t m_currentId = 0;
+  int m_refreshes = 0;
+  int m_total = 0;
+};
+
+DisplayDurations displayDurations;
+std::atomic<uint64_t> lastUploadedFrameId{0};
+
 IntervalHistogram presentIntervals("present   ");
 IntervalHistogram submitIntervals("submit    ");
 IntervalHistogram runFrameIntervals("runframe  ", &skippedRenders);
@@ -128,6 +174,8 @@ IntervalHistogram runFrameIntervals("runframe  ", &skippedRenders);
 void EmulatorItem::fldiagRecordRunFrame() { fldiag::runFrameIntervals.record(); }
 
 void EmulatorItem::fldiagRecordSkippedRender() { fldiag::skippedRenders++; }
+
+void EmulatorItem::fldiagRecordUploadedFrame(const uint64_t frameId) { fldiag::lastUploadedFrameId = frameId; }
 
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   // The emulator a hotkey acts on. Registered from here rather than when the
@@ -142,12 +190,26 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
       return;
     }
 
-    connect(w, &QQuickWindow::frameSwapped, this, [] { fldiag::presentIntervals.record(); }, Qt::DirectConnection);
+    connect(
+        w, &QQuickWindow::frameSwapped, this,
+        [this] {
+          fldiag::presentIntervals.record(); // FLDIAG (temporary)
+          fldiag::displayDurations.recordPresent(fldiag::lastUploadedFrameId.load());
+
+          // Display mode counts these
+          m_presentCount.fetch_add(1);
+          m_loopWake.notify_one();
+        },
+        Qt::DirectConnection);
 
     if (auto *screen = w->screen()) {
       spdlog::info("FLDIAG screen '{}' refreshRate={:.3f}Hz", screen->name().toStdString(), screen->refreshRate());
-      connect(screen, &QScreen::refreshRateChanged, this,
-              [](const qreal rate) { spdlog::info("FLDIAG refreshRate changed to {:.3f}Hz", rate); });
+      // A panel whose rate moves — ProMotion, or a VRR monitor — has to re-pace, or Display mode
+      // keeps holding frames for a number of refreshes that stopped being right
+      connect(screen, &QScreen::refreshRateChanged, this, [this](const qreal rate) {
+        spdlog::info("FLDIAG refreshRate changed to {:.3f}Hz", rate); // FLDIAG (temporary)
+        QMetaObject::invokeMethod(this, "reconfigurePacing", Qt::QueuedConnection);
+      });
     }
 
     connect(w, &QWindow::screenChanged, this, [](QScreen *screen) {
@@ -177,140 +239,119 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   m_rewindPointTimer.setSingleShot(false);
   connect(&m_rewindPointTimer, &QTimer::timeout, [this] {
     if (m_renderer) {
-      m_renderer->submitCommand({.type = EmulatorItemRenderer::WriteRewindPoint});
+      submitToEmulator({.type = firelight::emulation::EmulatorCommandType::WriteRewindPoint});
       update();
     }
   });
   m_rewindPointTimer.start();
 
-  const int64_t BUSY_WAIT_MARGIN_NS = 800000LL;
-
   m_emulationThread.setServiceLevel(QThread::QualityOfService::High);
-  m_emulationTimer.setInterval(std::chrono::nanoseconds(BUSY_WAIT_MARGIN_NS));
-  // m_emulatorTimer.setSingleShot(false);
-  m_emulationTimer.setTimerType(Qt::PreciseTimer);
 
-  connect(&m_emulationTimer, &QChronoTimer::timeout, [this] {
-    // Audio-driven pacing: submit a frame whenever the audio buffer has room to
-    // accept another, instead of spinning to a wall-clock target. The audio
-    // device's consumption rate becomes the master clock
-    if (m_audioSyncActive.load()) {
-      // When paused, no audio is produced so the buffer would sit empty and we'd
-      // submit a frame every tick — skip entirely (the renderer holds the pause
-      // image)
-      if (m_paused) {
-        return;
-      }
-      // Read the level through the service, which guards the instance's lifetime
-      // Dereferencing a raw instance pointer here races loadEntry/stopEmulation
-      // freeing it on the GUI thread (a use-after-free on game load/unload)
-      const float level = firelight::emulation::EmulationService::getInstance()->currentAudioBufferLevel();
-      // Keep the buffer around half full; below that, room for another frame
-      if (m_renderer && level >= 0.0f && level < 0.5f) {
-        fldiag::submitIntervals.record();
-        m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
-        QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
-      }
-      return;
-    }
-
-    auto actualTargetNs = m_emulationTimingTargetNs.load();
-    // Static variables for timing and rolling average
-    static int64_t previousFrameActualEndTimeNs = 0; // When the last frame *actually* ended (after spin)
-    static int64_t timingCorrectionNs = 0;           // Adaptive correction for the spin target
-
-    const std::size_t windowSize = 200;
-    static std::deque<int64_t> recentSignedDifferencesNs_deque;
-    static std::deque<int64_t> recentAbsoluteDifferencesNs_deque;
-    static int64_t rollingSumOfSignedDifferencesNs = 0;
-    static int64_t rollingSumOfAbsoluteDifferencesNs = 0;
-
-    if (previousFrameActualEndTimeNs == 0) {
-      // First call, or after a reset. Perform work and set the baseline
-      // CALL YOUR FRAME UPDATE/WORK FUNCTION HERE (e.g.,
-      // your_main_update_function();)
-
-      QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
-      previousFrameActualEndTimeNs = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-      spdlog::info("Timing initialized. First frame processed. End time recorded.");
-      return;
-    }
-
-    // Determine the target end time for *this* frame's spin
-    // Add the adaptive timingCorrectionNs here
-    int64_t intendedTargetFrameEndTimeNs = previousFrameActualEndTimeNs + actualTargetNs + timingCorrectionNs;
-    int64_t spinStartTimeNs = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-
-    // --- Busy Wait (Spin Loop) ---
-    if (spinStartTimeNs < intendedTargetFrameEndTimeNs) {
-      while (std::chrono::high_resolution_clock::now().time_since_epoch().count() < intendedTargetFrameEndTimeNs) {
-        // This is a hard spin, consumes 100% CPU on one core
-        // Optional: If there's significant time left (e.g., > 0.2-0.5 ms),
-        // you could std::this_thread::yield(); or a platform-specific short
-        // pause to reduce CPU load, at the cost of slightly less precision
-        // Example:
-        // if (intendedTargetFrameEndTimeNs -
-        //         std::chrono::high_resolution_clock::now()
-        //             .time_since_epoch()
-        //             .count() >
-        //     200000) { // > 0.2ms
-        //   std::this_thread::yield();
-        // }
-      }
-    }
-    // --- End of Busy Wait ---
-
-    auto currentFrameActualEndTimeNs = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-    int64_t achievedFrameDurationNs = currentFrameActualEndTimeNs - previousFrameActualEndTimeNs;
-    previousFrameActualEndTimeNs = currentFrameActualEndTimeNs; // Update for the next frame's
-                                                                // calculation
-
-    if (achievedFrameDurationNs <= 0 || achievedFrameDurationNs > (actualTargetNs * 5)) {
-      return;
-    }
-
-    int64_t currentSignedDifferenceNs = actualTargetNs - achievedFrameDurationNs; // Target - Actual
-    int64_t currentAbsoluteDifferenceNs = std::abs(currentSignedDifferenceNs);
-
-    rollingSumOfSignedDifferencesNs += currentSignedDifferenceNs;
-    recentSignedDifferencesNs_deque.push_back(currentSignedDifferenceNs);
-
-    rollingSumOfAbsoluteDifferencesNs += currentAbsoluteDifferenceNs;
-    recentAbsoluteDifferencesNs_deque.push_back(currentAbsoluteDifferenceNs);
-
-    if (recentSignedDifferencesNs_deque.size() > windowSize) {
-      rollingSumOfSignedDifferencesNs -= recentSignedDifferencesNs_deque.front();
-      recentSignedDifferencesNs_deque.pop_front();
-      rollingSumOfAbsoluteDifferencesNs -= recentAbsoluteDifferencesNs_deque.front();
-      recentAbsoluteDifferencesNs_deque.pop_front();
-    }
-
-    std::size_t currentSamplesInWindow = recentSignedDifferencesNs_deque.size();
-
-    if (currentSamplesInWindow > 0) {
-      double averageSignedDifferenceNs = static_cast<double>(rollingSumOfSignedDifferencesNs) / currentSamplesInWindow;
-      double averageAbsoluteDifferenceNs =
-          static_cast<double>(rollingSumOfAbsoluteDifferencesNs) / currentSamplesInWindow;
-      double averageSignedDifferenceFraction = averageSignedDifferenceNs / static_cast<double>(actualTargetNs);
-
-      if (currentSamplesInWindow > windowSize / 2) { // Wait for some stability in average
-        timingCorrectionNs = static_cast<int64_t>(averageSignedDifferenceNs / 10.0); // Apply 10% of the average error
-      }
-      // Clamp the correction to avoid excessive adjustments
-      const int64_t maxCorrectionNs = BUSY_WAIT_MARGIN_NS / 2; // Don't correct by more than half the spin margin
-      timingCorrectionNs = std::max(-maxCorrectionNs, std::min(timingCorrectionNs, maxCorrectionNs));
-    }
-
-    if (m_renderer) {
-      m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
-    }
-    QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
-  });
+  // The loop is the thread: it waits for the next frame to be due, runs it, and goes back to
+  // waiting. Nothing else is posted here, so there is no event loop to run
+  connect(&m_emulationThread, &QThread::started, this, [this] { runEmulationLoop(); }, Qt::DirectConnection);
 
   m_emulationThread.start();
   m_emulationThread.setPriority(QThread::TimeCriticalPriority);
-  m_emulationTimer.moveToThread(&m_emulationThread);
-  QMetaObject::invokeMethod(&m_emulationTimer, "start", Qt::QueuedConnection);
+}
+
+void EmulatorItem::submitToEmulator(const firelight::emulation::EmulatorCommand &command) {
+  if (const auto emulator = firelight::emulation::EmulationService::getInstance()->getCurrentEmulatorInstance()) {
+    emulator->submitCommand(command);
+  }
+}
+
+void EmulatorItem::waitForNextFrame() {
+  const auto deadlineNs = m_rateController.getNextDeadlineNs();
+
+  if (deadlineNs == 0) {
+    // Nothing has established a cadence yet — the first frame of a game, or a mode that hasn't been
+    // configured. Wait a moment rather than spinning
+    std::unique_lock lock(m_loopMutex);
+    // Audio asks the sink often enough that a frame is never late by more than this, and Display
+    // is woken by a refresh rather than the timeout
+    m_loopWake.wait_for(lock, std::chrono::milliseconds(1),
+                        [this] { return m_presentCount.load() > 0 || m_emulationStopping; });
+    return;
+  }
+
+  const auto marginNs = m_spinMarginNs.load();
+  const auto sleepUntilNs = deadlineNs - marginNs;
+  const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
+
+  if (sleepUntilNs > nowNs) {
+    std::unique_lock lock(m_loopMutex);
+    m_loopWake.wait_for(lock, std::chrono::nanoseconds(sleepUntilNs - nowNs),
+                        [this] { return m_emulationStopping.load(); });
+  }
+
+  // The last stretch is spun rather than slept, because a sleep that overshoots costs a frame where
+  // presentation follows production. A margin of 0 makes this a no-op
+  while (!m_emulationStopping && std::chrono::steady_clock::now().time_since_epoch().count() < deadlineNs) {
+  }
+}
+
+void EmulatorItem::runEmulationLoop() {
+  while (!m_emulationStopping) {
+    waitForNextFrame();
+
+    if (m_emulationStopping) {
+      return;
+    }
+
+    const auto decoupled = m_renderer != nullptr && m_renderer->isDecoupled();
+
+    if (!decoupled) {
+      // A core tied to the render thread still has its frames run there; all this decides is when
+      if (m_rateController.framesDue(std::chrono::steady_clock::now().time_since_epoch().count()) > 0 && m_renderer) {
+        submitToEmulator({.type = firelight::emulation::EmulatorCommandType::RunFrame});
+        QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+      }
+      continue;
+    }
+
+    auto *emulator = firelight::emulation::EmulationService::getInstance()->getCurrentEmulatorInstance();
+
+    if (emulator == nullptr) {
+      continue;
+    }
+
+    // Anything queued runs on this thread too, so a save state can't be taken from the middle of a
+    // frame
+    emulator->drainCommands();
+
+    if (m_paused) {
+      continue;
+    }
+
+    if (m_rateController.getContext().mode == firelight::emulation::SyncMode::Audio) {
+      m_rateController.setAudioBufferLevel(
+          firelight::emulation::EmulationService::getInstance()->currentAudioBufferLevel());
+    }
+
+    const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
+    auto frames = 0;
+
+    // Display puts frames on refreshes; everything else runs on a clock
+    for (auto refreshes = m_presentCount.exchange(0); refreshes > 0; --refreshes) {
+      frames += m_rateController.framesDueOnPresent();
+    }
+
+    frames += m_rateController.framesDue(nowNs);
+
+    if (frames > 0) {
+      m_renderer->runFrames(frames);
+      QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+    }
+
+    emulator->drainCommands();
+
+    // The GUI's undo affordance follows what the emulator actually has to undo
+    if (const auto canUndo = emulator->canUndoLoadSuspendPoint(); canUndo != m_canUndoLoadSuspendPoint) {
+      m_canUndoLoadSuspendPoint = canUndo;
+      QMetaObject::invokeMethod(this, "canUndoLoadSuspendPointChanged", Qt::QueuedConnection);
+    }
+  }
 }
 
 EmulatorItem::~EmulatorItem() {
@@ -320,15 +361,10 @@ EmulatorItem::~EmulatorItem() {
   }
   getDiscordManager()->clearActivity();
 
-  // m_emulationTimer was moved to m_emulationThread (see the constructor). Stop
-  // it *on that thread* and wait for the stop to complete before quitting the
-  // thread, so the timer is inactive by the time it's destroyed as a member on
-  // the GUI thread. Otherwise Qt's cross-thread killTimer path runs against the
-  // torn-down thread's timer dispatcher ("Timers cannot be stopped from another
-  // thread") and can fault at shutdown (0xC0000005). A blocking queued call is
-  // safe here: the timeout handler only enqueues render commands (never blocks
-  // on the GUI thread), so it can't deadlock, and the thread is always running
-  QMetaObject::invokeMethod(&m_emulationTimer, "stop", Qt::BlockingQueuedConnection);
+  // Wake the loop so it sees the flag rather than sleeping out its current wait, then let the
+  // thread finish the frame it may be in the middle of
+  m_emulationStopping = true;
+  m_loopWake.notify_all();
   m_emulationThread.quit();
   m_emulationThread.wait();
 
@@ -352,7 +388,7 @@ void EmulatorItem::advanceOneFrame() {
   // Pause first so the pacing thread stops queueing frames of its own, then
   // hand the renderer exactly one — the same command the pacer would have sent
   setPaused(true);
-  m_renderer->submitCommand({.type = EmulatorItemRenderer::RunFrame});
+  submitToEmulator({.type = firelight::emulation::EmulatorCommandType::RunFrame});
   update();
 }
 
@@ -465,83 +501,83 @@ void EmulatorItem::reconfigurePacing() {
     }
   }
 
-  // Audio sync needs a working audio device; otherwise fall back to wall-clock
+  // Audio sync needs a working audio device; without one it is just a clock at the core's rate
   const bool audioAvailable = emulator->getAudioBufferLevel() >= 0.0f;
-  m_audioSyncActive = (method == SyncMethod::Audio) && audioAvailable;
 
-  // Only sync-to-monitor bends audio to the display rate; other modes play audio
-  // at the core's native rate
-  double audioRatio = 1.0;
-  int64_t targetNs = 0;
+  firelight::emulation::PacingContext context;
+  context.contentFps = coreFps;
 
-  if (method == SyncMethod::Monitor) {
-    // Match the display only when it divides down close to the content rate
-    // (e.g. 60/120/240 Hz for a 60 fps game); otherwise fall back to native so we
-    // never over/underspeed the game (e.g. on a 144 Hz display)
-    if (const double rate = monitorPacingRate(coreFps, refreshHz); rate > 0.0) {
-      targetNs = static_cast<int64_t>(1e9 / rate);
-      audioRatio = rate / coreFps;
-    }
-    // else: leave targetNs 0 -> native fallback below
-  } else {
-    targetNs = computeTargetIntervalNs(method, coreFps, targetFramerate, refreshHz);
+  switch (method) {
+  case SyncMethod::Audio:
+    context.mode = audioAvailable ? firelight::emulation::SyncMode::Audio : firelight::emulation::SyncMode::Fixed;
+    break;
+  case SyncMethod::Monitor:
+    context.mode = firelight::emulation::SyncMode::Display;
+    context.displayHz = refreshHz;
+    break;
+  case SyncMethod::Fixed:
+    context.mode = firelight::emulation::SyncMode::Fixed;
+    context.contentFps = targetFramerate > 0 ? static_cast<double>(targetFramerate) : coreFps;
+    break;
+  case SyncMethod::Native:
+    context.mode = firelight::emulation::SyncMode::Fixed;
+    break;
   }
 
-  if (targetNs <= 0) {
-    // Native pacing (also the fallback for audio-with-no-device and for a monitor
-    // that doesn't line up with the content rate)
-    targetNs = static_cast<int64_t>(1e9 / coreFps);
-  }
+  m_rateController.configure(context);
 
-  emulator->setAudioPlaybackRateRatio(audioRatio);
-  m_emulationTimingTargetNs = targetNs;
+  emulator->setAudioPlaybackRateRatio(m_rateController.getAudioRatio());
+  // Nothing here changes the rate audio is produced at any more — Audio mode gates whole frames on
+  // there being room, which is what the resampler's own correction is for the fine end of
+  emulator->setPacingOwnsAudioRate(false);
 }
 
 void EmulatorItem::writeSuspendPoint(const int index) {
   if (m_renderer) {
-    m_renderer->submitCommand({.type = EmulatorItemRenderer::WriteSuspendPoint, .suspendPointIndex = index});
+    submitToEmulator(
+        {.type = firelight::emulation::EmulatorCommandType::WriteSuspendPoint, .suspendPointIndex = index});
     update();
   }
 }
 
 void EmulatorItem::captureScreenshot() {
   if (m_renderer) {
-    m_renderer->submitCommand({.type = EmulatorItemRenderer::CaptureScreenshot});
+    submitToEmulator({.type = firelight::emulation::EmulatorCommandType::CaptureScreenshot});
     update();
   }
 }
 
 void EmulatorItem::captureVideoClip() {
   if (m_renderer) {
-    m_renderer->submitCommand({.type = EmulatorItemRenderer::CaptureVideoClip});
+    submitToEmulator({.type = firelight::emulation::EmulatorCommandType::CaptureVideoClip});
     update();
   }
 }
 
 void EmulatorItem::loadSuspendPoint(const int index) {
   if (m_renderer) {
-    m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadSuspendPoint, .suspendPointIndex = index});
+    submitToEmulator({.type = firelight::emulation::EmulatorCommandType::LoadSuspendPoint, .suspendPointIndex = index});
     update();
   }
 }
 
 void EmulatorItem::undoLastLoadSuspendPoint() {
   if (m_renderer) {
-    m_renderer->submitCommand({.type = EmulatorItemRenderer::UndoLoadSuspendPoint});
+    submitToEmulator({.type = firelight::emulation::EmulatorCommandType::UndoLoadSuspendPoint});
     update();
   }
 }
 
 void EmulatorItem::createRewindPoints() {
   if (m_renderer) {
-    m_renderer->submitCommand({.type = EmulatorItemRenderer::EmitRewindPoints});
+    submitToEmulator({.type = firelight::emulation::EmulatorCommandType::EmitRewindPoints});
     update();
   }
 }
 
 void EmulatorItem::loadRewindPoint(const int index) {
   if (m_renderer) {
-    m_renderer->submitCommand({.type = EmulatorItemRenderer::LoadRewindPoint, .rewindPointIndex = index});
+    submitToEmulator({.type = firelight::emulation::EmulatorCommandType::LoadRewindPoint, .rewindPointIndex = index});
     update();
   }
 }
@@ -556,8 +592,8 @@ void EmulatorItem::setPlaybackMultiplier(float playbackMultiplier) {
     emit playbackMultiplierChanged();
 
     if (m_renderer) {
-      m_renderer->submitCommand(
-          {.type = EmulatorItemRenderer::SetPlaybackMultiplier, .playbackMultiplier = m_playbackMultiplier});
+      submitToEmulator({.type = firelight::emulation::EmulatorCommandType::SetPlaybackMultiplier,
+                        .playbackMultiplier = m_playbackMultiplier});
       update();
     }
   }

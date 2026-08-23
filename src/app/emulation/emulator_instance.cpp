@@ -12,6 +12,7 @@
 #include <firelight/settings/settings_catalog.hpp>
 #include <firelight/settings/settings_service.hpp>
 
+#include <chrono>
 #include <filesystem>
 #include <libretro/game.hpp>
 #include <spdlog/spdlog.h>
@@ -120,7 +121,7 @@ bool EmulatorInstance::initialize(libretro::IVideoDataReceiver *videoDataReceive
     m_audioOutput->setMuted(m_startMuted);
     // Apply the resolved DRC setting (refreshAllSettings may have run before
     // the output existed, so it only stored the value on this instance)
-    m_audioOutput->setDynamicRateControlEnabled(m_dynamicRateControl);
+    applyAudioRateControl();
     m_core->setAudioReceiver(m_audioOutput);
   }
 
@@ -407,6 +408,137 @@ void EmulatorInstance::runFrame() {
   }
 }
 
+void EmulatorInstance::submitCommand(const EmulatorCommand &command) {
+  std::lock_guard lock(m_commandQueueMutex);
+  m_commandQueue.push_back(command);
+}
+
+void EmulatorInstance::drainCommands() {
+  std::deque<EmulatorCommand> pending;
+
+  {
+    std::lock_guard lock(m_commandQueueMutex);
+    pending.swap(m_commandQueue);
+  }
+
+  // Handled without the lock: serializing a state is heavy, and whoever queued the next command
+  // shouldn't wait behind it
+  while (!pending.empty()) {
+    const auto command = pending.front();
+    pending.pop_front();
+    handleCommand(command);
+  }
+}
+
+SuspendPoint EmulatorInstance::capturePoint() {
+  SuspendPoint point;
+  point.state = serializeState();
+  point.timestamp =
+      std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
+          .count();
+  point.saveSlot = m_saveSlotNumber;
+
+  if (m_thumbnailProvider) {
+    point.image = m_thumbnailProvider();
+  }
+
+  if (const auto achievements = m_context.achievementManager) {
+    point.retroachievementsState = achievements->serializeState();
+  }
+
+  return point;
+}
+
+void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
+  switch (command.type) {
+  case EmulatorCommandType::RunFrame:
+    // Stepping: it runs here rather than waiting for whatever paces frames to decide it is due
+    runFrame();
+    break;
+
+  case EmulatorCommandType::WriteRewindPoint: {
+    // Rolling snapshots take whatever picture is on hand rather than forcing a readback, which
+    // stalled hardware cores every few seconds. The state is always current either way
+    m_rewindPoints.push_front(capturePoint());
+
+    if (m_rewindPoints.size() > MAX_REWIND_POINTS) {
+      m_rewindPoints.pop_back();
+    }
+  } break;
+
+  case EmulatorCommandType::LoadRewindPoint: {
+    const auto index = static_cast<size_t>(command.rewindPointIndex - 1);
+
+    if (index >= m_rewindPoints.size()) {
+      break;
+    }
+
+    const auto &point = m_rewindPoints.at(index);
+    deserializeState(point.state);
+
+    if (const auto achievements = m_context.achievementManager; achievements && !point.retroachievementsState.empty()) {
+      achievements->deserializeState(point.retroachievementsState);
+    }
+  } break;
+
+  case EmulatorCommandType::WriteSuspendPoint: {
+    if (!m_context.saveManager) {
+      break;
+    }
+
+    m_context.saveManager->writeSuspendPoint(m_contentHash, m_saveSlotNumber, command.suspendPointIndex,
+                                             capturePoint());
+  } break;
+
+  case EmulatorCommandType::LoadSuspendPoint: {
+    if (!m_context.saveManager) {
+      break;
+    }
+
+    const auto point =
+        m_context.saveManager->readSuspendPoint(m_contentHash, m_saveSlotNumber, command.suspendPointIndex);
+    if (!point.has_value()) {
+      break;
+    }
+
+    // What was replaced is kept so it can be put back, which is the whole of undo
+    m_beforeLastLoadSuspendPoint = capturePoint();
+
+    deserializeState(point->state);
+
+    if (const auto achievements = m_context.achievementManager;
+        achievements && !point->retroachievementsState.empty()) {
+      achievements->deserializeState(point->retroachievementsState);
+    }
+  } break;
+
+  case EmulatorCommandType::UndoLoadSuspendPoint: {
+    if (m_beforeLastLoadSuspendPoint.state.empty()) {
+      break;
+    }
+
+    deserializeState(m_beforeLastLoadSuspendPoint.state);
+
+    if (const auto achievements = m_context.achievementManager;
+        achievements && !m_beforeLastLoadSuspendPoint.retroachievementsState.empty()) {
+      achievements->deserializeState(m_beforeLastLoadSuspendPoint.retroachievementsState);
+    }
+
+    m_beforeLastLoadSuspendPoint = {};
+  } break;
+
+  case EmulatorCommandType::EmitRewindPoints:
+  case EmulatorCommandType::SetPlaybackMultiplier:
+  case EmulatorCommandType::CaptureScreenshot:
+  case EmulatorCommandType::CaptureVideoClip:
+    // Pixels off a GPU, or an image provider QML reads: none of that is the emulator's to do
+    if (m_commandSink) {
+      m_commandSink(command);
+    }
+    break;
+  }
+}
+
 void EmulatorInstance::reset() {
   m_core->reset();
   if (const auto achievements = m_context.achievementManager) {
@@ -487,8 +619,17 @@ void EmulatorInstance::setAudioPlaybackRateRatio(const double ratio) {
 
 void EmulatorInstance::setDynamicRateControlEnabled(const bool enabled) {
   m_dynamicRateControl = enabled;
+  applyAudioRateControl();
+}
+
+void EmulatorInstance::setPacingOwnsAudioRate(const bool owns) {
+  m_pacingOwnsAudioRate = owns;
+  applyAudioRateControl();
+}
+
+void EmulatorInstance::applyAudioRateControl() const {
   if (m_audioOutput) {
-    m_audioOutput->setDynamicRateControlEnabled(enabled);
+    m_audioOutput->setDynamicRateControlEnabled(m_dynamicRateControl && !m_pacingOwnsAudioRate);
   }
 }
 

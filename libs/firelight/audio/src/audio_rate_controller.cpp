@@ -2,6 +2,18 @@
 
 #include <cmath>
 
+namespace {
+// TODO
+// How hard the rate is pulled, as a fraction of the output rate. These are the sample counts the
+// controller used to return, divided by a typical callback's worth of output, so a buffer that was
+// steady before stays steady now
+constexpr double DRAIN_HARD = 0.00625;
+constexpr double DRAIN_MEDIUM = 0.005;
+constexpr double DRAIN_SOFT = 0.00375;
+constexpr double FILL_SOFT = 0.00125;
+constexpr double FILL_MEDIUM = 0.0025;
+} // namespace
+
 void AudioRateController::reset() {
   for (int &bytes : m_usageBytes) {
     bytes = 0;
@@ -12,7 +24,7 @@ void AudioRateController::reset() {
   m_previousAvgFillRatio = -1.0;
 }
 
-int AudioRateController::computeCompensation(const int usedBytes, const int bufferCapacityBytes) {
+double AudioRateController::computeCompensation(const int usedBytes, const int bufferCapacityBytes) {
   if (bufferCapacityBytes <= 0) {
     return 0;
   }
@@ -60,24 +72,25 @@ int AudioRateController::computeCompensation(const int usedBytes, const int buff
   }
 
   if (!adjust) {
-    return 0;
+    return 0.0;
   }
 
-  // Buffer too full, drop samples. Too empty, add samples
+  // Buffer too full, shorten the audio. Too empty, stretch it. The further off target, the firmer
+  // the answer
   if (deviation > 0.6) {
-    return -5;
+    return -DRAIN_HARD;
   }
   if (deviation > 0.3) {
-    return -4;
+    return -DRAIN_MEDIUM;
   }
   if (deviation > 0.1) {
-    return -3;
+    return -DRAIN_SOFT;
   }
   if (deviation > -0.3) {
-    return 0;
+    return 0.0;
   }
   if (deviation > -0.6) {
-    return 1;
+    return FILL_SOFT;
   }
-  return 2;
+  return FILL_MEDIUM;
 }

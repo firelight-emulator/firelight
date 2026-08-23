@@ -99,11 +99,12 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
 
     // Steer the buffer toward ~50% full by nudging the resample rate, unless the
     // user has disabled Dynamic Rate Control (advanced setting)
-    const int delta = m_drcEnabled.load() ? m_rateController.computeCompensation(static_cast<int>(usedBytes),
-                                                                                 static_cast<int>(bufferTotalCapacity))
-                                          : 0;
+    const double compensation =
+        m_drcEnabled.load()
+            ? m_rateController.computeCompensation(static_cast<int>(usedBytes), static_cast<int>(bufferTotalCapacity))
+            : 0.0;
 
-    std::vector<int16_t> output = m_resampler.process(data, numFrames, delta);
+    std::vector<int16_t> output = m_resampler.process(data, numFrames, compensation);
     if (output.empty()) {
       return numFrames; // input consumed, nothing produced this call
     }

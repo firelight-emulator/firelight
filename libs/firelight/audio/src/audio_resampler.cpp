@@ -61,7 +61,8 @@ void AudioResampler::rebuild() {
   }
 }
 
-std::vector<int16_t> AudioResampler::process(const int16_t *data, const size_t numFrames, const int compensationDelta) {
+std::vector<int16_t> AudioResampler::process(const int16_t *data, const size_t numFrames,
+                                             const double compensationRatio) {
   if (const double req = m_requestedRatio.load(); std::abs(req - m_activeRatio) > 1e-6 && m_sampleRate > 0) {
     m_activeRatio = req;
     rebuild();
@@ -73,12 +74,17 @@ std::vector<int16_t> AudioResampler::process(const int16_t *data, const size_t n
 
   // TODO
   // The compensation window is measured in output samples: what this call is about to produce, plus
-  // the samples the delta asks it to gain or lose. The window also caps the conversion, so one
+  // the samples the ratio asks it to gain or lose. The window also caps the conversion, so one
   // measured in input frames holds an upsample down to the count it was handed
   const auto nominal = static_cast<int64_t>(numFrames) * m_effectiveOutputRate / m_sampleRate;
 
-  if (const auto window = static_cast<int>(nominal) + compensationDelta; window > 0) {
-    swr_set_compensation(m_swrContext, compensationDelta, window);
+  // TODO
+  // The ratio becomes a count against this batch, so a small batch gets a small correction rather
+  // than the same number of samples spread over a fraction of the audio
+  const auto delta = static_cast<int>(std::lround(compensationRatio * static_cast<double>(nominal)));
+
+  if (const auto window = static_cast<int>(nominal) + delta; window > 0) {
+    swr_set_compensation(m_swrContext, delta, window);
   }
 
   const int maxOut = swr_get_out_samples(m_swrContext, static_cast<int>(numFrames));

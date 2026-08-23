@@ -1,6 +1,8 @@
 #pragma once
 
 #include "audio/audio_manager.hpp"
+#include "emulation/emulation_rate_controller.hpp"
+#include "emulation/emulator_command.hpp"
 #include "emulation/emulator_controller.hpp"
 #include "emulator_item_renderer.hpp"
 #include "libretro/core_configuration.hpp"
@@ -10,7 +12,9 @@
 
 #include <QThreadPool>
 #include <atomic>
+#include <condition_variable>
 #include <cstdint>
+#include <mutex>
 #include <qchronotimer.h>
 #include <rcheevos/ra_client.hpp>
 #include <string>
@@ -51,6 +55,7 @@ public:
   // FLDIAG (temporary instrumentation — remove with the rest of the FLDIAG code)
   static void fldiagRecordRunFrame();
   static void fldiagRecordSkippedRender();
+  static void fldiagRecordUploadedFrame(uint64_t frameId);
 
   ~EmulatorItem() override;
 
@@ -199,6 +204,21 @@ protected:
   QQuickRhiItemRenderer *createRenderer() override;
 
 private:
+  /**
+   * Runs frames for as long as the emulator is alive, on its own thread
+   */
+  void runEmulationLoop();
+
+  /**
+   * Waits for the next frame to be due: a deadline for a clock-driven mode, a present for Display
+   */
+  void waitForNextFrame();
+
+  /**
+   * Queues something for the running emulator, if there is one
+   */
+  static void submitToEmulator(const firelight::emulation::EmulatorCommand &command);
+
   bool m_stopping = false;
   QThreadPool m_threadPool;
   QTimer m_rewindPointTimer;
@@ -207,12 +227,26 @@ private:
   bool m_rewindEnabled = true;
 
   QThread m_emulationThread;
-  QChronoTimer m_emulationTimer{};
+
+  // What decides when a frame is due, for whichever mode is in force
+  firelight::emulation::EmulationRateController m_rateController;
+
+  // The loop runs until this is set; the condition variable is how a sleeping loop is woken early
+  // to shut down rather than sleeping out the rest of its wait
+  std::atomic<bool> m_emulationStopping = false;
+  std::mutex m_loopMutex;
+  std::condition_variable m_loopWake;
+
+  // Refreshes since the loop last looked. A count rather than a flag: two can land between wakes,
+  // and holding a frame for a number of refreshes only works if every one of them is seen
+  std::atomic<int> m_presentCount = 0;
+
+  // How much of the wait before a frame is spent spinning rather than sleeping. Sleeping alone
+  // overshoots by more than a frame can afford where presentation follows production; 0 is pure sleep
+  std::atomic<int64_t> m_spinMarginNs = 1000000;
   // Wall-clock target interval for native/monitor/fixed pacing. Written on the
   // GUI thread (reconfigurePacing), read on the emulation thread
-  std::atomic<int64_t> m_emulationTimingTargetNs = 16666667;
   // When true, pace off audio buffer occupancy instead of the wall clock
-  std::atomic<bool> m_audioSyncActive = false;
   // Core's native fps, cached from the renderer geometry callback
   std::atomic<double> m_coreFps = 60.0;
 

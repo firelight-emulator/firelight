@@ -1,17 +1,24 @@
 #pragma once
 #include "emulation_context.hpp"
+#include "emulator_command.hpp"
+#include "frame_slot.hpp"
 #include "libretro/core_registry.hpp"
 
 #include <firelight/cheats/cheat.hpp>
 #include <firelight/cheats/cheat_engine.hpp>
 #include <firelight/event_dispatcher.hpp>
+#include <firelight/image.hpp>
 #include <firelight/libretro/audio_input_provider.hpp>
 #include <firelight/libretro/audio_output.hpp>
 #include <firelight/libretro/icore.hpp>
 #include <firelight/saves/suspend_point.hpp>
 
+#include <atomic>
+#include <deque>
+#include <functional>
 #include <future>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -24,6 +31,11 @@ class CoreSettingsApplier;
 // the exception: it's read from the pacing thread (backed by an atomic)
 class EmulatorInstance {
 public:
+  /**
+   * How many rewind snapshots are kept in memory
+   */
+  static constexpr size_t MAX_REWIND_POINTS = 10;
+
   EmulatorInstance(std::unique_ptr<::libretro::ICore>, std::string contentPath, std::string contentHash, int platformId,
                    int saveSlotNumber, std::vector<uint8_t> gameData, std::vector<uint8_t> saveData,
                    EmulationContext context);
@@ -90,6 +102,13 @@ public:
   // advanced setting). Stored so it can be applied when the AudioManager is
   // (re)created, and forwarded live when it already exists
   void setDynamicRateControlEnabled(bool enabled);
+
+  /**
+   * Tells the emulator that whatever is pacing it is already holding the audio buffer where it wants
+   * it, so the resampler's own correction stands down. Two loops on one error signal fight; the one
+   * allowed to change the thing that is wrong should be the one correcting
+   */
+  void setPacingOwnsAudioRate(bool owns);
   bool getDynamicRateControlEnabled() const;
 
   // Whether the instant-replay recorder should keep a rolling window while this
@@ -101,6 +120,46 @@ public:
   // Sink for the host game stream (null when netplay isn't wired); the
   // renderer pushes each frame into it
   [[nodiscard]] media::IClipSink *getNetplayStreamSink() const { return m_context.netplayStreamSink; }
+
+  /**
+   * The latest frame this emulator produced, and the one place anything reads it from — the
+   * renderer, screenshots, suspend-point thumbnails, the clip recorder, the netplay sink
+   */
+  [[nodiscard]] FrameSlot &getFrameSlot() { return m_frameSlot; }
+
+  // --- Queued work ----------------------------------------------------------
+  /**
+   * Queues something to be done between frames. Safe to call from any thread
+   */
+  void submitCommand(const EmulatorCommand &command);
+
+  /**
+   * Does everything queued since the last call. Must run on the thread that runs frames, which is
+   * what makes serializing a state safe without locking one out of the other
+   */
+  void drainCommands();
+
+  /**
+   * Where commands this instance doesn't own are sent — the ones that need pixels off a GPU, or a
+   * QML image provider. Unset in a headless run, where those commands are simply dropped
+   */
+  void setCommandSink(std::function<void(const EmulatorCommand &)> sink) { m_commandSink = std::move(sink); }
+
+  /**
+   * Where the picture attached to a suspend or rewind point comes from. Unset means points are
+   * stored without one, which is what a run with nothing on screen wants
+   */
+  void setThumbnailProvider(std::function<Image()> provider) { m_thumbnailProvider = std::move(provider); }
+
+  /**
+   * The rewind points held in memory, newest first
+   */
+  [[nodiscard]] const std::deque<SuspendPoint> &getRewindPoints() const { return m_rewindPoints; }
+
+  /**
+   * @return Whether undoing the last suspend-point load would do anything
+   */
+  [[nodiscard]] bool canUndoLoadSuspendPoint() const { return !m_beforeLastLoadSuspendPoint.state.empty(); }
 
   // Forward the two core-side input settings (glide speed for stick-driven
   // pointer devices; whether the physical mouse drives mouse/light-gun devices)
@@ -145,6 +204,32 @@ public:
   void removeCheat(int cheatId);
 
 private:
+  /**
+   * Pushes the resampler correction the setting and the pacing mode agree on
+   */
+  void applyAudioRateControl() const;
+
+  /**
+   * Handles one queued command, or hands it on when it belongs to whoever owns the screen
+   */
+  void handleCommand(const EmulatorCommand &command);
+
+  /**
+   * Builds a point from the state as it stands, with a picture when something can supply one
+   */
+  [[nodiscard]] SuspendPoint capturePoint();
+
+  std::mutex m_commandQueueMutex;
+  std::deque<EmulatorCommand> m_commandQueue;
+  std::function<void(const EmulatorCommand &)> m_commandSink;
+  std::function<Image()> m_thumbnailProvider;
+
+  // Rolling rewind snapshots, newest first, and the state replaced by the last suspend-point load
+  std::deque<SuspendPoint> m_rewindPoints;
+  SuspendPoint m_beforeLastLoadSuspendPoint;
+
+  FrameSlot m_frameSlot;
+
   // Resolves the controller variant selected for a port: the per-game override
   // (by coreDeviceId) if still valid for the loaded core, else the default
   [[nodiscard]] CoreDeviceVariant resolveSelectedVariant(unsigned port) const;
@@ -159,7 +244,8 @@ private:
 
   cheats::CheatEngine m_cheatEngine;
 
-  bool m_initialized = false;
+  // Written on the render thread when the core comes up, read by the thread that runs frames
+  std::atomic<bool> m_initialized = false;
 
   EmulationContext m_context;
   std::unique_ptr<::libretro::ICore> m_core;
@@ -211,6 +297,7 @@ private:
   std::string m_syncMethod;
   int m_targetFramerate = 0;
   bool m_dynamicRateControl = true;
+  bool m_pacingOwnsAudioRate = false;
   // Read from the render thread (renderer's clip feed); written from the GUI
   // thread when settings change. A bool toggle, so a benign 1-frame-stale read
   bool m_instantReplayEnabled = false;

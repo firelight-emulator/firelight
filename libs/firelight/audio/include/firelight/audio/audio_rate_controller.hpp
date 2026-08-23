@@ -6,10 +6,16 @@
 class AudioRateController {
 public:
   /**
-   * Calculates the compensation value based on the current fill level of the audio sink buffer
-   * Can be used with AudioResampler to adjust the audio rate dynamically to prevent buffer underruns or overruns
+   * Calculates the compensation for the current fill level of the audio sink buffer, as a fraction of
+   * the output rate: positive stretches the audio to fill a buffer that is draining, negative drains
+   * one that is filling.
+   *
+   * A rate rather than a sample count, because the same correction has to mean the same thing however
+   * many samples the core happened to hand over. Cores do not deliver evenly — mupen alternates
+   * batches of roughly 500 and 30 — and a fixed count applied to the small one is a swing of over ten
+   * percent
    */
-  int computeCompensation(int usedBytes, int bufferCapacityBytes);
+  double computeCompensation(int usedBytes, int bufferCapacityBytes);
 
   /**
    * Resets the internal state of the audio rate controller, clearing any previous usage data

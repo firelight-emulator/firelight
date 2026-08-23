@@ -1,6 +1,7 @@
 #pragma once
 
 #include "audio/audio_manager.hpp"
+#include "emulation/emulator_command.hpp"
 #include "emulation/emulator_instance.hpp"
 #include "emulator_vulkan_renderer.hpp"
 #include "libretro/core.hpp"
@@ -8,6 +9,7 @@
 
 #include <firelight/activity/activity_log.hpp>
 #include <firelight/libretro/video_data_receiver.hpp>
+#include <firelight/video_frame.hpp>
 
 #include <QElapsedTimer>
 #include <QImage>
@@ -93,30 +95,52 @@ public:
   QString m_contentPath;
   float m_playbackMultiplier = 1;
 
-  enum EmulatorCommandType {
-    WriteRewindPoint,
-    EmitRewindPoints,
-    LoadRewindPoint,
-    WriteSuspendPoint,
-    LoadSuspendPoint,
-    UndoLoadSuspendPoint,
-    SetPlaybackMultiplier,
-    CaptureScreenshot,
-    CaptureVideoClip,
-    RunFrame
-  };
+  using EmulatorCommand = firelight::emulation::EmulatorCommand;
 
-  struct EmulatorCommand {
-    EmulatorCommandType type;
-    int suspendPointIndex;
-    int rewindPointIndex;
-    float playbackMultiplier;
-    // Set when a capture command was held back a frame to force a fresh
-    // framebuffer readback (HW cores that were idle). Prevents re-deferral
-    bool deferred = false;
-  };
+  /**
+   * Handles a command the emulator handed on because it needs a screen
+   */
+  void handleCommand(const firelight::emulation::EmulatorCommand &command);
 
-  void submitCommand(EmulatorCommand command);
+  /**
+   * Makes frame the emulator's current one and hands it to the consumers that want every frame
+   */
+  void publishFrame(firelight::VideoFrame frame);
+
+  /**
+   * @return The emulator's current frame as a QImage, or a null image when there isn't one
+   */
+  [[nodiscard]] QImage currentFrameImage() const;
+
+  /**
+   * Puts the emulator's current frame on colorTexture()
+   */
+  void uploadCurrentFrame(QRhiResourceUpdateBatch *batch);
+
+  /**
+   * @return Whether this core can run away from the render thread. A hardware-rendered core and the
+   *   OpenGL backend both need the graphics context the render thread holds; everything else only
+   *   needs somewhere to put pixels
+   */
+  [[nodiscard]] bool isDecoupled() const {
+    return !m_usingHardwareRenderer && m_graphicsApi != QSGRendererInterface::OpenGL;
+  }
+
+  /**
+   * Runs count frames, honouring the playback multiplier. Called from whichever thread drives the
+   * emulator — the render thread for a coupled core, the emulation thread otherwise
+   */
+  void runFrames(int count);
+
+  /**
+   * Handles everything queued since the last call: save states, rewind points, captures. Runs on the
+   * same thread as the frames so state can't be serialised out from under one
+   */
+
+  /**
+   * Runs exactly one frame whether or not the emulator is paused
+   */
+  void runOneFrame();
 
 protected:
   ~EmulatorItemRenderer() override;
@@ -153,20 +177,13 @@ private:
   int64_t m_streamFrameIndex = 0;
 
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
-  QQueue<EmulatorCommand> m_commandQueue;
   // Guards m_commandQueue against concurrent enqueue (GUI/pacing threads) and
   // drain (render thread)
-  std::mutex m_commandQueueMutex;
   // Capture commands deferred one frame to wait for a fresh readback. Only ever
   // touched on the render thread (in synchronize), so it needs no lock
-  QQueue<EmulatorCommand> m_deferredCommands;
   // Forces a single framebuffer readback next frame (idle HW cores)
   bool m_captureNextFrame = false;
 
-  QImage m_overlayImage;
-  QImage m_currentImage;
-
-  SuspendPoint m_beforeLastLoadSuspendPoint;
   QList<QString> m_rewindImageUrls{};
 
   QElapsedTimer m_playSessionTimer;
@@ -174,6 +191,7 @@ private:
 
   bool m_quitting = false;
   bool m_shouldRunFrame = true;
+  bool m_hooksInstalled = false;
 
   QThread m_emulatorThread;
   QChronoTimer m_emulatorTimer{};
@@ -190,8 +208,6 @@ private:
   int m_frameNumber = 0;
   int m_currentWaitFrames = 0;
   int m_waitFrames = 0;
-
-  QList<SuspendPoint> m_rewindPoints;
 
   std::function<void(int, int, float, double)> m_geometryChangedCallback = nullptr;
 
@@ -224,7 +240,7 @@ private:
 
   void displayPauseImage(QRhiCommandBuffer *cb);
 
-  // Reads the composited colorTexture() back to a CPU QImage (m_currentImage)
+  // Reads the composited colorTexture() back and publishes it as the current frame
   // and feeds it to the clip recorder and netplay stream. Works for software
   // and hardware cores alike, since both fill colorTexture()
   void scheduleFrameReadback(QRhiResourceUpdateBatch *batch);

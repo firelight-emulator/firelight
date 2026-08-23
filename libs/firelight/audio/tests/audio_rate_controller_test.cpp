@@ -6,8 +6,8 @@ namespace {
 constexpr int CAPACITY = 16384;
 
 // Feed the same occupancy enough times to fill the rolling average window
-int settle(AudioRateController &controller, int usedBytes) {
-  int delta = 0;
+double settle(AudioRateController &controller, int usedBytes) {
+  double delta = 0.0;
   for (int i = 0; i < 15; ++i) {
     delta = controller.computeCompensation(usedBytes, CAPACITY);
   }
@@ -27,12 +27,12 @@ TEST(AudioRateControllerTest, AddsSamplesWhenBufferEmpty) {
 
 TEST(AudioRateControllerTest, NoCompensationNearTarget) {
   AudioRateController controller;
-  EXPECT_EQ(settle(controller, CAPACITY / 2), 0);
+  EXPECT_EQ(settle(controller, CAPACITY / 2), 0.0);
 }
 
 TEST(AudioRateControllerTest, ZeroCapacityIsSafe) {
   AudioRateController controller;
-  EXPECT_EQ(controller.computeCompensation(100, 0), 0);
+  EXPECT_EQ(controller.computeCompensation(100, 0), 0.0);
 }
 
 TEST(AudioRateControllerTest, ResetClearsWindow) {
