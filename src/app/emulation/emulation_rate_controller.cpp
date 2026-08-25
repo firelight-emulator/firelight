@@ -24,13 +24,16 @@ constexpr double DUE_EPSILON = 1e-4;
 } // namespace
 
 void EmulationRateController::configure(const PacingContext &context) {
-  const auto modeChanged = context.mode != m_context.mode;
+  const auto previousMode = m_resolvedMode;
+  const auto previousFps = m_effectiveFps;
+  const auto previousRefreshes = m_refreshesPerFrame;
+
   m_context = context;
   resolveRates();
 
-  // A mode change means the old cadence describes nothing; a rate change within a mode is a nudge
-  // the phase can absorb
-  if (modeChanged) {
+  // Anything that changes the cadence leaves the phase built for the old one describing nothing —
+  // half of a two-refresh frame is not half of a four-refresh one
+  if (m_resolvedMode != previousMode || m_effectiveFps != previousFps || m_refreshesPerFrame != previousRefreshes) {
     reset();
   }
 }
@@ -41,31 +44,91 @@ void EmulationRateController::reset() {
   m_refreshesSinceFrame = 0;
 }
 
-void EmulationRateController::resolveRates() {
-  const auto contentFps = m_context.contentFps > 0.0 ? m_context.contentFps : 60.0;
-
-  m_refreshesPerFrame = 0;
-  m_effectiveFps = contentFps;
-  m_audioRatio = 1.0;
-
-  if (m_context.mode != SyncMode::Display || m_context.displayHz <= 0.0) {
-    return;
+double EmulationRateController::displayLockedFps(const double contentFps) const {
+  if (m_context.displayHz <= 0.0 || contentFps <= 0.0) {
+    return 0.0;
   }
 
   // The whole number of refreshes closest to one frame's worth. A display that cannot hold a frame
-  // for a whole number of refreshes cannot represent this content rate, and the mode gives up
+  // for a whole number of refreshes cannot represent this content rate
   const auto refreshes = std::max(1, static_cast<int>(std::lround(m_context.displayHz / contentFps)));
   const auto candidateFps = m_context.displayHz / refreshes;
 
   if (std::abs(candidateFps - contentFps) / contentFps > DISPLAY_MATCH_TOLERANCE) {
+    return 0.0;
+  }
+
+  return candidateFps;
+}
+
+void EmulationRateController::resolveRates() {
+  const auto contentFps = m_context.contentFps > 0.0 ? m_context.contentFps : 60.0;
+
+  m_resolvedMode = m_context.mode;
+  m_followingDisplay = false;
+  m_refreshesPerFrame = 0;
+  m_effectiveFps = contentFps;
+  m_audioRatio = 1.0;
+
+  // Running the game at a rate it didn't ask for means stretching its audio by the same amount to
+  // stay in step with it
+  const auto runClockAt = [this, contentFps](const double fps) {
+    m_resolvedMode = SyncMode::Fixed;
+    m_followingDisplay = true;
+    m_effectiveFps = fps;
+    m_audioRatio = fps / contentFps;
+  };
+
+  const auto countRefreshesFor = [this, contentFps](const double fps) {
+    m_resolvedMode = SyncMode::Display;
+    m_followingDisplay = true;
+    m_refreshesPerFrame = static_cast<int>(std::lround(m_context.displayHz / fps));
+    m_effectiveFps = fps;
+    m_audioRatio = fps / contentFps;
+  };
+
+  const auto lockedFps = displayLockedFps(contentFps);
+
+  if (m_context.mode == SyncMode::Auto) {
+    // Never the sink. Pacing off audio occupancy cannot put frames out evenly: the device only
+    // reports what it has taken in whole periods — 10.67 ms, measured — so the gate can only fire on
+    // those boundaries and frames leave 10.7 or 21.3 ms apart, never the 16.67 they are due. Audio
+    // is made to fit a clock instead, by rate control, which is what every other emulator settled on
+    if (lockedFps > 0.0 && m_context.presentationLocked) {
+      // Presentation waits for the refresh, so counting refreshes puts each frame on an exact number
+      // of them — nearer than a clock can get, with no beat left to drift
+      countRefreshesFor(lockedFps);
+    } else if (lockedFps > 0.0) {
+      // The rate is right but the presents cannot be trusted to mark refreshes, so a clock at that
+      // rate is the closest thing available
+      runClockAt(lockedFps);
+    } else {
+      // Nothing the display can hold, so the rate the content asked for
+      m_resolvedMode = SyncMode::Fixed;
+    }
+
     return;
   }
 
-  m_refreshesPerFrame = refreshes;
-  m_effectiveFps = candidateFps;
-  // The game is running at the display's rate rather than its own, so the audio has to be stretched
-  // by the same amount to stay in step with it
-  m_audioRatio = candidateFps / contentFps;
+  if (m_resolvedMode != SyncMode::Display) {
+    return;
+  }
+
+  if (lockedFps <= 0.0) {
+    // No whole number of refreshes shows this content rate, so there is nothing to sync to
+    m_resolvedMode = SyncMode::Fixed;
+    return;
+  }
+
+  if (!m_context.presentationLocked) {
+    // Asked for outright, but counting presents that don't wait for the display would run the game
+    // at whatever rate they happen to arrive at. A clock at the rate the display can hold is the
+    // nearest honest thing to what was asked for
+    runClockAt(lockedFps);
+    return;
+  }
+
+  countRefreshesFor(lockedFps);
 }
 
 void EmulationRateController::setAudioBufferLevel(const float level) { m_audioBufferLevel = level; }
@@ -86,14 +149,14 @@ int EmulationRateController::takeOwedFrames() {
 
 int EmulationRateController::framesDue(const int64_t nowNs) {
   // Display counts refreshes instead, so that frames land on them rather than near them
-  if (m_context.mode == SyncMode::Display && m_refreshesPerFrame > 0) {
+  if (m_resolvedMode == SyncMode::Display && m_refreshesPerFrame > 0) {
     return 0;
   }
 
   // Audio has no rate. A frame is due when there is room for the audio it will produce, which makes
   // the device's consumption the clock — and it stays right through anything a clock would drift
   // against: a device running slightly off its nominal rate, or a core whose own rate is misreported
-  if (m_context.mode == SyncMode::Audio) {
+  if (m_resolvedMode == SyncMode::Audio) {
     return m_audioBufferLevel >= 0.0 && m_audioBufferLevel < TARGET_BUFFER_LEVEL ? 1 : 0;
   }
 
@@ -123,7 +186,7 @@ int EmulationRateController::framesDue(const int64_t nowNs) {
 }
 
 int EmulationRateController::framesDueOnPresent() {
-  if (m_context.mode != SyncMode::Display) {
+  if (m_resolvedMode != SyncMode::Display) {
     return 0;
   }
 
@@ -144,11 +207,11 @@ int EmulationRateController::framesDueOnPresent() {
 
 int64_t EmulationRateController::getNextDeadlineNs() const {
   // Neither of these runs on a clock: Display waits for a refresh, Audio for room in the sink
-  if (m_context.mode == SyncMode::Audio) {
+  if (m_resolvedMode == SyncMode::Audio) {
     return 0;
   }
 
-  if (m_context.mode == SyncMode::Display && m_refreshesPerFrame > 0) {
+  if (m_resolvedMode == SyncMode::Display && m_refreshesPerFrame > 0) {
     return 0;
   }
 

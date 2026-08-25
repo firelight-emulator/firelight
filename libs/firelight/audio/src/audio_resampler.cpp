@@ -40,6 +40,7 @@ void AudioResampler::rebuild() {
     swr_free(&m_swrContext);
   }
   m_swrContext = swr_alloc();
+  m_compensationRemainder = 0.0;
 
   av_channel_layout_default(&m_channelLayout, 2);
 
@@ -73,17 +74,26 @@ std::vector<int16_t> AudioResampler::process(const int16_t *data, const size_t n
   }
 
   // TODO
-  // The compensation window is measured in output samples: what this call is about to produce, plus
-  // the samples the ratio asks it to gain or lose. The window also caps the conversion, so one
-  // measured in input frames holds an upsample down to the count it was handed
-  const auto nominal = static_cast<int64_t>(numFrames) * m_effectiveOutputRate / m_sampleRate;
+  // What this call is worth in output samples, exactly. Integer division would floor it, and the
+  // window below caps the conversion — so a batch whose exact count has a fraction would have that
+  // fraction withheld inside the resampler on every call. A core handing over a constant batch never
+  // offers a later call with room to give it back, so the shortfall accumulates as a rate error
+  // rather than a delay: a constant 30 frames at 33600 into 48000 measures two percent slow, which is
+  // four times the whole authority of rate control
+  const auto exactNominal = static_cast<double>(numFrames) * m_effectiveOutputRate / m_sampleRate;
 
   // TODO
   // The ratio becomes a count against this batch, so a small batch gets a small correction rather
-  // than the same number of samples spread over a fraction of the audio
-  const auto delta = static_cast<int>(std::lround(compensationRatio * static_cast<double>(nominal)));
+  // than the same number of samples spread over a fraction of the audio. What is left over after
+  // taking whole samples is carried: a batch whose share rounds to nothing would otherwise lose it
+  // every time, and rounding never goes the other way to make up for it
+  m_compensationRemainder += compensationRatio * exactNominal;
+  const auto delta = static_cast<int>(m_compensationRemainder);
+  m_compensationRemainder -= delta;
 
-  if (const auto window = static_cast<int>(nominal) + delta; window > 0) {
+  // Rounded up, never down: a window a sample longer than needed simply spreads the correction over
+  // slightly more audio, while one a fraction short silently caps the rate
+  if (const auto window = static_cast<int>(std::ceil(exactNominal)) + delta; window > 0) {
     swr_set_compensation(m_swrContext, delta, window);
   }
 

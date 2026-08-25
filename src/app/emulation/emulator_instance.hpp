@@ -152,6 +152,13 @@ public:
   void setThumbnailProvider(std::function<Image()> provider) { m_thumbnailProvider = std::move(provider); }
 
   /**
+   * Where a point's own picture goes when the emulator is put back to it. Without this the screen
+   * keeps the frame from the state that was just left, which for a game that is stopped is the last
+   * thing it shows — the point was chosen by its picture, so that picture is what has to appear
+   */
+  void setFrameRestorer(std::function<void(const Image &)> restorer) { m_frameRestorer = std::move(restorer); }
+
+  /**
    * The rewind points held in memory, newest first
    */
   [[nodiscard]] const std::deque<SuspendPoint> &getRewindPoints() const { return m_rewindPoints; }
@@ -215,6 +222,11 @@ private:
   void handleCommand(const EmulatorCommand &command);
 
   /**
+   * Hands a point's picture to whatever is showing the game, if anything is and there is one
+   */
+  void restoreFrame(const Image &image);
+
+  /**
    * Builds a point from the state as it stands, with a picture when something can supply one
    */
   [[nodiscard]] SuspendPoint capturePoint();
@@ -223,6 +235,7 @@ private:
   std::deque<EmulatorCommand> m_commandQueue;
   std::function<void(const EmulatorCommand &)> m_commandSink;
   std::function<Image()> m_thumbnailProvider;
+  std::function<void(const Image &)> m_frameRestorer;
 
   // Rolling rewind snapshots, newest first, and the state replaced by the last suspend-point load
   std::deque<SuspendPoint> m_rewindPoints;

@@ -21,6 +21,9 @@
 #endif
 #include "emulator_item.hpp"
 
+#include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <spdlog/spdlog.h>
 
 static EmulatorItemRenderer *globalRenderer = nullptr;
@@ -218,12 +221,17 @@ void EmulatorItemRenderer::publishFrame(firelight::VideoFrame frame) {
 
   m_emulatorInstance->getFrameSlot().publish(std::move(frame));
 
+  // These want every frame rather than the latest one, so they are fed as frames arrive. Nothing
+  // else needs a copy, and making one per frame for nobody is a full-frame allocation a frame
+  if (!anyFrameConsumerActive()) {
+    return;
+  }
+
   const auto published = m_emulatorInstance->getFrameSlot().get();
   if (!published || published->isNull()) {
     return;
   }
 
-  // These want every frame rather than the latest one, so they are fed as frames arrive
   const auto asImage = firelight::gui::toQImage(*published);
 
   feedClipRecorder(asImage);
@@ -249,8 +257,6 @@ void EmulatorItemRenderer::uploadCurrentFrame(QRhiResourceUpdateBatch *batch) {
   if (!frame || frame->isNull()) {
     return;
   }
-
-  EmulatorItem::fldiagRecordUploadedFrame(frame->id); // FLDIAG (temporary)
 
   auto image = firelight::gui::toQImage(*frame);
   // OpenGL's default framebuffer is bottom-up, so what the slot holds the right way up has to go
@@ -425,6 +431,14 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       }
       return firelight::gui::toImage(thumb);
     });
+    // Straight into the slot rather than through publishFrame: this is a picture being put back,
+    // not a frame the game produced, and the recorders want only the ones it did
+    m_emulatorInstance->setFrameRestorer([this](const firelight::Image &image) {
+      auto restored = firelight::gui::toQImage(image);
+      if (!restored.isNull() && m_emulatorInstance) {
+        m_emulatorInstance->getFrameSlot().publish(firelight::gui::toVideoFrame(restored));
+      }
+    });
   }
 
   if (m_paused && !emulatorItem->paused()) {
@@ -465,36 +479,59 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
       emulatorItem->setFixedColorBufferHeight(pendingH);
     }
   }
+
+  // TODO
+  // Everything queued runs here, between frames rather than inside one, so a state can't be
+  // serialized out of a half-run frame. A RunFrame only raises the flag render() takes
+  if (m_emulatorInstance && m_emulatorInstance->isInitialized()) {
+    m_emulatorInstance->drainCommands();
+
+    // TODO
+    // The GUI's undo affordance follows what the emulator actually has to undo. This is the one
+    // moment the item can be written from here, because synchronize() runs with the GUI blocked
+    if (const auto canUndo = m_emulatorInstance->canUndoLoadSuspendPoint();
+        canUndo != emulatorItem->m_canUndoLoadSuspendPoint) {
+      emulatorItem->m_canUndoLoadSuspendPoint = canUndo;
+      emit emulatorItem->canUndoLoadSuspendPointChanged();
+    }
+  }
 }
 
-void EmulatorItemRenderer::runOneFrame() {
-  // m_emulatorItem is only set once the first synchronize() has run, and the core is brought up on
-  // the render thread during the first render. The loop starts before either, so there is a window
-  // where this renderer exists but has nothing it can legally run
-  if (!m_emulatorInstance || !m_emulatorItem || m_quitting || !m_emulatorInstance->isInitialized()) {
+namespace {
+// FLPACE (temporary instrumentation — remove with its two call sites)
+// Frames asked for against frames actually run. Any gap is time the game never got, and it is never
+// made up — measured at about one percent before m_framesToRun became a count
+std::atomic<int> paceRequested{0};
+std::atomic<int> paceRan{0};
+std::atomic<int64_t> paceReportAtNs{0};
+
+int64_t paceIntervalNs() {
+  const auto secs = qEnvironmentVariableIntValue("FL_DIAG_SECS");
+  return (secs > 0 ? secs : 10) * 1000000000LL;
+}
+
+void paceReport() {
+  const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
+  auto due = paceReportAtNs.load();
+
+  if (due == 0) {
+    paceReportAtNs.store(nowNs + paceIntervalNs());
     return;
   }
 
-  EmulatorItem::fldiagRecordRunFrame(); // FLDIAG (temporary)
-
-  emit m_emulatorItem->aboutToRunFrame();
-
-  const auto multiplier = m_playbackMultiplier > 1 ? static_cast<int>(m_playbackMultiplier) : 1;
-
-  for (auto repeat = 0; repeat < multiplier; ++repeat) {
-    m_emulatorInstance->runFrame();
-  }
-}
-
-void EmulatorItemRenderer::runFrames(const int count) {
-  if (m_paused) {
+  if (nowNs < due || !paceReportAtNs.compare_exchange_strong(due, nowNs + paceIntervalNs())) {
     return;
   }
 
-  for (auto frame = 0; frame < count; ++frame) {
-    runOneFrame();
-  }
+  const auto requested = paceRequested.exchange(0);
+  const auto ran = paceRan.exchange(0);
+
+  const auto secs = static_cast<double>(paceIntervalNs()) / 1e9;
+
+  spdlog::info("FLPACE requested={} ran={} lost={} ({:.2f}%) -> {:.3f} fps actual", requested, ran, requested - ran,
+               requested > 0 ? (requested - ran) * 100.0 / requested : 0.0, ran / secs);
 }
+} // namespace
 
 void EmulatorItemRenderer::handleCommand(const firelight::emulation::EmulatorCommand &command) {
   using firelight::emulation::EmulatorCommandType;
@@ -504,6 +541,11 @@ void EmulatorItemRenderer::handleCommand(const firelight::emulation::EmulatorCom
   }
 
   switch (command.type) {
+  case EmulatorCommandType::RunFrame:
+    paceRequested.fetch_add(1); // FLPACE (temporary)
+    m_framesToRun = std::min(m_framesToRun + 1, MAX_FRAMES_PER_PASS);
+    break;
+
   case EmulatorCommandType::EmitRewindPoints: {
     for (auto &url : m_rewindImageUrls) {
       m_gameImageProvider->removeImageWithUrl(url);
@@ -629,24 +671,17 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
-  // If we're paused, display the pause image and skip running a frame
-  if (m_paused) {
+  // TODO
+  // If we're paused, display the pause image and skip running a frame — unless a frame was asked
+  // for outright, which is what stepping a paused game is
+  if (m_paused && m_framesToRun == 0) {
     displayPauseImage(cb);
     return;
   }
 
-  // A decoupled core runs its frames elsewhere; all this pass has to do is show the newest one
-  if (isDecoupled()) {
-    QRhiResourceUpdateBatch *batch = rhi()->nextResourceUpdateBatch();
-    cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch, QRhiCommandBuffer::ExternalContent);
-    uploadCurrentFrame(batch);
-    cb->endPass(batch);
-    return;
-  }
-
-  // The renderer hasn't been told to run a frame yet, so skip running a frame
-  if (!m_shouldRunFrame) {
-    EmulatorItem::fldiagRecordSkippedRender(); // FLDIAG (temporary)
+  // TODO
+  // No frame is due, so there is nothing new to show — leave what is on screen alone
+  if (m_framesToRun == 0) {
     return;
   }
 
@@ -655,9 +690,12 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
   m_currentWaitFrames = m_waitFrames;
-  m_shouldRunFrame = false;
 
-  EmulatorItem::fldiagRecordRunFrame(); // FLDIAG (temporary)
+  const auto framesThisPass = m_framesToRun;
+  m_framesToRun = 0;
+
+  paceRan.fetch_add(framesThisPass); // FLPACE (temporary)
+  paceReport();
 
   // ------------------------------------------------------------
   // If we made it here, we're going to run at least one frame
@@ -669,13 +707,15 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     cb->beginPass(renderTarget(), {0, 0, 0, 0}, {1.0f, 0}, batch, QRhiCommandBuffer::ExternalContent);
     m_currentUpdateBatch = batch;
     cb->beginExternal();
-    if (m_playbackMultiplier > 1) {
-      for (int i = 0; i < static_cast<int>(m_playbackMultiplier); i++) {
+
+    const auto repeats = m_playbackMultiplier > 1 ? static_cast<int>(m_playbackMultiplier) : 1;
+
+    for (auto frame = 0; frame < framesThisPass; ++frame) {
+      for (auto repeat = 0; repeat < repeats; ++repeat) {
         m_emulatorInstance->runFrame();
       }
-    } else {
-      m_emulatorInstance->runFrame();
     }
+
     cb->endExternal();
 
     // A software core hands over CPU pixels, so the frame is already in the slot — reading it back
@@ -685,7 +725,9 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_currentUpdateBatch = nullptr;
     cb->endPass(batch);
   } else if (m_vulkanRenderer) {
-    m_vulkanRenderer->renderFrame(m_emulatorInstance, m_playbackMultiplier, colorTexture()->pixelSize(), rhi());
+    // renderFrame repeats runFrame() by its multiplier, so the frames owed multiply through it
+    m_vulkanRenderer->renderFrame(m_emulatorInstance, m_playbackMultiplier * static_cast<float>(framesThisPass),
+                                  colorTexture()->pixelSize(), rhi());
 
     if (m_vulkanRenderer->isFirstFrameReady() && m_vulkanRenderer->sharedTexture() &&
         m_vulkanRenderer->sharedSemValue() > 0) {
@@ -710,8 +752,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
       cb->endPass();
     }
   }
-
-  update();
 }
 
 void EmulatorItemRenderer::initializeEmulatorInstance(QRhiCommandBuffer *cb) {

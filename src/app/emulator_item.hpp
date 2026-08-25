@@ -4,6 +4,7 @@
 #include "emulation/emulation_rate_controller.hpp"
 #include "emulation/emulator_command.hpp"
 #include "emulation/emulator_controller.hpp"
+#include "emulation/refresh_counter.hpp"
 #include "emulator_item_renderer.hpp"
 #include "libretro/core_configuration.hpp"
 #include "service_accessor.hpp"
@@ -19,9 +20,11 @@
 #include <rcheevos/ra_client.hpp>
 #include <string>
 
+// TODO
 // Threading: a QML item — constructed and driven (properties/slots) on the GUI
-// thread. Owns the frame-pacing thread (m_emulationThread), whose timer fires
-// there and enqueues RunFrame onto the renderer (drained on the render thread)
+// thread. Owns the frame-pacing thread (m_emulationThread), which decides when a
+// frame is due and enqueues RunFrame onto the emulator; the frame itself runs on
+// the render thread, in the pass that shows it
 // m_paused is atomic because the pacing thread reads it each tick
 class EmulatorItem : public QQuickRhiItem,
                      public firelight::ServiceAccessor,
@@ -51,11 +54,6 @@ private:
 
 public:
   explicit EmulatorItem(QQuickItem *parent = nullptr);
-
-  // FLDIAG (temporary instrumentation — remove with the rest of the FLDIAG code)
-  static void fldiagRecordRunFrame();
-  static void fldiagRecordSkippedRender();
-  static void fldiagRecordUploadedFrame(uint64_t frameId);
 
   ~EmulatorItem() override;
 
@@ -231,11 +229,53 @@ private:
   // What decides when a frame is due, for whichever mode is in force
   firelight::emulation::EmulationRateController m_rateController;
 
+  // TODO
+  // Guards the controller: the pacing thread asks it for frames while the GUI thread reconfigures it
+  // for a new setting, display or core rate. Uncontended in the ordinary case, since reconfiguring
+  // happens on a setting change rather than on a frame
+  std::mutex m_rateControllerMutex;
+
   // The loop runs until this is set; the condition variable is how a sleeping loop is woken early
   // to shut down rather than sleeping out the rest of its wait
   std::atomic<bool> m_emulationStopping = false;
   std::mutex m_loopMutex;
   std::condition_variable m_loopWake;
+
+  // TODO
+  // Whether a present should ask for the next render. Only true while frames are being put on
+  // refreshes, which is also the only time presentation waits for the display and so the only time
+  // this can't run away. Atomic: written on the GUI thread, read on the render thread
+  std::atomic<bool> m_renderContinuously = false;
+
+  // TODO
+  // When the loop last saw a present. Only touched on the emulation thread
+  int64_t m_lastPresentNs = 0;
+
+  // TODO
+  // Whether frames have stopped reaching the screen. Frames run on the render thread, so while it
+  // isn't drawing there is nobody to run what the loop would queue — a minimised window would
+  // otherwise collect an hour of them and pay for all of it at once on restore. Starts true because
+  // nothing has been drawn yet. Atomic: set on the emulation thread, read on the GUI thread too
+  std::atomic<bool> m_renderStalled = true;
+
+  // TODO
+  // One refresh of the display, in nanoseconds, or 0 when the rate isn't known. Lets a late present
+  // be read as the number of refreshes that actually went by. Atomic: written on the GUI thread when
+  // pacing is reconfigured, read on the render thread
+  std::atomic<int64_t> m_displayPeriodNs = 0;
+
+  // TODO
+  // When the last present arrived. Only the render thread writes it
+  std::atomic<int64_t> m_lastPresentAtNs = 0;
+
+  // TODO
+  // Reads the gap between two presents as a number of refreshes. Only the render thread touches it
+  firelight::emulation::RefreshCounter m_refreshCounter;
+
+  // TODO
+  // The most refreshes one present may be read as covering, for whatever a frame is currently held
+  // for. Atomic: written on the GUI thread when pacing is reconfigured, read on the render thread
+  std::atomic<int> m_refreshCeiling = firelight::emulation::RefreshCounter::MIN_CEILING;
 
   // Refreshes since the loop last looked. A count rather than a flag: two can land between wakes,
   // and holding a frame for a number of refreshes only works if every one of them is seen
@@ -266,21 +306,6 @@ private:
   void updateGeometry(unsigned int width, unsigned int height, float aspectRatio);
 
   // Frame-pacing strategy (maps to the "sync-method" emulation setting)
-  enum class SyncMethod { Native, Monitor, Fixed, Audio };
+  enum class SyncMethod { Auto, Native, Monitor, Fixed, Audio };
   static SyncMethod syncMethodFromString(const std::string &method);
-
-  // Wall-clock frame interval (ns) for native/fixed pacing:
-  //   Native -> 1e9 / coreFps
-  //   Fixed  -> 1e9 / targetFramerate
-  // Returns 0 for Audio (audio-driven) and Monitor (resolved via
-  // monitorPacingRate, which needs the refresh/content-rate relationship), or
-  // when the input is non-positive
-  static int64_t computeTargetIntervalNs(SyncMethod method, double coreFps, int targetFramerate, double refreshHz);
-
-  // The rate to pace at for "sync to monitor", or 0 if the display doesn't line
-  // up with the content rate (caller falls back to native). Divides the refresh
-  // rate down to the nearest integer fraction and only matches when that lands
-  // within tolerance of coreFps — so 60/120/240 Hz match a 60 fps game but 144 Hz
-  // (2.4x) does not, avoiding a sped-up game on high-refresh displays
-  static double monitorPacingRate(double coreFps, double refreshHz);
 };

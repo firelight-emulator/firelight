@@ -103,7 +103,7 @@
       "label": "Sync method",
       "group": "emulation-video",
       "order": 30,
-      "description": "How gameplay is paced. Audio keeps the sound buffer full (smoothest audio, low CPU, works on any display); Sync to monitor matches your display's refresh rate when it's close to the game's and resamples audio to it (smoothest video); Native timer paces to the core's native rate; Fixed framerate paces to a rate you choose.",
+      "description": "How gameplay is paced. Automatic (recommended) matches your display's refresh rate when your display can show the game's rate, and uses the game's own rate when it can't. Sync to monitor does the same thing explicitly: matching the display removes repeated and skipped frames entirely, and the pitch change it needs to do so is far too small to hear. Native timer runs at exactly the rate the game asks for and leaves audio completely untouched, at the cost of a repeated or skipped frame every few seconds on most displays. Fixed framerate runs at a rate you choose. Audio paces off your sound device instead of a clock, which keeps audio untouched but is usually less smooth, because sound devices report their progress in coarse steps.",
       "keywords": [
         "vsync",
         "v-sync",
@@ -114,8 +114,12 @@
         "framerate"
       ],
       "type": "options",
-      "default": "audio",
+      "default": "auto",
       "options": [
+        {
+          "label": "Automatic",
+          "value": "auto"
+        },
         {
           "label": "Audio",
           "value": "audio"

@@ -213,6 +213,7 @@ add_library(firelight_emulation_lib STATIC
         src/app/emulation/core_settings_applier.cpp
         src/app/emulation/emulator_instance.cpp
         src/app/emulation/emulation_rate_controller.cpp
+        src/app/emulation/refresh_counter.cpp
 )
 
 target_include_directories(firelight_emulation_lib PUBLIC
@@ -637,6 +638,7 @@ add_executable(fl_test
         tests/app/emulation/shortcut_dispatcher_test.cpp
         tests/app/emulation/emulator_instance_test.cpp
         tests/app/emulation/emulation_rate_controller_test.cpp
+        tests/app/emulation/refresh_counter_test.cpp
         tests/app/emulation/frame_slot_test.cpp
         tests/app/emulation/emulator_instance_e2e_test.cpp
         tests/app/emulation/hotkeys_disabled_test.cpp

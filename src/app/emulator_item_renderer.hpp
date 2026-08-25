@@ -49,13 +49,12 @@ class ClipRecorder;
 } // namespace media
 } // namespace firelight
 
+// TODO
 // Threading: created, used, and destroyed on the QML render thread — Qt drives
-// initialize()/synchronize()/render() there, which is also where the
-// EmulatorCommand queue (incl. RunFrame -> EmulatorInstance) is drained
-// submitCommand() enqueues from the GUI and pacing threads while the render
-// thread drains it in synchronize(), so all access goes through
-// m_commandQueueMutex (QQueue isn't thread-safe — a concurrent enqueue realloc
-// racing a dequeue corrupts the heap)
+// initialize()/synchronize()/render() there. The emulator's command queue is
+// drained in synchronize(), so frames and the state work around them all happen
+// on this thread; RunFrame only raises a flag, because the frame itself belongs
+// in render() where the graphics context is live
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver {
@@ -117,31 +116,6 @@ public:
    */
   void uploadCurrentFrame(QRhiResourceUpdateBatch *batch);
 
-  /**
-   * @return Whether this core can run away from the render thread. A hardware-rendered core and the
-   *   OpenGL backend both need the graphics context the render thread holds; everything else only
-   *   needs somewhere to put pixels
-   */
-  [[nodiscard]] bool isDecoupled() const {
-    return !m_usingHardwareRenderer && m_graphicsApi != QSGRendererInterface::OpenGL;
-  }
-
-  /**
-   * Runs count frames, honouring the playback multiplier. Called from whichever thread drives the
-   * emulator — the render thread for a coupled core, the emulation thread otherwise
-   */
-  void runFrames(int count);
-
-  /**
-   * Handles everything queued since the last call: save states, rewind points, captures. Runs on the
-   * same thread as the frames so state can't be serialised out from under one
-   */
-
-  /**
-   * Runs exactly one frame whether or not the emulator is paused
-   */
-  void runOneFrame();
-
 protected:
   ~EmulatorItemRenderer() override;
 
@@ -177,10 +151,6 @@ private:
   int64_t m_streamFrameIndex = 0;
 
   QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
-  // Guards m_commandQueue against concurrent enqueue (GUI/pacing threads) and
-  // drain (render thread)
-  // Capture commands deferred one frame to wait for a fresh readback. Only ever
-  // touched on the render thread (in synchronize), so it needs no lock
   // Forces a single framebuffer readback next frame (idle HW cores)
   bool m_captureNextFrame = false;
 
@@ -190,7 +160,18 @@ private:
   firelight::activity::PlaySession m_playSession{};
 
   bool m_quitting = false;
-  bool m_shouldRunFrame = true;
+
+  // TODO
+  // The most frames one pass will run at once. Beyond this the debt is dropped rather than paid, so a
+  // stall does not come back as a burst of fast-forward
+  static constexpr int MAX_FRAMES_PER_PASS = 4;
+
+  // TODO
+  // Frames asked for but not yet run, taken by the next render(), which is what makes a frame and the
+  // pass that shows it the same piece of work. A count rather than a flag because the requests arrive
+  // as a queued update() that Qt coalesces into one dirty flag — two landing before a pass would
+  // collapse into a single frame, and the rest would be time the game simply never got
+  int m_framesToRun = 1;
   bool m_hooksInstalled = false;
 
   QThread m_emulatorThread;

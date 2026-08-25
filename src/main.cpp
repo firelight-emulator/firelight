@@ -212,15 +212,12 @@ int main(int argc, char *argv[]) {
 
   // ===== Set up QApplication ===============================================================
   QSurfaceFormat format;
-#ifdef Q_OS_MACOS
-  // Windowed surfaces composite on the display link whatever this says, so asking for anything else
-  // only misleads the code that reads it back
-  format.setSwapInterval(1);
-#else
+  // TODO
   // Presenting as soon as a frame is ready is what lets emulation timing be the truth rather than
-  // the display's, at the cost of tearing
-  format.setSwapInterval(0);
-#endif
+  // the display's, at the cost of tearing. FL_VSYNC=1 waits for the display instead: no tearing, up
+  // to a refresh of added latency, and the pacer sees presentation as locked — which is the one
+  // condition under which counting refreshes is exact rather than a guess
+  format.setSwapInterval(qEnvironmentVariableIntValue("FL_VSYNC"));
   QSurfaceFormat::setDefaultFormat(format);
 
   QApplication app(argc, argv);

@@ -156,6 +156,23 @@ bool EmulationService::currentAudioMuted() {
   return m_emulatorInstance && m_emulatorInstance->isMuted();
 }
 
+bool EmulationService::submitToCurrentEmulator(const EmulatorCommand &command) {
+  std::lock_guard lock(m_instanceMutex);
+
+  if (!m_emulatorInstance) {
+    return false;
+  }
+
+  m_emulatorInstance->submitCommand(command);
+
+  return true;
+}
+
+bool EmulationService::isCurrentEmulatorReady() {
+  std::lock_guard lock(m_instanceMutex);
+  return m_emulatorInstance && m_emulatorInstance->isInitialized();
+}
+
 void EmulationService::setPendingLaunchOverrides(LaunchOverrides overrides) { m_pendingLaunch = overrides; }
 
 EmulatorInstance *EmulationService::getCurrentEmulatorInstance() { return m_emulatorInstance.get(); }

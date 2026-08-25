@@ -12,11 +12,9 @@
 #include <QQuickWindow>
 #include <QScreen>
 #include <algorithm>
-#include <array>
 #include <atomic>
 #include <chrono>
 #include <cmath>
-#include <deque>
 #include <mutex>
 #include <patching/bps_patch.hpp>
 #include <patching/ups_patch.hpp>
@@ -48,134 +46,30 @@ void EmulatorItem::feedPointer(const QPointF &pos) {
 
 void EmulatorItem::mouseMoveEvent(QMouseEvent *event) { feedPointer(event->position()); }
 
-// FLDIAG (temporary instrumentation — remove before the real change lands)
-// Counts the gaps between repeated events into 0.5ms buckets, so a cadence can be read as a shape
-// rather than a stream of per-frame lines
-namespace fldiag {
-class IntervalHistogram {
-public:
-  IntervalHistogram(const char *name, std::atomic<int> *extra = nullptr) : m_name(name), m_extra(extra) {}
+namespace {
+// TODO
+// How long without a frame reaching the screen before the loop treats the render thread as not
+// drawing. Long enough that it never fires on a display that is working, since even the slowest
+// mode puts something up every few hundredths of a second
+constexpr int64_t RENDER_STALL_NS = 100000000LL;
 
-  void record() {
-    const auto now = std::chrono::steady_clock::now().time_since_epoch().count();
-    std::lock_guard lock(m_mutex);
-
-    if (m_lastNs != 0) {
-      const auto ms = static_cast<double>(now - m_lastNs) / 1e6;
-      m_buckets[std::clamp(static_cast<int>(ms * 2.0), 0, BUCKETS - 1)]++;
-      m_count++;
-      m_sumMs += ms;
-      m_minMs = std::min(m_minMs, ms);
-      m_maxMs = std::max(m_maxMs, ms);
-    }
-
-    m_lastNs = now;
-
-    if (m_dumpAtNs == 0) {
-      m_dumpAtNs = now + 5000000000LL;
-    } else if (now >= m_dumpAtNs) {
-      m_dumpAtNs = now + 5000000000LL;
-      dump();
-    }
+// TODO
+// What the mode is called in the log, in terms of what it paces against rather than what it is named
+const char *pacedAgainst(const firelight::emulation::SyncMode mode) {
+  switch (mode) {
+  case firelight::emulation::SyncMode::Auto:
+    return "auto";
+  case firelight::emulation::SyncMode::Audio:
+    return "the audio sink";
+  case firelight::emulation::SyncMode::Fixed:
+    return "a clock";
+  case firelight::emulation::SyncMode::Display:
+    return "display refreshes";
   }
 
-private:
-  void dump() {
-    if (m_count == 0) {
-      return;
-    }
-
-    std::string shape;
-    for (auto i = 0; i < BUCKETS; ++i) {
-      if (m_buckets[i] > 0) {
-        shape += fmt::format(" {:.1f}:{}", i * 0.5, m_buckets[i]);
-      }
-    }
-
-    const auto extra = m_extra != nullptr ? m_extra->exchange(0) : -1;
-
-    spdlog::info("FLDIAG {} n={} mean={:.2f}ms min={:.2f} max={:.2f}{} |{}", m_name, m_count, m_sumMs / m_count,
-                 m_minMs, m_maxMs, extra >= 0 ? fmt::format(" skipped-renders={}", extra) : std::string(), shape);
-
-    m_buckets.fill(0);
-    m_count = 0;
-    m_sumMs = 0.0;
-    m_minMs = 1e9;
-    m_maxMs = 0.0;
-  }
-
-  static constexpr int BUCKETS = 81; // 0-40ms in 0.5ms steps, last bucket catches everything above
-
-  const char *m_name;
-  std::atomic<int> *m_extra;
-  std::mutex m_mutex;
-  std::array<int, BUCKETS> m_buckets{};
-  int64_t m_lastNs = 0;
-  int64_t m_dumpAtNs = 0;
-  int m_count = 0;
-  double m_sumMs = 0.0;
-  double m_minMs = 1e9;
-  double m_maxMs = 0.0;
-};
-
-std::atomic<int> skippedRenders{0};
-
-// FLDIAG (temporary)
-// How long each frame stays on screen, counted in refreshes. This is what smoothness actually is:
-// an even number every time looks right, a mix of 1 and 2 is judder however evenly the frames were
-// produced
-class DisplayDurations {
-public:
-  void recordPresent(const uint64_t frameId) {
-    std::lock_guard lock(m_mutex);
-
-    if (frameId == m_currentId) {
-      m_refreshes++;
-      return;
-    }
-
-    if (m_currentId != 0 && m_refreshes > 0) {
-      m_counts[std::min<size_t>(m_refreshes, m_counts.size() - 1)]++;
-      m_total++;
-    }
-
-    m_currentId = frameId;
-    m_refreshes = 1;
-
-    if (m_total >= 300) {
-      std::string shape;
-      for (size_t i = 0; i < m_counts.size(); ++i) {
-        if (m_counts[i] > 0) {
-          shape += fmt::format(" {}x:{}", i, m_counts[i]);
-        }
-      }
-      spdlog::info("FLDIAG shown-for  {} frames |{}", m_total, shape);
-      m_counts.fill(0);
-      m_total = 0;
-    }
-  }
-
-private:
-  std::mutex m_mutex;
-  std::array<int, 9> m_counts{};
-  uint64_t m_currentId = 0;
-  int m_refreshes = 0;
-  int m_total = 0;
-};
-
-DisplayDurations displayDurations;
-std::atomic<uint64_t> lastUploadedFrameId{0};
-
-IntervalHistogram presentIntervals("present   ");
-IntervalHistogram submitIntervals("submit    ");
-IntervalHistogram runFrameIntervals("runframe  ", &skippedRenders);
-} // namespace fldiag
-
-void EmulatorItem::fldiagRecordRunFrame() { fldiag::runFrameIntervals.record(); }
-
-void EmulatorItem::fldiagRecordSkippedRender() { fldiag::skippedRenders++; }
-
-void EmulatorItem::fldiagRecordUploadedFrame(const uint64_t frameId) { fldiag::lastUploadedFrameId = frameId; }
+  return "nothing";
+}
+} // namespace
 
 EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   // The emulator a hotkey acts on. Registered from here rather than when the
@@ -184,40 +78,55 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     actions->setController(this);
   }
 
-  // FLDIAG (temporary): watch what the display is actually doing, and when frames reach it
   connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow *w) {
     if (w == nullptr) {
       return;
     }
 
+    // TODO
+    // Display mode counts refreshes, and this is the only thing that knows one happened. Direct
+    // because it arrives on the render thread and there is nothing here that needs the GUI's
     connect(
         w, &QQuickWindow::frameSwapped, this,
         [this] {
-          fldiag::presentIntervals.record(); // FLDIAG (temporary)
-          fldiag::displayDurations.recordPresent(fldiag::lastUploadedFrameId.load());
+          const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
+          const auto lastNs = m_lastPresentAtNs.exchange(nowNs);
+          const auto periodNs = m_displayPeriodNs.load();
+          auto refreshes = 1;
 
-          // Display mode counts these
-          m_presentCount.fetch_add(1);
+          // TODO
+          // A present arriving late means refreshes went by without one, and counting presents is how
+          // Display mode knows the time — so counting each as a single refresh loses the frames the
+          // missed ones were owed, with no clock to make them up
+          if (lastNs != 0 && periodNs > 0) {
+            refreshes = m_refreshCounter.observe(nowNs - lastNs, periodNs, m_refreshCeiling.load());
+          }
+
+          m_presentCount.fetch_add(refreshes);
           m_loopWake.notify_one();
+
+          // TODO
+          // Counting refreshes only works while they keep arriving, and one only arrives if
+          // something asked to draw — a frame held for two refreshes would otherwise stop the
+          // presents that were going to make the next one due. Safe here and nowhere else, because
+          // this only runs when presentation waits for the display and so cannot free-run. Queued
+          // because the signal arrives on the render thread and update() belongs to the GUI's
+          if (m_renderContinuously.load()) {
+            QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
+          }
         },
         Qt::DirectConnection);
 
+    // TODO
+    // A panel whose rate moves — ProMotion, or a VRR monitor — has to re-pace, or the rate it was
+    // paced to stops being the one it has
     if (auto *screen = w->screen()) {
-      spdlog::info("FLDIAG screen '{}' refreshRate={:.3f}Hz", screen->name().toStdString(), screen->refreshRate());
-      // A panel whose rate moves — ProMotion, or a VRR monitor — has to re-pace, or Display mode
-      // keeps holding frames for a number of refreshes that stopped being right
-      connect(screen, &QScreen::refreshRateChanged, this, [this](const qreal rate) {
-        spdlog::info("FLDIAG refreshRate changed to {:.3f}Hz", rate); // FLDIAG (temporary)
-        QMetaObject::invokeMethod(this, "reconfigurePacing", Qt::QueuedConnection);
-      });
+      connect(screen, &QScreen::refreshRateChanged, this,
+              [this](qreal) { QMetaObject::invokeMethod(this, "reconfigurePacing", Qt::QueuedConnection); });
     }
 
-    connect(w, &QWindow::screenChanged, this, [](QScreen *screen) {
-      if (screen != nullptr) {
-        spdlog::info("FLDIAG moved to screen '{}' refreshRate={:.3f}Hz", screen->name().toStdString(),
-                     screen->refreshRate());
-      }
-    });
+    connect(w, &QWindow::screenChanged, this,
+            [this](QScreen *) { QMetaObject::invokeMethod(this, "reconfigurePacing", Qt::QueuedConnection); });
   });
 
   setFlag(ItemHasContents);
@@ -238,7 +147,10 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   m_rewindPointTimer.setInterval(3000);
   m_rewindPointTimer.setSingleShot(false);
   connect(&m_rewindPointTimer, &QTimer::timeout, [this] {
-    if (m_renderer) {
+    // TODO
+    // A game that isn't advancing is the same state every time this fires, and ten of those would be
+    // the whole history — a minute in the quick menu would leave nothing to rewind to
+    if (m_renderer && !m_paused && !m_renderStalled.load()) {
       submitToEmulator({.type = firelight::emulation::EmulatorCommandType::WriteRewindPoint});
       update();
     }
@@ -256,13 +168,16 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 }
 
 void EmulatorItem::submitToEmulator(const firelight::emulation::EmulatorCommand &command) {
-  if (const auto emulator = firelight::emulation::EmulationService::getInstance()->getCurrentEmulatorInstance()) {
-    emulator->submitCommand(command);
-  }
+  firelight::emulation::EmulationService::getInstance()->submitToCurrentEmulator(command);
 }
 
 void EmulatorItem::waitForNextFrame() {
-  const auto deadlineNs = m_rateController.getNextDeadlineNs();
+  int64_t deadlineNs = 0;
+
+  {
+    std::lock_guard lock(m_rateControllerMutex);
+    deadlineNs = m_rateController.getNextDeadlineNs();
+  }
 
   if (deadlineNs == 0) {
     // Nothing has established a cadence yet — the first frame of a game, or a mode that hasn't been
@@ -299,58 +214,78 @@ void EmulatorItem::runEmulationLoop() {
       return;
     }
 
-    const auto decoupled = m_renderer != nullptr && m_renderer->isDecoupled();
-
-    if (!decoupled) {
-      // A core tied to the render thread still has its frames run there; all this decides is when
-      if (m_rateController.framesDue(std::chrono::steady_clock::now().time_since_epoch().count()) > 0 && m_renderer) {
-        submitToEmulator({.type = firelight::emulation::EmulatorCommandType::RunFrame});
-        QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
-      }
-      continue;
-    }
-
-    auto *emulator = firelight::emulation::EmulationService::getInstance()->getCurrentEmulatorInstance();
-
-    if (emulator == nullptr) {
-      continue;
-    }
-
-    // Anything queued runs on this thread too, so a save state can't be taken from the middle of a
-    // frame
-    emulator->drainCommands();
-
-    if (m_paused) {
-      continue;
-    }
-
-    if (m_rateController.getContext().mode == firelight::emulation::SyncMode::Audio) {
-      m_rateController.setAudioBufferLevel(
-          firelight::emulation::EmulationService::getInstance()->currentAudioBufferLevel());
-    }
-
     const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
-    auto frames = 0;
 
-    // Display puts frames on refreshes; everything else runs on a clock
-    for (auto refreshes = m_presentCount.exchange(0); refreshes > 0; --refreshes) {
-      frames += m_rateController.framesDueOnPresent();
+    // TODO
+    // A game that is stopped, or one that hasn't come up yet, owes nothing for the time it wasn't
+    // running, and the refreshes that went by while it wasn't are frames nobody is waiting for. The
+    // core comes up on the render thread, so until it has there is nothing that could run one
+    if (m_paused || !firelight::emulation::EmulationService::getInstance()->isCurrentEmulatorReady()) {
+      std::lock_guard lock(m_rateControllerMutex);
+      m_rateController.reset();
+      m_presentCount.store(0);
+      m_lastPresentAtNs.store(0);
+      m_refreshCounter.reset();
+      m_lastPresentNs = nowNs;
+      continue;
     }
 
-    frames += m_rateController.framesDue(nowNs);
+    auto refreshes = m_presentCount.exchange(0);
 
-    if (frames > 0) {
-      m_renderer->runFrames(frames);
+    if (refreshes > 0) {
+      m_lastPresentNs = nowNs;
+      m_renderStalled.store(false);
+    } else if (nowNs - m_lastPresentNs > RENDER_STALL_NS) {
+      // TODO
+      // Nothing has reached the screen for a while: either nothing asked for a render, or the window
+      // isn't being drawn at all. Ask, in case the stall was ours to break — a frame held for two
+      // refreshes stops the presents that were going to make the next one due
+      m_lastPresentNs = nowNs;
+      m_renderStalled.store(true);
       QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
     }
 
-    emulator->drainCommands();
-
-    // The GUI's undo affordance follows what the emulator actually has to undo
-    if (const auto canUndo = emulator->canUndoLoadSuspendPoint(); canUndo != m_canUndoLoadSuspendPoint) {
-      m_canUndoLoadSuspendPoint = canUndo;
-      QMetaObject::invokeMethod(this, "canUndoLoadSuspendPointChanged", Qt::QueuedConnection);
+    if (m_renderStalled.load()) {
+      // TODO
+      // Frames run in the pass that shows them, so with nothing drawing there is nobody to run one.
+      // Queueing them anyway builds a backlog that lands in a single lump when drawing resumes, and
+      // time spent not drawing is not time the player experienced
+      std::lock_guard lock(m_rateControllerMutex);
+      m_rateController.reset();
+      continue;
     }
+
+    auto frames = 0;
+
+    {
+      std::lock_guard lock(m_rateControllerMutex);
+
+      if (m_rateController.getResolvedMode() == firelight::emulation::SyncMode::Audio) {
+        m_rateController.setAudioBufferLevel(
+            firelight::emulation::EmulationService::getInstance()->currentAudioBufferLevel());
+      }
+
+      // Display puts frames on refreshes; everything else runs on a clock
+      for (; refreshes > 0; --refreshes) {
+        frames += m_rateController.framesDueOnPresent();
+      }
+
+      frames += m_rateController.framesDue(nowNs);
+    }
+
+    if (frames == 0) {
+      continue;
+    }
+
+    // TODO
+    // The frame itself runs on the render thread, inside the pass that puts it on screen — deciding
+    // when is all that happens here. Every frame owed is handed over, because a pass runs as many as
+    // it is given; how far behind it is worth trying to catch up was already decided above
+    for (auto frame = 0; frame < frames; ++frame) {
+      submitToEmulator({.type = firelight::emulation::EmulatorCommandType::RunFrame});
+    }
+
+    QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
   }
 }
 
@@ -433,6 +368,9 @@ float EmulatorItem::audioBufferLevel() const {
 }
 
 EmulatorItem::SyncMethod EmulatorItem::syncMethodFromString(const std::string &method) {
+  if (method == "auto") {
+    return SyncMethod::Auto;
+  }
   if (method == "monitor") {
     return SyncMethod::Monitor;
   }
@@ -445,45 +383,6 @@ EmulatorItem::SyncMethod EmulatorItem::syncMethodFromString(const std::string &m
   return SyncMethod::Native;
 }
 
-int64_t EmulatorItem::computeTargetIntervalNs(const SyncMethod method, const double coreFps, const int targetFramerate,
-                                              const double refreshHz) {
-  double fps = 0.0;
-  switch (method) {
-  case SyncMethod::Fixed:
-    fps = static_cast<double>(targetFramerate);
-    break;
-  case SyncMethod::Native:
-    fps = coreFps;
-    break;
-  case SyncMethod::Monitor: // resolved via monitorPacingRate()
-  case SyncMethod::Audio:   // audio-driven: no wall-clock target
-    return 0;
-  }
-  if (fps <= 0.0) {
-    return 0;
-  }
-  return static_cast<int64_t>(1e9 / fps);
-}
-
-double EmulatorItem::monitorPacingRate(const double coreFps, const double refreshHz) {
-  if (coreFps <= 0.0 || refreshHz <= 0.0) {
-    return 0.0;
-  }
-  // Divide the refresh rate down to the integer fraction closest to the content
-  // rate (e.g. 120 Hz / 2 = 60 for a 60 fps game; 144 Hz / 2 = 72, which won't
-  // match below)
-  const double multiple = std::round(refreshHz / coreFps);
-  if (multiple < 1.0) {
-    return 0.0;
-  }
-  const double effectiveRate = refreshHz / multiple;
-  constexpr double TOLERANCE = 0.05; // within 5% of the content rate
-  if (std::abs(effectiveRate - coreFps) / coreFps <= TOLERANCE) {
-    return effectiveRate;
-  }
-  return 0.0; // display doesn't line up with the content rate
-}
-
 void EmulatorItem::reconfigurePacing() {
   const auto emulator = firelight::emulation::EmulationService::getInstance()->getCurrentEmulatorInstance();
   if (!emulator) {
@@ -494,11 +393,21 @@ void EmulatorItem::reconfigurePacing() {
   const double coreFps = m_coreFps.load() > 0.0 ? m_coreFps.load() : 60.0;
   const int targetFramerate = emulator->getTargetFramerate();
 
-  double refreshHz = 60.0;
+  // TODO
+  // 0 rather than a guess: the controller reads it as "no display to pace against" and picks
+  // something that doesn't depend on one, which a made-up 60 would have talked it out of
+  double refreshHz = 0.0;
+  bool presentationLocked = false;
+
   if (const auto *w = window()) {
     if (const auto *screen = w->screen(); screen && screen->refreshRate() > 0.0) {
       refreshHz = screen->refreshRate();
     }
+
+    // TODO
+    // The same thing Qt reads to decide whether to ask the swapchain for vsync, so it is also what
+    // decides whether a present stands for a refresh
+    presentationLocked = w->requestedFormat().swapInterval() != 0;
   }
 
   // Audio sync needs a working audio device; without one it is just a clock at the core's rate
@@ -506,14 +415,21 @@ void EmulatorItem::reconfigurePacing() {
 
   firelight::emulation::PacingContext context;
   context.contentFps = coreFps;
+  context.displayHz = refreshHz;
+  context.audioAvailable = audioAvailable;
+  context.presentationLocked = presentationLocked;
 
   switch (method) {
+  case SyncMethod::Auto:
+    // TODO
+    // Which mode this becomes is the controller's to work out, from the same three facts
+    context.mode = firelight::emulation::SyncMode::Auto;
+    break;
   case SyncMethod::Audio:
     context.mode = audioAvailable ? firelight::emulation::SyncMode::Audio : firelight::emulation::SyncMode::Fixed;
     break;
   case SyncMethod::Monitor:
     context.mode = firelight::emulation::SyncMode::Display;
-    context.displayHz = refreshHz;
     break;
   case SyncMethod::Fixed:
     context.mode = firelight::emulation::SyncMode::Fixed;
@@ -524,9 +440,50 @@ void EmulatorItem::reconfigurePacing() {
     break;
   }
 
-  m_rateController.configure(context);
+  firelight::emulation::SyncMode resolved{};
+  bool followingDisplay = false;
+  double effectiveFps = 0.0;
+  double audioRatio = 1.0;
+  int refreshesPerFrame = 0;
 
-  emulator->setAudioPlaybackRateRatio(m_rateController.getAudioRatio());
+  {
+    std::lock_guard lock(m_rateControllerMutex);
+    m_rateController.configure(context);
+    resolved = m_rateController.getResolvedMode();
+    followingDisplay = m_rateController.isFollowingTheDisplay();
+    effectiveFps = m_rateController.getEffectiveFps();
+    audioRatio = m_rateController.getAudioRatio();
+    refreshesPerFrame = m_rateController.getRefreshesPerFrame();
+  }
+
+  // TODO
+  // Only refresh-counting needs a render per present, and the kick is what starts that cycle: with
+  // nothing else dirtying the scene there would be no present to count and so nothing to ask for
+  // the render that would have made one
+  m_displayPeriodNs.store(refreshHz > 0.0 ? static_cast<int64_t>(1e9 / refreshHz) : 0);
+  m_refreshCeiling.store(firelight::emulation::RefreshCounter::ceilingFor(refreshesPerFrame));
+
+  const auto onRefreshes = resolved == firelight::emulation::SyncMode::Display;
+  m_renderContinuously.store(onRefreshes);
+
+  if (onRefreshes) {
+    update();
+  }
+
+  // TODO
+  // Auto is a choice between the named modes, so it says which one it made rather than leaving the
+  // reader to work out whether this is monitor's behaviour or native's
+  const auto chose = method == SyncMethod::Auto ? fmt::format(" (chose '{}')", followingDisplay ? "monitor" : "native")
+                                                : std::string();
+
+  spdlog::info("Pacing '{}'{}: against {} at {:.3f}fps, {} refresh(es) per frame, audio x{:.4f} "
+               "(core {:.3f}fps, display {:.3f}Hz, {}, audio sink {})",
+               emulator->getSyncMethod(), chose, pacedAgainst(resolved), effectiveFps, refreshesPerFrame, audioRatio,
+               coreFps, refreshHz,
+               presentationLocked ? "presentation waits for the display" : "presentation does not wait",
+               audioAvailable ? "readable" : "absent");
+
+  emulator->setAudioPlaybackRateRatio(audioRatio);
   // Nothing here changes the rate audio is produced at any more — Audio mode gates whole frames on
   // there being room, which is what the resampler's own correction is for the fine end of
   emulator->setPacingOwnsAudioRate(false);

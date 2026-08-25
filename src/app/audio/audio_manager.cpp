@@ -2,14 +2,117 @@
 
 #include "audio_device_selection.hpp"
 
+#include <QtGlobal>
+#include <array>
+#include <chrono>
+#include <cmath>
 #include <cstring>
 #include <spdlog/spdlog.h>
+#include <string>
 
 namespace {
 // How long to wait between attempts at rebuilding a lost output, doubling up to the cap so one
 // that is simply gone is not retried on every frame
 constexpr int REOPEN_DELAY_MS = 250;
 constexpr int MAX_REOPEN_BACKOFF_MS = 10000;
+
+// FLDRC (temporary instrumentation — remove this block and its call in receive())
+// What rate control is actually doing on real hardware, which the simulation cannot show: whether
+// occupancy holds where the gain says it should, whether the correction stays inaudible, and what
+// the device's true rate turns out to be.
+//
+// The rate comes from the slope of the sink's cumulative counter against a monotonic clock. That
+// counter only moves in whole device periods — 10.67 ms on CoreAudio — but quantisation is noise on
+// a cumulative quantity, so the slope recovers the real rate to a few parts per million anyway
+class DrcDiagnostics {
+public:
+  void record(const double occupancy, const double requestedRatio, const int64_t processedUSecs) {
+    const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
+
+    // A new sink restarts the counter from zero while the wall clock carries on, which would read as
+    // an enormous rate error for as long as the baseline stood. Compared against the LAST reading
+    // rather than the baseline, because the baseline is itself near zero at startup and a restart to
+    // zero would never look like a decrease
+    if (m_startNs == 0 || processedUSecs < m_lastUSecs) {
+      m_startNs = nowNs;
+      m_startUSecs = processedUSecs;
+      m_lastUSecs = processedUSecs;
+      m_reportAtNs = nowNs + reportIntervalNs();
+      return;
+    }
+
+    m_lastUSecs = processedUSecs;
+
+    m_buckets[std::clamp(static_cast<int>(occupancy * BUCKETS), 0, BUCKETS - 1)]++;
+    m_occupancySum += occupancy;
+    m_ratioSum += requestedRatio;
+    m_ratioPeak = std::max(m_ratioPeak, std::abs(requestedRatio));
+    m_count++;
+
+    if (occupancy <= 0.001) {
+      m_dry++;
+    } else if (occupancy >= 0.999) {
+      m_full++;
+    }
+
+    if (nowNs < m_reportAtNs) {
+      return;
+    }
+
+    const auto elapsedSecs = static_cast<double>(nowNs - m_startNs) / 1e9;
+    const auto processedSecs = static_cast<double>(processedUSecs - m_startUSecs) / 1e6;
+    const auto rateRatio = elapsedSecs > 0.0 ? processedSecs / elapsedSecs : 0.0;
+
+    std::string shape;
+    for (auto i = 0; i < BUCKETS; ++i) {
+      shape += fmt::format(" {}0%:{}", i, m_buckets[i]);
+    }
+
+    // A starved sink cannot consume at its own rate, so while it is running dry this figure measures
+    // the starvation rather than the device and must not be read as a crystal error
+    const auto rateIsMeaningful = m_dry == 0;
+
+    spdlog::info("FLDRC occupancy mean={:.1f}% |{} | correction mean={:+.4f}% peak={:.4f}% | dry={} full={} | {}",
+                 m_occupancySum / m_count * 100.0, shape, m_ratioSum / m_count * 100.0, m_ratioPeak * 100.0, m_dry,
+                 m_full,
+                 rateIsMeaningful ? fmt::format("device rate {:.6f}x nominal ({:+.1f} ppm over {:.0f}s)", rateRatio,
+                                                (rateRatio - 1.0) * 1e6, elapsedSecs)
+                                  : std::string("device rate not measurable while the sink is running dry"));
+
+    m_buckets.fill(0);
+    m_occupancySum = 0.0;
+    m_ratioSum = 0.0;
+    m_ratioPeak = 0.0;
+    m_count = 0;
+    m_dry = 0;
+    m_full = 0;
+    m_reportAtNs = nowNs + reportIntervalNs();
+  }
+
+private:
+  static constexpr int BUCKETS = 10;
+
+  // FL_DIAG_SECS tunes how often this interrupts the thread it runs on. Writing a line blocks the
+  // render thread for as long as the write takes, so a run being judged for hitching wants this rare
+  static int64_t reportIntervalNs() {
+    const auto secs = qEnvironmentVariableIntValue("FL_DIAG_SECS");
+    return (secs > 0 ? secs : 10) * 1000000000LL;
+  }
+
+  std::array<int, BUCKETS> m_buckets{};
+  double m_occupancySum = 0.0;
+  double m_ratioSum = 0.0;
+  double m_ratioPeak = 0.0;
+  int m_count = 0;
+  int m_dry = 0;
+  int m_full = 0;
+  int64_t m_startNs = 0;
+  int64_t m_startUSecs = 0;
+  int64_t m_lastUSecs = 0;
+  int64_t m_reportAtNs = 0;
+};
+
+DrcDiagnostics drcDiagnostics; // FLDRC (temporary)
 } // namespace
 
 QAudioDevice AudioManager::selectedOutputDevice() const {
@@ -36,12 +139,24 @@ AudioManager::AudioManager(firelight::settings::SettingsService &settingsService
       refreshUserMuted();
     } else if (key == VOLUME_KEY) {
       refreshVolume();
+    } else if (key == LATENCY_KEY) {
+      // The buffer's size is fixed when the sink is created, so a new one has to be built for it
+      reinitializeAudioDevice();
     }
   };
   m_settingChangedConnection = EventDispatcher::instance().subscribe<firelight::settings::GlobalSettingChangedEvent>(
       [onKey](const firelight::settings::GlobalSettingChangedEvent &e) { onKey(e.key); });
   m_settingResetConnection = EventDispatcher::instance().subscribe<firelight::settings::GlobalSettingResetEvent>(
       [onKey](const firelight::settings::GlobalSettingResetEvent &e) { onKey(e.key); });
+}
+
+int AudioManager::latencyMs() const {
+  try {
+    return std::clamp(std::stoi(m_settingsService.getGlobalValue(LATENCY_KEY).value_or("")),
+                      firelight::audio::MIN_LATENCY_MS, firelight::audio::MAX_LATENCY_MS);
+  } catch (const std::exception &) {
+    return firelight::audio::DEFAULT_LATENCY_MS;
+  }
 }
 
 void AudioManager::refreshUserMuted() {
@@ -88,9 +203,14 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
 
     const auto usedBytes = bufferTotalCapacity - m_audioSink->bytesFree();
 
-    // Only while the reading means something: outside those states bytesFree() answers zero, which
-    // would publish a permanently full buffer and stall whatever is pacing off it
-    if (isSinkMeasurable()) {
+    // TODO
+    // Only published while the sink is running. Measured on Qt 6.11, bytesFree() does report real
+    // occupancy while suspended, so this is not the "answers zero" hazard an older comment here
+    // claimed — it is that a suspended sink is one being primed, and its occupancy is on its way up
+    // by design rather than telling anyone anything about drift
+    const auto measurable = isSinkMeasurable();
+
+    if (measurable) {
       m_currentBufferLevel = static_cast<float>(usedBytes) / bufferTotalCapacity;
       if (m_onAudioBufferLevelChanged) {
         m_onAudioBufferLevelChanged();
@@ -99,10 +219,25 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
 
     // Steer the buffer toward ~50% full by nudging the resample rate, unless the
     // user has disabled Dynamic Rate Control (advanced setting)
+    // TODO
+    // Converted to the sink's rate so the controller's smoothing spans a fixed amount of sound rather
+    // than a fixed number of calls, which is whatever the core felt like
+    const auto framesAtSinkRate = m_sampleRate > 0 ? static_cast<int>(numFrames * m_deviceSampleRate / m_sampleRate)
+                                                   : static_cast<int>(numFrames);
+
+    // TODO
+    // Gated the same way. Every game starts with the sink suspended while the buffer fills from
+    // empty, and a controller told about that would spend the opening seconds correcting for a climb
+    // that the priming loop is causing on purpose
     const double compensation =
-        m_drcEnabled.load()
-            ? m_rateController.computeCompensation(static_cast<int>(usedBytes), static_cast<int>(bufferTotalCapacity))
+        m_drcEnabled.load() && measurable
+            ? m_rateController.computeCompensation(static_cast<int>(usedBytes), static_cast<int>(bufferTotalCapacity),
+                                                   framesAtSinkRate)
             : 0.0;
+
+    // FLDRC (temporary)
+    drcDiagnostics.record(static_cast<double>(usedBytes) / bufferTotalCapacity, compensation,
+                          m_audioSink->processedUSecs());
 
     std::vector<int16_t> output = m_resampler.process(data, numFrames, compensation);
     if (output.empty()) {
@@ -159,15 +294,22 @@ void AudioManager::openAudioSink() {
   m_audioSink->setVolume(
       QtAudio::convertVolume(m_volume.load(), QtAudio::LogarithmicVolumeScale, QtAudio::LinearVolumeScale));
 
-  // Set a larger buffer for higher sample rates
-  const int bufferMultiplier = m_deviceSampleRate > 44000 ? 4 : 2;
-  m_audioSink->setBufferSize(8192 * bufferMultiplier);
+  // TODO
+  // Sized by how much sound the user wants buffered ahead rather than by a constant, so the figure
+  // means the same thing at any device rate. It is a latency the player feels directly: everything
+  // written is heard this far in the future, and there are ten frames of it at the old 170 ms
+  m_audioSink->setBufferSize(firelight::audio::bufferBytesForLatency(latencyMs(), m_deviceSampleRate));
 
   m_audioDevice = m_audioSink->start();
 
   // Suspend the sink until we've pre-buffered to around 50% full
   m_audioSink->suspend();
   m_priming = true;
+
+  // TODO
+  // What the controller had smoothed was occupancy of the buffer just discarded, in bytes of a
+  // capacity that may not be the same again
+  m_rateController.reset();
 }
 
 // TODO
@@ -253,6 +395,15 @@ float AudioManager::getBufferLevel() const {
       return static_cast<float>(used) / static_cast<float>(capacity);
     }
   }
+
+  // TODO
+  // With no sink there is no occupancy to report, and the cached 0 would read as room for another
+  // frame every time it was asked — which is a game running as fast as the host can manage. A sink
+  // that is merely between states still has its last real level to give
+  if (!m_audioSink) {
+    return -1.0f;
+  }
+
   return m_currentBufferLevel.load();
 }
 

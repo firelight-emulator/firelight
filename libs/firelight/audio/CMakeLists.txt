@@ -28,6 +28,7 @@ enable_testing()
 
 add_executable(firelight_audio_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/main.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/audio_drc_simulation_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/audio_rate_controller_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/audio_resampler_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/pcm_converter_test.cpp

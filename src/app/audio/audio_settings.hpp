@@ -14,6 +14,32 @@ inline constexpr auto OUTPUT_DEVICE_KEY = "audio-output-device";
 // switching games and works with none running
 inline constexpr auto MUTED_KEY = "audio-muted";
 
+// TODO
+/** How much sound is buffered ahead, in milliseconds */
+inline constexpr auto LATENCY_KEY = "audio-latency";
+
+// TODO
+/** What to buffer when the setting is missing or unreadable. RetroArch ships the same figure */
+inline constexpr int DEFAULT_LATENCY_MS = 64;
+
+// TODO
+/**
+ * The least that can be asked for. Half the buffer is what paces audio-synced emulation and what
+ * rate control steers toward, and a device reports what it has consumed only in whole periods —
+ * 10.67 ms on CoreAudio — so a half-buffer smaller than a couple of those has nothing to work with
+ */
+inline constexpr int MIN_LATENCY_MS = 32;
+inline constexpr int MAX_LATENCY_MS = 256;
+
+// TODO
+/**
+ * Bytes of interleaved stereo 16-bit audio that hold the given milliseconds at the given rate
+ */
+[[nodiscard]] inline int bufferBytesForLatency(const int latencyMs, const int sampleRate) {
+  constexpr int BYTES_PER_FRAME = 4;
+  return latencyMs * sampleRate / 1000 * BYTES_PER_FRAME;
+}
+
 // Playback loudness, 0-100. Separate from mute so that unmuting returns you to
 // the volume you had rather than to full
 inline constexpr auto VOLUME_KEY = "volume";

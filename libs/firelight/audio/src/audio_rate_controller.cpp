@@ -1,96 +1,41 @@
 #include <firelight/audio/audio_rate_controller.hpp>
 
+#include <algorithm>
 #include <cmath>
 
 namespace {
-// TODO
-// How hard the rate is pulled, as a fraction of the output rate. These are the sample counts the
-// controller used to return, divided by a typical callback's worth of output, so a buffer that was
-// steady before stays steady now
-constexpr double DRAIN_HARD = 0.00625;
-constexpr double DRAIN_MEDIUM = 0.005;
-constexpr double DRAIN_SOFT = 0.00375;
-constexpr double FILL_SOFT = 0.00125;
-constexpr double FILL_MEDIUM = 0.0025;
+constexpr int BYTES_PER_FRAME = 4; // interleaved stereo int16
 } // namespace
 
-void AudioRateController::reset() {
-  for (int &bytes : m_usageBytes) {
-    bytes = 0;
-  }
+void AudioRateController::reset() { m_averageUsedBytes = -1.0; }
 
-  m_index = 0;
-  m_populatedCount = 0;
-  m_previousAvgFillRatio = -1.0;
-}
-
-double AudioRateController::computeCompensation(const int usedBytes, const int bufferCapacityBytes) {
+double AudioRateController::computeCompensation(const int usedBytes, const int bufferCapacityBytes,
+                                                const int framesThisCall) {
   if (bufferCapacityBytes <= 0) {
-    return 0;
-  }
-
-  // Rolling average of recent buffer occupancy
-  m_usageBytes[m_index] = usedBytes;
-  m_index = (m_index + 1) % WINDOW_SIZE;
-
-  if (m_populatedCount < WINDOW_SIZE) {
-    m_populatedCount++;
-  }
-
-  long long sum = 0;
-  for (int i = 0; i < m_populatedCount; ++i) {
-    sum += m_usageBytes[i];
-  }
-
-  const double avgUsedBytes = static_cast<double>(sum) / m_populatedCount;
-  const double avgFillRatio = avgUsedBytes / bufferCapacityBytes;
-
-  constexpr double TARGET_FILL_RATIO = 0.5;
-  const double targetFillBytes = bufferCapacityBytes * TARGET_FILL_RATIO;
-  const double deviation = (avgUsedBytes - targetFillBytes) / targetFillBytes;
-
-  // Skip adjusting while near the target or already trending back toward it
-  bool adjust = true;
-  if (m_previousAvgFillRatio >= 0.0 && m_populatedCount == WINDOW_SIZE) {
-    const double currentError = avgFillRatio - TARGET_FILL_RATIO;
-    const double previousError = m_previousAvgFillRatio - TARGET_FILL_RATIO;
-
-    constexpr double WITHIN_TARGET_TOLERANCE = 0.05; // ~45%-55% fill
-    constexpr double EXTREME_DEVIATION = 0.25;       // <25% or >75% fill
-
-    const bool trendingWell = std::abs(currentError) < std::abs(previousError);
-    const bool nearTarget = std::abs(currentError) <= WITHIN_TARGET_TOLERANCE;
-    const bool extreme = std::abs(currentError) > EXTREME_DEVIATION;
-
-    if (nearTarget || (trendingWell && !extreme)) {
-      adjust = false;
-    }
-  }
-
-  if (m_populatedCount == WINDOW_SIZE) {
-    m_previousAvgFillRatio = avgFillRatio;
-  }
-
-  if (!adjust) {
     return 0.0;
   }
 
-  // Buffer too full, shorten the audio. Too empty, stretch it. The further off target, the firmer
-  // the answer
-  if (deviation > 0.6) {
-    return -DRAIN_HARD;
+  const auto used = static_cast<double>(usedBytes);
+
+  if (m_averageUsedBytes < 0.0) {
+    m_averageUsedBytes = used;
+  } else {
+    // TODO
+    // Weighted by how much audio this call carried rather than by the call itself, so the smoothing
+    // spans the same amount of sound whether a core hands over one batch a frame or eight
+    const auto windowBytes = SMOOTHING_BUFFERS * bufferCapacityBytes;
+    const auto carriedBytes = static_cast<double>(std::max(framesThisCall, 0)) * BYTES_PER_FRAME;
+    const auto weight = 1.0 - std::exp(-carriedBytes / windowBytes);
+
+    m_averageUsedBytes += weight * (used - m_averageUsedBytes);
   }
-  if (deviation > 0.3) {
-    return -DRAIN_MEDIUM;
-  }
-  if (deviation > 0.1) {
-    return -DRAIN_SOFT;
-  }
-  if (deviation > -0.3) {
-    return 0.0;
-  }
-  if (deviation > -0.6) {
-    return FILL_SOFT;
-  }
-  return FILL_MEDIUM;
+
+  const auto half = bufferCapacityBytes / 2.0;
+  const auto error = std::clamp((m_averageUsedBytes - half) / half, -1.0, 1.0);
+
+  // TODO
+  // Too full shortens the audio and too empty stretches it, in proportion to how far off it is. The
+  // error cannot leave -1..1, so the correction cannot leave MAX_CORRECTION, and a buffer sitting
+  // exactly on target is left alone without needing a dead zone to say so
+  return -MAX_CORRECTION * error;
 }

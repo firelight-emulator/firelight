@@ -108,6 +108,24 @@ public:
   void setCurrentAudioMuted(bool muted);
   bool currentAudioMuted();
 
+  // TODO
+  /**
+   * Queues work on the running instance, if there is one that has come up.
+   *
+   * Guarded like currentAudioBufferLevel, and for the same reason: the frame-pacing thread queues
+   * every frame, and the instance can be destroyed under it on the GUI thread
+   *
+   * @return Whether there was an instance to take it
+   */
+  bool submitToCurrentEmulator(const EmulatorCommand &command);
+
+  // TODO
+  /**
+   * @return Whether a running instance has come up far enough to be given work. Guarded like
+   *   currentAudioBufferLevel, and for the same reason
+   */
+  bool isCurrentEmulatorReady();
+
   // Sets the one-shot launch knobs applied to (and consumed by) the next
   // loadEntry. See LaunchOverrides. Not persisted
   void setPendingLaunchOverrides(LaunchOverrides overrides);

@@ -30,6 +30,7 @@ public:
   static constexpr auto OUTPUT_DEVICE_KEY = firelight::audio::OUTPUT_DEVICE_KEY;
   static constexpr auto MUTED_KEY = firelight::audio::MUTED_KEY;
   static constexpr auto VOLUME_KEY = firelight::audio::VOLUME_KEY;
+  static constexpr auto LATENCY_KEY = firelight::audio::LATENCY_KEY;
 
   explicit AudioManager(firelight::settings::SettingsService &settingsService,
                         std::function<void()> onAudioBufferLevelChanged = nullptr);
@@ -74,6 +75,10 @@ private:
   [[nodiscard]] QAudioDevice selectedOutputDevice() const;
 
   // Re-reads MUTED_KEY into m_userMuted
+  // TODO
+  /** How much sound the user wants buffered ahead, clamped to what the sink can usefully do */
+  [[nodiscard]] int latencyMs() const;
+
   void refreshUserMuted();
   // Re-reads VOLUME_KEY and applies it to the sink, if there is one
   void refreshVolume();

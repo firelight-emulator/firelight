@@ -449,10 +449,23 @@ SuspendPoint EmulatorInstance::capturePoint() {
   return point;
 }
 
+void EmulatorInstance::restoreFrame(const Image &image) {
+  if (m_frameRestorer && !image.isNull()) {
+    m_frameRestorer(image);
+  }
+}
+
 void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
   switch (command.type) {
   case EmulatorCommandType::RunFrame:
-    // Stepping: it runs here rather than waiting for whatever paces frames to decide it is due
+    // TODO
+    // A hardware core draws into the graphics context whatever is showing the game holds, so the
+    // frame has to run there. With nothing showing it, this side runs it
+    if (m_commandSink) {
+      m_commandSink(command);
+      break;
+    }
+
     runFrame();
     break;
 
@@ -479,6 +492,8 @@ void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
     if (const auto achievements = m_context.achievementManager; achievements && !point.retroachievementsState.empty()) {
       achievements->deserializeState(point.retroachievementsState);
     }
+
+    restoreFrame(point.image);
   } break;
 
   case EmulatorCommandType::WriteSuspendPoint: {
@@ -510,6 +525,8 @@ void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
         achievements && !point->retroachievementsState.empty()) {
       achievements->deserializeState(point->retroachievementsState);
     }
+
+    restoreFrame(point->image);
   } break;
 
   case EmulatorCommandType::UndoLoadSuspendPoint: {
@@ -524,6 +541,7 @@ void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
       achievements->deserializeState(m_beforeLastLoadSuspendPoint.retroachievementsState);
     }
 
+    restoreFrame(m_beforeLastLoadSuspendPoint.image);
     m_beforeLastLoadSuspendPoint = {};
   } break;
 

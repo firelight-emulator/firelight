@@ -97,7 +97,7 @@ TEST_F(EmulatorInstanceTest, GameSettingChangeUpdatesInstance) {
  * @brief Sync-method and target-framerate resolve and react to setting changes
  *
  * These drive the frame-pacing strategy. With no override they fall back to the
- * defaults (audio / 60), and a game override updates the live instance via the
+ * defaults (auto / 60), and a game override updates the live instance via the
  * GameSettingChangedEvent -> refreshAllSettings path
  */
 TEST_F(EmulatorInstanceTest, SyncSettingsUpdateInstance) {
@@ -119,7 +119,7 @@ TEST_F(EmulatorInstanceTest, SyncSettingsUpdateInstance) {
   ASSERT_NE(instance, nullptr);
 
   // No overrides yet -> defaults
-  EXPECT_EQ("audio", instance->getSyncMethod());
+  EXPECT_EQ("auto", instance->getSyncMethod());
   EXPECT_EQ(60, instance->getTargetFramerate());
 
   // Game overrides update the live instance

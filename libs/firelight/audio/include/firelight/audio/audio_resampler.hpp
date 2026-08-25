@@ -81,4 +81,10 @@ private:
   // process()/initialize() thread
   std::atomic<double> m_requestedRatio = 1.0;
   double m_activeRatio = 1.0;
+
+  // TODO
+  // The part of a correction too small to be worth a whole sample of the batch it arrived with,
+  // carried until it is. Without it a core handing over small batches loses their share of the
+  // correction outright, and always in the same direction
+  double m_compensationRemainder = 0.0;
 };

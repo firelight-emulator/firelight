@@ -123,6 +123,28 @@
       "step": 1
     },
     {
+      "key": "audio-latency",
+      "label": "Audio latency",
+      "group": "system-audio",
+      "order": 15,
+      "description": "How much sound is buffered ahead, in milliseconds. Lower means the sound you hear tracks the game more closely; too low and the buffer can run dry between refills, which crackles. 64 suits most machines. Only takes effect when audio is next started.",
+      "keywords": [
+        "buffer",
+        "latency",
+        "delay",
+        "lag",
+        "crackle",
+        "underrun",
+        "responsiveness"
+      ],
+      "type": "spinbox",
+      "default": "64",
+      "min": 32,
+      "max": 256,
+      "step": 8,
+      "advanced": true
+    },
+    {
       "key": "audio-muted",
       "label": "Mute audio",
       "group": "system-audio",

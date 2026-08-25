@@ -174,3 +174,127 @@ TEST(AudioResamplerTest, HandlesTinyBuffers) {
 
   EXPECT_NEAR(static_cast<double>(convert(resampler, 64)), 64.0, 8.0);
 }
+
+// TODO
+// Over a long run the output has to keep pace with the input whatever the batch sizes. A call that
+// comes up a fraction of a sample short every time is a rate error, not a rounding detail — and it is
+// the one thing no single-call assertion above can see
+TEST(AudioResamplerTest, ThroughputHoldsOverManyCalls) {
+  AudioResampler resampler;
+  resampler.initialize(N64_RATE, DEVICE_RATE);
+
+  size_t inFrames = 0;
+  size_t outFrames = 0;
+
+  for (auto i = 0; i < 2000; ++i) {
+    const size_t batch = i % 2 == 0 ? 500 : 30;
+    inFrames += batch;
+    outFrames += convert(resampler, batch);
+  }
+
+  const auto expected = static_cast<double>(inFrames) * DEVICE_RATE / N64_RATE;
+  EXPECT_NEAR(static_cast<double>(outFrames) / expected, 1.0, 0.0005)
+      << outFrames << " frames out for " << inFrames << " in; expected " << expected;
+}
+
+TEST(AudioResamplerTest, ThroughputHoldsForEvenBatches) {
+  AudioResampler resampler;
+  resampler.initialize(N64_RATE, DEVICE_RATE);
+
+  size_t outFrames = 0;
+  constexpr size_t BATCH = 560;
+  constexpr int CALLS = 2000;
+
+  for (auto i = 0; i < CALLS; ++i) {
+    outFrames += convert(resampler, BATCH);
+  }
+
+  const auto expected = static_cast<double>(BATCH * CALLS) * DEVICE_RATE / N64_RATE;
+  EXPECT_NEAR(static_cast<double>(outFrames) / expected, 1.0, 0.0005)
+      << outFrames << " frames out; expected " << expected;
+}
+
+// TODO
+// Open loop, because a closed one hides this: if only half the correction lands, the controller
+// simply sits at twice the error and the amount that lands still matches what is physically needed.
+// Handed a fixed rate against alternating batches, what comes out has to match what was asked for —
+// a batch whose share rounds to nothing must not silently forfeit it
+TEST(AudioResamplerTest, SmallBatchesCarryTheirShareOfTheCorrection) {
+  AudioResampler resampler;
+  resampler.initialize(N64_RATE, DEVICE_RATE);
+
+  constexpr double RATE = 0.002;
+  size_t inFrames = 0;
+  size_t outFrames = 0;
+
+  for (auto i = 0; i < 2000; ++i) {
+    const size_t batch = i % 2 == 0 ? 500 : 30;
+    inFrames += batch;
+    outFrames += convert(resampler, batch, RATE);
+  }
+
+  const auto nominal = static_cast<double>(inFrames) * DEVICE_RATE / N64_RATE;
+  const auto applied = (static_cast<double>(outFrames) - nominal) / nominal;
+
+  EXPECT_NEAR(applied, RATE, RATE * 0.25) << "asked for " << RATE << ", " << applied << " landed";
+}
+
+TEST(AudioResamplerTest, SmallBatchesCarryTheirShareWhenShortening) {
+  AudioResampler resampler;
+  resampler.initialize(N64_RATE, DEVICE_RATE);
+
+  constexpr double RATE = -0.002;
+  size_t inFrames = 0;
+  size_t outFrames = 0;
+
+  for (auto i = 0; i < 2000; ++i) {
+    const size_t batch = i % 2 == 0 ? 500 : 30;
+    inFrames += batch;
+    outFrames += convert(resampler, batch, RATE);
+  }
+
+  const auto nominal = static_cast<double>(inFrames) * DEVICE_RATE / N64_RATE;
+  const auto applied = (static_cast<double>(outFrames) - nominal) / nominal;
+
+  EXPECT_NEAR(applied, RATE, std::abs(RATE) * 0.25) << "asked for " << RATE << ", " << applied << " landed";
+}
+
+// TODO
+// The case both throughput tests above miss, because each of their patterns contains a batch large
+// enough to drain whatever the resampler held back. A core handing over the SAME small batch every
+// time never offers that slack, so anything withheld is withheld for good — a rate error, not a delay
+TEST(AudioResamplerTest, ThroughputHoldsForAConstantSmallBatch) {
+  for (const size_t batch : {size_t(30), size_t(32), size_t(34), size_t(64)}) {
+    AudioResampler resampler;
+    resampler.initialize(N64_RATE, DEVICE_RATE);
+
+    size_t outFrames = 0;
+    constexpr int CALLS = 20000;
+
+    for (auto i = 0; i < CALLS; ++i) {
+      outFrames += convert(resampler, batch);
+    }
+
+    const auto expected = static_cast<double>(batch * CALLS) * DEVICE_RATE / N64_RATE;
+    EXPECT_NEAR(static_cast<double>(outFrames) / expected, 1.0, 0.0005)
+        << "batch " << batch << ": " << outFrames << " frames out, expected " << expected << " ("
+        << (static_cast<double>(outFrames) / expected - 1.0) * 1e6 << " ppm)";
+  }
+}
+
+TEST(AudioResamplerTest, ThroughputHoldsForAConstantSmallBatchUpsampling) {
+  AudioResampler resampler;
+  resampler.initialize(CD_RATE, DEVICE_RATE);
+
+  size_t outFrames = 0;
+  constexpr size_t BATCH = 16;
+  constexpr int CALLS = 20000;
+
+  for (auto i = 0; i < CALLS; ++i) {
+    outFrames += convert(resampler, BATCH);
+  }
+
+  const auto expected = static_cast<double>(BATCH * CALLS) * DEVICE_RATE / CD_RATE;
+  EXPECT_NEAR(static_cast<double>(outFrames) / expected, 1.0, 0.0005)
+      << (static_cast<double>(outFrames) / expected - 1.0) * 1e6 << " ppm";
+}
