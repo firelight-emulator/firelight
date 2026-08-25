@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "_note": "Known-good runahead amounts, keyed by content hash + core. Rows are produced by `firelight measure-lag` (see docs/runahead.md); nothing here is hand-guessed. `frames` is the only field the app reads — the rest is the evidence for it. Unknown content resolves to 0 (off), never to a guess.",
+  "platformDefaults": [],
+  "blocked": [],
+  "games": []
+}
