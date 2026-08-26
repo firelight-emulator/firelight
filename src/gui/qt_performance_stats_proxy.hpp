@@ -33,8 +33,8 @@ class QtPerformanceStatsProxy final : public QObject {
   Q_PROPERTY(QString frameRate READ getFrameRate NOTIFY updated)
   Q_PROPERTY(QString frameTime READ getFrameTime NOTIFY updated)
   Q_PROPERTY(QString frameTimeDeviation READ getFrameTimeDeviation NOTIFY updated)
-  Q_PROPERTY(QString presentTime READ getPresentTime NOTIFY updated)
-  Q_PROPERTY(QString presentDeviation READ getPresentDeviation NOTIFY updated)
+  Q_PROPERTY(QString submitTime READ getSubmitTime NOTIFY updated)
+  Q_PROPERTY(QString submitDeviation READ getSubmitDeviation NOTIFY updated)
   Q_PROPERTY(QString spinMargin READ getSpinMargin NOTIFY updated)
   Q_PROPERTY(QString wakeOvershoot READ getWakeOvershoot NOTIFY updated)
   Q_PROPERTY(QString framesRun READ getFramesRun NOTIFY updated)
@@ -76,8 +76,8 @@ public:
   [[nodiscard]] QString getFrameRate() const;
   [[nodiscard]] QString getFrameTime() const;
   [[nodiscard]] QString getFrameTimeDeviation() const;
-  [[nodiscard]] QString getPresentTime() const;
-  [[nodiscard]] QString getPresentDeviation() const;
+  [[nodiscard]] QString getSubmitTime() const;
+  [[nodiscard]] QString getSubmitDeviation() const;
   [[nodiscard]] QString getSpinMargin() const;
   [[nodiscard]] QString getWakeOvershoot() const;
   [[nodiscard]] QString getFramesRun() const;

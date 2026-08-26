@@ -91,13 +91,17 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
     }
 
     // TODO
-    // Display mode counts refreshes, and this is the only thing that knows one happened. Direct
+    // frameSwapped says a frame was queued for the display, not that the display showed one — Qt
+    // emits it as soon as the present is submitted, and the wait for the refresh happens elsewhere.
+    // It is still the closest thing to a refresh available, and RefreshCounter is written to take a
+    // gap shorter than one refresh because of it. Direct
     // because it arrives on the render thread and there is nothing here that needs the GUI's
-    connect(
+    disconnect(m_frameSwappedConnection);
+    m_frameSwappedConnection = connect(
         w, &QQuickWindow::frameSwapped, this,
         [this] {
           const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
-          const auto lastNs = m_lastPresentAtNs.exchange(nowNs);
+          const auto lastNs = m_lastSubmitAtNs.exchange(nowNs);
           const auto periodNs = m_displayPeriodNs.load();
           auto refreshes = 1;
 
@@ -110,10 +114,10 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
           }
 
           if (lastNs != 0) {
-            firelight::diagnostics::PerformanceStats::instance().recordPresent(nowNs - lastNs);
+            firelight::diagnostics::PerformanceStats::instance().recordSubmit(nowNs - lastNs);
           }
 
-          m_presentCount.fetch_add(refreshes);
+          m_submitCount.fetch_add(refreshes);
           m_loopWake.notify_one();
 
           // TODO
@@ -228,17 +232,11 @@ void EmulatorItem::waitForNextFrame() {
     // Audio asks the sink often enough that a frame is never late by more than this, and Display
     // is woken by a refresh rather than the timeout
     m_loopWake.wait_for(lock, std::chrono::milliseconds(1),
-                        [this] { return m_presentCount.load() > 0 || m_emulationStopping; });
+                        [this] { return m_submitCount.load() > 0 || m_emulationStopping; });
     return;
   }
 
-  // TODO
-  // FL_SPIN_MS raises how much of the frame is spun rather than slept. The default of one
-  // millisecond assumes a sleep that returns within one, which is a claim about the host rather
-  // than about this code
-  static const int64_t spinOverrideNs =
-      qEnvironmentVariableIsEmpty("FL_SPIN_MS") ? 0 : qEnvironmentVariableIntValue("FL_SPIN_MS") * 1000000LL;
-  const auto marginNs = spinOverrideNs > 0 ? spinOverrideNs : m_spinMarginNs.load();
+  const auto marginNs = m_spinMarginNs.load();
   const auto sleepUntilNs = deadlineNs - marginNs;
   const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
 
@@ -251,10 +249,7 @@ void EmulatorItem::waitForNextFrame() {
 
     const auto overshootNs = std::chrono::steady_clock::now().time_since_epoch().count() - sleepUntilNs;
     firelight::diagnostics::PerformanceStats::instance().recordWake(marginNs, overshootNs);
-
-    if (spinOverrideNs <= 0) {
-      noteWakeOvershoot(overshootNs);
-    }
+    noteWakeOvershoot(overshootNs);
   }
 
   // The last stretch is spun rather than slept, because a sleep that overshoots costs a frame where
@@ -298,24 +293,24 @@ void EmulatorItem::runEmulationLoop() {
     if (m_paused || !firelight::emulation::EmulationService::getInstance()->isCurrentEmulatorReady()) {
       std::lock_guard lock(m_rateControllerMutex);
       m_rateController.reset();
-      m_presentCount.store(0);
-      m_lastPresentAtNs.store(0);
+      m_submitCount.store(0);
+      m_lastSubmitAtNs.store(0);
       m_refreshCounter.reset();
-      m_lastPresentNs = nowNs;
+      m_lastSubmitNs = nowNs;
       continue;
     }
 
-    auto refreshes = m_presentCount.exchange(0);
+    auto refreshes = m_submitCount.exchange(0);
 
     if (refreshes > 0) {
-      m_lastPresentNs = nowNs;
+      m_lastSubmitNs = nowNs;
       m_renderStalled.store(false);
-    } else if (nowNs - m_lastPresentNs > RENDER_STALL_NS) {
+    } else if (nowNs - m_lastSubmitNs > RENDER_STALL_NS) {
       // TODO
       // Nothing has reached the screen for a while: either nothing asked for a render, or the window
       // isn't being drawn at all. Ask, in case the stall was ours to break — a frame held for two
       // refreshes stops the presents that were going to make the next one due
-      m_lastPresentNs = nowNs;
+      m_lastSubmitNs = nowNs;
       m_renderStalled.store(true);
       QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
     }
@@ -365,6 +360,12 @@ void EmulatorItem::runEmulationLoop() {
 }
 
 EmulatorItem::~EmulatorItem() {
+  // TODO
+  // First, before anything else here: the handler below touches members of this object from the
+  // render thread, and that thread keeps presenting until the window goes. Leaving it to ~QObject
+  // runs it after every one of those members has been destroyed
+  disconnect(m_frameSwappedConnection);
+
   m_stopping = true;
   if (const auto actions = getShortcutActions()) {
     actions->setController(nullptr);

@@ -14,79 +14,6 @@
 #include <spdlog/spdlog.h>
 #include <vector>
 
-// FLGPU (temporary instrumentation — remove this block and its uses in renderFrame())
-// Whether the render thread is waiting on the GPU, and for how long. The wait after submit blocks
-// the same thread the core and its audio run on, so its cost is frame pacing rather than throughput
-namespace {
-class GpuSyncDiagnostics {
-public:
-  void recordPreRecordWait(const int64_t ns) {
-    m_preWaitNs += ns;
-    m_preWaitPeakNs = std::max(m_preWaitPeakNs, ns);
-  }
-
-  void recordPostSubmitWait(const int64_t ns) {
-    m_postWaitNs += ns;
-    m_postWaitPeakNs = std::max(m_postWaitPeakNs, ns);
-  }
-
-  void endFrame() {
-    m_frames++;
-
-    const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
-    if (m_reportAtNs == 0) {
-      m_reportAtNs = nowNs + reportIntervalNs();
-      return;
-    }
-    if (nowNs < m_reportAtNs) {
-      return;
-    }
-
-    const auto frames = std::max<int64_t>(m_frames, 1);
-    spdlog::info("FLGPU frames={} | wait-before-record mean={:.2f}ms peak={:.2f}ms | "
-                 "wait-after-submit mean={:.2f}ms peak={:.2f}ms | render thread blocked {:.1f}% of the time",
-                 m_frames, ms(m_preWaitNs / frames), ms(m_preWaitPeakNs), ms(m_postWaitNs / frames),
-                 ms(m_postWaitPeakNs),
-                 100.0 * static_cast<double>(m_preWaitNs + m_postWaitNs) / (nowNs - m_windowStartNs));
-
-    m_preWaitNs = 0;
-    m_postWaitNs = 0;
-    m_preWaitPeakNs = 0;
-    m_postWaitPeakNs = 0;
-    m_frames = 0;
-    m_windowStartNs = nowNs;
-    m_reportAtNs = nowNs + reportIntervalNs();
-  }
-
-private:
-  static double ms(const int64_t ns) { return static_cast<double>(ns) / 1e6; }
-
-  static int64_t reportIntervalNs() {
-    const auto secs = qEnvironmentVariableIntValue("FL_DIAG_SECS");
-    return (secs > 0 ? secs : 10) * 1000000000LL;
-  }
-
-  int64_t m_preWaitNs = 0;
-  int64_t m_postWaitNs = 0;
-  int64_t m_preWaitPeakNs = 0;
-  int64_t m_postWaitPeakNs = 0;
-  int64_t m_frames = 0;
-  int64_t m_windowStartNs = 0;
-  int64_t m_reportAtNs = 0;
-};
-
-GpuSyncDiagnostics gpuSync;
-
-// TODO
-// The wait after submit exists only because Qt reads the shared image with no semaphore to order it.
-// FL_GPU_SYNC=0 drops it, which lets the CPU run a frame ahead of the GPU
-bool shouldSyncAfterSubmit() {
-  static const bool sync =
-      qEnvironmentVariableIsEmpty("FL_GPU_SYNC") || qEnvironmentVariableIntValue("FL_GPU_SYNC") != 0;
-  return sync;
-}
-} // namespace
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Construction / destruction
 // ─────────────────────────────────────────────────────────────────────────────
@@ -143,11 +70,7 @@ void EmulatorVulkanRenderer::renderFrame(firelight::emulation::EmulatorInstance 
 
   // Wait for the previous frame's copy command buffer to finish before we
   // record into it again, then reset for re-use. (Fence is pre-signaled on first call.)
-  {
-    const auto waitStartNs = std::chrono::steady_clock::now().time_since_epoch().count();
-    m_vkfWaitForFences(m_vkDevice, 1, &m_vkFrameFences[0], VK_TRUE, UINT64_MAX);
-    gpuSync.recordPreRecordWait(std::chrono::steady_clock::now().time_since_epoch().count() - waitStartNs);
-  }
+  m_vkfWaitForFences(m_vkDevice, 1, &m_vkFrameFences[0], VK_TRUE, UINT64_MAX);
   m_vkfResetFences(m_vkDevice, 1, &m_vkFrameFences[0]);
 
   VkCommandBuffer cmd = m_vkCmdBuffers[0];
@@ -250,13 +173,7 @@ void EmulatorVulkanRenderer::renderFrame(firelight::emulation::EmulatorInstance 
   }
   // CPU-sync: wait for the blit to finish so Qt can safely read m_sharedImage
   // without needing a cross-device semaphore import
-  if (shouldSyncAfterSubmit()) {
-    const auto waitStartNs = std::chrono::steady_clock::now().time_since_epoch().count();
-    m_vkfWaitForFences(m_vkDevice, 1, &m_vkFrameFences[0], VK_TRUE, UINT64_MAX);
-    gpuSync.recordPostSubmitWait(std::chrono::steady_clock::now().time_since_epoch().count() - waitStartNs);
-  }
-
-  gpuSync.endFrame();
+  m_vkfWaitForFences(m_vkDevice, 1, &m_vkFrameFences[0], VK_TRUE, UINT64_MAX);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -171,7 +171,6 @@ void EmulatorItemRenderer::setHwRenderContextNegotiationInterface(
 void EmulatorItemRenderer::setHwRenderInterface(retro_hw_render_callback *iface) {
   // I believe this is only used for OpenGL... need to confirm. Vulkan uses the negotiation interface instead
 
-  spdlog::info("IS THIS ACTUALLY BEING CALLED? EmulatorItemRenderer::getHwRenderInterface");
   m_usingHardwareRenderer = true;
 
   // Store reset/destroy for all APIs
@@ -510,42 +509,6 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   }
 }
 
-namespace {
-// FLPACE (temporary instrumentation — remove with its two call sites)
-// Frames asked for against frames actually run. Any gap is time the game never got, and it is never
-// made up — measured at about one percent before m_framesToRun became a count
-std::atomic<int> paceRequested{0};
-std::atomic<int> paceRan{0};
-std::atomic<int64_t> paceReportAtNs{0};
-
-int64_t paceIntervalNs() {
-  const auto secs = qEnvironmentVariableIntValue("FL_DIAG_SECS");
-  return (secs > 0 ? secs : 10) * 1000000000LL;
-}
-
-void paceReport() {
-  const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
-  auto due = paceReportAtNs.load();
-
-  if (due == 0) {
-    paceReportAtNs.store(nowNs + paceIntervalNs());
-    return;
-  }
-
-  if (nowNs < due || !paceReportAtNs.compare_exchange_strong(due, nowNs + paceIntervalNs())) {
-    return;
-  }
-
-  const auto requested = paceRequested.exchange(0);
-  const auto ran = paceRan.exchange(0);
-
-  const auto secs = static_cast<double>(paceIntervalNs()) / 1e9;
-
-  spdlog::info("FLPACE requested={} ran={} lost={} ({:.2f}%) -> {:.3f} fps actual", requested, ran, requested - ran,
-               requested > 0 ? (requested - ran) * 100.0 / requested : 0.0, ran / secs);
-}
-} // namespace
-
 void EmulatorItemRenderer::handleCommand(const firelight::emulation::EmulatorCommand &command) {
   using firelight::emulation::EmulatorCommandType;
 
@@ -555,8 +518,6 @@ void EmulatorItemRenderer::handleCommand(const firelight::emulation::EmulatorCom
 
   switch (command.type) {
   case EmulatorCommandType::RunFrame:
-    paceRequested.fetch_add(1); // FLPACE (temporary)
-
     // TODO
     // A frame asked for with the pass already full is one the player never gets, and the only point
     // at which one is actually lost
@@ -714,9 +675,6 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
   const auto framesThisPass = m_framesToRun;
   m_framesToRun = 0;
-
-  paceRan.fetch_add(framesThisPass); // FLPACE (temporary)
-  paceReport();
 
   // TODO
   // Named as the overlay shows it, so it lines up with what another emulator reports for the same

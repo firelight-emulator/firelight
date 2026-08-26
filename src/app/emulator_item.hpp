@@ -260,7 +260,7 @@ private:
 
   // TODO
   // When the loop last saw a present. Only touched on the emulation thread
-  int64_t m_lastPresentNs = 0;
+  int64_t m_lastSubmitNs = 0;
 
   // TODO
   // Whether frames have stopped reaching the screen. Frames run on the render thread, so while it
@@ -277,7 +277,7 @@ private:
 
   // TODO
   // When the last present arrived. Only the render thread writes it
-  std::atomic<int64_t> m_lastPresentAtNs = 0;
+  std::atomic<int64_t> m_lastSubmitAtNs = 0;
 
   // TODO
   // Reads the gap between two presents as a number of refreshes. Only the render thread touches it
@@ -290,7 +290,7 @@ private:
 
   // Refreshes since the loop last looked. A count rather than a flag: two can land between wakes,
   // and holding a frame for a number of refreshes only works if every one of them is seen
-  std::atomic<int> m_presentCount = 0;
+  std::atomic<int> m_submitCount = 0;
 
   // How much of the wait before a frame is spent spinning rather than sleeping. Sleeping alone
   // overshoots by more than a frame can afford where presentation follows production; 0 is pure sleep
@@ -303,6 +303,12 @@ private:
    * Widens or narrows the spun part of the frame to cover how late a sleep just returned
    */
   void noteWakeOvershoot(int64_t overshootNs);
+
+  // TODO
+  // Held so the handler can be taken off the window before this object's members go. ~QObject would
+  // do it too, but only after every member below has already been destroyed, and the handler runs on
+  // the render thread which is still presenting by then
+  QMetaObject::Connection m_frameSwappedConnection;
 
   std::atomic<int64_t> m_spinMarginNs = MIN_SPIN_MARGIN_NS;
   // Wall-clock target interval for native/monitor/fixed pacing. Written on the

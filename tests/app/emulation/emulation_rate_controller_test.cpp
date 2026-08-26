@@ -196,12 +196,20 @@ TEST(EmulationRateControllerTest, AudioIgnoresTheClock) {
   EXPECT_EQ(controller.getNextDeadlineNs(), 0);
 }
 
-TEST(EmulationRateControllerTest, AudioRunsNothingWhenTheSinkCannotBeRead) {
+// TODO
+// A sink that cannot be read is one being rebuilt or one that was lost, and a frame is the only
+// thing that calls into it — so stopping on an unreadable level is a game that never starts again.
+// The clock takes over until there is a level to read
+TEST(EmulationRateControllerTest, AudioFallsBackToTheClockWhenTheSinkCannotBeRead) {
   EmulationRateController controller;
   controller.configure({.mode = SyncMode::Audio, .contentFps = 60.0});
   controller.setAudioBufferLevel(-1.0F);
 
-  EXPECT_EQ(controller.framesDue(SECOND_NS), 0);
+  EXPECT_EQ(controller.framesDue(SECOND_NS), 1) << "the first frame runs immediately";
+  EXPECT_EQ(controller.framesDue(SECOND_NS + SECOND_NS / 60), 1) << "and then at the content rate";
+
+  controller.setAudioBufferLevel(0.8F);
+  EXPECT_EQ(controller.framesDue(SECOND_NS + 2 * SECOND_NS / 60), 0) << "a readable full sink gates again";
 }
 
 // Time the player didn't experience isn't owed. A breakpoint or a suspended laptop must not come

@@ -17,7 +17,7 @@ inline constexpr auto MUTED_KEY = "audio-muted";
 
 // TODO
 /** How much sound is buffered ahead, in milliseconds */
-inline constexpr auto LATENCY_KEY = "audio-latency";
+inline constexpr auto LATENCY_KEY = "emulation-audio-latency";
 
 // TODO
 /** What to buffer when the setting is missing or unreadable. RetroArch ships the same figure */

@@ -146,11 +146,11 @@ Rectangle {
         }
 
         StatName {
-            text: "Present Time:"
+            text: "Submit Time:"
         }
 
         StatValue {
-            text: PerformanceStats.presentTime
+            text: PerformanceStats.submitTime
         }
 
         StatName {
@@ -158,7 +158,7 @@ Rectangle {
         }
 
         StatValue {
-            text: PerformanceStats.presentDeviation
+            text: PerformanceStats.submitDeviation
         }
 
         StatName {

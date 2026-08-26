@@ -247,6 +247,48 @@
       "_note": "An emulation setting, so it resolves game -> platform -> global like the rest: set it on the DOS platform and every DOS game inherits it. The per-device toggle_hotkeys shortcut is the instant escape hatch on top.",
       "type": "boolean",
       "default": "false"
+    },
+    {
+      "key": "emulation-audio-latency",
+      "label": "Audio latency",
+      "group": "emulation-audio",
+      "order": 50,
+      "description": "How much sound is buffered ahead, in milliseconds. Lower means the sound you hear tracks the game more closely; too low and the buffer can run dry between refills, which crackles. 64 suits most machines. Only takes effect when audio is next started.",
+      "keywords": [
+        "buffer",
+        "latency",
+        "delay",
+        "lag",
+        "crackle",
+        "underrun",
+        "responsiveness"
+      ],
+      "type": "spinbox",
+      "default": "64",
+      "min": 32,
+      "max": 256,
+      "step": 8,
+      "advanced": true
+    }
+  ],
+  "app": [
+    {
+      "key": "vsync",
+      "label": "Wait for the display",
+      "group": "emulation-video",
+      "order": 25,
+      "description": "Holds each frame until the display is ready for it. On removes tearing and lets 'Sync to monitor' and 'Automatic' match the display exactly, at the cost of up to one refresh of extra delay. Off shows each frame the moment it is ready, which tears on most displays and stops the display being matchable at all. Takes effect when Firelight is next started.",
+      "keywords": [
+        "vsync",
+        "tearing",
+        "sync",
+        "display",
+        "latency",
+        "lag"
+      ],
+      "type": "toggle",
+      "default": "true",
+      "advanced": true
     }
   ]
 }

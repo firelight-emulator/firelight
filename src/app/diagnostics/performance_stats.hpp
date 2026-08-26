@@ -30,8 +30,8 @@ struct PerformanceSnapshot {
   double frameRate = 0.0;
   double frameTimeMs = 0.0;
   double frameTimeDeviationPercent = 0.0;
-  double presentTimeMs = 0.0;
-  double presentDeviationPercent = 0.0;
+  double submitTimeMs = 0.0;
+  double submitDeviationPercent = 0.0;
   double spinMarginMs = 0.0;
   double wakeOvershootMeanMs = 0.0;
   double wakeOvershootPeakMs = 0.0;
@@ -96,12 +96,14 @@ public:
   void recordDroppedFrame();
 
   /**
-   * Records the gap between one frame reaching the display and the next.
+   * Records the gap between one frame being handed to the display and the next.
    *
-   * Separate from the frame time, because a pass being irregular says nothing on its own about what
-   * the player sees: presentation can still be even if every frame waits for the display anyway
+   * This is a submission, not a flip: it is taken from frameSwapped, which fires when a present is
+   * queued rather than when the display shows it. Frames in flight and a buffered swapchain mean two
+   * can be handed over inside one refresh, so this figure is bursty even when scanout is perfectly
+   * even, and it must not be read as presentation quality
    */
-  void recordPresent(int64_t gapNs);
+  void recordSubmit(int64_t gapNs);
 
   /**
    * Records how far past its own deadline a sleep returned, and how much of the frame is being spun
@@ -153,6 +155,11 @@ private:
   // recompiler's first pass and a hardware renderer's first pipelines
   static constexpr int64_t WARMUP_FRAMES = 120;
 
+  // TODO
+  // The longest gap that still describes a frame interval. A menu, a pause or a window that went
+  // away leaves one far longer, and a total that swallows it reads slow for the rest of the session
+  static constexpr double MAX_FRAME_GAP_NS = 100000000.0;
+
   static constexpr double UNDERRUN_LEVEL = 0.25;
   static constexpr double BLOCKING_LEVEL = 0.75;
 
@@ -165,9 +172,9 @@ private:
   double m_frameTimeMeanNs = 0.0;
   double m_frameTimeVarianceNs = 0.0;
   double m_wakeOvershootMeanNs = 0.0;
-  double m_presentMeanNs = 0.0;
-  double m_presentVarianceNs = 0.0;
-  bool m_hasPresent = false;
+  double m_submitMeanNs = 0.0;
+  double m_submitVarianceNs = 0.0;
+  bool m_hasSubmit = false;
   double m_occupancyMean = 0.0;
   double m_occupancyVariance = 0.0;
   double m_underrunShare = 0.0;

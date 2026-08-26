@@ -67,6 +67,10 @@ void PerformanceStats::recordFrame(const int64_t frameTimeNs, const int framesRu
 
   const auto sample = static_cast<double>(frameTimeNs);
 
+  if (sample > MAX_FRAME_GAP_NS) {
+    return;
+  }
+
   if (!m_hasFrameTime) {
     m_frameTimeMeanNs = sample;
     m_frameTimeVarianceNs = 0.0;
@@ -104,7 +108,7 @@ void PerformanceStats::recordFrame(const int64_t frameTimeNs, const int framesRu
       m_frameTimeMeanNs > 0.0 ? std::sqrt(m_frameTimeVarianceNs) / m_frameTimeMeanNs * 100.0 : 0.0;
 }
 
-void PerformanceStats::recordPresent(const int64_t gapNs) {
+void PerformanceStats::recordSubmit(const int64_t gapNs) {
   if (gapNs <= 0) {
     return;
   }
@@ -117,19 +121,19 @@ void PerformanceStats::recordPresent(const int64_t gapNs) {
 
   const auto sample = static_cast<double>(gapNs);
 
-  if (!m_hasPresent) {
-    m_presentMeanNs = sample;
-    m_presentVarianceNs = 0.0;
-    m_hasPresent = true;
+  if (!m_hasSubmit) {
+    m_submitMeanNs = sample;
+    m_submitVarianceNs = 0.0;
+    m_hasSubmit = true;
   } else {
-    const auto delta = sample - m_presentMeanNs;
-    m_presentMeanNs += FRAME_SMOOTHING * delta;
-    m_presentVarianceNs = (1.0 - FRAME_SMOOTHING) * (m_presentVarianceNs + FRAME_SMOOTHING * delta * delta);
+    const auto delta = sample - m_submitMeanNs;
+    m_submitMeanNs += FRAME_SMOOTHING * delta;
+    m_submitVarianceNs = (1.0 - FRAME_SMOOTHING) * (m_submitVarianceNs + FRAME_SMOOTHING * delta * delta);
   }
 
-  m_snapshot.presentTimeMs = m_presentMeanNs / 1e6;
-  m_snapshot.presentDeviationPercent =
-      m_presentMeanNs > 0.0 ? std::sqrt(m_presentVarianceNs) / m_presentMeanNs * 100.0 : 0.0;
+  m_snapshot.submitTimeMs = m_submitMeanNs / 1e6;
+  m_snapshot.submitDeviationPercent =
+      m_submitMeanNs > 0.0 ? std::sqrt(m_submitVarianceNs) / m_submitMeanNs * 100.0 : 0.0;
 }
 
 void PerformanceStats::recordWake(const int64_t marginNs, const int64_t overshootNs) {
@@ -201,10 +205,10 @@ void PerformanceStats::reset() {
   m_blockingShare = 0.0;
   m_wakeOvershootMeanNs = 0.0;
   m_snapshot.wakeOvershootPeakMs = 0.0;
-  m_presentMeanNs = 0.0;
-  m_presentVarianceNs = 0.0;
+  m_submitMeanNs = 0.0;
+  m_submitVarianceNs = 0.0;
   m_hasFrameTime = false;
-  m_hasPresent = false;
+  m_hasSubmit = false;
   m_hasOccupancy = false;
 }
 

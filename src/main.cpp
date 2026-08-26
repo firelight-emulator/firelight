@@ -216,11 +216,10 @@ int main(int argc, char *argv[]) {
   // ===== Set up QApplication ===============================================================
   QSurfaceFormat format;
   // TODO
-  // Presenting as soon as a frame is ready is what lets emulation timing be the truth rather than
-  // the display's, at the cost of tearing. FL_VSYNC=1 waits for the display instead: no tearing, up
-  // to a refresh of added latency, and the pacer sees presentation as locked — which is the one
-  // condition under which counting refreshes is exact rather than a guess
-  format.setSwapInterval(qEnvironmentVariableIntValue("FL_VSYNC"));
+  // Waiting for the display is what makes counting refreshes exact rather than a guess, and it is
+  // the only way the pacer can match the display at all. The stored setting decides, once the
+  // settings are open; this is the format any window made before then would get
+  format.setSwapInterval(1);
   QSurfaceFormat::setDefaultFormat(format);
 
   QApplication app(argc, argv);
@@ -404,6 +403,20 @@ int main(int argc, char *argv[]) {
 
   firelight::settings::SettingsService settingsService(settingsRepository);
   firelight::settings::SettingsService::setInstance(&settingsService);
+
+  // TODO
+  // Applied here rather than with the rest of the format, because the settings are not open that
+  // early. Any window is made later, during engine.load(), so this is still in time for the one
+  // that matters. FL_VSYNC overrides it for a single run without touching what is stored
+  {
+    const auto stored = settingsService.getGlobalEffectiveValue("vsync").value_or("true");
+    const auto vsync =
+        qEnvironmentVariableIsEmpty("FL_VSYNC") ? stored != "false" : qEnvironmentVariableIntValue("FL_VSYNC") != 0;
+    auto surfaceFormat = QSurfaceFormat::defaultFormat();
+    surfaceFormat.setSwapInterval(vsync ? 1 : 0);
+    QSurfaceFormat::setDefaultFormat(surfaceFormat);
+    spdlog::info("Presentation {} for the display", vsync ? "waits" : "does not wait");
+  }
 
   // Keeps each variant group pointed at the release the region/language ordering
   // prefers. Constructed after the settings service because that is where the
@@ -853,32 +866,6 @@ int main(int argc, char *argv[]) {
   // Just doing this to instantiate it
   engine.singletonInstance<QObject *>("QMLFirelight", "SoundEffects");
 
-  // Give Qt's Vulkan renderer a shared instance that enables the external
-  // memory/semaphore/fence *capabilities* extensions. HW-render cores that
-  // request only Vulkan 1.0 (PPSSPP) resolve their shared-image negotiation
-  // through the KHR entry points and crash if those extensions aren't enabled;
-  // cores that request 1.1+ (parallel-RDP) get them as core functions. The
-  // apiVersion must stay >= 1.1 so those 1.1 cores keep working. Must be set
-  // before the window is exposed. Static so it outlives the window
-  // static QVulkanInstance vulkanInstance;
-  // if (window) {
-  //   vulkanInstance.setApiVersion(QVersionNumber(1, 3));
-  //   const QByteArrayList wanted = {"VK_KHR_surface",
-  //                                  "VK_KHR_win32_surface",
-  //                                  "VK_KHR_get_physical_device_properties2",
-  //                                  "VK_KHR_external_memory_capabilities",
-  //                                  "VK_KHR_external_semaphore_capabilities",
-  //                                  "VK_KHR_external_fence_capabilities",
-  //                                  "VK_EXT_swapchain_colorspace",
-  //                                  "VK_EXT_debug_utils"};
-  //   const auto supported = vulkanInstance.supportedExtensions();
-  //   QByteArrayList enable;
-  //   for (const auto &w : wanted) {
-  //     for (const auto &s : supported) {
-  //       if (s.name == w) {
-  //         enable << w;
-  //         break;
-  //       }
   //     }
   //   }
   //   vulkanInstance.setExtensions(enable);

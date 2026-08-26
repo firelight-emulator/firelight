@@ -176,6 +176,12 @@
       "order": 20
     },
     {
+      "id": "emulation-audio",
+      "page": "emulation",
+      "label": "Audio",
+      "order": 25
+    },
+    {
       "id": "emulation-input",
       "page": "emulation",
       "label": "Input",

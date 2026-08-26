@@ -96,12 +96,12 @@ QString QtPerformanceStatsProxy::getFrameTimeDeviation() const {
   return figure(m_snapshot.frameTimeDeviationPercent, 2, QStringLiteral(" %"));
 }
 
-QString QtPerformanceStatsProxy::getPresentTime() const {
-  return figureOrDash(m_snapshot.presentTimeMs, 2, QStringLiteral(" ms"));
+QString QtPerformanceStatsProxy::getSubmitTime() const {
+  return figureOrDash(m_snapshot.submitTimeMs, 2, QStringLiteral(" ms"));
 }
 
-QString QtPerformanceStatsProxy::getPresentDeviation() const {
-  return figure(m_snapshot.presentDeviationPercent, 2, QStringLiteral(" %"));
+QString QtPerformanceStatsProxy::getSubmitDeviation() const {
+  return figure(m_snapshot.submitDeviationPercent, 2, QStringLiteral(" %"));
 }
 
 QString QtPerformanceStatsProxy::getSpinMargin() const {
