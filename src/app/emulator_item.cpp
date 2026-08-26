@@ -3,7 +3,6 @@
 #ifdef _WIN32
 // clang-format off
 #include <windows.h>
-#include <timeapi.h>
 // clang-format on
 #endif
 
@@ -276,20 +275,13 @@ void EmulatorItem::noteWakeOvershoot(const int64_t overshootNs) {
   }
 
   // TODO
-  // Narrowed slowly, so that one accurate sleep among late ones does not give back the margin the
-  // late ones just bought
-  m_spinMarginNs.store(std::max(margin - (margin - MIN_SPIN_MARGIN_NS) / 256 - 1, MIN_SPIN_MARGIN_NS));
+  // Narrowed very slowly, because the sleeps that matter are the worst ones and they are rare. A
+  // margin that sags back between them is one that does not cover them when they come, which is
+  // measurable: both machines settled just under their own peak overshoot at a quarter of this
+  m_spinMarginNs.store(std::max(margin - (margin - MIN_SPIN_MARGIN_NS) / 4096 - 1, MIN_SPIN_MARGIN_NS));
 }
 
 void EmulatorItem::runEmulationLoop() {
-#ifdef _WIN32
-  // TODO
-  // Windows hands out sleeps on a tick that is 15.6ms by default, which no spin margin short of a
-  // whole frame can cover. Asking for a millisecond is what Qt::PreciseTimer used to do for this
-  // loop before it kept its own thread, and the request lasts as long as it is held
-  timeBeginPeriod(1);
-#endif
-
   while (!m_emulationStopping) {
     waitForNextFrame();
 
@@ -370,10 +362,6 @@ void EmulatorItem::runEmulationLoop() {
 
     QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
   }
-
-#ifdef _WIN32
-  timeEndPeriod(1);
-#endif
 }
 
 EmulatorItem::~EmulatorItem() {

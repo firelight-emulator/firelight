@@ -556,8 +556,15 @@ void EmulatorItemRenderer::handleCommand(const firelight::emulation::EmulatorCom
   switch (command.type) {
   case EmulatorCommandType::RunFrame:
     paceRequested.fetch_add(1); // FLPACE (temporary)
-    firelight::diagnostics::PerformanceStats::instance().recordFrame(0, 0, 1);
-    m_framesToRun = std::min(m_framesToRun + 1, MAX_FRAMES_PER_PASS);
+
+    // TODO
+    // A frame asked for with the pass already full is one the player never gets, and the only point
+    // at which one is actually lost
+    if (m_framesToRun >= MAX_FRAMES_PER_PASS) {
+      firelight::diagnostics::PerformanceStats::instance().recordDroppedFrame();
+    } else {
+      m_framesToRun++;
+    }
     break;
 
   case EmulatorCommandType::EmitRewindPoints: {
@@ -735,7 +742,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
     const auto sinceLastNs = lastPassNs > 0 ? nowNs - lastPassNs : 0;
     lastPassNs = nowNs;
-    firelight::diagnostics::PerformanceStats::instance().recordFrame(sinceLastNs, framesThisPass, 0);
+    firelight::diagnostics::PerformanceStats::instance().recordFrame(sinceLastNs, framesThisPass);
   }
 
   // ------------------------------------------------------------

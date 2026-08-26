@@ -36,7 +36,6 @@ struct PerformanceSnapshot {
   double wakeOvershootMeanMs = 0.0;
   double wakeOvershootPeakMs = 0.0;
   int64_t framesRun = 0;
-  int64_t framesRequested = 0;
   int64_t framesLost = 0;
   std::string pacingMode;
   double audioRatio = 1.0;
@@ -87,12 +86,14 @@ public:
   void setViewport(int width, int height);
 
   /**
-   * Records one frame's wall-clock cost, and how many were asked for against how many ran.
-   *
-   * The two counts arrive from different places — a frame is requested when the pacer decides one
-   * is due, and runs a pass later — so each call carries whichever it knows about
+   * Records one frame's wall-clock cost and how many ran in the pass
    */
-  void recordFrame(int64_t frameTimeNs, int framesRun, int framesRequested);
+  void recordFrame(int64_t frameTimeNs, int framesRun);
+
+  /**
+   * Records a frame the pacer asked for that the render pass had no room to run
+   */
+  void recordDroppedFrame();
 
   /**
    * Records the gap between one frame reaching the display and the next.

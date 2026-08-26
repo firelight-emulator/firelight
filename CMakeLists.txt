@@ -485,8 +485,7 @@ target_include_directories(firelight PRIVATE libs/firelight/achievements/src lib
 #target_link_libraries(firelight PRIVATE firelight_lib)
 target_link_libraries(firelight PUBLIC
         discord
-        firelight_lib
-        $<$<PLATFORM_ID:Windows>:winmm>)
+        firelight_lib)
 
 #if (CMAKE_BUILD_TYPE STREQUAL "Release")
 #    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)

@@ -42,14 +42,26 @@ void PerformanceStats::setViewport(const int width, const int height) {
   m_snapshot.viewportHeight = height;
 }
 
-void PerformanceStats::recordFrame(const int64_t frameTimeNs, const int framesRun, const int framesRequested) {
+void PerformanceStats::recordDroppedFrame() {
+  std::lock_guard lock(m_mutex);
+  m_snapshot.framesLost++;
+}
+
+void PerformanceStats::recordFrame(const int64_t frameTimeNs, const int framesRun) {
   std::lock_guard lock(m_mutex);
 
   m_snapshot.framesRun += framesRun;
-  m_snapshot.framesRequested += framesRequested;
-  m_snapshot.framesLost = m_snapshot.framesRequested - m_snapshot.framesRun;
 
   if (frameTimeNs <= 0) {
+    return;
+  }
+
+  // TODO
+  // The same opening the totals leave out, left out of the smoothed figures too. Seeding a mean from
+  // a gap that contains a recompiler's first pass puts the reading in the hundreds of milliseconds
+  // and takes a quarter of a minute to shed
+  if (m_warmupFrames < WARMUP_FRAMES) {
+    m_warmupFrames += framesRun;
     return;
   }
 
@@ -76,15 +88,8 @@ void PerformanceStats::recordFrame(const int64_t frameTimeNs, const int framesRu
   // of frames against a length that is not a whole number of them: one frame either way over a
   // second is more than a percent, which is the whole size of the difference being looked for here.
   // The total converges instead, and the deviation beside it is what shows movement
-  // TODO
-  // The opening seconds are a recompiler translating and a renderer building pipelines, and a total
-  // that includes them spends minutes averaging them back out. They are skipped rather than weighted
-  if (m_warmupFrames < WARMUP_FRAMES) {
-    m_warmupFrames += framesRun;
-  } else {
-    m_totalElapsedNs += sample;
-    m_totalFrames += framesRun;
-  }
+  m_totalElapsedNs += sample;
+  m_totalFrames += framesRun;
 
   if (m_totalFrames > 0 && m_totalElapsedNs > 0.0) {
     m_snapshot.frameRate = static_cast<double>(m_totalFrames) * 1e9 / m_totalElapsedNs;
@@ -105,6 +110,10 @@ void PerformanceStats::recordPresent(const int64_t gapNs) {
   }
 
   std::lock_guard lock(m_mutex);
+
+  if (m_warmupFrames < WARMUP_FRAMES) {
+    return;
+  }
 
   const auto sample = static_cast<double>(gapNs);
 
@@ -179,7 +188,6 @@ PerformanceSnapshot PerformanceStats::snapshot() const {
 void PerformanceStats::reset() {
   std::lock_guard lock(m_mutex);
   m_snapshot.framesRun = 0;
-  m_snapshot.framesRequested = 0;
   m_snapshot.framesLost = 0;
   m_snapshot.samplesDelivered = 0;
   m_frameTimeMeanNs = 0.0;

@@ -21,7 +21,12 @@ int RefreshCounter::observe(const int64_t gapNs, const int64_t periodNs, const i
   // drawing at all would come back afterwards as a run of frames nobody is waiting for
   m_remainder = std::clamp(m_remainder + static_cast<double>(gapNs) / static_cast<double>(periodNs), -limit, limit);
 
-  const auto refreshes = std::clamp(static_cast<int>(m_remainder), 1, bound);
+  // TODO
+  // Floored at nothing rather than at one, because what is being counted is the frame being handed
+  // to the display, not the display showing it. Those are pipelined, so two can be handed over
+  // inside one refresh; charging each of them a whole refresh releases a frame before its refresh
+  // has happened, and the debt that leaves has to be paid back by the next one
+  const auto refreshes = std::clamp(static_cast<int>(m_remainder), 0, bound);
   m_remainder -= refreshes;
 
   return refreshes;
