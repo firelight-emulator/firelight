@@ -156,8 +156,13 @@ int EmulationRateController::framesDue(const int64_t nowNs) {
   // Audio has no rate. A frame is due when there is room for the audio it will produce, which makes
   // the device's consumption the clock — and it stays right through anything a clock would drift
   // against: a device running slightly off its nominal rate, or a core whose own rate is misreported
-  if (m_resolvedMode == SyncMode::Audio) {
-    return m_audioBufferLevel >= 0.0 && m_audioBufferLevel < TARGET_BUFFER_LEVEL ? 1 : 0;
+  // TODO
+  // A level below zero is a sink that cannot be read — one being rebuilt, or one that was lost.
+  // Falling through to the clock keeps frames running, and a frame is the only thing that calls into
+  // the sink and so the only thing that can rebuild it. Gating on a level that cannot be read would
+  // stop the emulation for good
+  if (m_resolvedMode == SyncMode::Audio && m_audioBufferLevel >= 0.0) {
+    return m_audioBufferLevel < TARGET_BUFFER_LEVEL ? 1 : 0;
   }
 
   if (m_lastTickNs == 0) {

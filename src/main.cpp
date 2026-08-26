@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #define SDL_MAIN_HANDLED
 #ifdef _WIN32
 #include <windows.h>
@@ -72,6 +73,7 @@
 #include "gui/qt_game_art_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include "gui/qt_network_service_proxy.hpp"
+#include "gui/qt_performance_stats_proxy.hpp"
 #include "gui/qt_platform_service_proxy.hpp"
 #include "gui/qt_save_manager_proxy.hpp"
 #include "gui/qt_settings_catalog_proxy.hpp"
@@ -121,6 +123,7 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQmlNetworkAccessManagerFactory>
+#include <QQuickGraphicsConfiguration>
 #include <QQuickWindow>
 #include <QTimer>
 #include <QVulkanInstance>
@@ -443,7 +446,7 @@ int main(int argc, char *argv[]) {
   // destroyed first, and that call would hit freed memory (Discord SDK assert
   // / crash). `initialize()` still runs later, once the window exists
 
-  // QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+  QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 
   auto gameImageProvider = new firelight::gui::GameImageProvider();
   firelight::ServiceAccessor::setGameImageProvider(gameImageProvider);
@@ -785,6 +788,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("SearchResultsModel", searchResultsModel);
 
   engine.rootContext()->setContextProperty("InputService", &inputServiceProxy);
+  engine.rootContext()->setContextProperty("PerformanceStats", new firelight::gui::QtPerformanceStatsProxy());
   engine.rootContext()->setContextProperty("EmulationService", new firelight::gui::QtEmulationServiceProxy());
   engine.rootContext()->setContextProperty("ShortcutDispatcher", &shortcutDispatcher);
   engine.rootContext()->setContextProperty("AchievementService", &achievementServiceProxy);
@@ -885,6 +889,20 @@ int main(int argc, char *argv[]) {
   //     window->setVulkanInstance(&vulkanInstance);
   //   }
   // }
+
+  // TODO
+  // Qt enables only what its own scene graph needs, and the cross-device semaphore the emulator's
+  // Vulkan renderer imports is not on that list. Without these the import resolves to null and the
+  // renderer falls back to blocking the render thread on a fence every frame. Must be set before
+  // the scene graph initializes, which is on first expose and so after this point
+  if (window && QQuickWindow::graphicsApi() == QSGRendererInterface::Vulkan) {
+    QQuickGraphicsConfiguration graphicsConfig;
+    graphicsConfig.setDeviceExtensions({"VK_KHR_external_memory", "VK_KHR_external_memory_win32",
+                                        "VK_KHR_external_semaphore", "VK_KHR_external_semaphore_win32",
+                                        "VK_KHR_timeline_semaphore"});
+    window->setGraphicsConfiguration(graphicsConfig);
+    spdlog::info("Vulkan: requesting device extensions for the shared-image path");
+  }
 
   window->installEventFilter(resizeHandler);
   window->installEventFilter(inputMethodDetectionHandler);

@@ -1,5 +1,13 @@
 #include "emulator_item.hpp"
 
+#ifdef _WIN32
+// clang-format off
+#include <windows.h>
+#include <timeapi.h>
+// clang-format on
+#endif
+
+#include "diagnostics/performance_stats.hpp"
 #include "emulation/emulation_service.hpp"
 #include "emulation/shortcut_actions.hpp"
 #include "emulator_item_renderer.hpp"
@@ -102,6 +110,10 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
             refreshes = m_refreshCounter.observe(nowNs - lastNs, periodNs, m_refreshCeiling.load());
           }
 
+          if (lastNs != 0) {
+            firelight::diagnostics::PerformanceStats::instance().recordPresent(nowNs - lastNs);
+          }
+
           m_presentCount.fetch_add(refreshes);
           m_loopWake.notify_one();
 
@@ -171,6 +183,37 @@ void EmulatorItem::submitToEmulator(const firelight::emulation::EmulatorCommand 
   firelight::emulation::EmulationService::getInstance()->submitToCurrentEmulator(command);
 }
 
+namespace {
+// TODO
+// A sleep that lands within a fraction of a millisecond, which the condition variable's timeout does
+// not: measured on this machine it returns up to 17.85ms past its deadline, which is more than a
+// frame. Windows has given high-resolution timers since 1803; where one cannot be had this returns
+// false and the caller keeps its old wait
+bool waitUntilHighResolution(const int64_t durationNs) {
+#ifdef _WIN32
+  static thread_local HANDLE timer =
+      CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
+
+  if (timer == nullptr) {
+    return false;
+  }
+
+  LARGE_INTEGER dueTime;
+  // Negative is relative, in hundreds of nanoseconds
+  dueTime.QuadPart = -(durationNs / 100);
+
+  if (dueTime.QuadPart >= 0 || !SetWaitableTimerEx(timer, &dueTime, 0, nullptr, nullptr, nullptr, 0)) {
+    return false;
+  }
+
+  return WaitForSingleObject(timer, INFINITE) == WAIT_OBJECT_0;
+#else
+  (void)durationNs;
+  return false;
+#endif
+}
+} // namespace
+
 void EmulatorItem::waitForNextFrame() {
   int64_t deadlineNs = 0;
 
@@ -190,14 +233,29 @@ void EmulatorItem::waitForNextFrame() {
     return;
   }
 
-  const auto marginNs = m_spinMarginNs.load();
+  // TODO
+  // FL_SPIN_MS raises how much of the frame is spun rather than slept. The default of one
+  // millisecond assumes a sleep that returns within one, which is a claim about the host rather
+  // than about this code
+  static const int64_t spinOverrideNs =
+      qEnvironmentVariableIsEmpty("FL_SPIN_MS") ? 0 : qEnvironmentVariableIntValue("FL_SPIN_MS") * 1000000LL;
+  const auto marginNs = spinOverrideNs > 0 ? spinOverrideNs : m_spinMarginNs.load();
   const auto sleepUntilNs = deadlineNs - marginNs;
   const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
 
   if (sleepUntilNs > nowNs) {
-    std::unique_lock lock(m_loopMutex);
-    m_loopWake.wait_for(lock, std::chrono::nanoseconds(sleepUntilNs - nowNs),
-                        [this] { return m_emulationStopping.load(); });
+    if (!waitUntilHighResolution(sleepUntilNs - nowNs)) {
+      std::unique_lock lock(m_loopMutex);
+      m_loopWake.wait_for(lock, std::chrono::nanoseconds(sleepUntilNs - nowNs),
+                          [this] { return m_emulationStopping.load(); });
+    }
+
+    const auto overshootNs = std::chrono::steady_clock::now().time_since_epoch().count() - sleepUntilNs;
+    firelight::diagnostics::PerformanceStats::instance().recordWake(marginNs, overshootNs);
+
+    if (spinOverrideNs <= 0) {
+      noteWakeOvershoot(overshootNs);
+    }
   }
 
   // The last stretch is spun rather than slept, because a sleep that overshoots costs a frame where
@@ -206,7 +264,32 @@ void EmulatorItem::waitForNextFrame() {
   }
 }
 
+void EmulatorItem::noteWakeOvershoot(const int64_t overshootNs) {
+  const auto margin = m_spinMarginNs.load();
+
+  if (overshootNs + SPIN_MARGIN_HEADROOM_NS > margin) {
+    // TODO
+    // Widened at once, because the frame that overshot is already late and every further one is late
+    // until it is covered
+    m_spinMarginNs.store(std::min(overshootNs + SPIN_MARGIN_HEADROOM_NS, MAX_SPIN_MARGIN_NS));
+    return;
+  }
+
+  // TODO
+  // Narrowed slowly, so that one accurate sleep among late ones does not give back the margin the
+  // late ones just bought
+  m_spinMarginNs.store(std::max(margin - (margin - MIN_SPIN_MARGIN_NS) / 256 - 1, MIN_SPIN_MARGIN_NS));
+}
+
 void EmulatorItem::runEmulationLoop() {
+#ifdef _WIN32
+  // TODO
+  // Windows hands out sleeps on a tick that is 15.6ms by default, which no spin margin short of a
+  // whole frame can cover. Asking for a millisecond is what Qt::PreciseTimer used to do for this
+  // loop before it kept its own thread, and the request lasts as long as it is held
+  timeBeginPeriod(1);
+#endif
+
   while (!m_emulationStopping) {
     waitForNextFrame();
 
@@ -287,6 +370,10 @@ void EmulatorItem::runEmulationLoop() {
 
     QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
   }
+
+#ifdef _WIN32
+  timeEndPeriod(1);
+#endif
 }
 
 EmulatorItem::~EmulatorItem() {
@@ -483,6 +570,15 @@ void EmulatorItem::reconfigurePacing() {
                presentationLocked ? "presentation waits for the display" : "presentation does not wait",
                audioAvailable ? "readable" : "absent");
 
+  // TODO
+  // The size the picture ends up at on screen, which the renderer cannot see because its target is
+  // sized to the core's output rather than to the window
+  const auto pixelRatio = window() != nullptr ? window()->devicePixelRatio() : 1.0;
+  firelight::diagnostics::PerformanceStats::instance().setViewport(static_cast<int>(width() * pixelRatio),
+                                                                   static_cast<int>(height() * pixelRatio));
+
+  firelight::diagnostics::PerformanceStats::instance().setPacing(fmt::format("{}{}", emulator->getSyncMethod(), chose),
+                                                                 refreshHz, audioRatio);
   emulator->setAudioPlaybackRateRatio(audioRatio);
   // Nothing here changes the rate audio is produced at any more — Audio mode gates whole frames on
   // there being room, which is what the resampler's own correction is for the fine end of

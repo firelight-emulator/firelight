@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 /**
@@ -10,7 +11,7 @@ public:
    * How far the rate may be pulled either way, as a fraction of the output rate. Half a percent is
    * around eight cents of pitch, which is below what is heard on program material
    */
-  static constexpr double MAX_CORRECTION = 0.005;
+  static constexpr double MAX_CORRECTION = 0.02;
 
   // TODO
   /**
@@ -21,7 +22,20 @@ public:
    * is real movement, but it is not drift, and correcting for it would put a wobble on everything the
    * game plays at half the frame rate
    */
-  static constexpr double SMOOTHING_BUFFERS = 3.0;
+  static constexpr double SMOOTHING_BUFFERS = 12.0;
+
+  // TODO
+  /**
+   * How much audio the standing part of the correction takes to walk its full range, as a multiple of
+   * the sink's capacity.
+   *
+   * Proportional correction alone can only hold a rate mismatch by sitting off centre, far enough
+   * that the error it reads produces the correction it needs — a device 0.6% out parks the buffer at
+   * 65% and keeps it there. Carrying that offset separately lets the error return to zero, which puts
+   * the buffer back on target and gives a large batch the room it was supposed to have. Slow enough
+   * to stay well clear of the proportional loop it sits under
+   */
+  static constexpr double INTEGRAL_BUFFERS = 200.0;
 
   /**
    * Calculates the compensation for the current fill level of the audio sink buffer, as a fraction of
@@ -47,4 +61,8 @@ private:
   // TODO
   /** Smoothed occupancy, or negative before anything has been seen */
   double m_averageUsedBytes = -1.0;
+
+  // TODO
+  /** The part of the correction that persists once the buffer is on target */
+  double m_standingCorrection = 0.0;
 };

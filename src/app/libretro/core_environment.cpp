@@ -463,8 +463,14 @@ void Core::buildEnvironmentHandlers() {
                                                        spdlog::warn("No video receiver set; cannot set geometry");
                                                        return false;
                                                      }
-                                                     retroSystemAVInfo->geometry =
-                                                         *static_cast<retro_game_geometry *>(data);
+                                                     // TODO
+                                                     // Only the visible portion, because the
+                                                     // maximum is fixed when the core starts and a
+                                                     // core sending this call leaves it zero
+                                                     const auto *geometry = static_cast<retro_game_geometry *>(data);
+                                                     retroSystemAVInfo->geometry.base_width = geometry->base_width;
+                                                     retroSystemAVInfo->geometry.base_height = geometry->base_height;
+                                                     retroSystemAVInfo->geometry.aspect_ratio = geometry->aspect_ratio;
                                                      videoReceiver->setSystemAVInfo(retroSystemAVInfo);
                                                      return true;
                                                    }};

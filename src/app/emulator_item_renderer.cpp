@@ -2,6 +2,7 @@
 
 #include "../gui/game_image_provider.hpp"
 #include "../gui/image_qt.hpp"
+#include "diagnostics/performance_stats.hpp"
 
 #include <firelight/media/clip_recorder.hpp>
 #include <firelight/media/media_service.hpp>
@@ -106,6 +107,18 @@ void EmulatorItemRenderer::setSystemAVInfo(retro_system_av_info *info) {
   if (info->timing.fps > 0) {
     m_clipFps = info->timing.fps;
   }
+
+  // TODO
+  // Frame and sample totals belong to the game being measured, and this is where a new one announces
+  // the geometry it wants
+  firelight::diagnostics::PerformanceStats::instance().reset();
+
+  // TODO
+  // Reported from here rather than from the item, because the item swaps width and height for a
+  // rotated aspect ratio and has no copy of the maximum geometry at all
+  firelight::diagnostics::PerformanceStats::instance().setCoreInfo(
+      static_cast<int>(m_coreBaseWidth), static_cast<int>(m_coreBaseHeight), static_cast<int>(m_coreMaxWidth),
+      static_cast<int>(m_coreMaxHeight), m_coreAspectRatio, info->timing.fps);
 
   if (m_geometryChangedCallback) {
     m_geometryChangedCallback(m_coreBaseWidth, m_coreBaseHeight, m_coreAspectRatio, info->timing.fps);
@@ -543,6 +556,7 @@ void EmulatorItemRenderer::handleCommand(const firelight::emulation::EmulatorCom
   switch (command.type) {
   case EmulatorCommandType::RunFrame:
     paceRequested.fetch_add(1); // FLPACE (temporary)
+    firelight::diagnostics::PerformanceStats::instance().recordFrame(0, 0, 1);
     m_framesToRun = std::min(m_framesToRun + 1, MAX_FRAMES_PER_PASS);
     break;
 
@@ -696,6 +710,33 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
 
   paceRan.fetch_add(framesThisPass); // FLPACE (temporary)
   paceReport();
+
+  // TODO
+  // Named as the overlay shows it, so it lines up with what another emulator reports for the same
+  // machine. The sizes come from the target the frame was just drawn into
+  {
+    const char *apiName = m_graphicsApi == QSGRendererInterface::Vulkan       ? "vulkan"
+                          : m_graphicsApi == QSGRendererInterface::OpenGL     ? "opengl"
+                          : m_graphicsApi == QSGRendererInterface::Direct3D11 ? "d3d11"
+                          : m_graphicsApi == QSGRendererInterface::Metal      ? "metal"
+                                                                              : "software";
+    const auto target = renderTarget()->pixelSize();
+    const auto renderWidth = m_vulkanRenderer ? static_cast<int>(m_vulkanRenderer->sharedImageWidth()) : 0;
+    const auto renderHeight = m_vulkanRenderer ? static_cast<int>(m_vulkanRenderer->sharedImageHeight()) : 0;
+    firelight::diagnostics::PerformanceStats::instance().setVideo(
+        apiName, renderWidth > 0 ? renderWidth : target.width(), renderHeight > 0 ? renderHeight : target.height());
+  }
+
+  // TODO
+  // Timed here rather than around the core alone, because the gap between passes is what the
+  // player experiences and what another emulator's overlay is reporting
+  {
+    static int64_t lastPassNs = 0;
+    const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
+    const auto sinceLastNs = lastPassNs > 0 ? nowNs - lastPassNs : 0;
+    lastPassNs = nowNs;
+    firelight::diagnostics::PerformanceStats::instance().recordFrame(sinceLastNs, framesThisPass, 0);
+  }
 
   // ------------------------------------------------------------
   // If we made it here, we're going to run at least one frame

@@ -64,7 +64,7 @@ public:
    * Every rate real content reports lands inside 0.5% of a whole division — 59.94, 60.0988 and
    * 59.7275 against 60 Hz — so nothing that should match is turned away
    */
-  static constexpr double DISPLAY_MATCH_TOLERANCE = 0.01;
+  static constexpr double DISPLAY_MATCH_TOLERANCE = 0.03;
 
   /**
    * Applies a new mode, content rate or display rate, keeping the phase that is still meaningful

@@ -202,6 +202,17 @@ protected:
   QQuickRhiItemRenderer *createRenderer() override;
 
 private:
+  // TODO
+  // The least of a frame ever spun, and the most. The floor keeps a host with an accurate timer from
+  // spinning at all; the ceiling keeps one with a bad timer from burning a whole core to hide it
+  static constexpr int64_t MIN_SPIN_MARGIN_NS = 500000;
+  static constexpr int64_t MAX_SPIN_MARGIN_NS = 8000000;
+
+  // TODO
+  // Added to a measured overshoot before it becomes the margin, so that the margin covers the sleeps
+  // it was widened for rather than landing exactly on them
+  static constexpr int64_t SPIN_MARGIN_HEADROOM_NS = 250000;
+
   /**
    * Runs frames for as long as the emulator is alive, on its own thread
    */
@@ -283,7 +294,17 @@ private:
 
   // How much of the wait before a frame is spent spinning rather than sleeping. Sleeping alone
   // overshoots by more than a frame can afford where presentation follows production; 0 is pure sleep
-  std::atomic<int64_t> m_spinMarginNs = 1000000;
+  // TODO
+  // How much of the frame is spun rather than slept, learned from how late the sleeps actually
+  // return. A host whose timer is accurate settles at the floor and spins almost nothing; one whose
+  // sleeps overshoot grows this until they are covered. Encoding a constant here instead is a claim
+  // about the host, and the two this runs on do not agree
+  /**
+   * Widens or narrows the spun part of the frame to cover how late a sleep just returned
+   */
+  void noteWakeOvershoot(int64_t overshootNs);
+
+  std::atomic<int64_t> m_spinMarginNs = MIN_SPIN_MARGIN_NS;
   // Wall-clock target interval for native/monitor/fixed pacing. Written on the
   // GUI thread (reconfigurePacing), read on the emulation thread
   // When true, pace off audio buffer occupancy instead of the wall clock

@@ -56,6 +56,24 @@ MainWindow {
         onActivated: Router.matchedPattern === "/dev/gallery" ? Router.back() : Router.navigate("/dev/gallery")
     }
 
+    // TODO
+    // Toggles the performance overlay, on the key RetroArch uses for the same thing so the two can
+    // be brought up side by side without relearning it
+    Shortcut {
+        sequence: "F3"
+        context: Qt.ApplicationShortcut
+        onActivated: PerformanceStats.toggle()
+    }
+
+    PerformanceOverlay {
+        id: performanceOverlay
+
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.margins: AppStyle.spacingLg
+        z: 9999
+    }
+
     onActiveFocusItemChanged: {
         if (!activeFocusItem) {
             return;

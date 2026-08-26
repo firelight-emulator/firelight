@@ -15,6 +15,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <vector>
 
 // Threading: created on the render thread (injected into EmulatorInstance),
 // where receive() is called each frame. The QAudioSink runs on Qt's audio
@@ -98,6 +99,8 @@ private:
 
   std::unique_ptr<QAudioSink> m_audioSink;
   QIODevice *m_audioDevice = nullptr;
+
+  std::vector<char> m_pendingBytes;
 
   // QAudioSink/QIODevice aren't thread-safe. receive() (render thread) and
   // getBufferLevel() (the "audio" sync method's pacing thread) both touch the

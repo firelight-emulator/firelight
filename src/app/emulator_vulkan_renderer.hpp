@@ -50,6 +50,13 @@ public:
 
   uint64_t sharedSemValue() const { return m_sharedSemValue; }
 
+  // TODO
+  // The size the core is actually rendering at — its base resolution times the upscale the core
+  // chose, rather than anything this class decides
+  [[nodiscard]] uint32_t sharedImageWidth() const { return m_sharedImageW; }
+
+  [[nodiscard]] uint32_t sharedImageHeight() const { return m_sharedImageH; }
+
   retro_hw_render_interface_vulkan *hwRenderInterface() { return &m_vkInterface; }
 
 private:

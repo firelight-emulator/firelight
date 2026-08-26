@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 namespace firelight::audio {
@@ -30,6 +31,17 @@ inline constexpr int DEFAULT_LATENCY_MS = 64;
  */
 inline constexpr int MIN_LATENCY_MS = 32;
 inline constexpr int MAX_LATENCY_MS = 256;
+
+// TODO
+/**
+ * How full the sink is filled before playback starts, as a fraction of its capacity.
+ *
+ * Above the level rate control steers to, because the first seconds of a game are when audio arrives
+ * least evenly — a recompiler is still translating and a hardware renderer is still building
+ * pipelines — and a buffer started on target has only half of itself to absorb that. Rate control
+ * brings the extra back down over the seconds that follow
+ */
+inline constexpr double PRIMING_FILL_FRACTION = 0.75;
 
 // TODO
 /**

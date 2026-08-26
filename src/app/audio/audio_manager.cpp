@@ -1,8 +1,13 @@
+// TODO: NEEDS REVIEW
 #include "audio_manager.hpp"
 
 #include "audio_device_selection.hpp"
+#include "diagnostics/performance_stats.hpp"
+
+#include <firelight/audio/audio_rate_controller.hpp>
 
 #include <QtGlobal>
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -26,7 +31,9 @@ constexpr int MAX_REOPEN_BACKOFF_MS = 10000;
 // a cumulative quantity, so the slope recovers the real rate to a few parts per million anyway
 class DrcDiagnostics {
 public:
-  void record(const double occupancy, const double requestedRatio, const int64_t processedUSecs) {
+  void record(const double occupancy, const double requestedRatio, const int64_t processedUSecs,
+              const int64_t offeredBytes, const int64_t takenBytes, const int64_t backlogBytes,
+              const int64_t batchBytes, const int64_t droppedBytes) {
     const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
 
     // A new sink restarts the counter from zero while the wall clock carries on, which would read as
@@ -55,6 +62,19 @@ public:
       m_full++;
     }
 
+    // TODO
+    // A refusal is the sink taking less than it was offered, which is the only thing that puts audio
+    // in the backlog. Counted per call rather than sampled, so it cannot be missed between reports
+    if (takenBytes < offeredBytes) {
+      m_refusals++;
+      m_refusedBytes += offeredBytes - takenBytes;
+    }
+
+    m_backlogPeak = std::max(m_backlogPeak, backlogBytes);
+    m_backlogSum += static_cast<double>(backlogBytes);
+    m_batchPeak = std::max(m_batchPeak, batchBytes);
+    m_droppedBytes += droppedBytes;
+
     if (nowNs < m_reportAtNs) {
       return;
     }
@@ -79,6 +99,24 @@ public:
                                                 (rateRatio - 1.0) * 1e6, elapsedSecs)
                                   : std::string("device rate not measurable while the sink is running dry"));
 
+    // TODO
+    // The sink's own occupancy says nothing about audio held back from it. Capacity, the largest
+    // batch a core handed over, and what the backlog grew to are the three numbers that say whether
+    // a buffer is big enough for the core feeding it
+    spdlog::info("FLBUF capacity={}B ({:.1f}ms) | biggest batch={}B ({:.1f}ms, {:.0f}% of capacity) | "
+                 "refusals={} refused={}B | backlog mean={:.1f}ms peak={:.1f}ms | dropped={}B ({:.1f}ms)",
+                 m_capacityBytes, msFor(m_capacityBytes), m_batchPeak, msFor(m_batchPeak),
+                 m_capacityBytes > 0 ? 100.0 * m_batchPeak / m_capacityBytes : 0.0, m_refusals, m_refusedBytes,
+                 msFor(static_cast<int64_t>(m_backlogSum / std::max(m_count, 1))), msFor(m_backlogPeak), m_droppedBytes,
+                 msFor(m_droppedBytes));
+
+    m_refusals = 0;
+    m_refusedBytes = 0;
+    m_backlogPeak = 0;
+    m_backlogSum = 0.0;
+    m_batchPeak = 0;
+    m_droppedBytes = 0;
+
     m_buckets.fill(0);
     m_occupancySum = 0.0;
     m_ratioSum = 0.0;
@@ -87,6 +125,40 @@ public:
     m_dry = 0;
     m_full = 0;
     m_reportAtNs = nowNs + reportIntervalNs();
+  }
+
+  // TODO
+  // Anything that would be heard, reported when it happens rather than averaged into the next
+  // window. A buffer at either end, or a correction with nothing left to give, is the shape every
+  // audible episode so far has had. Rate limited, because the interesting part is when one starts
+  void noteIfAudible(const double occupancy, const double correction, const int64_t backlogBytes,
+                     const int64_t refusedBytes) {
+    const auto saturated = std::abs(correction) >= AudioRateController::MAX_CORRECTION * 0.99;
+    const auto atTheEnds = occupancy >= 0.97 || occupancy <= 0.03;
+
+    if (!saturated && !atTheEnds) {
+      m_wasAudible = false;
+      return;
+    }
+
+    const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
+    if (m_wasAudible && nowNs < m_nextNoteAtNs) {
+      return;
+    }
+
+    spdlog::warn("FLPOP occupancy={:.1f}% correction={:+.4f}%{} | backlog={:.1f}ms refused={}B this call",
+                 occupancy * 100.0, correction * 100.0, saturated ? " (SATURATED)" : "", msFor(backlogBytes),
+                 refusedBytes);
+
+    m_wasAudible = true;
+    m_nextNoteAtNs = nowNs + 250000000LL;
+  }
+
+  // TODO
+  // Capacity and rate are fixed for the life of a sink and change together when one is rebuilt
+  void describeSink(const int capacityBytes, const int deviceRate) {
+    m_capacityBytes = capacityBytes;
+    m_deviceRate = deviceRate;
   }
 
 private:
@@ -98,6 +170,25 @@ private:
     const auto secs = qEnvironmentVariableIntValue("FL_DIAG_SECS");
     return (secs > 0 ? secs : 10) * 1000000000LL;
   }
+
+  // TODO
+  // Bytes are what every one of these is measured in, and milliseconds are what anyone reading the
+  // line wants. Set once the sink is open, since the rate is not known before that
+  int m_deviceRate = 48000;
+
+  [[nodiscard]] double msFor(const int64_t bytes) const {
+    return m_deviceRate > 0 ? static_cast<double>(bytes) * 1000.0 / (m_deviceRate * 4) : 0.0;
+  }
+
+  bool m_wasAudible = false;
+  int64_t m_nextNoteAtNs = 0;
+  int64_t m_capacityBytes = 0;
+  int64_t m_refusals = 0;
+  int64_t m_refusedBytes = 0;
+  int64_t m_backlogPeak = 0;
+  double m_backlogSum = 0.0;
+  int64_t m_batchPeak = 0;
+  int64_t m_droppedBytes = 0;
 
   std::array<int, BUCKETS> m_buckets{};
   double m_occupancySum = 0.0;
@@ -235,10 +326,6 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
                                                    framesAtSinkRate)
             : 0.0;
 
-    // FLDRC (temporary)
-    drcDiagnostics.record(static_cast<double>(usedBytes) / bufferTotalCapacity, compensation,
-                          m_audioSink->processedUSecs());
-
     std::vector<int16_t> output = m_resampler.process(data, numFrames, compensation);
     if (output.empty()) {
       return numFrames; // input consumed, nothing produced this call
@@ -248,14 +335,48 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
       // Keep the buffer flowing (for pacing) but play silence
       std::memset(output.data(), 0, output.size() * sizeof(int16_t));
     }
-    m_audioDevice->write(reinterpret_cast<const char *>(output.data()),
-                         output.size() * sizeof(int16_t)); // stereo, s16
 
-    // Once we've pre-buffered ~half the sink, begin playback. Writes above fill
+    const auto *bytes = reinterpret_cast<const char *>(output.data());
+    const auto batchBytes = static_cast<int64_t>(output.size() * sizeof(int16_t));
+    m_pendingBytes.insert(m_pendingBytes.end(), bytes, bytes + batchBytes);
+
+    const auto offeredBytes = static_cast<int64_t>(m_pendingBytes.size());
+    const auto taken = m_audioDevice->write(m_pendingBytes.data(), static_cast<qint64>(offeredBytes));
+    if (taken > 0) {
+      m_pendingBytes.erase(m_pendingBytes.begin(), m_pendingBytes.begin() + taken);
+    }
+
+    // TODO
+    // Bounded after the write rather than before it, so the cap applies to what the sink actually
+    // refused. Clamping the queue first throws away the head of the very run the sink was about to
+    // take, which is a splice in the waveform on the call that was recovering
+    int64_t droppedBytes = 0;
+    if (m_pendingBytes.size() > static_cast<size_t>(bufferTotalCapacity)) {
+      droppedBytes = static_cast<int64_t>(m_pendingBytes.size()) - bufferTotalCapacity;
+      m_pendingBytes.erase(m_pendingBytes.begin(), m_pendingBytes.end() - bufferTotalCapacity);
+    }
+
+    firelight::diagnostics::PerformanceStats::instance().recordAudio(
+        static_cast<double>(usedBytes) / bufferTotalCapacity, compensation, static_cast<int64_t>(output.size() / 2));
+
+    // FLPOP / FLDRC / FLBUF (temporary)
+    // TODO
+    // Silent while priming, because a buffer being filled from empty on purpose passes through both
+    // ends on its way to the level it is being filled to
+    if (!m_priming) {
+      drcDiagnostics.noteIfAudible(static_cast<double>(usedBytes) / bufferTotalCapacity, compensation,
+                                   static_cast<int64_t>(m_pendingBytes.size()),
+                                   offeredBytes - std::max<int64_t>(taken, 0));
+    }
+    drcDiagnostics.record(static_cast<double>(usedBytes) / bufferTotalCapacity, compensation,
+                          m_audioSink->processedUSecs(), offeredBytes, std::max<int64_t>(taken, 0),
+                          static_cast<int64_t>(m_pendingBytes.size()), batchBytes, droppedBytes);
+
+    // Once we've pre-buffered enough of the sink, begin playback. Writes above fill
     // the sink while it's suspended, so playback starts from a healthy buffer
     if (m_priming) {
       const auto filled = bufferTotalCapacity - m_audioSink->bytesFree();
-      if (filled >= bufferTotalCapacity / 2) {
+      if (filled >= static_cast<qint64>(bufferTotalCapacity * firelight::audio::PRIMING_FILL_FRACTION)) {
         m_audioSink->resume();
         m_priming = false;
       }
@@ -302,9 +423,25 @@ void AudioManager::openAudioSink() {
 
   m_audioDevice = m_audioSink->start();
 
+  // TODO
+  // Read back rather than assumed: the request above is a hint and the sink is free to round it
+  spdlog::info("Audio: sink buffer requested {} ms, got {} bytes ({:.1f} ms)", latencyMs(), m_audioSink->bufferSize(),
+               m_deviceSampleRate > 0 ? m_audioSink->bufferSize() * 1000.0 / (m_deviceSampleRate * 4) : 0.0);
+  drcDiagnostics.describeSink(m_audioSink->bufferSize(), m_deviceSampleRate);
+  firelight::diagnostics::PerformanceStats::instance().setAudioDevice(dev.description().toStdString(),
+                                                                      m_audioSink->bufferSize(), m_sampleRate);
+
   // Suspend the sink until we've pre-buffered to around 50% full
   m_audioSink->suspend();
   m_priming = true;
+
+  m_pendingBytes.clear();
+
+  // TODO
+  // The cached level belongs to the sink just discarded, and pacing reads it whenever the live one
+  // cannot be read. Left alone it would report the old sink's occupancy for as long as the new one
+  // is priming
+  m_currentBufferLevel = -1.0f;
 
   // TODO
   // What the controller had smoothed was occupancy of the buffer just discarded, in bytes of a

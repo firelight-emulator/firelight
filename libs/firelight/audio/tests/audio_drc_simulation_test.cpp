@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/audio/audio_rate_controller.hpp>
 #include <firelight/audio/audio_resampler.hpp>
 
@@ -94,11 +95,14 @@ double alternatingSwing(const std::vector<double> &values) {
 // up to a period — half of one on average — and the controller holds the true level that much lower.
 // The second term is what makes a small buffer sit further off centre: the same period is a larger
 // share of it
+// TODO
+// A rate mismatch is carried by the standing correction rather than by an offset, so it does not
+// appear here whatever its size. What is left is the device reporting drain in whole periods, which
+// reads occupancy low by half a period however well the correction is doing
 double expectedOccupancy(const SimConfig &config) {
-  const auto fromDrift = config.deviceRateError / AudioRateController::MAX_CORRECTION * 0.5;
   const auto fromReportingLag = 0.5 * (config.reportPeriodSecs * config.deviceRate) / config.capacityFrames;
 
-  return 0.5 - fromDrift - fromReportingLag;
+  return 0.5 - fromReportingLag;
 }
 
 SimResult simulate(AudioRateController &controller, const SimConfig &config, const double seconds) {
@@ -187,8 +191,7 @@ TEST(AudioDrcSimulationTest, SettlesInsteadOfSawtoothingOnASlowDevice) {
   const auto low = *std::min_element(settled.begin(), settled.end());
   const auto high = *std::max_element(settled.begin(), settled.end());
 
-  EXPECT_NEAR(mean(settled), expectedOccupancy(config), 0.02)
-      << "should hold where the gain and the reporting lag put it";
+  EXPECT_NEAR(mean(settled), expectedOccupancy(config), 0.02) << "should hold where the reporting lag puts it";
   EXPECT_LT(high - low, 0.1) << "occupancy swept " << (high - low) * 100 << "% of the buffer";
 }
 
@@ -224,9 +227,9 @@ TEST(AudioDrcSimulationTest, HoldsTheBufferAcrossRealisticDrift) {
 }
 
 // TODO
-// A rate wrong by tenths of a percent is a misreported rate rather than drift, and correcting one
-// means sitting away from half full: a proportional correction only exists while there is an error to
-// be proportional to. Holding a safe distance from both ends is what matters, not sitting on target
+// A rate wrong by tenths of a percent is a misreported rate rather than drift. The standing
+// correction takes it over, so the buffer holds the same place it would with no mismatch at all,
+// which is what leaves a large batch the room it needs
 TEST(AudioDrcSimulationTest, SurvivesAMisreportedRateWithoutRunningDry) {
   for (const auto error : {-2e-3, 2e-3}) {
     AudioRateController controller;
@@ -243,8 +246,10 @@ TEST(AudioDrcSimulationTest, SurvivesAMisreportedRateWithoutRunningDry) {
     EXPECT_EQ(result.overruns, 0) << "at " << error;
     EXPECT_GT(low, 0.15) << "at " << error << ", came within " << low * 100 << "% of running dry";
     EXPECT_LT(high, 0.85) << "at " << error << ", reached " << high * 100 << "% full";
-    // The offset is what produces the correction, and it should be the size the gain implies
-    EXPECT_NEAR(mean(settled), expectedOccupancy(config), 0.03) << "at " << error;
+    // TODO
+    // Both signs of mismatch settle in the same place, which is the point: the error term is free to
+    // return to zero once the standing correction is holding the rate
+    EXPECT_NEAR(mean(settled), expectedOccupancy(config), 0.01) << "at " << error;
   }
 }
 

@@ -235,6 +235,7 @@ target_link_libraries(firelight_emulation_lib PUBLIC
 add_library(firelight_lib STATIC
         src/app/emulation/shortcut_actions.cpp
         src/app/emulation/shortcut_dispatcher.cpp
+        src/app/diagnostics/performance_stats.cpp
         src/app/audio/audio_manager.cpp
         src/app/audio/audio_device_selection.cpp
         src/app/audio/audio_device_selection.hpp
@@ -313,6 +314,7 @@ add_library(firelight_lib STATIC
         src/gui/qt_input_service_proxy.cpp
         src/gui/EventEmitter.h
         src/gui/qt_input_service_proxy.hpp
+        src/gui/qt_performance_stats_proxy.cpp
         src/gui/qt_emulation_service_proxy.cpp
         src/gui/qt_emulation_service_proxy.hpp
         src/image_cache.cpp
@@ -483,7 +485,8 @@ target_include_directories(firelight PRIVATE libs/firelight/achievements/src lib
 #target_link_libraries(firelight PRIVATE firelight_lib)
 target_link_libraries(firelight PUBLIC
         discord
-        firelight_lib)
+        firelight_lib
+        $<$<PLATFORM_ID:Windows>:winmm>)
 
 #if (CMAKE_BUILD_TYPE STREQUAL "Release")
 #    set_property(TARGET firelight PROPERTY WIN32_EXECUTABLE true)
