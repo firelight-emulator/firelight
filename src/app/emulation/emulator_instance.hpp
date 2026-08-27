@@ -55,6 +55,11 @@ public:
   std::future<bool> save();
 
   void setMuted(bool muted);
+
+  /**
+   * Records how fast the game is being run, which decides whether it is heard
+   */
+  void setSpeedMultiplier(float multiplier);
   bool isMuted() const;
 
   // The mute state the AudioManager is born with in initialize(). Lets a CLI
@@ -103,12 +108,6 @@ public:
   // (re)created, and forwarded live when it already exists
   void setDynamicRateControlEnabled(bool enabled);
 
-  /**
-   * Tells the emulator that whatever is pacing it is already holding the audio buffer where it wants
-   * it, so the resampler's own correction stands down. Two loops on one error signal fight; the one
-   * allowed to change the thing that is wrong should be the one correcting
-   */
-  void setPacingOwnsAudioRate(bool owns);
   bool getDynamicRateControlEnabled() const;
 
   // Whether the instant-replay recorder should keep a rolling window while this
@@ -310,12 +309,37 @@ private:
   std::string m_syncMethod;
   int m_targetFramerate = 0;
   bool m_dynamicRateControl = true;
-  bool m_pacingOwnsAudioRate = false;
   // Read from the render thread (renderer's clip feed); written from the GUI
   // thread when settings change. A bool toggle, so a benign 1-frame-stale read
   bool m_instantReplayEnabled = false;
 
   // Observes setting changes and applies this game's resolved common settings
+  /**
+   * Silences the output when either the caller or the speed asks for it
+   */
+  void applyMuted() const;
+
+  /**
+   * Whether a game running at this speed should be heard
+   */
+  [[nodiscard]] bool shouldMuteAtSpeed(float multiplier) const;
+
+  /**
+   * Applies the pacing and the speed together, neither being the whole rate on its own
+   */
+  void applyAudioRatio() const;
+
+  // TODO
+  // Two reasons to be silent, kept apart so that leaving one does not undo the other
+  bool m_mutedByRequest = false;
+  bool m_mutedBySpeed = false;
+
+  // TODO
+  // Two reasons the audio is not at its nominal rate: the rate the game is being paced at, and the
+  // speed the player asked for. They multiply
+  double m_pacingAudioRatio = 1.0;
+  double m_speedAudioRatio = 1.0;
+
   std::unique_ptr<CoreSettingsApplier> m_settingsApplier;
 };
 

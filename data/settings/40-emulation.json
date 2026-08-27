@@ -269,6 +269,40 @@
       "max": 256,
       "step": 8,
       "advanced": true
+    },
+    {
+      "key": "mute-on-fast-forward",
+      "label": "Mute when fast forwarding",
+      "group": "emulation-audio",
+      "order": 60,
+      "description": "Silences the game while it runs faster than normal. Sound produced faster than it can be played cannot be slowed to fit without changing its pitch, so the choice is between silence and a rising tone.",
+      "keywords": [
+        "mute",
+        "silence",
+        "audio",
+        "speed",
+        "fast forward",
+        "slow motion"
+      ],
+      "type": "toggle",
+      "default": "true"
+    },
+    {
+      "key": "mute-on-slow-motion",
+      "label": "Mute when slowing down",
+      "group": "emulation-audio",
+      "order": 70,
+      "description": "Silences the game while it runs slower than normal. Sound produced slower than it is played leaves gaps, so the choice is between silence and stuttering.",
+      "keywords": [
+        "mute",
+        "silence",
+        "audio",
+        "speed",
+        "fast forward",
+        "slow motion"
+      ],
+      "type": "toggle",
+      "default": "true"
     }
   ],
   "app": [

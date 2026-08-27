@@ -3,7 +3,6 @@
 
 #include "audio_device_selection.hpp"
 #include "diagnostics/performance_stats.hpp"
-#include "emulation/emulation_service.hpp"
 
 #include <firelight/audio/audio_rate_controller.hpp>
 
@@ -28,9 +27,10 @@ QAudioDevice AudioManager::selectedOutputDevice() const {
   return firelight::audio::selectOutputDevice(m_settingsService);
 }
 
-AudioManager::AudioManager(firelight::settings::SettingsService &settingsService,
-                           std::function<void()> onAudioBufferLevelChanged)
-    : m_settingsService(settingsService), m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
+AudioManager::AudioManager(firelight::settings::SettingsService &settingsService, std::string contentHash,
+                           const int platformId, std::function<void()> onAudioBufferLevelChanged)
+    : m_settingsService(settingsService), m_contentHash(std::move(contentHash)), m_platformId(platformId),
+      m_onAudioBufferLevelChanged(std::move(onAudioBufferLevelChanged)) {
   m_mediaDevices = new QMediaDevices(this);
   connect(m_mediaDevices, &QMediaDevices::audioOutputsChanged, this, &AudioManager::onAudioDevicesChanged);
 
@@ -61,15 +61,12 @@ AudioManager::AudioManager(firelight::settings::SettingsService &settingsService
 
 int AudioManager::latencyMs() const {
   // TODO
-  // Resolved against the running game, because a core that hands over audio unevenly may want more
-  // buffered than one that does not, and the setting sits in the tier that allows that
-  const auto *emulation = firelight::emulation::EmulationService::getInstance();
-  const auto hash = emulation != nullptr ? emulation->getCurrentContentHash() : std::string();
-  const auto platformId = emulation != nullptr ? emulation->getCurrentPlatformId() : 0;
-
+  // Resolved against the game this was made for, because a core that hands over audio unevenly may
+  // want more buffered than one that does not, and the setting sits in the tier that allows that
   try {
-    return std::clamp(std::stoi(m_settingsService.getEffectiveValue(hash, platformId, LATENCY_KEY).value_or("")),
-                      firelight::audio::MIN_LATENCY_MS, firelight::audio::MAX_LATENCY_MS);
+    return std::clamp(
+        std::stoi(m_settingsService.getEffectiveValue(m_contentHash, m_platformId, LATENCY_KEY).value_or("")),
+        firelight::audio::MIN_LATENCY_MS, firelight::audio::MAX_LATENCY_MS);
   } catch (const std::exception &) {
     return firelight::audio::DEFAULT_LATENCY_MS;
   }

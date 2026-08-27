@@ -30,7 +30,6 @@ struct PacingContext {
   /** The display's refresh rate, or 0 when it isn't known */
   double displayHz = 0.0;
   /** Whether the audio sink can be read, which is the only thing Audio mode has to pace against */
-  bool audioAvailable = false;
   /** Whether presentation waits for the display's refresh. When it doesn't, a present says nothing
       about when a refresh happened, and no mode that counts them can be right */
   bool presentationLocked = false;

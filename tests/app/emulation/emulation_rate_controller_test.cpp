@@ -25,13 +25,11 @@ EmulationRateController displayOf(const double contentFps, const double displayH
   return controller;
 }
 
-EmulationRateController autoOf(const double contentFps, const double displayHz, const bool audioAvailable,
-                               const bool presentationLocked) {
+EmulationRateController autoOf(const double contentFps, const double displayHz, const bool presentationLocked) {
   EmulationRateController controller;
   controller.configure({.mode = SyncMode::Auto,
                         .contentFps = contentFps,
                         .displayHz = displayHz,
-                        .audioAvailable = audioAvailable,
                         .presentationLocked = presentationLocked});
   return controller;
 }
@@ -330,26 +328,18 @@ TEST(EmulationRateControllerTest, AutoNeverPacesOffTheSink) {
 
   for (const auto &c : {Case{SNES_FPS, 60.0, false}, Case{SNES_FPS, 60.0, true}, Case{60.0, 120.0, true},
                         Case{48.0, 120.0, true}, Case{60.0, 0.0, false}}) {
-    auto controller = autoOf(c.contentFps, c.displayHz, true, c.presentationLocked);
+    auto controller = autoOf(c.contentFps, c.displayHz, c.presentationLocked);
 
     EXPECT_NE(controller.getResolvedMode(), SyncMode::Audio)
         << c.contentFps << "fps on " << c.displayHz << "Hz, locked=" << c.presentationLocked;
   }
 }
 
-TEST(EmulationRateControllerTest, AutoIsUnmovedByWhetherThereIsASink) {
-  auto withSink = autoOf(SNES_FPS, 60.0, true, false);
-  auto without = autoOf(SNES_FPS, 60.0, false, false);
-
-  EXPECT_EQ(withSink.getResolvedMode(), without.getResolvedMode());
-  EXPECT_NEAR(withSink.getEffectiveFps(), without.getEffectiveFps(), 0.001);
-}
-
 // TODO
 // The one case where counting refreshes beats a clock: with presentation waiting for the display a
 // present IS a refresh, so a frame lands on an exact number of them with no beat left to drift
 TEST(EmulationRateControllerTest, AutoCountsRefreshesWhenPresentationWaitsForThem) {
-  auto controller = autoOf(SNES_FPS, 60.0, true, true);
+  auto controller = autoOf(SNES_FPS, 60.0, true);
 
   EXPECT_EQ(controller.getResolvedMode(), SyncMode::Display);
   EXPECT_EQ(controller.getRefreshesPerFrame(), 1);
@@ -358,7 +348,7 @@ TEST(EmulationRateControllerTest, AutoCountsRefreshesWhenPresentationWaitsForThe
 }
 
 TEST(EmulationRateControllerTest, AutoHoldsAFrameForTwoRefreshesOnAHighRefreshPanel) {
-  auto controller = autoOf(60.0, 120.0, true, true);
+  auto controller = autoOf(60.0, 120.0, true);
 
   EXPECT_EQ(controller.getResolvedMode(), SyncMode::Display);
   EXPECT_EQ(controller.getRefreshesPerFrame(), 2);
@@ -373,7 +363,7 @@ TEST(EmulationRateControllerTest, AutoHoldsAFrameForTwoRefreshesOnAHighRefreshPa
 // Unlocked, a present says nothing about when a refresh happened, so the rate is kept but taken from
 // a clock instead of from the presents
 TEST(EmulationRateControllerTest, AutoRunsAClockAtTheDisplayRateWhenPresentationDoesNotWait) {
-  auto controller = autoOf(SNES_FPS, 60.0, true, false);
+  auto controller = autoOf(SNES_FPS, 60.0, false);
 
   EXPECT_EQ(controller.getResolvedMode(), SyncMode::Fixed);
   EXPECT_EQ(controller.getRefreshesPerFrame(), 0);
@@ -384,7 +374,7 @@ TEST(EmulationRateControllerTest, AutoRunsAClockAtTheDisplayRateWhenPresentation
 
 // 120/48 is 2.5, so no whole number of refreshes shows 48 fps and the display has nothing to offer
 TEST(EmulationRateControllerTest, AutoFallsBackToTheContentRateWhenNothingFits) {
-  auto controller = autoOf(48.0, 120.0, true, true);
+  auto controller = autoOf(48.0, 120.0, true);
 
   EXPECT_EQ(controller.getResolvedMode(), SyncMode::Fixed);
   EXPECT_EQ(controller.getRefreshesPerFrame(), 0);
@@ -394,7 +384,7 @@ TEST(EmulationRateControllerTest, AutoFallsBackToTheContentRateWhenNothingFits) 
 }
 
 TEST(EmulationRateControllerTest, AutoIgnoresAnUnknownRefreshRate) {
-  auto controller = autoOf(60.0, 0.0, true, true);
+  auto controller = autoOf(60.0, 0.0, true);
 
   EXPECT_EQ(controller.getResolvedMode(), SyncMode::Fixed);
   EXPECT_NEAR(controller.getEffectiveFps(), 60.0, 0.001);
@@ -402,7 +392,7 @@ TEST(EmulationRateControllerTest, AutoIgnoresAnUnknownRefreshRate) {
 
 // Turning vsync on or off changes which is right, so it has to change which is used
 TEST(EmulationRateControllerTest, AutoSwitchesModeWhenPresentationLockChanges) {
-  auto controller = autoOf(60.0, 60.0, true, false);
+  auto controller = autoOf(60.0, 60.0, false);
   ASSERT_EQ(controller.getResolvedMode(), SyncMode::Fixed);
 
   controller.framesDue(SECOND_NS);
@@ -419,7 +409,7 @@ TEST(EmulationRateControllerTest, AutoSwitchesModeWhenPresentationLockChanges) {
 // to bound is how much of that can be heard rather than how near the two numbers look
 TEST(EmulationRateControllerTest, AutoDeclinesADisplayRateFarEnoughOutToBeHeard) {
   // 3.4% out, which is most of a semitone of stretch on everything the game plays
-  auto controller = autoOf(58.0, 60.0, true, false);
+  auto controller = autoOf(58.0, 60.0, false);
 
   EXPECT_EQ(controller.getResolvedMode(), SyncMode::Fixed);
   EXPECT_NEAR(controller.getEffectiveFps(), 58.0, 0.001);
@@ -429,7 +419,7 @@ TEST(EmulationRateControllerTest, AutoDeclinesADisplayRateFarEnoughOutToBeHeard)
 TEST(EmulationRateControllerTest, AutoTakesTheRatesRealContentReports) {
   // NTSC, the SNES, and the Game Boy Advance, all against a 60 Hz panel
   for (const auto contentFps : {59.94, 60.0988, 59.7275}) {
-    auto controller = autoOf(contentFps, 60.0, true, false);
+    auto controller = autoOf(contentFps, 60.0, false);
 
     EXPECT_EQ(controller.getResolvedMode(), SyncMode::Fixed) << "at " << contentFps;
     EXPECT_NEAR(controller.getEffectiveFps(), 60.0, 0.001) << "at " << contentFps;

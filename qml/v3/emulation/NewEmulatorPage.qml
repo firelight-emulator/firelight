@@ -149,7 +149,7 @@ FocusScope {
         anchors.centerIn: root
 
         paused: root.paused || root.windowResizing
-        muted: root.startMuted || paused || playbackMultiplier !== 1
+        muted: root.startMuted || paused
 
         layer.enabled: true
 

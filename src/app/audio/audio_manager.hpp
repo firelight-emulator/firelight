@@ -33,8 +33,12 @@ public:
   static constexpr auto VOLUME_KEY = firelight::audio::VOLUME_KEY;
   static constexpr auto LATENCY_KEY = firelight::audio::LATENCY_KEY;
 
-  explicit AudioManager(firelight::settings::SettingsService &settingsService,
-                        std::function<void()> onAudioBufferLevelChanged = nullptr);
+  /**
+   * @param contentHash The game being buffered for, so a per-game latency override resolves. Empty
+   *   where there is no local game, as when playing back a guest's stream
+   */
+  explicit AudioManager(firelight::settings::SettingsService &settingsService, std::string contentHash = {},
+                        int platformId = 0, std::function<void()> onAudioBufferLevelChanged = nullptr);
 
   size_t receive(const int16_t *data, size_t numFrames) override;
 
@@ -85,6 +89,8 @@ private:
   void refreshVolume();
 
   firelight::settings::SettingsService &m_settingsService;
+  std::string m_contentHash;
+  int m_platformId;
   ScopedConnection m_settingChangedConnection;
   ScopedConnection m_settingResetConnection;
   std::function<void()> m_onAudioBufferLevelChanged;

@@ -667,13 +667,22 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
+  // TODO
+  // The frames owed are taken either way. Leaving them queued while slow motion waits builds a
+  // backlog that hits the per-pass cap, counts every frame past it as lost, and then runs the lot in
+  // one burst when the wait expires — which is the opposite of slowing down
   if (m_currentWaitFrames > 0) {
     m_currentWaitFrames--;
+    m_framesToRun = 0;
     return;
   }
   m_currentWaitFrames = m_waitFrames;
 
-  const auto framesThisPass = m_framesToRun;
+  // TODO
+  // Fast forward runs each frame owed more than once, so this is what the core actually advances by
+  // and what the statistics have to be told
+  const auto repeats = m_playbackMultiplier > 1 ? static_cast<int>(m_playbackMultiplier) : 1;
+  const auto framesThisPass = m_framesToRun * repeats;
   m_framesToRun = 0;
 
   // TODO
@@ -696,10 +705,9 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   // Timed here rather than around the core alone, because the gap between passes is what the
   // player experiences and what another emulator's overlay is reporting
   {
-    static int64_t lastPassNs = 0;
     const auto nowNs = std::chrono::steady_clock::now().time_since_epoch().count();
-    const auto sinceLastNs = lastPassNs > 0 ? nowNs - lastPassNs : 0;
-    lastPassNs = nowNs;
+    const auto sinceLastNs = m_lastPassNs > 0 ? nowNs - m_lastPassNs : 0;
+    m_lastPassNs = nowNs;
     firelight::diagnostics::PerformanceStats::instance().recordFrame(sinceLastNs, framesThisPass);
   }
 
@@ -714,12 +722,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_currentUpdateBatch = batch;
     cb->beginExternal();
 
-    const auto repeats = m_playbackMultiplier > 1 ? static_cast<int>(m_playbackMultiplier) : 1;
-
     for (auto frame = 0; frame < framesThisPass; ++frame) {
-      for (auto repeat = 0; repeat < repeats; ++repeat) {
-        m_emulatorInstance->runFrame();
-      }
+      m_emulatorInstance->runFrame();
     }
 
     cb->endExternal();
@@ -731,9 +735,7 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     m_currentUpdateBatch = nullptr;
     cb->endPass(batch);
   } else if (m_vulkanRenderer) {
-    // renderFrame repeats runFrame() by its multiplier, so the frames owed multiply through it
-    m_vulkanRenderer->renderFrame(m_emulatorInstance, m_playbackMultiplier * static_cast<float>(framesThisPass),
-                                  colorTexture()->pixelSize(), rhi());
+    m_vulkanRenderer->renderFrame(m_emulatorInstance, framesThisPass, colorTexture()->pixelSize(), rhi());
 
     if (m_vulkanRenderer->isFirstFrameReady() && m_vulkanRenderer->sharedTexture() &&
         m_vulkanRenderer->sharedSemValue() > 0) {

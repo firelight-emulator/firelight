@@ -137,15 +137,7 @@ public:
   [[nodiscard]] std::optional<library::Entry> getCurrentEntry();
   [[nodiscard]] std::optional<platforms::Platform> getCurrentPlatform() const;
 
-  /**
-   * The game currently running, for settings that resolve per game
-   */
-  [[nodiscard]] std::string getCurrentContentHash() const { return m_currentContentHash; }
 
-  /**
-   * The platform the running game belongs to, for settings that resolve per platform
-   */
-  [[nodiscard]] int getCurrentPlatformId() const { return m_currentEntry.platformId; }
 
 private:
   static EmulationService *s_emuServiceInstance;

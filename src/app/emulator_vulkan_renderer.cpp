@@ -34,16 +34,12 @@ void EmulatorVulkanRenderer::setRenderDimensions(uint32_t w, uint32_t h) {
   m_vkFrameReady = true;
 }
 
-void EmulatorVulkanRenderer::renderFrame(firelight::emulation::EmulatorInstance *emulator, float playbackMultiplier,
+void EmulatorVulkanRenderer::renderFrame(firelight::emulation::EmulatorInstance *emulator, const int frames,
                                          QSize targetSize, QRhi *rhi) {
   m_coreSignalSem = VK_NULL_HANDLE;
   m_vkFrameReady = false;
 
-  if (playbackMultiplier > 1) {
-    for (int i = 0; i < static_cast<int>(playbackMultiplier); i++) {
-      emulator->runFrame();
-    }
-  } else {
+  for (auto frame = 0; frame < frames; ++frame) {
     emulator->runFrame();
   }
 

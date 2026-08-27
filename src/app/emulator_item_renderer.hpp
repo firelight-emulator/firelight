@@ -210,6 +210,11 @@ private:
   bool m_paused = false;
   bool m_shouldSave = false;
 
+  // TODO
+  // When the last pass ran, for the interval between one frame and the next. Per renderer, because
+  // two of them running at once would otherwise time each other
+  int64_t m_lastPassNs = 0;
+
   uint m_coreBaseWidth = 0;
   uint m_coreBaseHeight = 0;
   uint m_coreMaxWidth = 0;

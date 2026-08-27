@@ -115,10 +115,12 @@ bool EmulatorInstance::initialize(libretro::IVideoDataReceiver *videoDataReceive
   // Qt-Multimedia impls); both are created here on the render thread for Qt
   // audio thread-affinity. Null in headless/tests -> no audio
   if (m_context.audioOutputFactory) {
-    m_audioOutput = m_context.audioOutputFactory();
-    // Apply the requested initial mute now that the output exists (a QML muted
-    // binding fires before this and would otherwise be lost)
-    m_audioOutput->setMuted(m_startMuted);
+    m_audioOutput = m_context.audioOutputFactory(m_contentHash, m_platformId);
+    // TODO
+    // Through the same two flags everything else uses, because a binding that fired before the
+    // output existed has already set one of them and writing past it would strand that value
+    m_mutedByRequest = m_mutedByRequest || m_startMuted;
+    applyMuted();
     // Apply the resolved DRC setting (refreshAllSettings may have run before
     // the output existed, so it only stored the value on this instance)
     applyAudioRateControl();
@@ -545,8 +547,14 @@ void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
     m_beforeLastLoadSuspendPoint = {};
   } break;
 
-  case EmulatorCommandType::EmitRewindPoints:
   case EmulatorCommandType::SetPlaybackMultiplier:
+    setSpeedMultiplier(command.playbackMultiplier);
+    if (m_commandSink) {
+      m_commandSink(command);
+    }
+    break;
+
+  case EmulatorCommandType::EmitRewindPoints:
   case EmulatorCommandType::CaptureScreenshot:
   case EmulatorCommandType::CaptureVideoClip:
     // Pixels off a GPU, or an image provider QML reads: none of that is the emulator's to do
@@ -573,10 +581,39 @@ std::future<bool> EmulatorInstance::save() {
 }
 
 void EmulatorInstance::setMuted(const bool muted) {
+  m_mutedByRequest = muted;
+  applyMuted();
+}
+
+void EmulatorInstance::setSpeedMultiplier(const float multiplier) {
+  m_mutedBySpeed = shouldMuteAtSpeed(multiplier);
+  applyMuted();
+
+  // TODO
+  // Heard at speed means heard at pitch: the core hands over as much sound per emulated second
+  // whatever the speed, so playing it in less time is what makes it fit. Without this the sink is
+  // handed twice the sound it can take and spends the fast forward full and the recovery draining
+  m_speedAudioRatio = m_mutedBySpeed ? 1.0 : multiplier;
+  applyAudioRatio();
+}
+
+void EmulatorInstance::applyMuted() const {
   if (!m_audioOutput) {
     return;
   }
-  m_audioOutput->setMuted(muted);
+  m_audioOutput->setMuted(m_mutedByRequest || m_mutedBySpeed);
+}
+
+bool EmulatorInstance::shouldMuteAtSpeed(const float multiplier) const {
+  if (multiplier == 1.0f || m_context.settingsService == nullptr) {
+    return false;
+  }
+
+  // TODO
+  // Sound produced faster than it can be played has to lose either its pitch or its samples, and
+  // slower than it is played leaves gaps. Silence is the third option, and the default
+  const auto *key = multiplier > 1.0f ? "mute-on-fast-forward" : "mute-on-slow-motion";
+  return m_context.settingsService->getEffectiveValue(m_contentHash, m_platformId, key).value_or("true") != "false";
 }
 
 void EmulatorInstance::setPaused(const bool paused) {
@@ -630,8 +667,13 @@ int EmulatorInstance::getTargetFramerate() const { return m_targetFramerate; }
 float EmulatorInstance::getAudioBufferLevel() const { return m_audioOutput ? m_audioOutput->getBufferLevel() : -1.0f; }
 
 void EmulatorInstance::setAudioPlaybackRateRatio(const double ratio) {
+  m_pacingAudioRatio = ratio;
+  applyAudioRatio();
+}
+
+void EmulatorInstance::applyAudioRatio() const {
   if (m_audioOutput) {
-    m_audioOutput->setPlaybackRateRatio(ratio);
+    m_audioOutput->setPlaybackRateRatio(m_pacingAudioRatio * m_speedAudioRatio);
   }
 }
 
@@ -640,14 +682,9 @@ void EmulatorInstance::setDynamicRateControlEnabled(const bool enabled) {
   applyAudioRateControl();
 }
 
-void EmulatorInstance::setPacingOwnsAudioRate(const bool owns) {
-  m_pacingOwnsAudioRate = owns;
-  applyAudioRateControl();
-}
-
 void EmulatorInstance::applyAudioRateControl() const {
   if (m_audioOutput) {
-    m_audioOutput->setDynamicRateControlEnabled(m_dynamicRateControl && !m_pacingOwnsAudioRate);
+    m_audioOutput->setDynamicRateControlEnabled(m_dynamicRateControl);
   }
 }
 

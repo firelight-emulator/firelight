@@ -615,6 +615,7 @@ int main(int argc, char *argv[]) {
       .inputService = &inputService,
       .achievementManager = &raClient,
       .saveManager = &saveManager,
+      .settingsService = &settingsService,
       .coreOptionRepository = &settingsRepository,
       .cheatRepository = &cheatRepository,
       .platformService = &platformService,
@@ -628,9 +629,10 @@ int main(int argc, char *argv[]) {
       // The tee mirrors PCM into the netplay stream (a no-op unless a host
       // stream is armed) on its way to the real output
       .audioOutputFactory =
-          [&netplayService, &settingsService] {
-            return std::make_shared<firelight::netplay::TeeAudioOutput>(std::make_shared<AudioManager>(settingsService),
-                                                                        &netplayService.streamSender());
+          [&netplayService, &settingsService](const std::string &contentHash, const int platformId) {
+            return std::make_shared<firelight::netplay::TeeAudioOutput>(
+                std::make_shared<AudioManager>(settingsService, contentHash, platformId),
+                &netplayService.streamSender());
           },
       .audioInputFactory = [] { return std::make_unique<firelight::audio::QtMicrophone>(); }};
   firelight::emulation::EmulationService emuService(userLibraryService, entryResolver, settingsService,

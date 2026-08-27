@@ -1,10 +1,10 @@
 #pragma once
 
 #include "audio/audio_manager.hpp"
-#include "emulation/emulation_rate_controller.hpp"
 #include "emulation/emulator_command.hpp"
 #include "emulation/emulator_controller.hpp"
-#include "emulation/refresh_counter.hpp"
+#include "emulation/frame_pacer.hpp"
+#include "emulation/precision_waiter.hpp"
 #include "emulator_item_renderer.hpp"
 #include "libretro/core_configuration.hpp"
 #include "service_accessor.hpp"
@@ -202,17 +202,6 @@ protected:
   QQuickRhiItemRenderer *createRenderer() override;
 
 private:
-  // TODO
-  // The least of a frame ever spun, and the most. The floor keeps a host with an accurate timer from
-  // spinning at all; the ceiling keeps one with a bad timer from burning a whole core to hide it
-  static constexpr int64_t MIN_SPIN_MARGIN_NS = 500000;
-  static constexpr int64_t MAX_SPIN_MARGIN_NS = 8000000;
-
-  // TODO
-  // Added to a measured overshoot before it becomes the margin, so that the margin covers the sleeps
-  // it was widened for rather than landing exactly on them
-  static constexpr int64_t SPIN_MARGIN_HEADROOM_NS = 250000;
-
   /**
    * Runs frames for as long as the emulator is alive, on its own thread
    */
@@ -235,16 +224,20 @@ private:
 
   bool m_rewindEnabled = true;
 
-  QThread m_emulationThread;
+  // TODO
+  // Everything about when a frame is due. Holds no thread of its own; this class drives it
+  // TODO
+  // What was last asked for, which outlives any one emulator instance and is not the same thing as
+  // whether the game can currently be heard
+  bool m_muted = false;
 
-  // What decides when a frame is due, for whichever mode is in force
-  firelight::emulation::EmulationRateController m_rateController;
+  firelight::emulation::FramePacer m_pacer;
 
   // TODO
-  // Guards the controller: the pacing thread asks it for frames while the GUI thread reconfigures it
-  // for a new setting, display or core rate. Uncontended in the ordinary case, since reconfiguring
-  // happens on a setting change rather than on a frame
-  std::mutex m_rateControllerMutex;
+  // How the pacing thread waits, and how much of the wait it has learned to spin
+  firelight::emulation::PrecisionWaiter m_waiter;
+
+  QThread m_emulationThread;
 
   // The loop runs until this is set; the condition variable is how a sleeping loop is woken early
   // to shut down rather than sleeping out the rest of its wait
@@ -258,40 +251,6 @@ private:
   // this can't run away. Atomic: written on the GUI thread, read on the render thread
   std::atomic<bool> m_renderContinuously = false;
 
-  // TODO
-  // When the loop last saw a present. Only touched on the emulation thread
-  int64_t m_lastSubmitNs = 0;
-
-  // TODO
-  // Whether frames have stopped reaching the screen. Frames run on the render thread, so while it
-  // isn't drawing there is nobody to run what the loop would queue — a minimised window would
-  // otherwise collect an hour of them and pay for all of it at once on restore. Starts true because
-  // nothing has been drawn yet. Atomic: set on the emulation thread, read on the GUI thread too
-  std::atomic<bool> m_renderStalled = true;
-
-  // TODO
-  // One refresh of the display, in nanoseconds, or 0 when the rate isn't known. Lets a late present
-  // be read as the number of refreshes that actually went by. Atomic: written on the GUI thread when
-  // pacing is reconfigured, read on the render thread
-  std::atomic<int64_t> m_displayPeriodNs = 0;
-
-  // TODO
-  // When the last present arrived. Only the render thread writes it
-  std::atomic<int64_t> m_lastSubmitAtNs = 0;
-
-  // TODO
-  // Reads the gap between two presents as a number of refreshes. Only the render thread touches it
-  firelight::emulation::RefreshCounter m_refreshCounter;
-
-  // TODO
-  // The most refreshes one present may be read as covering, for whatever a frame is currently held
-  // for. Atomic: written on the GUI thread when pacing is reconfigured, read on the render thread
-  std::atomic<int> m_refreshCeiling = firelight::emulation::RefreshCounter::MIN_CEILING;
-
-  // Refreshes since the loop last looked. A count rather than a flag: two can land between wakes,
-  // and holding a frame for a number of refreshes only works if every one of them is seen
-  std::atomic<int> m_submitCount = 0;
-
   // How much of the wait before a frame is spent spinning rather than sleeping. Sleeping alone
   // overshoots by more than a frame can afford where presentation follows production; 0 is pure sleep
   // TODO
@@ -299,10 +258,6 @@ private:
   // return. A host whose timer is accurate settles at the floor and spins almost nothing; one whose
   // sleeps overshoot grows this until they are covered. Encoding a constant here instead is a claim
   // about the host, and the two this runs on do not agree
-  /**
-   * Widens or narrows the spun part of the frame to cover how late a sleep just returned
-   */
-  void noteWakeOvershoot(int64_t overshootNs);
 
   // TODO
   // Held so the handler can be taken off the window before this object's members go. ~QObject would
@@ -310,7 +265,6 @@ private:
   // the render thread which is still presenting by then
   QMetaObject::Connection m_frameSwappedConnection;
 
-  std::atomic<int64_t> m_spinMarginNs = MIN_SPIN_MARGIN_NS;
   // Wall-clock target interval for native/monitor/fixed pacing. Written on the
   // GUI thread (reconfigurePacing), read on the emulation thread
   // When true, pace off audio buffer occupancy instead of the wall clock

@@ -87,47 +87,36 @@ void EmulationRateController::resolveRates() {
     m_audioRatio = fps / contentFps;
   };
 
+  // Every other mode names its own pacing outright and is already resolved above
+  if (m_context.mode != SyncMode::Auto && m_context.mode != SyncMode::Display) {
+    return;
+  }
+
+  // TODO
+  // Never the sink, for either of them. Pacing off audio occupancy cannot put frames out evenly: the
+  // device only reports what it has taken in whole periods — 10.67 ms, measured — so the gate can
+  // only fire on those boundaries and frames leave 10.7 or 21.3 ms apart, never the 16.67 they are
+  // due. Audio is made to fit a clock instead, by rate control, which is what every other emulator
+  // settled on
   const auto lockedFps = displayLockedFps(contentFps);
 
-  if (m_context.mode == SyncMode::Auto) {
-    // Never the sink. Pacing off audio occupancy cannot put frames out evenly: the device only
-    // reports what it has taken in whole periods — 10.67 ms, measured — so the gate can only fire on
-    // those boundaries and frames leave 10.7 or 21.3 ms apart, never the 16.67 they are due. Audio
-    // is made to fit a clock instead, by rate control, which is what every other emulator settled on
-    if (lockedFps > 0.0 && m_context.presentationLocked) {
-      // Presentation waits for the refresh, so counting refreshes puts each frame on an exact number
-      // of them — nearer than a clock can get, with no beat left to drift
-      countRefreshesFor(lockedFps);
-    } else if (lockedFps > 0.0) {
-      // The rate is right but the presents cannot be trusted to mark refreshes, so a clock at that
-      // rate is the closest thing available
-      runClockAt(lockedFps);
-    } else {
-      // Nothing the display can hold, so the rate the content asked for
-      m_resolvedMode = SyncMode::Fixed;
-    }
-
-    return;
-  }
-
-  if (m_resolvedMode != SyncMode::Display) {
-    return;
-  }
-
   if (lockedFps <= 0.0) {
-    // No whole number of refreshes shows this content rate, so there is nothing to sync to
+    // No whole number of refreshes shows this content rate, so there is nothing to follow and the
+    // rate the content asked for is the honest answer
     m_resolvedMode = SyncMode::Fixed;
     return;
   }
 
   if (!m_context.presentationLocked) {
-    // Asked for outright, but counting presents that don't wait for the display would run the game
-    // at whatever rate they happen to arrive at. A clock at the rate the display can hold is the
-    // nearest honest thing to what was asked for
+    // The rate is right, but presents that don't wait for the display cannot be trusted to mark
+    // refreshes — counting them would run the game at whatever rate they happen to arrive at. A
+    // clock at the rate the display can hold is the closest thing available
     runClockAt(lockedFps);
     return;
   }
 
+  // Presentation waits for the refresh, so counting refreshes puts each frame on an exact number of
+  // them — nearer than a clock can get, with no beat left to drift
   countRefreshesFor(lockedFps);
 }
 

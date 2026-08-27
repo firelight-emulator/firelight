@@ -71,7 +71,7 @@ struct EmulationContext {
   // Audio output + microphone are created on the render thread inside
   // EmulatorInstance::initialize(); main.cpp injects the Qt-Multimedia impls
   // (AudioManager / QtMicrophone). Null in headless/tests -> no audio
-  std::function<std::shared_ptr<IAudioOutput>()> audioOutputFactory;
+  std::function<std::shared_ptr<IAudioOutput>(const std::string &contentHash, int platformId)> audioOutputFactory;
   std::function<std::unique_ptr<libretro::IAudioInputProvider>()> audioInputFactory;
 };
 

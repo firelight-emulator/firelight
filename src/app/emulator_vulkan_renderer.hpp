@@ -30,8 +30,7 @@ public:
 
   // Runs the emulator frame(s), blits core → shared image
   // targetSize must be colorTexture()->pixelSize() so the shared image matches
-  void renderFrame(firelight::emulation::EmulatorInstance *emulator, float playbackMultiplier, QSize targetSize,
-                   QRhi *rhi);
+  void renderFrame(firelight::emulation::EmulatorInstance *emulator, int frames, QSize targetSize, QRhi *rhi);
 
   // Called from receive() when data == RETRO_HW_FRAME_BUFFER_VALID
   void setRenderDimensions(uint32_t w, uint32_t h);
