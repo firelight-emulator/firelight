@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/library/disc_set_playlist.hpp>
 #include <firelight/library/disc_set_service.hpp>
@@ -86,7 +87,7 @@ protected:
     return fileId;
   }
 
-  int entryCount() { return static_cast<int>(m_repo.getEntries(0, -1).size()); }
+  int entryCount() { return static_cast<int>(m_repo.getEntries().size()); }
 
   std::vector<RunConfiguration> configsFor(const std::string &hash) { return m_repo.getRunConfigurations(hash); }
 

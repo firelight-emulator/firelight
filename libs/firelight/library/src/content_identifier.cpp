@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/content_extensions.hpp>
 #include <firelight/library/content_identifier.hpp>
 #include <firelight/library/file_bytes.hpp>
@@ -13,17 +14,9 @@ namespace firelight::library {
 ContentIdentifier::ContentIdentifier(platforms::IPlatformService &platformService)
     : m_platformService(platformService), m_discInspector(platformService) {}
 
-std::string ContentIdentifier::suffixOf(const std::string &name) {
-  const auto dot = name.find_last_of('.');
-  if (dot == std::string::npos) {
-    return {};
-  }
-  return strings::toLower(name.substr(dot + 1));
-}
-
 IdentifiedContent ContentIdentifier::identify(const std::string &path) const {
   IdentifiedContent content;
-  const std::string suffix = suffixOf(path);
+  const std::string suffix = library::suffixOf(path);
 
   // Disc images share extensions across many consoles, so the platform can only
   // be determined from the contents (delegated to DiscInspector)
@@ -76,7 +69,7 @@ IdentifiedContent ContentIdentifier::identify(const std::string &path) const {
 IdentifiedContent ContentIdentifier::identifyInArchive(const std::string &entryName, const std::vector<uint8_t> &data,
                                                        const size_t sizeBytes, const std::string &archivePath) const {
   IdentifiedContent content;
-  const std::string suffix = suffixOf(entryName);
+  const std::string suffix = library::suffixOf(entryName);
 
   if (firelight::library::isDiscExtension(suffix)) {
     content.isDisc = true;

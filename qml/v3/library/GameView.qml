@@ -30,14 +30,8 @@ Item {
 
     // --- Refine (stack on top of the scope; the proxy ANDs them) ---
     property bool showOnlyFavorites: false
-    property bool showOnlyUnplayed: false
     property string filterText: ""
     // Advanced refine filters (from the Filters popup)
-    property bool filterHasAchievements: false
-    property bool filterCompleted: false
-    property string filterPlayTime: "any" // any / never / short / medium / long
-    property int filterDecade: 0          // 0 = any; else the decade's start year
-    property string filterGenre: ""
 
     // TODO
     // Where the cursor lands when the page is entered: the games themselves, or the rail beside
@@ -56,99 +50,19 @@ Item {
     LibraryEntrySortFilterModel {
         id: gameModel
         sourceModel: LibraryEntryModel
-        collapseVariants: GeneralSettings.collapseVariants
 
         onFiltersOrSortChanged: root.queueRefresh()
     }
 
     // The advanced-filter bar under the toolbar is expanded
-    property bool filtersExpanded: false
 
-    property string _pendingSortRole: "displayName"
     property string _pendingViewType: "grid"
 
-    readonly property var playTimeOptions: [
-        {
-            label: "Any play time",
-            value: "any"
-        },
-        {
-            label: "Never played",
-            value: "never"
-        },
-        {
-            label: "Under 1 hour",
-            value: "short"
-        },
-        {
-            label: "1–10 hours",
-            value: "medium"
-        },
-        {
-            label: "Over 10 hours",
-            value: "long"
-        }
-    ]
-    readonly property var decadeOptions: [
-        {
-            label: "Any decade",
-            value: 0
-        },
-        {
-            label: "1970s",
-            value: 1970
-        },
-        {
-            label: "1980s",
-            value: 1980
-        },
-        {
-            label: "1990s",
-            value: 1990
-        },
-        {
-            label: "2000s",
-            value: 2000
-        },
-        {
-            label: "2010s",
-            value: 2010
-        },
-        {
-            label: "2020s",
-            value: 2020
-        }
-    ]
-    readonly property bool anyAdvancedFilter: filterHasAchievements || filterCompleted || filterPlayTime !== "any" || filterDecade !== 0 || filterGenre.trim().length > 0
     // TODO
-    // Every filter reachable from the Filters popup (advanced + the favorites/unplayed toggles)
-    readonly property bool anyPopupFilter: anyAdvancedFilter || showOnlyFavorites || showOnlyUnplayed
-    function playTimeLabel(v) {
-        for (var i = 0; i < playTimeOptions.length; i++) {
-            if (playTimeOptions[i].value === v) {
-                return playTimeOptions[i].label;
-            }
-        }
-        return "";
-    }
-    function clearAdvancedFilters() {
-        filterHasAchievements = false;
-        filterCompleted = false;
-        filterPlayTime = "any";
-        filterDecade = 0;
-        filterGenre = "";
-    }
-    // TODO
-    // Clears every filter reachable from the Filters popup
-    function clearPopupFilters() {
-        clearAdvancedFilters();
-        showOnlyFavorites = false;
-        showOnlyUnplayed = false;
-    }
+    // Whether anything reachable from the Filters popup is narrowing the grid
+    readonly property bool anyPopupFilter: gameModel.anyFiltersActive
 
     // --- Sort / view ---
-    property string sortRole: "displayName"
-    property bool sortAscending: true
 
     property string viewMode: "grid"
 
@@ -175,7 +89,6 @@ Item {
     // The fade commits these and is shared with filter changes, so at rest they must equal what is on
     // screen or a filter refresh would apply an empty view or sort
     onViewModeChanged: root._pendingViewType = root.viewMode
-    onSortRoleChanged: root._pendingSortRole = root.sortRole
 
     // Section grouping: "none" | "platform" | "decade" | "year" | "genre" | "title"
     property string groupBy: "none"
@@ -217,57 +130,88 @@ Item {
     // (a smart folder's membership is computed, so "remove" is meaningless)
     readonly property int removableFolderId: filterManualIds.indexOf(filterFolderId) !== -1 ? filterFolderId : -1
 
-    readonly property var sortOptions: [
-        {
-            label: "Name",
-            role: "displayName"
-        },
-        {
-            label: "Last played",
-            role: "lastPlayedAt"
-        },
-        {
-            label: "Playtime",
-            role: "numSecondsPlayed"
-        },
-        {
-            label: "Achievements",
-            role: "achievementsEarned"
-        },
-        {
-            label: "Date added",
-            role: "createdAt"
-        }
-    ]
+    signal folderCrumbClicked(int folderId)
+
+    property bool _applyingFolderSort: false
+
+    // The sort the scoped collection has pinned, or empty when it takes the default
+    property string scopeSortRole: ""
 
     // TODO
-    // The active sort role's label, shown on the Display button
-    readonly property string currentSortLabel: {
-        for (var i = 0; i < sortOptions.length; i++) {
-            if (sortOptions[i].role === sortRole) {
-                return sortOptions[i].label;
+    // Whether the sort on screen belongs to this collection rather than being the one everything
+    // else uses. Shown in the sort menu, because a pin nobody can see is a pin nobody can undo
+    readonly property bool sortIsPinnedToCollection: filterFolderId !== -1 && scopeSortRole.length > 0
+
+    // TODO
+    // The role name for an entry in the one sort table, so a stored sort and the menu speak the
+    // same language
+    function sortRoleNameFor(value) {
+        const options = gameModel.sortOptions;
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].value === value) {
+                return options[i].role;
             }
         }
         return "";
     }
 
-    signal folderCrumbClicked(int folderId)
-
-    property bool _applyingFolderSort: false
-
-    function applyFolderSort(sr, asc) {
-        if (sr && sr.length > 0) {
-            _applyingFolderSort = true;
-            root.sortRole = sr;
-            root.sortAscending = asc;
-            _applyingFolderSort = false;
+    function sortValueFor(roleName) {
+        const options = gameModel.sortOptions;
+        for (var i = 0; i < options.length; i++) {
+            if (options[i].role === roleName) {
+                return options[i].value;
+            }
         }
+        return -1;
     }
 
-    function persistFolderSort() {
-        if (!_applyingFolderSort && filterFolderId !== -1) {
-            LibraryFolderModel.setFolderSort(filterFolderId, sortRole, sortAscending);
+    function applyFolderSort(sr, asc) {
+        root.scopeSortRole = sr ? sr : "";
+
+        if (root.scopeSortRole.length === 0) {
+            return;
         }
+
+        const value = sortValueFor(root.scopeSortRole);
+
+        if (value === -1) {
+            return;
+        }
+
+        _applyingFolderSort = true;
+        gameModel.sortRole = value;
+        gameModel.sortAscending = asc;
+        gameModel.applyFilters();
+        _applyingFolderSort = false;
+    }
+
+    // TODO
+    // Sorting inside a collection pins that sort to it, the way a folder remembers how it was
+    // last left. Silent while nothing shows the pin, which is what resetSortToDefault answers
+    function persistFolderSort() {
+        if (_applyingFolderSort || filterFolderId === -1) {
+            return;
+        }
+
+        root.scopeSortRole = sortRoleNameFor(gameModel.sortRole);
+        LibraryFolderModel.setFolderSort(filterFolderId, root.scopeSortRole, gameModel.sortAscending);
+    }
+
+    // TODO
+    // Hands the collection back to the default sort, which is the only way out of a pin
+    function resetSortToDefault() {
+        if (filterFolderId === -1) {
+            return;
+        }
+
+        root.scopeSortRole = "";
+        LibraryFolderModel.setFolderSort(filterFolderId, "", true);
+
+        _applyingFolderSort = true;
+        gameModel.sortRole = LibraryEntrySortFilterModel.DisplayName;
+        gameModel.sortAscending = true;
+        gameModel.applyFilters();
+        _applyingFolderSort = false;
     }
 
     // The sidebar picks a scope; it clears only the other scope axis, never the
@@ -299,7 +243,6 @@ Item {
     }
 
     function setScopeFolder(folderId, label, crumb, sr, asc, manualIds, smartIds, iconUrl, folderType, color, description) {
-        filterPlatformId = -1;
         filterFolderId = folderId;
         filterManualIds = manualIds ? manualIds : [];
         filterSmartIds = smartIds ? smartIds : [];
@@ -316,10 +259,7 @@ Item {
 
     function clearAll() {
         setScopeAll();
-        showOnlyFavorites = false;
-        showOnlyUnplayed = false;
-        filterText = "";
-        clearAdvancedFilters();
+        gameModel.clearAllFilters();
     }
 
     function openAddToFolder() {
@@ -428,12 +368,6 @@ Item {
             d.favorite = fav;
             root.detailData = d;
         }
-    }
-
-    LibraryFilters {
-        id: filters
-
-        onPendingValuesChanged: root.queueRefresh()
     }
 
     // The distinct group-header labels in display order, derived from the sorted
@@ -640,13 +574,39 @@ Item {
                     }
                 }
 
-                FLToggleMenuItem {
-                    label: "Has achievements"
+                FLSubmenuItem {
+                    id: playtimeItem
+                    label: "Time played"
+                    model: [
+                        {
+                            "text": "Over 1 hour",
+                            "value": 60
+                        },
+                        {
+                            "text": "Over 5 hours",
+                            "value": 300
+                        },
+                        {
+                            "text": "Over 10 hours",
+                            "value": 600
+                        },
+                        {
+                            "text": "Over 25 hours",
+                            "value": 1500
+                        }
+                    ]
+
+                    onCurrentValuesChanged: {
+                        gameModel.filter.minMinutesPlayed = playtimeItem.currentValues.length > 0 ? Math.min(...playtimeItem.currentValues) : -1;
+                    }
                 }
 
-                FLSubmenuItem {
-                    label: "Time played"
-                    model: []
+                FLToggleMenuItem {
+                    label: "Never played"
+                    checked: gameModel.filter.unplayed === LibraryFilter.Yes
+                    onSelected: function (selected) {
+                        gameModel.filter.unplayed = selected ? LibraryFilter.Yes : LibraryFilter.Unset;
+                    }
                 }
 
                 FLSubmenuItem {
@@ -782,7 +742,21 @@ Item {
                 model: gameModel.sortOptions
                 currentValue: gameModel.sortRole
 
-                onClosed: gameModel.sortRole = gameSortPopup.currentValue
+                onClosed: {
+                    gameModel.sortRole = gameSortPopup.currentValue;
+                    root.persistFolderSort();
+                }
+
+                FLMenuSeparator {
+                    visible: root.filterFolderId !== -1
+                }
+
+                FLMenuItem {
+                    label: root.sortIsPinnedToCollection ? "Reset to default sort" : "Using the default sort"
+                    enabled: root.sortIsPinnedToCollection
+                    visible: root.filterFolderId !== -1
+                    onClicked: root.resetSortToDefault()
+                }
             }
 
             // GameSortPopup {
@@ -1086,12 +1060,10 @@ Item {
             script: {
                 root._refreshApplied = true;
                 gameModel.applyFilters();
-                root.sortRole = root._pendingSortRole;
                 root.viewMode = root._pendingViewType;
                 if (viewLoader.item) {
                     viewLoader.item.positionViewAtBeginning();
                 }
-                // root._pendingSortRole = "";
             }
         }
 
@@ -1159,14 +1131,6 @@ Item {
             model: gameModel
             selectedIds: root.selectedIds
             groupBy: root.groupBy
-            onSortRoleChanged: {
-                root.sortRole = sortRole;
-                root.persistFolderSort();
-            }
-            onSortAscendingChanged: {
-                root.sortAscending = sortAscending;
-                root.persistFolderSort();
-            }
             onGameClicked: (entryId, rowIndex, modifiers) => root.handleGameClick(entryId, rowIndex, modifiers)
             onGameFocused: data => root.detailData = data
             onRequestAddToFolder: entryIds => addToFolderDialog.openFor(entryIds)
@@ -1185,8 +1149,8 @@ Item {
         id: gridView
         GameGridView {
             model: gameModel
-            currentSortLabel: root.currentSortLabel
-            sortAscending: root.sortAscending
+            currentSortLabel: gameModel.sortDisplayName
+            sortAscending: gameModel.sortAscending
             selectedIds: root.selectedIds
             groupBy: root.groupBy
             groupKeys: root.groupKeys
@@ -1199,7 +1163,7 @@ Item {
             onRequestLaunch: (id, hash, platformId, playable, statusText) => {
                 if (!playable) {
                     cannotLaunchGamePopup.openWithText(statusText);
-                    return
+                    return;
                 }
 
                 EmulationService.loadEntry(id);
@@ -1332,7 +1296,7 @@ Item {
             }
 
             Text {
-                text: "By " + gameModel.sortDisplayName + " (" + (root.sortAscending ? "ascending" : "descending") + ")"
+                text: "By " + gameModel.sortDisplayName + " (" + (gameModel.sortAscending ? "ascending" : "descending") + ")"
                 color: Theme.textMuted
                 font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium

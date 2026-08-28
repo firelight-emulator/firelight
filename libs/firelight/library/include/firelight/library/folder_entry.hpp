@@ -1,7 +1,11 @@
 #pragma once
 
 namespace firelight::library {
-struct FolderEntryInfo {
+
+/**
+* Represents an entry's membership in a manual folder
+*/
+struct FolderEntry {
   int folderId = -1;
   int entryId = -1;
 };

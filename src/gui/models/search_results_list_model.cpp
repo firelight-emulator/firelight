@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "search_results_list_model.hpp"
 
 #include "util/fuzzy_string_matcher.hpp"
@@ -53,7 +54,7 @@ void SearchResultsListModel::refreshItems() {
   beginResetModel();
   m_allItems.clear();
 
-  for (const auto &entry : m_library->getEntries(0, 0)) {
+  for (const auto &entry : m_library->getEntries()) {
     // Searching turns up somewhere to go, and a game with no readable copy is nowhere
     if (!entry.isContentAvailable || entry.hidden) {
       continue;

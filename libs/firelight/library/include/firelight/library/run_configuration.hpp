@@ -6,6 +6,11 @@
 #include <string_view>
 
 namespace firelight::library {
+
+/**
+ * Represents a way to launch an entry: a ROM/disc file, optionally with a patch applied, or a playlist for a multi-disc
+ * game
+ */
 struct RunConfiguration {
   static constexpr std::string_view TYPE_ROM = "rom";
   static constexpr std::string_view TYPE_PATCH = "patch";
@@ -16,10 +21,6 @@ struct RunConfiguration {
   std::string contentHash;
   int contentFileId = -1;
   int patchId = -1;
-
-  // TODO
-  // The set this launches, unset when it launches a single file. A set's way in exists for as
-  // long as the set does, rather than for as long as a file we generated survives on disk
   std::optional<int> discSetId{};
 
   int64_t createdAt = 0;

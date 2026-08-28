@@ -11,9 +11,6 @@ FLListView {
 
     property real initialContentY: contentY
 
-    property string sortRole: "displayName"
-    property bool sortAscending: true
-
     // TODO
     // Section grouping mode ("none" = ungrouped); the model's groupKey role
     // supplies the section value

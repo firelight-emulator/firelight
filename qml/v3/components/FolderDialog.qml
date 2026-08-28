@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import Firelight 1.0
 
 // TODO
 // Unified create/edit dialog for library folders. Manual folders edit
@@ -66,6 +67,13 @@ FirelightDialog {
 
     signal saved
 
+    // TODO
+    // What the dialog is editing. The same type the library view holds, so a saved folder and the
+    // current view are one thing rather than two shapes of the same JSON
+    LibraryFilter {
+        id: criteria
+    }
+
     function toggleId(arr, id) {
         var copy = arr.slice();
         var idx = copy.indexOf(id);
@@ -78,6 +86,7 @@ FirelightDialog {
     }
 
     function resetFields() {
+        criteria.clear();
         nameInput.text = "";
         descriptionInput.text = "";
         selectedColor = "";
@@ -126,69 +135,62 @@ FirelightDialog {
         control.open();
     }
 
+    // TODO
+    // Reads the fields the dialog shows out of the criteria. Anything the dialog has no control for
+    // stays on the object, which is what stops an edit dropping it
     function loadCriteria(jsonStr) {
-        if (!jsonStr || jsonStr.length === 0) {
-            return;
-        }
-        var c = {};
-        try {
-            c = JSON.parse(jsonStr);
-        } catch (e) {
-            return;
-        }
-        pathContainsInput.text = c.pathContains || "";
-        developerInput.text = c.developer || "";
-        publisherInput.text = c.publisher || "";
-        genreInput.text = (c.genres && c.genres.length > 0) ? c.genres[0] : "";
-        yearMinInput.text = c.yearMin !== undefined ? String(c.yearMin) : "";
-        yearMaxInput.text = c.yearMax !== undefined ? String(c.yearMax) : "";
-        minMinutesInput.text = c.minSecondsPlayed !== undefined ? String(Math.round(c.minSecondsPlayed / 60)) : "";
-        lastDaysInput.text = c.playedWithinDays !== undefined ? String(c.playedWithinDays) : "";
-        favoriteOnly.checked = c.favorite === true;
-        unplayedOnly.checked = c.unplayed === true;
-        selectedDirIds = c.contentDirectoryIds ? c.contentDirectoryIds.slice() : [];
-        selectedPlatformIds = c.platformIds ? c.platformIds.slice() : [];
+        criteria.setJson(jsonStr ? jsonStr : "");
+
+        pathContainsInput.text = criteria.pathContains;
+        developerInput.text = criteria.developer;
+        publisherInput.text = criteria.publisher;
+        genreInput.text = criteria.genres.join(", ");
+        yearMinInput.text = criteria.yearMin === 0 ? "" : String(criteria.yearMin);
+        yearMaxInput.text = criteria.yearMax === 0 ? "" : String(criteria.yearMax);
+        minMinutesInput.text = criteria.minMinutesPlayed < 0 ? "" : String(criteria.minMinutesPlayed);
+        lastDaysInput.text = criteria.playedWithinDays === 0 ? "" : String(criteria.playedWithinDays);
+        favoriteOnly.checked = criteria.favorite === LibraryFilter.Yes;
+        unplayedOnly.checked = criteria.unplayed === LibraryFilter.Yes;
+        selectedDirIds = criteria.contentDirectoryIds.slice();
+        selectedPlatformIds = criteria.platformIds.slice();
     }
 
+    // TODO
+    // A number the field cannot express reads as unset rather than as nothing, so a typo narrows
+    // the folder to nothing instead of silently writing null
+    function numberOr(field, unset) {
+        const text = field.text.trim();
+
+        if (text.length === 0) {
+            return unset;
+        }
+
+        const value = parseInt(text, 10);
+        return isNaN(value) ? unset : value;
+    }
+
+    function splitGenres(text) {
+        return text.split(",").map(part => part.trim()).filter(part => part.length > 0);
+    }
+
+    // TODO
+    // Writes the fields back onto the criteria and hands over what it serialises to, rather than
+    // building the same JSON a second time in a second language
     function buildFilterJson() {
-        var c = {};
-        if (selectedDirIds.length > 0) {
-            c.contentDirectoryIds = selectedDirIds;
-        }
-        if (pathContainsInput.text.trim().length > 0) {
-            c.pathContains = pathContainsInput.text.trim();
-        }
-        if (selectedPlatformIds.length > 0) {
-            c.platformIds = selectedPlatformIds;
-        }
-        if (favoriteOnly.checked) {
-            c.favorite = true;
-        }
-        if (genreInput.text.trim().length > 0) {
-            c.genres = [genreInput.text.trim()];
-        }
-        if (developerInput.text.trim().length > 0) {
-            c.developer = developerInput.text.trim();
-        }
-        if (publisherInput.text.trim().length > 0) {
-            c.publisher = publisherInput.text.trim();
-        }
-        if (yearMinInput.text.trim().length > 0) {
-            c.yearMin = parseInt(yearMinInput.text);
-        }
-        if (yearMaxInput.text.trim().length > 0) {
-            c.yearMax = parseInt(yearMaxInput.text);
-        }
-        if (minMinutesInput.text.trim().length > 0) {
-            c.minSecondsPlayed = parseInt(minMinutesInput.text) * 60;
-        }
-        if (lastDaysInput.text.trim().length > 0) {
-            c.playedWithinDays = parseInt(lastDaysInput.text);
-        }
-        if (unplayedOnly.checked) {
-            c.unplayed = true;
-        }
-        return JSON.stringify(c);
+        criteria.contentDirectoryIds = selectedDirIds;
+        criteria.pathContains = pathContainsInput.text.trim();
+        criteria.platformIds = selectedPlatformIds;
+        criteria.developer = developerInput.text.trim();
+        criteria.publisher = publisherInput.text.trim();
+        criteria.genres = splitGenres(genreInput.text);
+        criteria.yearMin = numberOr(yearMinInput, 0);
+        criteria.yearMax = numberOr(yearMaxInput, 0);
+        criteria.minMinutesPlayed = numberOr(minMinutesInput, -1);
+        criteria.playedWithinDays = numberOr(lastDaysInput, 0);
+        criteria.favorite = favoriteOnly.checked ? LibraryFilter.Yes : LibraryFilter.Unset;
+        criteria.unplayed = unplayedOnly.checked ? LibraryFilter.Yes : LibraryFilter.Unset;
+
+        return criteria.json;
     }
 
     // Writes the appearance fields to the active folder row through setData
@@ -215,7 +217,6 @@ FirelightDialog {
             }
             control.persistAppearance();
         }
-        LibraryEntryModel.invalidateSmartFolderCache();
         control.saved();
     }
 

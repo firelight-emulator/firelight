@@ -1,7 +1,5 @@
 #pragma once
 
-#include <firelight/util/game_metadata.hpp>
-
 #include <set>
 #include <string>
 #include <string_view>
@@ -9,10 +7,9 @@
 namespace firelight::library {
 
 /**
- * The metadata fields a user edited by hand.
+ * The metadata fields a user edited by hand
  *
- * A scrape skips every field named here, which is what generalizes the entry's name guard to the
- * rest of the document. Only field names are stored; the values stay in the document
+ * A scrape skips every field named here. Only field names are stored; the values stay in the document
  */
 struct MetadataOverrides {
   std::set<std::string> fields;

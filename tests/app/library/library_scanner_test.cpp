@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/platforms/platform_service.hpp>
@@ -414,6 +415,44 @@ TEST_F(LibraryScannerTest, AFileUnderNoContentDirectoryIsStillJudged) {
   waitForScanIdle(scanner);
 
   EXPECT_EQ(m_repo->getPresentContentFiles().size(), 1u) << "a file belonging to no directory was passed over";
+}
+
+// TODO
+// The queue should hold the directories that were queued and nothing else. std::map::operator[]
+// inserts what it is asked about, so a question about a path nothing queued would grow it -- and
+// grow it under a read lock
+TEST_F(LibraryScannerTest, TheQueueHoldsOnlyWhatWasQueued) {
+  ASSERT_TRUE(QDir(tempDir.path()).mkpath("one"));
+  ASSERT_TRUE(QDir(tempDir.path()).mkpath("two"));
+
+  ContentDirectory dir{.path = tempDir.path().toStdString()};
+  ASSERT_TRUE(m_repo->create(dir));
+
+  LibraryScanner2 scanner(*m_repo, m_platformService);
+  scanner.watchPath(tempDir.path());
+  waitForScanIdle(scanner);
+
+  EXPECT_EQ(scanner.queuedDirectoryCount(), 3)
+      << "the queue holds something nobody queued: the root and its two subdirectories are all there is";
+}
+
+// TODO
+// The flag a second caller checks is set inside the worker, so both get past the guard and the
+// second queues a pass that has nothing to do
+TEST_F(LibraryScannerTest, StartingASecondScanWhileOneRunsDoesNotQueueASecondPass) {
+  ContentDirectory dir{.path = tempDir.path().toStdString()};
+  ASSERT_TRUE(m_repo->create(dir));
+
+  LibraryScanner2 scanner(*m_repo, m_platformService);
+  scanner.watchPath(tempDir.path());
+
+  auto first = scanner.startScan();
+  auto second = scanner.startScan();
+
+  first.waitForFinished();
+  second.waitForFinished();
+
+  EXPECT_FALSE(second.result()) << "a second scan started while the first was still running";
 }
 
 } // namespace firelight::library

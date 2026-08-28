@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "app/library/variant_group_service.hpp"
 
 #include <firelight/library/filename_tags.hpp>
@@ -328,7 +329,7 @@ TEST_F(VariantGroupServiceTest, ResolvingEveryGroupAtOnceMatchesResolvingEachAlo
 
   VariantGroupService service(m_library, m_settings);
 
-  const auto resolution = service.resolveAll(m_repo.getEntries(0, 0), m_repo.getVariantGroups());
+  const auto resolution = service.resolveAll(m_repo.getEntries(), m_repo.getVariantGroups());
 
   EXPECT_EQ(resolution.primaryByGroup.at(first), firstUsa);
   EXPECT_EQ(resolution.primaryByGroup.at(second), secondEurope);
@@ -345,7 +346,7 @@ TEST_F(VariantGroupServiceTest, ResolvingEveryGroupAtOnceSkipsHiddenEntries) {
 
   VariantGroupService service(m_library, m_settings);
 
-  const auto resolution = service.resolveAll(m_repo.getEntries(0, 0), m_repo.getVariantGroups());
+  const auto resolution = service.resolveAll(m_repo.getEntries(), m_repo.getVariantGroups());
 
   EXPECT_EQ(resolution.primaryByGroup.at(groupId), japan);
 }

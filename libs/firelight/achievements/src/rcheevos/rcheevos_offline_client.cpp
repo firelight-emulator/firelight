@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "rcheevos_offline_client.hpp"
 
 #include "rcheevos/achievement_set_response.hpp"
@@ -256,7 +257,7 @@ rc_api_server_response_t RetroAchievementsOfflineClient::handleLogin2Request(con
     return GENERIC_SERVER_ERROR;
   }
 
-  auto user = User{.username = username, .token = token, .softcoreScore = 0, .score = 0};
+  auto user = User{.username = username, .token = token, .score = 0, .softcoreScore = 0};
   auto userOpt = m_achievementService.getUser(username);
   if (!userOpt.has_value()) {
     m_achievementService.create(user);
@@ -322,7 +323,7 @@ void RetroAchievementsOfflineClient::processAchievementSetsResponse(const std::s
   auto i = 0;
   for (const auto &set : setResponse.Sets) {
     AchievementSet achievementSet{
-        .id = set.id, .title = set.title, .gameId = game.id, .type = set.type, .imageIconUrl = set.imageIconUrl};
+        .id = set.id, .gameId = game.id, .title = set.title, .type = set.type, .imageIconUrl = set.imageIconUrl};
 
     m_achievementService.create(achievementSet);
     m_achievementService.setAchievementSetHash(achievementSet.id, hash);

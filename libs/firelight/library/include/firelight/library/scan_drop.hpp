@@ -9,9 +9,9 @@
 namespace firelight::library {
 
 /**
- * A file the scanner accepted and then could not catalogue.
+ * A file the scanner accepted and then could not catalogue
  *
- * Kept per file, because the answer to "where did my game go" is a path. The row goes away as
+ * Kept per file so users can see what was scanned but not ingested. The row goes away as
  * soon as that path identifies, so the table holds only what is still wrong
  */
 struct ScanDrop {
@@ -27,10 +27,7 @@ struct ScanDrop {
 };
 
 /**
- * How many files carry an extension nothing accepts.
- *
- * A count and never a path: a folder of three thousand save files is one row, and a list of
- * what people actually own is the whole reason to keep it
+ * How many files carry an extension nothing accepts
  */
 struct UnrecognizedExtension {
   std::string extension;

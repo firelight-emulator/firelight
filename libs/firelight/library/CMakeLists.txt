@@ -17,6 +17,7 @@ add_library(firelight_library STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/library_scanner2.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/archive_reader.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/content_hasher.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/content_discoverer.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/content_identifier.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/content_loader.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/chd_cdreader.cpp

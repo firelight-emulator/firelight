@@ -154,7 +154,7 @@ void checkFormatGaps(std::vector<Finding> &findings) {
     // Info, not a warning: a core reading more than Firelight accepts is work to pick up rather
     // than something broken, and each format needs its own decision about how it hashes
     findings.push_back(
-        {Level::Info, "formats", core.displayName + " opens " + joinNames(unaccepted, ", ") + " — not scanned for"});
+        {Level::Info, "formats", core.displayName + " opens " + joinNames(unaccepted, ", ") + " - not scanned for"});
   }
 }
 

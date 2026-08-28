@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <gtest/gtest.h>
 #include <rcheevos/award_achievement_response.hpp>
 #include <rcheevos/gameid_response.hpp>
@@ -75,7 +76,7 @@ TEST_F(RetroAchievementsOfflineClientTest, LoginGetsScoreCorrectly) {
 
   RetroAchievementsOfflineClient offlineClient(service);
 
-  service.create(User{.username = "testuser", .token = "testtoken", .softcoreScore = 1000, .score = 2000});
+  service.create(User{.username = "testuser", .token = "testtoken", .score = 2000, .softcoreScore = 1000});
 
   const auto response = offlineClient.handleRequest("https://retroachievements.com/dorequest.php",
                                                     "r=login2&u=testuser&t=testtoken", "application/json");
@@ -232,18 +233,18 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeNonHardcore)
   RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
-  User user{.username = "testuser", .token = "token", .softcoreScore = 100, .score = 50};
+  User user{.username = "testuser", .token = "token", .score = 50, .softcoreScore = 100};
   service.create(user);
 
   Achievement achievement{.id = 1,
+                          .achievementSetId = 1,
                           .title = "Test Achievement",
                           .description = "Test",
-                          .badgeUrl = "",
                           .points = 25,
+                          .flags = 3,
                           .type = "progression",
-                          .displayOrder = 0,
-                          .achievementSetId = 1,
-                          .flags = 3};
+                          .badgeUrl = "",
+                          .displayOrder = 0};
   repo.create(achievement);
 
   // Award achievement in non-hardcore mode
@@ -266,18 +267,18 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementFirstTimeHardcore) {
   RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
-  User user{.username = "testuser", .token = "token", .softcoreScore = 100, .score = 50};
+  User user{.username = "testuser", .token = "token", .score = 50, .softcoreScore = 100};
   service.create(user);
 
   Achievement achievement{.id = 1,
+                          .achievementSetId = 1,
                           .title = "Test Achievement",
                           .description = "Test",
-                          .badgeUrl = "",
                           .points = 25,
+                          .flags = 3,
                           .type = "progression",
-                          .displayOrder = 0,
-                          .achievementSetId = 1,
-                          .flags = 3};
+                          .badgeUrl = "",
+                          .displayOrder = 0};
   repo.create(achievement);
 
   // Award achievement in hardcore mode
@@ -300,18 +301,18 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementHardcoreAfterNonHardc
   RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
-  User user{.username = "testuser", .token = "token", .softcoreScore = 100, .score = 50};
+  User user{.username = "testuser", .token = "token", .score = 50, .softcoreScore = 100};
   service.create(user);
 
   Achievement achievement{.id = 1,
+                          .achievementSetId = 1,
                           .title = "Test Achievement",
                           .description = "Test",
-                          .badgeUrl = "",
                           .points = 25,
+                          .flags = 3,
                           .type = "progression",
-                          .displayOrder = 0,
-                          .achievementSetId = 1,
-                          .flags = 3};
+                          .badgeUrl = "",
+                          .displayOrder = 0};
   repo.create(achievement);
 
   // First, award in non-hardcore mode
@@ -351,18 +352,18 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementNonHardcoreAfterHardc
   RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
-  User user{.username = "testuser", .token = "token", .softcoreScore = 100, .score = 50};
+  User user{.username = "testuser", .token = "token", .score = 50, .softcoreScore = 100};
   service.create(user);
 
   Achievement achievement{.id = 1,
+                          .achievementSetId = 1,
                           .title = "Test Achievement",
                           .description = "Test",
-                          .badgeUrl = "",
                           .points = 25,
+                          .flags = 3,
                           .type = "progression",
-                          .displayOrder = 0,
-                          .achievementSetId = 1,
-                          .flags = 3};
+                          .badgeUrl = "",
+                          .displayOrder = 0};
   repo.create(achievement);
 
   // First, award in hardcore mode
@@ -402,18 +403,18 @@ TEST_F(RetroAchievementsOfflineClientTest, AwardAchievementAlreadyEarnedInSameMo
   RetroAchievementsOfflineClient offlineClient(service);
 
   // Set up user and achievement
-  User user{.username = "testuser", .token = "token", .softcoreScore = 100, .score = 50};
+  User user{.username = "testuser", .token = "token", .score = 50, .softcoreScore = 100};
   service.create(user);
 
   Achievement achievement{.id = 1,
+                          .achievementSetId = 1,
                           .title = "Test Achievement",
                           .description = "Test",
-                          .badgeUrl = "",
                           .points = 25,
+                          .flags = 3,
                           .type = "progression",
-                          .displayOrder = 0,
-                          .achievementSetId = 1,
-                          .flags = 3};
+                          .badgeUrl = "",
+                          .displayOrder = 0};
   repo.create(achievement);
 
   // Award achievement twice in non-hardcore mode

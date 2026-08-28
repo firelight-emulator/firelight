@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "cli/scan_command.hpp"
 
 #include "cli/data_dirs.hpp"
@@ -49,7 +50,7 @@ int runScan(int argc, char **argv, const CliOptions &opts) {
   scanner.scanAll();
   loop.exec();
 
-  const auto entries = repository.getEntries(0, -1);
+  const auto entries = repository.getEntries();
   const auto contentFiles = repository.getPresentContentFiles();
   std::printf("Scan complete: %zu content file(s), %zu library entr%s.\n", contentFiles.size(), entries.size(),
               entries.size() == 1 ? "y" : "ies");

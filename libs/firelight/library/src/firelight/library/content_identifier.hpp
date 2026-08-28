@@ -50,8 +50,6 @@ public:
                                                     size_t sizeBytes, const std::string &archivePath) const;
 
 private:
-  static std::string suffixOf(const std::string &name);
-
   platforms::IPlatformService &m_platformService;
   ContentHasher m_hasher;
   DiscInspector m_discInspector;

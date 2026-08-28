@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "firelight/event_dispatcher.hpp"
 
 #include <firelight/library/library_events.hpp>
@@ -40,9 +41,9 @@ Entry deserializeEntry(const SQLite::Statement &query) {
       .icon1x1SourceUrl = query.getColumn("icon_1x1_source_url").getString(),
       .boxartFrontSourceUrl = query.getColumn("boxart_front_source_url").getString(),
       .boxartBackSourceUrl = query.getColumn("boxart_back_source_url").getString(),
-      .normalizedTitle = query.getColumn("normalized_title").getString(),
       .metadata = GameMetadata::parse(query.getColumn("metadata_json").getString()),
       .metadataOverrides = MetadataOverrides::parse(query.getColumn("metadata_overrides_json").getString()),
+      .normalizedTitle = query.getColumn("normalized_title").getString(),
       .discSetId = query.getColumn("disc_set_id").isNull() ? std::nullopt
                                                            : std::optional(query.getColumn("disc_set_id").getInt()),
       .discSetUserSet = query.getColumn("disc_set_user_set").getInt() != 0,
@@ -69,12 +70,12 @@ ContentFile deserializeContentFile(SQLite::Statement &query) {
       .m_archivePathName = query.getColumn("archive_file_path").getString(),
       .m_platformId = query.getColumn("platform_id").getInt(),
       .m_contentHash = query.getColumn("content_hash").getString(),
+      .m_discSetId = query.getColumn("disc_set_id").isNull() ? std::nullopt
+                                                             : std::optional(query.getColumn("disc_set_id").getInt()),
       .m_discNumber = query.getColumn("disc_number").getInt(),
       .m_discNumberUserSet = query.getColumn("disc_number_user_set").getInt() != 0,
       .m_regions = strings::split(query.getColumn("region").getString(), ','),
       .m_gameId = query.getColumn("game_id").getInt(),
-      .m_discSetId = query.getColumn("disc_set_id").isNull() ? std::nullopt
-                                                             : std::optional(query.getColumn("disc_set_id").getInt()),
       .m_contentDirectoryId = query.getColumn("content_directory_id").getInt(),
       .m_missingSince = query.getColumn("missing_since").getInt64(),
   };
@@ -428,6 +429,7 @@ bool SqliteUserLibraryRepository::create(FolderInfo &folder) {
     query.exec();
 
     folder.id = static_cast<int>(m_db->getLastInsertRowid());
+    EventDispatcher::instance().publish(FolderChangedEvent{.folderId = folder.id});
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to create folder: {}", e.what());
@@ -449,7 +451,7 @@ int SqliteUserLibraryRepository::nextFolderPosition(int parentId) {
   return 0;
 }
 
-bool SqliteUserLibraryRepository::create(FolderEntryInfo &folderEntry) {
+bool SqliteUserLibraryRepository::create(FolderEntry &folderEntry) {
   std::lock_guard lock(m_mutex);
   try {
     SQLite::Statement query(*m_db, "INSERT INTO folder_entries(folder_id, entry_id, "
@@ -506,6 +508,8 @@ bool SqliteUserLibraryRepository::deleteFolder(int folderId) {
     SQLite::Statement deleteEntriesQuery(*m_db, "DELETE FROM folder_entries WHERE folder_id = :folderId;");
     deleteEntriesQuery.bind(":folderId", folderId);
     deleteEntriesQuery.exec();
+
+    EventDispatcher::instance().publish(FolderChangedEvent{.folderId = folderId});
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to delete folder with ID {}: {}", folderId, e.what());
@@ -542,6 +546,8 @@ bool SqliteUserLibraryRepository::update(FolderInfo &folder) {
       spdlog::error("Failed to update folder with ID {}: no rows affected", folder.id);
       return false;
     }
+
+    EventDispatcher::instance().publish(FolderChangedEvent{.folderId = folder.id});
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to update folder with ID {}: {}", folder.id, e.what());
@@ -590,7 +596,7 @@ bool SqliteUserLibraryRepository::setFolderParent(const int folderId, const int 
   }
 }
 
-bool SqliteUserLibraryRepository::deleteFolderEntry(FolderEntryInfo &info) {
+bool SqliteUserLibraryRepository::deleteFolderEntry(FolderEntry &info) {
   std::lock_guard lock(m_mutex);
   try {
     SQLite::Statement query(*m_db, "DELETE FROM folder_entries WHERE folder_id = "
@@ -1779,7 +1785,7 @@ bool SqliteUserLibraryRepository::deleteContentFile(int id) {
   return true;
 }
 
-std::vector<Entry> SqliteUserLibraryRepository::getEntries(int offset, int limit) {
+std::vector<Entry> SqliteUserLibraryRepository::getEntries() {
   std::lock_guard lock(m_mutex);
   std::vector<Entry> entries;
 
@@ -1980,12 +1986,6 @@ void SqliteUserLibraryRepository::populateEntrySource(Entry &entry) {
       // Which disc this is belongs to the file; the entry reads it rather than storing it again
       if (entry.discNumber == 0) {
         entry.discNumber = query.getColumn("disc_number").getInt();
-      }
-
-      // TODO
-      // Which game this is a copy of belongs to the dump for the same reason
-      if (entry.gameId == 0) {
-        entry.gameId = query.getColumn("game_id").getInt();
       }
 
       const int dirId = query.getColumn("content_directory_id").getInt();

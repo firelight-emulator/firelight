@@ -49,6 +49,10 @@ SmartFolderCriteria SmartFolderCriteria::parse(const std::string &json) {
   }
   getStr("developer", c.developer);
   getStr("publisher", c.publisher);
+  getStr("nameContains", c.nameContains);
+  if (parsed.contains("playable") && parsed["playable"].is_boolean()) {
+    c.playable = parsed["playable"].get<bool>();
+  }
   if (parsed.contains("yearMin") && parsed["yearMin"].is_number_integer()) {
     c.yearMin = parsed["yearMin"].get<int>();
   }
@@ -96,6 +100,12 @@ std::string SmartFolderCriteria::toJson() const {
   if (!publisher.empty()) {
     j["publisher"] = publisher;
   }
+  if (!nameContains.empty()) {
+    j["nameContains"] = nameContains;
+  }
+  if (playable.has_value()) {
+    j["playable"] = *playable;
+  }
   if (yearMin.has_value()) {
     j["yearMin"] = *yearMin;
   }
@@ -119,9 +129,9 @@ std::string SmartFolderCriteria::toJson() const {
 
 bool SmartFolderCriteria::isEmpty() const {
   return contentDirectoryIds.empty() && pathContains.empty() && platformIds.empty() && !favorite.has_value() &&
-         genres.empty() && developer.empty() && publisher.empty() && !yearMin.has_value() && !yearMax.has_value() &&
-         !playedAfterMillis.has_value() && !minSecondsPlayed.has_value() && !playedWithinDays.has_value() &&
-         !unplayed.has_value();
+         genres.empty() && developer.empty() && publisher.empty() && nameContains.empty() && !playable.has_value() &&
+         !yearMin.has_value() && !yearMax.has_value() && !playedAfterMillis.has_value() &&
+         !minSecondsPlayed.has_value() && !playedWithinDays.has_value() && !unplayed.has_value();
 }
 
 bool SmartFolderCriteria::matches(const EntryFields &entry) const {
@@ -174,6 +184,12 @@ bool SmartFolderCriteria::matches(const EntryFields &entry, const int64_t nowMil
     return false;
   }
   if (!criteria.publisher.empty() && !strings::containsIgnoringCase(entry.publisher, criteria.publisher)) {
+    return false;
+  }
+  if (!criteria.nameContains.empty() && !strings::containsIgnoringCase(entry.searchText, criteria.nameContains)) {
+    return false;
+  }
+  if (criteria.playable.has_value() && entry.playable != *criteria.playable) {
     return false;
   }
   // An unknown release year (0) satisfies no year bound, so a year-range folder

@@ -9,8 +9,7 @@
 
 namespace firelight::library {
 
-// The bytes to hand to the core for a piece of content, plus the canonical
-// content hash they correspond to
+// The bytes to hand to the core for a piece of content, plus the canonical content hash they correspond to
 struct LoadedContent {
   bool valid = false;
   std::vector<uint8_t> contentBytes;

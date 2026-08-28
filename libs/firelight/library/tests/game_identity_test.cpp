@@ -103,7 +103,6 @@ TEST(GameIdentityTest, RepeatedDiscNumbersStillReadAsOneRelease) {
 TEST(GameIdentityTest, IdentityIsReadFromTheEntryFieldByField) {
   Entry entry;
   entry.platformId = 7;
-  entry.gameId = 25390;
   entry.normalizedTitle = "resident evil 2";
   entry.metadata.regions = {"US"};
   entry.discNumber = 2;

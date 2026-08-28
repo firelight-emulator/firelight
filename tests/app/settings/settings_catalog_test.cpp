@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "audio/audio_manager.hpp"
 
 #include <firelight/settings/settings_catalog.hpp>
@@ -676,8 +677,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheGeneralFacadeBinds) {
   // library-sort-method is left out: the facade still binds it but the catalog has never
   // declared it and nothing reads the property, so listing it here would assert a fix
   // rather than guard a contract
-  const std::vector<std::string> facadeKeys = {"fullscreen", "show-advanced-settings", "show-new-user-flow",
-                                               "library-collapse-variants"};
+  const std::vector<std::string> facadeKeys = {"fullscreen", "show-advanced-settings", "show-new-user-flow"};
 
   for (const auto &key : facadeKeys) {
     const auto *setting = c.findByKey(key);
@@ -691,14 +691,13 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheGeneralFacadeBinds) {
   }
 }
 
-// The variant settings back the grouping rules, which have no meaning without them
-TEST(ShippedSettingsCatalogTest, DeclaresTheVariantGroupingKeys) {
+// TODO
+// The ordering settings decide which release stands for a group. Grouping is unwired, so nothing
+// reads them today, but VariantGroupService still resolves them and would start empty without a
+// declared default
+TEST(ShippedSettingsCatalogTest, DeclaresTheVariantOrderingKeys) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
-
-  const auto *collapse = c.findByKey("library-collapse-variants");
-  ASSERT_NE(collapse, nullptr);
-  EXPECT_EQ(collapse->defaultValue, "true");
 
   const auto *regions = c.findByKey("library-region-priority");
   ASSERT_NE(regions, nullptr);

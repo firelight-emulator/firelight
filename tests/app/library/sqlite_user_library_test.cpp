@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/library/library_events.hpp>
 #include <firelight/library/library_ingest_service.hpp>
@@ -66,7 +67,7 @@ TEST_F(SqliteUserLibraryTest, UpdateFolderTest) {
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
 
-  auto folderEntry = library::FolderEntryInfo{.folderId = info.id, .entryId = 1};
+  auto folderEntry = library::FolderEntry{.folderId = info.id, .entryId = 1};
   ASSERT_TRUE(library.create(folderEntry));
 
   auto folders = library.listFolders();
@@ -94,7 +95,7 @@ TEST_F(SqliteUserLibraryTest, UpdateFolderInvalidIdTest) {
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
 
-  auto folderEntry = library::FolderEntryInfo{.folderId = info.id, .entryId = 1};
+  auto folderEntry = library::FolderEntry{.folderId = info.id, .entryId = 1};
   ASSERT_TRUE(library.create(folderEntry));
 
   auto folders = library.listFolders();
@@ -139,7 +140,7 @@ TEST_F(SqliteUserLibraryTest, CreateFolderEntryTest) {
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
 
-  auto folderEntry = library::FolderEntryInfo{.folderId = info.id, .entryId = 1};
+  auto folderEntry = library::FolderEntry{.folderId = info.id, .entryId = 1};
   ASSERT_TRUE(library.create(folderEntry));
 }
 
@@ -285,7 +286,7 @@ TEST_F(SqliteUserLibraryTest, DeleteFolderEntryTest) {
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
 
-  auto folderEntry = library::FolderEntryInfo{.folderId = info.id, .entryId = entry.id};
+  auto folderEntry = library::FolderEntry{.folderId = info.id, .entryId = entry.id};
   ASSERT_TRUE(library.create(folderEntry));
 
   auto actualEntry = library.getEntry(entry.id);
@@ -1327,10 +1328,10 @@ TEST_F(SqliteUserLibraryTest, GetEntriesAttachesJoinsToTheRightRows) {
   ASSERT_TRUE(library.createEntry(bare));
 
   ASSERT_TRUE(library.setEntryTags(tagged.id, {tag.id}));
-  auto membership = library::FolderEntryInfo{.folderId = folder.id, .entryId = tagged.id};
+  auto membership = library::FolderEntry{.folderId = folder.id, .entryId = tagged.id};
   ASSERT_TRUE(library.create(membership));
 
-  const auto entries = library.getEntries(0, 0);
+  const auto entries = library.getEntries();
   ASSERT_EQ(entries.size(), 2u);
 
   for (const auto &entry : entries) {

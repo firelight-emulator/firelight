@@ -364,6 +364,8 @@ add_library(firelight_lib STATIC
         src/gui/focus/spatial_resolver.hpp
         src/gui/models/library_entry_sort_filter_model.cpp
         src/gui/models/library_entry_sort_filter_model.hpp
+        src/gui/models/library_filter.cpp
+        src/gui/models/library_filter.hpp
 )
 
 # Single source of truth for the app version, consumed by the CLI --version and
@@ -591,6 +593,7 @@ add_executable(fl_test
         tests/app/library/archive_reader_test.cpp
         tests/app/library/content_identifier_test.cpp
         tests/app/library/content_extensions_test.cpp
+        tests/app/library/content_discoverer_test.cpp
         tests/app/library/content_hasher_test.cpp
         tests/app/library/content_loader_test.cpp
         tests/app/library/entry_list_model_test.cpp
@@ -603,6 +606,7 @@ add_executable(fl_test
         tests/app/library/chd_disc_test.cpp
         tests/app/metadata/metadata_service_test.cpp
         tests/gui/models/library_entry_sort_filter_model_test.cpp
+        tests/gui/models/library_filter_test.cpp
         tests/app/gui/filesystem_utils_test.cpp
         tests/app/gui/focus_info_test.cpp
         tests/app/gui/focus/candidate_collector_test.cpp

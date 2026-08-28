@@ -5,7 +5,6 @@ namespace firelight::library {
 GameIdentity identityOf(const Entry &entry) {
   return GameIdentity{
       .platformId = entry.platformId,
-      .gameId = entry.gameId,
       .title = entry.normalizedTitle,
       .regions = entry.metadata.regions,
       .discNumber = entry.discNumber,

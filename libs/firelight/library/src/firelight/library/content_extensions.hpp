@@ -1,7 +1,9 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <string>
 #include <string_view>
 
@@ -23,6 +25,33 @@ inline constexpr std::array DISC_EXTENSIONS{"iso", "bin", "cue", "chd", "pbp", "
 inline constexpr std::array DISC_TRACK_EXTENSIONS{"bin", "img", "mdf"};
 
 inline constexpr std::array DISC_SHEET_EXTENSIONS{"cue", "gdi", "m3u"};
+
+// TODO
+// Sheets that can name a track, which is a wider set than the sheets we can read as content: a
+// .ccd is not a format anything here identifies, but a track it names is still spoken for and must
+// not be catalogued in its own right
+inline constexpr std::array TRACK_NAMING_EXTENSIONS{"cue", "gdi", "m3u", "ccd"};
+
+[[nodiscard]] inline bool namesTracks(const std::string &extension) {
+  return std::ranges::find(TRACK_NAMING_EXTENSIONS, extension) != TRACK_NAMING_EXTENSIONS.end();
+}
+
+// TODO
+// The text after the last dot of a file's own name, lower-cased and without the dot. Takes the base
+// name first, so a dot in a parent directory cannot be read as the extension
+[[nodiscard]] inline std::string suffixOf(const std::string &path) {
+  const auto separator = path.find_last_of("/\\");
+  const auto name = separator == std::string::npos ? path : path.substr(separator + 1);
+  const auto dot = name.find_last_of('.');
+
+  if (dot == std::string::npos) {
+    return {};
+  }
+
+  auto suffix = name.substr(dot + 1);
+  std::ranges::transform(suffix, suffix.begin(), [](const unsigned char c) { return std::tolower(c); });
+  return suffix;
+}
 
 // Any disc-image container or sheet extension the scanner should try to identify
 [[nodiscard]] inline bool isDiscExtension(const std::string &extension) {

@@ -38,6 +38,18 @@
             }
         },
         {
+            "name": "coverage-win",
+            "inherits": "debug-win",
+            "binaryDir": "build/coverage-win",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "g++",
+                "CMAKE_C_COMPILER": "gcc",
+                "CMAKE_CXX_FLAGS": "--coverage -O0 -g",
+                "CMAKE_C_FLAGS": "--coverage -O0 -g",
+                "CMAKE_EXE_LINKER_FLAGS": "--coverage"
+            }
+        },
+        {
             "name": "xcode",
             "displayName": "XCode",
             "generator": "Xcode",

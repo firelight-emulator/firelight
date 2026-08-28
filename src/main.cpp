@@ -448,8 +448,6 @@ int main(int argc, char *argv[]) {
   firelight::gui::QtAchievementServiceProxy achievementServiceProxy(achievementService);
   firelight::gui::QtGameArtProxy gameArtProxy(metadataService, steamGridDbArtProvider, mediaAssetRepository);
 
-  firelight::gui::QtVariantGroupProxy variantGroupProxy(variantGroupService);
-
   firelight::cli::provisionCoreAssets(dataDirs);
 
   // Declared early so it outlives the QML engine and its EmulatorItem: those
@@ -522,10 +520,7 @@ int main(int argc, char *argv[]) {
   // Set up the models for QML
   // ***********************************************
   firelight::library::EntryListModel entryListModel(userLibraryService, activityLog, platformService,
-                                                    achievementService, variantGroupService, settingsService);
-
-  firelight::gui::LibraryEntrySortFilterModel entrySortFilterModel;
-  entrySortFilterModel.setSourceModel(&entryListModel);
+                                                    achievementService, settingsService);
 
   // Gallery model over the capture index (screenshots + clips)
   firelight::gui::CaptureListModel captureListModel(gameCaptureRepository, userLibraryService);
@@ -571,6 +566,7 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<firelight::achievements::RetroAchievementsGameItem>("Firelight", 1, 0, "RetroAchievementsGame");
 
   qmlRegisterType<firelight::gui::LibraryEntrySortFilterModel>("Firelight", 1, 0, "LibraryEntrySortFilterModel");
+  qmlRegisterType<firelight::gui::LibraryFilter>("Firelight", 1, 0, "LibraryFilter");
   qmlRegisterType<firelight::LibraryEntryItem>("Firelight", 1, 0, "LibraryEntry");
   qmlRegisterType<firelight::saves::SuspendPointsItem>("Firelight", 1, 0, "SuspendPoints");
   qmlRegisterType<firelight::activity::GameActivityItem>("Firelight", 1, 0, "GameActivity");
@@ -808,7 +804,6 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("ShortcutDispatcher", &shortcutDispatcher);
   engine.rootContext()->setContextProperty("AchievementService", &achievementServiceProxy);
   engine.rootContext()->setContextProperty("GameArtService", &gameArtProxy);
-  engine.rootContext()->setContextProperty("VariantGroupService", &variantGroupProxy);
   engine.rootContext()->setContextProperty("PlatformService",
                                            new firelight::gui::QtPlatformServiceProxy(&platformService));
 

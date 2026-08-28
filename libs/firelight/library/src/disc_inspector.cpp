@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "firelight/library/chd_cdreader.hpp"
 #include "firelight/library/rc_hash_logging.hpp"
 
@@ -36,14 +37,6 @@ namespace {
 constexpr int64_t MAX_IN_ARCHIVE_DISC_EXTRACT_BYTES = 2LL * 1024 * 1024 * 1024;
 
 std::string baseNameOf(const std::string &path) { return std::filesystem::path(path).filename().string(); }
-
-std::string suffixOf(const std::string &name) {
-  const auto dot = name.find_last_of('.');
-  if (dot == std::string::npos) {
-    return {};
-  }
-  return strings::toLower(name.substr(dot + 1));
-}
 
 // A unique temporary directory removed when this object goes out of scope
 class TempDir {

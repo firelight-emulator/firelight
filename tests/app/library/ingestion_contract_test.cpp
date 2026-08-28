@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/accepted_extensions.hpp>
 #include <firelight/library/content_loader.hpp>
 #include <firelight/library/library_ingest_service.hpp>
@@ -59,8 +60,11 @@ struct Recipe {
 // Plain whole-file md5 platforms: the hasher has no content-dependent branch, so synthetic
 // bytes exercise everything a real dump would
 QByteArray plainRom() { return filled(65536, 7); }
+
 QByteArray nesRom() { return withMagicAt(40960, 0, "NES\x1A"); }
+
 QByteArray fdsRom() { return withMagicAt(40960, 0, "FDS\x1A"); }
+
 QByteArray z64Rom() {
   auto bytes = filled(65536, 11);
   bytes[0] = static_cast<char>(0x80);
@@ -69,6 +73,7 @@ QByteArray z64Rom() {
   bytes[3] = static_cast<char>(0x40);
   return bytes;
 }
+
 QByteArray genesisCartridge() { return withMagicAt(524288, 0x100, "SEGA MEGA DRIVE "); }
 
 // The same cartridge scattered into a copier image: 512 leading bytes, then each 16KB block split
@@ -105,6 +110,7 @@ QByteArray encodedImage() {
   image.append('\0');
   return image;
 }
+
 QByteArray segaCdImage() { return withMagicAt(65536, 0, "SEGADISCSYSTEM  "); }
 
 const std::map<std::string, Recipe> &recipes() {
@@ -251,7 +257,7 @@ TEST_P(AcceptedExtensionTest, IdentifiesAndAgreesWithTheLoader) {
   write(QString::fromStdString("Game." + GetParam()), recipe.build());
   scan();
 
-  const auto entries = m_repo->getEntries(0, -1);
+  const auto entries = m_repo->getEntries();
   ASSERT_EQ(entries.size(), 1u) << GetParam() << " did not become a library entry";
   EXPECT_EQ(entries.front().platformId, recipe.platformId) << GetParam() << " landed on the wrong platform";
   EXPECT_FALSE(entries.front().contentHash.empty());
@@ -282,7 +288,7 @@ TEST_F(IngestionContractTest, AKnownGapIsAcceptedAndReported) {
   write("Game.cso", filled(65536, 13));
   scan();
 
-  EXPECT_TRUE(m_repo->getEntries(0, -1).empty()) << "cso identified, so its recipe is out of date";
+  EXPECT_TRUE(m_repo->getEntries().empty()) << "cso identified, so its recipe is out of date";
 
   const auto drops = m_repo->getScanDrops();
   ASSERT_EQ(drops.size(), 1u) << "cso was not reported, so a real PSP library loses files silently";

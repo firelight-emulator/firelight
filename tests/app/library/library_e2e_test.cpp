@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/content_identifier.hpp>
 #include <firelight/library/content_loader.hpp>
 #include <firelight/library/library_ingest_service.hpp>
@@ -88,6 +89,26 @@ protected:
 
   void remove(const QString &relative) const { ASSERT_TRUE(QFile::remove(path(relative))); }
 
+  // TODO
+  // A one-entry zip, which is what every archive case here needs
+  void writeArchive(const QString &relative, const std::string &entryName, const QByteArray &bytes) const {
+    const auto archivePath = path(relative).toStdString();
+    archive *writer = archive_write_new();
+    archive_write_set_format_zip(writer);
+    ASSERT_EQ(archive_write_open_filename(writer, archivePath.c_str()), ARCHIVE_OK);
+
+    archive_entry *entry = archive_entry_new();
+    archive_entry_set_pathname(entry, entryName.c_str());
+    archive_entry_set_size(entry, bytes.size());
+    archive_entry_set_filetype(entry, AE_IFREG);
+    archive_entry_set_perm(entry, 0644);
+    archive_write_header(writer, entry);
+    archive_write_data(writer, bytes.constData(), bytes.size());
+    archive_entry_free(entry);
+    archive_write_close(writer);
+    archive_write_free(writer);
+  }
+
   // scanFinished only fires when something changed, so an idempotent rescan would wait forever
   // on it. The scanning flag returning to false is true either way, and the worker's writes are
   // complete by then
@@ -116,7 +137,7 @@ protected:
     ASSERT_TRUE(m_repo->create(directory));
   }
 
-  std::vector<Entry> entries() { return m_repo->getEntries(0, -1); }
+  std::vector<Entry> entries() { return m_repo->getEntries(); }
 
   std::optional<Entry> entryNamed(const std::string &displayName) {
     for (const auto &entry : entries()) {
@@ -244,6 +265,82 @@ TEST_F(LibraryEndToEndTest, TheSameRomInTwoFoldersIsOneEntryWithTwoWaysIn) {
   ASSERT_EQ(entries().size(), 1u);
   EXPECT_EQ(m_repo->getContentFiles().size(), 2u);
   EXPECT_EQ(m_repo->getRunConfigurations(entries().front().contentHash).size(), 2u);
+}
+
+// TODO
+// The archive copy of the cataloguing pipeline never called parseFilenameTags, so a zipped release
+// lost the region and disc number its name carries while the identical loose file kept them
+TEST_F(LibraryEndToEndTest, AZippedCartridgeCarriesTheRegionFromItsName) {
+  writeArchive("games.zip", "Sonic (USA).bin", genesisCartridgeBytes("SEGA MEGA DRIVE ", 9));
+  registerContentDirectory();
+
+  scan();
+
+  const auto files = m_repo->getContentFiles();
+  ASSERT_EQ(files.size(), 1u) << shape();
+  EXPECT_EQ(files.front().m_regions, (std::vector<std::string>{"US"}))
+      << "a zipped release lost the region its name carries";
+}
+
+// TODO
+// Only the loose path cleared a stale drop before identifying, so an archived entry that failed
+// once kept being reported even after it started identifying
+TEST_F(LibraryEndToEndTest, AnArchivedEntrysDropIsClearedOnceItIdentifies) {
+  writeArchive("games.zip", "Sonic.bin", QByteArray(4096, 0x11));
+  registerContentDirectory();
+  scan();
+  ASSERT_EQ(m_repo->getScanDrops().size(), 1u) << "unreadable bytes should have been recorded";
+
+  writeArchive("games.zip", "Sonic.bin", genesisCartridgeBytes("SEGA MEGA DRIVE ", 9));
+  scan();
+
+  EXPECT_TRUE(m_repo->getScanDrops().empty()) << "the drop outlived the thing it was reporting";
+}
+
+// TODO
+// The size cap ran before the acceptance gate, so a file nothing accepts became a row of its own
+// rather than one tally, which is the opposite of what the drop table is for
+TEST_F(LibraryEndToEndTest, AFileNothingAcceptsIsCountedRatherThanDropped) {
+  write("save.srm", QByteArray(1024, 0x22));
+  registerContentDirectory();
+
+  scan();
+
+  EXPECT_TRUE(m_repo->getScanDrops().empty()) << "an unaccepted file became a per-path row";
+
+  const auto counted = m_repo->getUnrecognizedExtensions();
+  ASSERT_EQ(counted.size(), 1u);
+  EXPECT_EQ(counted.front().extension, "srm");
+}
+
+// TODO
+// There was no patch handling inside an archive at all, so a zipped patch was tallied as an
+// extension nothing accepts instead of being catalogued
+TEST_F(LibraryEndToEndTest, APatchInsideAnArchiveIsCatalogued) {
+  writeArchive("patches.zip", "Translation.ips", QByteArray("PATCH") + QByteArray(64, 0x33) + QByteArray("EOF"));
+  registerContentDirectory();
+
+  scan();
+
+  for (const auto &row : m_repo->getUnrecognizedExtensions()) {
+    EXPECT_NE(row.extension, "ips") << "an archived patch was tallied rather than catalogued";
+  }
+}
+
+// TODO
+// The archive path took its extension from the whole entry path, so a dot anywhere above the file
+// made the text after it the extension
+TEST_F(LibraryEndToEndTest, AnArchiveEntryUnderADottedDirectoryIsReadCorrectly) {
+  writeArchive("games.zip", "v1.0/Sonic.bin", genesisCartridgeBytes("SEGA MEGA DRIVE ", 5));
+  registerContentDirectory();
+
+  scan();
+
+  for (const auto &row : m_repo->getUnrecognizedExtensions()) {
+    EXPECT_EQ(row.extension.find('/'), std::string::npos)
+        << "a directory name was read as an extension: " << row.extension;
+  }
+  EXPECT_EQ(m_repo->getContentFiles().size(), 1u) << shape();
 }
 
 // A ROM inside an archive still becomes a playable-looking entry

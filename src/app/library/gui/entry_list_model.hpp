@@ -8,7 +8,6 @@
 
 #include <QAbstractListModel>
 #include <QTimer>
-#include <library/variant_group_service.hpp>
 #include <unordered_map>
 
 namespace firelight::activity {
@@ -79,7 +78,11 @@ public:
     Problems,
     // What is wrong, in a sentence. Empty when nothing is
     StatusText,
-    SearchText
+    SearchText,
+    // TODO
+    // The row's cached filter fields, by pointer. Valid only for the duration of the call that
+    // asked for it, because appending a row moves the ones already there
+    FilterFields
   };
 
   /**
@@ -139,6 +142,12 @@ public:
     // Everything a text filter should match on one line: this entry's name, the group's
     // title, and the names of the variants it stands for
     QString searchText;
+
+    // TODO
+    // Everything the filter predicate reads, rebuilt whenever the row changes. Cached for the
+    // same reason as groupKey: the proxy asks per row per pass, and rebuilding it there would
+    // cost an allocation a row and a second copy of the mapping
+    EntryFields fields;
   };
 
   /** Puts both the verdict and its sentence on a row, so neither is refreshed without the other */
@@ -146,7 +155,7 @@ public:
 
   EntryListModel(UserLibraryService &userLibrary, activity::IActivityLog &activityLog,
                  platforms::IPlatformService &platformService, achievements::AchievementService &achievementService,
-                 VariantGroupService &variantGroups, settings::SettingsService &settings, QObject *parent = nullptr);
+                 settings::SettingsService &settings, QObject *parent = nullptr);
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
@@ -170,12 +179,6 @@ public:
   // True if the entry satisfies the given smart folder's criteria. Used by
   // the client-side folder filter for smart folders (manual folders use
   // folderIds membership). Parsed criteria are cached per folder; call
-  // invalidateSmartFolderCache() after a smart folder's criteria change
-  Q_INVOKABLE bool matchesSmartFolder(int folderId, int entryId);
-
-  // Drops cached smart-folder criteria so the next matchesSmartFolder /
-  // count reflects edited criteria
-  Q_INVOKABLE void invalidateSmartFolderCache();
 
   int getCount() const;
 
@@ -238,13 +241,17 @@ private:
   activity::IActivityLog &m_activityLog;
   platforms::IPlatformService &m_platformService;
   achievements::AchievementService &m_achievementService;
-  VariantGroupService &m_variantGroups;
   settings::SettingsService &m_settings;
   QList<Item> m_items{};
   QString m_groupMode = "none";
 
   // Flattens an item (entry attributes + joined play stats) into the Qt-free
   // struct the smart-folder evaluator consumes
+  // TODO
+  // Drops cached smart-folder criteria, so the next count re-reads them. Driven by
+  // FolderChangedEvent rather than by a caller remembering to ask
+  void invalidateSmartFolderCache();
+
   [[nodiscard]] static EntryFields buildEntryFields(const Item &item);
 
   // Resolves (and memoizes) a smart folder's parsed criteria by id
@@ -277,29 +284,27 @@ private:
   // TODO
   // The entries of each group, so re-picking a primary after one member changes reads
   // what is already loaded rather than the database
-  std::unordered_map<int, std::vector<int>> m_entryIdsByGroup;
 
   // TODO
   // Fills in the variant fields and the group's totals across every row, then hands back
   // which entry stands for each group
-  void applyVariantGrouping();
+  void refreshRowFields();
 
   // TODO
   // Re-picks the primary for one group and tells the view about every row that changed,
   // including the one that stopped standing for it
-  void refreshVariantGroup(int groupId);
 
   // TODO
   // Name, group title, and the variants' names, lowercased for the filter to match against
   [[nodiscard]] QString computeSearchText(const Item &item) const;
 
+  ScopedConnection m_folderChangedConnection;
   ScopedConnection m_gamePlayedConnection;
   ScopedConnection m_entryCreatedConnection;
   ScopedConnection m_entryUpdatedConnection;
   ScopedConnection m_entryDeletedConnection;
   ScopedConnection m_achievementSessionEndedConnection;
   ScopedConnection m_userLoggedInConnection;
-  ScopedConnection m_variantGroupUpdatedConnection;
   ScopedConnection m_coreSettingChangedConnection;
   ScopedConnection m_coreSettingResetConnection;
 
@@ -308,3 +313,8 @@ private:
   QTimer m_countsChangedTimer;
 };
 } // namespace firelight::library
+
+// TODO
+// Handed to the proxy through the FilterFields role, so the predicate reads the row's cached
+// record rather than rebuilding one
+Q_DECLARE_METATYPE(const firelight::library::EntryFields *)

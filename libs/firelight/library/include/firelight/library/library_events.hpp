@@ -5,11 +5,6 @@
 
 namespace firelight::library {
 
-// Domain events the user-library repository publishes through the global
-// EventDispatcher (replacing the old Qt signals). They are consumed by the
-// ingest service (content/run-config) and by the app's scanner wiring (watched
-// directories). Synchronous, same-thread delivery
-
 struct ContentFileAddedEvent {
   int id = -1;
   std::string filePath;
@@ -28,18 +23,12 @@ struct RunConfigurationDeletedEvent {
   std::string contentHash;
 };
 
-// TODO
-// A catalogued file that is no longer on disk. The row stays, so this says nothing about the
-// entry on its own — only every copy of a hash being gone decides that. The set id is carried
-// because an absorbed disc has no entry of its own to notice
 struct ContentFileMissingEvent {
   int id = -1;
   std::string contentHash;
   std::optional<int> discSetId{};
 };
 
-// TODO
-// A file that was marked missing and is back
 struct ContentFileRestoredEvent {
   int id = -1;
   std::string contentHash;
@@ -60,6 +49,37 @@ struct ContentDirectoryUpdatedEvent {
   int id = -1;
   std::string oldPath;
   std::string newPath;
+};
+
+struct EntryCreatedEvent {
+  int entryId;
+};
+
+struct EntryUpdatedEvent {
+  int entryId;
+};
+
+// A folder was created, edited or deleted
+struct FolderChangedEvent {
+  int folderId;
+};
+
+struct EntryDeletedEvent {
+  int entryId;
+};
+
+// Published when a group's title, pin, or the entry standing for it changes, and when the
+// group is dissolved. The id outlives the group, so a listener must tolerate it being gone
+struct VariantGroupUpdatedEvent {
+  int groupId;
+};
+
+// Published when one entry is folded into another because they turned out to be the same
+// game
+struct EntryAbsorbedEvent {
+  int survivingEntryId;
+  std::string absorbedContentHash;
+  std::string survivingContentHash;
 };
 
 } // namespace firelight::library

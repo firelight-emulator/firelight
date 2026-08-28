@@ -209,7 +209,7 @@ Item {
                                 tooltipText: (root.entry && root.entry.favorite) ? "Unfavorite" : "Favorite"
                                 onClicked: {
                                     if (root.entry) {
-                                        LibraryEntryModel.setEntryFavorite(root._eid, !root.entry.favorite);
+                                        root.entry.favorite = !root.entry.favorite;
                                     }
                                 }
                             }

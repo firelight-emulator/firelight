@@ -44,11 +44,7 @@ struct FilenameTags {
 };
 
 /**
- * Parses the tag groups out of a filename or a full path.
- *
- * A parenthesized group whose tokens are all two-letter codes reads as languages, one whose tokens
- * all name regions reads as regions, and a group that is neither is kept as flags. That rule is what
- * decides tokens like "No", which names both Norway and Norwegian
+ * Parses the tag groups out of a filename or a full path
  */
 [[nodiscard]] FilenameTags parseFilenameTags(std::string_view fileName);
 
@@ -58,11 +54,6 @@ struct FilenameTags {
  * titles that are the same rather than titles that are merely similar
  */
 [[nodiscard]] std::string normalizeTitle(const std::string &title);
-
-/**
- * How much of a dump a name accounts for. Only useful for comparing two names of the same dump
- */
-[[nodiscard]] int filenameInformationScore(const FilenameTags &tags);
 
 /**
  * Which of the paths holding one dump an entry reads its name and tags from.

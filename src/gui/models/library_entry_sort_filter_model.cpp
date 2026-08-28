@@ -1,10 +1,15 @@
 #include "library_entry_sort_filter_model.hpp"
 
+#include <QDateTime>
 #include <spdlog/spdlog.h>
 
 namespace firelight::gui {
 
-LibraryEntrySortFilterModel::LibraryEntrySortFilterModel(QObject *parent) : QSortFilterProxyModel(parent) {
+LibraryEntrySortFilterModel::LibraryEntrySortFilterModel(QObject *parent)
+    : QSortFilterProxyModel(parent), m_filter(new LibraryFilter(this)) {
+  // Editing a criterion stages it; the pass it belongs to is run by applyFilters
+  connect(m_filter, &LibraryFilter::changed, this, [this] { emit filtersOrSortChanged(); });
+
   // Names sort the way a reader expects rather than the way ASCII does
   setSortCaseSensitivity(Qt::CaseInsensitive);
   // TODO
@@ -50,55 +55,51 @@ void LibraryEntrySortFilterModel::setSourceModel(QAbstractListModel *sourceModel
 
 int LibraryEntrySortFilterModel::getCount() const { return rowCount({}); }
 
-QString LibraryEntrySortFilterModel::getFilterText() const { return m_pendingFilterText; }
+QString LibraryEntrySortFilterModel::getFilterText() const { return m_filter->getNameContains(); }
 
 void LibraryEntrySortFilterModel::setFilterText(const QString &filterText) {
-  if (m_pendingFilterText == filterText) {
+  if (m_filter->getNameContains() == filterText) {
     return;
   }
 
-  m_pendingFilterText = filterText;
+  m_filter->setNameContains(filterText);
   emit filterTextChanged();
-  emit filtersOrSortChanged();
 }
 
-bool LibraryEntrySortFilterModel::isFavoritesOnly() const { return m_pendingFavoritesOnly; }
+bool LibraryEntrySortFilterModel::isFavoritesOnly() const { return m_filter->getFavorite() == LibraryFilter::Yes; }
 
 void LibraryEntrySortFilterModel::setFavoritesOnly(const bool favoritesOnly) {
-  if (m_pendingFavoritesOnly == favoritesOnly) {
+  if (isFavoritesOnly() == favoritesOnly) {
     return;
   }
 
-  m_pendingFavoritesOnly = favoritesOnly;
+  m_filter->setFavorite(favoritesOnly ? LibraryFilter::Yes : LibraryFilter::Unset);
   emit favoritesOnlyChanged();
-  emit filtersOrSortChanged();
 }
 
-bool LibraryEntrySortFilterModel::isHideUnavailable() const { return m_pendingHideUnavailable; }
+bool LibraryEntrySortFilterModel::isHideUnavailable() const { return m_filter->getPlayable() == LibraryFilter::Yes; }
 
 void LibraryEntrySortFilterModel::setHideUnavailable(const bool hideUnavailable) {
-  if (m_pendingHideUnavailable == hideUnavailable) {
+  if (isHideUnavailable() == hideUnavailable) {
     return;
   }
 
-  m_pendingHideUnavailable = hideUnavailable;
+  m_filter->setPlayable(hideUnavailable ? LibraryFilter::Yes : LibraryFilter::Unset);
   emit hideUnavailableChanged();
-  emit filtersOrSortChanged();
 }
 
-QVariantList LibraryEntrySortFilterModel::getPlatformIds() const { return m_pendingPlatformIds; }
+QVariantList LibraryEntrySortFilterModel::getPlatformIds() const { return m_filter->getPlatformIds(); }
 
 void LibraryEntrySortFilterModel::setPlatformIds(const QVariantList &platformIds) {
-  if (m_pendingPlatformIds == platformIds) {
+  if (m_filter->getPlatformIds() == platformIds) {
     return;
   }
 
-  m_pendingPlatformIds = platformIds;
+  m_filter->setPlatformIds(platformIds);
   emit platformIdsChanged();
-  emit filtersOrSortChanged();
 }
 
-LibraryEntrySortFilterModel::SortRole LibraryEntrySortFilterModel::getSortRole() const { return m_sortRole; }
+LibraryEntrySortFilterModel::SortRole LibraryEntrySortFilterModel::getSortRole() const { return m_pendingSortRole; }
 
 void LibraryEntrySortFilterModel::setSortRole(const SortRole sortRole) {
   if (m_pendingSortRole == sortRole) {
@@ -112,7 +113,7 @@ void LibraryEntrySortFilterModel::setSortRole(const SortRole sortRole) {
 
 QString LibraryEntrySortFilterModel::getSortDisplayName() const {
   for (const auto &option : getSortOptions()) {
-    if (option.toMap().value("value").toInt() == m_sortRole) {
+    if (option.toMap().value("value").toInt() == m_pendingSortRole) {
       return option.toMap().value("text").toString();
     }
   }
@@ -132,32 +133,29 @@ void LibraryEntrySortFilterModel::setSortAscending(const bool sortAscending) {
   emit filtersOrSortChanged();
 }
 
-bool LibraryEntrySortFilterModel::anyFiltersActive() const {
-  return !m_pendingFilterText.isEmpty() || m_pendingFavoritesOnly || m_pendingHideUnavailable ||
-         !m_pendingPlatformIds.isEmpty();
+bool LibraryEntrySortFilterModel::anyFiltersActive() const { return !m_filter->isEmpty(); }
+
+LibraryFilter *LibraryEntrySortFilterModel::getFilter() const { return m_filter; }
+
+bool LibraryEntrySortFilterModel::isPending() const {
+  return m_filter->getCriteria() != m_appliedCriteria || QSortFilterProxyModel::sortRole() != m_pendingSortRole ||
+         (sortOrder() == Qt::AscendingOrder) != m_pendingSortAscending;
 }
 
-void LibraryEntrySortFilterModel::applyFilters() {
-  // TODO
-  // Lowered once here to match the search text, which is stored that way so the compare
-  // is not case-folding both sides on every row
-  m_filterText = m_pendingFilterText.toLower();
-  m_favoritesOnly = m_pendingFavoritesOnly;
-  m_hideUnavailable = m_pendingHideUnavailable;
+void LibraryEntrySortFilterModel::clearAllFilters() {
+  m_filter->clear();
+  applyFilters();
+}
 
-  // TODO
-  // Converted once here rather than per row in filterAcceptsRow
-  m_acceptedPlatformIds.clear();
+void LibraryEntrySortFilterModel::applyFilters() { applyFilters(QDateTime::currentMSecsSinceEpoch()); }
 
-  for (const auto &platformId : m_pendingPlatformIds) {
-    m_acceptedPlatformIds.insert(platformId.toInt());
-  }
+void LibraryEntrySortFilterModel::applyFilters(const qint64 nowMillis) {
+  m_appliedCriteria = m_filter->getCriteria();
+  m_nowMillis = nowMillis;
 
   QSortFilterProxyModel::setSortRole(m_pendingSortRole);
   sort(0, m_pendingSortAscending ? Qt::AscendingOrder : Qt::DescendingOrder);
 
-  m_sortRole = m_pendingSortRole;
-  m_sortAscending = m_pendingSortAscending;
   emit sortRoleChanged();
   invalidateFilter();
 }
@@ -169,117 +167,28 @@ bool LibraryEntrySortFilterModel::filterAcceptsRow(const int sourceRow, const QM
 
   const auto sourceIndex = m_sourceModel->index(sourceRow, 0, sourceParent);
 
-  if (m_favoritesOnly && !m_sourceModel->data(sourceIndex, library::EntryListModel::Favorite).toBool()) {
-    return false;
-  }
-
-  if (m_hideUnavailable && !m_sourceModel->data(sourceIndex, library::EntryListModel::Playable).toBool()) {
-    return false;
-  }
-
-  if (!m_acceptedPlatformIds.isEmpty()) {
-    const auto platformId = m_sourceModel->data(sourceIndex, library::EntryListModel::PlatformId).toInt();
-
-    if (!m_acceptedPlatformIds.contains(platformId)) {
-      return false;
-    }
-  }
-
-  if (!m_filterText.isEmpty()) {
-    // TODO
-    // Precomputed and already lowercased, and it carries the group's other names, so
-    // searching a variant by its own title finds the row standing for it
-    const auto searchText = m_sourceModel->data(sourceIndex, library::EntryListModel::SearchText).toString();
-
-    if (!searchText.contains(m_filterText)) {
-      return false;
-    }
-  }
-
   // TODO
-  // A group shows as the one entry standing for it. Last, so a filtered-out group does
-  // not cost a grouping lookup
-  if (m_collapseVariants) {
-    const auto groupId = m_sourceModel->data(sourceIndex, library::EntryListModel::VariantGroupId).toInt();
+  // The row's own record rather than one built here, because this runs per row on every pass and
+  // again while sorting
+  const auto *fields =
+      m_sourceModel->data(sourceIndex, library::EntryListModel::FilterFields).value<const library::EntryFields *>();
 
-    if (groupId != -1 && !m_sourceModel->data(sourceIndex, library::EntryListModel::IsVariantPrimary).toBool()) {
-      return false;
-    }
+  if (fields == nullptr) {
+    return false;
   }
 
-  return true;
-}
-
-bool LibraryEntrySortFilterModel::isCollapseVariants() const { return m_collapseVariants; }
-
-void LibraryEntrySortFilterModel::setCollapseVariants(const bool collapseVariants) {
-  if (m_collapseVariants == collapseVariants) {
-    return;
-  }
-
-  m_collapseVariants = collapseVariants;
-  invalidateFilter();
-  emit collapseVariantsChanged();
-  emit countByPlatformChanged();
-}
-
-QVariantList LibraryEntrySortFilterModel::getVariantEntryIds(const int groupId) const {
-  if (m_sourceModel == nullptr || groupId == -1) {
-    return {};
-  }
-
-  QVariantList primary;
-  QVariantList others;
-
-  for (auto row = 0; row < m_sourceModel->rowCount(QModelIndex()); ++row) {
-    const auto index = m_sourceModel->index(row, 0);
-
-    if (m_sourceModel->data(index, library::EntryListModel::VariantGroupId).toInt() != groupId) {
-      continue;
-    }
-
-    const auto entryId = m_sourceModel->data(index, library::EntryListModel::Id);
-
-    if (m_sourceModel->data(index, library::EntryListModel::IsVariantPrimary).toBool()) {
-      primary.append(entryId);
-    } else {
-      others.append(entryId);
-    }
-  }
-
-  primary.append(others);
-  return primary;
+  return m_appliedCriteria.matches(*fields, m_nowMillis);
 }
 
 QVariantList LibraryEntrySortFilterModel::getSortOptions() {
-  auto list = QVariantList();
-
-  list.append(QVariantMap{
-      {"value", DisplayName},
-      {"text", "Title"},
-  });
-
-  list.append(QVariantMap{
-      {"value", LastPlayedAt},
-      {"text", "Last Played"},
-  });
-
-  list.append(QVariantMap{
-      {"value", NumSecondsPlayed},
-      {"text", "Playtime"},
-  });
-
-  list.append(QVariantMap{
-      {"value", AchievementsEarned},
-      {"text", "Achievements"},
-  });
-
-  list.append(QVariantMap{
-      {"value", CreatedAt},
-      {"text", "Date Added"},
-  });
-
-  return list;
+  return {
+      QVariantMap{{"value", DisplayName}, {"role", "displayName"}, {"text", "Title"}},
+      QVariantMap{{"value", LastPlayedAt}, {"role", "lastPlayedAt"}, {"text", "Last Played"}},
+      QVariantMap{{"value", NumSecondsPlayed}, {"role", "numSecondsPlayed"}, {"text", "Playtime"}},
+      QVariantMap{{"value", AchievementsEarned}, {"role", "achievementsEarned"}, {"text", "Achievements"}},
+      QVariantMap{{"value", CreatedAt}, {"role", "createdAt"}, {"text", "Date Added"}},
+      QVariantMap{{"value", ReleaseYear}, {"role", "releaseYear"}, {"text", "Release Year"}},
+  };
 }
 
 int LibraryEntrySortFilterModel::getEntryIdAt(const int row) const {
@@ -295,45 +204,7 @@ QVariantMap LibraryEntrySortFilterModel::getCountByPlatform() const {
     return {};
   }
 
-  if (!m_collapseVariants) {
-    return m_sourceModel->getCountByPlatform();
-  }
-
-  // TODO
-  // Counted over the rows a collapsed grid actually shows, so the platform totals and
-  // the grid do not disagree by however many variants are folded away. The platform
-  // filter itself is left out, so its own chip still shows what selecting it would give
-  QVariantMap counts;
-
-  for (auto row = 0; row < m_sourceModel->rowCount(QModelIndex()); ++row) {
-    const auto index = m_sourceModel->index(row, 0);
-    const auto groupId = m_sourceModel->data(index, library::EntryListModel::VariantGroupId).toInt();
-
-    if (groupId != -1 && !m_sourceModel->data(index, library::EntryListModel::IsVariantPrimary).toBool()) {
-      continue;
-    }
-
-    const auto platformId = m_sourceModel->data(index, library::EntryListModel::PlatformId).toString();
-    counts[platformId] = counts.value(platformId, 0).toInt() + 1;
-  }
-
-  return counts;
-}
-
-bool LibraryEntrySortFilterModel::matchesSmartFolder(const int folderId, const int entryId) {
-  if (m_sourceModel == nullptr) {
-    return false;
-  }
-
-  return m_sourceModel->matchesSmartFolder(folderId, entryId);
-}
-
-void LibraryEntrySortFilterModel::removeEntryFromFolder(const int entryId, const int folderId) {
-  if (m_sourceModel == nullptr) {
-    return;
-  }
-
-  m_sourceModel->removeEntryFromFolder(entryId, folderId);
+  return m_sourceModel->getCountByPlatform();
 }
 
 void LibraryEntrySortFilterModel::setEntryFavorite(const int entryId, const bool favorite) {
@@ -342,6 +213,14 @@ void LibraryEntrySortFilterModel::setEntryFavorite(const int entryId, const bool
   }
 
   m_sourceModel->setEntryFavorite(entryId, favorite);
+}
+
+void LibraryEntrySortFilterModel::removeEntryFromFolder(const int entryId, const int folderId) {
+  if (m_sourceModel == nullptr) {
+    return;
+  }
+
+  m_sourceModel->removeEntryFromFolder(entryId, folderId);
 }
 
 } // namespace firelight::gui

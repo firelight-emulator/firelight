@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "metadata/metadata_service.hpp"
 
 #include <firelight/library/entry.hpp>
@@ -419,7 +420,7 @@ std::vector<ArtReviewItem> MetadataService::getArtReviewItems() {
   }
 
   std::unordered_map<std::string, const library::Entry *> entriesByHash;
-  const auto entries = m_library.getEntries(0, 0);
+  const auto entries = m_library.getEntries();
   for (const auto &entry : entries) {
     entriesByHash.emplace(entry.contentHash, &entry);
   }
@@ -447,7 +448,7 @@ void MetadataService::refreshAll() {
     if (m_shuttingDown) {
       return;
     }
-    for (const auto &entry : m_library.getEntries(0, 0)) {
+    for (const auto &entry : m_library.getEntries()) {
       if (m_shuttingDown) {
         return;
       }

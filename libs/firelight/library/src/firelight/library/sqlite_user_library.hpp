@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/library/content_file.hpp>
@@ -21,7 +22,7 @@ public:
 
   bool create(FolderInfo &folder) override;
 
-  bool create(FolderEntryInfo &folderEntry) override;
+  bool create(FolderEntry &folderEntry) override;
 
   std::vector<FolderInfo> listFolders() override;
 
@@ -33,7 +34,7 @@ public:
 
   bool setFolderParent(int folderId, int newParentId) override;
 
-  bool deleteFolderEntry(FolderEntryInfo &info) override;
+  bool deleteFolderEntry(FolderEntry &info) override;
 
   bool update(Entry &entry) override;
 
@@ -117,7 +118,7 @@ public:
 
   bool deleteContentFile(int id) override;
 
-  std::vector<Entry> getEntries(int offset, int limit) override;
+  std::vector<Entry> getEntries() override;
 
   std::optional<Entry> getEntry(int entryId) override;
 

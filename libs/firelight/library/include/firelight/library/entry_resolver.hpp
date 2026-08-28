@@ -18,14 +18,13 @@ struct ResolvedContent {
   ContentFile contentFile;
   std::optional<PatchFile> patch;
 
-  // TODO
-  // The set this launches, unset for a single file. The path in contentFile is a playlist that
-  // is rendered from the database rather than kept, so a caller has to be able to ask for it
+  // The set this launches, unset for a single file. The path in contentFile is a playlist that we generated
   std::optional<int> discSetId{};
 };
 
-// Chooses the "most correct" content to launch for a library entry from among
-// its run configurations
+/**
+ * Chooses the "most correct" content to launch for a library entry from among its run configurations
+ */
 class EntryResolver {
 public:
   EntryResolver(IUserLibraryRepository &library, std::string appDataDirectory);
@@ -38,7 +37,7 @@ private:
 
   IUserLibraryRepository &m_library;
 
-  // TODO
+  // TODO: Give it app data or a specific directory?
   // Holds the playlists a disc set launches through, which are derived from the identity
   // rather than recorded anywhere
   std::string m_appDataDirectory;

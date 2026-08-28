@@ -1,25 +1,35 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
-#include <firelight/library/user_library_repository.hpp>
+#include <firelight/library/content_directory.hpp>
+#include <firelight/library/content_file.hpp>
+#include <firelight/library/disc_set.hpp>
+#include <firelight/library/entry.hpp>
+#include <firelight/library/folder_entry.hpp>
+#include <firelight/library/folder_info.hpp>
+#include <firelight/library/game_identity.hpp>
+#include <firelight/library/tag.hpp>
+#include <firelight/library/variant_group.hpp>
+#include <firelight/util/game_metadata.hpp>
 
+#include <cstdint>
+#include <optional>
+#include <set>
 #include <string>
+#include <vector>
 
 namespace firelight::library {
+class IUserLibraryRepository;
 
-// The app-facing curation surface for the user library. A thin, concrete facade
-// over the repository (no Qt, no QObject): it exposes only the operations the GUI
-// and emulation need — browsing/updating entries, managing folders, and managing
-// content directories — and keeps the full CRUD contract out of the app
-//
-// It also owns the guarantee that a default content directory always exists: on
-// construction it creates that directory on disk and ensures it is watched, so
-// the user never has to pick or configure a primary games folder
+/**
+ * Provides the library service's operations on a user library, delegating to a repository for the actual storage
+ */
 class UserLibraryService {
 public:
   UserLibraryService(IUserLibraryRepository &repository, const std::string &defaultContentDirectory);
 
   // Entries
-  std::vector<Entry> getEntries(int offset = 0, int limit = -1);
+  std::vector<Entry> getEntries();
   std::optional<Entry> getEntry(int entryId);
   std::optional<Entry> getEntryWithContentHash(const std::string &contentHash);
   bool update(Entry &entry);
@@ -28,17 +38,14 @@ public:
   // user's own edits and the metadata pipeline share one write path
   bool updateEntryMetadata(const Entry &entry);
 
-  // TODO
   // Merges metadata into an entry's document, leaving fields the user pinned alone
   // unless the change is theirs
   bool applyEntryMetadata(int entryId, const GameMetadata &incoming, const std::set<std::string> &changedFields,
                           bool isUserEdit);
 
-  // TODO
   // Records that art was looked up, found or not
   bool markArtFetched(int entryId, uint64_t whenMillis);
 
-  // TODO
   // A handful of entries art has never been looked up for
   std::vector<int> getEntryIdsMissingArt(int limit);
 
@@ -56,15 +63,12 @@ public:
   std::optional<DiscSet> getDiscSet(int setId);
   std::vector<ContentFile> getDiscsInSet(int setId);
 
-  // TODO
   // Only the discs of the set whose bytes are on disk
   std::vector<ContentFile> getPresentDiscsInSet(int setId);
 
-  // TODO
   // Pins a group's primary, so the preference ordering stops moving it
   bool setVariantGroupPrimary(int groupId, int entryId);
 
-  // TODO
   // Hands the primary back to the preference ordering
   bool clearVariantGroupPrimary(int groupId);
 
@@ -83,8 +87,8 @@ public:
   bool deleteFolder(int folderId);
   bool reorderFolders(int parentId, const std::vector<int> &orderedFolderIds);
   bool setFolderParent(int folderId, int newParentId);
-  bool create(FolderEntryInfo &folderEntry);
-  bool deleteFolderEntry(FolderEntryInfo &info);
+  bool create(FolderEntry &folderEntry);
+  bool deleteFolderEntry(FolderEntry &info);
 
   // Watched directories
   std::vector<ContentDirectory> getContentDirectories();

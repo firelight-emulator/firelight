@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "gui/models/library_entry_sort_filter_model.hpp"
 
 #include "app/library/gui/entry_list_model.hpp"
@@ -71,8 +72,7 @@ protected:
       ASSERT_TRUE(catalogue(hash));
     }
 
-    m_source.emplace(m_service, m_activityLog, m_platformService, m_achievementService, m_variantGroups,
-                     m_settingsService);
+    m_source.emplace(m_service, m_activityLog, m_platformService, m_achievementService, m_settingsService);
     m_model.setSourceModel(&m_source.value());
   }
 
@@ -330,54 +330,155 @@ TEST_F(LibraryEntrySortFilterModelTest, ASourceChangeReachesTheViewWithoutMoving
   EXPECT_EQ(m_model.getCount(), 3);
 }
 
-// A group takes one row, and it is the entry standing for the group
-TEST_F(LibraryEntrySortFilterModelTest, AGroupShowsAsOneRow) {
+// TODO
+// Grouping is unwired, so a group in the database changes nothing about what the grid shows
+TEST_F(LibraryEntrySortFilterModelTest, AGroupedEntryStillGetsItsOwnRow) {
   ASSERT_TRUE(groupUsaAndJapan());
   pump();
 
-  EXPECT_EQ(m_model.getCount(), 4);
+  EXPECT_EQ(m_model.getCount(), 5) << "a grouped release lost its row";
+
   const auto shown = names();
   EXPECT_EQ(std::count(shown.begin(), shown.end(), QStringLiteral("Zelda (USA)")), 1);
-  EXPECT_EQ(std::count(shown.begin(), shown.end(), QStringLiteral("Zelda (Japan)")), 0);
-}
-
-// Turning collapsing off is what the "show every version" option does
-TEST_F(LibraryEntrySortFilterModelTest, ShowingEveryVariantBringsTheOthersBack) {
-  ASSERT_TRUE(groupUsaAndJapan());
-  pump();
-  ASSERT_EQ(m_model.getCount(), 4);
-
-  m_model.setCollapseVariants(false);
-  pump();
-
-  EXPECT_EQ(m_model.getCount(), 5);
-  const auto shown = names();
   EXPECT_EQ(std::count(shown.begin(), shown.end(), QStringLiteral("Zelda (Japan)")), 1);
 }
 
-// Searching a folded-away variant by its own name still finds the group
-TEST_F(LibraryEntrySortFilterModelTest, AFoldedVariantIsFoundByItsOwnName) {
+// TODO
+// The chips count the rows the grid shows
+TEST_F(LibraryEntrySortFilterModelTest, PlatformCountsFollowTheRows) {
   ASSERT_TRUE(groupUsaAndJapan());
-  pump();
-
-  m_model.setFilterText("japan");
-  m_model.applyFilters();
-  pump();
-
-  EXPECT_EQ(names(), (std::vector<QString>{"Zelda (USA)"}));
-}
-
-// The chips count what the grid shows, not how many files are behind it
-TEST_F(LibraryEntrySortFilterModelTest, PlatformCountsFollowTheCollapsedRows) {
-  ASSERT_TRUE(groupUsaAndJapan());
-  pump();
-
-  EXPECT_EQ(m_model.getCountByPlatform().value("3").toInt(), 3);
-
-  m_model.setCollapseVariants(false);
   pump();
 
   EXPECT_EQ(m_model.getCountByPlatform().value("3").toInt(), 4);
+}
+
+// TODO
+// A getter that reads what a pass is showing while its setter writes what the next pass will show
+// means a write followed by a read hands back the old value
+TEST_F(LibraryEntrySortFilterModelTest, EveryGetterReadsTheStagedValue) {
+  m_model.setFilterText(QStringLiteral("zel"));
+  m_model.setFavoritesOnly(true);
+  m_model.setHideUnavailable(true);
+  m_model.setPlatformIds({3});
+  m_model.setSortRole(LibraryEntrySortFilterModel::LastPlayedAt);
+  m_model.setSortAscending(false);
+
+  EXPECT_EQ(m_model.getFilterText(), QStringLiteral("zel"));
+  EXPECT_TRUE(m_model.isFavoritesOnly());
+  EXPECT_TRUE(m_model.isHideUnavailable());
+  EXPECT_EQ(m_model.getPlatformIds(), QVariantList{3});
+  EXPECT_EQ(m_model.getSortRole(), LibraryEntrySortFilterModel::LastPlayedAt)
+      << "sortRole read back the committed value while its siblings read the staged one";
+  EXPECT_FALSE(m_model.isSortAscending());
+  EXPECT_EQ(m_model.getSortDisplayName(), QStringLiteral("Last Played"));
+}
+
+// TODO
+// Clearing has to clear everything and take effect, or the button leaves filters on that the
+// controls say are off
+TEST_F(LibraryEntrySortFilterModelTest, ClearingFiltersClearsEveryOne) {
+  ASSERT_TRUE(takeBravosFilesAway());
+  pump();
+
+  m_model.setFilterText(QStringLiteral("zzz"));
+  m_model.setFavoritesOnly(true);
+  m_model.setHideUnavailable(true);
+  m_model.setPlatformIds({99});
+  m_model.applyFilters();
+  pump();
+  ASSERT_EQ(m_model.getCount(), 0);
+
+  m_model.clearAllFilters();
+  pump();
+
+  EXPECT_EQ(m_model.getCount(), 3) << "clearing left a filter applied";
+  EXPECT_TRUE(m_model.getFilterText().isEmpty());
+  EXPECT_FALSE(m_model.isFavoritesOnly());
+  EXPECT_FALSE(m_model.isHideUnavailable()) << "hideUnavailable was never cleared";
+  EXPECT_TRUE(m_model.getPlatformIds().isEmpty());
+  EXPECT_FALSE(m_model.anyFiltersActive());
+}
+
+// TODO
+// Seven dimensions the criteria always had and the grid could never reach. Three of them, to say
+// the reach is real rather than the plumbing merely compiling
+TEST_F(LibraryEntrySortFilterModelTest, AGenreFilterReachesTheRows) {
+  auto entry = m_repo.getEntryWithContentHash("hashA");
+  ASSERT_TRUE(entry.has_value());
+
+  GameMetadata metadata;
+  metadata.genres = {"Puzzle"};
+  ASSERT_TRUE(m_repo.applyEntryMetadata(entry->id, metadata, {metadata_fields::GENRES}, false));
+  m_source->reset();
+  pump();
+
+  m_model.getFilter()->setGenres({QStringLiteral("puzzle")});
+  m_model.applyFilters();
+  pump();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"alpha"}));
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, AYearRangeReachesTheRows) {
+  auto entry = m_repo.getEntryWithContentHash("hashC");
+  ASSERT_TRUE(entry.has_value());
+
+  GameMetadata metadata;
+  metadata.releaseYear = 1994;
+  ASSERT_TRUE(m_repo.applyEntryMetadata(entry->id, metadata, {metadata_fields::RELEASE_YEAR}, false));
+  m_source->reset();
+  pump();
+
+  m_model.getFilter()->setYearMin(1990);
+  m_model.getFilter()->setYearMax(1999);
+  m_model.applyFilters();
+  pump();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Charlie"}));
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, ADeveloperFilterReachesTheRows) {
+  auto entry = m_repo.getEntryWithContentHash("hashB");
+  ASSERT_TRUE(entry.has_value());
+
+  GameMetadata metadata;
+  metadata.developer = "Konami";
+  ASSERT_TRUE(m_repo.applyEntryMetadata(entry->id, metadata, {metadata_fields::DEVELOPER}, false));
+  m_source->reset();
+  pump();
+
+  m_model.getFilter()->setDeveloper(QStringLiteral("konami"));
+  m_model.applyFilters();
+  pump();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
+}
+
+// TODO
+// A rolling window resolved per row moves partway through a pass, so two rows the same age can
+// land on opposite sides of it
+TEST_F(LibraryEntrySortFilterModelTest, TheClockIsStampedOncePerPass) {
+  const int64_t now = 1'700'000'000'000;
+  const int64_t day = 86'400'000;
+
+  activity::PlaySession recent;
+  recent.contentHash = "hashA";
+  recent.startedAt = static_cast<uint64_t>(now - 2 * day);
+  recent.endedAt = static_cast<uint64_t>(now - 2 * day + 1000);
+  recent.unpausedDurationMillis = 1000;
+  ASSERT_TRUE(m_activityLog.createPlaySession(recent));
+
+  m_source->reset();
+  pump();
+
+  m_model.getFilter()->setPlayedWithinDays(7);
+  m_model.applyFilters(now);
+  pump();
+  EXPECT_EQ(names(), (std::vector<QString>{"alpha"}));
+
+  m_model.applyFilters(now + 30 * day);
+  pump();
+  EXPECT_TRUE(names().empty()) << "the window was resolved against a clock the caller did not set";
 }
 
 } // namespace firelight::gui

@@ -1,8 +1,10 @@
+// TODO: NEEDS REVIEW
 #include "entry_list_model.hpp"
 
 #include <firelight/achievement_service.hpp>
 #include <firelight/activity/activity_log.hpp>
 #include <firelight/library/folder_info.hpp>
+#include <firelight/library/user_library_repository.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
 #include <QDateTime>
@@ -130,11 +132,10 @@ std::vector<std::string> splitList(const QString &value) {
 
 EntryListModel::EntryListModel(UserLibraryService &userLibrary, activity::IActivityLog &activityLog,
                                platforms::IPlatformService &platformService,
-                               achievements::AchievementService &achievementService, VariantGroupService &variantGroups,
+                               achievements::AchievementService &achievementService,
                                settings::SettingsService &settings, QObject *parent)
     : QAbstractListModel(parent), m_userLibrary(userLibrary), m_activityLog(activityLog),
-      m_platformService(platformService), m_achievementService(achievementService), m_variantGroups(variantGroups),
-      m_settings(settings) {
+      m_platformService(platformService), m_achievementService(achievementService), m_settings(settings) {
   // Pointing a platform at a different core changes what every game on it can do
   m_coreSettingChangedConnection = EventDispatcher::instance().subscribe<settings::PlatformSettingChangedEvent>(
       [this](const settings::PlatformSettingChangedEvent &event) {
@@ -154,10 +155,18 @@ EntryListModel::EntryListModel(UserLibraryService &userLibrary, activity::IActiv
         QMetaObject::invokeMethod(this, [this] { refreshStatuses(); }, Qt::QueuedConnection);
       });
 
-  m_variantGroupUpdatedConnection =
-      EventDispatcher::instance().subscribe<VariantGroupUpdatedEvent>([this](const VariantGroupUpdatedEvent &event) {
-        const auto groupId = event.groupId;
-        QMetaObject::invokeMethod(this, [this, groupId] { refreshVariantGroup(groupId); }, Qt::QueuedConnection);
+  // TODO
+  // A folder's criteria are cached, so an edit anywhere has to reach the cache without the view
+  // being asked to poke it
+  m_folderChangedConnection =
+      EventDispatcher::instance().subscribe<FolderChangedEvent>([this](const FolderChangedEvent &) {
+        QMetaObject::invokeMethod(
+            this,
+            [this] {
+              invalidateSmartFolderCache();
+              emit countByFolderIdChanged();
+            },
+            Qt::QueuedConnection);
       });
 
   m_gamePlayedConnection = EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
@@ -279,14 +288,6 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
   case Id:
     return item.entry.id;
   case DisplayName:
-    // TODO
-    // The entry standing for a group is shown under the group's name. Until somebody
-    // renames the group the two are the same string, so this only shows through once
-    // the name was chosen deliberately
-    if (item.isVariantPrimary && !item.variantTitle.isEmpty()) {
-      return item.variantTitle;
-    }
-
     return QString::fromStdString(item.entry.displayName);
   case ContentHash:
     return QString::fromStdString(item.entry.contentHash);
@@ -333,6 +334,8 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return item.statusText;
   case SearchText:
     return item.searchText;
+  case FilterFields:
+    return QVariant::fromValue(&item.fields);
   case Icon1x1SourceUrl:
     return QString::fromStdString(item.entry.icon1x1SourceUrl);
   case BoxartFrontSourceUrl:
@@ -393,13 +396,6 @@ bool EntryListModel::setData(const QModelIndex &index, const QVariant &value, in
 
   switch (role) {
   case DisplayName:
-    // TODO
-    // The row is showing the group's name, so that is what a rename edits
-    if (item.isVariantPrimary && item.variantGroupId != -1) {
-      m_variantGroups.setTitle(item.variantGroupId, value.toString().toStdString());
-      return true;
-    }
-
     item.entry.displayName = value.toString().toStdString();
     item.entry.nameUserSet = true;
     break;
@@ -438,6 +434,12 @@ bool EntryListModel::setData(const QModelIndex &index, const QVariant &value, in
     return false;
   }
 
+  // TODO
+  // The row derives searchText and its filter fields from what was just written, so they are
+  // rebuilt before anyone is told the row changed
+  item.searchText = computeSearchText(item);
+  item.fields = buildEntryFields(item);
+
   emit dataChanged(index, index, {role});
   if (changedField != nullptr) {
     item.entry.metadataOverrides.markUserSet(changedField);
@@ -454,7 +456,7 @@ Qt::ItemFlags EntryListModel::flags(const QModelIndex &index) const {
 }
 
 void EntryListModel::addEntryToFolder(int entryId, int folderId) {
-  auto libraryEntryInfo = FolderEntryInfo{.folderId = folderId, .entryId = entryId};
+  auto libraryEntryInfo = FolderEntry{.folderId = folderId, .entryId = entryId};
   if (!m_userLibrary.create(libraryEntryInfo)) {
     spdlog::error("Failed to add entry {} to folder {}", entryId, folderId);
     return;
@@ -468,6 +470,7 @@ void EntryListModel::addEntryToFolder(int entryId, int folderId) {
       }
 
       item.entry.folderIds.push_back(folderId);
+      item.fields = buildEntryFields(item);
       emit dataChanged(createIndex(0, 0), createIndex(m_items.size() - 1, 0), {FolderIds});
       emit countByFolderIdChanged();
       break;
@@ -476,7 +479,7 @@ void EntryListModel::addEntryToFolder(int entryId, int folderId) {
 }
 
 void EntryListModel::removeEntryFromFolder(int entryId, int folderId) {
-  if (auto entryInfo = FolderEntryInfo{.folderId = folderId, .entryId = entryId};
+  if (auto entryInfo = FolderEntry{.folderId = folderId, .entryId = entryId};
       !m_userLibrary.deleteFolderEntry(entryInfo)) {
     spdlog::error("Failed to remove entry {} from folder {}", entryId, folderId);
     return;
@@ -487,6 +490,7 @@ void EntryListModel::removeEntryFromFolder(int entryId, int folderId) {
       auto it = std::ranges::find(item.entry.folderIds, folderId);
       if (it != item.entry.folderIds.end()) {
         item.entry.folderIds.erase(it);
+        item.fields = buildEntryFields(item);
         emit dataChanged(createIndex(0, 0), createIndex(m_items.size() - 1, 0), {FolderIds});
         emit countByFolderIdChanged();
         break;
@@ -512,6 +516,7 @@ void EntryListModel::setEntryFavorite(int entryId, bool favorite) {
     return;
   }
   item.entry.favorite = favorite;
+  item.fields = buildEntryFields(item);
   m_userLibrary.update(item.entry);
   emit dataChanged(createIndex(row, 0), createIndex(row, 0), {Favorite});
   emit numFavoritesChanged();
@@ -598,14 +603,16 @@ QVariantMap EntryListModel::getCountByFolderId() const {
     if (folder.type != static_cast<int>(FolderType::Smart)) {
       continue;
     }
-    const auto criteria = SmartFolderCriteria::parse(folder.filterJson);
+
+    const auto &criteria = criteriaForFolder(folder.id);
     int count = 0;
 
     for (const auto &item : m_items) {
-      if (criteria.matches(buildEntryFields(item))) {
+      if (criteria.matches(item.fields)) {
         ++count;
       }
     }
+
     countByFolderId[QString::number(folder.id)] = count;
   }
 
@@ -624,6 +631,9 @@ EntryFields EntryListModel::buildEntryFields(const Item &item) {
   fields.contentPaths = item.entry.contentPaths;
   fields.lastPlayedMillis = static_cast<int64_t>(item.lastPlayedEpochMillis);
   fields.secondsPlayed = static_cast<int64_t>(item.numSecondsPlayed);
+  fields.searchText = item.searchText.toStdString();
+  fields.playable = item.status.isPlayable();
+  fields.folderIds = item.entry.folderIds;
   return fields;
 }
 
@@ -632,23 +642,14 @@ const SmartFolderCriteria &EntryListModel::criteriaForFolder(int folderId) const
     return it->second;
   }
 
-  SmartFolderCriteria criteria;
+  // TODO
+  // Every folder is parsed on the first miss, because reaching the one asked for costs the same
+  // listFolders() call as reaching all of them
   for (const auto &folder : m_userLibrary.listFolders()) {
-    if (folder.id == folderId) {
-      criteria = SmartFolderCriteria::parse(folder.filterJson);
-      break;
-    }
+    m_smartFolderCache.insert_or_assign(folder.id, SmartFolderCriteria::parse(folder.filterJson));
   }
-  return m_smartFolderCache.emplace(folderId, std::move(criteria)).first->second;
-}
 
-bool EntryListModel::matchesSmartFolder(int folderId, int entryId) {
-  const auto it = m_indexByEntryId.find(entryId);
-  if (it == m_indexByEntryId.end()) {
-    return false;
-  }
-  const auto &criteria = criteriaForFolder(folderId);
-  return criteria.matches(buildEntryFields(m_items.at(it->second)));
+  return m_smartFolderCache.emplace(folderId, SmartFolderCriteria{}).first->second;
 }
 
 void EntryListModel::invalidateSmartFolderCache() {
@@ -656,140 +657,25 @@ void EntryListModel::invalidateSmartFolderCache() {
   emit countByFolderIdChanged();
 }
 
-void EntryListModel::applyVariantGrouping() {
-  m_entryIdsByGroup.clear();
-
-  const auto groups = m_userLibrary.getVariantGroups();
-
-  if (groups.empty()) {
-    for (auto &item : m_items) {
-      item.variantGroupId = -1;
-      item.variantCount = 1;
-      item.isVariantPrimary = true;
-      item.variantAutoLaunch = false;
-      item.variantTitle.clear();
-      item.variantSecondsPlayed = item.numSecondsPlayed;
-      item.variantLastPlayedMillis = item.lastPlayedEpochMillis;
-      item.searchText = computeSearchText(item);
-    }
-
-    return;
-  }
-
-  std::vector<Entry> entries;
-  entries.reserve(m_items.size());
-
-  for (const auto &item : m_items) {
-    entries.push_back(item.entry);
-  }
-
-  const auto resolution = m_variantGroups.resolveAll(entries, groups);
-
-  std::unordered_map<int, const VariantGroup *> groupsById;
-  for (const auto &group : groups) {
-    groupsById[group.id] = &group;
-  }
-
-  struct Totals {
-    uint64_t seconds = 0;
-    uint64_t lastPlayed = 0;
-  };
-
-  // TODO
-  // Every row counts, including one whose files have gone: the hours were still played, and
-  // the game is still owned
-  std::unordered_map<int, Totals> totalsByGroup;
-
+// TODO
+// Rebuilds what every row derives rather than stores. Variant grouping is not wired up, so each
+// row stands for itself: its own name, its own play stats, and nothing folded away behind it
+void EntryListModel::refreshRowFields() {
   for (auto &item : m_items) {
-    const auto groupId = item.entry.variantGroupId.value_or(-1);
-    const auto group = groupsById.find(groupId);
-
-    if (groupId == -1 || group == groupsById.end()) {
-      item.variantGroupId = -1;
-      item.variantCount = 1;
-      item.isVariantPrimary = true;
-      item.variantAutoLaunch = false;
-      item.variantTitle.clear();
-      item.variantSecondsPlayed = item.numSecondsPlayed;
-      item.variantLastPlayedMillis = item.lastPlayedEpochMillis;
-      continue;
-    }
-
-    const auto primary = resolution.primaryByGroup.find(groupId);
-    const auto count = resolution.memberCountByGroup.find(groupId);
-
-    item.variantGroupId = groupId;
-    item.variantCount = count == resolution.memberCountByGroup.end() ? 1 : count->second;
-    item.isVariantPrimary = primary != resolution.primaryByGroup.end() && primary->second == item.entry.id;
-    item.variantAutoLaunch = group->second->autoLaunchPrimary;
-    item.variantTitle = QString::fromStdString(group->second->title);
-
-    m_entryIdsByGroup[groupId].push_back(item.entry.id);
-
-    auto &totals = totalsByGroup[groupId];
-    totals.seconds += item.numSecondsPlayed;
-    totals.lastPlayed = std::max(totals.lastPlayed, item.lastPlayedEpochMillis);
-  }
-
-  for (auto &item : m_items) {
-    if (item.variantGroupId != -1) {
-      const auto &totals = totalsByGroup[item.variantGroupId];
-      item.variantSecondsPlayed = totals.seconds;
-      item.variantLastPlayedMillis = totals.lastPlayed;
-    }
-
+    item.variantGroupId = -1;
+    item.variantCount = 1;
+    item.isVariantPrimary = true;
+    item.variantAutoLaunch = false;
+    item.variantTitle.clear();
+    item.variantSecondsPlayed = item.numSecondsPlayed;
+    item.variantLastPlayedMillis = item.lastPlayedEpochMillis;
     item.searchText = computeSearchText(item);
+    item.fields = buildEntryFields(item);
   }
 }
 
 QString EntryListModel::computeSearchText(const Item &item) const {
-  QStringList parts;
-  parts.append(QString::fromStdString(item.entry.displayName));
-
-  if (!item.variantTitle.isEmpty()) {
-    parts.append(item.variantTitle);
-  }
-
-  if (item.isVariantPrimary && item.variantGroupId != -1) {
-    const auto members = m_entryIdsByGroup.find(item.variantGroupId);
-
-    if (members != m_entryIdsByGroup.end()) {
-      for (const auto memberId : members->second) {
-        const auto index = m_indexByEntryId.find(memberId);
-
-        if (index != m_indexByEntryId.end()) {
-          parts.append(QString::fromStdString(m_items.at(index->second).entry.displayName));
-        }
-      }
-    }
-  }
-
-  return parts.join(QLatin1Char('\n')).toLower();
-}
-
-void EntryListModel::refreshVariantGroup(const int groupId) {
-  std::vector<int> affected;
-
-  for (auto i = 0; i < m_items.size(); ++i) {
-    if (m_items.at(i).variantGroupId == groupId || m_items.at(i).entry.variantGroupId.value_or(-1) == groupId) {
-      affected.push_back(i);
-    }
-  }
-
-  applyVariantGrouping();
-
-  // TODO
-  // Rows that joined or left the group in this pass are told about too, so the proxy
-  // re-tests the one that stopped standing for the group as well as the one that started
-  for (auto i = 0; i < m_items.size(); ++i) {
-    if (m_items.at(i).variantGroupId == groupId && std::find(affected.begin(), affected.end(), i) == affected.end()) {
-      affected.push_back(i);
-    }
-  }
-
-  for (const auto row : affected) {
-    emit dataChanged(createIndex(row, 0), createIndex(row, 0), {});
-  }
+  return QString::fromStdString(item.entry.displayName).toLower();
 }
 
 void EntryListModel::refreshStatuses() {
@@ -977,7 +863,7 @@ void EntryListModel::reset() {
 
   // A game whose files are gone stays in the library and is badged. Taking the row away is
   // what left somebody unable to find out why their game had disappeared
-  for (const auto &entry : m_userLibrary.getEntries(0, 0)) {
+  for (const auto &entry : m_userLibrary.getEntries()) {
     auto item = Item{.entry = entry};
 
     if (const auto it = statsByHash.find(entry.contentHash); it != statsByHash.end()) {
@@ -993,7 +879,7 @@ void EntryListModel::reset() {
     m_items.emplace_back(item);
   }
 
-  applyVariantGrouping();
+  refreshRowFields();
 
   emit endResetModel();
   emit countChanged();
@@ -1061,16 +947,11 @@ void EntryListModel::syncEntry(const int entryId) {
   if (!visible) {
     if (present) {
       const int row = it->second;
-      const auto leftGroup = m_items.at(row).variantGroupId;
 
       beginRemoveRows(QModelIndex(), row, row);
       m_items.removeAt(row);
       rebuildIndex(); // keep the id->row map consistent before the proxy reads
       endRemoveRows();
-
-      if (leftGroup != -1) {
-        refreshVariantGroup(leftGroup);
-      }
 
       scheduleCountsChanged();
     }
@@ -1083,24 +964,13 @@ void EntryListModel::syncEntry(const int entryId) {
   applyStatus(item);
   item.groupKey = computeGroupKey(item);
 
-  const auto joinedGroup = entry->variantGroupId.value_or(-1);
-
   // Update the entry in place if it's already present in the model
   if (present) {
     const int row = it->second;
-    const auto leftGroup = m_items.at(row).variantGroupId;
     m_items[row] = item;
 
-    applyVariantGrouping();
+    refreshRowFields();
     emit dataChanged(createIndex(row, 0), createIndex(row, 0), {});
-
-    if (leftGroup != -1 && leftGroup != joinedGroup) {
-      refreshVariantGroup(leftGroup);
-    }
-
-    if (joinedGroup != -1) {
-      refreshVariantGroup(joinedGroup);
-    }
 
     scheduleCountsChanged();
     return;
@@ -1113,11 +983,7 @@ void EntryListModel::syncEntry(const int entryId) {
   m_indexByEntryId[entryId] = row;
   endInsertRows();
 
-  if (joinedGroup != -1) {
-    refreshVariantGroup(joinedGroup);
-  } else {
-    applyVariantGrouping();
-  }
+  refreshRowFields();
 
   scheduleCountsChanged();
 }

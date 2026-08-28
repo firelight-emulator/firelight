@@ -232,6 +232,72 @@ TEST(SmartFolderTest, EmptyJsonAndMalformedJsonAreMatchAll) {
   EXPECT_TRUE(SmartFolderCriteria::parse("{}").isEmpty());
 }
 
+// TODO
+// The search box writes this, so it matches the same folded text the grid searches
+TEST(SmartFolderTest, NameContainsMatchesCaseInsensitively) {
+  auto entry = sampleEntry();
+  entry.searchText = "final fantasy vii";
+
+  SmartFolderCriteria c;
+  c.nameContains = "FANTASY";
+  EXPECT_TRUE(c.matches(entry));
+
+  c.nameContains = "chrono";
+  EXPECT_FALSE(c.matches(entry));
+}
+
+// TODO
+// Three states, not two: wanting only what runs, only what does not, or not caring
+TEST(SmartFolderTest, PlayableIsTristate) {
+  auto runs = sampleEntry();
+  runs.playable = true;
+  auto broken = sampleEntry();
+  broken.playable = false;
+
+  SmartFolderCriteria c;
+  EXPECT_TRUE(c.matches(runs)) << "an unset criterion asked about playability";
+  EXPECT_TRUE(c.matches(broken));
+
+  c.playable = true;
+  EXPECT_TRUE(c.matches(runs));
+  EXPECT_FALSE(c.matches(broken));
+
+  c.playable = false;
+  EXPECT_FALSE(c.matches(runs));
+  EXPECT_TRUE(c.matches(broken));
+}
+
+// TODO
+// A criterion the folder dialog never surfaces still has to survive being saved
+TEST(SmartFolderTest, JsonRoundTripCarriesNameContainsAndPlayable) {
+  SmartFolderCriteria c;
+  c.nameContains = "zelda";
+  c.playable = false;
+  c.playedAfterMillis = 5000;
+
+  const auto restored = SmartFolderCriteria::parse(c.toJson());
+
+  EXPECT_EQ(restored.nameContains, "zelda");
+  ASSERT_TRUE(restored.playable.has_value());
+  EXPECT_FALSE(*restored.playable);
+  ASSERT_TRUE(restored.playedAfterMillis.has_value());
+  EXPECT_EQ(*restored.playedAfterMillis, 5000);
+}
+
+// TODO
+// The new criteria have to stay out of the JSON when nobody set them, or every folder
+// saved from the library view would pin a playability it never asked about
+TEST(SmartFolderTest, ToJsonStillOmitsUnsetFields) {
+  SmartFolderCriteria c;
+  c.nameContains = "zelda";
+
+  const auto json = c.toJson();
+
+  EXPECT_NE(json.find("nameContains"), std::string::npos);
+  EXPECT_EQ(json.find("playable"), std::string::npos);
+  EXPECT_TRUE(SmartFolderCriteria{}.toJson() == "{}") << SmartFolderCriteria{}.toJson();
+}
+
 TEST(SmartFolderTest, ToJsonOmitsUnsetFields) {
   SmartFolderCriteria c;
   c.favorite = true;

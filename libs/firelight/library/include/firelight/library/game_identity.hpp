@@ -14,6 +14,7 @@ namespace firelight::library {
  * Nothing at all never counts as different — an id nobody has resolved and a region nobody has
  * scraped are absences, not distinctions
  */
+// TODO
 struct GameIdentity {
   unsigned platformId = 0;
 

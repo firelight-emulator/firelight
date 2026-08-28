@@ -1,3 +1,5 @@
+// TODO: NEEDS REVIEW
+#include <firelight/library/user_library_repository.hpp>
 #include <firelight/library/user_library_service.hpp>
 
 #include <filesystem>
@@ -27,9 +29,7 @@ UserLibraryService::UserLibraryService(IUserLibraryRepository &repository, const
   m_repository.create(defaultDir);
 }
 
-std::vector<Entry> UserLibraryService::getEntries(int offset, int limit) {
-  return m_repository.getEntries(offset, limit);
-}
+std::vector<Entry> UserLibraryService::getEntries() { return m_repository.getEntries(); }
 
 std::optional<Entry> UserLibraryService::getEntry(int entryId) { return m_repository.getEntry(entryId); }
 
@@ -150,9 +150,9 @@ bool UserLibraryService::setFolderParent(int folderId, int newParentId) {
   return m_repository.setFolderParent(folderId, newParentId);
 }
 
-bool UserLibraryService::create(FolderEntryInfo &folderEntry) { return m_repository.create(folderEntry); }
+bool UserLibraryService::create(FolderEntry &folderEntry) { return m_repository.create(folderEntry); }
 
-bool UserLibraryService::deleteFolderEntry(FolderEntryInfo &info) { return m_repository.deleteFolderEntry(info); }
+bool UserLibraryService::deleteFolderEntry(FolderEntry &info) { return m_repository.deleteFolderEntry(info); }
 
 std::vector<ContentDirectory> UserLibraryService::getContentDirectories() {
   return m_repository.getContentDirectories();

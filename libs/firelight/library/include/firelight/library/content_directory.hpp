@@ -9,9 +9,7 @@ struct ContentDirectory {
   std::string path;
   int numFiles = 0;
   int numContentFiles = 0;
-  // Filesystem mtime of the directory (epoch ms). Persisted from the DB;
-  // not currently read back, kept for future use
-  uint64_t lastModifiedEpochMs = 0;
+  uint64_t lastModifiedEpochMs = 0; // Filesystem mtime of the directory (epoch ms)
   bool recursive = true;
   unsigned createdAt = 0;
 };

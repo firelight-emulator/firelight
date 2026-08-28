@@ -259,22 +259,6 @@
       "default": "US,EU,JP,WORLD"
     },
     {
-      "key": "library-collapse-variants",
-      "label": "Group versions of a game",
-      "group": "system-library",
-      "order": 5,
-      "description": "Show one entry per game instead of one per regional release or revision.",
-      "keywords": [
-        "variant",
-        "region",
-        "revision",
-        "group",
-        "duplicate"
-      ],
-      "type": "boolean",
-      "default": "true"
-    },
-    {
       "key": "library-language-priority",
       "label": "Preferred languages",
       "group": "system-library",

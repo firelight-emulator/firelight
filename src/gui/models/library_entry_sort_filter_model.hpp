@@ -1,5 +1,6 @@
 #pragma once
-#include <QSet>
+#include "library_filter.hpp"
+
 #include <QSortFilterProxyModel>
 #include <library/gui/entry_list_model.hpp>
 
@@ -10,7 +11,10 @@ namespace firelight::gui {
  *
  * Filter values are staged rather than applied as they are set: a setter records what the user asked
  * for and applyFilters commits it, so changing several at once costs one pass. Mapping rows, telling
- * the view what moved, and forwarding a source change through to the delegate are all the proxy's job
+ * the view what moved, and forwarding a source change through to the delegate are all the proxy's job.
+ *
+ * The rule, without exception: every property reads the pending edit, and filterAcceptsRow is the
+ * only thing that reads the applied snapshot
  */
 class LibraryEntrySortFilterModel : public QSortFilterProxyModel {
   Q_OBJECT
@@ -26,7 +30,8 @@ class LibraryEntrySortFilterModel : public QSortFilterProxyModel {
   Q_PROPERTY(QVariantMap countByPlatform READ getCountByPlatform NOTIFY countByPlatformChanged)
   Q_PROPERTY(bool anyFiltersActive READ anyFiltersActive NOTIFY filtersOrSortChanged)
   Q_PROPERTY(QVariantList sortOptions READ getSortOptions CONSTANT)
-  Q_PROPERTY(bool collapseVariants READ isCollapseVariants WRITE setCollapseVariants NOTIFY collapseVariantsChanged)
+  Q_PROPERTY(firelight::gui::LibraryFilter *filter READ getFilter CONSTANT)
+  Q_PROPERTY(bool pending READ isPending NOTIFY filtersOrSortChanged)
 
 public:
   enum SortRole {
@@ -34,7 +39,8 @@ public:
     LastPlayedAt = library::EntryListModel::LastPlayedAt,
     NumSecondsPlayed = library::EntryListModel::NumSecondsPlayed,
     AchievementsEarned = library::EntryListModel::AchievementsEarned,
-    CreatedAt = library::EntryListModel::CreatedAt
+    CreatedAt = library::EntryListModel::CreatedAt,
+    ReleaseYear = library::EntryListModel::ReleaseYear
   };
   Q_ENUM(SortRole)
 
@@ -67,17 +73,35 @@ public:
   [[nodiscard]] bool isSortAscending() const;
   void setSortAscending(bool sortAscending);
 
-  [[nodiscard]] bool isCollapseVariants() const;
-  void setCollapseVariants(bool collapseVariants);
-
   [[nodiscard]] bool anyFiltersActive() const;
 
+  /**
+   * @return The staged criteria, which QML edits directly
+   */
+  [[nodiscard]] LibraryFilter *getFilter() const;
+
+  /**
+   * @return Whether a staged value differs from what the current pass is showing
+   */
+  [[nodiscard]] bool isPending() const;
+
+  /**
+   * @return Every sort a view can offer: the label, the enum value, and the role name a folder
+   *         stores. One table, so a folder's remembered sort and the menu cannot name different
+   *         sets
+   */
   [[nodiscard]] static QVariantList getSortOptions();
 
   /**
    * Commits every staged value and re-runs the pass
    */
   Q_INVOKABLE void applyFilters();
+
+  /**
+   * The same, against a fixed clock. A rolling window like playedWithinDays is resolved once per
+   * pass rather than per row, so it cannot move partway through one
+   */
+  void applyFilters(qint64 nowMillis);
 
   /**
    * @return The entry id at a visible row, or -1 when the row is out of range
@@ -92,22 +116,14 @@ public:
    */
   [[nodiscard]] QVariantMap getCountByPlatform() const;
 
-  Q_INVOKABLE bool matchesSmartFolder(int folderId, int entryId);
-
   Q_INVOKABLE void removeEntryFromFolder(int entryId, int folderId);
 
   Q_INVOKABLE void setEntryFavorite(int entryId, bool favorite);
 
   /**
-   * @return The entry ids in a variant group, the one standing for it first
+   * Forgets every criterion and re-runs the pass
    */
-  [[nodiscard]] Q_INVOKABLE QVariantList getVariantEntryIds(int groupId) const;
-
-  Q_INVOKABLE void clearAllFilters() {
-    setFilterText({});
-    setFavoritesOnly(false);
-    setPlatformIds({});
-  }
+  Q_INVOKABLE void clearAllFilters();
 
 signals:
   void sourceModelChanged();
@@ -128,8 +144,6 @@ signals:
 
   void countByPlatformChanged();
 
-  void collapseVariantsChanged();
-
   void filtersOrSortChanged();
 
 protected:
@@ -138,21 +152,15 @@ protected:
 private:
   library::EntryListModel *m_sourceModel{};
 
-  QString m_pendingFilterText{};
-  bool m_pendingFavoritesOnly{false};
-  bool m_pendingHideUnavailable{false};
-  QVariantList m_pendingPlatformIds{};
+  // What the user has asked for and not yet applied
+  LibraryFilter *m_filter;
   SortRole m_pendingSortRole{DisplayName};
   bool m_pendingSortAscending{true};
 
-  // What the current pass is filtering by
-  QString m_filterText{};
-  bool m_favoritesOnly{false};
-  bool m_hideUnavailable{false};
-  QSet<int> m_acceptedPlatformIds{};
-  bool m_collapseVariants{true};
-  SortRole m_sortRole{DisplayName};
-  bool m_sortAscending{true};
+  // What the current pass is filtering by. Read only by filterAcceptsRow, so a getter cannot
+  // hand one of these back by mistake
+  library::SmartFolderCriteria m_appliedCriteria{};
+  qint64 m_nowMillis{0};
 };
 
 } // namespace firelight::gui

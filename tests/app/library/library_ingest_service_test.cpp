@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/library/library_events.hpp>
 #include <firelight/library/library_ingest_service.hpp>
@@ -63,7 +64,7 @@ TEST_F(LibraryIngestServiceTest, RunConfigForExistingContentDoesNotDuplicateTheE
   EventDispatcher::instance().publish(
       RunConfigurationCreatedEvent{.id = 999, .filePath = "/roms/Game.gba", .platformId = 3, .contentHash = "hashB"});
 
-  EXPECT_EQ(countEntriesWithHash(m_repo.getEntries(0, -1), "hashB"), 1);
+  EXPECT_EQ(countEntriesWithHash(m_repo.getEntries(), "hashB"), 1);
 }
 
 // Availability follows the files, not the ways in, so it is the file being marked missing that
@@ -120,7 +121,7 @@ TEST_F(LibraryIngestServiceTest, RemovingAndReaddingAFileKeepsTheEntryIntact) {
 
   auto folder = FolderInfo{.displayName = "Favourites"};
   ASSERT_TRUE(m_repo.create(folder));
-  auto membership = FolderEntryInfo{.folderId = folder.id, .entryId = originalId};
+  auto membership = FolderEntry{.folderId = folder.id, .entryId = originalId};
   ASSERT_TRUE(m_repo.create(membership));
 
   VariantGroup group{.title = "Chrono Trigger"};
@@ -155,7 +156,7 @@ TEST_F(LibraryIngestServiceTest, RemovingAndReaddingAFileKeepsTheEntryIntact) {
   EXPECT_EQ(entry->variantGroupId, group.id);
 
   // Only one row for the content, so the re-add did not duplicate it
-  EXPECT_EQ(countEntriesWithHash(m_repo.getEntries(0, 0), "hashKeep"), 1);
+  EXPECT_EQ(countEntriesWithHash(m_repo.getEntries(), "hashKeep"), 1);
 }
 
 // A delete event while other run configurations still exist must NOT hide the

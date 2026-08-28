@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/disc_inspector.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/library_scanner2.hpp>
@@ -149,7 +150,7 @@ TEST_F(ChdDiscTest, AChdOnDiskBecomesALibraryEntry) {
   scanner.scanAll();
   loop.exec();
 
-  const auto entries = repository.getEntries(0, -1);
+  const auto entries = repository.getEntries();
   ASSERT_EQ(entries.size(), 1u);
   EXPECT_EQ(entries.front().contentHash, TEST_DISC_HASH);
   EXPECT_EQ(entries.front().platformId, platforms::PlatformService::PLATFORM_ID_PS1);

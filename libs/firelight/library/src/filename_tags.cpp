@@ -186,6 +186,12 @@ void applyBracketGroup(const std::string &body, FilenameTags &tags) {
     return;
   }
 }
+
+// Score a filename's tags for how much information they carry. The more tags, the higher score
+int filenameInformationScore(const FilenameTags &tags) {
+  return (tags.regions.empty() ? 0 : 8) + (tags.languages.empty() ? 0 : 4) + (tags.revision.empty() ? 0 : 2) +
+         (tags.flags.empty() ? 0 : 1);
+}
 } // namespace
 
 FilenameTags parseFilenameTags(const std::string_view fileName) {
@@ -269,11 +275,6 @@ FilenameTags parseFilenameTags(const std::string_view fileName) {
 }
 
 std::string normalizeTitle(const std::string &title) { return strings::collapseWhitespace(strings::toLower(title)); }
-
-int filenameInformationScore(const FilenameTags &tags) {
-  return (tags.regions.empty() ? 0 : 8) + (tags.languages.empty() ? 0 : 4) + (tags.revision.empty() ? 0 : 2) +
-         (tags.flags.empty() ? 0 : 1);
-}
 
 std::string chooseIdentityPath(const std::vector<std::string> &paths) {
   std::string best;

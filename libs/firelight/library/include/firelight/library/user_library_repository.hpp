@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/library/content_directory.hpp>
@@ -5,7 +6,7 @@
 #include <firelight/library/disc_member.hpp>
 #include <firelight/library/disc_set.hpp>
 #include <firelight/library/entry.hpp>
-#include <firelight/library/folder_entry_info.hpp>
+#include <firelight/library/folder_entry.hpp>
 #include <firelight/library/folder_info.hpp>
 #include <firelight/library/game_identity.hpp>
 #include <firelight/library/patch_file.hpp>
@@ -20,37 +21,6 @@
 #include <vector>
 
 namespace firelight::library {
-struct EntryCreatedEvent {
-  int entryId;
-};
-
-struct EntryUpdatedEvent {
-  int entryId;
-};
-
-// TODO
-// An entry that is gone rather than changed. Folding a disc set destroys the entries it absorbs, and
-// a row is only taken off the grid by an event naming the id that went
-struct EntryDeletedEvent {
-  int entryId;
-};
-
-// TODO
-// Published when a group's title, pin, or the entry standing for it changes, and when the
-// group is dissolved. The id outlives the group, so a listener must tolerate it being gone
-struct VariantGroupUpdatedEvent {
-  int groupId;
-};
-
-// TODO
-// Published when one entry is folded into another because they turned out to be the same
-// game. Anything keyed on the content hash has to follow, and the library cannot do that
-// itself because saves and activity live in other modules
-struct EntryAbsorbedEvent {
-  int survivingEntryId;
-  std::string absorbedContentHash;
-  std::string survivingContentHash;
-};
 
 class IUserLibraryRepository {
 public:
@@ -62,7 +32,7 @@ public:
 
   virtual bool create(FolderInfo &folder) = 0;
 
-  virtual bool create(FolderEntryInfo &folderEntry) = 0;
+  virtual bool create(FolderEntry &folderEntry) = 0;
 
   virtual bool create(ContentDirectory &directory) = 0;
 
@@ -86,28 +56,17 @@ public:
    */
   virtual void createRunConfigurationForSet(int setId, int anchorContentFileId, const std::string &contentHash) = 0;
 
-  /**
-   * Takes away a set's way in
-   *
-   * @return True when a row went
-   */
   virtual bool deleteRunConfigurationsForDiscSet(int setId) = 0;
 
   virtual bool update(FolderInfo &folder) = 0;
 
   virtual bool update(Entry &entry) = 0;
 
-  // TODO
-  /**
-   * Writes whether an entry is hidden.
-   *
-   * A field of its own rather than part of update(Entry&), which writes a whole row from a copy the
-   * caller read earlier and would carry a stale flag back over one written since
-   */
   virtual bool setEntryHidden(int entryId, bool hidden) = 0;
 
   virtual bool update(const ContentDirectory &directory) = 0;
 
+  // TODO
   /**
    * Writes an entry's art projections. The descriptive document is not written here — see
    * applyEntryMetadata
@@ -115,11 +74,10 @@ public:
   virtual bool updateEntryMetadata(const Entry &entry) = 0;
 
   /**
-   * Merges metadata into an entry's stored document.
+   * Merges metadata into an entry's stored document
    *
    * Fields the user pinned are skipped unless isUserEdit says this change is theirs, in which case
-   * every field in changedFields is written and pinned. The read, merge and write happen in one
-   * locked step, so a scrape on a worker cannot lose an edit made while it was running
+   * every field in changedFields is written and pinned
    *
    * @param changedFields The metadata_fields names incoming carries a value for
    */
@@ -127,7 +85,7 @@ public:
                                   bool isUserEdit) = 0;
 
   /**
-   * Records that art was looked up for an entry, whether or not any was found.
+   * Records that art was looked up for an entry, regardless of whether any was found.
    *
    * Stamped even on an empty result, so a game the provider has nothing for is not
    * asked about again on every startup
@@ -135,16 +93,9 @@ public:
   virtual bool markArtFetched(int entryId, uint64_t whenMillis) = 0;
 
   /**
-   * The ids of visible entries art has never been looked up for, oldest first.
-   *
-   * A query rather than a filter over getEntries, because the caller wants a handful at a time out of
-   * a library of thousands
+   * The ids of visible entries art has never been looked up for, oldest first
    */
   virtual std::vector<int> getEntryIdsMissingArt(int limit) = 0;
-
-  //****************
-  // what the scan could not catalogue
-  //****************
 
   /**
    * Records a file the scanner accepted and could not catalogue, or refreshes the one already
@@ -165,8 +116,7 @@ public:
   [[nodiscard]] virtual std::vector<ScanDrop> getScanDrops() = 0;
 
   /**
-   * Counts one more file carrying an extension nothing accepts. The path is deliberately not
-   * kept — this answers which formats people own, not which files
+   * Counts one more file carrying an extension nothing accepts
    */
   virtual void countUnrecognizedExtension(const std::string &extension) = 0;
 
@@ -174,10 +124,6 @@ public:
    * The extensions seen on disk that nothing accepts, most common first
    */
   [[nodiscard]] virtual std::vector<UnrecognizedExtension> getUnrecognizedExtensions() = 0;
-
-  //****************
-  // disc sets
-  //****************
 
   /**
    * Creates a multi-disc game, setting the id on the passed set
@@ -226,10 +172,6 @@ public:
 
   virtual bool setLastDisc(int entryId, int saveSlot, int discNumber) = 0;
 
-  //****************
-  // variant groups
-  //****************
-
   virtual bool createVariantGroup(VariantGroup &group) = 0;
 
   virtual bool updateVariantGroup(const VariantGroup &group) = 0;
@@ -261,10 +203,6 @@ public:
   virtual std::vector<int> getCandidateEntryIds(const GameIdentity &identity) = 0;
 
   virtual std::vector<Entry> getEntriesInVariantGroup(int groupId) = 0;
-
-  //****************
-  // tags
-  //****************
 
   /**
    * Creates a tag, or fills in the existing one when the name is already taken. Names collide case
@@ -299,11 +237,10 @@ public:
 
   virtual bool deleteFolder(int folderId) = 0;
 
-  virtual bool deleteFolderEntry(FolderEntryInfo &info) = 0;
+  virtual bool deleteFolderEntry(FolderEntry &info) = 0;
 
   virtual bool reorderFolders(int parentId, const std::vector<int> &orderedFolderIds) = 0;
 
-  // Moves a folder under a new parent (-1 = root), appended at the end
   virtual bool setFolderParent(int folderId, int newParentId) = 0;
 
   virtual bool deleteContentDirectory(int id) = 0;
@@ -315,15 +252,8 @@ public:
 
   virtual std::optional<ContentFile> getContentFile(int id) = 0;
 
-  /**
-   * Every catalogued file holding the same content, which for a disc set member is its disc
-   */
   [[nodiscard]] virtual std::vector<ContentFile> getContentFilesWithContentHash(const std::string &contentHash) = 0;
 
-  /**
-   * The catalogued file at a path, whatever size it is now. A file we rewrite changes size,
-   * which is what the path-and-size lookup keys on
-   */
   [[nodiscard]] virtual std::optional<ContentFile> getContentFileWithPath(const std::string &filePath) = 0;
 
   /**
@@ -331,14 +261,6 @@ public:
    */
   virtual bool setContentFileIdentity(int contentFileId, const std::string &contentHash, size_t fileSizeBytes) = 0;
 
-  // TODO
-  /**
-   * Records that a catalogued file is no longer on disk, keeping the row.
-   *
-   * The ways to launch it are left alone, so the patch a run configuration names survives the file
-   * going away and coming back
-   */
-  // TODO
   /**
    * Every catalogued file whose bytes are on disk right now.
    *
@@ -347,39 +269,35 @@ public:
    */
   [[nodiscard]] virtual std::vector<ContentFile> getPresentContentFiles() = 0;
 
-  // TODO
   /**
-   * The discs of a set whose bytes are on disk right now.
-   *
-   * Membership outlives a disc going away, so counting what is there and writing the playlist ask
-   * this while anything deciding what the set is asks for every member
+   * The discs of a set whose bytes are on disk right now
    */
   [[nodiscard]] virtual std::vector<ContentFile> getPresentDiscsInSet(int setId) = 0;
 
   virtual bool markContentFileMissing(int id) = 0;
 
-  // TODO
   /**
    * Records that a file marked missing is back
    */
   virtual bool reviveContentFile(int id) = 0;
 
-  // TODO
   /**
-   * Forgets a content file outright, along with its ways in and its disc members. This is the
-   * purge; a file that merely went away is marked missing instead
+   * Forgets a content file outright, along with its ways in and its disc members
    */
   virtual bool deleteContentFile(int id) = 0;
 
   virtual std::optional<PatchFile> getPatchFile(int id) = 0;
 
-  virtual std::vector<Entry> getEntries(int offset, int limit) = 0;
+  /**
+   * Every entry, with its folders, tags and content files attached. Reads and hydrates the whole
+   * entries table across four queries
+   */
+  virtual std::vector<Entry> getEntries() = 0;
 
   virtual std::optional<Entry> getEntry(int entryId) = 0;
 
   /**
-   * Removes an entry and everything hanging off it in this database. Saves and playtime are
-   * keyed on the content hash and are not touched
+   * Removes an entry and everything hanging off it in this database
    */
   virtual bool deleteEntry(int entryId) = 0;
 
@@ -388,14 +306,12 @@ public:
   virtual std::vector<RunConfiguration> getRunConfigurations(const std::string &contentHash) = 0;
 
   /**
-   * Removes the ways to launch one file, leaving the file itself catalogued
-   */
-  /**
    * Takes away the ways in a file has of its own, leaving any belonging to a disc set.
    *
    * A set anchors its way in on one of its discs, so removing everything pointed at that disc
    * would take the whole set's way in with it
    */
+  // TODO
   virtual bool deleteRunConfigurationsForContentFile(int contentFileId) = 0;
 
   virtual std::vector<ContentDirectory> getContentDirectories() = 0;
