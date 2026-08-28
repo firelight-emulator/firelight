@@ -49,8 +49,8 @@ SqliteActivityLog::SqliteActivityLog(std::string databaseFile) : m_databaseFile(
 
     SQLite::Transaction transaction(*m_db);
     const int currentVersion = m_db->execAndGet("PRAGMA user_version").getInt();
-    migrations::applyMigrations(currentVersion, schema,
-                                [this](const int v) { m_db->exec("PRAGMA user_version = " + std::to_string(v)); });
+    applyMigrations(currentVersion, schema,
+                    [this](const int v) { m_db->exec("PRAGMA user_version = " + std::to_string(v)); });
     transaction.commit();
   } catch (const std::exception &e) {
     spdlog::error("Failed to initialize activity store: {}", e.what());
