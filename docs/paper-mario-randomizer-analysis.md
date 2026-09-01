@@ -10,6 +10,9 @@ backend behind the official web generator for the Open World Paper Mario Randomi
 Every number below was measured against a clone of the generator at `0.31.2 (beta)` and against this
 repo, not estimated.
 
+**Scope: backend only.** Nothing here costs or designs the screens — this is about where the seed gets
+generated, what crosses the boundary, and how the result becomes a library entry.
+
 ## Verdict up front
 
 The library-side work is small, because Firelight already has almost all of it. The blocker is one
@@ -112,8 +115,6 @@ Considerably more than I expected. This feature is mostly assembly, not construc
 | Entry creation | `IUserLibraryRepository::createEntry` / `createRunConfiguration` | Done |
 | N64 emulation | `mupen64plus_next_libretro`, defaults in `platform_core_defaults.hpp` | Done |
 | Shop scaffolding | `src/gui/models/shop/shop_item_model.{hpp,cpp}` | Stub — roles defined, `m_items` never populated |
-| Shop routes | `/shop`, `/shop/mods/:modId` in `verify_ui_command.cpp` | Declared; commented out in `qml/v3/routing/RouteView.qml` |
-| Shop delegate | `qml/shop/ShopGridItemDelegate.qml` | Exists, pre-design-system (raw `"#25282C"` literals) |
 | Shop content model | `content.db`: `mods`, `mod_shop_pages`, `patches` | **Schema exists and is populated** |
 
 That last row is the important one. `content.db` already ships 5 mods and 5 patches, and one of them is
@@ -177,24 +178,23 @@ strand the work.
 
 ## Settings: the surprise scope
 
-`default_settings.yaml` has **347 keys**; `get_web_settings()` returns **329**. This is not a form, it's
-a settings *application* — difficulty, item placement, entrance rando, glitch logic, partners, palettes,
-audio, plus a full plandomizer.
+`default_settings.yaml` has **347 keys**; `get_web_settings()` returns **329** — difficulty, item
+placement, entrance rando, glitch logic, partners, palettes, audio, plus a full plandomizer.
 
-For calibration, the repo ships **9 presets** (`Beginner`, `Intermediate`, `OpenWorld`,
-`ExtremeShuffle`, and five race presets).
+Setting presentation aside entirely, this is still a real modelling problem: the C++ side has to hold a
+settings object, serialize it to what the generator expects, validate it, and version it. Two things
+make that harder than the key count suggests.
 
-Three plausible scopes:
+- **The YAML keys and the web settings names do not match 1:1.** `OptionSet.py` (2,363 lines) is the
+  translation layer, and that is where the real schema lives — not in the YAML.
+- **There is no machine-readable schema.** Types, ranges and the many interdependencies ("irrelevant
+  if `IncludeShops:false`", "always false if `IncludeFavorsMode:0`") live in YAML comments and Python
+  branches. Anything derived from the YAML alone will be wrong at the edges.
 
-1. **Presets only** — a dropdown of the 9 shipped presets, plus a seed field. Perhaps a week of UI.
-   Ships the feature, and honestly covers most people who aren't already deep in the community.
-2. **Presets + a curated subset** — the ~30 settings people actually touch, on top of a preset base.
-   The sane target. A few weeks.
-3. **Full parity** — 329 settings. Only worth it generated from a schema rather than hand-authored, and
-   even then it's a big surface to design, theme, and keep in sync with upstream.
-
-Worth noting `OptionSet.py` is 2,363 lines and the YAML keys don't map 1:1 to the web settings names, so
-"just generate the form from the YAML" is less free than it looks.
+The cheap way through is to **treat settings as an opaque preset plus a small diff**: carry the 9
+upstream presets (`Beginner`, `Intermediate`, `OpenWorld`, `ExtremeShuffle`, and five race presets) as
+blobs, and hand-model only the subset actually exposed. That keeps Firelight out of the business of
+mirroring a 329-field schema it does not own and cannot validate.
 
 ## Library integration
 
@@ -211,8 +211,8 @@ Consequences to decide on, not to discover later:
 
 - **Achievements are gone.** `AchievementService` is keyed on content hash
   (`getAchievementSetByContentHash`), and a randomized ROM's hash matches nothing on RetroAchievements.
-  This is correct behaviour — you can't cheev a randomizer — but the UI should say so rather than look
-  broken.
+  This is correct behaviour — you can't cheev a randomizer — but the entry needs to carry the fact
+  explicitly, so it reads as "not applicable" rather than as something that failed to load.
 - **Saves are per-hash too**, so every seed gets its own save file. Almost certainly what you want.
 - **The spoiler log is 110 KB per seed** and needs a home, plus a deliberate choice about whether it's
   even shown (the web generator hides it from players by default).
@@ -225,17 +225,17 @@ Consequences to decide on, not to discover later:
 
 ## Rough effort
 
-Assuming option B and settings scope 2, and assuming the shop scaffolding gets finished as part of it:
+Backend only — no UI work counted. Assuming option B and the preset-plus-subset settings approach:
 
 | Work | Estimate |
 |---|---|
 | Ops applier + CIC-6103 CRC + tests | 1–2 days |
-| Base-mod acquisition & verification flow (detect dump, apply BPS, cache) | 2–3 days |
-| Generation client (`cpr`, JSON settings, errors, cancel) | 2–3 days |
-| Settings model + QML form (~30 settings, presets, `FL*` components) | 1–2 weeks |
+| Base-mod acquisition & verification (detect dump, apply BPS, cache the result) | 2–3 days |
+| Generation client (`cpr`, JSON settings, errors, cancellation) | 2–3 days |
+| Settings model, preset handling, serialization | 3–5 days |
 | Library integration (patch storage, entry creation, grouping) | 3–5 days |
-| Shop route/page revival, delegate rebuilt on the design system | 3–5 days |
-| **Client total** | **~4–6 weeks** |
+| Service + proxy/model surface for whatever drives it | 2–3 days |
+| **Backend total** | **~2.5–3.5 weeks** |
 | Server (containerize generator, thin API, deploy, monitoring) | 1–2 weeks, plus ongoing |
 
 Option A instead of B trades the server line for roughly 1–2 weeks of packaging work per platform, and
@@ -252,7 +252,9 @@ a permanent tax on the build.
    `creator_name`, `user_has_required_game` — that reads like a remote catalogue, but the data is
    currently in the local `content.db`. Which is it going to be? A randomizer is a much easier sell if
    the shop already has a service behind it.
-4. **Settings scope** — presets only, curated subset, or full parity?
+4. **Settings scope** — presets only, curated subset, or full parity? A data-contract question before
+   it is anything else: full parity means owning a mirror of a 329-field schema that upstream changes
+   without notice.
 5. **Can Firelight ship the base-mod BPS?** It's MIT in the repo, but the base mod's *source* is
    private, and redistributing the patch is a courtesy question as much as a licence one.
 6. **Is Paper Mario the pilot for a general "Randomizers" section**, or a one-off? Nearly every
