@@ -11,12 +11,29 @@ Button {
 
     property bool compact: false
     property string tooltipText: ""
+
+    // Allows the button to be disabled but still allow it to receive focus
+    property bool canInteract: true
+
     // TODO
     // Icon/label tint when checked; subtle toggles only
     property color checkedColor: Theme.textPrimary
     FLFocus.showCursor: true
 
-    property bool canInteract: true
+    FLFocus.actions: [
+        FLAction {
+            label: "OK"
+            keys: [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Space, Qt.Key_Select]
+            sound: control.canInteract ? SoundEffects.openPopup : SoundEffects.cursorBump
+            onTriggered: {
+                if (!control.canInteract) {
+                    return;
+                }
+
+                control.click();
+            }
+        }
+    ]
 
     readonly property bool _subtle: variant === "subtle"
     readonly property color _fill: variant === "primary" ? Theme.accent : variant === "danger" ? Theme.danger : variant === "flat" ? "transparent" : Theme.surfaceElevated
@@ -111,7 +128,7 @@ Button {
                 }
 
                 if (control._subtle) {
-                    return control.pressed ? 0.14 : (hover.hovered || control.checked || control.cursorFocused) ? 0.10 : 0;
+                    return control.pressed ? 0.14 : (hover.hovered || control.cursorFocused) ? 0.10 : 0;
                 }
 
                 return control.pressed ? 0.12 : hover.hovered ? 0.07 : 0;

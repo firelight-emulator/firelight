@@ -1,9 +1,13 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/disc_set_playlist.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/user_library_repository.hpp>
 
+#include <algorithm>
 #include <filesystem>
+#include <optional>
 #include <spdlog/spdlog.h>
+#include <tuple>
 
 namespace firelight::library {
 
@@ -13,56 +17,43 @@ bool EntryResolver::contentFileExists(const ContentFile &info) {
   return !path.empty() && std::filesystem::exists(path, ec);
 }
 
-int EntryResolver::scoreConfig(const RunConfiguration &config, const ContentFile &contentFile) {
-  int score = 0;
-  if (contentFileExists(contentFile)) {
-    score += 2;
-  }
-  if (config.type == RunConfiguration::TYPE_PATCH && config.patchId != -1) {
-    score += 1;
-  }
-
-  // A playlist reaches every disc of the set, so leaving this to the tie-break would let the
-  // order files were scanned in decide whether the game launches whole or as disc one alone
-  if (config.type == RunConfiguration::TYPE_PLAYLIST) {
-    score += 4;
-  }
-
-  // TODO
-  // A way in the set owns outranks one that happens to point at a playlist file, so which of
-  // the two the resolver picks does not depend on which was recorded first
-  if (config.discSetId.has_value()) {
-    score += 1;
-  }
-
-  return score;
-}
-
 EntryResolver::EntryResolver(IUserLibraryRepository &library, std::string appDataDirectory)
     : m_library(library), m_appDataDirectory(std::move(appDataDirectory)) {}
 
 ResolvedContent EntryResolver::resolve(const Entry &entry) const {
-  const auto runConfigs = m_library.getRunConfigurations(entry.contentHash);
+  auto runConfigs = m_library.getRunConfigurations(entry.contentHash);
+
   if (runConfigs.empty()) {
     return {};
   }
 
-  // Pick the highest-scoring configuration, breaking ties toward the most
-  // recently added (largest id) for determinism
-  const RunConfiguration *best = nullptr;
-  ContentFile bestContentFile;
-  int bestScore = -1;
+  // TODO
+  // The one the entry launches through comes first, and the rest are ordered by id so a way in
+  // being recorded before another cannot decide which is picked
+  std::ranges::sort(runConfigs, [](const RunConfiguration &left, const RunConfiguration &right) {
+    return std::tie(right.isDefault, left.id) < std::tie(left.isDefault, right.id);
+  });
+
+  // TODO
+  // A file the library still believes in but that is not on disk is worth resolving to: the loader
+  // says what is wrong with it, where refusing here would only say the game does not exist
+  std::optional<ResolvedContent> fallback;
 
   for (const auto &config : runConfigs) {
     auto contentFile = m_library.getContentFile(config.contentFileId);
+
     if (!contentFile.has_value()) {
       continue;
     }
 
     // TODO
+    // Whether this way in launches through the set's playlist rather than the file it points at
+    const auto usesPlaylist = config.discSetId.has_value() && m_library.getDiscsInSet(*config.discSetId).size() > 1;
+
+    // TODO
     // A set launches through the playlist naming every disc, while the row is anchored on the
     // disc the identity comes from. The hash stays the anchor's; only the path moves
-    if (config.discSetId.has_value()) {
+    if (usesPlaylist) {
       contentFile->m_filePath = playlistPathFor(config.contentHash, m_appDataDirectory);
       contentFile->m_inArchive = false;
       contentFile->m_type = ContentType::Disc;
@@ -74,27 +65,30 @@ ResolvedContent EntryResolver::resolve(const Entry &entry) const {
       continue;
     }
 
-    const int score = scoreConfig(config, *contentFile);
-    if (score > bestScore || (score == bestScore && best && config.id > best->id)) {
-      bestScore = score;
-      best = &config;
-      bestContentFile = *contentFile;
+    ResolvedContent resolved;
+    resolved.valid = true;
+    resolved.contentFile = *contentFile;
+    resolved.discSetId = usesPlaylist ? config.discSetId : std::nullopt;
+
+    if (config.patchId != -1) {
+      resolved.patch = m_library.getPatchFile(config.patchId);
+    }
+
+    if (usesPlaylist || contentFileExists(*contentFile)) {
+      return resolved;
+    }
+
+    if (!fallback.has_value()) {
+      fallback = resolved;
     }
   }
 
-  if (!best) {
-    spdlog::warn("[EntryResolver] No usable content for entry {} ({})", entry.id, entry.contentHash);
-    return {};
+  if (fallback.has_value()) {
+    return *fallback;
   }
 
-  ResolvedContent resolved;
-  resolved.valid = true;
-  resolved.contentFile = bestContentFile;
-  resolved.discSetId = best->discSetId;
-  if (best->type == RunConfiguration::TYPE_PATCH && best->patchId != -1) {
-    resolved.patch = m_library.getPatchFile(best->patchId);
-  }
-  return resolved;
+  spdlog::warn("[EntryResolver] No usable content for entry {} ({})", entry.id, entry.contentHash);
+  return {};
 }
 
 } // namespace firelight::library

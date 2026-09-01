@@ -225,6 +225,30 @@ std::vector<std::string> DiscInspector::sheetFilenameCandidates(const std::vecto
   return candidates;
 }
 
+// TODO
+// The discs a playlist names, one per line. Blank lines and comments are not discs, and rc_hash
+// skips them the same way when it resolves a playlist to the disc it stands for
+std::vector<std::string> DiscInspector::playlistLines(const std::vector<uint8_t> &bytes) {
+  std::vector<std::string> lines;
+  const std::string text(reinterpret_cast<const char *>(bytes.data()), bytes.size());
+
+  size_t start = 0;
+  while (start <= text.size()) {
+    const size_t newline = text.find('\n', start);
+    const size_t end = newline == std::string::npos ? text.size() : newline;
+    const auto line = strings::trim(text.substr(start, end - start));
+    start = newline == std::string::npos ? text.size() + 1 : newline + 1;
+
+    if (line.empty() || line.front() == '#') {
+      continue;
+    }
+
+    lines.push_back(line);
+  }
+
+  return lines;
+}
+
 std::string DiscInspector::roleForBaseName(const std::string &baseNameLower) {
   return firelight::library::isDiscSheetExtension(suffixOf(baseNameLower)) ? "disc" : "track";
 }
@@ -363,17 +387,50 @@ std::vector<IdentifiedDiscMember> DiscInspector::collectLooseMembers(const std::
   const std::filesystem::path dir = sheet.parent_path();
   const std::string sheetNameLower = strings::toLower(sheet.filename().string());
 
+  // TODO
+  // Every line of a playlist is a disc, so one naming a file nobody has yet is kept: dropping it
+  // would slide the discs after it up a number. A sheet is read the other way round, from every
+  // field of every line, so there the file having to exist is what tells a path from the words
+  // around it
+  const auto isPlaylist = suffixOf(sheetNameLower) == "m3u";
+  const auto candidates = isPlaylist ? playlistLines(bytes) : sheetFilenameCandidates(bytes);
+
   std::set<std::string> seen;
-  for (const auto &token : sheetFilenameCandidates(bytes)) {
+  for (const auto &token : candidates) {
     const std::string base = baseNameOf(token);
     const std::string baseLower = strings::toLower(base);
-    std::error_code ec;
-    if (baseLower.empty() || baseLower == sheetNameLower || seen.contains(baseLower) ||
-        !std::filesystem::exists(dir / base, ec)) {
+
+    if (baseLower.empty() || baseLower == sheetNameLower) {
       continue;
     }
-    seen.insert(baseLower);
-    members.push_back({(dir / base).string(), roleForBaseName(baseLower)});
+
+    // TODO
+    // A line is tried as written before falling back to the name alone, because reducing to the
+    // name first loses every set laid out one folder per disc
+    auto written = token;
+    std::ranges::replace(written, '\\', '/');
+
+    std::error_code ec;
+    auto resolved = (dir / std::filesystem::path(written)).lexically_normal();
+
+    if (!std::filesystem::exists(resolved, ec)) {
+      const auto byName = dir / base;
+
+      if (std::filesystem::exists(byName, ec)) {
+        resolved = byName;
+      } else if (!isPlaylist) {
+        continue;
+      }
+    }
+
+    // TODO
+    // Keyed on where the line landed rather than what it was called, so one folder per disc with
+    // the same name in each stays several discs
+    if (!seen.insert(strings::toLower(resolved.generic_string())).second) {
+      continue;
+    }
+
+    members.push_back({resolved.generic_string(), roleForBaseName(baseLower)});
   }
 
   return members;

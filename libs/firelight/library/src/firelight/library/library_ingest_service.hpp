@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/event_dispatcher.hpp>
@@ -6,6 +7,7 @@
 #include <string>
 
 namespace firelight::library {
+class DiscSetService;
 class IUserLibraryRepository;
 
 // Owns the scan-time orchestration that turns discovered content files into
@@ -16,7 +18,11 @@ class IUserLibraryRepository;
 // library_events.hpp), so it is a plain class — not a QObject
 class LibraryIngestService final {
 public:
-  explicit LibraryIngestService(IUserLibraryRepository &library);
+  // TODO
+  // Placement runs on this path rather than off its own event, so a disc has found its set before
+  // anything decides how it launches. Two handlers racing for that order would depend on the order
+  // they were constructed in
+  LibraryIngestService(IUserLibraryRepository &library, DiscSetService &discSets);
 
 private:
   // TODO
@@ -30,6 +36,7 @@ private:
   void announceContentChange(const std::string &contentHash, std::optional<int> discSetId);
 
   IUserLibraryRepository &m_library;
+  DiscSetService &m_discSets;
 
   ScopedConnection m_contentFileAddedConnection;
   ScopedConnection m_runConfigurationCreatedConnection;

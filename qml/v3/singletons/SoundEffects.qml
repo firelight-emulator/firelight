@@ -69,4 +69,9 @@ QtObject {
         source: "qrc:/sfx/snap-medium"
         volume: 0.4
     }
+
+    readonly property FLSoundEffect tabBarNavigate: FLSoundEffect {
+        source: "qrc:/sfx/snap-medium"
+        volume: 0.4
+    }
 }

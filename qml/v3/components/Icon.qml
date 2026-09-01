@@ -19,7 +19,7 @@ Text {
 
     // Material Symbols variable-font axes
     property bool filled: true
-    property int weight: Font.Normal
+    property int weight: Font.Light
     property int grade: 0
 
     text: root.glyph.length > 0 ? root.glyph : MaterialSymbols.glyph(root.name)

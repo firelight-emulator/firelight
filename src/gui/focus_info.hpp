@@ -4,11 +4,14 @@
 #include "focus_action.hpp"
 
 #include <QColor>
+#include <QHash>
+#include <QKeySequence>
 #include <QList>
 #include <QObject>
 #include <QPair>
 #include <QQmlListProperty>
 #include <QQuickItem>
+#include <QVariant>
 #include <QtNumeric>
 #include <qqmlintegration.h>
 
@@ -98,12 +101,36 @@ public:
    * barrier because navigation cannot leave one.
    *
    * A key appears once per set of modifiers, so a key and the same key under Shift are both listed.
-   * The nearest declaration wins, which is the one a press would actually run, and a disabled action
-   * is left out because it would answer nothing
+   * The nearest declaration wins, which is the one a press would actually run. A disabled action is
+   * listed only where nothing enabled answers the same press, so it reads as the press being off
+   * rather than the press being absent
    */
   Q_INVOKABLE static QList<FocusAction *> collectActions(QQuickItem *item) {
     QList<FocusAction *> actions;
     QList<QPair<int, int>> claimedKeys;
+    QList<QPair<int, int>> answeredKeys;
+
+    for (auto *current = item; current != nullptr; current = current->parentItem()) {
+      auto *info = find(current);
+
+      if (info == nullptr) {
+        continue;
+      }
+
+      for (const auto *action : info->m_actions) {
+        if (action == nullptr || !action->isEnabled()) {
+          continue;
+        }
+
+        for (const auto key : action->getKeys()) {
+          answeredKeys.append({key, action->getModifiers()});
+        }
+      }
+
+      if (info->isBarrier()) {
+        break;
+      }
+    }
 
     for (auto *current = item; current != nullptr; current = current->parentItem()) {
       auto *info = find(current);
@@ -113,7 +140,7 @@ public:
       }
 
       for (auto *action : info->m_actions) {
-        if (action == nullptr || !action->isEnabled()) {
+        if (action == nullptr) {
           continue;
         }
 
@@ -132,6 +159,21 @@ public:
           continue;
         }
 
+        if (!action->isEnabled()) {
+          auto isAnswered = false;
+
+          for (const auto key : keys) {
+            if (answeredKeys.contains({key, modifiers})) {
+              isAnswered = true;
+              break;
+            }
+          }
+
+          if (isAnswered) {
+            continue;
+          }
+        }
+
         for (const auto key : keys) {
           claimedKeys.append({key, modifiers});
         }
@@ -145,6 +187,55 @@ public:
     }
 
     return actions;
+  }
+
+  /**
+   * The same actions folded so one label appears once however many ways it is bound, in the order
+   * the labels were first reached.
+   *
+   * @return Entries shaped {label, bindings: [{key, modifiers, text}]}, where text is the binding
+   * written the way the platform writes it
+   */
+  Q_INVOKABLE static QVariantList collectActionGroups(QQuickItem *item) {
+    QVariantList groups;
+    QHash<QString, int> indexByLabel;
+
+    for (const auto *action : collectActions(item)) {
+      const auto label = action->getLabel();
+
+      if (label.isEmpty()) {
+        continue;
+      }
+
+      if (!indexByLabel.contains(label)) {
+        indexByLabel.insert(label, static_cast<int>(groups.size()));
+        groups.append(QVariantMap{{"label", label}, {"bindings", QVariantList{}}, {"enabled", false}});
+      }
+
+      const auto at = indexByLabel.value(label);
+      auto group = groups.at(at).toMap();
+      auto bindings = group.value("bindings").toList();
+      const auto modifiers = action->getModifiers();
+
+      // TODO
+      // One way in still working is enough for the label to be reachable
+      if (action->isEnabled()) {
+        group["enabled"] = true;
+      }
+
+      for (const auto key : action->getKeys()) {
+        const QKeyCombination combination(static_cast<Qt::KeyboardModifiers>(modifiers), static_cast<Qt::Key>(key));
+        bindings.append(QVariantMap{{"key", key},
+                                    {"modifiers", modifiers},
+                                    {"text", QKeySequence(combination).toString(QKeySequence::NativeText)},
+                                    {"enabled", action->isEnabled()}});
+      }
+
+      group["bindings"] = bindings;
+      groups[at] = group;
+    }
+
+    return groups;
   }
 
   /**
@@ -226,6 +317,32 @@ public:
     for (auto *action : m_actions) {
       if (action != nullptr && action->handles(key, modifiers)) {
         return action;
+      }
+    }
+
+    return nullptr;
+  }
+
+  /**
+   * The action a press on item would run: the nearest declaration answering to key with modifiers,
+   * looking outward from item and stopping at a barrier the way collectActions does
+   *
+   * @return The action, or null when nothing on the way out answers
+   */
+  Q_INVOKABLE static FocusAction *findActionFor(QQuickItem *item, const int key, const int modifiers = Qt::NoModifier) {
+    for (auto *current = item; current != nullptr; current = current->parentItem()) {
+      auto *info = find(current);
+
+      if (info == nullptr) {
+        continue;
+      }
+
+      if (auto *action = info->getActionFor(key, modifiers); action != nullptr) {
+        return action;
+      }
+
+      if (info->isBarrier()) {
+        return nullptr;
       }
     }
 

@@ -1,7 +1,9 @@
+// TODO: NEEDS REVIEW
 #pragma once
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/library/entry.hpp>
 #include <firelight/library/entry_status.hpp>
+#include <firelight/library/library_events.hpp>
 #include <firelight/library/smart_folder.hpp>
 #include <firelight/library/user_library_service.hpp>
 #include <firelight/settings/settings_service.hpp>

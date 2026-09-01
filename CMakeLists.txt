@@ -249,6 +249,7 @@ add_library(firelight_lib STATIC
         src/app/metadata/cpr_http_client.cpp
         src/app/metadata/cpr_http_client.hpp
         src/gui/qt_game_art_proxy.cpp
+        src/gui/qt_disc_set_proxy.cpp
         src/gui/qt_variant_group_proxy.cpp
         src/gui/qt_game_art_proxy.hpp
 
@@ -284,6 +285,7 @@ add_library(firelight_lib STATIC
         src/gui/eventhandlers/input_method_detection_handler.cpp
         src/app/library/variant_group_service.cpp
         src/app/library/entry_merge_service.cpp
+        src/app/library/gui/disc_set_list_model.cpp
         src/app/library/gui/entry_list_model.cpp
         src/app/media/gui/capture_list_model.cpp
         src/app/netplay/direct_lobby_backend.cpp
@@ -596,6 +598,7 @@ add_executable(fl_test
         tests/app/library/content_discoverer_test.cpp
         tests/app/library/content_hasher_test.cpp
         tests/app/library/content_loader_test.cpp
+        tests/app/library/disc_set_list_model_test.cpp
         tests/app/library/entry_list_model_test.cpp
         tests/app/library/library_ingest_service_test.cpp
         tests/app/library/variant_group_service_test.cpp
@@ -668,6 +671,7 @@ file(GLOB QML_TEST_FILES
         qml/v3/routing/routing.js
         qml_tests/tst_routing.qml
         qml_tests/tst_focus_info.qml
+        qml_tests/tst_focus_action_lookup.qml
         qml_tests/tst_action_modifiers.qml
         qml_tests/tst_focus_nav.qml
         qml_tests/tst_focus_navigator.qml

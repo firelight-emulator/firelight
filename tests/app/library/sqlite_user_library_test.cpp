@@ -1,5 +1,6 @@
 // TODO: NEEDS REVIEW
 #include <firelight/event_dispatcher.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/library_events.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -23,7 +24,8 @@ struct LibraryEventCounters {
 
 TEST_F(SqliteUserLibraryTest, CreateFolderSetsIdTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
   auto info = library::FolderInfo{.displayName = "test"};
 
   ASSERT_TRUE(library.create(info));
@@ -32,7 +34,8 @@ TEST_F(SqliteUserLibraryTest, CreateFolderSetsIdTest) {
 
 TEST_F(SqliteUserLibraryTest, CreateFolderWithExistingNameTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
   auto info = library::FolderInfo{.displayName = "test"};
 
   ASSERT_TRUE(library.create(info));
@@ -45,7 +48,8 @@ TEST_F(SqliteUserLibraryTest, CreateFolderWithExistingNameTest) {
 
 TEST_F(SqliteUserLibraryTest, ListFoldersTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   ASSERT_TRUE(library.listFolders().empty());
 
@@ -62,7 +66,8 @@ TEST_F(SqliteUserLibraryTest, ListFoldersTest) {
 
 TEST_F(SqliteUserLibraryTest, UpdateFolderTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
@@ -90,7 +95,8 @@ TEST_F(SqliteUserLibraryTest, UpdateFolderTest) {
 
 TEST_F(SqliteUserLibraryTest, UpdateFolderInvalidIdTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
@@ -107,7 +113,8 @@ TEST_F(SqliteUserLibraryTest, UpdateFolderInvalidIdTest) {
 
 TEST_F(SqliteUserLibraryTest, UpdateFolderThatDoesntExistTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   ASSERT_EQ(0, library.listFolders().size());
 
@@ -118,7 +125,8 @@ TEST_F(SqliteUserLibraryTest, UpdateFolderThatDoesntExistTest) {
 
 TEST_F(SqliteUserLibraryTest, DeleteFolderTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   ASSERT_TRUE(library.listFolders().empty());
 
@@ -135,7 +143,8 @@ TEST_F(SqliteUserLibraryTest, DeleteFolderTest) {
 
 TEST_F(SqliteUserLibraryTest, CreateFolderEntryTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   auto info = library::FolderInfo{.displayName = "test"};
   ASSERT_TRUE(library.create(info));
@@ -148,7 +157,8 @@ TEST_F(SqliteUserLibraryTest, CreateFolderEntryTest) {
 // forgetting the row is how a file going away and coming back loses both
 TEST_F(SqliteUserLibraryTest, AFileThatGoesAwayAndComesBackKeepsWhatWasSaidAboutIt) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   auto set = library::DiscSet{.title = "Final Fantasy VII", .discCount = 2};
   ASSERT_TRUE(library.createDiscSet(set));
@@ -159,11 +169,13 @@ TEST_F(SqliteUserLibraryTest, AFileThatGoesAwayAndComesBackKeepsWhatWasSaidAbout
                                    .m_fileMd5 = "md5",
                                    .m_platformId = 8,
                                    .m_contentHash = "disc2",
-                                   .m_discNumber = 2,
-                                   .m_discNumberUserSet = true};
+                                   .m_discNumber = 2};
   ASSERT_TRUE(library.create(file));
   ASSERT_NE(file.m_id, -1);
-  ASSERT_TRUE(library.setContentFileDiscSet(file.m_id, set.id));
+
+  library::DiscSetMember member{
+      .m_discSetId = set.id, .m_discNumber = 2, .m_contentFileId = file.m_id, .m_memberPath = file.m_filePath};
+  ASSERT_TRUE(library.create(member));
 
   const auto configsBefore = library.getRunConfigurations("disc2");
   ASSERT_EQ(configsBefore.size(), 1u) << "the file was catalogued without a way in";
@@ -174,10 +186,8 @@ TEST_F(SqliteUserLibraryTest, AFileThatGoesAwayAndComesBackKeepsWhatWasSaidAbout
   ASSERT_TRUE(whileGone.has_value()) << "the row was destroyed rather than marked";
   EXPECT_NE(whileGone->m_missingSince, 0);
   EXPECT_EQ(whileGone->m_filePath, "/roms/ff7-disc2.chd") << "the path is the whole point";
-  EXPECT_TRUE(whileGone->m_discNumberUserSet);
   EXPECT_EQ(whileGone->m_discNumber, 2);
-  ASSERT_TRUE(whileGone->m_discSetId.has_value());
-  EXPECT_EQ(*whileGone->m_discSetId, set.id);
+  ASSERT_TRUE(library.getDiscSetMemberForContentFile(file.m_id).has_value()) << "membership went with the bytes";
   EXPECT_EQ(library.getRunConfigurations("disc2").size(), 1u) << "the way in went with the file";
 
   ASSERT_TRUE(library.reviveContentFile(file.m_id));
@@ -185,43 +195,41 @@ TEST_F(SqliteUserLibraryTest, AFileThatGoesAwayAndComesBackKeepsWhatWasSaidAbout
   const auto back = library.getContentFile(file.m_id);
   ASSERT_TRUE(back.has_value());
   EXPECT_EQ(back->m_missingSince, 0);
-  EXPECT_TRUE(back->m_discNumberUserSet);
-  ASSERT_TRUE(back->m_discSetId.has_value());
-  EXPECT_EQ(*back->m_discSetId, set.id);
+
+  const auto stillAMember = library.getDiscSetMemberForContentFile(file.m_id);
+  ASSERT_TRUE(stillAMember.has_value());
+  EXPECT_EQ(stillAMember->m_discSetId, set.id);
 }
 
 // Launching through a patch is a choice somebody made, and re-cataloguing the file gives it back
 // a plain way in with no patch on it
-TEST_F(SqliteUserLibraryTest, AFileThatGoesAwayAndComesBackKeepsThePatchItLaunchesThrough) {
+TEST_F(SqliteUserLibraryTest, AFileThatGoesAwayAndComesBackKeepsTheWayInItLaunchesThrough) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   auto file = library::ContentFile{
       .m_fileSizeBytes = 1024, .m_filePath = "/roms/Sonic.md", .m_platformId = 5, .m_contentHash = "sonic"};
   ASSERT_TRUE(library.create(file));
 
-  library.createRunConfiguration(file.m_id, file.m_filePath, file.m_platformId, "sonic",
-                                 library::RunConfiguration::TYPE_PATCH);
+  library.createRunConfiguration(file.m_id, file.m_filePath, file.m_platformId, "sonic");
 
-  const auto patched = [&] {
-    const auto configs = library.getRunConfigurations("sonic");
-    return std::ranges::count_if(configs, [](const library::RunConfiguration &config) {
-      return config.type == library::RunConfiguration::TYPE_PATCH;
-    });
-  };
-  ASSERT_EQ(patched(), 1) << "the patched way in was never created";
+  const auto waysIn = [&] { return library.getRunConfigurations("sonic").size(); };
+  ASSERT_EQ(waysIn(), 1u) << "the way in was never created";
 
   ASSERT_TRUE(library.markContentFileMissing(file.m_id));
-  EXPECT_EQ(patched(), 1) << "the file going away took the patch choice with it";
+  EXPECT_EQ(waysIn(), 1u) << "the file going away took its way in with it";
 
   ASSERT_TRUE(library.reviveContentFile(file.m_id));
-  EXPECT_EQ(patched(), 1) << "the file came back without the patch it launched through";
+  EXPECT_EQ(waysIn(), 1u) << "the file came back without the way in it launched through";
+  EXPECT_TRUE(library.getRunConfigurations("sonic").front().isDefault);
 }
 
 // One dump in two folders is one game with two ways in, and either one being readable is enough
 TEST_F(SqliteUserLibraryTest, AGameWithTwoCopiesStaysOnTheShelfUntilBothAreGone) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   auto onDrive = library::ContentFile{.m_fileSizeBytes = 2048,
                                       .m_filePath = "E:/Games/Kirby.gb",
@@ -255,7 +263,8 @@ TEST_F(SqliteUserLibraryTest, AGameWithTwoCopiesStaysOnTheShelfUntilBothAreGone)
 // and holds a stale answer to. Writing it as part of a whole row would hand that stale answer back
 TEST_F(SqliteUserLibraryTest, EditingAnEntryFromAStaleCopyDoesNotResurrectItsOldHiddenFlag) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   auto entry = library::Entry{.displayName = "Chrono Trigger", .contentHash = "1234", .platformId = 1};
   ASSERT_TRUE(library.createEntry(entry));
@@ -277,7 +286,8 @@ TEST_F(SqliteUserLibraryTest, EditingAnEntryFromAStaleCopyDoesNotResurrectItsOld
 
 TEST_F(SqliteUserLibraryTest, DeleteFolderEntryTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   auto entry = library::Entry{.displayName = "test entry", .contentHash = "1234", .platformId = 1};
 
@@ -303,7 +313,8 @@ TEST_F(SqliteUserLibraryTest, DeleteFolderEntryTest) {
 
 TEST_F(SqliteUserLibraryTest, AddRomWithNoEntryTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   LibraryEventCounters counters;
 
@@ -334,7 +345,8 @@ TEST_F(SqliteUserLibraryTest, AddRomWithNoEntryTest) {
 
 TEST_F(SqliteUserLibraryTest, AddRomWithExistingEntryTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   library::ContentFile romInfo{.m_fileSizeBytes = 123456,
                                .m_filePath = "test.rom",
@@ -381,7 +393,8 @@ TEST_F(SqliteUserLibraryTest, AddRomWithExistingEntryTest) {
 
 TEST_F(SqliteUserLibraryTest, AddRomWithDuplicatePathTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   library::ContentFile romInfo{.m_fileSizeBytes = 123456,
                                .m_filePath = "test.rom",
@@ -412,7 +425,8 @@ TEST_F(SqliteUserLibraryTest, AddRomWithDuplicatePathTest) {
 
 TEST_F(SqliteUserLibraryTest, DeleteRomForEntryWithMultipleRunConfigsTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   library::ContentFile romInfo{.m_fileSizeBytes = 123456,
                                .m_filePath = "test.rom",
@@ -464,7 +478,8 @@ TEST_F(SqliteUserLibraryTest, DeleteRomForEntryWithMultipleRunConfigsTest) {
 
 TEST_F(SqliteUserLibraryTest, DeleteRomLeavesEntryUnavailableTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   library::ContentFile romInfo{.m_fileSizeBytes = 123456,
                                .m_filePath = "test.rom",
@@ -495,7 +510,8 @@ TEST_F(SqliteUserLibraryTest, DeleteRomLeavesEntryUnavailableTest) {
 
 TEST_F(SqliteUserLibraryTest, AddingRomAfterDeletingMakesEntryAvailableAgainTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   library::ContentFile romInfo{.m_fileSizeBytes = 123456,
                                .m_filePath = "test.rom",
@@ -530,7 +546,8 @@ TEST_F(SqliteUserLibraryTest, AddingRomAfterDeletingMakesEntryAvailableAgainTest
 
 TEST_F(SqliteUserLibraryTest, RomsMarkedMissingWhenContentDirectoryDeletedTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   // Create a content directory
   library::ContentDirectory main{.path = "test_content_directory"};
@@ -610,7 +627,8 @@ TEST_F(SqliteUserLibraryTest, SmartFolderTypeAndFilterJsonRoundTripTest) {
 
 TEST_F(SqliteUserLibraryTest, ContentDirectoryIdStampedOnCreateTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   library::ContentDirectory dir{.path = "roms"};
   ASSERT_TRUE(library.create(dir));
@@ -641,7 +659,8 @@ TEST_F(SqliteUserLibraryTest, ContentDirectoryIdStampedOnCreateTest) {
 
 TEST_F(SqliteUserLibraryTest, ContentDirectoryLongestPrefixWinsTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   library::ContentDirectory parent{.path = "roms"};
   ASSERT_TRUE(library.create(parent));
@@ -662,7 +681,8 @@ TEST_F(SqliteUserLibraryTest, ContentDirectoryLongestPrefixWinsTest) {
 
 TEST_F(SqliteUserLibraryTest, EntryFileLocationsPopulatedTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   library::ContentDirectory dir{.path = "roms"};
   ASSERT_TRUE(library.create(dir));
@@ -791,7 +811,8 @@ TEST_F(SqliteUserLibraryTest, SetFolderParentMovesAndAppendsTest) {
 
 TEST_F(SqliteUserLibraryTest, EntryFileLocationsUseArchivePathTest) {
   auto library = library::SqliteUserLibraryRepository(":memory:");
-  library::LibraryIngestService ingest(library);
+  library::DiscSetService discSets(library, "");
+  library::LibraryIngestService ingest(library, discSets);
 
   library::ContentDirectory dir{.path = "roms"};
   ASSERT_TRUE(library.create(dir));
@@ -822,6 +843,72 @@ TEST_F(SqliteUserLibraryTest, EntryFileLocationsUseArchivePathTest) {
 // Variant groups: a set of entries that are the same game. Membership lives on the
 // entry, so removing a group has to clear its members by hand -- there are no
 // foreign keys anywhere in this schema
+// TODO
+// The whole-library load and the single-entry read fill in the same per-file facts by different
+// SQL, so they are pinned against each other: an entry read either way says the same thing
+TEST_F(SqliteUserLibraryTest, BothLoadersAgreeOnAnEntrysFiles) {
+  library::SqliteUserLibraryRepository library(":memory:");
+
+  library::ContentDirectory dir;
+  dir.path = "roms";
+  ASSERT_TRUE(library.create(dir));
+
+  const auto addDump = [&](const std::string &path, const int discNumber, const bool isMissing) {
+    library::ContentFile file;
+    file.m_type = library::ContentType::Disc;
+    file.m_filePath = path;
+    file.m_fileSizeBytes = 1;
+    file.m_fileMd5 = path;
+    file.m_platformId = 6;
+    file.m_contentHash = "sharedHash";
+    file.m_discNumber = discNumber;
+    file.m_contentDirectoryId = dir.id;
+    ASSERT_TRUE(library.create(file));
+
+    if (isMissing) {
+      ASSERT_TRUE(library.markContentFileMissing(file.m_id));
+    }
+  };
+
+  // One numbered, one not, and one that has gone away: the three cases the ordering has to settle
+  addDump("roms/game-d2.cue", 2, false);
+  addDump("roms/game.cue", 0, false);
+  addDump("roms/game-d1.cue", 1, true);
+
+  library::Entry first{.displayName = "Game", .contentHash = "sharedHash", .platformId = 6};
+  ASSERT_TRUE(library.createEntry(first));
+
+  // TODO
+  // One entry per hash, which is what makes an entry a facade over its ways in rather than one of
+  // them. The index does not say so, so this is the only thing that does
+  library::Entry second{.displayName = "Game (again)", .contentHash = "sharedHash", .platformId = 6};
+  EXPECT_FALSE(library.createEntry(second)) << "a second entry took the same hash";
+
+  const auto all = library.getEntries();
+  ASSERT_EQ(all.size(), 1u);
+
+  for (const auto &grouped : all) {
+    const auto single = library.getEntry(grouped.id);
+    ASSERT_TRUE(single.has_value());
+
+    EXPECT_EQ(grouped.contentPaths, single->contentPaths) << "the two loaders disagree on where the content is";
+    EXPECT_EQ(grouped.readableContentPaths, single->readableContentPaths);
+    EXPECT_EQ(grouped.contentDirectoryIds, single->contentDirectoryIds);
+    EXPECT_EQ(grouped.isContentAvailable, single->isContentAvailable);
+    EXPECT_EQ(grouped.isDiscInArchive, single->isDiscInArchive);
+    EXPECT_EQ(grouped.hasRunConfiguration, single->hasRunConfiguration);
+
+    // Every dump on the hash, not just the first one found
+    EXPECT_EQ(grouped.contentPaths.size(), 3u);
+
+    // A file carrying no number sorts behind the ones that are, so disc 1 leads the paths
+    EXPECT_EQ(grouped.contentPaths.front(), "roms/game-d1.cue");
+
+    // The disc that went missing is still somewhere the content lives, just not readable
+    EXPECT_EQ(grouped.readableContentPaths.size(), 2u);
+  }
+}
+
 // A multi-disc game is one set holding several content files. The membership edge is on the
 // file, so the set is found from its discs rather than from the entry
 TEST_F(SqliteUserLibraryTest, DiscSetHoldsItsDiscsInOrder) {
@@ -841,7 +928,10 @@ TEST_F(SqliteUserLibraryTest, DiscSetHoldsItsDiscsInOrder) {
     file.m_contentHash = path;
     file.m_discNumber = discNumber;
     library.create(file);
-    library.setContentFileDiscSet(file.m_id, set.id);
+
+    library::DiscSetMember member{
+        .m_discSetId = set.id, .m_discNumber = discNumber, .m_contentFileId = file.m_id, .m_memberPath = path};
+    library.create(member);
     return file.m_id;
   };
 
@@ -879,7 +969,10 @@ TEST_F(SqliteUserLibraryTest, ADiscDumpedTwiceCountsOnce) {
     file.m_contentHash = contentHash;
     file.m_discNumber = discNumber;
     library.create(file);
-    library.setContentFileDiscSet(file.m_id, set.id);
+
+    library::DiscSetMember member{
+        .m_discSetId = set.id, .m_discNumber = discNumber, .m_contentFileId = file.m_id, .m_memberPath = path};
+    library.create(member);
   };
 
   makeDisc("ff7-d1.cue", 1, "hash-disc-1");
@@ -905,24 +998,21 @@ TEST_F(SqliteUserLibraryTest, PerDumpFactsRoundTrip) {
   file.m_platformId = 6;
   file.m_contentHash = "hash-disc-1";
   file.m_discNumber = 1;
-  file.m_discNumberUserSet = true;
   file.m_regions = {"US", "EU"};
-  file.m_gameId = 25390;
   ASSERT_TRUE(library.create(file));
 
   const auto stored = library.getContentFile(file.m_id);
   ASSERT_TRUE(stored.has_value());
   EXPECT_EQ(stored->m_regions, (std::vector<std::string>{"US", "EU"}));
-  EXPECT_EQ(stored->m_gameId, 25390);
-  EXPECT_TRUE(stored->m_discNumberUserSet);
 }
 
-// The query is a net, not an answer: an id and a title are each only sometimes known, so it
-// returns everything either could reach and the predicate decides
+// TODO
+// The query is a net, not an answer: a title can be carried by the entry or only by the dumps
+// behind it, so it returns everything either could reach and the predicate decides
 TEST_F(SqliteUserLibraryTest, CandidateEntriesAreEverythingEitherKeyCouldReach) {
   library::SqliteUserLibraryRepository library(":memory:");
 
-  const auto add = [&](const std::string &hash, const std::string &title, const int gameId) {
+  const auto add = [&](const std::string &hash, const std::string &entryTitle, const std::string &dumpTitle) {
     library::ContentFile file;
     file.m_filePath = hash + ".cue";
     file.m_fileSizeBytes = 1;
@@ -930,42 +1020,30 @@ TEST_F(SqliteUserLibraryTest, CandidateEntriesAreEverythingEitherKeyCouldReach) 
     file.m_fileCrc32 = "";
     file.m_platformId = 7;
     file.m_contentHash = hash;
-    file.m_gameId = gameId;
+    file.m_normalizedTitle = dumpTitle;
     library.create(file);
 
-    library::Entry entry{.displayName = title, .contentHash = hash, .platformId = 7};
-    entry.normalizedTitle = title;
+    library::Entry entry{.displayName = entryTitle, .contentHash = hash, .platformId = 7};
+    entry.normalizedTitle = entryTitle;
     library.createEntry(entry);
     library.updateEntryMetadata(entry);
     return entry.id;
   };
 
-  const auto byBoth = add("h1", "resident evil 2", 25390);
-  const auto byIdOnly = add("h2", "biohazard 2", 25390);
-  const auto byTitleOnly = add("h3", "resident evil 2", 0);
-  add("h4", "grandia", 111);
+  const auto byBoth = add("h1", "resident evil 2", "resident evil 2");
+  const auto byDumpOnly = add("h2", "", "resident evil 2");
+  const auto byEntryOnly = add("h3", "resident evil 2", "");
+  add("h4", "grandia", "grandia");
 
   // Both arms, merged, ascending and without repeats
-  const auto both =
-      library.getCandidateEntryIds(library::GameIdentity{.platformId = 7, .gameId = 25390, .title = "resident evil 2"});
-  EXPECT_EQ(both, (std::vector{byBoth, byIdOnly, byTitleOnly}));
-
-  // No id resolved: exactly the title peers, which is what it did before ids existed
-  const auto titleOnly =
-      library.getCandidateEntryIds(library::GameIdentity{.platformId = 7, .title = "resident evil 2"});
-  EXPECT_EQ(titleOnly, (std::vector{byBoth, byTitleOnly}));
-
-  // No title derived: only the id peers
-  const auto idOnly = library.getCandidateEntryIds(library::GameIdentity{.platformId = 7, .gameId = 25390});
-  EXPECT_EQ(idOnly, (std::vector{byBoth, byIdOnly}));
+  const auto found = library.getCandidateEntryIds(library::GameIdentity{.platformId = 7, .title = "resident evil 2"});
+  EXPECT_EQ(found, (std::vector{byBoth, byDumpOnly, byEntryOnly}));
 
   // Nothing known reaches nothing, rather than reaching everything
   EXPECT_TRUE(library.getCandidateEntryIds(library::GameIdentity{.platformId = 7}).empty());
 
   // Another platform's game is never a candidate
-  EXPECT_TRUE(
-      library.getCandidateEntryIds(library::GameIdentity{.platformId = 8, .gameId = 25390, .title = "resident evil 2"})
-          .empty());
+  EXPECT_TRUE(library.getCandidateEntryIds(library::GameIdentity{.platformId = 8, .title = "resident evil 2"}).empty());
 }
 
 // A file that got past the extension gate and could not be catalogued is kept per path, because
@@ -1037,8 +1115,6 @@ TEST_F(SqliteUserLibraryTest, AnUnstampedRegionReadsBackEmpty) {
   const auto stored = library.getContentFile(file.m_id);
   ASSERT_TRUE(stored.has_value());
   EXPECT_TRUE(stored->m_regions.empty());
-  EXPECT_EQ(stored->m_gameId, 0);
-  EXPECT_FALSE(stored->m_discNumberUserSet);
 }
 
 // Dissolving a set must not take the discs or the entry with it
@@ -1056,20 +1132,21 @@ TEST_F(SqliteUserLibraryTest, DeletingADiscSetKeepsItsDiscsAndEntry) {
   file.m_platformId = 6;
   file.m_contentHash = "zeldaHash";
   ASSERT_TRUE(library.create(file));
-  ASSERT_TRUE(library.setContentFileDiscSet(file.m_id, set.id));
+
+  library::DiscSetMember member{
+      .m_discSetId = set.id, .m_discNumber = 1, .m_contentFileId = file.m_id, .m_memberPath = file.m_filePath};
+  ASSERT_TRUE(library.create(member));
 
   library::Entry entry;
   entry.displayName = "Zelda";
   entry.contentHash = "zeldaHash";
   entry.platformId = 6;
   ASSERT_TRUE(library.createEntry(entry));
-  ASSERT_TRUE(library.setEntryDiscSet(entry.id, set.id, true));
-
   ASSERT_TRUE(library.deleteDiscSet(set.id));
 
   EXPECT_FALSE(library.getDiscSet(set.id).has_value());
   EXPECT_TRUE(library.getEntry(entry.id).has_value());
-  EXPECT_FALSE(library.getEntry(entry.id)->discSetId.has_value());
+  EXPECT_TRUE(library.getEntriesInDiscSet(set.id).empty()) << "the set still reaches an entry";
   EXPECT_FALSE(library.getDiscSetForContentFile(file.m_id).has_value());
 }
 
@@ -1343,6 +1420,54 @@ TEST_F(SqliteUserLibraryTest, GetEntriesAttachesJoinsToTheRightRows) {
       EXPECT_TRUE(entry.folderIds.empty());
     }
   }
+}
+
+// TODO
+// A copy sitting in a zip says nothing while another sits loose on disk. This flag refuses the
+// launch outright, so reading it as "any copy is archived" hides a game whose files are right here
+TEST_F(SqliteUserLibraryTest, AnArchivedCopyDoesNotCondemnAGameWhoseLooseCopyIsHere) {
+  library::SqliteUserLibraryRepository library(":memory:");
+
+  const auto addDisc = [&](const std::string &path, const bool inArchive) -> int {
+    library::ContentFile file;
+    file.m_type = library::ContentType::Disc;
+    file.m_filePath = path;
+    file.m_fileSizeBytes = 1;
+    file.m_fileMd5 = path;
+    file.m_platformId = 7;
+    file.m_contentHash = "oneDump";
+    file.m_inArchive = inArchive;
+    file.m_archivePathName = inArchive ? "roms/backup.zip" : "";
+    EXPECT_TRUE(library.create(file));
+    return file.m_id;
+  };
+
+  addDisc("roms/Game (Disc 1).chd", false);
+  const auto archived = addDisc("Game (Disc 1).chd", true);
+
+  library::Entry entry{.displayName = "Game", .contentHash = "oneDump", .platformId = 7};
+  ASSERT_TRUE(library.createEntry(entry));
+
+  const auto both = library.getEntry(entry.id);
+  ASSERT_TRUE(both.has_value());
+  EXPECT_TRUE(both->isContentAvailable);
+  EXPECT_FALSE(both->isDiscInArchive) << "a zipped duplicate condemned a game whose loose copy is here";
+
+  // With the loose copy gone, the only way to reach the game really is through the archive
+  ASSERT_TRUE(library.markContentFileMissing(library.getContentFileWithPath("roms/Game (Disc 1).chd")->m_id));
+
+  const auto onlyArchived = library.getEntry(entry.id);
+  ASSERT_TRUE(onlyArchived.has_value());
+  EXPECT_TRUE(onlyArchived->isContentAvailable);
+  EXPECT_TRUE(onlyArchived->isDiscInArchive) << "the only readable copy being zipped went unreported";
+
+  // And with nothing readable at all, the archive is not the problem worth reporting
+  ASSERT_TRUE(library.markContentFileMissing(archived));
+
+  const auto none = library.getEntry(entry.id);
+  ASSERT_TRUE(none.has_value());
+  EXPECT_FALSE(none->isContentAvailable);
+  EXPECT_FALSE(none->isDiscInArchive) << "a game with nothing on disk reported an archive problem on top";
 }
 
 } // namespace firelight::db

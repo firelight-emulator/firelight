@@ -13,9 +13,6 @@ Item {
     property int fillMode: Image.PreserveAspectFit
     property color background: "transparent"
     property alias status: img.status
-    // TODO
-    // Max decode size; non-zero and independent of layout so the image is never
-    // decoded at full native resolution before the item is sized
     property int sourceSizePx: 512
 
     Item {

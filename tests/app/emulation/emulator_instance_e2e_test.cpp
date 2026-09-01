@@ -2,6 +2,7 @@
 #include "fake_save_database.hpp"
 
 #include <firelight/cheats/sqlite_cheat_repository.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -25,6 +26,7 @@ namespace firelight::emulation {
 class EmulatorInstanceE2ETest : public testing::Test {
 protected:
   std::unique_ptr<library::SqliteUserLibraryRepository> m_library;
+  std::unique_ptr<library::DiscSetService> m_discSets;
   std::unique_ptr<library::LibraryIngestService> m_ingest;
   std::unique_ptr<library::UserLibraryService> m_libraryService;
   std::unique_ptr<library::EntryResolver> m_resolver;
@@ -43,7 +45,8 @@ protected:
     ASSERT_TRUE(m_saveDir.isValid());
     m_library = std::make_unique<library::SqliteUserLibraryRepository>(":memory:");
     // Turns created content files into entries (subscribes to library events)
-    m_ingest = std::make_unique<library::LibraryIngestService>(*m_library);
+    m_discSets = std::make_unique<library::DiscSetService>(*m_library, "");
+    m_ingest = std::make_unique<library::LibraryIngestService>(*m_library, *m_discSets);
     m_libraryService = std::make_unique<library::UserLibraryService>(*m_library, ".");
     m_resolver = std::make_unique<library::EntryResolver>(*m_library, "");
     m_settingsService =

@@ -1,6 +1,7 @@
 // TODO: NEEDS REVIEW
 #include <firelight/library/accepted_extensions.hpp>
 #include <firelight/library/content_loader.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -184,12 +185,14 @@ protected:
   QTemporaryDir m_tempDir;
   platforms::PlatformService m_platformService;
   std::unique_ptr<SqliteUserLibraryRepository> m_repo;
+  std::unique_ptr<DiscSetService> m_discSets;
   std::unique_ptr<LibraryIngestService> m_ingest;
 
   void SetUp() override {
     ASSERT_TRUE(m_tempDir.isValid());
     m_repo = std::make_unique<SqliteUserLibraryRepository>(QString(":memory:"));
-    m_ingest = std::make_unique<LibraryIngestService>(*m_repo);
+    m_discSets = std::make_unique<DiscSetService>(*m_repo, "");
+    m_ingest = std::make_unique<LibraryIngestService>(*m_repo, *m_discSets);
   }
 
   void write(const QString &name, const QByteArray &bytes) const {

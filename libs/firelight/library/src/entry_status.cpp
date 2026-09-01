@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/entry_status.hpp>
 
 #include <algorithm>
@@ -16,6 +17,7 @@ bool blocksLaunch(const EntryProblem problem) {
   case EntryProblem::ContentUnavailable:
   case EntryProblem::FilesMissing:
   case EntryProblem::ContentInArchive:
+  case EntryProblem::NoRunConfiguration:
     return true;
   case EntryProblem::DiscsMissing:
     return false;
@@ -38,11 +40,13 @@ int severity(const EntryProblem problem) {
     return 4;
   case EntryProblem::ContentInArchive:
     return 5;
-  case EntryProblem::DiscsMissing:
+  case EntryProblem::NoRunConfiguration:
     return 6;
+  case EntryProblem::DiscsMissing:
+    return 7;
   }
 
-  return 7;
+  return 8;
 }
 
 EntryStatus evaluateEntryStatus(const EntryStatusFacts &facts) {
@@ -67,6 +71,11 @@ EntryStatus evaluateEntryStatus(const EntryStatusFacts &facts) {
     status.problems.push_back(EntryProblem::ContentUnavailable);
   } else if (!facts.hasWayIn) {
     status.problems.push_back(EntryProblem::FilesMissing);
+  } else if (!facts.hasRunConfiguration) {
+    // TODO
+    // Last of the three, so a game whose files are gone is told that rather than being told
+    // the library has no way to launch files it does not have
+    status.problems.push_back(EntryProblem::NoRunConfiguration);
   }
 
   if (facts.isDiscInArchive) {

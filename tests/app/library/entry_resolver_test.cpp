@@ -1,3 +1,4 @@
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -10,7 +11,8 @@ namespace firelight::library {
 // entry must return the content file (no patch)
 TEST(EntryResolverTest, ResolvesRomEntry) {
   SqliteUserLibraryRepository library(":memory:");
-  LibraryIngestService ingest(library);
+  DiscSetService discSets(library, "");
+  LibraryIngestService ingest(library, discSets);
 
   ContentFile romInfo{.m_fileSizeBytes = 100,
                       .m_filePath = "game.rom",
@@ -38,7 +40,8 @@ TEST(EntryResolverTest, ResolvesRomEntry) {
 // core and Play fails at load instead of the game running from the copy that is there
 TEST(EntryResolverTest, ResolvesThroughTheCopyThatIsStillOnDisk) {
   SqliteUserLibraryRepository library(":memory:");
-  LibraryIngestService ingest(library);
+  DiscSetService discSets(library, "");
+  LibraryIngestService ingest(library, discSets);
 
   ContentFile onDrive{
       .m_fileSizeBytes = 100, .m_filePath = "E:/Games/game.rom", .m_platformId = 1, .m_contentHash = "hash123"};
@@ -63,7 +66,8 @@ TEST(EntryResolverTest, ResolvesThroughTheCopyThatIsStillOnDisk) {
 // Every copy being gone is the case that must not launch at all
 TEST(EntryResolverTest, InvalidWhenEveryCopyIsMissing) {
   SqliteUserLibraryRepository library(":memory:");
-  LibraryIngestService ingest(library);
+  DiscSetService discSets(library, "");
+  LibraryIngestService ingest(library, discSets);
 
   ContentFile romInfo{.m_fileSizeBytes = 100, .m_filePath = "game.rom", .m_platformId = 1, .m_contentHash = "hash123"};
   ASSERT_TRUE(library.create(romInfo));

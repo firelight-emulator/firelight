@@ -19,17 +19,14 @@ Item {
     // scale/density do
     readonly property int minTarget: 24
 
-    // Font size scale — device-independent px. Use these for text; never font.pointSize
-    // (pointSize renders ~25% smaller on macOS than Windows due to a 72-vs-96 logical-DPI baseline)
-    // TODO
-    // Overline / section-label size (uppercase group headers)
+    // Font size scale
     readonly property int fontSizeXSmall: Math.round(12 * scale)  // section labels, overlines
     readonly property int fontSizeSmall: Math.round(14 * scale)  // captions, muted/secondary labels
     readonly property int fontSizeMedium: Math.round(16 * scale)  // body / default
     readonly property int fontSizeLarge: Math.round(22 * scale)   // subtitles, section headers
     readonly property int fontSizeXLarge: Math.round(32 * scale)  // page / hero titles
 
-    // TODO
+
     //*************************************************************
     // Fonts - one UI font plus the Material Symbols icon font
     //*************************************************************
@@ -51,19 +48,18 @@ Item {
         source: "qrc:/fonts/symbols"
     }
 
-    // Spacing / gaps / padding — scale AND density (density is about how tightly
-    // content packs)
+    // Spacing / gaps / padding
     readonly property int spacingXs: Math.round(4 * scale * density)
     readonly property int spacingSm: Math.round(8 * scale * density)
     readonly property int spacingMd: Math.round(12 * scale * density)
     readonly property int spacingLg: Math.round(16 * scale * density)
     readonly property int spacingXl: Math.round(24 * scale * density)
 
-    // Interactive heights — floored at minTarget
+    // Interactive heights
     readonly property int controlHeight: Math.max(minTarget, Math.round(36 * scale * density))
     readonly property int rowHeight: Math.max(minTarget, Math.round(36 * scale * density))
 
-    // Icon glyph sizes — scale only (an icon isn't a density concern)
+    // Icon glyph sizes
     readonly property int iconSizeSm: Math.round(16 * scale)
     readonly property int iconSizeMd: Math.round(24 * scale)
     readonly property int iconSizeLg: Math.round(32 * scale)
@@ -77,16 +73,20 @@ Item {
     readonly property int radiusMd: Math.round(8 * scale)
     readonly property int radiusLg: Math.round(12 * scale)
 
-    // TODO
-    // Border thickness of the controller-focus ring
+    // Border thickness of the focus ring
     readonly property int focusRingWidth: Math.round(3 * scale)
 
-    readonly property int windowPadding: Math.round(18 * scale)
+    readonly property int windowPadding: Math.round(36 * scale)
 
     // v2 button metrics: one height + a compact option, one fixed icon size
     readonly property int buttonHeight: Math.max(minTarget, Math.round(42 * scale * density))
     readonly property int buttonHeightCompact: Math.max(minTarget, Math.round(28 * scale * density))
-    readonly property int iconSizeButton: Math.round(22 * scale)
+    readonly property int buttonHeightJumbo: Math.max(minTarget, Math.round(46 * scale * density))
+    readonly property int iconSizeButton: Math.round(28 * scale)
+
+    readonly property int gamepadGlyphSize: Math.round(28 * scale)
+
+    readonly property int tabBarHeight: Math.max(minTarget, Math.round(38 * scale * density))
 
     // TODO
     // Comfortable default width for value inputs (slider/combobox) so they don't
@@ -118,7 +118,7 @@ Item {
     //*************************************************************
     // Title Bar
     //*************************************************************
-    readonly property int titleBarHeight: Math.round(48 * scale)
+    readonly property int titleBarHeight: Math.round(60 * scale)
     // TODO
     // Banner height for the in-game quick menu
     readonly property int standardTitleBarHeight: Math.round(60 * scale)
@@ -149,6 +149,8 @@ Item {
     readonly property int artIconSizeSm: Math.round(48 * scale)
     readonly property int artIconSizeMd: Math.round(64 * scale)
     readonly property int artIconSizeLg: Math.round(96 * scale)
+
+    readonly property real gameViewHeaderHeight: Math.round(40 * scale)
 
     // TODO
     //*************************************************************

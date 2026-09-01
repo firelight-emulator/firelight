@@ -64,6 +64,16 @@ QtObject {
     }
 
     // TODO
+    // Asks that the next item taken focus of be scrolled to the top of its container rather than
+    // only far enough to be on screen. itemTop is that item's y in the container's content
+    // coordinates, given rather than measured because the item may not be built yet
+    function alignNextToTop(itemTop: real) {
+        if (root._highlight !== null) {
+            root._highlight.alignNextToTop(itemTop);
+        }
+    }
+
+    // TODO
     // Hides the ring until endBlink()
     function startBlink() {
         if (root._highlight !== null) {

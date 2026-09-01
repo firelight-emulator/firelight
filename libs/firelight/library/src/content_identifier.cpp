@@ -14,6 +14,10 @@ namespace firelight::library {
 ContentIdentifier::ContentIdentifier(platforms::IPlatformService &platformService)
     : m_platformService(platformService), m_discInspector(platformService) {}
 
+std::vector<IdentifiedDiscMember> ContentIdentifier::membersNamedBy(const std::string &sheetPath) const {
+  return m_discInspector.collectLooseMembers(sheetPath);
+}
+
 IdentifiedContent ContentIdentifier::identify(const std::string &path) const {
   IdentifiedContent content;
   const std::string suffix = library::suffixOf(path);

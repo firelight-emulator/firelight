@@ -1,5 +1,6 @@
 // TODO: NEEDS REVIEW
 #include <firelight/event_dispatcher.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/library_events.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -16,7 +17,8 @@ namespace firelight::library {
 class LibraryIngestServiceTest : public testing::Test {
 protected:
   SqliteUserLibraryRepository m_repo{":memory:"};
-  LibraryIngestService m_ingest{m_repo};
+  DiscSetService m_discSets{m_repo, ""};
+  LibraryIngestService m_ingest{m_repo, m_discSets};
 
   static ContentFile makeContentFile(const std::string &path, int platformId, const std::string &hash) {
     ContentFile cf;

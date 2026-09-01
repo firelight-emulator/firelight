@@ -442,63 +442,14 @@ Item {
     FLColumnLayout {
         id: toolbarColumn
         anchors.left: parent.left
+        anchors.leftMargin: AppStyle.spacingLg
+        // anchors.top: parent.top
         anchors.top: parent.top
-        anchors.topMargin: AppStyle.spacingMd
+        // anchors.topMargin: AppStyle.spacingMd
+        anchors.topMargin: AppStyle.gameViewHeaderHeight - AppStyle.spacingSm
         anchors.bottom: parent.bottom
-        width: 72
+        width: 48
         spacing: AppStyle.spacingSm
-
-        // FLIconButton {
-        //     Layout.alignment: Qt.AlignHCenter
-        //     iconName: "add"
-        //     tooltipText: "Add or create"
-        //     compact: false
-        //     onClicked: addPopup.opened ? addPopup.close() : addPopup.open()
-        //
-        //     // RightClickMenu {
-        //     //     id: addPopup
-        //     //     x: parent.width + AppStyle.spacingXs
-        //     //     y: 0
-        //     //
-        //     //     RightClickMenuItem {
-        //     //         text: "Add game"
-        //     //         onTriggered: {
-        //     //             // GameAddDialog.openForExisting();
-        //     //         }
-        //     //     }
-        //     //
-        //     //     RightClickMenuItem {
-        //     //         text: "Create folder"
-        //     //         onTriggered: {
-        //     //             // GameAddDialog.openForExisting();
-        //     //         }
-        //     //     }
-        //     //
-        //     //     enter: Transition {
-        //     //         NumberAnimation {
-        //     //             property: "opacity"
-        //     //             from: 0
-        //     //             to: 1
-        //     //             duration: AppStyle.durationFast
-        //     //             easing.type: Easing.InOutQuad
-        //     //         }
-        //     //         NumberAnimation {
-        //     //             property: "x"
-        //     //             from: gameSortPopup.x - 8
-        //     //             to: gameSortPopup.x
-        //     //             duration: AppStyle.durationFast
-        //     //             easing.type: Easing.InOutQuad
-        //     //         }
-        //     //     }
-        //     // }
-        // }
-        //
-        // FLIconButton {
-        //     Layout.alignment: Qt.AlignHCenter
-        //     iconName: "search"
-        //     tooltipText: "Search"
-        //     compact: false
-        // }
 
         FLIconButton {
             id: filterButton
@@ -556,9 +507,9 @@ Item {
 
                 FLToggleMenuItem {
                     label: "Favorites"
-                    checked: gameModel.favoritesOnly
+                    checked: gameModel.filter.favorite === LibraryFilter.Yes
                     onSelected: function (selected) {
-                        gameModel.favoritesOnly = selected;
+                        gameModel.filter.favorite = selected ? LibraryFilter.Yes : LibraryFilter.Unset;
                     }
                 }
 
@@ -569,7 +520,7 @@ Item {
                     valueRole: "platformId"
 
                     Synchronizer on currentValues {
-                        targetObject: gameModel
+                        targetObject: gameModel.filter
                         targetProperty: "platformIds"
                     }
                 }
@@ -631,9 +582,9 @@ Item {
 
                 FLToggleMenuItem {
                     label: "Hide unplayable"
-                    checked: gameModel.hideUnavailable
+                    checked: gameModel.filter.playable === LibraryFilter.Yes
                     onSelected: function (selected) {
-                        gameModel.hideUnavailable = selected;
+                        gameModel.filter.playable = selected ? LibraryFilter.Yes : LibraryFilter.Unset;
                     }
                 }
 
@@ -877,113 +828,21 @@ Item {
     ColumnLayout {
         id: mainColumn
         anchors.left: toolbarColumn.right
+        // anchors.top: parent.top
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        anchors.rightMargin: 72
+        anchors.rightMargin: AppStyle.spacingLg
+        anchors.leftMargin: AppStyle.spacingSm
+        // anchors.rightMargin: 72
         spacing: 0
-
-        // ---- Header / toolbar ----
-        // ColumnLayout {
-        //     Layout.fillWidth: true
-        //     Layout.leftMargin: AppStyle.spacingLg
-        //     Layout.rightMargin: AppStyle.spacingLg
-        //     Layout.topMargin: AppStyle.spacingSm
-        //     Layout.bottomMargin: AppStyle.spacingSm
-        //     spacing: AppStyle.spacingSm
-        //
-        //     GameViewHeader {
-        //         Layout.fillWidth: true
-        //         view: root
-        //     }
-        //
-        //     // Toolbar: search, quick filters, Filters/Display popups, details toggle
-        //     GameToolbar {
-        //         Layout.fillWidth: true
-        //         view: root
-        //     }
-        //
-        //     // Advanced filters expand inline under the toolbar
-        //     GameFilterBar {
-        //         view: root
-        //         expanded: root.filtersExpanded
-        //     }
-        //
-        //     // TODO
-        //     // Bulk-action bar for multi-select. Slides in under the filter bar so
-        //     // selecting adds a little header height rather than shifting anything
-        //     Rectangle {
-        //         id: selectionBar
-        //         Layout.fillWidth: true
-        //         Layout.preferredHeight: root.selectedCount > 0 ? selectionRow.implicitHeight + AppStyle.spacingSm * 2 : 0
-        //         visible: Layout.preferredHeight > 0
-        //         clip: true
-        //         radius: AppStyle.radiusMd
-        //         color: Theme.backgroundInset
-        //
-        //         Behavior on Layout.preferredHeight {
-        //             NumberAnimation {
-        //                 duration: AppStyle.durationFast
-        //                 easing.type: Easing.InOutQuad
-        //             }
-        //         }
-        //
-        //         RowLayout {
-        //             id: selectionRow
-        //             anchors.left: parent.left
-        //             anchors.right: parent.right
-        //             anchors.verticalCenter: parent.verticalCenter
-        //             anchors.leftMargin: AppStyle.spacingMd
-        //             anchors.rightMargin: AppStyle.spacingMd
-        //             spacing: AppStyle.spacingSm
-        //
-        //             Text {
-        //                 text: root.selectedCount + " selected"
-        //                 color: Theme.accent
-        //                 font.family: AppStyle.fontFamily
-        //                 font.pixelSize: AppStyle.fontSizeMedium
-        //                 font.weight: Font.DemiBold
-        //             }
-        //             FLButton {
-        //                 compact: true
-        //                 variant: "default"
-        //                 iconName: "favorite"
-        //                 text: "Favorite"
-        //                 onClicked: root.bulkFavorite(true)
-        //             }
-        //             FLButton {
-        //                 compact: true
-        //                 variant: "default"
-        //                 text: "Add to folder…"
-        //                 onClicked: root.openAddToFolder()
-        //             }
-        //             FLButton {
-        //                 compact: true
-        //                 variant: "default"
-        //                 text: "Remove from folder"
-        //                 visible: root.removableFolderId !== -1
-        //                 onClicked: root.bulkRemoveFromFolder()
-        //             }
-        //             Item {
-        //                 Layout.fillWidth: true
-        //             }
-        //             FLButton {
-        //                 compact: true
-        //                 variant: "subtle"
-        //                 text: "Clear selection"
-        //                 onClicked: root.clearSelection()
-        //             }
-        //         }
-        //     }
-        // }
-        //
-        // FLDivider {}
 
         Loader {
             id: viewLoader
             // clip: true
             Layout.fillHeight: true
             Layout.fillWidth: true
+            focus: true
             sourceComponent: {
                 if (gameModel.count === 0) {
                     if (gameModel.anyFiltersActive) {
@@ -998,17 +857,10 @@ Item {
         }
     }
 
-    // TODO
-    // Whether the run in flight has already swapped the rows. A change arriving
-    // before that point is picked up by the same apply; one arriving after needs
-    // a pass of its own
+
     property bool _refreshApplied: false
     property bool _refreshQueued: false
 
-    // TODO
-    // Folds a change into the run in flight wherever it still can be, so several
-    // filters changed in quick succession hide the view once rather than each
-    // replaying the fade
     function queueRefresh() {
         if (refreshAnimation.running) {
             if (root._refreshApplied) {
@@ -1138,6 +990,7 @@ Item {
             onRequestEditGame: (id, hash, platformId) => editGameDialog.loadAndOpen(id, hash, platformId)
 
             header: GameViewHeader {
+                height: AppStyle.gameViewHeaderHeight
                 width: ListView.view.width
                 verticalPadding: AppStyle.spacingSm
                 horizontalPadding: 0
@@ -1170,9 +1023,16 @@ Item {
             }
 
             header: GameViewHeader {
-                width: GridView.view.width - AppStyle.spacingSm * 2
-                verticalPadding: AppStyle.spacingSm
-                horizontalPadding: AppStyle.spacingSm
+                height: AppStyle.gameViewHeaderHeight
+                width: GridView.view.width
+                verticalPadding: AppStyle.spacingXs
+                leftPadding: AppStyle.spacingSm
+                rightPadding: AppStyle.spacingSm
+            }
+
+            footer: Item {
+                height: 48
+                width: GridView.view.width
             }
         }
     }
@@ -1276,18 +1136,18 @@ Item {
     }
 
     component GameViewHeader: Pane {
+        horizontalPadding: 0
+        verticalPadding: 0
+
         background: Item {}
         contentItem: RowLayout {
-            width: parent.width
-            height: parent.height
-
             Text {
                 text: "Showing " + gameModel.count
                 color: Theme.textMuted
                 font.family: AppStyle.fontFamily
-                font.pixelSize: AppStyle.fontSizeMedium
-                font.weight: Font.Medium
-                Layout.alignment: Qt.AlignVCenter
+                font.pixelSize: AppStyle.fontSizeSmall
+                font.weight: Font.Normal
+                Layout.alignment: Qt.AlignBottom
             }
 
             Item {
@@ -1299,9 +1159,9 @@ Item {
                 text: "By " + gameModel.sortDisplayName + " (" + (gameModel.sortAscending ? "ascending" : "descending") + ")"
                 color: Theme.textMuted
                 font.family: AppStyle.fontFamily
-                font.pixelSize: AppStyle.fontSizeMedium
-                font.weight: Font.Medium
-                Layout.alignment: Qt.AlignVCenter
+                font.pixelSize: AppStyle.fontSizeSmall
+                font.weight: Font.Normal
+                Layout.alignment: Qt.AlignBottom
             }
         }
     }

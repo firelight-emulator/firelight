@@ -43,6 +43,12 @@ Item {
     signal requestLaunch(int entryId, string contentHash, int platformId, bool playable, string statusText)
 
     property alias header: root.header
+    property alias headerItem: root.headerItem
+
+    property alias footer: root.footer
+
+    property alias contentY: root.contentY
+    property alias currentIndex: root.currentIndex
 
     // A plain snapshot of a game's fields for the detail panel (cheaper than
     // mirroring every row's full data just to show one)
@@ -86,6 +92,10 @@ Item {
         return [entryId];
     }
 
+    function jumpToIndex(index: int) {
+        root.jumpTo(index);
+    }
+
     FLGridView {
         id: root
 
@@ -94,7 +104,9 @@ Item {
 
         displayMarginBeginning: Math.round(cellHeight / 2)
 
-        property real initialContentY: contentY
+        cacheBuffer: Math.round(height + cellHeight * 8)
+
+        property real initialContentY: 0
 
         property string sortRole: "displayName"
         property bool sortAscending: true
@@ -102,6 +114,7 @@ Item {
         width: Math.max(1, Math.floor(parent.width / cellWidth)) * cellWidth
         height: parent.height
         x: Math.round((parent.width - width) / 2)
+        // anchors.fill: parent
 
         readonly property bool _showTitleBox: AppearanceSettings.libraryIconGridShowTitleBox
         property real _titleBoxHeight: _showTitleBox ? gridRoot.labelHeight : 0
@@ -116,25 +129,63 @@ Item {
             }
         }
 
+        readonly property int jumpRows: Math.max(1, Math.floor(height / Math.max(1, cellHeight)))
+        readonly property int jumpSize: root.columns * root.jumpRows
+
+        // TODO
+        // Where a row sits in the content, worked out rather than read off a tile, because the row
+        // jumped to is usually one the grid has not built yet
+        function rowTop(index: int): real {
+            return root.originY + Math.floor(index / root.columns) * root.cellHeight;
+        }
+
+        // TODO
+        // Puts the cursor on index. A jump asks for the row at the top, so the tiles it skipped are
+        // not still filling the view
+        function jumpTo(index: int) {
+            FocusCursor.alignNextToTop(root.rowTop(index));
+            root.currentIndex = index;
+            root.focusCurrentItem();
+        }
+
+        FLFocus.actions: [
+            FLAction {
+                keys: [Qt.Key_PageDown]
+                label: qsTr("Jump down")
+                enabled: root.currentIndex < root.count - 1
+                onTriggered: {
+                    root.adoptFocusedIndex();
+                    root.jumpTo(Math.min(root.currentIndex + root.jumpSize, root.count - 1));
+                }
+            },
+            FLAction {
+                keys: [Qt.Key_PageUp]
+                label: qsTr("Jump up")
+                enabled: root.currentIndex > 0
+                onTriggered: {
+                    root.adoptFocusedIndex();
+                    root.jumpTo(Math.max(root.currentIndex - root.jumpSize, 0));
+                }
+            }
+        ]
+
         Component.onCompleted: {
             initialContentY = contentY;
         }
 
         ScrollBar.vertical: FLScrollBar {
-            anchors.right: root.right
-            anchors.rightMargin: -32
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: AppStyle.spacingMd
+            parent: gridRoot.Window.window.contentItem
+            anchors.right: parent.right
+            anchors.rightMargin: (AppStyle.windowPadding / 2) - width / 2
+            y: gridRoot.mapToItem(parent, Qt.point(0, 0)).y
+            height: gridRoot.height
         }
         boundsBehavior: Flickable.StopAtBounds
-        reuseItems: true
+        // reuseItems: true
 
         delegate: tileComponent
     }
 
-    // TODO
-    // Shared tile — used by the plain grid above and the grouped flow below
     Component {
         id: tileComponent
 
@@ -148,17 +199,19 @@ Item {
 
             readonly property bool selected: gridRoot.selectedIds[gameDelegate.model.entryId] === true
 
+            // GridView.onPooled: control.FLFocus.mode = FLFocus.Skip
+            // GridView.onReused: control.FLFocus.mode = FLFocus.Normal
+
             Button {
                 id: control
                 anchors.fill: parent
-                // TODO
-                // Half the gap on each side, so two neighbours make one whole gap between them and
-                // the tile itself keeps the size it was asked for whatever the spacing is
                 anchors.margins: AppearanceSettings.libraryIconGridTileSpacing / 2
                 padding: 0
                 horizontalPadding: 0
                 hoverEnabled: true
                 focus: true
+
+                objectName: "GridViewDelegate|" + gameDelegate.model.displayName
 
                 FLFocus.showCursor: true
                 FLFocus.spacing: 3
@@ -170,10 +223,14 @@ Item {
                     id: selectTap
                     acceptedButtons: Qt.LeftButton
                     onSingleTapped: {
+                        // TODO
+                        // A tap lands on the tile without going through the view, so the view is
+                        // told where the cursor now is rather than keeping the index it last moved to
+                        gameDelegate.GridView.view.currentIndex = gameDelegate.index;
                         gridRoot.gameClicked(gameDelegate.model.entryId, gameDelegate.index, selectTap.point.modifiers);
                         gridRoot.gameFocused(gridRoot.focusSnapshot(gameDelegate.model));
                     }
-                    onDoubleTapped: EmulationService.loadEntry(gameDelegate.model.entryId)
+                    onDoubleTapped: activatedAnimation.restart();
                 }
 
                 HoverHandler {
@@ -181,14 +238,10 @@ Item {
                 }
 
                 ContextMenu.menu: FLMenu {
-                    id: delegateContextMenu
+                    // id: delegateContextMenu
 
                     FLMenuItem {
                         label: qsTr("Play")
-                    }
-
-                    FLMenuItem {
-                        label: "Resume last session"
                     }
 
                     FLMenuSeparator {}
@@ -197,11 +250,10 @@ Item {
                         label: "View details"
                     }
 
-                    FLToggleMenuItem {
-                        label: "Favorite"
-                        checked: gameDelegate.model.favorite
-                        onSelected: function (selected) {
-                            gameDelegate.model.favorite = selected;
+                    FLMenuItem {
+                        label: gameDelegate.model.favorite ? "Remove from favorites" : "Add to favorites"
+                        onClicked: {
+                            gameDelegate.model.favorite = !gameDelegate.model.favorite;
                         }
                     }
 
@@ -220,16 +272,23 @@ Item {
 
                 FLFocus.actions: [
                     FLAction {
-                        keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
+                        keys: [Qt.Key_Enter, Qt.Key_Select, Qt.Key_Return, Qt.Key_Space]
                         label: qsTr("Play")
                         sound: SoundEffects.activateGame
                         onTriggered: activatedAnimation.restart();
                     },
                     FLAction {
                         keys: [Qt.Key_Menu]
-                        label: qsTr("Menu")
-                        onTriggered: delegateContextMenu.popupFor(control, control.width + AppStyle.spacingSm, 0)
-
+                        label: qsTr("Options")
+                        sound: SoundEffects.openPopup
+                        onTriggered: control.ContextMenu.menu.popupFor(control, control.width + AppStyle.spacingSm, 0)
+                    },
+                    FLAction {
+                        keys: [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space, Qt.Key_Select]
+                        modifiers: Qt.ControlModifier
+                        label: qsTr("Options")
+                        sound: SoundEffects.openPopup
+                        onTriggered: control.ContextMenu.menu.popupFor(control, control.width + AppStyle.spacingSm, 0)
                     }
                 ]
 

@@ -1,6 +1,10 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/disc_set_playlist.hpp>
 
+#include <algorithm>
 #include <gtest/gtest.h>
+#include <string>
+#include <vector>
 
 // The playlist is what gives a set one identity and one memory card, and its first line is
 // what that identity is read from. These pin the ordering and the derived path
@@ -16,6 +20,8 @@ ContentFile disc(const int number, const std::string &path, const std::string &c
   return file;
 }
 
+// TODO
+// The disc lines, without the line saying the file is ours
 std::vector<std::string> linesOf(const std::string &contents) {
   std::vector<std::string> lines;
   size_t start = 0;
@@ -32,6 +38,7 @@ std::vector<std::string> linesOf(const std::string &contents) {
     start = end + 1;
   }
 
+  std::erase_if(lines, [](const std::string &line) { return line.starts_with("#"); });
   return lines;
 }
 } // namespace
@@ -70,13 +77,24 @@ TEST(DiscSetPlaylistTest, OrderIsByDiscNumberNotByTheOrderGiven) {
   EXPECT_EQ(linesOf(plan->contents), (std::vector<std::string>{"C:/roms/a.chd", "C:/roms/b.chd", "C:/roms/c.chd"}));
 }
 
-// One disc is not a set, and neither is a set nothing can identify
-TEST(DiscSetPlaylistTest, NothingToWriteForOneDiscOrNoIdentity) {
+// TODO
+// A set of one launches through its playlist like any other, so a single disc renders
+TEST(DiscSetPlaylistTest, OneDiscStillGetsAPlaylist) {
   const std::vector<ContentFile> one{disc(1, "C:/roms/a.chd", "a")};
-  EXPECT_FALSE(planPlaylist(one, "hash1", "C:/appdata").has_value());
 
+  const auto plan = planPlaylist(one, "hash1", "C:/appdata");
+
+  ASSERT_TRUE(plan.has_value());
+  EXPECT_EQ(linesOf(plan->contents), (std::vector<std::string>{"C:/roms/a.chd"}));
+}
+
+// TODO
+// What is left to refuse: nothing to name it by, and nothing to name
+TEST(DiscSetPlaylistTest, NothingToWriteWithoutAnIdentityOrAnyDiscs) {
   const std::vector<ContentFile> two{disc(1, "C:/roms/a.chd", "a"), disc(2, "C:/roms/b.chd", "b")};
   EXPECT_FALSE(planPlaylist(two, "", "C:/appdata").has_value());
+
+  EXPECT_FALSE(planPlaylist({}, "hash1", "C:/appdata").has_value());
 }
 
 // A path inside an archive is not a path the core can open
@@ -102,11 +120,15 @@ TEST(DiscSetPlaylistTest, ADiscDumpedTwiceIsOneLine) {
   EXPECT_EQ(linesOf(plan->contents), (std::vector<std::string>{"C:/roms/a.chd", "C:/roms/b.cue"}));
 }
 
-// Two containers of one disc are still one disc, and a set of one is not a set
-TEST(DiscSetPlaylistTest, OneDiscInTwoContainersIsNotAPlaylist) {
+// TODO
+// Two containers of one disc are still one disc, so the set renders as the one line it is
+TEST(DiscSetPlaylistTest, OneDiscInTwoContainersIsOneLine) {
   const std::vector<ContentFile> discs{disc(1, "C:/roms/a.cue", "hashA"), disc(1, "C:/roms/a.chd", "hashA")};
 
-  EXPECT_FALSE(planPlaylist(discs, "hashA", "C:/appdata").has_value());
+  const auto plan = planPlaylist(discs, "hashA", "C:/appdata");
+
+  ASSERT_TRUE(plan.has_value());
+  EXPECT_EQ(linesOf(plan->contents), (std::vector<std::string>{"C:/roms/a.chd"}));
 }
 
 // A path inside an archive is not one the core can open, so the loose copy is the one to name
@@ -133,23 +155,30 @@ TEST(DiscSetPlaylistTest, UnhashedDiscsAreNotCollapsedTogether) {
   EXPECT_EQ(linesOf(plan->contents), (std::vector<std::string>{"C:/roms/a.chd", "C:/roms/b.chd", "C:/roms/c.chd"}));
 }
 
-// Whether a core skips comment lines is not something we know, and the directory already says
-// the file is ours
-TEST(DiscSetPlaylistTest, GeneratedPlaylistsCarryNoCommentLine) {
+// TODO
+// A playlist of ours says so on its first line, which is what makes overwriting or deleting one
+// ours to do. rc_hash skips comment lines when it resolves a playlist to its first disc, so the
+// marker cannot move the set's identity
+TEST(DiscSetPlaylistTest, AGeneratedPlaylistSaysItIsOurs) {
   const std::vector<ContentFile> discs{disc(1, "C:/roms/a.chd", "a"), disc(2, "C:/roms/b.chd", "b")};
 
   const auto plan = planPlaylist(discs, "hash1", "C:/appdata");
 
   ASSERT_TRUE(plan.has_value());
-  EXPECT_FALSE(plan->contents.starts_with("#"));
+  EXPECT_TRUE(isGeneratedPlaylist(plan->contents));
+  EXPECT_TRUE(plan->contents.starts_with(PLAYLIST_MARKER));
+
+  // The discs still follow, in order, with the marker taking only its own line
+  EXPECT_NE(plan->contents.find("C:/roms/a.chd"), std::string::npos);
+  EXPECT_LT(plan->contents.find("C:/roms/a.chd"), plan->contents.find("C:/roms/b.chd"));
 }
 
-// Playlists written by older versions carry the marker, which is what tells one of ours from
-// one somebody made themselves
-TEST(DiscSetPlaylistTest, AnOlderGeneratedPlaylistIsStillRecognisable) {
-  EXPECT_TRUE(isGeneratedPlaylist(std::string(PLAYLIST_MARKER) + "\nGame (Disc 1).cue\n"));
+// TODO
+// Somebody else's playlist is not ours to touch, whatever it is called or wherever it sits
+TEST(DiscSetPlaylistTest, APlaylistSomebodyElseWroteIsNotOurs) {
   EXPECT_FALSE(isGeneratedPlaylist("Game (Disc 1).cue\nGame (Disc 2).cue\n"));
   EXPECT_FALSE(isGeneratedPlaylist(""));
+  EXPECT_FALSE(isGeneratedPlaylist("# Generated by something else\nGame (Disc 1).cue\n"));
 }
 
 } // namespace firelight::library

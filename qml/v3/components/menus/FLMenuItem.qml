@@ -86,6 +86,16 @@ ItemDelegate {
     FLFocus.bottomLeftRadius: root._bottomRadius
     FLFocus.bottomRightRadius: root._bottomRadius
 
+    FLFocus.actions: [
+        FLAction {
+            label: "OK"
+            keys: [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Space, Qt.Key_Select]
+            onTriggered: {
+                root.click()
+            }
+        }
+    ]
+
     topPadding: AppStyle.spacingMd
     bottomPadding: _inGroup ? AppStyle.rowSpacerPage : AppStyle.spacingMd
     leftPadding: root.contentIndent

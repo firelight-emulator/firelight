@@ -8,12 +8,15 @@
 #include "firelight/library/file_bytes.hpp"
 
 #include <firelight/library/accepted_extensions.hpp>
+#include <firelight/library/filename_tags.hpp>
 #include <firelight/platforms/platform_service.hpp>
 #include <firelight/util/strings.hpp>
 
 #include <QDir>
 #include <QDirIterator>
 #include <QFileInfo>
+#include <algorithm>
+#include <filesystem>
 #include <set>
 
 namespace firelight::library {
@@ -30,7 +33,10 @@ ContentFile toContentFile(const DiscoveredFile &file, const IdentifiedContent &i
                      .m_platformId = identified.platformId,
                      .m_contentHash = identified.contentHash,
                      .m_discNumber = file.tags.discNumber,
-                     .m_regions = file.tags.regions};
+                     .m_regions = file.tags.regions,
+                     .m_normalizedTitle = normalizeTitle(file.tags.title),
+                     .m_revision = file.tags.revision,
+                     .m_role = file.role};
 }
 
 namespace {
@@ -64,13 +70,46 @@ public:
       m_names = m_archivePath.empty() ? namesInDirectory() : namesInArchive();
     }
 
+    // TODO
+    // Loose sheets name a resolved path while an archive's name only the entry, so each is asked
+    // in the form it recorded
+    if (m_archivePath.empty()) {
+      return m_names->count(resolvedKey(std::filesystem::path(path))) > 0;
+    }
+
     return m_names->count(baseNameOfToken(path)) > 0;
   }
 
 private:
+  // TODO
+  // The form paths are compared in: lower-cased and with one separator, so a sheet naming a track
+  // and the walk finding it agree however either spelled it
+  [[nodiscard]] static std::string resolvedKey(const std::filesystem::path &path) {
+    return strings::toLower(path.lexically_normal().generic_string());
+  }
+
+  // TODO
+  // Every track the sheets around this directory speak for, as resolved paths rather than names.
+  // Names alone cannot tell two tracks called the same thing in different folders apart, and a
+  // sheet naming one in a subdirectory would not reach it at all
   [[nodiscard]] std::set<std::string> namesInDirectory() const {
     std::set<std::string> names;
-    const QDir directory(QString::fromStdString(m_directoryPath));
+    const std::filesystem::path directory(m_directoryPath);
+
+    // TODO
+    // The parent as well as the directory itself, because a sheet sitting above its tracks is a
+    // layout people use and its lines point down into here
+    readSheetsInto(directory, names);
+
+    if (directory.has_parent_path() && directory.parent_path() != directory) {
+      readSheetsInto(directory.parent_path(), names);
+    }
+
+    return names;
+  }
+
+  static void readSheetsInto(const std::filesystem::path &directoryPath, std::set<std::string> &names) {
+    const QDir directory(QString::fromStdString(directoryPath.string()));
 
     for (const auto &name : directory.entryList(QDir::Files)) {
       if (!namesTracks(suffixOf(name.toStdString()))) {
@@ -80,11 +119,11 @@ private:
       const auto bytes = readAllBytes(directory.absoluteFilePath(name).toStdString());
 
       for (const auto &candidate : DiscInspector::sheetFilenameCandidates(bytes)) {
-        names.insert(baseNameOfToken(candidate));
+        auto written = candidate;
+        std::ranges::replace(written, '\\', '/');
+        names.insert(resolvedKey(directoryPath / std::filesystem::path(written)));
       }
     }
-
-    return names;
   }
 
   [[nodiscard]] std::set<std::string> namesInArchive() const {
@@ -141,10 +180,7 @@ std::optional<DiscoveredFile> ContentDiscoverer::triage(const std::string &path,
     return std::nullopt;
   }
 
-  if (accepted.count(extension) == 0) {
-    // TODO
-    // Counted rather than listed: this answers which formats people own, and a folder of save
-    // files must not become a folder of rows
+  if (!accepted.contains(extension)) {
     ++skipped.unrecognizedExtensions[extension];
     return std::nullopt;
   }
@@ -168,15 +204,19 @@ std::optional<DiscoveredFile> ContentDiscoverer::triage(const std::string &path,
   // TODO
   // A raw track is reached through the sheet naming it. One nothing names is a file in its own
   // right, and skipping those is how a zipped cartridge went missing
-  if (isDiscTrackExtension(extension) && suppressor.speaksFor(path)) {
-    return std::nullopt;
-  }
+  const auto isSpokenFor = isDiscTrackExtension(extension) && suppressor.speaksFor(path);
+
+  // TODO
+  // Everything recognised is handed back and told apart by what it is, rather than a track or a
+  // playlist being left out and the reason unreadable afterwards
+  const auto role = isSpokenFor ? ContentRole::Track : extension == "m3u" ? ContentRole::Playlist : ContentRole::Dump;
 
   return DiscoveredFile{.path = path,
                         .archivePath = archivePath,
                         .extension = extension,
                         .sizeBytes = sizeBytes,
                         .isDisc = isDisc,
+                        .role = role,
                         .tags = parseFilenameTags(path),
                         .readBytes = readBytes};
 }

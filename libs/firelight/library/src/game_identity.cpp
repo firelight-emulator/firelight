@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/game_identity.hpp>
 
 namespace firelight::library {
@@ -7,17 +8,21 @@ GameIdentity identityOf(const Entry &entry) {
       .platformId = entry.platformId,
       .title = entry.normalizedTitle,
       .regions = entry.metadata.regions,
-      .discNumber = entry.discNumber,
+  };
+}
+
+GameIdentity identityOf(const ContentFile &file) {
+  return GameIdentity{
+      .platformId = static_cast<unsigned>(file.m_platformId),
+      .title = file.m_normalizedTitle,
+      .regions = file.m_regions,
+      .discNumber = file.m_discNumber,
   };
 }
 
 bool areSameGame(const GameIdentity &left, const GameIdentity &right) {
   if (left.platformId != right.platformId) {
     return false;
-  }
-
-  if (left.gameId != 0 && right.gameId != 0) {
-    return left.gameId == right.gameId;
   }
 
   return !left.title.empty() && left.title == right.title;

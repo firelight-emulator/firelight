@@ -5,8 +5,11 @@ FLButtonBase {
 
     objectName: "FLButton|" + text
 
+    property string imageSource: ""
     property string iconName: ""
     property string trailingIconName: ""
+
+    property var leadingIcon: null
 
     readonly property int _hpad: compact ? AppStyle.spacingMd : AppStyle.spacingLg
 
@@ -23,6 +26,13 @@ FLButtonBase {
             id: row
             anchors.centerIn: parent
             spacing: AppStyle.spacingSm
+
+            Loader {
+                id: leadingIconLoader
+                sourceComponent: control.leadingIcon
+                visible: control.leadingIcon !== null
+                anchors.verticalCenter: parent.verticalCenter
+            }
 
             Icon {
                 visible: control.iconName !== ""

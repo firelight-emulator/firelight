@@ -19,6 +19,7 @@ FLButtonBase {
     FLFocus.focusSound: SoundEffects.iconButtonFocus
 
     variant: "subtle"
+    implicitHeight: AppStyle.buttonHeightJumbo
     implicitWidth: implicitHeight
 
     contentItem: Icon {

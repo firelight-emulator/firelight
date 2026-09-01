@@ -49,6 +49,11 @@ public:
   [[nodiscard]] IdentifiedContent identifyInArchive(const std::string &entryName, const std::vector<uint8_t> &data,
                                                     size_t sizeBytes, const std::string &archivePath) const;
 
+  // TODO
+  // The files a sheet on disk names, without identifying it. A playlist naming a disc nobody has
+  // cannot be hashed, and what it says about the rest is worth reading anyway
+  [[nodiscard]] std::vector<IdentifiedDiscMember> membersNamedBy(const std::string &sheetPath) const;
+
 private:
   platforms::IPlatformService &m_platformService;
   ContentHasher m_hasher;

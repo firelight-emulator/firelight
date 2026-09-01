@@ -7,7 +7,8 @@ import Firelight 1.0
 Menu {
     id: control
     property int minWidth: AppStyle.defaultPopupMinimumWidth
-    property FLSoundEffect openSound: SoundEffects.openPopup
+    // property FLSoundEffect openSound: SoundEffects.openPopup
+    property FLSoundEffect openSound: null
 
     padding: AppStyle.spacingMd
     implicitWidth: Math.max(minWidth, contentItem.implicitWidth + padding * 2)
@@ -15,6 +16,8 @@ Menu {
 
     Overlay.modal: Item {}
     property Item caller: null
+
+
 
     // TODO
     // Whether this popup is the one holding a dim up, so the two calls stay paired
@@ -69,7 +72,6 @@ Menu {
         }
 
         function onAboutToHide() {
-            console.log("onAboutToHide in FLPopup");
             FocusCursor.startBlink();
         }
 
@@ -82,6 +84,21 @@ Menu {
             Qt.callLater(() => FocusCursor.endBlink());
         }
     }
+
+    // TODO
+    // Held on a property rather than in the default one, which for a Menu is the list of items
+    // it shows
+    property FLAction _backAction: FLAction {
+        label: "Back"
+        keys: [Qt.Key_Back, Qt.Key_Escape]
+        sound: SoundEffects.back
+        onTriggered: control.close()
+    }
+
+    // TODO
+    // Declared on the content item rather than on the menu, because a Menu is not an Item and the
+    // walk that collects actions follows items. Nothing here would ever be reached from the menu
+    Component.onCompleted: control.contentItem.FLFocus.actions = [control._backAction]
 
     property bool deadHeld: false
 
@@ -150,7 +167,10 @@ Menu {
 
         const info = control.contentItem.FLFocus.find(focused);
 
-        if (control.runAction(info !== null ? info.getActionFor(key, modifiers) : null)) {
+        // TODO
+        // Looks outward from the focused item, so an action a container declares answers for
+        // everything inside it, which is what the guide bar already lists
+        if (control.runAction(control.contentItem.FLFocus.findActionFor(focused, key, modifiers))) {
             return true;
         }
 

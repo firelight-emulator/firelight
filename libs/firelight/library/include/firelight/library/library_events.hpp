@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <optional>
@@ -80,6 +81,19 @@ struct EntryAbsorbedEvent {
   int survivingEntryId;
   std::string absorbedContentHash;
   std::string survivingContentHash;
+};
+
+// TODO
+/**
+ * An entry now launches as a different dump than it did.
+ *
+ * A set is identified by its lowest-numbered disc, so a lower one arriving moves the identity onto
+ * it. Everything keyed on the old hash has to follow
+ */
+struct EntryIdentityChangedEvent {
+  int entryId;
+  std::string previousContentHash;
+  std::string contentHash;
 };
 
 } // namespace firelight::library

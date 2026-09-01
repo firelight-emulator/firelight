@@ -6,6 +6,7 @@
 
 #include <firelight/achievement_service.hpp>
 #include <firelight/activity/sqlite_activity_log.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_service.hpp>
@@ -47,7 +48,8 @@ library::Entry makeEntry(const std::string &name, const std::string &hash, const
 class LibraryEntrySortFilterModelTest : public testing::Test {
 protected:
   library::SqliteUserLibraryRepository m_repo{":memory:"};
-  library::LibraryIngestService m_ingest{m_repo};
+  library::DiscSetService m_discSets{m_repo, ""};
+  library::LibraryIngestService m_ingest{m_repo, m_discSets};
   library::UserLibraryService m_service{m_repo, (QDir::tempPath() + "/fl_lesfm_test").toStdString()};
   activity::SqliteActivityLog m_activityLog{":memory:"};
   platforms::PlatformService m_platformService;
@@ -144,7 +146,7 @@ TEST_F(LibraryEntrySortFilterModelTest, HideUnavailableIsWhatTakesItAway) {
   pump();
   ASSERT_EQ(m_model.getCount(), 3);
 
-  m_model.setHideUnavailable(true);
+  m_model.getFilter()->setPlayable(LibraryFilter::Yes);
   m_model.applyFilters();
   pump();
 
@@ -168,7 +170,7 @@ TEST_F(LibraryEntrySortFilterModelTest, DescendingReversesOrder) {
 
 // The text filter matches anywhere in the name, regardless of case
 TEST_F(LibraryEntrySortFilterModelTest, FilterTextMatchesSubstring) {
-  m_model.setFilterText("RAV");
+  m_model.getFilter()->setNameContains("RAV");
   m_model.applyFilters();
 
   EXPECT_EQ(m_model.getCount(), 1);
@@ -177,12 +179,12 @@ TEST_F(LibraryEntrySortFilterModelTest, FilterTextMatchesSubstring) {
 
 // Only entries on a listed platform survive; an empty list accepts every platform
 TEST_F(LibraryEntrySortFilterModelTest, PlatformIdsRestrictRows) {
-  m_model.setPlatformIds({7});
+  m_model.getFilter()->setPlatformIds({7});
   m_model.applyFilters();
 
   EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
 
-  m_model.setPlatformIds({});
+  m_model.getFilter()->setPlatformIds({});
   m_model.applyFilters();
 
   EXPECT_EQ(m_model.getCount(), 3);
@@ -192,7 +194,7 @@ TEST_F(LibraryEntrySortFilterModelTest, PlatformIdsRestrictRows) {
 // the heart button does
 TEST_F(LibraryEntrySortFilterModelTest, FavoritesOnlyRestrictsRows) {
   m_source->setEntryFavorite(m_model.getEntryIdAt(0), true);
-  m_model.setFavoritesOnly(true);
+  m_model.getFilter()->setFavorite(LibraryFilter::Yes);
   m_model.applyFilters();
 
   EXPECT_EQ(names(), (std::vector<QString>{"alpha"}));
@@ -200,8 +202,8 @@ TEST_F(LibraryEntrySortFilterModelTest, FavoritesOnlyRestrictsRows) {
 
 // Filters combine rather than replacing each other
 TEST_F(LibraryEntrySortFilterModelTest, FiltersCompose) {
-  m_model.setPlatformIds({3});
-  m_model.setFilterText("a");
+  m_model.getFilter()->setPlatformIds({3});
+  m_model.getFilter()->setNameContains("a");
   m_model.applyFilters();
 
   EXPECT_EQ(names(), (std::vector<QString>{"alpha", "Charlie"}));
@@ -215,9 +217,9 @@ TEST_F(LibraryEntrySortFilterModelTest, RebuildsOnlyWhenApplied) {
   QObject::connect(&m_model, &QAbstractItemModel::rowsRemoved, [&touched] { ++touched; });
   QObject::connect(&m_model, &QAbstractItemModel::layoutChanged, [&touched] { ++touched; });
 
-  m_model.setFilterText("a");
+  m_model.getFilter()->setNameContains("a");
   m_model.setSortAscending(false);
-  m_model.setPlatformIds({3});
+  m_model.getFilter()->setPlatformIds({3});
 
   EXPECT_EQ(touched, 0);
   EXPECT_EQ(m_model.getCount(), 3);
@@ -256,7 +258,7 @@ TEST_F(LibraryEntrySortFilterModelTest, FilteringRemovesRowsWithoutResetting) {
   QObject::connect(&m_model, &QAbstractItemModel::rowsRemoved, [&removes] { ++removes; });
 
   // Drops the rows either side of Bravo, so removals come in two runs
-  m_model.setFilterText("RAV");
+  m_model.getFilter()->setNameContains("RAV");
   m_model.applyFilters();
 
   EXPECT_EQ(resets, 0);
@@ -265,7 +267,7 @@ TEST_F(LibraryEntrySortFilterModelTest, FilteringRemovesRowsWithoutResetting) {
 }
 
 TEST_F(LibraryEntrySortFilterModelTest, WideningAFilterInsertsWithoutResetting) {
-  m_model.setFilterText("RAV");
+  m_model.getFilter()->setNameContains("RAV");
   m_model.applyFilters();
   ASSERT_EQ(m_model.getCount(), 1);
 
@@ -274,7 +276,7 @@ TEST_F(LibraryEntrySortFilterModelTest, WideningAFilterInsertsWithoutResetting) 
   QObject::connect(&m_model, &QAbstractItemModel::modelReset, [&resets] { ++resets; });
   QObject::connect(&m_model, &QAbstractItemModel::rowsInserted, [&inserts] { ++inserts; });
 
-  m_model.setFilterText("");
+  m_model.getFilter()->setNameContains("");
   m_model.applyFilters();
 
   EXPECT_EQ(resets, 0);
@@ -356,17 +358,17 @@ TEST_F(LibraryEntrySortFilterModelTest, PlatformCountsFollowTheRows) {
 // A getter that reads what a pass is showing while its setter writes what the next pass will show
 // means a write followed by a read hands back the old value
 TEST_F(LibraryEntrySortFilterModelTest, EveryGetterReadsTheStagedValue) {
-  m_model.setFilterText(QStringLiteral("zel"));
-  m_model.setFavoritesOnly(true);
-  m_model.setHideUnavailable(true);
-  m_model.setPlatformIds({3});
+  m_model.getFilter()->setNameContains(QStringLiteral("zel"));
+  m_model.getFilter()->setFavorite(LibraryFilter::Yes);
+  m_model.getFilter()->setPlayable(LibraryFilter::Yes);
+  m_model.getFilter()->setPlatformIds({3});
   m_model.setSortRole(LibraryEntrySortFilterModel::LastPlayedAt);
   m_model.setSortAscending(false);
 
-  EXPECT_EQ(m_model.getFilterText(), QStringLiteral("zel"));
-  EXPECT_TRUE(m_model.isFavoritesOnly());
-  EXPECT_TRUE(m_model.isHideUnavailable());
-  EXPECT_EQ(m_model.getPlatformIds(), QVariantList{3});
+  EXPECT_EQ(m_model.getFilter()->getNameContains(), QStringLiteral("zel"));
+  EXPECT_TRUE((m_model.getFilter()->getFavorite() == LibraryFilter::Yes));
+  EXPECT_TRUE((m_model.getFilter()->getPlayable() == LibraryFilter::Yes));
+  EXPECT_EQ(m_model.getFilter()->getPlatformIds(), QVariantList{3});
   EXPECT_EQ(m_model.getSortRole(), LibraryEntrySortFilterModel::LastPlayedAt)
       << "sortRole read back the committed value while its siblings read the staged one";
   EXPECT_FALSE(m_model.isSortAscending());
@@ -380,10 +382,10 @@ TEST_F(LibraryEntrySortFilterModelTest, ClearingFiltersClearsEveryOne) {
   ASSERT_TRUE(takeBravosFilesAway());
   pump();
 
-  m_model.setFilterText(QStringLiteral("zzz"));
-  m_model.setFavoritesOnly(true);
-  m_model.setHideUnavailable(true);
-  m_model.setPlatformIds({99});
+  m_model.getFilter()->setNameContains(QStringLiteral("zzz"));
+  m_model.getFilter()->setFavorite(LibraryFilter::Yes);
+  m_model.getFilter()->setPlayable(LibraryFilter::Yes);
+  m_model.getFilter()->setPlatformIds({99});
   m_model.applyFilters();
   pump();
   ASSERT_EQ(m_model.getCount(), 0);
@@ -392,10 +394,10 @@ TEST_F(LibraryEntrySortFilterModelTest, ClearingFiltersClearsEveryOne) {
   pump();
 
   EXPECT_EQ(m_model.getCount(), 3) << "clearing left a filter applied";
-  EXPECT_TRUE(m_model.getFilterText().isEmpty());
-  EXPECT_FALSE(m_model.isFavoritesOnly());
-  EXPECT_FALSE(m_model.isHideUnavailable()) << "hideUnavailable was never cleared";
-  EXPECT_TRUE(m_model.getPlatformIds().isEmpty());
+  EXPECT_TRUE(m_model.getFilter()->getNameContains().isEmpty());
+  EXPECT_FALSE((m_model.getFilter()->getFavorite() == LibraryFilter::Yes));
+  EXPECT_FALSE((m_model.getFilter()->getPlayable() == LibraryFilter::Yes)) << "hideUnavailable was never cleared";
+  EXPECT_TRUE(m_model.getFilter()->getPlatformIds().isEmpty());
   EXPECT_FALSE(m_model.anyFiltersActive());
 }
 

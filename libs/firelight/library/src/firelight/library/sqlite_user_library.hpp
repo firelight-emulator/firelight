@@ -7,7 +7,11 @@
 #include <QString>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace SQLite {
 class Database;
@@ -40,6 +44,8 @@ public:
 
   bool setEntryHidden(int entryId, bool hidden) override;
 
+  bool setEntryContentHash(int entryId, const std::string &contentHash, std::string_view reason) override;
+
   bool updateEntryMetadata(const Entry &entry) override;
 
   bool applyEntryMetadata(int entryId, const GameMetadata &incoming, const std::set<std::string> &changedFields,
@@ -57,6 +63,8 @@ public:
 
   std::optional<DiscSet> getDiscSet(int setId) override;
 
+  std::vector<DiscSet> getCandidateDiscSets(const GameIdentity &identity) override;
+
   std::vector<DiscSet> getDiscSets() override;
 
   std::optional<DiscSet> getDiscSetForContentFile(int contentFileId) override;
@@ -64,10 +72,6 @@ public:
   std::vector<ContentFile> getDiscsInSet(int setId) override;
 
   std::vector<Entry> getEntriesInDiscSet(int setId) override;
-
-  bool setContentFileDiscSet(int contentFileId, std::optional<int> setId) override;
-
-  bool setEntryDiscSet(int entryId, std::optional<int> setId, bool isUserChoice) override;
 
   std::optional<int> getLastDisc(int entryId, int saveSlot) override;
 
@@ -130,6 +134,8 @@ public:
 
   std::vector<ContentFile> getContentFiles() override;
 
+  std::vector<ContentFile> getRecordedFiles() override;
+
   std::optional<ContentFile> getContentFile(int id) override;
 
   std::vector<ContentFile> getContentFilesWithContentHash(const std::string &contentHash) override;
@@ -140,7 +146,19 @@ public:
 
   std::optional<PatchFile> getPatchFile(int id) override;
 
-  bool create(DiscMember &member) override;
+  bool create(ContentFileTrack &track) override;
+
+  bool create(DiscSetMember &member) override;
+
+  std::vector<DiscSetMember> getDiscSetMembers(int setId) override;
+
+  bool deleteDiscSetMember(int memberId) override;
+
+  std::optional<DiscSetMember> getDiscSetMemberForContentFile(int contentFileId) override;
+
+  std::optional<DiscSetMember> getDiscSetMember(int memberId) override;
+
+  std::optional<DiscSetMember> getPendingDiscSetMember(const std::string &memberPath) override;
 
   void create(PatchFile &file) override;
 
@@ -155,8 +173,7 @@ public:
   bool deleteEntry(int entryId) override;
 
   void createRunConfiguration(int contentFileId, const std::string &path, int platformId,
-                              const std::string &contentHash,
-                              std::string_view type = RunConfiguration::TYPE_ROM) override;
+                              const std::string &contentHash) override;
 
   void createRunConfigurationForSet(int setId, int anchorContentFileId, const std::string &contentHash) override;
 
@@ -174,8 +191,49 @@ public:
 
 private:
   // TODO
-  // The listing behind getContentFiles and getPresentContentFiles
-  [[nodiscard]] std::vector<ContentFile> contentFiles(bool presentOnly);
+  // TODO
+  /**
+   * What one dump row says about the entry it belongs to
+   */
+  struct ContentSourceRow {
+    int id = 0;
+    int contentDirectoryId = -1;
+    std::string path; // the archive when the dump is inside one
+    int discNumber = 0;
+    bool isReadable = false;
+    bool isDisc = false;
+    bool isInArchive = false;
+  };
+
+  // TODO
+  // Every dump grouped by the hash it stands for, or just one hash's worth. One projection, so
+  // the whole-library load and the single-entry read cannot come to different conclusions
+  [[nodiscard]] std::unordered_map<std::string, std::vector<ContentSourceRow>>
+  readContentSource(const std::optional<std::string> &contentHash);
+
+  // TODO
+  // What each hash launches through: present when anything can launch it, holding a set id when
+  // that way in is a disc set. Whole-library, or just one hash
+  [[nodiscard]] std::unordered_map<std::string, std::optional<int>>
+  readWaysIn(const std::optional<std::string> &contentHash);
+
+  // TODO
+  // Writes an entry's per-file facts from its dumps. The single writer of all six, so the order
+  // they land in and what each one means are decided in one place
+  static void applyContentSource(Entry &entry, std::vector<ContentSourceRow> rows);
+
+  // TODO
+  // Writes what an entry launches through: whether anything does, and the set when that is one
+  static void applyWayIn(Entry &entry, const std::unordered_map<std::string, std::optional<int>> &waysIn);
+
+  // TODO
+  // The set a file is a disc of, read from its membership row. Announced with a file going
+  // missing or coming back, so the set's other discs know to look again
+  [[nodiscard]] std::optional<int> discSetOfContentFile(int contentFileId);
+
+  // TODO
+  // The listing behind getContentFiles, getPresentContentFiles and getRecordedFiles
+  [[nodiscard]] std::vector<ContentFile> contentFiles(bool presentOnly, bool dumpsOnly);
 
   // TODO
   // The listing behind getDiscsInSet and getPresentDiscsInSet

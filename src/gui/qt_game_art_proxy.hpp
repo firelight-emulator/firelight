@@ -1,5 +1,7 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
+#include <firelight/library/library_events.hpp>
 #include <firelight/metadata/art_provider.hpp>
 
 #include <QHash>

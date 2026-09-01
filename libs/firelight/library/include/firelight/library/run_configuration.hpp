@@ -1,27 +1,31 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <cstdint>
 #include <optional>
 #include <string>
-#include <string_view>
 
 namespace firelight::library {
 
+// TODO
 /**
- * Represents a way to launch an entry: a ROM/disc file, optionally with a patch applied, or a playlist for a multi-disc
- * game
+ * A way to launch an entry.
+ *
+ * What kind it is, is what it points at: a disc set launches through the set's playlist, anything
+ * else through the content file named here. A patch id means the bytes handed to the core are the
+ * patched ones
  */
 struct RunConfiguration {
-  static constexpr std::string_view TYPE_ROM = "rom";
-  static constexpr std::string_view TYPE_PATCH = "patch";
-  static constexpr std::string_view TYPE_PLAYLIST = "playlist";
-
   int id = -1;
-  std::string type;
   std::string contentHash;
   int contentFileId = -1;
   int patchId = -1;
   std::optional<int> discSetId{};
+
+  // TODO
+  // Which of an entry's ways in it launches through. Exactly one carries this, so nothing has to
+  // score them against each other
+  bool isDefault = false;
 
   int64_t createdAt = 0;
 };

@@ -11,15 +11,33 @@ FocusScope {
     // Where the cursor enters the page. Focus landing on the scope itself means nothing inside
     // holds it yet; focus handed straight to a descendant — coming back from a popup — is left
     // where it is
-    onActiveFocusChanged: {
-        if (root.activeFocus && root.Window.activeFocusItem === root) {
-            gameView.enterFocus();
+    // onActiveFocusChanged: {
+    //     if (root.activeFocus && root.Window.activeFocusItem === root) {
+    //         gameView.enterFocus();
+    //     }
+    // }
+
+    property Component headerLeading: null
+    property Component headerCenter: Component {
+        NavigationTabBar {
+            tabs: ["Games", "Collections"]
+
+            clickAction: function() {
+                gameView.enterFocus();
+            }
+
+            onCurrentIndexChanged: {
+                console.log("Tab changed to index: " + currentIndex);
+            }
         }
     }
+    property Component headerTrailing: null
 
     SplitView {
         id: splitView
         anchors.fill: parent
+        anchors.leftMargin: AppStyle.windowPadding
+        anchors.rightMargin: AppStyle.windowPadding
         orientation: Qt.Horizontal
         spacing: 0
 
@@ -238,6 +256,8 @@ FocusScope {
             horizontalPadding: 0
             topPadding: 0
             verticalPadding: 0
+
+            focus: true
 
             background: Item {}
 

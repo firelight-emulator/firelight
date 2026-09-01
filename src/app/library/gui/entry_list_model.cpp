@@ -4,6 +4,7 @@
 #include <firelight/achievement_service.hpp>
 #include <firelight/activity/activity_log.hpp>
 #include <firelight/library/folder_info.hpp>
+#include <firelight/library/library_events.hpp>
 #include <firelight/library/user_library_repository.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
@@ -86,6 +87,9 @@ QString statusText(const EntryStatus &status, const StatusDetail &detail) {
       break;
     case EntryProblem::ContentInArchive:
       sentences << QObject::tr("This disc is inside an archive and has to be extracted first.");
+      break;
+    case EntryProblem::NoRunConfiguration:
+      sentences << QObject::tr("Firelight can't work out how to launch this game. Try scanning again.");
       break;
     case EntryProblem::DiscsMissing:
       if (detail.missingDiscs.isEmpty()) {
@@ -745,6 +749,8 @@ void EntryListModel::refreshPlatformProblems() {
 EntryStatus EntryListModel::statusOf(const Entry &entry) const {
   EntryStatusFacts facts;
   facts.hasWayIn = entry.isContentAvailable;
+  facts.hasRunConfiguration = entry.hasRunConfiguration;
+  facts.isDiscInArchive = entry.isDiscInArchive;
 
   if (const auto problem = m_problemByPlatformId.constFind(static_cast<int>(entry.platformId));
       problem != m_problemByPlatformId.constEnd()) {
@@ -762,7 +768,11 @@ EntryStatus EntryListModel::statusOf(const Entry &entry) const {
       facts.expectedDiscCount = set->discCount;
     }
 
-    facts.isDiscInArchive = std::ranges::any_of(discs, [](const ContentFile &disc) { return disc.m_inArchive; });
+    // TODO
+    // Widens what the entry's own files already said, because the rest of a set is other content
+    // files that the entry does not carry
+    facts.isDiscInArchive =
+        facts.isDiscInArchive || std::ranges::any_of(discs, [](const ContentFile &disc) { return disc.m_inArchive; });
   }
 
   return evaluateEntryStatus(facts);

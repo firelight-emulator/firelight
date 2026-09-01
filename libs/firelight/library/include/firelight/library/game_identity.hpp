@@ -1,5 +1,7 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
+#include <firelight/library/content_file.hpp>
 #include <firelight/library/entry.hpp>
 
 #include <string>
@@ -11,19 +13,16 @@ namespace firelight::library {
  * What is known about which game an entry is a copy of.
  *
  * Every field is three-valued: it says the same thing, a different thing, or nothing at all.
- * Nothing at all never counts as different — an id nobody has resolved and a region nobody has
- * scraped are absences, not distinctions
+ * Nothing at all never counts as different — a region nobody has scraped is an absence, not a
+ * distinction
  */
 // TODO
 struct GameIdentity {
   unsigned platformId = 0;
 
-  // The content database's id for the game, 0 when nothing has resolved one. It spans regions
-  // and discs by construction, which is why region has to survive as its own field
-  int gameId = 0;
-
-  // The folded title. The whole key before a content database exists, and the fallback for
-  // anything it has nothing to say about afterwards
+  // TODO
+  // The folded title, and the whole of what says which game this is. There is no id here: the
+  // one the content database holds spans regions and discs, so it can never decide either
   std::string title;
 
   // Ordered most authoritative first, empty when nothing has said
@@ -35,17 +34,21 @@ struct GameIdentity {
   int discNumber = 0;
 
   /** Whether nothing has said what this is, in which case it matches nothing */
-  [[nodiscard]] bool isEmpty() const { return gameId == 0 && title.empty(); }
+  [[nodiscard]] bool isEmpty() const { return title.empty(); }
 };
 
 /** The identity an entry carries */
 [[nodiscard]] GameIdentity identityOf(const Entry &entry);
 
+// TODO
 /**
- * Whether two entries are copies of the same game.
- *
- * Resolved ids win outright when both sides have one. When either side has none the folded
- * title decides, which is the whole rule before a content database exists
+ * The identity a dump carries, read from its own filename tags rather than from the entry that
+ * stands for it
+ */
+[[nodiscard]] GameIdentity identityOf(const ContentFile &file);
+
+/**
+ * Whether two entries are copies of the same game, which the folded title decides
  */
 [[nodiscard]] bool areSameGame(const GameIdentity &left, const GameIdentity &right);
 

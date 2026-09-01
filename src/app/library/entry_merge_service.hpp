@@ -25,6 +25,7 @@ private:
   activity::IActivityLog &m_activityLog;
 
   ScopedConnection m_entryAbsorbedConnection;
+  ScopedConnection m_entryIdentityChangedConnection;
 };
 
 } // namespace firelight::library

@@ -3,8 +3,9 @@
 
 #include <firelight/library/content_directory.hpp>
 #include <firelight/library/content_file.hpp>
-#include <firelight/library/disc_member.hpp>
+#include <firelight/library/content_file_track.hpp>
 #include <firelight/library/disc_set.hpp>
+#include <firelight/library/disc_set_member.hpp>
 #include <firelight/library/entry.hpp>
 #include <firelight/library/folder_entry.hpp>
 #include <firelight/library/folder_info.hpp>
@@ -36,17 +37,17 @@ public:
 
   virtual bool create(ContentDirectory &directory) = 0;
 
-  virtual bool create(DiscMember &member) = 0;
+  virtual bool create(ContentFileTrack &track) = 0;
 
   virtual bool createEntry(Entry &entry) = 0;
 
+  // TODO
   /**
-   * Records a way to launch a content file. The type is what tells one disc's own way in from
-   * the playlist that stands for the whole set
+   * Records a way to launch a content file. The first one an entry gets is the one it launches
+   * through
    */
   virtual void createRunConfiguration(int contentFileId, const std::string &path, int platformId,
-                                      const std::string &contentHash,
-                                      std::string_view type = RunConfiguration::TYPE_ROM) = 0;
+                                      const std::string &contentHash) = 0;
 
   /**
    * Records the way a whole disc set launches, replacing whichever one it had.
@@ -63,6 +64,14 @@ public:
   virtual bool update(Entry &entry) = 0;
 
   virtual bool setEntryHidden(int entryId, bool hidden) = 0;
+
+  // TODO
+  /**
+   * Points an entry at a different dump, which is what a set does when a lower-numbered disc
+   * arrives and takes over as its anchor. Announces the move so everything keyed on the old hash
+   * can follow
+   */
+  virtual bool setEntryContentHash(int entryId, const std::string &contentHash, std::string_view reason) = 0;
 
   virtual bool update(const ContentDirectory &directory) = 0;
 
@@ -136,6 +145,13 @@ public:
 
   [[nodiscard]] virtual std::optional<DiscSet> getDiscSet(int setId) = 0;
 
+  // TODO
+  /**
+   * The sets a disc carrying this identity could belong to, oldest first so a disc matching more
+   * than one joins the same one every time
+   */
+  [[nodiscard]] virtual std::vector<DiscSet> getCandidateDiscSets(const GameIdentity &identity) = 0;
+
   [[nodiscard]] virtual std::vector<DiscSet> getDiscSets() = 0;
 
   /**
@@ -148,22 +164,49 @@ public:
    */
   [[nodiscard]] virtual std::vector<ContentFile> getDiscsInSet(int setId) = 0;
 
+  // TODO
+  /**
+   * Records which disc of a set a file is, or the position a disc will take once its file is
+   * catalogued. Replaces the row already at that path in the same set
+   */
+  virtual bool create(DiscSetMember &member) = 0;
+
+  // TODO
+  /**
+   * A set's membership, ordered by disc number. Includes rows whose file is not catalogued yet
+   */
+  [[nodiscard]] virtual std::vector<DiscSetMember> getDiscSetMembers(int setId) = 0;
+
+  // TODO
+  /**
+   * Takes a disc out of whatever set holds it
+   */
+  virtual bool deleteDiscSetMember(int memberId) = 0;
+
+  // TODO
+  /**
+   * The membership row holding a catalogued file, or nothing when no set has claimed it
+   */
+  [[nodiscard]] virtual std::optional<DiscSetMember> getDiscSetMemberForContentFile(int contentFileId) = 0;
+
+  // TODO
+  /**
+   * One membership row by id
+   */
+  [[nodiscard]] virtual std::optional<DiscSetMember> getDiscSetMember(int memberId) = 0;
+
+  // TODO
+  /**
+   * A row naming this path whose file has not been catalogued yet, which is a claim waiting for
+   * the file to turn up
+   */
+  [[nodiscard]] virtual std::optional<DiscSetMember> getPendingDiscSetMember(const std::string &memberPath) = 0;
+
   /**
    * The entries pointed at a set. An absorbed disc has no entry, so a set's discs cannot be
    * walked back to find the one standing for it
    */
   [[nodiscard]] virtual std::vector<Entry> getEntriesInDiscSet(int setId) = 0;
-
-  /**
-   * Puts a content file in a set, or takes it out when the set is empty
-   */
-  virtual bool setContentFileDiscSet(int contentFileId, std::optional<int> setId) = 0;
-
-  /**
-   * Points an entry at a set. isUserChoice records that a person decided it, which is what
-   * stops automatic grouping undoing them
-   */
-  virtual bool setEntryDiscSet(int entryId, std::optional<int> setId, bool isUserChoice) = 0;
 
   /**
    * Which disc a save slot was last on, or nothing when it has never been launched
@@ -193,9 +236,9 @@ public:
   /**
    * The entries on a platform that could be the same game as this one.
    *
-   * A net, not an answer. An id and a title are each only sometimes known, and SQL cannot
-   * cheaply say that an unknown matches anything, so this returns everything either could
-   * reach and areSameGame decides which of them count
+   * A net, not an answer. A title is only sometimes known and can be carried by the entry or
+   * by the dumps behind it, so this returns everything either could reach and areSameGame
+   * decides which of them count
    *
    * Ascending and without repeats, so a caller that stops at the first peer stops at the same
    * one every time
@@ -249,6 +292,14 @@ public:
                                                                    bool inArchive) = 0;
 
   virtual std::vector<ContentFile> getContentFiles() = 0;
+
+  /**
+   * Every file the walk recognised, whatever it turned out to be.
+   *
+   * The other listings answer what stands for a game; this one answers what is on disk, so a track
+   * or a playlist going missing is noticed too
+   */
+  [[nodiscard]] virtual std::vector<ContentFile> getRecordedFiles() = 0;
 
   virtual std::optional<ContentFile> getContentFile(int id) = 0;
 

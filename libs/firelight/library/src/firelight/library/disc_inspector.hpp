@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/library/identify_outcome.hpp>
@@ -69,12 +70,16 @@ public:
   // Plausible sibling-filename tokens out of a cue/gdi/m3u sheet
   [[nodiscard]] static std::vector<std::string> sheetFilenameCandidates(const std::vector<uint8_t> &sheetBytes);
 
+  // TODO
+  // The files a sheet names, resolved against the sheet's own directory. A playlist keeps a line
+  // naming a file nobody has; a cue drops one, because there a line's fields are not all paths
+  [[nodiscard]] std::vector<IdentifiedDiscMember> collectLooseMembers(const std::string &sheetPath) const;
+
 private:
   // Runs rcheevos AUTO detection over a disc image on disk
   DiscIdentity detect(const std::string &discFilePath) const;
 
   // For a loose cue/gdi/m3u sheet, finds the sibling member files on disk
-  std::vector<IdentifiedDiscMember> collectLooseMembers(const std::string &sheetPath) const;
 
   // TODO
   // What the bytes say a file is once nothing has read it as a disc. Only ever asked after the
@@ -83,6 +88,10 @@ private:
 
   // True when the iterator's first data track holds the Sega Saturn magic
   static bool isSaturn(rc_hash_iterator &iterator);
+
+  // TODO
+  // The discs a playlist names, one per line, with blanks and comments left out
+  static std::vector<std::string> playlistLines(const std::vector<uint8_t> &bytes);
 
   static std::string roleForBaseName(const std::string &baseNameLower);
 

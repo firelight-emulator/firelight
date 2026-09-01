@@ -18,15 +18,15 @@ RowLayout {
         Layout.preferredWidth: Math.round(240 * AppStyle.scale)
         placeholder: qsTr("Search this view")
         onTextChanged: {
-            if (root.view.filterText !== text) {
-                root.view.filterText = text;
+            if (root.view.filter.nameContains !== text) {
+                root.view.filter.nameContains = text;
             }
         }
         Connections {
-            target: root.view
-            function onFilterTextChanged() {
-                if (searchField.text !== root.view.filterText) {
-                    searchField.text = root.view.filterText;
+            target: root.view.filter
+            function onNameContainsChanged() {
+                if (searchField.text !== root.view.filter.nameContains) {
+                    searchField.text = root.view.filter.nameContains;
                 }
             }
         }

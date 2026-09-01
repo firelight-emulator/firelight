@@ -1,6 +1,7 @@
 // TODO: NEEDS REVIEW
 #include "variant_group_service.hpp"
 
+#include <firelight/library/library_events.hpp>
 #include <firelight/library/user_library_repository.hpp>
 
 #include <spdlog/spdlog.h>

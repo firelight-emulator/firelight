@@ -1,6 +1,7 @@
 // TODO: NEEDS REVIEW
 #include <firelight/library/content_identifier.hpp>
 #include <firelight/library/content_loader.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -64,16 +65,25 @@ QByteArray romBytes(const int size, const char seed) {
 class LibraryEndToEndTest : public testing::Test {
 protected:
   QTemporaryDir m_tempDir;
+
+  // TODO
+  // Where a set's playlist is written, kept out of the scanned folder so the artifact a launch
+  // needs is never itself scanned back in as content
+  QTemporaryDir m_appDataDir;
+
   platforms::PlatformService m_platformService;
   std::unique_ptr<SqliteUserLibraryRepository> m_repo;
   // Entries exist only because this is alive: the scanner writes content files and nothing
   // else. Its absence is why no other test reaches an entry from a real file
+  std::unique_ptr<DiscSetService> m_discSets;
   std::unique_ptr<LibraryIngestService> m_ingest;
 
   void SetUp() override {
     ASSERT_TRUE(m_tempDir.isValid());
+    ASSERT_TRUE(m_appDataDir.isValid());
     m_repo = std::make_unique<SqliteUserLibraryRepository>(QString(":memory:"));
-    m_ingest = std::make_unique<LibraryIngestService>(*m_repo);
+    m_discSets = std::make_unique<DiscSetService>(*m_repo, m_appDataDir.path().toStdString());
+    m_ingest = std::make_unique<LibraryIngestService>(*m_repo, *m_discSets);
   }
 
   QString path(const QString &relative) const { return m_tempDir.filePath(relative); }
@@ -127,7 +137,7 @@ protected:
   // One scanner per scan, so the periodic rescan timer and the watcher debounce cannot fire
   // into a later assertion
   void scan() {
-    LibraryScanner2 scanner(*m_repo, m_platformService);
+    LibraryScanner2 scanner(*m_repo, m_platformService, nullptr, m_discSets.get());
     waitForScanIdle(scanner);
   }
 
@@ -160,6 +170,50 @@ protected:
       total += m_repo->getRunConfigurations(entry.contentHash).size();
     }
     return total;
+  }
+
+  // TODO
+  // A disc as it sits on disk: a sheet naming the raw track beside it, which is what the walk
+  // has to reach through
+  void writeDisc(const QString &baseName, const char seed) const {
+    write(baseName + ".bin", discImageBytes(seededSegaCdImage(seed)));
+
+    const auto trackName = QFileInfo(baseName).fileName() + ".bin";
+    write(baseName + ".cue", QByteArray("FILE \"") + trackName.toUtf8() +
+                                 QByteArray("\" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n"));
+  }
+
+  // Where the set launching under this identity keeps its playlist
+  std::string playlistFor(const std::string &contentHash) const {
+    return playlistPathFor(contentHash, m_appDataDir.path().toStdString());
+  }
+
+  // TODO
+  // What a playlist names, without the line saying the file is ours
+  static std::vector<std::string> discLinesOf(const std::string &playlistPath) {
+    QFile file(QString::fromStdString(playlistPath));
+
+    if (!file.open(QIODevice::ReadOnly)) {
+      return {};
+    }
+
+    std::vector<std::string> lines;
+
+    for (const auto &line : QString::fromUtf8(file.readAll()).split('\n')) {
+      const auto trimmed = line.trimmed();
+
+      if (!trimmed.isEmpty() && !trimmed.startsWith('#')) {
+        lines.push_back(trimmed.toStdString());
+      }
+    }
+
+    return lines;
+  }
+
+  // TODO
+  // The discs of the set behind an entry, in the order membership holds them
+  std::vector<DiscSetMember> membersOf(const Entry &entry) {
+    return entry.discSetId.has_value() ? m_repo->getDiscSetMembers(*entry.discSetId) : std::vector<DiscSetMember>{};
   }
 };
 
@@ -655,6 +709,433 @@ TEST_F(LibraryEndToEndTest, DiscNumbersAndRegionsAreParsedFromRealFilenamesOntoC
   std::ranges::sort(discNumbers);
 
   EXPECT_EQ(discNumbers, (std::vector<int>{1, 2})) << "the scanner did not carry the disc tag onto the content file";
+}
+
+// TODO
+// The whole path, on real files: two discs and a playlist naming them. The playlist is read as a
+// statement about which discs belong together rather than catalogued as a game of its own
+TEST_F(LibraryEndToEndTest, APlaylistBesideItsDiscsIsReadRatherThanCatalogued) {
+  write("Lunar (USA) (Disc 1).cue",
+        QByteArray("FILE \"lunard1.bin\" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n"));
+  write("lunard1.bin", discImageBytes(seededSegaCdImage(61)));
+  write("Lunar (USA) (Disc 2).cue",
+        QByteArray("FILE \"lunard2.bin\" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n"));
+  write("lunard2.bin", discImageBytes(seededSegaCdImage(62)));
+  write("Lunar.m3u", QByteArray("Lunar (USA) (Disc 1).cue\nLunar (USA) (Disc 2).cue\n"));
+  registerContentDirectory();
+
+  scan();
+
+  // The playlist is not a game, and the two discs are one
+  EXPECT_EQ(entries().size(), 1u) << "the playlist was catalogued as a game of its own";
+
+  for (const auto &file : m_repo->getContentFiles()) {
+    EXPECT_FALSE(file.m_filePath.ends_with(".m3u")) << "the playlist was catalogued as content";
+  }
+
+  const auto game = entries().front();
+  ASSERT_TRUE(game.discSetId.has_value()) << "the discs the playlist named did not become a set";
+
+  const auto members = m_repo->getDiscSetMembers(*game.discSetId);
+  ASSERT_EQ(members.size(), 2u);
+  EXPECT_EQ(members[0].m_discNumber, 1);
+  EXPECT_EQ(members[1].m_discNumber, 2);
+
+  for (const auto &member : members) {
+    EXPECT_EQ(member.m_source, DiscSource::PlaylistFile) << "the playlist's word was not what placed the disc";
+  }
+
+  // The line count is what says how many discs the game came on
+  EXPECT_EQ(m_repo->getDiscSet(*game.discSetId)->discCount, 2);
+}
+
+// TODO
+// One folder per disc, with a playlist naming them by relative path. Reducing each line to its
+// file name loses every set laid out this way, and the playlist is then catalogued as a game of
+// its own that renders itself as one of the discs
+// TODO
+// A playlist says which discs a game has, not which of them are here. A line naming a file nobody
+// has yet holds its number, so the discs after it do not slide up one
+TEST_F(LibraryEndToEndTest, APlaylistLineForAMissingDiscHoldsItsNumber) {
+  write("FF7 (Disc 1).cue",
+        QByteArray("FILE \"FF7 (Disc 1).bin\" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n"));
+  write("FF7 (Disc 1).bin", discImageBytes(seededSegaCdImage(81)));
+  write("FF7 (Disc 3).cue",
+        QByteArray("FILE \"FF7 (Disc 3).bin\" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n"));
+  write("FF7 (Disc 3).bin", discImageBytes(seededSegaCdImage(83)));
+
+  // Disc 2 is named but nobody has it
+  write("FF7.m3u", QByteArray("FF7 (Disc 1).cue\nFF7 (Disc 2).cue\nFF7 (Disc 3).cue\n"));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "the discs did not become one game";
+
+  const auto game = entries().front();
+  ASSERT_TRUE(game.discSetId.has_value());
+
+  const auto members = m_repo->getDiscSetMembers(*game.discSetId);
+  ASSERT_EQ(members.size(), 3u) << "the line for the disc nobody has was dropped";
+
+  EXPECT_EQ(members[0].m_discNumber, 1);
+  EXPECT_EQ(members[1].m_discNumber, 2);
+  EXPECT_EQ(members[2].m_discNumber, 3);
+
+  // The one nobody has is holding a place rather than standing for a file
+  EXPECT_TRUE(members[0].m_contentFileId.has_value());
+  EXPECT_FALSE(members[1].m_contentFileId.has_value());
+  EXPECT_TRUE(members[2].m_contentFileId.has_value());
+
+  EXPECT_TRUE(members[2].m_memberPath.ends_with("FF7 (Disc 3).cue")) << "disc 3 slid up into disc 2's place";
+}
+
+TEST_F(LibraryEndToEndTest, APlaylistNamesDiscsInTheirOwnFolders) {
+  write("FF7 (Disc 1)/FF7 (Disc 1).cue",
+        QByteArray("FILE \"FF7 (Disc 1).bin\" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n"));
+  write("FF7 (Disc 1)/FF7 (Disc 1).bin", discImageBytes(seededSegaCdImage(71)));
+  write("FF7 (Disc 2)/FF7 (Disc 2).cue",
+        QByteArray("FILE \"FF7 (Disc 2).bin\" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n"));
+  write("FF7 (Disc 2)/FF7 (Disc 2).bin", discImageBytes(seededSegaCdImage(72)));
+  write("FF7.m3u", QByteArray("FF7 (Disc 1)/FF7 (Disc 1).cue\nFF7 (Disc 2)/FF7 (Disc 2).cue\n"));
+  registerContentDirectory();
+
+  scan();
+
+  for (const auto &file : m_repo->getContentFiles()) {
+    EXPECT_FALSE(file.m_filePath.ends_with(".m3u")) << "the playlist was catalogued as a disc";
+  }
+
+  ASSERT_EQ(entries().size(), 1u) << "the discs in their own folders did not become one game";
+
+  const auto game = entries().front();
+  ASSERT_TRUE(game.discSetId.has_value());
+
+  const auto members = m_repo->getDiscSetMembers(*game.discSetId);
+  ASSERT_EQ(members.size(), 2u) << "a playlist line naming a subdirectory was not resolved";
+
+  for (const auto &member : members) {
+    EXPECT_EQ(member.m_source, DiscSource::PlaylistFile);
+    EXPECT_FALSE(member.m_memberPath.ends_with(".m3u"));
+  }
+
+  EXPECT_EQ(m_repo->getDiscSet(*game.discSetId)->discCount, 2);
+}
+
+// TODO
+// A sheet sitting above its tracks. Matching by file name alone cannot reach into a subdirectory,
+// so the track was catalogued as a game of its own however clearly the sheet spoke for it
+TEST_F(LibraryEndToEndTest, ASheetSpeaksForATrackInASubdirectory) {
+  write("Sonic CD.cue",
+        QByteArray("FILE \"tracks/Sonic CD (Track 1).bin\" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n"));
+  write("tracks/Sonic CD (Track 1).bin", discImageBytes(seededSegaCdImage(81)));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "the track under the sheet was catalogued as its own game";
+
+  const auto files = m_repo->getContentFiles();
+  ASSERT_EQ(files.size(), 1u);
+  EXPECT_TRUE(files.front().m_filePath.ends_with(".cue"));
+}
+
+// TODO
+// Two numbered discs with nothing else to go on collapse into one game. This is the filename rung
+// of the placement ladder, which is what fires for the overwhelming majority of real libraries
+TEST_F(LibraryEndToEndTest, TwoDiscsWithNoPlaylistBecomeOneGame) {
+  writeDisc("Lunar (Disc 1)", 41);
+  writeDisc("Lunar (Disc 2)", 42);
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << shape();
+
+  const auto game = entries().front();
+  ASSERT_TRUE(game.discSetId.has_value()) << "two discs of one game did not form a set";
+
+  const auto members = membersOf(game);
+  ASSERT_EQ(members.size(), 2u);
+  EXPECT_EQ(members[0].m_discNumber, 1);
+  EXPECT_EQ(members[1].m_discNumber, 2);
+
+  for (const auto &member : members) {
+    EXPECT_EQ(member.m_source, DiscSource::Filename);
+  }
+
+  // One game is one way in, on the disc the set is identified by
+  EXPECT_EQ(runConfigurationCount(), 1u) << shape();
+}
+
+// TODO
+// Disc 1 turning up after the others moves what the game is keyed on, in place. The row is the
+// same row, so everything a person put on it is still there
+TEST_F(LibraryEndToEndTest, DiscOneArrivingLastMovesTheGameOntoItWithoutLosingIt) {
+  writeDisc("Xenogears (Disc 2)", 52);
+  writeDisc("Xenogears (Disc 3)", 53);
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << shape();
+  const auto before = entries().front();
+
+  // Something only the person could have done, which has to survive the identity moving
+  auto edited = before;
+  edited.rating = 5;
+  edited.favorite = true;
+  ASSERT_TRUE(m_repo->update(edited));
+
+  writeDisc("Xenogears (Disc 1)", 51);
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "a second game appeared instead of the identity moving: " + shape();
+
+  const auto after = entries().front();
+  EXPECT_EQ(after.id, before.id) << "the row was replaced rather than re-keyed";
+  EXPECT_NE(after.contentHash, before.contentHash) << "the identity did not move onto disc 1";
+  EXPECT_EQ(after.rating, 5) << "the rating did not survive the re-key";
+  EXPECT_TRUE(after.favorite) << "the favourite did not survive the re-key";
+
+  ASSERT_EQ(membersOf(after).size(), 3u);
+  EXPECT_EQ(membersOf(after).front().m_discNumber, 1);
+}
+
+// TODO
+// A playlist is a statement about which discs belong together and in what order, so its order is
+// what the set takes even when the filenames say something else
+TEST_F(LibraryEndToEndTest, APlaylistsOrderOutranksTheNumbersInTheFilenames) {
+  writeDisc("Riven (Disc 1)", 61);
+  writeDisc("Riven (Disc 2)", 62);
+  write("Riven.m3u", QByteArray("Riven (Disc 2).cue\nRiven (Disc 1).cue\n"));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << shape();
+
+  const auto members = membersOf(entries().front());
+  ASSERT_EQ(members.size(), 2u);
+
+  EXPECT_TRUE(members[0].m_memberPath.ends_with("Riven (Disc 2).cue")) << "the playlist's order was ignored";
+  EXPECT_TRUE(members[1].m_memberPath.ends_with("Riven (Disc 1).cue"));
+
+  for (const auto &member : members) {
+    EXPECT_EQ(member.m_source, DiscSource::PlaylistFile);
+  }
+}
+
+// TODO
+// A claim holds a place for a disc nobody has yet. The disc turning up fills that place rather
+// than starting a set of its own
+TEST_F(LibraryEndToEndTest, TheDiscAClaimWasHoldingAPlaceForArrivesLater) {
+  writeDisc("Koudelka (Disc 1)", 71);
+  write("Koudelka.m3u", QByteArray("Koudelka (Disc 1).cue\nKoudelka (Disc 2).cue\n"));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << shape();
+  auto members = membersOf(entries().front());
+  ASSERT_EQ(members.size(), 2u);
+  EXPECT_FALSE(members[1].m_contentFileId.has_value()) << "a disc nobody has read as a real file";
+
+  writeDisc("Koudelka (Disc 2)", 72);
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "the arriving disc started a game of its own: " + shape();
+
+  members = membersOf(entries().front());
+  ASSERT_EQ(members.size(), 2u) << "the arriving disc was added beside the place held for it";
+  EXPECT_TRUE(members[1].m_contentFileId.has_value()) << "the place held for disc 2 was never filled";
+  EXPECT_EQ(members[1].m_discNumber, 2);
+}
+
+// TODO
+// Membership is not presence. A disc going away leaves the game, the set and the membership row
+// exactly where they were, so putting the file back needs no repair
+TEST_F(LibraryEndToEndTest, LosingOneDiscKeepsTheSetAndItsMembership) {
+  writeDisc("Grandia (Disc 1)", 81);
+  writeDisc("Grandia (Disc 2)", 82);
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << shape();
+  const auto before = entries().front();
+  const auto setId = *before.discSetId;
+
+  remove("Grandia (Disc 2).cue");
+  remove("Grandia (Disc 2).bin");
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "losing a disc took the game with it: " + shape();
+
+  const auto after = entries().front();
+  EXPECT_EQ(after.id, before.id);
+  EXPECT_EQ(after.contentHash, before.contentHash) << "losing disc 2 moved what the game is keyed on";
+  ASSERT_TRUE(after.discSetId.has_value());
+  EXPECT_EQ(*after.discSetId, setId) << "the set was dissolved";
+
+  EXPECT_EQ(m_repo->getDiscSetMembers(setId).size(), 2u) << "membership followed the bytes";
+  EXPECT_EQ(m_repo->getPresentDiscsInSet(setId).size(), 1u) << "a missing disc still counts as present";
+}
+
+// TODO
+// Two regional releases share a title and differ in region, which is the whole of what keeps them
+// apart. Folding them would put one release's saves on the other
+TEST_F(LibraryEndToEndTest, TwoRegionalReleasesInOneFolderStayTwoGames) {
+  writeDisc("Suikoden II (USA) (Disc 1)", 91);
+  writeDisc("Suikoden II (Japan) (Disc 1)", 92);
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 2u) << "two regional releases were folded into one game: " + shape();
+
+  for (const auto &entry : entries()) {
+    ASSERT_TRUE(entry.discSetId.has_value());
+    EXPECT_EQ(membersOf(entry).size(), 1u) << "a release took the other's disc into its set";
+  }
+}
+
+// TODO
+// A playlist naming raw disc images rather than sheets still forms a set. Reading it as a sheet
+// that speaks for its lines would leave the game with nothing to launch through
+TEST_F(LibraryEndToEndTest, APlaylistNamingRawDiscsStillYieldsAGame) {
+  write("Panzer (Disc 1).iso", discImageBytes(seededSegaCdImage(101)));
+  write("Panzer (Disc 2).iso", discImageBytes(seededSegaCdImage(102)));
+  write("Panzer.m3u", QByteArray("Panzer (Disc 1).iso\nPanzer (Disc 2).iso\n"));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "a playlist of raw discs left no game behind: " + shape();
+
+  const auto game = entries().front();
+  ASSERT_TRUE(game.discSetId.has_value());
+  EXPECT_EQ(membersOf(game).size(), 2u);
+  EXPECT_TRUE(game.hasRunConfiguration) << "the game has nothing to launch through";
+}
+
+// TODO
+// A playlist whose first line names a disc nobody has still groups the ones they do have. The
+// absent disc keeps the number the playlist gave it
+TEST_F(LibraryEndToEndTest, APlaylistWhoseFirstDiscIsAbsentStillGroupsTheRest) {
+  writeDisc("Lunar 2 (Disc 2)", 112);
+  writeDisc("Lunar 2 (Disc 3)", 113);
+  write("Lunar 2.m3u", QByteArray("Lunar 2 (Disc 1).cue\nLunar 2 (Disc 2).cue\nLunar 2 (Disc 3).cue\n"));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << shape();
+
+  const auto members = membersOf(entries().front());
+  ASSERT_EQ(members.size(), 3u) << "the discs that are here did not group";
+
+  EXPECT_FALSE(members[0].m_contentFileId.has_value()) << "a disc nobody has read as a real file";
+  EXPECT_TRUE(members[1].m_contentFileId.has_value());
+  EXPECT_TRUE(members[2].m_contentFileId.has_value());
+
+  // The set launches from the lowest disc it actually has
+  EXPECT_TRUE(entries().front().hasRunConfiguration);
+}
+
+// TODO
+// A playlist carries its first disc's content hash. Catalogued as content it would hand that
+// disc's game a second way in and name itself among the game's own files
+TEST_F(LibraryEndToEndTest, APlaylistIsNeitherAWayInNorAContentPath) {
+  writeDisc("Riven (Disc 1)", 121);
+  writeDisc("Riven (Disc 2)", 122);
+  write("Riven.m3u", QByteArray("Riven (Disc 1).cue\nRiven (Disc 2).cue\n"));
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << shape();
+  const auto game = entries().front();
+
+  EXPECT_EQ(m_repo->getRunConfigurations(game.contentHash).size(), 1u)
+      << "the playlist handed the game a second way in";
+
+  for (const auto &path : game.contentPaths) {
+    EXPECT_FALSE(path.ends_with(".m3u")) << "the playlist read as somewhere the game's content lives";
+  }
+
+  for (const auto &file : m_repo->getContentFilesWithContentHash(game.contentHash)) {
+    EXPECT_FALSE(file.m_filePath.ends_with(".m3u")) << "the playlist read as a copy of disc 1";
+  }
+}
+
+// TODO
+// A set launches through a playlist of ours under the app data directory, never through anything
+// written beside the discs
+TEST_F(LibraryEndToEndTest, ADiscSetLaunchesThroughAPlaylistWeWrote) {
+  writeDisc("Riven (Disc 1)", 131);
+  writeDisc("Riven (Disc 2)", 132);
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << shape();
+  const auto game = entries().front();
+
+  const auto rendered = playlistFor(game.contentHash);
+  ASSERT_TRUE(QFile::exists(QString::fromStdString(rendered))) << "the set has no playlist to launch through";
+
+  const auto lines = discLinesOf(rendered);
+  ASSERT_EQ(lines.size(), 2u);
+  EXPECT_TRUE(lines[0].ends_with("Riven (Disc 1).cue")) << "the playlist does not start with the disc it is named for";
+  EXPECT_TRUE(lines[1].ends_with("Riven (Disc 2).cue"));
+
+  // Nothing of ours is written in among somebody's ROMs
+  for (const auto &name : QDir(m_tempDir.path()).entryList(QDir::Files)) {
+    EXPECT_FALSE(name.endsWith(".m3u") && name.contains(QString::fromStdString(game.contentHash)))
+        << "a generated playlist was written into the ROM folder";
+  }
+}
+
+// TODO
+// A game whose discs have all gone stays in the library as something that cannot be played, rather
+// than disappearing and taking everything a person put on it with it
+TEST_F(LibraryEndToEndTest, ASetWhoseDiscsAreAllGoneStaysInTheLibrary) {
+  writeDisc("Grandia (Disc 1)", 141);
+  writeDisc("Grandia (Disc 2)", 142);
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << shape();
+  const auto before = entries().front();
+
+  remove("Grandia (Disc 1).cue");
+  remove("Grandia (Disc 1).bin");
+  remove("Grandia (Disc 2).cue");
+  remove("Grandia (Disc 2).bin");
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "the game left the library when its files did";
+
+  const auto after = entries().front();
+  EXPECT_EQ(after.id, before.id);
+  EXPECT_FALSE(after.isContentAvailable) << "a game with no files on disk read as playable";
+  EXPECT_FALSE(after.contentPaths.empty()) << "the answer to where the game went was thrown away";
+}
+
+// TODO
+// One folder per disc is a layout people use, and the discs in it have to find each other with
+// nothing but their names to go on
+TEST_F(LibraryEndToEndTest, DiscsInTheirOwnFoldersFindEachOtherWithoutAPlaylist) {
+  writeDisc("FF9 (Disc 1)/FF9 (Disc 1)", 151);
+  writeDisc("FF9 (Disc 2)/FF9 (Disc 2)", 152);
+  registerContentDirectory();
+
+  scan();
+
+  ASSERT_EQ(entries().size(), 1u) << "discs in their own folders did not become one game: " + shape();
+  EXPECT_EQ(membersOf(entries().front()).size(), 2u);
 }
 
 } // namespace firelight::library

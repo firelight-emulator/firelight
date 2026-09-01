@@ -1,6 +1,8 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/event_dispatcher.hpp>
+#include <firelight/library/library_events.hpp>
 #include <firelight/metadata/game_metadata.hpp>
 
 #include <QThreadPool>

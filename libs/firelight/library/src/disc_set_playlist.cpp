@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/disc_set_playlist.hpp>
 #include <firelight/util/strings.hpp>
 
@@ -34,9 +35,10 @@ std::optional<PlaylistPlan> planPlaylist(const std::vector<ContentFile> &discs, 
     return !disc.m_contentHash.empty() && !seenHashes.insert(disc.m_contentHash).second;
   });
 
-  // A one-line playlist buys nothing, and gaining a second disc does not move the identity
-  // because the first line is still the same disc
-  if (ordered.size() < 2) {
+  // TODO
+  // A set launches through its playlist whatever its size, so the floor is having something to
+  // name rather than having two of them
+  if (ordered.empty()) {
     return std::nullopt;
   }
 
@@ -49,6 +51,12 @@ std::optional<PlaylistPlan> planPlaylist(const std::vector<ContentFile> &discs, 
 
   PlaylistPlan plan;
   plan.path = playlistPathFor(contentHash, appDataDirectory);
+
+  // TODO
+  // Says whose file this is, so overwriting or deleting it is never done to something somebody
+  // else put at the same path
+  plan.contents += PLAYLIST_MARKER;
+  plan.contents += "\n";
 
   // TODO
   // Absolute, because the file lives nowhere near the discs and is rewritten from the database

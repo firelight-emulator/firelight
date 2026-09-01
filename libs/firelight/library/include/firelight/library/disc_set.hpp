@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <cstdint>
@@ -14,8 +15,19 @@ namespace firelight::library {
  */
 struct DiscSet {
   int id = -1;
+
+  // TODO
+  // What a disc looking for its set matches on, alongside the folded title below
+  unsigned platformId = 0;
+
   std::string title;
   bool titleUserSet = false;
+
+  // TODO
+  // The folded form of the title, which is what grouping compares. Kept beside the display title
+  // so renaming a set does not move it
+  std::string normalizedTitle;
+
   int discCount = 0; // How many discs the game came on, 0 until something authoritative says
   uint64_t createdAt = 0;
 };
@@ -30,31 +42,6 @@ struct EntryDiscState {
 };
 
 /**
- * How complete a set is, from the disc numbers actually present
- */
-enum class DiscSetState {
-  Complete,          // Every disc from 1 upward is here
-  MissingFirstDisc,  // Disc 1 is missing, so there is nothing worth launching
-  MissingMiddleDisc, // Disc 1 is here but the run has a hole in it
-};
-
-/**
- * Which disc stands for a set: the lowest number present
- *
- * @return The disc number, or 0 when there are none
- */
-// TODO: Get rid of?
-[[nodiscard]] int representativeDisc(const std::vector<int> &discNumbers);
-
-/**
- * Reads the shape of a set from the discs it holds
- *
- * Without an external database we cannot know a set's true size, so this only reports what is
- * knowable: whether the numbers run from 1 without a gap
- */
-[[nodiscard]] DiscSetState discSetState(const std::vector<int> &discNumbers);
-
-/**
  * The disc numbers missing from the run, which is empty for a complete set. A set with no
  * disc 1 reports 1 as missing
  *
@@ -62,11 +49,5 @@ enum class DiscSetState {
  * @param knownDiscCount How many discs the game came on
  */
 [[nodiscard]] std::vector<int> missingDiscs(const std::vector<int> &discNumbers, int knownDiscCount = 0);
-
-/**
- * Whether a set can be launched at all. Playing disc 2 of an RPG without disc 1 is not a use
- * case worth supporting, and refusing it keeps the set's identity from ever moving.
- */
-[[nodiscard]] bool isDiscSetLaunchable(const std::vector<int> &discNumbers);
 
 } // namespace firelight::library

@@ -187,6 +187,21 @@ Item {
     property bool _scrollPending: false
 
     // TODO
+    // Set for one move by whatever is about to take focus somewhere far away, and spent on the
+    // next scroll the cursor works out. The top is given rather than measured, because the item
+    // moved to may not be built yet and a container knows where its rows are without one
+    property bool _alignNextToTop: false
+    property real _alignTop: 0
+
+    // TODO
+    // Asks that the next item taken focus of be scrolled to the top rather than just into view.
+    // itemTop is that item's y in its container's content coordinates
+    function alignNextToTop(itemTop: real) {
+        root._alignNextToTop = true;
+        root._alignTop = itemTop;
+    }
+
+    // TODO
     // Tween state for the single-step scroll (fixed-duration quadratic ease-out)
     // and cruise state for held repeats (constant velocity at the repeat
     // cadence, landing with a velocity-matched tween)
@@ -220,7 +235,13 @@ Item {
         const itemTop = cursorItem.mapToItem(_flick.contentItem, 0, 0).y;
         let desired = _flick.contentY;
 
-        if (itemTop - above < desired) {
+        if (_alignNextToTop) {
+            // TODO
+            // Asked for the item at the top rather than merely on screen, at the position the
+            // container gave rather than the one read off the item. The clamp below is what leaves
+            // it short of the top near the end of the content
+            desired = _alignTop - above;
+        } else if (itemTop - above < desired) {
             desired = itemTop - above;
         } else if (itemTop + cursorItem.height + below > desired + _flick.height) {
             desired = itemTop + cursorItem.height + below - _flick.height;
@@ -414,8 +435,10 @@ Item {
         if (_flick === null) {
             _scrollPending = false;
             _cruising = false;
+            _alignNextToTop = false;
         } else {
             const scrollTarget = computeScrollTarget(_flick === prevFlick);
+            _alignNextToTop = false;
             const inFlight = (_scrollPending || _cruising) && _flick === prevFlick;
             const sameDestination = inFlight && Math.abs(scrollTarget - _scrollTo) < 0.5;
 

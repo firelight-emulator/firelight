@@ -16,6 +16,8 @@ class QtInputServiceProxy final : public QObject {
                  setPrioritizeControllerOverKeyboard NOTIFY prioritizeControllerOverKeyboardChanged)
   Q_PROPERTY(bool onlyPlayerOneCanNavigateMenus READ getOnlyPlayerOneCanNavigateMenus WRITE
                  setOnlyPlayerOneCanNavigateMenus NOTIFY onlyPlayerOneCanNavigateMenusChanged)
+  Q_PROPERTY(
+      QVariantMap currentGamepadButtonIcons READ getCurrentGamepadButtonIcons NOTIFY currentGamepadButtonIconsChanged)
 public:
   explicit QtInputServiceProxy(input::InputService &inputService);
 
@@ -26,6 +28,8 @@ public:
   void setOnlyPlayerOneCanNavigateMenus(bool onlyPlayerOneCanNavigateMenus);
 
   [[nodiscard]] bool getOnlyPlayerOneCanNavigateMenus() const;
+
+  QVariantMap getCurrentGamepadButtonIcons() const;
 
   // Switches shortcut scope between in-game and menu contexts (driven by the UI)
   Q_INVOKABLE void setShortcutsInGame(bool inGame);
@@ -39,6 +43,7 @@ public:
 signals:
   void prioritizeControllerOverKeyboardChanged();
   void onlyPlayerOneCanNavigateMenusChanged();
+  void currentGamepadButtonIconsChanged();
 
 private:
   input::InputService *m_inputService;

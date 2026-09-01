@@ -4,6 +4,7 @@
 #include <firelight/library/content_discoverer.hpp>
 #include <firelight/library/content_extensions.hpp>
 #include <firelight/library/content_identifier.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/file_bytes.hpp>
 #include <firelight/library/filename_tags.hpp>
 #include <firelight/library/library_scanner2.hpp>
@@ -13,6 +14,7 @@
 #include <QDateTime>
 #include <QDir>
 #include <QtConcurrent>
+#include <filesystem>
 #include <qcryptographichash.h>
 #include <qdiriterator.h>
 #include <spdlog/spdlog.h>
@@ -20,13 +22,12 @@
 
 namespace firelight::library {
 
-void LibraryScanner2::persistDiscMembers(const int contentFileId, const std::vector<IdentifiedDiscMember> &members) {
+void LibraryScanner2::persistContentFileTracks(const int contentFileId,
+                                               const std::vector<IdentifiedDiscMember> &members) {
   for (size_t i = 0; i < members.size(); ++i) {
-    DiscMember member{.m_contentFileId = contentFileId,
-                      .m_path = members[i].path,
-                      .m_role = members[i].role,
-                      .m_sortIndex = static_cast<int>(i)};
-    m_library.create(member);
+    ContentFileTrack track{
+        .m_contentFileId = contentFileId, .m_path = members[i].path, .m_sortIndex = static_cast<int>(i)};
+    m_library.create(track);
   }
 }
 
@@ -41,14 +42,14 @@ void LibraryScanner2::recordDrop(const std::string &filePath, const std::string 
                       .identifiedAs = identifiedAs};
 
   if (m_library.recordScanDrop(drop)) {
-    spdlog::warn("Could not catalogue {}{}", archivePath.empty() ? "" : archivePath + " -> ", filePath);
+    spdlog::warn("Could not catalog {}{}", archivePath.empty() ? "" : archivePath + " -> ", filePath);
   }
 }
 
 LibraryScanner2::LibraryScanner2(IUserLibraryRepository &library, platforms::IPlatformService &platformService,
-                                 IPatchAssociator *patchAssociator)
+                                 IPatchAssociator *patchAssociator, DiscSetService *discSets)
     : m_library(library), m_platformService(platformService),
-      m_patchAssociator(patchAssociator == nullptr ? m_nullPatchAssociator : *patchAssociator) {
+      m_patchAssociator(patchAssociator == nullptr ? m_nullPatchAssociator : *patchAssociator), m_discSets(discSets) {
   m_threadPool.setMaxThreadCount(1);
   for (const auto &dir : m_library.getContentDirectories()) {
     watchPath(QString::fromStdString(dir.path));
@@ -187,7 +188,7 @@ QFuture<bool> LibraryScanner2::startScan() {
 
     const auto unreachable = unreachableRoots();
 
-    auto allRoms = m_library.getContentFiles();
+    auto allRoms = m_library.getRecordedFiles();
     for (auto &romFile : allRoms) {
       if (unreachable.ids.contains(romFile.m_contentDirectoryId)) {
         continue;
@@ -273,7 +274,7 @@ std::optional<QString> LibraryScanner2::getNextDirectory() {
   return {nextDirectory};
 }
 
-bool LibraryScanner2::catalogue(const DiscoveredFile &file, const ContentIdentifier &identifier) {
+bool LibraryScanner2::catalog(const DiscoveredFile &file, const ContentIdentifier &identifier) {
   if (m_library.getContentFileWithPathAndSize(file.path, static_cast<int64_t>(file.sizeBytes), file.isInArchive())) {
     spdlog::debug("Skipping known file: {}", file.path);
     return true;
@@ -282,6 +283,36 @@ bool LibraryScanner2::catalogue(const DiscoveredFile &file, const ContentIdentif
   // The table holds only what is still wrong, so a path that used to fail and now does not stops
   // being reported
   m_library.clearScanDrop(file.path, file.archivePath);
+
+  // TODO
+  // A track is reached through the sheet naming it, so it is recorded as one and never hashed:
+  // identifying it would cost the read and tell us nothing we would act on
+  if (file.role == ContentRole::Track) {
+    auto trackInfo = toContentFile(file, {});
+
+    // TODO
+    // The size the walk measured, because nothing identified this file and the next scan finds a
+    // known file by its path and size together
+    trackInfo.m_fileSizeBytes = file.sizeBytes;
+    m_library.create(trackInfo);
+    return true;
+  }
+
+  // TODO
+  // Claimed before identifying, because a playlist whose first disc is absent has no hash at all
+  // and what it says about the discs that are here is worth reading anyway
+  if (file.role == ContentRole::Playlist) {
+    auto playlistInfo = toContentFile(file, {});
+    playlistInfo.m_fileSizeBytes = file.sizeBytes;
+    m_library.create(playlistInfo);
+
+    if (m_discSets == nullptr || file.isInArchive() || !claimPlaylist(file, identifier.membersNamedBy(file.path))) {
+      spdlog::warn("Could not read the discs named by playlist {}", file.path);
+    }
+
+    ++m_changesInCurrentScan;
+    return true;
+  }
 
   // TODO
   // A disc is identified from its container rather than from a buffer, so its bytes are never read
@@ -299,9 +330,32 @@ bool LibraryScanner2::catalogue(const DiscoveredFile &file, const ContentIdentif
 
   auto romInfo = toContentFile(file, identified);
   m_library.create(romInfo);
-  persistDiscMembers(romInfo.m_id, identified.discMembers);
+  persistContentFileTracks(romInfo.m_id, identified.discMembers);
   ++m_changesInCurrentScan;
   return true;
+}
+
+// TODO
+// The discs a playlist names, in the order it names them. A sheet that names tracks rather than
+// discs is a single disc's container and is catalogued like any other
+bool LibraryScanner2::claimPlaylist(const DiscoveredFile &file, const std::vector<IdentifiedDiscMember> &members) {
+  std::vector<std::string> discPaths;
+
+  // TODO
+  // Every line, whatever the file behind it turns out to be: a playlist names discs by definition,
+  // and asking the extension instead drops a set written as .chd rather than .cue
+  for (const auto &member : members) {
+    // TODO
+    // Sheet members are built with the platform's own separator while catalogued files carry
+    // the one the walk produced, so the two only line up in the generic form
+    discPaths.push_back(std::filesystem::path(member.path).generic_string());
+  }
+
+  if (discPaths.empty()) {
+    return false;
+  }
+
+  return m_discSets->claimPlaylist(file.path, discPaths).has_value();
 }
 
 void LibraryScanner2::catalogPatch(const DiscoveredFile &file) {
@@ -341,7 +395,7 @@ void LibraryScanner2::scanDirectory(const QString &path) {
   bool dirHasContent = false;
 
   const auto skipped = discoverer.walk(
-      path.toStdString(), [&](const DiscoveredFile &file) { dirHasContent |= catalogue(file, identifier); },
+      path.toStdString(), [&](const DiscoveredFile &file) { dirHasContent |= catalog(file, identifier); },
       [&] { return !m_shuttingDown && !pathIsQueued(path); }, !unchanged);
 
   for (const auto &subdirectory : skipped.subdirectories) {

@@ -1,5 +1,6 @@
 // TODO: NEEDS REVIEW
 #include <firelight/library/content_discoverer.hpp>
+#include <firelight/library/content_extensions.hpp>
 #include <firelight/library/content_identifier.hpp>
 #include <firelight/platforms/platform_service.hpp>
 
@@ -132,8 +133,14 @@ TEST_F(ContentDiscovererTest, ASheetSpeaksForItsTracksOnDiskAndInAnArchive) {
   write("Game (Track 1).bin", bytesOf(4096, 5));
 
   const auto loose = walk();
-  EXPECT_EQ(named(loose, "Game (Track 1).bin"), nullptr) << "a track its sheet names was discovered anyway";
-  EXPECT_NE(named(loose, "Game.cue"), nullptr) << "the sheet itself should still be discovered";
+
+  const auto *track = named(loose, "Game (Track 1).bin");
+  ASSERT_NE(track, nullptr) << "a track its sheet names was left out rather than told apart";
+  EXPECT_EQ(track->role, ContentRole::Track) << "a track its sheet names was offered as a game";
+
+  const auto *sheetFile = named(loose, "Game.cue");
+  ASSERT_NE(sheetFile, nullptr) << "the sheet itself should still be discovered";
+  EXPECT_EQ(sheetFile->role, ContentRole::Dump);
 }
 
 TEST_F(ContentDiscovererTest, ASheetInsideAnArchiveSpeaksForItsTracksToo) {
@@ -142,7 +149,9 @@ TEST_F(ContentDiscovererTest, ASheetInsideAnArchiveSpeaksForItsTracksToo) {
 
   const auto walked = walk();
 
-  EXPECT_EQ(named(walked, "Game (Track 1).bin"), nullptr) << "an archived track its sheet names was discovered anyway";
+  const auto *track = named(walked, "Game (Track 1).bin");
+  ASSERT_NE(track, nullptr) << "an archived track its sheet names was left out rather than told apart";
+  EXPECT_EQ(track->role, ContentRole::Track) << "an archived track its sheet names was offered as a game";
 }
 
 // TODO
@@ -164,7 +173,22 @@ TEST_F(ContentDiscovererTest, AnUnreferencedTrackExtensionIsStillDiscovered) {
 
   const auto walked = walk();
 
-  EXPECT_NE(named(walked, "Sonic.bin"), nullptr) << "a .bin nothing speaks for was skipped";
+  const auto *cartridge = named(walked, "Sonic.bin");
+  ASSERT_NE(cartridge, nullptr) << "a .bin nothing speaks for was skipped";
+  EXPECT_EQ(cartridge->role, ContentRole::Dump) << "a .bin nothing speaks for read as somebody's track";
+}
+
+// TODO
+// A playlist is a statement about which discs belong together, so it is told apart from the discs
+// it names rather than being offered as one of them
+TEST_F(ContentDiscovererTest, APlaylistIsToldApartFromContent) {
+  write("Game.m3u", QByteArray("Game (Disc 1).cue\r\n"));
+
+  const auto walked = walk();
+
+  const auto *playlist = named(walked, "Game.m3u");
+  ASSERT_NE(playlist, nullptr);
+  EXPECT_EQ(playlist->role, ContentRole::Playlist);
 }
 
 // TODO
@@ -350,6 +374,28 @@ TEST(ToContentFileTest, ALooseFileIsNotMarkedAsArchived) {
   EXPECT_EQ(row.m_type, ContentType::Cartridge);
   EXPECT_FALSE(row.m_inArchive);
   EXPECT_TRUE(row.m_archivePathName.empty());
+}
+
+// TODO
+// A playlist names discs, not tracks. Speaking for them would leave every disc it lists out of the
+// library and the game with nothing to launch through
+TEST_F(ContentDiscovererTest, APlaylistDoesNotSpeakForTheDiscsItNames) {
+  write("Game.m3u", QByteArray("Game (Disc 1).bin\nGame (Disc 2).bin\n"));
+  write("Game (Disc 1).bin", bytesOf(4096, 11));
+  write("Game (Disc 2).bin", bytesOf(4096, 12));
+
+  const auto walked = walk();
+
+  for (const auto *name : {"Game (Disc 1).bin", "Game (Disc 2).bin"}) {
+    const auto *disc = named(walked, name);
+    ASSERT_NE(disc, nullptr) << name << " was left out because a playlist named it";
+    EXPECT_EQ(disc->role, ContentRole::Dump) << name << " was offered as somebody's track";
+  }
+
+  EXPECT_FALSE(namesTracks("m3u")) << "a playlist counts as a sheet that speaks for tracks";
+  EXPECT_TRUE(namesTracks("cue"));
+  EXPECT_TRUE(namesTracks("gdi"));
+  EXPECT_TRUE(namesTracks("ccd"));
 }
 
 } // namespace firelight::library

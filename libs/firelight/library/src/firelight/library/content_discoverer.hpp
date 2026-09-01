@@ -35,6 +35,11 @@ struct DiscoveredFile {
   std::string extension;
   size_t sizeBytes = 0;
   bool isDisc = false;
+
+  // TODO
+  // What the walk decided this file is. A track or a playlist is recorded like anything else and
+  // told apart by this rather than by being left out
+  ContentRole role = ContentRole::Dump;
   // What the file name says about the release
   FilenameTags tags;
   // The bytes, read on demand. Empty for a disc, which is identified from its container

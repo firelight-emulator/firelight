@@ -1,4 +1,6 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/metadata_overrides.hpp>
+#include <firelight/util/game_metadata.hpp>
 
 #include <gtest/gtest.h>
 

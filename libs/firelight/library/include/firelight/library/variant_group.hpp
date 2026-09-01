@@ -8,7 +8,7 @@
 namespace firelight::library {
 
 /**
- * A set of entries that are the same game — regional releases, revisions, translations.
+ * A set of entries that are the same game - regional releases, revisions, translations
  *
  * The group carries no metadata of its own; each variant keeps its own. What it holds is a title and
  * which variant stands for the set
@@ -19,9 +19,6 @@ struct VariantGroup {
   bool titleUserSet = false;
   std::optional<int> primaryEntryId;
   bool primaryUserSet = false;
-  // TODO
-  // Whether launching the group goes straight to the primary rather than asking which
-  // variant to run
   bool autoLaunchPrimary = false;
   uint64_t createdAt = 0;
 };
@@ -50,7 +47,7 @@ struct VariantCandidate {
 };
 
 /**
- * The entry that should stand for a group, or nothing when no candidate can.
+ * The entry that should stand for a group, or nothing when no candidate can
  *
  * Ranks on released-before-unreleased, then preferred region, then preferred language, then highest
  * revision, and finally the lowest id so the answer never depends on the order asked. A candidate

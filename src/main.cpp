@@ -21,6 +21,7 @@
 #include "app/input/gui/platform_input_preferences.hpp"
 #include "app/input/gui/profile_list_model.hpp"
 #include "app/library/gui/content_directory_model.hpp"
+#include "app/library/gui/disc_set_list_model.hpp"
 #include "app/library/gui/entry_list_model.hpp"
 #include "app/library/gui/library_entry_item.hpp"
 #include "app/library/gui/library_path_model.hpp"
@@ -69,6 +70,7 @@
 #include "gui/platform_list_model.hpp"
 #include "gui/qt_achievement_service_proxy.hpp"
 #include "gui/qt_core_registry_proxy.hpp"
+#include "gui/qt_disc_set_proxy.hpp"
 #include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_game_art_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
@@ -331,12 +333,13 @@ int main(int argc, char *argv[]) {
 
   // Drives content-file -> run-configuration -> entry orchestration off the
   // repository's events. Must outlive scanning
-  firelight::library::LibraryIngestService libIngestService(userLibrary);
 
   // Folds the discs of one game into a single entry, so a three-disc game is one row with one
   // memory card. Constructed alongside ingest, since a set forms as soon as metadata gives the
   // entries a title to match on
   firelight::library::DiscSetService discSetService(userLibrary, defaultAppDataPathString.toStdString());
+
+  firelight::library::LibraryIngestService libIngestService(userLibrary, discSetService);
 
   // Auto-populates entry name/metadata/art from the shipped offline metadata
   // DB when a game is added (and backfills existing entries). Constructed
@@ -368,7 +371,7 @@ int main(int argc, char *argv[]) {
   // reachable once one is supplied
   metadataService.startArtSweep();
 
-  firelight::library::LibraryScanner2 libScanner2(userLibrary, platformService);
+  firelight::library::LibraryScanner2 libScanner2(userLibrary, platformService, nullptr, &discSetService);
 
   firelight::library::EntryResolver entryResolver(userLibrary, defaultAppDataPathString.toStdString());
   firelight::library::UserLibraryService userLibraryService(userLibrary, romsPath.toStdString());
@@ -422,6 +425,13 @@ int main(int argc, char *argv[]) {
   // prefers. Constructed after the settings service because that is where the
   // ordering lives
   firelight::library::VariantGroupService variantGroupService(userLibraryService, settingsService);
+
+  // TODO
+  // Behind F10 for now: a way to look at what grouping decided and correct it
+  firelight::gui::DiscSetListModel discSetListModel(userLibrary);
+  firelight::gui::QtDiscSetProxy discSetProxy(discSetService, userLibrary);
+  QObject::connect(&discSetProxy, &firelight::gui::QtDiscSetProxy::setsChanged, &discSetListModel,
+                   &firelight::gui::DiscSetListModel::refresh);
 
   // Carries saves and playtime across when one entry is folded into another
   firelight::library::EntryMergeService entryMergeService(saveManager, activityLog);
@@ -785,6 +795,8 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("SaveManager", &saveManagerProxy);
   engine.rootContext()->setContextProperty("ContentDirectoryModel", &contentDirectoryModel);
   engine.rootContext()->setContextProperty("LibraryEntryModel", &entryListModel);
+  engine.rootContext()->setContextProperty("DiscSetModel", &discSetListModel);
+  engine.rootContext()->setContextProperty("DiscSets", &discSetProxy);
   engine.rootContext()->setContextProperty("CaptureModel", &captureListModel);
   engine.rootContext()->setContextProperty("PlatformModel", &platformListModel);
 

@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/library/metadata_overrides.hpp>
@@ -18,6 +19,16 @@ struct Entry {
   unsigned activeSaveSlot = 1;
   bool hidden = false;             // Hidden manually by the user
   bool isContentAvailable = false; // Whether any copy of this content is still on disk
+
+  // TODO
+  // Whether anything records a way to launch this. Read alongside the content files rather than
+  // asked per row, which the grid would pay for once per entry
+  bool hasRunConfiguration = false;
+
+  // TODO
+  // Whether a readable copy of this entry's own content is a disc sitting inside an archive,
+  // which is a path the core cannot open
+  bool isDiscInArchive = false;
   bool favorite = false;
   unsigned rating = 0; // 0-5, 0 when not rated
   std::string icon1x1SourceUrl;
@@ -35,15 +46,10 @@ struct Entry {
   // TODO
   // Which disc of a set this is, 0 when it is not one. Read from the entry's content file
   // rather than stored again here
-  int discNumber = 0;
 
   // TODO
   // The multi-disc game this entry is, when it is one
   std::optional<int> discSetId{};
-
-  // TODO
-  // Whether a person decided this entry's disc set. Automatic grouping leaves it alone
-  bool discSetUserSet = false;
 
   std::optional<int> variantGroupId{}; // The set of variant groups this entry is one of
   bool variantGroupUserSet = false;    // Whether a person decided this entry's membership so it's not overridden

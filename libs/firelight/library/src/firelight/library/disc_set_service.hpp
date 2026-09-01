@@ -1,6 +1,6 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
-#include <firelight/event_dispatcher.hpp>
 #include <firelight/library/disc_set.hpp>
 #include <firelight/library/disc_set_playlist.hpp>
 #include <firelight/library/user_library_repository.hpp>
@@ -12,15 +12,13 @@
 
 namespace firelight::library {
 
+// TODO
 /**
- * Folds the discs of one game into a single library entry.
+ * Owns which discs make up a game.
  *
- * A disc is a content file, not an entry, so a three-disc game is one row. Discs arrive as
- * separate entries because each has its own content hash; this finds them and absorbs the
- * extras into the one holding the lowest disc, which is the only one left able to launch.
- *
- * Runs off EntryUpdatedEvent rather than at ingest, because the title a set is matched on is
- * written by metadata population after the entry already exists
+ * A disc is a content file, not an entry, so a game is one row however many discs it came on. A
+ * disc finds its set as it is catalogued, and the set launches through one way in, on the disc it
+ * is identified by
  */
 class DiscSetService {
 public:
@@ -28,12 +26,41 @@ public:
 
   ~DiscSetService() = default;
 
+  // TODO
   /**
-   * Finds the discs of the same game as this entry and folds them together.
+   * Puts a newly catalogued disc in the set it belongs to, creating one when nothing matches.
    *
-   * @return True when anything moved
+   * @return The set it landed in, or nothing when the file is not a disc or nothing has named it
    */
-  bool autoGroupDiscs(int entryId);
+  std::optional<int> place(const ContentFile &file);
+
+  // TODO
+  /**
+   * Records the discs a user's playlist names, in the order it names them.
+   *
+   * A line whose file is not catalogued becomes a row holding that position until it is, and the
+   * line count is written as the set's disc count
+   *
+   * @return The set the playlist describes
+   */
+  std::optional<int> claimPlaylist(const std::string &playlistPath, const std::vector<std::string> &discPaths);
+
+  // TODO
+  /**
+   * Re-keys the set's entry onto its anchor when a lower-numbered disc has taken over
+   *
+   * @return True when the identity moved
+   */
+  bool syncSetEntry(int setId);
+
+  // TODO
+  /**
+   * Leaves the set with one way in, on the disc it is identified by, and one entry keyed on the
+   * same disc. Creates that way in when nothing stands for the set yet
+   *
+   * @return True when the set has an anchor to launch through
+   */
+  bool syncSetWayIn(int setId);
 
   /**
    * Writes the set's playlist when it is missing or says the wrong thing.
@@ -57,37 +84,35 @@ public:
   bool clearUserChoice(int entryId);
 
 private:
-  /** Keeps a set's disc count in step with what metadata says the game came on */
-  void recordDiscCount(const Entry &entry);
-
+  // TODO
   /**
-   * Whether these discs and the ones already in their sets number off without repeating.
-   *
-   * A repeat means more than one release is in play, and which disc pairs with which is a
-   * guess. Guessing wrong deletes somebody's entry, so nothing happens instead
+   * Whether a set could take a disc carrying this identity: compatible regions, and nothing
+   * already sitting at the number
    */
-  bool areDiscNumbersUnambiguous(const std::vector<Entry> &members);
+  bool hasRoomFor(const DiscSet &set, const ContentFile &file, const GameIdentity &identity);
 
-  /** The set these discs belong in, creating one when none of them is in a set yet */
-  std::optional<int> resolveSet(const std::vector<Entry> &members, const Entry &survivor);
-
+  // TODO
   /**
-   * Folds one entry into another: its discs join the set, their ways in are removed, and the
-   * entry itself goes. Announces the move so saves and playtime can follow
+   * The disc a set is identified by: its lowest-numbered member that has a hash
    */
-  bool absorb(const Entry &absorbed, const Entry &survivor, int setId);
+  std::optional<ContentFile> anchorOf(int setId);
 
-  /** Gives a disc a way in of its own, which is what puts it back in the library as an entry */
-  bool restoreOwnEntry(const ContentFile &file, const std::string &title, bool isUserChoice);
+  // TODO
+  /**
+   * Writes the membership row putting a disc in a set
+   */
+  // TODO
+  // Gives an entry the game's name rather than its filename, read from the entries standing
+  // beside it. The overload taking a set names whichever entry that set stands under
+  void nameAfterPeers(const std::string &contentHash, const std::vector<Entry> &peers);
 
-  /** Removes a set once it is down to one disc, since one disc is not a set */
-  bool dissolveIfUndersized(int setId);
+  void nameAfterPeers(int setId, const std::vector<Entry> &peers);
+
+  void joinSet(const ContentFile &file, int setId, int discNumber, DiscSource source, const std::string &sourcePath,
+               bool isUncertain);
 
   /** Takes a retired set's playlist off disk */
   void retirePlaylist(const std::string &contentHash);
-
-  /** The entry a set launches through */
-  std::optional<Entry> survivorOf(int setId);
 
   IUserLibraryRepository &m_library;
 
@@ -96,16 +121,6 @@ private:
   // TODO
   // Held across the compare and the write, so two threads deciding at once cannot both write
   std::mutex m_playlistMutex;
-
-  // TODO
-  // Set while a write of this service's own is in flight, so the event that write publishes
-  // does not start another round. Per thread, because a write on one thread says nothing about
-  // whether an event arriving on another is re-entrant
-  static thread_local bool s_applying;
-
-  ScopedConnection m_entryUpdatedConnection;
-
-  ScopedConnection m_runConfigurationDeletedConnection;
 };
 
 } // namespace firelight::library

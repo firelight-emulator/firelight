@@ -1,11 +1,17 @@
 import QtQuick
 import QtQuick.Controls
+import Firelight 1.0
 
 ScrollBar {
     id: control
 
+    policy: ScrollBar.AlwaysOn
+    width: AppStyle.spacingSm
+
     contentItem: Rectangle {
         color: control.pressed ? Theme.textMuted : Theme.borderStrong
+        radius: width / 2
+        width: AppStyle.spacingSm
 
         opacity: 0.0
 

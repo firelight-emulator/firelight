@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/library/content_file.hpp>
@@ -22,8 +23,10 @@ struct ResolvedContent {
   std::optional<int> discSetId{};
 };
 
+// TODO
 /**
- * Chooses the "most correct" content to launch for a library entry from among its run configurations
+ * Works out what to hand the core for a library entry: the way in the entry launches through, or
+ * the next usable one when that way in names a file nobody has
  */
 class EntryResolver {
 public:
@@ -33,7 +36,6 @@ public:
 
 private:
   static bool contentFileExists(const ContentFile &info);
-  static int scoreConfig(const RunConfiguration &config, const ContentFile &contentFile);
 
   IUserLibraryRepository &m_library;
 

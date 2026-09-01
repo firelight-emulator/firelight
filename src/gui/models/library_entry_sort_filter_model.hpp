@@ -20,10 +20,6 @@ class LibraryEntrySortFilterModel : public QSortFilterProxyModel {
   Q_OBJECT
   Q_PROPERTY(QAbstractListModel *sourceModel READ getSourceModel WRITE setSourceModel NOTIFY sourceModelChanged)
   Q_PROPERTY(int count READ getCount NOTIFY countChanged)
-  Q_PROPERTY(QString filterText READ getFilterText WRITE setFilterText NOTIFY filterTextChanged)
-  Q_PROPERTY(bool favoritesOnly READ isFavoritesOnly WRITE setFavoritesOnly NOTIFY favoritesOnlyChanged)
-  Q_PROPERTY(bool hideUnavailable READ isHideUnavailable WRITE setHideUnavailable NOTIFY hideUnavailableChanged)
-  Q_PROPERTY(QVariantList platformIds READ getPlatformIds WRITE setPlatformIds NOTIFY platformIdsChanged)
   Q_PROPERTY(SortRole sortRole READ getSortRole WRITE setSortRole NOTIFY sortRoleChanged)
   Q_PROPERTY(QString sortDisplayName READ getSortDisplayName NOTIFY sortRoleChanged)
   Q_PROPERTY(bool sortAscending READ isSortAscending WRITE setSortAscending NOTIFY sortAscendingChanged)
@@ -50,20 +46,6 @@ public:
 
   [[nodiscard]] QAbstractListModel *getSourceModel() const;
   void setSourceModel(QAbstractListModel *sourceModel);
-
-  [[nodiscard]] QString getFilterText() const;
-  void setFilterText(const QString &filterText);
-
-  [[nodiscard]] bool isFavoritesOnly() const;
-  void setFavoritesOnly(bool favoritesOnly);
-
-  [[nodiscard]] bool isHideUnavailable() const;
-
-  // Hides only what cannot be launched. A set missing a disc still plays, so it stays
-  void setHideUnavailable(bool hideUnavailable);
-
-  [[nodiscard]] QVariantList getPlatformIds() const;
-  void setPlatformIds(const QVariantList &platformIds);
 
   [[nodiscard]] SortRole getSortRole() const;
   void setSortRole(SortRole sortRole);
@@ -129,14 +111,6 @@ signals:
   void sourceModelChanged();
 
   void countChanged();
-
-  void filterTextChanged();
-
-  void favoritesOnlyChanged();
-
-  void hideUnavailableChanged();
-
-  void platformIdsChanged();
 
   void sortRoleChanged();
 

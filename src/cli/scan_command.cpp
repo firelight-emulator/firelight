@@ -3,6 +3,7 @@
 
 #include "cli/data_dirs.hpp"
 
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -28,9 +29,10 @@ int runScan(int argc, char **argv, const CliOptions &opts) {
   library::SqliteUserLibraryRepository repository(dirs.appDataPath + "/library.db");
   // Turns scanned content files into run configurations + entries; must outlive
   // the scan
-  library::LibraryIngestService ingest(repository);
+  library::DiscSetService discSets(repository, "");
+  library::LibraryIngestService ingest(repository, discSets);
   platforms::PlatformService platformService;
-  library::LibraryScanner2 scanner(repository, platformService);
+  library::LibraryScanner2 scanner(repository, platformService, nullptr, &discSets);
   // Guarantees the default content directory exists and is registered before we
   // scan (a fresh install has nothing to scan otherwise)
   library::UserLibraryService libraryService(repository, dirs.romsPath.toStdString());

@@ -1,5 +1,6 @@
 // TODO: NEEDS REVIEW
 #include <firelight/library/disc_inspector.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/library_scanner2.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -49,7 +50,7 @@ protected:
 
 // A console with no platform is not a failure to read the disc. The format was understood and the
 // dump is fine, so what it turned out to be is kept rather than being flattened into "could not
-// catalogue this" — which is the difference between telling somebody they own GameCube discs and
+// catalog this" — which is the difference between telling somebody they own GameCube discs and
 // telling them four files went missing
 TEST_F(ChdDiscTest, ADiscForAnUnmodeledConsoleKeepsWhatItWasIdentifiedAs) {
   // Answers as though Firelight modeled nothing, so a disc that really does identify still has
@@ -133,7 +134,8 @@ TEST_F(ChdDiscTest, AChdOnDiskBecomesALibraryEntry) {
   ASSERT_TRUE(QFile::copy(TEST_DISC_PATH, games.filePath("Final Fantasy VII (USA) (Disc 1).chd")));
 
   SqliteUserLibraryRepository repository{QString(":memory:")};
-  const LibraryIngestService ingest(repository);
+  DiscSetService discSets(repository, "");
+  const LibraryIngestService ingest(repository, discSets);
 
   ContentDirectory directory;
   directory.path = games.path().toStdString();

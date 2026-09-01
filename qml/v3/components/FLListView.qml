@@ -71,16 +71,37 @@ ListView {
     // Nothing links the current index to focus on its own, and an index that has
     // not been realized has no item to focus until the view is told to reach it
     function focusCurrentItem() {
-        let item = root.itemAtIndex(root.currentIndex);
+        const index = root.currentIndex;
+        let item = root.itemAtIndex(index);
 
         if (item === null) {
-            root.positionViewAtIndex(root.currentIndex, ListView.Contain);
-            item = root.itemAtIndex(root.currentIndex);
+            // TODO
+            // Nothing to focus and nothing to scroll toward, so the view is moved to build one.
+            // The cursor is told where it is going separately, so this does not decide the scroll
+            root.positionViewAtIndex(index, ListView.Contain);
+            root.forceLayout();
+            item = root.itemAtIndex(index);
         }
 
         if (item !== null) {
             item.forceActiveFocus();
+            return;
         }
+
+        // TODO
+        // A delegate far enough away is built with the next layout rather than this one, so the
+        // focus waits for it. Dropping it here is what leaves the view moved and the cursor behind
+        Qt.callLater(function () {
+            if (root.currentIndex !== index) {
+                return;
+            }
+
+            const built = root.itemAtIndex(index);
+
+            if (built !== null) {
+                built.forceActiveFocus();
+            }
+        });
     }
 
     Timer {

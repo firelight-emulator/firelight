@@ -44,9 +44,6 @@ Entry deserializeEntry(const SQLite::Statement &query) {
       .metadata = GameMetadata::parse(query.getColumn("metadata_json").getString()),
       .metadataOverrides = MetadataOverrides::parse(query.getColumn("metadata_overrides_json").getString()),
       .normalizedTitle = query.getColumn("normalized_title").getString(),
-      .discSetId = query.getColumn("disc_set_id").isNull() ? std::nullopt
-                                                           : std::optional(query.getColumn("disc_set_id").getInt()),
-      .discSetUserSet = query.getColumn("disc_set_user_set").getInt() != 0,
       .variantGroupId = query.getColumn("variant_group_id").isNull()
                             ? std::nullopt
                             : std::optional(query.getColumn("variant_group_id").getInt()),
@@ -70,12 +67,11 @@ ContentFile deserializeContentFile(SQLite::Statement &query) {
       .m_archivePathName = query.getColumn("archive_file_path").getString(),
       .m_platformId = query.getColumn("platform_id").getInt(),
       .m_contentHash = query.getColumn("content_hash").getString(),
-      .m_discSetId = query.getColumn("disc_set_id").isNull() ? std::nullopt
-                                                             : std::optional(query.getColumn("disc_set_id").getInt()),
       .m_discNumber = query.getColumn("disc_number").getInt(),
-      .m_discNumberUserSet = query.getColumn("disc_number_user_set").getInt() != 0,
       .m_regions = strings::split(query.getColumn("region").getString(), ','),
-      .m_gameId = query.getColumn("game_id").getInt(),
+      .m_normalizedTitle = query.getColumn("normalized_title").getString(),
+      .m_revision = query.getColumn("revision").getString(),
+      .m_role = static_cast<ContentRole>(query.getColumn("role").getInt()),
       .m_contentDirectoryId = query.getColumn("content_directory_id").getInt(),
       .m_missingSince = query.getColumn("missing_since").getInt64(),
   };
@@ -102,21 +98,57 @@ SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_datab
                     "content_hash TEXT NOT NULL,"
                     "content_type INTEGER NOT NULL DEFAULT 0,"
                     "disc_number INTEGER NOT NULL DEFAULT 0,"
-                    "disc_number_user_set INTEGER NOT NULL DEFAULT 0,"
                     "region TEXT NOT NULL DEFAULT '',"
-                    "game_id INTEGER NOT NULL DEFAULT 0,"
-                    "disc_set_id INTEGER,"
+                    "normalized_title TEXT NOT NULL DEFAULT '',"
+                    "revision TEXT NOT NULL DEFAULT '',"
                     "content_directory_id INTEGER NOT NULL DEFAULT -1,"
+                    "role INTEGER NOT NULL DEFAULT 0,"
                     "missing_since INTEGER NOT NULL DEFAULT 0,"
                     "created_at INTEGER NOT NULL);");
 
-         // A multi-file disc set's member tracks/discs, keyed to the primary
-         // ContentFile (the cue/gdi/m3u sheet) in content_files
-         m_db->exec("CREATE TABLE IF NOT EXISTS disc_members("
+         // TODO
+         // Every time an entry changed which dump it launches as. Saves, cheats, settings and
+         // playtime follow that key across other databases, so what moved and why is worth being
+         // able to look up afterwards
+         m_db->exec("CREATE TABLE IF NOT EXISTS entry_identity_changes("
+                    "id INTEGER PRIMARY KEY,"
+                    "entry_id INTEGER NOT NULL,"
+                    "previous_content_hash TEXT NOT NULL,"
+                    "content_hash TEXT NOT NULL,"
+                    "reason TEXT NOT NULL,"
+                    "changed_at INTEGER NOT NULL);");
+
+         m_db->exec("CREATE INDEX IF NOT EXISTS entryIdentityChangesEntryIdx "
+                    "ON entry_identity_changes(entry_id);");
+
+         // TODO
+         // A set's discs. content_file_id is null while a playlist names a disc that has not been
+         // catalogued, so the row holds the position that disc will take when its file turns up
+         m_db->exec("CREATE TABLE IF NOT EXISTS disc_set_discs("
+                    "id INTEGER PRIMARY KEY,"
+                    "disc_set_id INTEGER NOT NULL,"
+                    "disc_number INTEGER NOT NULL,"
+                    "content_file_id INTEGER,"
+                    "member_path TEXT NOT NULL,"
+                    "source INTEGER NOT NULL DEFAULT 1,"
+                    "source_path TEXT NOT NULL DEFAULT '',"
+                    "is_uncertain INTEGER NOT NULL DEFAULT 0,"
+                    "created_at INTEGER NOT NULL,"
+                    "UNIQUE (disc_set_id, member_path));");
+
+         // A dump belongs to one set, so a second set claiming it is a bug rather than a choice
+         m_db->exec("CREATE UNIQUE INDEX IF NOT EXISTS discSetDiscsOneHomeIdx ON "
+                    "disc_set_discs(content_file_id) WHERE content_file_id IS NOT NULL;");
+
+         m_db->exec("CREATE INDEX IF NOT EXISTS discSetDiscsSetIdx ON disc_set_discs(disc_set_id);");
+
+         // TODO
+         // The raw tracks a sheet names, keyed to that sheet's row in content_files. Which discs
+         // make up a game is a different question and lives in disc_set_discs
+         m_db->exec("CREATE TABLE IF NOT EXISTS content_file_tracks("
                     "id INTEGER PRIMARY KEY,"
                     "content_file_id INTEGER NOT NULL,"
                     "path TEXT NOT NULL,"
-                    "role TEXT NOT NULL,"
                     "sort_index INTEGER NOT NULL DEFAULT 0,"
                     "created_at INTEGER NOT NULL,"
                     "UNIQUE (content_file_id, path));");
@@ -150,8 +182,6 @@ SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_datab
                     "metadata_json TEXT, "
                     "metadata_overrides_json TEXT, "
                     "variant_group_id INTEGER, "
-                    "disc_set_id INTEGER, "
-                    "disc_set_user_set INTEGER NOT NULL DEFAULT 0, "
                     "variant_group_user_set INTEGER NOT NULL DEFAULT 0, "
                     // When art was last looked up for this entry. NULL means never
                     // tried, which is what makes the sweep resumable
@@ -177,16 +207,29 @@ SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_datab
          m_db->exec("CREATE INDEX IF NOT EXISTS entriesNormalizedTitleIdx "
                     "ON entries(platform_id, normalized_title);");
 
+         // TODO
+         // The same lookup against the dump's own title, which is written at ingest rather than
+         // waiting on metadata population
+         m_db->exec("CREATE INDEX IF NOT EXISTS contentFileNormalizedTitleIdx "
+                    "ON content_files(platform_id, normalized_title);");
+
          // A multi-disc game. The discs are content files pointing here; the entry points
          // here too, so one game is one row in the library however many discs it has
          m_db->exec("CREATE TABLE IF NOT EXISTS disc_sets("
                     "id INTEGER PRIMARY KEY,"
+                    "platform_id INTEGER NOT NULL DEFAULT 0,"
                     "title TEXT NOT NULL,"
                     "title_user_set INTEGER NOT NULL DEFAULT 0,"
-                    // The playlist we generate and own, empty when the set has only one disc.
-                    // but never rewrite
+                    // TODO
+                    // The folded title, so a disc looking for the set it belongs to is an index
+                    // seek rather than a walk through every set's members
+                    "normalized_title TEXT NOT NULL DEFAULT '',"
+                    // How many discs the game came on, 0 until something authoritative says
                     "disc_count INTEGER NOT NULL DEFAULT 0,"
                     "created_at INTEGER NOT NULL);");
+
+         m_db->exec("CREATE INDEX IF NOT EXISTS discSetsTitleIdx "
+                    "ON disc_sets(platform_id, normalized_title);");
 
          // Which disc a save slot was last on, so resuming picks up where it left off.
          // Per slot because two playthroughs genuinely sit on different discs
@@ -205,16 +248,27 @@ SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_datab
                     "auto_launch_primary INTEGER NOT NULL DEFAULT 0, "
                     "created_at INTEGER NOT NULL);");
 
+         // TODO
+         // What kind of way in this is, is what it points at: a disc set launches through the
+         // set's playlist, anything else through the content file named here
          m_db->exec("CREATE TABLE IF NOT EXISTS run_configurations("
                     "id INTEGER PRIMARY KEY,"
-                    "type TEXT NOT NULL,"
                     "content_hash TEXT NOT NULL,"
                     "content_file_id INTEGER NOT NULL,"
                     "patch_id INTEGER,"
                     "disc_set_id INTEGER,"
+                    "is_default INTEGER NOT NULL DEFAULT 0,"
                     "created_at INTEGER NOT NULL,"
-                    "UNIQUE (type, content_file_id, patch_id),"
-                    "UNIQUE (type, content_file_id));");
+                    "UNIQUE (content_file_id, patch_id));");
+
+         // One unpatched way in per file. Stated separately because SQLite counts NULL patch ids
+         // as distinct, so the constraint above does not cover them
+         m_db->exec("CREATE UNIQUE INDEX IF NOT EXISTS runConfigUnpatchedIdx ON "
+                    "run_configurations(content_file_id) WHERE patch_id IS NULL;");
+
+         // An entry launches through one of its ways in, so nothing has to score them
+         m_db->exec("CREATE UNIQUE INDEX IF NOT EXISTS runConfigDefaultIdx ON "
+                    "run_configurations(content_hash) WHERE is_default;");
 
          // A set launches through one way in, whichever disc is anchoring it
          m_db->exec("CREATE UNIQUE INDEX IF NOT EXISTS runConfigDiscSetIdx ON "
@@ -272,12 +326,6 @@ SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_datab
          m_db->exec("CREATE INDEX IF NOT EXISTS entriesVariantGroupIdx ON "
                     "entries(variant_group_id) WHERE variant_group_id IS NOT NULL;");
 
-         m_db->exec("CREATE INDEX IF NOT EXISTS entriesDiscSetIdx ON "
-                    "entries(disc_set_id) WHERE disc_set_id IS NOT NULL;");
-
-         m_db->exec("CREATE INDEX IF NOT EXISTS contentFileDiscSetIdx ON "
-                    "content_files(disc_set_id) WHERE disc_set_id IS NOT NULL;");
-
          // The UNIQUE(entry_id, tag_id) index serves the per-entry direction; this one
          // is what makes "how many entries use this tag" and deleting a tag everywhere
          // cheap
@@ -323,9 +371,10 @@ SqliteUserLibraryRepository::SqliteUserLibraryRepository(QString path) : m_datab
   // column from the schema above means removing its line here in the same
   // change — otherwise the next startup adds it straight back as NULL
   ensureColumnExists("content_files", "content_directory_id", "INTEGER NOT NULL DEFAULT -1");
-  ensureColumnExists("content_files", "disc_number_user_set", "INTEGER NOT NULL DEFAULT 0");
   ensureColumnExists("content_files", "region", "TEXT NOT NULL DEFAULT ''");
-  ensureColumnExists("content_files", "game_id", "INTEGER NOT NULL DEFAULT 0");
+  ensureColumnExists("content_files", "normalized_title", "TEXT NOT NULL DEFAULT ''");
+  ensureColumnExists("content_files", "revision", "TEXT NOT NULL DEFAULT ''");
+  ensureColumnExists("content_files", "role", "INTEGER NOT NULL DEFAULT 0");
   ensureColumnExists("run_configurations", "disc_set_id", "INTEGER");
   ensureColumnExists("folders", "type", "INTEGER NOT NULL DEFAULT 0");
   ensureColumnExists("folders", "filter_json", "TEXT");
@@ -382,7 +431,7 @@ void SqliteUserLibraryRepository::backfillContentDirectoryIds() {
   if (getContentDirectories().empty()) {
     return;
   }
-  for (const auto &cf : getContentFiles()) {
+  for (const auto &cf : getRecordedFiles()) {
     if (cf.m_contentDirectoryId >= 0) {
       continue; // already stamped
     }
@@ -637,6 +686,59 @@ bool SqliteUserLibraryRepository::update(Entry &entry) {
   return true;
 }
 
+bool SqliteUserLibraryRepository::setEntryContentHash(const int entryId, const std::string &contentHash,
+                                                      const std::string_view reason) {
+  std::string previous;
+
+  {
+    std::lock_guard lock(m_mutex);
+
+    try {
+      SQLite::Statement current(*m_db, "SELECT content_hash FROM entries WHERE id = :id LIMIT 1;");
+      current.bind(":id", entryId);
+
+      if (!current.executeStep()) {
+        return false;
+      }
+
+      previous = current.getColumn("content_hash").getString();
+
+      if (previous == contentHash) {
+        return true;
+      }
+
+      SQLite::Statement query(*m_db, "UPDATE entries SET content_hash = :contentHash WHERE id = :id;");
+      query.bind(":id", entryId);
+      query.bind(":contentHash", contentHash);
+
+      if (query.exec() == 0) {
+        return false;
+      }
+
+      SQLite::Statement audit(*m_db, "INSERT INTO entry_identity_changes(entry_id, previous_content_hash, "
+                                     "content_hash, reason, changed_at) "
+                                     "VALUES(:entryId, :previous, :contentHash, :reason, :changedAt);");
+      audit.bind(":entryId", entryId);
+      audit.bind(":previous", previous);
+      audit.bind(":contentHash", contentHash);
+      audit.bind(":reason", std::string(reason));
+      audit.bind(":changedAt", nowMs());
+      audit.exec();
+    } catch (const std::exception &e) {
+      spdlog::error("Failed to set content hash for entry {}: {}", entryId, e.what());
+      return false;
+    }
+  }
+
+  // TODO
+  // Outside the lock, because what follows the identity lives in other databases this one knows
+  // nothing about
+  EventDispatcher::instance().publish(
+      EntryIdentityChangedEvent{.entryId = entryId, .previousContentHash = previous, .contentHash = contentHash});
+  EventDispatcher::instance().publish(EntryUpdatedEvent{.entryId = entryId});
+  return true;
+}
+
 bool SqliteUserLibraryRepository::setEntryHidden(const int entryId, const bool hidden) {
   {
     std::lock_guard lock(m_mutex);
@@ -782,7 +884,7 @@ std::vector<int> SqliteUserLibraryRepository::getEntryIdsMissingArt(const int li
     // Looking up art for a game whose files are gone spends a request on something nobody can play
     SQLite::Statement query(*m_db, "SELECT id FROM entries e WHERE art_fetched_at IS NULL AND hidden = 0 "
                                    "AND EXISTS (SELECT 1 FROM content_files cf WHERE cf.content_hash = e.content_hash "
-                                   "            AND cf.missing_since = 0) "
+                                   "            AND cf.missing_since = 0 AND cf.role = 0) "
                                    "ORDER BY id LIMIT :limit;");
     query.bind(":limit", limit);
 
@@ -820,10 +922,29 @@ namespace {
 DiscSet deserializeDiscSet(const SQLite::Statement &query) {
   return DiscSet{
       .id = query.getColumn("id").getInt(),
+      .platformId = static_cast<unsigned>(query.getColumn("platform_id").getInt()),
       .title = query.getColumn("title").getString(),
       .titleUserSet = query.getColumn("title_user_set").getInt() != 0,
+      .normalizedTitle = query.getColumn("normalized_title").getString(),
       .discCount = query.getColumn("disc_count").getInt(),
       .createdAt = static_cast<uint64_t>(query.getColumn("created_at").getInt64()),
+  };
+}
+
+// TODO
+// Reads a DiscSetMember from the current row of a `SELECT *` over disc_set_discs
+DiscSetMember deserializeDiscSetMember(const SQLite::Statement &query) {
+  return DiscSetMember{
+      .m_id = query.getColumn("id").getInt(),
+      .m_discSetId = query.getColumn("disc_set_id").getInt(),
+      .m_discNumber = query.getColumn("disc_number").getInt(),
+      .m_contentFileId = query.getColumn("content_file_id").isNull()
+                             ? std::nullopt
+                             : std::optional(query.getColumn("content_file_id").getInt()),
+      .m_memberPath = query.getColumn("member_path").getString(),
+      .m_source = static_cast<DiscSource>(query.getColumn("source").getInt()),
+      .m_sourcePath = query.getColumn("source_path").getString(),
+      .m_isUncertain = query.getColumn("is_uncertain").getInt() != 0,
   };
 }
 } // namespace
@@ -831,10 +952,14 @@ DiscSet deserializeDiscSet(const SQLite::Statement &query) {
 bool SqliteUserLibraryRepository::createDiscSet(DiscSet &set) {
   std::lock_guard lock(m_mutex);
   try {
-    SQLite::Statement query(*m_db, "INSERT INTO disc_sets(title, title_user_set, disc_count, created_at) "
-                                   "VALUES(:title, :titleUserSet, :discCount, :createdAt);");
+    SQLite::Statement query(*m_db, "INSERT INTO disc_sets(platform_id, title, title_user_set, "
+                                   "normalized_title, disc_count, created_at) "
+                                   "VALUES(:platformId, :title, :titleUserSet, :normalizedTitle, "
+                                   ":discCount, :createdAt);");
+    query.bind(":platformId", set.platformId);
     query.bind(":title", set.title);
     query.bind(":titleUserSet", set.titleUserSet ? 1 : 0);
+    query.bind(":normalizedTitle", set.normalizedTitle);
     query.bind(":discCount", set.discCount);
     query.bind(":createdAt", nowMs());
     query.exec();
@@ -851,12 +976,14 @@ bool SqliteUserLibraryRepository::createDiscSet(DiscSet &set) {
 bool SqliteUserLibraryRepository::updateDiscSet(const DiscSet &set) {
   std::lock_guard lock(m_mutex);
   try {
-    SQLite::Statement query(*m_db, "UPDATE disc_sets SET title = :title, "
-                                   "title_user_set = :titleUserSet, disc_count = :discCount "
-                                   "WHERE id = :id;");
+    SQLite::Statement query(*m_db, "UPDATE disc_sets SET platform_id = :platformId, title = :title, "
+                                   "title_user_set = :titleUserSet, normalized_title = :normalizedTitle, "
+                                   "disc_count = :discCount WHERE id = :id;");
     query.bind(":id", set.id);
+    query.bind(":platformId", set.platformId);
     query.bind(":title", set.title);
     query.bind(":titleUserSet", set.titleUserSet ? 1 : 0);
+    query.bind(":normalizedTitle", set.normalizedTitle);
     query.bind(":discCount", set.discCount);
 
     if (query.exec() == 0) {
@@ -992,13 +1119,9 @@ bool SqliteUserLibraryRepository::deleteDiscSet(const int setId) {
   std::lock_guard lock(m_mutex);
   try {
     // The discs and the entry outlive the set; only the grouping goes
-    SQLite::Statement clearFiles(*m_db, "UPDATE content_files SET disc_set_id = NULL WHERE disc_set_id = :id;");
-    clearFiles.bind(":id", setId);
-    clearFiles.exec();
-
-    SQLite::Statement clearEntries(*m_db, "UPDATE entries SET disc_set_id = NULL WHERE disc_set_id = :id;");
-    clearEntries.bind(":id", setId);
-    clearEntries.exec();
+    SQLite::Statement clearMembers(*m_db, "DELETE FROM disc_set_discs WHERE disc_set_id = :id;");
+    clearMembers.bind(":id", setId);
+    clearMembers.exec();
 
     SQLite::Statement query(*m_db, "DELETE FROM disc_sets WHERE id = :id;");
     query.bind(":id", setId);
@@ -1030,6 +1153,33 @@ std::optional<DiscSet> SqliteUserLibraryRepository::getDiscSet(const int setId) 
   return std::nullopt;
 }
 
+std::vector<DiscSet> SqliteUserLibraryRepository::getCandidateDiscSets(const GameIdentity &identity) {
+  std::lock_guard lock(m_mutex);
+  std::vector<DiscSet> sets;
+
+  if (identity.title.empty()) {
+    return sets;
+  }
+
+  try {
+    // TODO
+    // Ordered so a disc matching more than one set joins the same one every time, whatever
+    // order the sets were made in
+    SQLite::Statement query(*m_db, "SELECT * FROM disc_sets WHERE platform_id = :platformId "
+                                   "AND normalized_title = :normalizedTitle ORDER BY id;");
+    query.bind(":platformId", identity.platformId);
+    query.bind(":normalizedTitle", identity.title);
+
+    while (query.executeStep()) {
+      sets.push_back(deserializeDiscSet(query));
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get candidate disc sets for title {}: {}", identity.title, e.what());
+  }
+
+  return sets;
+}
+
 std::vector<DiscSet> SqliteUserLibraryRepository::getDiscSets() {
   std::lock_guard lock(m_mutex);
   std::vector<DiscSet> sets;
@@ -1050,8 +1200,8 @@ std::vector<DiscSet> SqliteUserLibraryRepository::getDiscSets() {
 std::optional<DiscSet> SqliteUserLibraryRepository::getDiscSetForContentFile(const int contentFileId) {
   std::lock_guard lock(m_mutex);
   try {
-    SQLite::Statement query(*m_db, "SELECT s.* FROM disc_sets s JOIN content_files f ON "
-                                   "f.disc_set_id = s.id WHERE f.id = :id LIMIT 1;");
+    SQLite::Statement query(*m_db, "SELECT s.* FROM disc_sets s JOIN disc_set_discs d ON "
+                                   "d.disc_set_id = s.id WHERE d.content_file_id = :id LIMIT 1;");
     query.bind(":id", contentFileId);
 
     if (query.executeStep()) {
@@ -1076,10 +1226,16 @@ std::vector<ContentFile> SqliteUserLibraryRepository::discsInSet(const int setId
   std::lock_guard lock(m_mutex);
   std::vector<ContentFile> discs;
   try {
-    SQLite::Statement query(*m_db, presentOnly ? "SELECT * FROM content_files WHERE disc_set_id = :id "
-                                                 "AND missing_since = 0 ORDER BY disc_number, id;"
-                                               : "SELECT * FROM content_files WHERE disc_set_id = :id "
-                                                 "ORDER BY disc_number, id;");
+    // TODO
+    // Membership decides which discs a set holds and what number each sits at. A row naming a
+    // file nobody has yet drops out of the join, because there is no disc to hand back
+    SQLite::Statement query(*m_db, presentOnly ? "SELECT cf.* FROM disc_set_discs d "
+                                                 "JOIN content_files cf ON cf.id = d.content_file_id "
+                                                 "WHERE d.disc_set_id = :id AND cf.missing_since = 0 "
+                                                 "ORDER BY d.disc_number, cf.id;"
+                                               : "SELECT cf.* FROM disc_set_discs d "
+                                                 "JOIN content_files cf ON cf.id = d.content_file_id "
+                                                 "WHERE d.disc_set_id = :id ORDER BY d.disc_number, cf.id;");
     query.bind(":id", setId);
 
     // TODO
@@ -1109,7 +1265,18 @@ std::vector<Entry> SqliteUserLibraryRepository::getEntriesInDiscSet(const int se
   std::vector<Entry> entries;
 
   try {
-    SQLite::Statement query(*m_db, "SELECT * FROM entries WHERE disc_set_id = :setId;");
+    // TODO
+    // Two ways to belong, because they answer at different times. The way in is what the set
+    // launches as, and holds while a disc file is gone; a member dump is an entry the set has
+    // yet to take over, which is how one rejoining is found
+    SQLite::Statement query(*m_db, "SELECT DISTINCT e.* FROM entries e "
+                                   "JOIN run_configurations rc ON rc.content_hash = e.content_hash "
+                                   "WHERE rc.disc_set_id = :setId "
+                                   "UNION "
+                                   "SELECT DISTINCT e.* FROM entries e "
+                                   "JOIN content_files cf ON cf.content_hash = e.content_hash AND cf.role = 0 "
+                                   "JOIN disc_set_discs d ON d.content_file_id = cf.id "
+                                   "WHERE d.disc_set_id = :setId;");
     query.bind(":setId", setId);
 
     while (query.executeStep()) {
@@ -1122,56 +1289,6 @@ std::vector<Entry> SqliteUserLibraryRepository::getEntriesInDiscSet(const int se
   }
 
   return entries;
-}
-
-bool SqliteUserLibraryRepository::setContentFileDiscSet(const int contentFileId, const std::optional<int> setId) {
-  std::lock_guard lock(m_mutex);
-  try {
-    SQLite::Statement query(*m_db, "UPDATE content_files SET disc_set_id = :setId WHERE id = :id;");
-    query.bind(":id", contentFileId);
-
-    if (setId.has_value()) {
-      query.bind(":setId", *setId);
-    } else {
-      query.bind(":setId");
-    }
-
-    if (query.exec() == 0) {
-      return false;
-    }
-  } catch (const std::exception &e) {
-    spdlog::error("Failed to set disc set for content file {}: {}", contentFileId, e.what());
-    return false;
-  }
-
-  return true;
-}
-
-bool SqliteUserLibraryRepository::setEntryDiscSet(const int entryId, const std::optional<int> setId,
-                                                  const bool isUserChoice) {
-  std::lock_guard lock(m_mutex);
-  try {
-    SQLite::Statement query(*m_db, "UPDATE entries SET disc_set_id = :setId, "
-                                   "disc_set_user_set = :userSet WHERE id = :id;");
-    query.bind(":id", entryId);
-    query.bind(":userSet", isUserChoice ? 1 : 0);
-
-    if (setId.has_value()) {
-      query.bind(":setId", *setId);
-    } else {
-      query.bind(":setId");
-    }
-
-    if (query.exec() == 0) {
-      return false;
-    }
-  } catch (const std::exception &e) {
-    spdlog::error("Failed to set disc set for entry {}: {}", entryId, e.what());
-    return false;
-  }
-
-  EventDispatcher::instance().publish(EntryUpdatedEvent{.entryId = entryId});
-  return true;
 }
 
 std::optional<int> SqliteUserLibraryRepository::getLastDisc(const int entryId, const int saveSlot) {
@@ -1357,20 +1474,7 @@ std::vector<int> SqliteUserLibraryRepository::getCandidateEntryIds(const GameIde
     // TODO
     // Two statements rather than one OR, because the planner will not reliably split an OR
     // into two index seeks and each of these is obviously indexed on its own
-    if (identity.gameId != 0) {
-      SQLite::Statement query(*m_db, "SELECT DISTINCT e.id FROM entries e "
-                                     "JOIN content_files cf ON cf.content_hash = e.content_hash "
-                                     "WHERE e.platform_id = :platformId AND cf.game_id = :gameId "
-                                     "AND cf.game_id != 0;");
-      query.bind(":platformId", identity.platformId);
-      query.bind(":gameId", identity.gameId);
-
-      while (query.executeStep()) {
-        ids.push_back(query.getColumn(0).getInt());
-      }
-    }
-
-    if (!identity.title.empty()) {
+    {
       SQLite::Statement query(*m_db, "SELECT id FROM entries WHERE platform_id = :platformId "
                                      "AND normalized_title = :normalizedTitle;");
       query.bind(":platformId", identity.platformId);
@@ -1378,6 +1482,22 @@ std::vector<int> SqliteUserLibraryRepository::getCandidateEntryIds(const GameIde
 
       while (query.executeStep()) {
         ids.push_back(query.getColumn("id").getInt());
+      }
+    }
+
+    // TODO
+    // The same title asked of the dumps, which carry theirs from the filename at ingest. An entry
+    // whose metadata has not been populated yet has no title of its own to be found by
+    {
+      SQLite::Statement query(*m_db, "SELECT DISTINCT e.id FROM entries e "
+                                     "JOIN content_files cf ON cf.content_hash = e.content_hash "
+                                     "WHERE cf.platform_id = :platformId "
+                                     "AND cf.normalized_title = :normalizedTitle;");
+      query.bind(":platformId", identity.platformId);
+      query.bind(":normalizedTitle", identity.title);
+
+      while (query.executeStep()) {
+        ids.push_back(query.getColumn(0).getInt());
       }
     }
   } catch (const std::exception &e) {
@@ -1589,7 +1709,7 @@ bool SqliteUserLibraryRepository::deleteContentDirectory(int id) {
     return false;
   }
 
-  for (const auto &rom : getContentFiles()) {
+  for (const auto &rom : getRecordedFiles()) {
     auto romPath = rom.m_inArchive ? rom.m_archivePathName : rom.m_filePath;
 
     if (strings::startsWith(romPath, path)) {
@@ -1622,17 +1742,18 @@ bool SqliteUserLibraryRepository::create(ContentFile &romFile) {
   try {
     SQLite::Statement query(*m_db, "INSERT INTO content_files (file_path, file_size, file_md5, "
                                    "file_crc32, in_archive, archive_file_path, platform_id, "
-                                   "content_hash, content_type, disc_number, disc_number_user_set, "
-                                   "region, game_id, content_directory_id, created_at) "
+                                   "content_hash, content_type, disc_number, "
+                                   "region, normalized_title, revision, "
+                                   "content_directory_id, role, created_at) "
                                    "VALUES (:filePath, :fileSize, :fileMd5, :fileCrc32, :inArchive, "
                                    ":archiveFilePath, :platformId, :contentHash, :contentType, "
-                                   ":discNumber, :discNumberUserSet, :region, :gameId, "
-                                   ":contentDirectoryId, :createdAt);");
+                                   ":discNumber, :region, :normalizedTitle, "
+                                   ":revision, :contentDirectoryId, :role, :createdAt);");
     query.bind(":filePath", romFile.m_filePath);
     query.bind(":discNumber", romFile.m_discNumber);
-    query.bind(":discNumberUserSet", romFile.m_discNumberUserSet ? 1 : 0);
     query.bind(":region", strings::join(romFile.m_regions, ","));
-    query.bind(":gameId", romFile.m_gameId);
+    query.bind(":normalizedTitle", romFile.m_normalizedTitle);
+    query.bind(":revision", romFile.m_revision);
     query.bind(":fileSize", static_cast<int64_t>(romFile.m_fileSizeBytes));
     query.bind(":fileMd5", romFile.m_fileMd5);
     query.bind(":fileCrc32", romFile.m_fileCrc32);
@@ -1642,6 +1763,7 @@ bool SqliteUserLibraryRepository::create(ContentFile &romFile) {
     query.bind(":contentHash", romFile.m_contentHash);
     query.bind(":contentType", static_cast<int>(romFile.m_type));
     query.bind(":contentDirectoryId", romFile.m_contentDirectoryId);
+    query.bind(":role", static_cast<int>(romFile.m_role));
     query.bind(":createdAt", nowMs());
     query.exec();
   } catch (const std::exception &e) {
@@ -1650,6 +1772,13 @@ bool SqliteUserLibraryRepository::create(ContentFile &romFile) {
   }
 
   romFile.m_id = static_cast<int>(m_db->getLastInsertRowid());
+
+  // TODO
+  // Only a dump stands for a game, so only a dump announces itself. A track or a playlist is
+  // recorded so what the walk decided can be read back, not so something downstream acts on it
+  if (romFile.m_role != ContentRole::Dump) {
+    return true;
+  }
 
   EventDispatcher::instance().publish(ContentFileAddedEvent{.id = romFile.m_id,
                                                             .filePath = romFile.m_filePath,
@@ -1700,7 +1829,8 @@ bool SqliteUserLibraryRepository::markContentFileMissing(const int id) {
         return true;
       }
 
-      event = ContentFileMissingEvent{.id = id, .contentHash = file.m_contentHash, .discSetId = file.m_discSetId};
+      event =
+          ContentFileMissingEvent{.id = id, .contentHash = file.m_contentHash, .discSetId = discSetOfContentFile(id)};
 
       SQLite::Statement mark(*m_db, "UPDATE content_files SET missing_since = :now WHERE id = :id;");
       mark.bind(":id", id);
@@ -1735,7 +1865,8 @@ bool SqliteUserLibraryRepository::reviveContentFile(const int id) {
         return true;
       }
 
-      event = ContentFileRestoredEvent{.id = id, .contentHash = file.m_contentHash, .discSetId = file.m_discSetId};
+      event =
+          ContentFileRestoredEvent{.id = id, .contentHash = file.m_contentHash, .discSetId = discSetOfContentFile(id)};
 
       SQLite::Statement clear(*m_db, "UPDATE content_files SET missing_since = 0 WHERE id = :id;");
       clear.bind(":id", id);
@@ -1773,9 +1904,9 @@ bool SqliteUserLibraryRepository::deleteContentFile(int id) {
     deleteRunConfigsQuery.bind(":contentFileId", id);
     deleteRunConfigsQuery.exec();
 
-    SQLite::Statement deleteDiscMembersQuery(*m_db, "DELETE FROM disc_members WHERE content_file_id = :id;");
-    deleteDiscMembersQuery.bind(":id", id);
-    deleteDiscMembersQuery.exec();
+    SQLite::Statement deleteTracksQuery(*m_db, "DELETE FROM content_file_tracks WHERE content_file_id = :id;");
+    deleteTracksQuery.bind(":id", id);
+    deleteTracksQuery.exec();
   } catch (const std::exception &e) {
     spdlog::error("Failed to delete rom file with ID {}: {}", id, e.what());
     return false;
@@ -1805,11 +1936,9 @@ std::vector<Entry> SqliteUserLibraryRepository::getEntries() {
   // entries the per-entry form re-prepares thousands of statements, and adding tags
   // to it would have made that a third worse
   std::unordered_map<int, size_t> indexById;
-  std::unordered_map<std::string, std::vector<size_t>> indexByHash;
 
   for (size_t i = 0; i < entries.size(); ++i) {
     indexById[entries[i].id] = i;
-    indexByHash[entries[i].contentHash].push_back(i);
   }
 
   try {
@@ -1840,41 +1969,16 @@ std::vector<Entry> SqliteUserLibraryRepository::getEntries() {
     spdlog::error("Failed to get tag IDs: {}", e.what());
   }
 
-  try {
-    SQLite::Statement sourceQuery(*m_db, "SELECT content_hash, content_directory_id, file_path, in_archive, "
-                                         "archive_file_path, missing_since FROM content_files;");
+  // TODO
+  // Read once for the whole library, then applied per entry. Walking the entries rather than the
+  // buckets is what keeps two entries sharing one hash from being served a single row between them
+  const auto sourceByHash = readContentSource(std::nullopt);
+  const auto waysIn = readWaysIn(std::nullopt);
 
-    while (sourceQuery.executeStep()) {
-      const auto found = indexByHash.find(sourceQuery.getColumn("content_hash").getString());
-
-      if (found == indexByHash.end()) {
-        continue;
-      }
-
-      const auto directoryId = sourceQuery.getColumn("content_directory_id").getInt();
-      const auto isReadable = sourceQuery.getColumn("missing_since").getInt64() == 0;
-      const auto path = sourceQuery.getColumn("in_archive").getInt() != 0
-                            ? sourceQuery.getColumn("archive_file_path").getString()
-                            : sourceQuery.getColumn("file_path").getString();
-
-      for (const auto index : found->second) {
-        auto &entry = entries[index];
-
-        if (directoryId >= 0 &&
-            std::ranges::find(entry.contentDirectoryIds, directoryId) == entry.contentDirectoryIds.end()) {
-          entry.contentDirectoryIds.push_back(directoryId);
-        }
-
-        entry.contentPaths.push_back(path);
-
-        if (isReadable) {
-          entry.readableContentPaths.push_back(path);
-          entry.isContentAvailable = true;
-        }
-      }
-    }
-  } catch (const std::exception &e) {
-    spdlog::error("Failed to get content locations: {}", e.what());
+  for (auto &entry : entries) {
+    const auto found = sourceByHash.find(entry.contentHash);
+    applyContentSource(entry, found == sourceByHash.end() ? std::vector<ContentSourceRow>{} : found->second);
+    applyWayIn(entry, waysIn);
   }
 
   return entries;
@@ -1970,41 +2074,11 @@ std::optional<Entry> SqliteUserLibraryRepository::getEntryWithContentHash(const 
 }
 
 void SqliteUserLibraryRepository::populateEntrySource(Entry &entry) {
-  try {
-    // TODO
-    // A playlist carries its first disc's hash with no disc number of its own, so ordering
-    // numbered files first keeps it out of the front of contentPaths
-    SQLite::Statement query(*m_db, "SELECT content_directory_id, file_path, in_archive, "
-                                   "archive_file_path, disc_number, game_id, missing_since FROM content_files WHERE "
-                                   "content_hash = :contentHash "
-                                   "ORDER BY (disc_number = 0), disc_number, id;");
-    query.bind(":contentHash", entry.contentHash);
+  auto byHash = readContentSource(entry.contentHash);
+  const auto found = byHash.find(entry.contentHash);
 
-    while (query.executeStep()) {
-      const auto isReadable = query.getColumn("missing_since").getInt64() == 0;
-
-      // Which disc this is belongs to the file; the entry reads it rather than storing it again
-      if (entry.discNumber == 0) {
-        entry.discNumber = query.getColumn("disc_number").getInt();
-      }
-
-      const int dirId = query.getColumn("content_directory_id").getInt();
-      if (dirId >= 0 && std::ranges::find(entry.contentDirectoryIds, dirId) == entry.contentDirectoryIds.end()) {
-        entry.contentDirectoryIds.push_back(dirId);
-      }
-
-      const auto path = query.getColumn("in_archive").getInt() != 0 ? query.getColumn("archive_file_path").getString()
-                                                                    : query.getColumn("file_path").getString();
-      entry.contentPaths.push_back(path);
-
-      if (isReadable) {
-        entry.readableContentPaths.push_back(path);
-        entry.isContentAvailable = true;
-      }
-    }
-  } catch (const std::exception &e) {
-    spdlog::error("Failed to get content locations for entry {}: {}", entry.id, e.what());
-  }
+  applyContentSource(entry, found == byHash.end() ? std::vector<ContentSourceRow>{} : std::move(found->second));
+  applyWayIn(entry, readWaysIn(entry.contentHash));
 }
 
 std::vector<RunConfiguration> SqliteUserLibraryRepository::getRunConfigurations(const std::string &contentHash) {
@@ -2018,12 +2092,12 @@ std::vector<RunConfiguration> SqliteUserLibraryRepository::getRunConfigurations(
     while (query.executeStep()) {
       runConfigurations.push_back(RunConfiguration{
           .id = query.getColumn("id").getInt(),
-          .type = query.getColumn("type").getString(),
           .contentHash = contentHash,
           .contentFileId = query.getColumn("content_file_id").getInt(),
           .patchId = query.getColumn("patch_id").getInt(),
           .discSetId = query.getColumn("disc_set_id").isNull() ? std::nullopt
                                                                : std::optional(query.getColumn("disc_set_id").getInt()),
+          .isDefault = query.getColumn("is_default").getInt() != 0,
           .createdAt = static_cast<uint32_t>(query.getColumn("created_at").getInt64()),
       });
     }
@@ -2033,17 +2107,27 @@ std::vector<RunConfiguration> SqliteUserLibraryRepository::getRunConfigurations(
   return runConfigurations;
 }
 
-std::vector<ContentFile> SqliteUserLibraryRepository::getContentFiles() { return contentFiles(false); }
+std::vector<ContentFile> SqliteUserLibraryRepository::getContentFiles() { return contentFiles(false, true); }
 
-std::vector<ContentFile> SqliteUserLibraryRepository::getPresentContentFiles() { return contentFiles(true); }
+std::vector<ContentFile> SqliteUserLibraryRepository::getPresentContentFiles() { return contentFiles(true, true); }
 
-std::vector<ContentFile> SqliteUserLibraryRepository::contentFiles(const bool presentOnly) {
+std::vector<ContentFile> SqliteUserLibraryRepository::getRecordedFiles() { return contentFiles(false, false); }
+
+std::vector<ContentFile> SqliteUserLibraryRepository::contentFiles(const bool presentOnly, const bool dumpsOnly) {
   std::lock_guard lock(m_mutex);
   std::vector<ContentFile> romFiles;
 
+  std::string sql = "SELECT * FROM content_files";
+  if (presentOnly && dumpsOnly) {
+    sql += " WHERE missing_since = 0 AND role = 0";
+  } else if (presentOnly) {
+    sql += " WHERE missing_since = 0";
+  } else if (dumpsOnly) {
+    sql += " WHERE role = 0";
+  }
+
   try {
-    SQLite::Statement query(*m_db, presentOnly ? "SELECT * FROM content_files WHERE missing_since = 0;"
-                                               : "SELECT * FROM content_files;");
+    SQLite::Statement query(*m_db, sql + ";");
     while (query.executeStep()) {
       romFiles.emplace_back(deserializeContentFile(query));
     }
@@ -2077,7 +2161,7 @@ std::vector<ContentFile> SqliteUserLibraryRepository::getContentFilesWithContent
   std::vector<ContentFile> contentFiles;
 
   try {
-    SQLite::Statement query(*m_db, "SELECT * FROM content_files WHERE content_hash = :contentHash "
+    SQLite::Statement query(*m_db, "SELECT * FROM content_files WHERE content_hash = :contentHash AND role = 0 "
                                    "ORDER BY disc_number, id;");
     query.bind(":contentHash", contentHash);
 
@@ -2188,25 +2272,299 @@ bool SqliteUserLibraryRepository::deleteEntry(const int entryId) {
   return true;
 }
 
-bool SqliteUserLibraryRepository::create(DiscMember &member) {
+bool SqliteUserLibraryRepository::create(DiscSetMember &member) {
   std::lock_guard lock(m_mutex);
 
   try {
-    SQLite::Statement query(*m_db, "INSERT OR IGNORE INTO disc_members (content_file_id, path, "
-                                   "role, sort_index, created_at) VALUES (:contentFileId, :path, "
-                                   ":role, :sortIndex, :createdAt);");
-    query.bind(":contentFileId", member.m_contentFileId);
-    query.bind(":path", member.m_path);
-    query.bind(":role", member.m_role);
-    query.bind(":sortIndex", member.m_sortIndex);
+    // TODO
+    // Upsert on the path, so a stronger source correcting where a disc sits replaces the row
+    // rather than leaving two claims about one file
+    SQLite::Statement query(*m_db, "INSERT INTO disc_set_discs (disc_set_id, disc_number, content_file_id, "
+                                   "member_path, source, source_path, is_uncertain, created_at) "
+                                   "VALUES (:discSetId, :discNumber, :contentFileId, :memberPath, :source, "
+                                   ":sourcePath, :isUncertain, :createdAt) "
+                                   "ON CONFLICT(disc_set_id, member_path) DO UPDATE SET "
+                                   "disc_number = excluded.disc_number, content_file_id = excluded.content_file_id, "
+                                   "source = excluded.source, source_path = excluded.source_path, "
+                                   "is_uncertain = excluded.is_uncertain;");
+    query.bind(":discSetId", member.m_discSetId);
+    query.bind(":discNumber", member.m_discNumber);
+
+    if (member.m_contentFileId.has_value()) {
+      query.bind(":contentFileId", *member.m_contentFileId);
+    } else {
+      query.bind(":contentFileId");
+    }
+
+    query.bind(":memberPath", member.m_memberPath);
+    query.bind(":source", static_cast<int>(member.m_source));
+    query.bind(":sourcePath", member.m_sourcePath);
+    query.bind(":isUncertain", member.m_isUncertain ? 1 : 0);
     query.bind(":createdAt", nowMs());
     query.exec();
+
+    member.m_id = static_cast<int>(m_db->getLastInsertRowid());
   } catch (const std::exception &e) {
-    spdlog::error("Failed to add disc member {}: {}", member.m_path, e.what());
+    spdlog::error("Failed to add disc set member {}: {}", member.m_memberPath, e.what());
     return false;
   }
 
-  member.m_id = static_cast<int>(m_db->getLastInsertRowid());
+  return true;
+}
+
+std::vector<DiscSetMember> SqliteUserLibraryRepository::getDiscSetMembers(const int setId) {
+  std::lock_guard lock(m_mutex);
+  std::vector<DiscSetMember> members;
+
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM disc_set_discs WHERE disc_set_id = :setId "
+                                   "ORDER BY disc_number, id;");
+    query.bind(":setId", setId);
+
+    while (query.executeStep()) {
+      members.push_back(deserializeDiscSetMember(query));
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get disc set members for set {}: {}", setId, e.what());
+  }
+
+  return members;
+}
+
+std::unordered_map<std::string, std::vector<SqliteUserLibraryRepository::ContentSourceRow>>
+SqliteUserLibraryRepository::readContentSource(const std::optional<std::string> &contentHash) {
+  std::unordered_map<std::string, std::vector<ContentSourceRow>> byHash;
+
+  try {
+    // TODO
+    // Dumps only: a playlist carries its first disc's hash, so an unfiltered read would hand that
+    // disc's entry the playlist's own path as somewhere the game's content lives
+    std::string sql = "SELECT id, content_hash, content_directory_id, file_path, in_archive, "
+                      "archive_file_path, disc_number, content_type, missing_since FROM content_files "
+                      "WHERE role = 0";
+
+    if (contentHash.has_value()) {
+      sql += " AND content_hash = :contentHash";
+    }
+
+    SQLite::Statement query(*m_db, sql + ";");
+
+    if (contentHash.has_value()) {
+      query.bind(":contentHash", *contentHash);
+    }
+
+    while (query.executeStep()) {
+      const auto isInArchive = query.getColumn("in_archive").getInt() != 0;
+
+      byHash[query.getColumn("content_hash").getString()].push_back(ContentSourceRow{
+          .id = query.getColumn("id").getInt(),
+          .contentDirectoryId = query.getColumn("content_directory_id").getInt(),
+          .path =
+              isInArchive ? query.getColumn("archive_file_path").getString() : query.getColumn("file_path").getString(),
+          .discNumber = query.getColumn("disc_number").getInt(),
+          .isReadable = query.getColumn("missing_since").getInt64() == 0,
+          .isDisc = static_cast<ContentType>(query.getColumn("content_type").getInt()) == ContentType::Disc,
+          .isInArchive = isInArchive});
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get content locations: {}", e.what());
+  }
+
+  return byHash;
+}
+
+std::unordered_map<std::string, std::optional<int>>
+SqliteUserLibraryRepository::readWaysIn(const std::optional<std::string> &contentHash) {
+  std::unordered_map<std::string, std::optional<int>> waysIn;
+
+  try {
+    // TODO
+    // Ordered so the one naming a set is kept for a hash carrying both
+    std::string sql = "SELECT content_hash, disc_set_id FROM run_configurations";
+
+    if (contentHash.has_value()) {
+      sql += " WHERE content_hash = :contentHash";
+    }
+
+    sql += " ORDER BY disc_set_id IS NULL, id";
+
+    SQLite::Statement query(*m_db, sql + ";");
+
+    if (contentHash.has_value()) {
+      query.bind(":contentHash", *contentHash);
+    }
+
+    while (query.executeStep()) {
+      const auto hash = query.getColumn("content_hash").getString();
+
+      if (waysIn.contains(hash)) {
+        continue;
+      }
+
+      waysIn[hash] = query.getColumn("disc_set_id").isNull() ? std::nullopt
+                                                             : std::optional(query.getColumn("disc_set_id").getInt());
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get run configurations: {}", e.what());
+  }
+
+  return waysIn;
+}
+
+void SqliteUserLibraryRepository::applyWayIn(Entry &entry,
+                                             const std::unordered_map<std::string, std::optional<int>> &waysIn) {
+  const auto found = waysIn.find(entry.contentHash);
+
+  entry.hasRunConfiguration = found != waysIn.end();
+  entry.discSetId = found == waysIn.end() ? std::nullopt : found->second;
+}
+
+void SqliteUserLibraryRepository::applyContentSource(Entry &entry, std::vector<ContentSourceRow> rows) {
+  entry.contentPaths.clear();
+  entry.readableContentPaths.clear();
+  entry.contentDirectoryIds.clear();
+  entry.isContentAvailable = false;
+  entry.isDiscInArchive = false;
+
+  // TODO
+  // A file carrying no number is not a disc of anything, so it sorts behind the ones that are and
+  // the openable copy of the lowest disc leads the paths
+  const auto ordering = [](const ContentSourceRow &row) {
+    return std::make_tuple(row.discNumber == 0, row.discNumber, row.id);
+  };
+
+  std::ranges::sort(rows, [&ordering](const ContentSourceRow &left, const ContentSourceRow &right) {
+    return ordering(left) < ordering(right);
+  });
+
+  auto everyReadableCopyIsInArchive = true;
+
+  for (const auto &row : rows) {
+    if (row.contentDirectoryId >= 0 &&
+        std::ranges::find(entry.contentDirectoryIds, row.contentDirectoryId) == entry.contentDirectoryIds.end()) {
+      entry.contentDirectoryIds.push_back(row.contentDirectoryId);
+    }
+
+    entry.contentPaths.push_back(row.path);
+
+    if (!row.isReadable) {
+      continue;
+    }
+
+    entry.readableContentPaths.push_back(row.path);
+    entry.isContentAvailable = true;
+
+    if (!row.isDisc || !row.isInArchive) {
+      everyReadableCopyIsInArchive = false;
+    }
+  }
+
+  // TODO
+  // Every readable copy, not any of them: one copy in a zip says nothing while another sits
+  // loose on disk, and this is what refuses the launch
+  entry.isDiscInArchive = entry.isContentAvailable && everyReadableCopyIsInArchive;
+}
+
+std::optional<int> SqliteUserLibraryRepository::discSetOfContentFile(const int contentFileId) {
+  try {
+    SQLite::Statement query(*m_db, "SELECT disc_set_id FROM disc_set_discs WHERE content_file_id = :id LIMIT 1;");
+    query.bind(":id", contentFileId);
+
+    if (query.executeStep()) {
+      return query.getColumn("disc_set_id").getInt();
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get disc set for content file {}: {}", contentFileId, e.what());
+  }
+
+  return std::nullopt;
+}
+
+std::optional<DiscSetMember> SqliteUserLibraryRepository::getDiscSetMemberForContentFile(const int contentFileId) {
+  std::lock_guard lock(m_mutex);
+
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM disc_set_discs WHERE content_file_id = :id LIMIT 1;");
+    query.bind(":id", contentFileId);
+
+    if (query.executeStep()) {
+      return deserializeDiscSetMember(query);
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get disc set member for content file {}: {}", contentFileId, e.what());
+  }
+
+  return std::nullopt;
+}
+
+std::optional<DiscSetMember> SqliteUserLibraryRepository::getDiscSetMember(const int memberId) {
+  std::lock_guard lock(m_mutex);
+
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM disc_set_discs WHERE id = :id LIMIT 1;");
+    query.bind(":id", memberId);
+
+    if (query.executeStep()) {
+      return deserializeDiscSetMember(query);
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get disc set member {}: {}", memberId, e.what());
+  }
+
+  return std::nullopt;
+}
+
+std::optional<DiscSetMember> SqliteUserLibraryRepository::getPendingDiscSetMember(const std::string &memberPath) {
+  std::lock_guard lock(m_mutex);
+
+  try {
+    SQLite::Statement query(*m_db, "SELECT * FROM disc_set_discs WHERE member_path = :memberPath "
+                                   "AND content_file_id IS NULL LIMIT 1;");
+    query.bind(":memberPath", memberPath);
+
+    if (query.executeStep()) {
+      return deserializeDiscSetMember(query);
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get pending disc set member for {}: {}", memberPath, e.what());
+  }
+
+  return std::nullopt;
+}
+
+bool SqliteUserLibraryRepository::deleteDiscSetMember(const int memberId) {
+  std::lock_guard lock(m_mutex);
+
+  try {
+    SQLite::Statement query(*m_db, "DELETE FROM disc_set_discs WHERE id = :id;");
+    query.bind(":id", memberId);
+    query.exec();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to delete disc set member {}: {}", memberId, e.what());
+    return false;
+  }
+
+  return true;
+}
+
+bool SqliteUserLibraryRepository::create(ContentFileTrack &track) {
+  std::lock_guard lock(m_mutex);
+
+  try {
+    SQLite::Statement query(*m_db, "INSERT OR IGNORE INTO content_file_tracks (content_file_id, path, "
+                                   "sort_index, created_at) VALUES (:contentFileId, :path, "
+                                   ":sortIndex, :createdAt);");
+    query.bind(":contentFileId", track.m_contentFileId);
+    query.bind(":path", track.m_path);
+    query.bind(":sortIndex", track.m_sortIndex);
+    query.bind(":createdAt", nowMs());
+    query.exec();
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to add content file track {}: {}", track.m_path, e.what());
+    return false;
+  }
+
+  track.m_id = static_cast<int>(m_db->getLastInsertRowid());
   return true;
 }
 
@@ -2334,18 +2692,25 @@ bool SqliteUserLibraryRepository::update(const ContentDirectory &directory) {
 }
 
 void SqliteUserLibraryRepository::createRunConfiguration(const int contentFileId, const std::string &path,
-                                                         const int platformId, const std::string &contentHash,
-                                                         const std::string_view type) {
+                                                         const int platformId, const std::string &contentHash) {
   std::lock_guard lock(m_mutex);
   int64_t rowId = 0;
 
   try {
+    // TODO
+    // The first way in an entry gets is the one it launches through, and stays so until something
+    // says otherwise
+    SQLite::Statement existing(*m_db, "SELECT 1 FROM run_configurations WHERE content_hash = :contentHash "
+                                      "AND is_default LIMIT 1;");
+    existing.bind(":contentHash", contentHash);
+    const auto isDefault = !existing.executeStep();
+
     SQLite::Statement query(*m_db, "INSERT OR IGNORE INTO run_configurations "
-                                   "(type, content_hash, content_file_id, created_at) "
-                                   "VALUES (:type, :contentHash, :contentFileId, :createdAt);");
-    query.bind(":type", std::string(type));
+                                   "(content_hash, content_file_id, is_default, created_at) "
+                                   "VALUES (:contentHash, :contentFileId, :isDefault, :createdAt);");
     query.bind(":contentHash", contentHash);
     query.bind(":contentFileId", contentFileId);
+    query.bind(":isDefault", isDefault ? 1 : 0);
     query.bind(":createdAt", nowMs());
     query.exec();
 
@@ -2363,14 +2728,23 @@ void SqliteUserLibraryRepository::createRunConfigurationForSet(const int setId, 
   std::lock_guard lock(m_mutex);
 
   try {
-    // The unique index on disc_set_id is what makes this replace the set's way in rather than
-    // add a second one when the anchor moves to a lower-numbered disc
+    // TODO
+    // Cleared and written rather than upserted: the row can collide on the set it belongs to and
+    // on being the entry's way in, and an upsert can only name one of the two. Naming either
+    // leaves the other reported as an error
+    SQLite::Statement clearSet(*m_db, "DELETE FROM run_configurations WHERE disc_set_id = :discSetId;");
+    clearSet.bind(":discSetId", setId);
+    clearSet.exec();
+
+    // A set launches through its own way in, so whatever the entry launched through before does not
+    SQLite::Statement clearDefault(*m_db, "UPDATE run_configurations SET is_default = 0 "
+                                          "WHERE content_hash = :contentHash AND is_default;");
+    clearDefault.bind(":contentHash", contentHash);
+    clearDefault.exec();
+
     SQLite::Statement query(*m_db, "INSERT INTO run_configurations "
-                                   "(type, content_hash, content_file_id, disc_set_id, created_at) "
-                                   "VALUES (:type, :contentHash, :contentFileId, :discSetId, :createdAt) "
-                                   "ON CONFLICT(disc_set_id) WHERE disc_set_id IS NOT NULL DO UPDATE SET "
-                                   "content_hash = excluded.content_hash, content_file_id = excluded.content_file_id;");
-    query.bind(":type", std::string(RunConfiguration::TYPE_PLAYLIST));
+                                   "(content_hash, content_file_id, disc_set_id, is_default, created_at) "
+                                   "VALUES (:contentHash, :contentFileId, :discSetId, 1, :createdAt);");
     query.bind(":contentHash", contentHash);
     query.bind(":contentFileId", anchorContentFileId);
     query.bind(":discSetId", setId);

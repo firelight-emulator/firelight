@@ -153,8 +153,8 @@ TEST_F(LibraryScannerTest, DetectsCartridgesRecursively) {
 }
 
 // A raw disc track (.bin) named by a cue sheet beside it is reached through the sheet, so the
-// lone track is not catalogued on its own. The disc has to actually identify, or the assertion
-// below passes by finding nothing at all
+// lone track does not stand for a game of its own. The disc has to actually identify, or the
+// assertion below passes by finding nothing at all
 TEST_F(LibraryScannerTest, SkipsRawTrackTheSheetNames) {
   ASSERT_TRUE(tempDir.isValid());
   ASSERT_TRUE(QDir(tempDir.path()).mkpath("disc"));
@@ -170,6 +170,51 @@ TEST_F(LibraryScannerTest, SkipsRawTrackTheSheetNames) {
   const auto files = m_repo->getContentFiles();
   ASSERT_EQ(files.size(), 1u) << "the disc did not identify, so this proves nothing about suppression";
   EXPECT_TRUE(endsWith(files.front().m_filePath, "game.cue"));
+
+  // TODO
+  // The track is still written down, so what the walk decided about it can be read back rather
+  // than inferred from its absence
+  auto sawTrack = false;
+  for (const auto &file : m_repo->getRecordedFiles()) {
+    if (endsWith(file.m_filePath, "game.bin")) {
+      sawTrack = true;
+      EXPECT_EQ(file.m_role, ContentRole::Track);
+      EXPECT_TRUE(file.m_contentHash.empty()) << "a track was hashed, which costs a read and answers nothing";
+    }
+  }
+
+  EXPECT_TRUE(sawTrack) << "the track the sheet names was not written down at all";
+}
+
+// TODO
+// A playlist says which discs belong together. It is written down as one and never as a game:
+// it hashes to its first disc, so cataloguing it as content hands that disc a second way in
+TEST_F(LibraryScannerTest, RecordsAPlaylistWithoutMakingItAGame) {
+  ASSERT_TRUE(tempDir.isValid());
+  ASSERT_TRUE(QDir(tempDir.path()).mkpath("discs"));
+
+  auto image = romBytes(65536, 5);
+  image.replace(0, 16, QByteArray("SEGADISCSYSTEM  "));
+  writeFile(path("discs/game.bin"), image);
+  writeFile(path("discs/game.cue"), QByteArray("FILE \"game.bin\" BINARY\n  TRACK 01 MODE1/2048\n"
+                                               "    INDEX 01 00:00:00\n"));
+  writeFile(path("discs/game.m3u"), QByteArray("game.cue\n"));
+
+  scanTempDir();
+
+  for (const auto &file : m_repo->getContentFiles()) {
+    EXPECT_FALSE(endsWith(file.m_filePath, "game.m3u")) << "a playlist was offered as a game";
+  }
+
+  auto sawPlaylist = false;
+  for (const auto &file : m_repo->getRecordedFiles()) {
+    if (endsWith(file.m_filePath, "game.m3u")) {
+      sawPlaylist = true;
+      EXPECT_EQ(file.m_role, ContentRole::Playlist);
+    }
+  }
+
+  EXPECT_TRUE(sawPlaylist) << "the playlist was not written down at all";
 }
 
 // Suppression used to fire when any sheet existed in the directory rather than when one named
@@ -312,7 +357,7 @@ TEST_F(LibraryScannerTest, SuspendedScannerDefersUntilResumed) {
 //****************
 
 // An unmounted drive answers exactly as a deleted file does, so a sweep that believes it wipes the
-// catalogue of everything on that drive: every content file, every way in, every disc membership,
+// catalog of everything on that drive: every content file, every way in, every disc membership,
 // unattended, on the periodic rescan
 TEST_F(LibraryScannerTest, AnUnreachableRootLosesNothing) {
   const auto gamesDir = path("Games");
@@ -338,7 +383,7 @@ TEST_F(LibraryScannerTest, AnUnreachableRootLosesNothing) {
   // Everything hangs off the content file: deleting one takes its run configurations and disc
   // memberships with it, so the row surviving is what the rest survives by
   const auto after = m_repo->getContentFiles();
-  EXPECT_EQ(after.size(), 2u) << "the catalogue was swept away with the drive";
+  EXPECT_EQ(after.size(), 2u) << "the catalog was swept away with the drive";
 
   for (const auto &file : catalogued) {
     EXPECT_TRUE(std::ranges::any_of(after, [&](const ContentFile &kept) { return kept.m_id == file.m_id; }))

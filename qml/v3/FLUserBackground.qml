@@ -8,7 +8,7 @@ Rectangle {
     id: root
 
     // "solid" | "gradient" | "image"
-    property string mode: "gradient"
+    property string mode: "solid"
 
     property color color1: defaultColor
     property color color2: Qt.lighter(defaultColor, 1.5)
@@ -17,7 +17,7 @@ Rectangle {
     property var backgroundFile: ""
 
     property bool blur: false
-    property color defaultColor: "black"
+    property color defaultColor: "#171717"
 
     // 0..1. Legacy `blur` bool maps to a default level; hosts can set it directly
     property real blurAmount: root.blur ? 0.6 : 0
@@ -29,11 +29,12 @@ Rectangle {
     gradient: Gradient {
         GradientStop {
             position: 0.0
-            color: root.color1
+            color: root.defaultColor
         }
         GradientStop {
             position: 1.0
-            color: root.mode === "gradient" ? root.color2 : root.color1
+            // color: root.mode === "gradient" ? root.color2 : root.color1
+            color: root.defaultColor
         }
     }
 

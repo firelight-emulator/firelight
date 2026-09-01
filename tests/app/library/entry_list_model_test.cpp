@@ -5,6 +5,7 @@
 
 #include <firelight/achievement_service.hpp>
 #include <firelight/activity/sqlite_activity_log.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_repository.hpp>
@@ -43,7 +44,8 @@ Entry makeEntry(const std::string &name, const std::string &hash, unsigned platf
 class EntryListModelSyncTest : public testing::Test {
 protected:
   SqliteUserLibraryRepository m_repo{":memory:"};
-  LibraryIngestService m_ingest{m_repo};
+  DiscSetService m_discSets{m_repo, ""};
+  LibraryIngestService m_ingest{m_repo, m_discSets};
   UserLibraryService m_service{m_repo, (QDir::tempPath() + "/fl_elm_test").toStdString()};
   activity::SqliteActivityLog m_activityLog{":memory:"};
   platforms::PlatformService m_platformService;

@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include <firelight/library/entry_status.hpp>
 
 #include <gtest/gtest.h>
@@ -184,6 +185,36 @@ TEST(EntryStatusTest, OnlyTheDiscCountLeavesAGamePlayable) {
   EXPECT_TRUE(blocksLaunch(EntryProblem::ContentUnavailable));
   EXPECT_TRUE(blocksLaunch(EntryProblem::FilesMissing));
   EXPECT_TRUE(blocksLaunch(EntryProblem::ContentInArchive));
+  EXPECT_TRUE(blocksLaunch(EntryProblem::NoRunConfiguration));
+}
+
+// TODO
+// A readable file nothing knows how to launch reads as playable in the grid and then fails at
+// the loader, so it is worth a verdict of its own
+TEST(EntryStatusTest, ReadableFilesWithNoWayToLaunchThemStopItPlaying) {
+  const auto status = evaluateEntryStatus({.hasRunConfiguration = false});
+
+  EXPECT_TRUE(has(status, EntryProblem::NoRunConfiguration));
+  EXPECT_FALSE(status.isPlayable());
+}
+
+// TODO
+// Told the more useful of the two, rather than that there is no way to launch files that are
+// not there
+TEST(EntryStatusTest, MissingFilesAreSaidInsteadOfHavingNoWayToLaunchThem) {
+  const auto status = evaluateEntryStatus({.hasWayIn = false, .hasRunConfiguration = false});
+
+  EXPECT_TRUE(has(status, EntryProblem::FilesMissing));
+  EXPECT_FALSE(has(status, EntryProblem::NoRunConfiguration));
+}
+
+// TODO
+// An unplugged drive outranks both
+TEST(EntryStatusTest, AnUnreachableRootIsSaidInsteadOfHavingNoWayToLaunch) {
+  const auto status = evaluateEntryStatus({.hasRunConfiguration = false, .isContentReachable = false});
+
+  EXPECT_TRUE(has(status, EntryProblem::ContentUnavailable));
+  EXPECT_FALSE(has(status, EntryProblem::NoRunConfiguration));
 }
 
 } // namespace firelight::library

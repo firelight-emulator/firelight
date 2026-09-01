@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <vector>
@@ -14,7 +15,9 @@ enum class EntryProblem {
   ContentUnavailable,   // Used instead of FilesMissing when the content's root is unavailable (unplugged drive)
   FilesMissing,         // Previously known files are missing (deleted folder, moved out of library)
   ContentInArchive,     // A disc inside an archive. The core is handed a path that only exists within the archive
-  DiscsMissing,         // Fewer discs than the set is known to have
+  // TODO
+  NoRunConfiguration, // The files are here and readable, but nothing records a way to launch them
+  DiscsMissing,       // Fewer discs than the set is known to have
 };
 
 /**
@@ -22,6 +25,10 @@ enum class EntryProblem {
  */
 struct EntryStatusFacts {
   bool hasWayIn = true; // Whether the entry has content that can be launched at all (couldn't think of a better name)
+  // TODO
+  // Separate from hasWayIn: that one asks whether a file is there, this one whether anything
+  // records how to launch it
+  bool hasRunConfiguration = true;
   bool isCoreRegistered = true;
   bool isCoreInstalled = true;
   bool hasRequiredBios = true;

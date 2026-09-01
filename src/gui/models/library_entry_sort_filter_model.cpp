@@ -7,14 +7,9 @@ namespace firelight::gui {
 
 LibraryEntrySortFilterModel::LibraryEntrySortFilterModel(QObject *parent)
     : QSortFilterProxyModel(parent), m_filter(new LibraryFilter(this)) {
-  // Editing a criterion stages it; the pass it belongs to is run by applyFilters
   connect(m_filter, &LibraryFilter::changed, this, [this] { emit filtersOrSortChanged(); });
 
-  // Names sort the way a reader expects rather than the way ASCII does
   setSortCaseSensitivity(Qt::CaseInsensitive);
-  // TODO
-  // Qualified: the unqualified name is this class's staging setter, which records what
-  // to sort by later rather than telling the proxy what to sort by now
   QSortFilterProxyModel::setSortRole(m_pendingSortRole);
   setDynamicSortFilter(true);
   sort(0, Qt::AscendingOrder);
@@ -54,50 +49,6 @@ void LibraryEntrySortFilterModel::setSourceModel(QAbstractListModel *sourceModel
 }
 
 int LibraryEntrySortFilterModel::getCount() const { return rowCount({}); }
-
-QString LibraryEntrySortFilterModel::getFilterText() const { return m_filter->getNameContains(); }
-
-void LibraryEntrySortFilterModel::setFilterText(const QString &filterText) {
-  if (m_filter->getNameContains() == filterText) {
-    return;
-  }
-
-  m_filter->setNameContains(filterText);
-  emit filterTextChanged();
-}
-
-bool LibraryEntrySortFilterModel::isFavoritesOnly() const { return m_filter->getFavorite() == LibraryFilter::Yes; }
-
-void LibraryEntrySortFilterModel::setFavoritesOnly(const bool favoritesOnly) {
-  if (isFavoritesOnly() == favoritesOnly) {
-    return;
-  }
-
-  m_filter->setFavorite(favoritesOnly ? LibraryFilter::Yes : LibraryFilter::Unset);
-  emit favoritesOnlyChanged();
-}
-
-bool LibraryEntrySortFilterModel::isHideUnavailable() const { return m_filter->getPlayable() == LibraryFilter::Yes; }
-
-void LibraryEntrySortFilterModel::setHideUnavailable(const bool hideUnavailable) {
-  if (isHideUnavailable() == hideUnavailable) {
-    return;
-  }
-
-  m_filter->setPlayable(hideUnavailable ? LibraryFilter::Yes : LibraryFilter::Unset);
-  emit hideUnavailableChanged();
-}
-
-QVariantList LibraryEntrySortFilterModel::getPlatformIds() const { return m_filter->getPlatformIds(); }
-
-void LibraryEntrySortFilterModel::setPlatformIds(const QVariantList &platformIds) {
-  if (m_filter->getPlatformIds() == platformIds) {
-    return;
-  }
-
-  m_filter->setPlatformIds(platformIds);
-  emit platformIdsChanged();
-}
 
 LibraryEntrySortFilterModel::SortRole LibraryEntrySortFilterModel::getSortRole() const { return m_pendingSortRole; }
 

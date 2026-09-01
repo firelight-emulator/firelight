@@ -93,6 +93,8 @@ FLMenuItem {
         // x: control.width + AppStyle.spacingXs
         // y: -200
 
+        openSound: SoundEffects.openPopup
+
         onOpened: {
             submenu.focusFirstChild();
         }
@@ -108,20 +110,6 @@ FLMenuItem {
             canInteract: control.currentValues.length > 0
 
             FLFocus.focusSound: SoundEffects.menuNavigate
-            FLFocus.actions: [
-                FLAction {
-                    keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
-                    label: qsTr("Select")
-                    sound: clearButton.canInteract ? SoundEffects.openPopup : SoundEffects.cursorBump
-                    onTriggered: {
-                        if (!clearButton.canInteract) {
-                            return;
-                        }
-
-                        clearButton.click();
-                    }
-                }
-            ]
 
             Keys.onPressed: function (event) {
                 if (event.key !== Qt.Key_Left) {

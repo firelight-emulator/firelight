@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
+#include <sstream>
 
 // Exercises the shape change end to end: content files arrive, ingest turns them into
 // entries, and metadata giving those entries a title is what folds the discs of one game
@@ -24,8 +25,8 @@ protected:
   // The service writes real playlists, so the fixture gives it somewhere of its own to do it
   QTemporaryDir m_root;
   SqliteUserLibraryRepository m_repo{":memory:"};
-  LibraryIngestService m_ingest{m_repo};
   DiscSetService m_discSets{m_repo, (m_root.path() + "/appdata").toStdString()};
+  LibraryIngestService m_ingest{m_repo, m_discSets};
 
   std::string romsPath() const { return (m_root.path() + "/roms").toStdString(); }
 
@@ -33,9 +34,15 @@ protected:
   ScopedConnection m_absorbedConnection = EventDispatcher::instance().subscribe<EntryAbsorbedEvent>(
       [this](const EntryAbsorbedEvent &event) { m_absorbed.push_back(event); });
 
+  // TODO
+  // What a set moving onto a lower disc announces, so saves and playtime can follow it
+  std::vector<EntryIdentityChangedEvent> m_identityChanges;
+  ScopedConnection m_identityChangedConnection = EventDispatcher::instance().subscribe<EntryIdentityChangedEvent>(
+      [this](const EntryIdentityChangedEvent &event) { m_identityChanges.push_back(event); });
+
   // Catalogues one disc, which is what gives it an entry of its own
   int addDisc(const std::string &title, const std::string &hash, const int discNumber, const int platformId = 7,
-              const int gameId = 0) {
+              const std::vector<std::string> &regions = {}) {
     ContentFile file;
     file.m_type = ContentType::Disc;
     // Two releases put their disc 2 at the same name and size, so the hash is what keeps
@@ -44,16 +51,20 @@ protected:
     file.m_platformId = platformId;
     file.m_contentHash = hash;
     file.m_discNumber = discNumber;
-    file.m_gameId = gameId;
+    file.m_normalizedTitle = normalizeTitle(title);
+    file.m_regions = regions;
     file.m_fileSizeBytes = 1000 + discNumber;
     EXPECT_TRUE(m_repo.create(file));
     return file.m_id;
   }
 
-  // A disc the content database knows, catalogued and titled the way a scan does it
-  void addIdentifiedDisc(const std::string &title, const std::string &hash, const int discNumber, const int gameId,
+  // TODO
+  // A disc the content database knows, catalogued and titled the way a scan does it. The region
+  // goes onto the file as well as the entry because placement runs at ingest, before anything has
+  // had a chance to name the entry
+  void addIdentifiedDisc(const std::string &title, const std::string &hash, const int discNumber,
                          const std::vector<std::string> &regions = {}) {
-    addDisc(title, hash, discNumber, 7, gameId);
+    addDisc(title, hash, discNumber, 7, regions);
 
     if (!regions.empty()) {
       setRegions(hash, regions);
@@ -62,10 +73,16 @@ protected:
     nameIt(hash, title);
   }
 
-  // Stands in for metadata population, which is what publishes the event a set forms on
+  // TODO
+  // Stands in for metadata population. A disc reached through its set has no entry of its own, so
+  // there is nothing to name
   void nameIt(const std::string &hash, const std::string &title) {
     auto entry = m_repo.getEntryWithContentHash(hash);
-    ASSERT_TRUE(entry.has_value());
+
+    if (!entry.has_value()) {
+      return;
+    }
+
     entry->displayName = title;
     entry->normalizedTitle = normalizeTitle(title);
     ASSERT_TRUE(m_repo.updateEntryMetadata(*entry));
@@ -74,7 +91,11 @@ protected:
   // Stands in for the region a scrape or the filename tags resolved
   void setRegions(const std::string &hash, const std::vector<std::string> &regions) {
     const auto entry = m_repo.getEntryWithContentHash(hash);
-    ASSERT_TRUE(entry.has_value());
+
+    if (!entry.has_value()) {
+      return;
+    }
+
     GameMetadata metadata;
     metadata.regions = regions;
     ASSERT_TRUE(m_repo.applyEntryMetadata(entry->id, metadata, {metadata_fields::REGIONS}, false));
@@ -91,19 +112,12 @@ protected:
 
   std::vector<RunConfiguration> configsFor(const std::string &hash) { return m_repo.getRunConfigurations(hash); }
 
-  // The identity a set launches under: the lowest disc still holding an entry
+  // TODO
+  // The identity a set launches under, which is the hash of the entry left standing over it. The
+  // discs converge on one entry, so there is nothing to choose between
   std::string survivorOfSet(const int setId) {
-    auto entries = m_repo.getEntriesInDiscSet(setId);
-
-    if (entries.empty()) {
-      return "";
-    }
-
-    std::ranges::sort(entries, [](const Entry &left, const Entry &right) {
-      return std::tie(left.discNumber, left.id) < std::tie(right.discNumber, right.id);
-    });
-
-    return entries.front().contentHash;
+    const auto entries = m_repo.getEntriesInDiscSet(setId);
+    return entries.empty() ? "" : entries.front().contentHash;
   }
 
   // Where the set launching under this identity keeps its playlist
@@ -114,6 +128,22 @@ protected:
   static std::string readFile(const std::string &path) {
     std::ifstream in(path, std::ios::binary);
     return std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+  }
+
+  // TODO
+  // What a playlist names, without the line saying the file is ours
+  static std::string discLinesOf(const std::string &path) {
+    std::istringstream contents(readFile(path));
+    std::string discLines;
+    std::string line;
+
+    while (std::getline(contents, line)) {
+      if (!line.starts_with("#")) {
+        discLines += line + "\n";
+      }
+    }
+
+    return discLines;
   }
 };
 
@@ -138,8 +168,9 @@ TEST_F(DiscSetServiceTest, DiscsGoingMissingDoesNotDissolveTheSet) {
   ASSERT_TRUE(m_repo.getDiscSet(setId).has_value()) << "the set was dissolved because its discs were unreachable";
 
   for (const auto &disc : m_repo.getDiscsInSet(setId)) {
-    ASSERT_TRUE(disc.m_discSetId.has_value()) << disc.m_filePath << " lost its set";
-    EXPECT_EQ(*disc.m_discSetId, setId);
+    const auto member = m_repo.getDiscSetMemberForContentFile(disc.m_id);
+    ASSERT_TRUE(member.has_value()) << disc.m_filePath << " lost its set";
+    EXPECT_EQ(member->m_discSetId, setId);
   }
 
   const auto stillGrouped = m_repo.getEntryWithContentHash("disc1");
@@ -163,7 +194,7 @@ TEST_F(DiscSetServiceTest, AMissingDiscDropsOutOfThePresentCountAndThePlaylist) 
   EXPECT_EQ(m_repo.getPresentDiscsInSet(setId).size(), 2u);
 
   ASSERT_TRUE(m_discSets.materializePlaylist(setId, survivorOfSet(setId)));
-  const auto playlist = readFile(playlistFor(survivorOfSet(setId)));
+  const auto playlist = discLinesOf(playlistFor(survivorOfSet(setId)));
   EXPECT_EQ(playlist.find("disc2"), std::string::npos) << "the playlist names a disc that is not there";
 }
 
@@ -192,14 +223,19 @@ TEST_F(DiscSetServiceTest, ASetStillLaunchesWhenTheDiscItIsAnchoredOnGoesMissing
 // The shape change: two discs, one row
 TEST_F(DiscSetServiceTest, TwoDiscsConvergeOnOneEntry) {
   addTitledDisc("Final Fantasy VII", "disc1", 1);
-  addTitledDisc("Final Fantasy VII", "disc2", 2);
+  const auto second = addTitledDisc("Final Fantasy VII", "disc2", 2);
 
   EXPECT_EQ(entryCount(), 1);
 
   const auto survivor = m_repo.getEntryWithContentHash("disc1");
   ASSERT_TRUE(survivor.has_value());
   ASSERT_TRUE(survivor->discSetId.has_value());
-  EXPECT_FALSE(survivor->discSetUserSet);
+
+  // TODO
+  // Which rung placed a disc lives on the membership row, so a filename guess is readable as one
+  const auto placed = m_repo.getDiscSetMemberForContentFile(second);
+  ASSERT_TRUE(placed.has_value());
+  EXPECT_EQ(placed->m_source, DiscSource::Filename);
 
   // Both discs are still catalogued, and both are in the set
   const auto discs = m_repo.getDiscsInSet(*survivor->discSetId);
@@ -212,7 +248,7 @@ TEST_F(DiscSetServiceTest, TwoDiscsConvergeOnOneEntry) {
   const auto configs = configsFor("disc1");
   ASSERT_FALSE(configs.empty());
   EXPECT_TRUE(std::ranges::all_of(configs, [](const RunConfiguration &configuration) {
-    return configuration.type == RunConfiguration::TYPE_PLAYLIST;
+    return configuration.discSetId.has_value();
   })) << "a disc kept a way in of its own";
   EXPECT_TRUE(std::ranges::any_of(configs, [&](const RunConfiguration &configuration) {
     return configuration.discSetId == survivor->discSetId;
@@ -220,8 +256,9 @@ TEST_F(DiscSetServiceTest, TwoDiscsConvergeOnOneEntry) {
   EXPECT_TRUE(configsFor("disc2").empty());
 
   EXPECT_TRUE(std::filesystem::exists(playlistFor("disc1")));
-  EXPECT_EQ(readFile(playlistFor("disc1")), romsPath() + "/Final Fantasy VII (Disc 1) [disc1].cue\n" + romsPath() +
-                                                "/Final Fantasy VII (Disc 2) [disc2].cue\n");
+  EXPECT_TRUE(isGeneratedPlaylist(readFile(playlistFor("disc1")))) << "the playlist does not say it is ours";
+  EXPECT_EQ(discLinesOf(playlistFor("disc1")), romsPath() + "/Final Fantasy VII (Disc 1) [disc1].cue\n" + romsPath() +
+                                                   "/Final Fantasy VII (Disc 2) [disc2].cue\n");
 }
 
 // The lowest disc stands for the set however the files were found
@@ -238,17 +275,24 @@ TEST_F(DiscSetServiceTest, DiscOrderOnDiskDoesNotDecideWhichEntrySurvives) {
 
 // The tenet: a disc that was played before its set formed must not take its saves with it.
 // The move happens elsewhere, so what is asserted here is that it is announced
-TEST_F(DiscSetServiceTest, AbsorbingAnEntryAnnouncesWhereItsDataShouldGo) {
+// TODO
+// Nothing is absorbed when a lower disc arrives: the entry that was standing for the set moves
+// onto it, and says so, so what is keyed on the old dump can follow
+TEST_F(DiscSetServiceTest, TakingOverFromALowerDiscAnnouncesWhereTheDataShouldGo) {
   addTitledDisc("Grandia", "disc2", 2);
+
+  const auto before = m_repo.getEntryWithContentHash("disc2");
+  ASSERT_TRUE(before.has_value());
+  const auto entryId = before->id;
+
   addTitledDisc("Grandia", "disc1", 1);
 
-  ASSERT_EQ(m_absorbed.size(), 1u);
-  EXPECT_EQ(m_absorbed.front().absorbedContentHash, "disc2");
-  EXPECT_EQ(m_absorbed.front().survivingContentHash, "disc1");
+  ASSERT_EQ(m_identityChanges.size(), 1u) << "the identity moved without saying so";
+  EXPECT_EQ(m_identityChanges.front().entryId, entryId);
+  EXPECT_EQ(m_identityChanges.front().previousContentHash, "disc2");
+  EXPECT_EQ(m_identityChanges.front().contentHash, "disc1");
 
-  const auto survivor = m_repo.getEntryWithContentHash("disc1");
-  ASSERT_TRUE(survivor.has_value());
-  EXPECT_EQ(m_absorbed.front().survivingEntryId, survivor->id);
+  EXPECT_TRUE(m_absorbed.empty()) << "nothing should have been absorbed";
 }
 
 // A late disc 1 moves the identity once, and it never moves again
@@ -270,18 +314,35 @@ TEST_F(DiscSetServiceTest, ALateFirstDiscTakesOverTheSetItWalksInto) {
 
 // Two releases of one game fold to the same title, and which disc pairs with which is a
 // guess. Guessing wrong deletes an entry, so nothing happens
-TEST_F(DiscSetServiceTest, TwoCopiesOfOneDiscStopASetFromForming) {
-  addTitledDisc("Parasite Eve", "usaDisc2", 2);
-  addTitledDisc("Parasite Eve", "japanDisc2", 2);
+// TODO
+// A set holds each disc number once, so a second copy of disc 2 cannot join the set holding the
+// first and gets one of its own. Disc 1 then matches both, which it records rather than hides
+TEST_F(DiscSetServiceTest, TwoCopiesOfOneDiscCannotShareASet) {
+  const auto usaTwo = addTitledDisc("Parasite Eve", "usaDisc2", 2);
+  const auto japanTwo = addTitledDisc("Parasite Eve", "japanDisc2", 2);
   addTitledDisc("Parasite Eve", "usaDisc1", 1);
 
-  EXPECT_EQ(entryCount(), 3);
-  EXPECT_FALSE(m_repo.getEntryWithContentHash("usaDisc1")->discSetId.has_value());
+  // The entry that stood for the first set has re-keyed onto disc 1, so the sets are found
+  // through the discs rather than through an entry
+  const auto first = m_repo.getDiscSetMemberForContentFile(usaTwo);
+  const auto second = m_repo.getDiscSetMemberForContentFile(japanTwo);
+  ASSERT_TRUE(first.has_value());
+  ASSERT_TRUE(second.has_value());
+  EXPECT_NE(first->m_discSetId, second->m_discSetId) << "two copies of disc 2 shared one set";
+
+  // Disc 1 could have belonged to either, so where it landed is marked as a guess
+  const auto members = m_repo.getDiscSetMembers(first->m_discSetId);
+  const auto discOne = std::ranges::find_if(members, [](const DiscSetMember &m) { return m.m_discNumber == 1; });
+  ASSERT_NE(discOne, members.end());
+  EXPECT_TRUE(discOne->m_isUncertain) << "an ambiguous placement was recorded as certain";
 }
 
 // The copy that stops it may already be in a set, where it has no entry left to be found
 // by title. Without looking there, whichever release was scanned first would decide
-TEST_F(DiscSetServiceTest, ADiscAlreadyInASetStillCountsAsACopy) {
+// TODO
+// The number already being taken is what keeps a second copy out, so a set that has formed is no
+// more able to take one than a set still forming
+TEST_F(DiscSetServiceTest, ADiscAlreadyInASetStillHoldsItsNumber) {
   addTitledDisc("Parasite Eve", "usaDisc1", 1);
   addTitledDisc("Parasite Eve", "usaDisc2", 2);
   ASSERT_EQ(entryCount(), 1);
@@ -289,27 +350,23 @@ TEST_F(DiscSetServiceTest, ADiscAlreadyInASetStillCountsAsACopy) {
   addTitledDisc("Parasite Eve", "japanDisc2", 2);
 
   EXPECT_EQ(entryCount(), 2);
+
   const auto japan = m_repo.getEntryWithContentHash("japanDisc2");
   ASSERT_TRUE(japan.has_value());
-  EXPECT_FALSE(japan->discSetId.has_value());
+  ASSERT_TRUE(japan->discSetId.has_value()) << "the copy should have a set of its own";
+
+  const auto usa = m_repo.getEntryWithContentHash("usaDisc1");
+  ASSERT_TRUE(usa.has_value());
+  EXPECT_NE(*japan->discSetId, *usa->discSetId);
 }
 
 // With the regions known there is no ambiguity to back off from: each release's discs
 // find each other whatever order the files were scanned in
 TEST_F(DiscSetServiceTest, TwoReleasesOfOneGameFormTwoSets) {
-  addDisc("Suikoden II", "usaDisc1", 1);
-  addDisc("Suikoden II", "japanDisc2", 2);
-  addDisc("Suikoden II", "japanDisc1", 1);
-  addDisc("Suikoden II", "usaDisc2", 2);
-
-  setRegions("usaDisc1", {"US"});
-  setRegions("usaDisc2", {"US"});
-  setRegions("japanDisc1", {"JP"});
-  setRegions("japanDisc2", {"JP"});
-
-  for (const auto *hash : {"usaDisc1", "japanDisc2", "japanDisc1", "usaDisc2"}) {
-    nameIt(hash, "Suikoden II");
-  }
+  addDisc("Suikoden II", "usaDisc1", 1, 7, {"US"});
+  addDisc("Suikoden II", "japanDisc2", 2, 7, {"JP"});
+  addDisc("Suikoden II", "japanDisc1", 1, 7, {"JP"});
+  addDisc("Suikoden II", "usaDisc2", 2, 7, {"US"});
 
   EXPECT_EQ(entryCount(), 2);
 
@@ -326,23 +383,60 @@ TEST_F(DiscSetServiceTest, TwoReleasesOfOneGameFormTwoSets) {
 
 // A single-disc game is not a set, and neither is a game whose only peer is on another
 // console
-TEST_F(DiscSetServiceTest, OneDiscIsNotASet) {
+// TODO
+// A lone disc is a set of one, the same shape as any other set, so nothing branches on how many
+// discs a game came on. These two are different platforms and so different games
+TEST_F(DiscSetServiceTest, OneDiscIsASetOfOne) {
   addTitledDisc("Silent Hill", "onlyDisc", 1);
   addTitledDisc("Silent Hill", "saturnDisc", 2, 8);
 
   EXPECT_EQ(entryCount(), 2);
-  EXPECT_FALSE(m_repo.getEntryWithContentHash("onlyDisc")->discSetId.has_value());
-  EXPECT_FALSE(m_repo.getEntryWithContentHash("saturnDisc")->discSetId.has_value());
+
+  for (const auto *hash : {"onlyDisc", "saturnDisc"}) {
+    const auto entry = m_repo.getEntryWithContentHash(hash);
+    ASSERT_TRUE(entry.has_value());
+    ASSERT_TRUE(entry->discSetId.has_value()) << hash << " did not get a set of its own";
+    EXPECT_EQ(m_repo.getDiscSetMembers(*entry->discSetId).size(), 1u);
+  }
 }
 
 // A cartridge has no disc number, so it is never pulled into a set by its title
-TEST_F(DiscSetServiceTest, ContentWithNoDiscNumberIsLeftAlone) {
+// TODO
+// A cartridge launches through its own file, so it never joins a set however much its name looks
+// like a disc of one
+TEST_F(DiscSetServiceTest, ACartridgeIsLeftAlone) {
   addTitledDisc("Resident Evil 2", "disc1", 1);
-  addDisc("Resident Evil 2", "cartridge", 0);
+
+  ContentFile cartridge;
+  cartridge.m_type = ContentType::Cartridge;
+  cartridge.m_filePath = romsPath() + "/Resident Evil 2.md";
+  cartridge.m_platformId = 7;
+  cartridge.m_contentHash = "cartridge";
+  cartridge.m_normalizedTitle = normalizeTitle("Resident Evil 2");
+  cartridge.m_fileSizeBytes = 2048;
+  ASSERT_TRUE(m_repo.create(cartridge));
   nameIt("cartridge", "Resident Evil 2");
 
   EXPECT_EQ(entryCount(), 2);
   EXPECT_FALSE(m_repo.getEntryWithContentHash("cartridge")->discSetId.has_value());
+}
+
+// TODO
+// A set is identified by its anchor's hash, so a disc nothing could hash cannot be in one and
+// launches as itself
+TEST_F(DiscSetServiceTest, ADiscNothingCouldHashLaunchesAsItself) {
+  ContentFile unhashed;
+  unhashed.m_type = ContentType::Disc;
+  unhashed.m_filePath = romsPath() + "/Mystery.bin";
+  unhashed.m_platformId = 7;
+  unhashed.m_normalizedTitle = normalizeTitle("Mystery");
+  unhashed.m_fileSizeBytes = 4096;
+  ASSERT_TRUE(m_repo.create(unhashed));
+
+  const auto entry = m_repo.getEntryWithContentHash("");
+  ASSERT_TRUE(entry.has_value()) << "content nothing could hash never reached the library";
+  EXPECT_FALSE(entry->discSetId.has_value());
+  EXPECT_EQ(configsFor("").size(), 1u) << "it was left with no way in";
 }
 
 // The escape hatch, and it has to survive the next scan
@@ -356,14 +450,14 @@ TEST_F(DiscSetServiceTest, DetachingADiscGivesItItsEntryBackForGood) {
 
   const auto detached = m_repo.getEntryWithContentHash("disc2");
   ASSERT_TRUE(detached.has_value());
-  EXPECT_TRUE(detached->discSetUserSet);
-  EXPECT_FALSE(detached->discSetId.has_value());
   EXPECT_EQ(m_repo.getRunConfigurations("disc2").size(), 1u);
 
-  // One disc is not a set, so the set is gone with it
-  const auto survivor = m_repo.getEntryWithContentHash("disc1");
-  ASSERT_TRUE(survivor.has_value());
-  EXPECT_FALSE(survivor->discSetId.has_value());
+  // TODO
+  // A disc on its own is a set of one, and the row records that a person put it there
+  ASSERT_TRUE(detached->discSetId.has_value());
+  const auto members = m_repo.getDiscSetMembers(*detached->discSetId);
+  ASSERT_EQ(members.size(), 1u);
+  EXPECT_EQ(members.front().m_source, DiscSource::User);
 
   // The disc keeps the game's name rather than falling back to its filename
   EXPECT_EQ(detached->displayName, "Lunar");
@@ -414,9 +508,9 @@ TEST_F(DiscSetServiceTest, ALateFirstDiscBecomesThePlaylistsFirstLine) {
   addTitledDisc("Xenogears", "disc1", 1);
 
   // The identity moved to disc 1, so the playlist is named after it and lists it first
-  EXPECT_EQ(readFile(playlistFor("disc1")), romsPath() + "/Xenogears (Disc 1) [disc1].cue\n" + romsPath() +
-                                                "/Xenogears (Disc 2) [disc2].cue\n" + romsPath() +
-                                                "/Xenogears (Disc 3) [disc3].cue\n");
+  EXPECT_EQ(discLinesOf(playlistFor("disc1")), romsPath() + "/Xenogears (Disc 1) [disc1].cue\n" + romsPath() +
+                                                   "/Xenogears (Disc 2) [disc2].cue\n" + romsPath() +
+                                                   "/Xenogears (Disc 3) [disc3].cue\n");
   EXPECT_FALSE(std::filesystem::exists(playlistFor("disc2")))
       << "the playlist for the identity the set no longer launches under was left behind";
 }
@@ -462,12 +556,15 @@ TEST_F(DiscSetServiceTest, DetachingOneOfThreeRewritesThePlaylist) {
   ASSERT_TRUE(m_discSets.detachDisc(thirdDisc));
 
   EXPECT_TRUE(m_repo.getDiscSet(setId).has_value());
-  EXPECT_EQ(readFile(playlistFor("disc1")),
+  EXPECT_EQ(discLinesOf(playlistFor("disc1")),
             romsPath() + "/Riven (Disc 1) [disc1].cue\n" + romsPath() + "/Riven (Disc 2) [disc2].cue\n");
 }
 
 // A set that dissolves must not leave its entry pointed at a playlist for a set that is gone
-TEST_F(DiscSetServiceTest, DissolvingASetRetiresItsPlaylist) {
+// TODO
+// A set of one is a set like any other, so detaching leaves two of them rather than dissolving
+// anything. Each keeps its own way in
+TEST_F(DiscSetServiceTest, DetachingLeavesTwoSetsEachWithItsOwnWayIn) {
   addTitledDisc("Koudelka", "disc1", 1);
   const auto secondDisc = addTitledDisc("Koudelka", "disc2", 2);
 
@@ -478,13 +575,13 @@ TEST_F(DiscSetServiceTest, DissolvingASetRetiresItsPlaylist) {
 
   ASSERT_TRUE(m_discSets.detachDisc(secondDisc));
 
-  EXPECT_FALSE(std::filesystem::exists(playlistFor("disc1")));
+  // The set the disc left is still identified by disc 1, so its playlist stands
+  EXPECT_TRUE(std::filesystem::exists(playlistFor("disc1")));
 
-  // Both discs launch on their own again, and neither through the playlist
   for (const auto *hash : {"disc1", "disc2"}) {
     const auto configs = configsFor(hash);
     ASSERT_EQ(configs.size(), 1u) << hash;
-    EXPECT_EQ(configs.front().type, RunConfiguration::TYPE_ROM) << hash;
+    EXPECT_TRUE(configs.front().discSetId.has_value()) << hash;
   }
 }
 
@@ -530,13 +627,13 @@ TEST_F(DiscSetServiceTest, MaterializingBringsAStalePlaylistUpToDate) {
 
   const auto survivor = m_repo.getEntryWithContentHash("disc1");
   ASSERT_TRUE(survivor.has_value());
-  ASSERT_NE(readFile(playlistFor("disc1")).find("disc3"), std::string::npos);
+  ASSERT_NE(discLinesOf(playlistFor("disc1")).find("disc3"), std::string::npos);
 
   // Disc 3 goes away, the way a scan removes a file that is gone
   ASSERT_TRUE(m_repo.deleteContentFile(thirdDisc));
   EXPECT_TRUE(m_discSets.materializePlaylist(*survivor->discSetId, "disc1"));
 
-  EXPECT_EQ(readFile(playlistFor("disc1")).find("disc3"), std::string::npos)
+  EXPECT_EQ(discLinesOf(playlistFor("disc1")).find("disc3"), std::string::npos)
       << "the playlist still names a disc that is gone";
 }
 
@@ -552,34 +649,38 @@ TEST_F(DiscSetServiceTest, LosingTheSurvivorsOwnDiscStillRewritesThePlaylist) {
   ASSERT_TRUE(survivor->discSetId.has_value());
   const auto setId = *survivor->discSetId;
 
-  // Disc 1 goes away the way a scan removes a file that is gone
-  ASSERT_TRUE(m_repo.deleteContentFile(firstDisc));
+  // Disc 1 goes away the way a scan reports a file that is gone, which keeps its row
+  ASSERT_TRUE(m_repo.markContentFileMissing(firstDisc));
 
   const auto remaining = survivorOfSet(setId);
   ASSERT_FALSE(remaining.empty()) << "the set was left with nobody to rebuild for";
   EXPECT_TRUE(m_discSets.materializePlaylist(setId, remaining));
 
   EXPECT_TRUE(std::filesystem::exists(playlistFor(remaining)));
-  EXPECT_EQ(readFile(playlistFor(remaining)).find("disc1"), std::string::npos)
+  EXPECT_EQ(discLinesOf(playlistFor(remaining)).find("disc1"), std::string::npos)
       << "the playlist still names the disc that is gone";
 }
 
 // Nothing supplies the count yet, so a set records 0 and the verdict says nothing about discs
-TEST_F(DiscSetServiceTest, ASetRecordsTheDiscCountItWasToldAndOtherwiseNothing) {
-  addTitledDisc("Shenmue", "disc1", 1);
+// TODO
+// Scanning discs says nothing about how many the game came on, because owning two is not knowing
+// there are only two. A playlist naming them is the one source that does not need a database
+TEST_F(DiscSetServiceTest, ASetLearnsItsDiscCountFromAPlaylistAndNotFromScanning) {
+  const auto one = addTitledDisc("Shenmue", "disc1", 1);
   addTitledDisc("Shenmue", "disc2", 2);
 
-  const auto survivor = m_repo.getEntryWithContentHash("disc1");
-  ASSERT_TRUE(survivor.has_value());
-  ASSERT_TRUE(survivor->discSetId.has_value());
-  EXPECT_EQ(m_repo.getDiscSet(*survivor->discSetId)->discCount, 0);
+  const auto entry = m_repo.getEntryWithContentHash("disc1");
+  ASSERT_TRUE(entry.has_value());
+  ASSERT_TRUE(entry->discSetId.has_value());
+  EXPECT_EQ(m_repo.getDiscSet(*entry->discSetId)->discCount, 0) << "a count was guessed from what is on hand";
 
-  // What metadata population would supply once the content database carries it
-  GameMetadata metadata;
-  metadata.discCount = 4;
-  ASSERT_TRUE(m_repo.applyEntryMetadata(survivor->id, metadata, {metadata_fields::DISC_COUNT}, false));
+  const auto onePath = m_repo.getContentFile(one)->m_filePath;
+  const auto setId =
+      m_discSets.claimPlaylist(romsPath() + "/shenmue.m3u", {onePath, romsPath() + "/disc2.cue",
+                                                             romsPath() + "/disc3.cue", romsPath() + "/disc4.cue"});
 
-  EXPECT_EQ(m_repo.getDiscSet(*survivor->discSetId)->discCount, 4);
+  ASSERT_TRUE(setId.has_value());
+  EXPECT_EQ(m_repo.getDiscSet(*setId)->discCount, 4);
 }
 
 // A playlist left behind by an earlier run is catalogued before the disc folders and, because
@@ -614,10 +715,8 @@ TEST_F(DiscSetServiceTest, AStalePlaylistDoesNotSplitTheSetInTwo) {
 // The same shape without the region ever arriving: an entry that knows nothing about its
 // region must not read as a different release from one that does
 TEST_F(DiscSetServiceTest, AnUnknownRegionGroupsWithAKnownOne) {
-  addTitledDisc("Grandia", "disc1", 1);
-  addDisc("Grandia", "disc2", 2);
-  setRegions("disc2", {"US"});
-  nameIt("disc2", "Grandia");
+  addDisc("Grandia", "disc1", 1);
+  addDisc("Grandia", "disc2", 2, 7, {"US"});
 
   EXPECT_EQ(entryCount(), 1) << "not knowing a region was taken as knowing it is different";
 }
@@ -644,9 +743,10 @@ TEST_F(DiscSetServiceTest, ADeletedSetTakesItsWayInWithIt) {
   })) << "the set is gone but its way in is still there";
 }
 
-// The last file going is what hides a game. A way in anchored on a disc that no longer exists
-// would leave a game nobody can launch sitting in the library forever
-TEST_F(DiscSetServiceTest, AGameWhoseFilesAreAllGoneLeavesTheLibrary) {
+// TODO
+// The last file going takes every way in with it and leaves the entry standing, so the game is
+// still on the shelf and badged rather than gone
+TEST_F(DiscSetServiceTest, AGameWhoseFilesAreAllGoneStaysInTheLibrary) {
   const auto discOne = addTitledDisc("Final Fantasy VII", "disc1", 1);
   const auto discTwo = addTitledDisc("Final Fantasy VII", "disc2", 2);
 
@@ -669,25 +769,281 @@ TEST_F(DiscSetServiceTest, AGameWhoseFilesAreAllGoneLeavesTheLibrary) {
   EXPECT_GT(discTwo, 0);
 }
 
-// The whole point of the content database: discs whose filenames agree about nothing still
-// fold together, because the identity does not come from the filename
-TEST_F(DiscSetServiceTest, TheDatabaseGroupsDiscsWhoseNamesDisagree) {
-  addIdentifiedDisc("Biohazard", "disc1", 1, 25390);
-  addIdentifiedDisc("Resident Evil", "disc2", 2, 25390);
+// TODO
+// A set is identified by its lowest disc, so disc 1 turning up later moves the identity onto it.
+// The entry is re-keyed where it stands rather than replaced, so everything a person put on it
+// survives the move
+TEST_F(DiscSetServiceTest, ALateFirstDiscRekeysTheEntryInPlace) {
+  addDisc("Final Fantasy VII", "disc2", 2);
 
-  EXPECT_EQ(entryCount(), 1) << "a resolved game id did not bring two differently named discs together";
+  auto entry = m_repo.getEntryWithContentHash("disc2");
+  ASSERT_TRUE(entry.has_value());
+  const auto entryId = entry->id;
+
+  // Things a person put on the entry, which a delete-and-recreate would lose
+  entry->rating = 4;
+  entry->favorite = true;
+  ASSERT_TRUE(m_repo.update(*entry));
+
+  addDisc("Final Fantasy VII", "disc1", 1);
+
+  const auto after = m_repo.getEntry(entryId);
+  ASSERT_TRUE(after.has_value()) << "the entry was replaced rather than re-keyed";
+  EXPECT_EQ(after->contentHash, "disc1") << "the identity did not move onto the lower disc";
+  EXPECT_EQ(after->rating, 4u) << "a rating did not survive the move";
+  EXPECT_TRUE(after->favorite) << "a favourite did not survive the move";
+
+  EXPECT_EQ(entryCount(), 1) << "a second entry was stood up beside the one that moved";
+}
+
+// TODO
+// A row holding a position for a disc nobody has carries no hash, so it cannot be what the set is
+// identified by however low its number
+TEST_F(DiscSetServiceTest, ADiscNobodyHasCannotAnchorTheSet) {
+  const auto two = addDisc("Lunar", "disc2", 2);
+  const auto ownedPath = m_repo.getContentFile(two)->m_filePath;
+
+  const auto setId =
+      m_discSets.claimPlaylist(romsPath() + "/lunar.m3u", {romsPath() + "/missing-disc1.cue", ownedPath});
+  ASSERT_TRUE(setId.has_value());
+
+  auto entry = m_repo.getEntryWithContentHash("disc2");
+  ASSERT_TRUE(entry.has_value());
+
+  EXPECT_FALSE(m_discSets.syncSetEntry(*setId)) << "a claim with no file behind it was used as the anchor";
+  EXPECT_EQ(m_repo.getEntry(entry->id)->contentHash, "disc2");
+}
+
+// TODO
+// A playlist naming three discs where only one is on disk. Every line gets a row, the two nobody
+// has yet hold their positions, and the set knows it is a three-disc game
+TEST_F(DiscSetServiceTest, APlaylistClaimsDiscsThatAreNotHereYet) {
+  const auto owned = addDisc("Final Fantasy VII", "disc2", 2);
+  const auto ownedPath = m_repo.getContentFile(owned)->m_filePath;
+
+  const auto setId = m_discSets.claimPlaylist(
+      romsPath() + "/ff7.m3u", {romsPath() + "/missing-disc1.cue", ownedPath, romsPath() + "/missing-disc3.cue"});
+
+  ASSERT_TRUE(setId.has_value());
+
+  const auto members = m_repo.getDiscSetMembers(*setId);
+  ASSERT_EQ(members.size(), 3u);
+
+  EXPECT_FALSE(members[0].m_contentFileId.has_value()) << "a disc nobody has cannot name a file";
+  EXPECT_TRUE(members[1].m_contentFileId.has_value());
+  EXPECT_FALSE(members[2].m_contentFileId.has_value());
+
+  // The playlist's order is the disc order, whatever the files are called
+  EXPECT_EQ(members[0].m_discNumber, 1);
+  EXPECT_EQ(members[1].m_discNumber, 2);
+  EXPECT_EQ(members[2].m_discNumber, 3);
+
+  for (const auto &member : members) {
+    EXPECT_EQ(member.m_source, DiscSource::PlaylistFile);
+  }
+
+  const auto set = m_repo.getDiscSet(*setId);
+  ASSERT_TRUE(set.has_value());
+  EXPECT_EQ(set->discCount, 3) << "the line count is what says how many discs the game came on";
+}
+
+// TODO
+// The disc turning up later fills in the row that was holding its place, rather than making a
+// second claim on it
+TEST_F(DiscSetServiceTest, ADiscArrivingLaterFillsInThePlaylistsClaim) {
+  const auto missingPath = romsPath() + "/Final Fantasy VII (Disc 1) [disc1].cue";
+
+  const auto setId = m_discSets.claimPlaylist(romsPath() + "/ff7.m3u", {missingPath});
+  ASSERT_TRUE(setId.has_value());
+  ASSERT_FALSE(m_repo.getDiscSetMembers(*setId).front().m_contentFileId.has_value());
+
+  const auto arrived = addDisc("Final Fantasy VII", "disc1", 1);
+  const auto landedIn = m_discSets.place(*m_repo.getContentFile(arrived));
+
+  EXPECT_EQ(landedIn, setId) << "the arriving disc did not land in the set that claimed it";
+
+  const auto members = m_repo.getDiscSetMembers(*setId);
+  ASSERT_EQ(members.size(), 1u) << "binding a claim should not add a second row";
+  EXPECT_EQ(members.front().m_contentFileId, arrived);
+}
+
+// TODO
+// A playlist speaks with more authority than a filename, so it moves a disc grouping had guessed
+// into the wrong set
+TEST_F(DiscSetServiceTest, APlaylistMovesADiscGroupingHadGuessedAt) {
+  const auto one = addDisc("Lunar", "disc1", 1);
+  const auto guessedSet = m_discSets.place(*m_repo.getContentFile(one));
+  ASSERT_TRUE(guessedSet.has_value());
+
+  const auto path = m_repo.getContentFile(one)->m_filePath;
+  const auto claimedSet = m_discSets.claimPlaylist(romsPath() + "/lunar.m3u", {path});
+
+  ASSERT_TRUE(claimedSet.has_value());
+  EXPECT_EQ(m_repo.getDiscSetMembers(*claimedSet).front().m_source, DiscSource::PlaylistFile);
+}
+
+// TODO
+// Two discs of one game find the same set, in either scan order, with nothing named and nothing
+// deleted
+TEST_F(DiscSetServiceTest, PlacementPutsTwoDiscsInOneSet) {
+  const auto one = addDisc("Final Fantasy VII", "disc1", 1);
+  const auto two = addDisc("Final Fantasy VII", "disc2", 2);
+
+  const auto firstSet = m_discSets.place(*m_repo.getContentFile(one));
+  const auto secondSet = m_discSets.place(*m_repo.getContentFile(two));
+
+  ASSERT_TRUE(firstSet.has_value());
+  ASSERT_TRUE(secondSet.has_value());
+  EXPECT_EQ(*firstSet, *secondSet);
+
+  const auto members = m_repo.getDiscSetMembers(*firstSet);
+  ASSERT_EQ(members.size(), 2u);
+  EXPECT_EQ(members[0].m_discNumber, 1);
+  EXPECT_EQ(members[1].m_discNumber, 2);
+}
+
+// TODO
+// Placing the same file twice leaves it where it is rather than making a second claim on it
+TEST_F(DiscSetServiceTest, PlacingADiscTwiceLeavesItWhereItIs) {
+  const auto one = addDisc("Lunar", "disc1", 1);
+  const auto file = m_repo.getContentFile(one);
+
+  const auto first = m_discSets.place(*file);
+  const auto again = m_discSets.place(*file);
+
+  ASSERT_TRUE(first.has_value());
+  EXPECT_EQ(again, first);
+  EXPECT_EQ(m_repo.getDiscSetMembers(*first).size(), 1u);
+}
+
+// TODO
+// A set already holding a disc at this number cannot be the right one, so the second copy gets a
+// set of its own rather than displacing what is there
+TEST_F(DiscSetServiceTest, ASecondCopyOfOneDiscGetsItsOwnSet) {
+  const auto first = addDisc("Parasite Eve", "copyA", 2);
+  const auto second = addDisc("Parasite Eve", "copyB", 2);
+
+  const auto setA = m_discSets.place(*m_repo.getContentFile(first));
+  const auto setB = m_discSets.place(*m_repo.getContentFile(second));
+
+  ASSERT_TRUE(setA.has_value());
+  ASSERT_TRUE(setB.has_value());
+  EXPECT_NE(*setA, *setB) << "two copies of disc 2 were put in one set";
+}
+
+// TODO
+// A lone disc is a set of one, which is the same shape as any other set rather than a special case
+TEST_F(DiscSetServiceTest, ALoneDiscIsASetOfOne) {
+  const auto only = addDisc("Grandia", "disc1", 1);
+
+  const auto setId = m_discSets.place(*m_repo.getContentFile(only));
+
+  ASSERT_TRUE(setId.has_value());
+  EXPECT_EQ(m_repo.getDiscSetMembers(*setId).size(), 1u);
+}
+
+// TODO
+// Membership is written as rows beside the column that still carries it, so the two say the same
+// thing about which discs a set holds and at what numbers
+TEST_F(DiscSetServiceTest, FormingASetRecordsItsMembership) {
+  addTitledDisc("Final Fantasy VII", "disc1", 1);
+  addTitledDisc("Final Fantasy VII", "disc2", 2);
 
   const auto survivor = m_repo.getEntryWithContentHash("disc1");
   ASSERT_TRUE(survivor.has_value());
   ASSERT_TRUE(survivor->discSetId.has_value());
-  EXPECT_EQ(m_repo.getDiscsInSet(*survivor->discSetId).size(), 2u);
+
+  const auto members = m_repo.getDiscSetMembers(*survivor->discSetId);
+  ASSERT_EQ(members.size(), 2u);
+
+  EXPECT_EQ(members[0].m_discNumber, 1);
+  EXPECT_EQ(members[1].m_discNumber, 2);
+
+  for (const auto &member : members) {
+    EXPECT_TRUE(member.m_contentFileId.has_value()) << "a catalogued disc should name its file";
+    EXPECT_FALSE(member.m_memberPath.empty());
+    EXPECT_EQ(member.m_source, DiscSource::Filename);
+    EXPECT_FALSE(member.m_isUncertain);
+  }
+
+  // The column everything still reads and the rows beside it must agree
+  const auto discs = m_repo.getDiscsInSet(*survivor->discSetId);
+  EXPECT_EQ(discs.size(), members.size());
 }
 
-// One game id spans a game's regional releases, so once it is resolved the region check is the
-// only thing left keeping two releases apart -- and absorbing deletes an entry
-TEST_F(DiscSetServiceTest, OneGameIdStillDoesNotMergeTwoReleases) {
-  addIdentifiedDisc("Biohazard", "japanDisc1", 1, 25390, {"JP"});
-  addIdentifiedDisc("Resident Evil", "usaDisc2", 2, 25390, {"US"});
+// TODO
+// A disc leaving a set takes its membership row with it, so the rows and the column do not drift
+// apart when somebody detaches one
+TEST_F(DiscSetServiceTest, DetachingADiscTakesItsMembershipRowWithIt) {
+  addTitledDisc("Lunar", "disc1", 1);
+  const auto discTwoFileId = addTitledDisc("Lunar", "disc2", 2);
+
+  const auto survivor = m_repo.getEntryWithContentHash("disc1");
+  ASSERT_TRUE(survivor.has_value());
+  ASSERT_TRUE(survivor->discSetId.has_value());
+  const auto setId = *survivor->discSetId;
+
+  ASSERT_EQ(m_repo.getDiscSetMembers(setId).size(), 2u);
+
+  ASSERT_TRUE(m_discSets.detachDisc(discTwoFileId));
+
+  // TODO
+  // The disc takes its row with it and the set carries on as a set of one
+  const auto remaining = m_repo.getDiscSetMembers(setId);
+  ASSERT_EQ(remaining.size(), 1u);
+  EXPECT_EQ(m_repo.getContentFile(*remaining.front().m_contentFileId)->m_contentHash, "disc1");
+  EXPECT_EQ(m_repo.getDiscsInSet(setId).size(), 1u);
+}
+
+// TODO
+// A disc has one home, so a second set cannot claim a file the first already holds
+TEST_F(DiscSetServiceTest, ADiscBelongsToOneSetOnly) {
+  addTitledDisc("Final Fantasy VII", "disc1", 1);
+  addTitledDisc("Final Fantasy VII", "disc2", 2);
+
+  const auto survivor = m_repo.getEntryWithContentHash("disc1");
+  ASSERT_TRUE(survivor.has_value());
+  ASSERT_TRUE(survivor->discSetId.has_value());
+
+  const auto members = m_repo.getDiscSetMembers(*survivor->discSetId);
+  ASSERT_FALSE(members.empty());
+
+  DiscSetMember stolen{.m_discSetId = *survivor->discSetId + 1,
+                       .m_discNumber = 1,
+                       .m_contentFileId = members.front().m_contentFileId,
+                       .m_memberPath = "somewhere/else.cue",
+                       .m_source = DiscSource::User};
+
+  EXPECT_FALSE(m_repo.create(stolen)) << "a file already in a set was taken by a second one";
+}
+
+// TODO
+// The dump carries its title from the filename at ingest, so discs group on that without waiting
+// for metadata population to write a title onto the entry
+TEST_F(DiscSetServiceTest, DiscsGroupOnTheTitlesTheirFilenamesGaveThem) {
+  addDisc("Final Fantasy VII", "disc1", 1);
+  addDisc("Final Fantasy VII", "disc2", 2);
+
+  EXPECT_EQ(entryCount(), 1) << "two discs sharing a filename title did not become one game";
+
+  const auto entry = m_repo.getEntryWithContentHash("disc1");
+  ASSERT_TRUE(entry.has_value());
+  EXPECT_TRUE(entry->normalizedTitle.empty()) << "grouping should not have needed a titled entry";
+
+  ASSERT_TRUE(entry->discSetId.has_value());
+  EXPECT_EQ(m_repo.getDiscsInSet(*entry->discSetId).size(), 2u);
+
+  // The set launches through its anchor, so the disc reached through it keeps no way in
+  EXPECT_TRUE(configsFor("disc2").empty());
+  EXPECT_EQ(configsFor("disc1").size(), 1u);
+}
+
+// TODO
+// One title spans a game's regional releases, so the region check is the only thing left keeping
+// two of them apart
+TEST_F(DiscSetServiceTest, TwoRegionalReleasesOfOneTitleDoNotMerge) {
+  addIdentifiedDisc("Resident Evil 2", "japanDisc1", 1, {"JP"});
+  addIdentifiedDisc("Resident Evil 2", "usaDisc2", 2, {"US"});
 
   EXPECT_EQ(entryCount(), 2) << "discs of two releases were folded into one set";
 }
@@ -695,10 +1051,250 @@ TEST_F(DiscSetServiceTest, OneGameIdStillDoesNotMergeTwoReleases) {
 // Coverage arrives one dump at a time, so a database that knows one disc and not its sibling
 // must not split a set that the titles alone would have formed
 TEST_F(DiscSetServiceTest, PartialDatabaseCoverageStillGroups) {
-  addIdentifiedDisc("Grandia", "disc1", 1, 4242);
+  addIdentifiedDisc("Grandia", "disc1", 1);
   addTitledDisc("Grandia", "disc2", 2);
 
   EXPECT_EQ(entryCount(), 1) << "knowing one disc and not the other split the set";
+}
+
+// TODO
+// A disc that is not on disk keeps its hash, so it keeps anchoring. An unplugged drive moving the
+// identity onto a disc that happens to be present would take every save with it
+TEST_F(DiscSetServiceTest, AMissingAnchorStillIdentifiesTheSet) {
+  const auto discOne = addTitledDisc("Final Fantasy VII", "disc1", 1);
+  addTitledDisc("Final Fantasy VII", "disc2", 2);
+  addTitledDisc("Final Fantasy VII", "disc3", 3);
+
+  const auto before = m_repo.getEntryWithContentHash("disc1");
+  ASSERT_TRUE(before.has_value());
+  const auto entryId = before->id;
+
+  ASSERT_TRUE(m_repo.markContentFileMissing(discOne));
+
+  // The row survives with its hash, or the rest of this proves nothing
+  const auto gone = m_repo.getContentFile(discOne);
+  ASSERT_TRUE(gone.has_value());
+  EXPECT_EQ(gone->m_contentHash, "disc1");
+  EXPECT_NE(gone->m_missingSince, 0);
+
+  m_identityChanges.clear();
+  m_absorbed.clear();
+
+  // A real arrival, so placement and the way in are rebuilt while the anchor is unreachable
+  addTitledDisc("Final Fantasy VII", "disc4", 4);
+
+  const auto after = m_repo.getEntry(entryId);
+  ASSERT_TRUE(after.has_value());
+  EXPECT_EQ(after->contentHash, "disc1") << "the identity walked onto a disc that happened to be present";
+  EXPECT_TRUE(m_identityChanges.empty()) << "an identity move was announced for a disc that only went missing";
+  EXPECT_TRUE(m_absorbed.empty());
+  EXPECT_EQ(entryCount(), 1);
+
+  // The playlist still belongs to disc 1, and no longer names the file that is gone
+  EXPECT_TRUE(std::filesystem::exists(playlistFor("disc1")));
+  EXPECT_FALSE(std::filesystem::exists(playlistFor("disc2"))) << "the set re-anchored onto a present disc";
+  EXPECT_EQ(discLinesOf(playlistFor("disc1")).find("disc1]"), std::string::npos)
+      << "the playlist names a disc that is not there";
+}
+
+// TODO
+// Folding two rows into one says which hash survived and which was taken over, because saves and
+// playtime are keyed on the hash and have to be told where to go
+TEST_F(DiscSetServiceTest, FoldingTwoEntriesIntoOneSaysWhichHashSurvived) {
+  addTitledDisc("Koudelka", "disc1", 1);
+  const auto secondDisc = addTitledDisc("Koudelka", "disc2", 2);
+
+  ASSERT_TRUE(m_discSets.detachDisc(secondDisc));
+  ASSERT_EQ(entryCount(), 2);
+
+  const auto kept = m_repo.getEntryWithContentHash("disc1");
+  const auto absorbed = m_repo.getEntryWithContentHash("disc2");
+  ASSERT_TRUE(kept.has_value());
+  ASSERT_TRUE(absorbed.has_value());
+
+  m_absorbed.clear();
+  ASSERT_TRUE(m_discSets.clearUserChoice(absorbed->id));
+
+  ASSERT_EQ(m_absorbed.size(), 1u) << "a row was taken over without saying so";
+  EXPECT_EQ(m_absorbed.front().survivingEntryId, kept->id);
+  EXPECT_EQ(m_absorbed.front().absorbedContentHash, "disc2");
+  EXPECT_EQ(m_absorbed.front().survivingContentHash, "disc1");
+
+  EXPECT_FALSE(m_repo.getEntry(absorbed->id).has_value());
+  EXPECT_EQ(m_repo.getEntry(kept->id)->contentHash, "disc1");
+  EXPECT_TRUE(configsFor("disc2").empty()) << "the taken-over row kept a way in";
+}
+
+// TODO
+// Taking the disc a set is identified by out of it leaves the rest of the set still named after
+// the game rather than after whichever file is left
+TEST_F(DiscSetServiceTest, DetachingTheDiscASetIsIdentifiedByLeavesTheRestNamed) {
+  const auto firstDisc = addTitledDisc("Lunar", "disc1", 1);
+  addTitledDisc("Lunar", "disc2", 2);
+
+  ASSERT_TRUE(m_discSets.detachDisc(firstDisc));
+  ASSERT_EQ(entryCount(), 2);
+
+  const auto rest = m_repo.getEntryWithContentHash("disc2");
+  ASSERT_TRUE(rest.has_value());
+  EXPECT_EQ(rest->displayName, "Lunar") << "the discs left behind fell back to a filename";
+
+  const auto detached = m_repo.getEntryWithContentHash("disc1");
+  ASSERT_TRUE(detached.has_value());
+  EXPECT_EQ(detached->displayName, "Lunar") << "the disc taken out fell back to a filename";
+}
+
+// TODO
+// Taking the only disc out of a set leaves nothing behind it, because a set holding no discs is
+// not something anybody can act on
+TEST_F(DiscSetServiceTest, DetachingTheOnlyDiscLeavesNoEmptySetBehind) {
+  const auto only = addTitledDisc("Patapon", "disc1", 1);
+
+  const auto before = m_repo.getEntryWithContentHash("disc1");
+  ASSERT_TRUE(before.has_value());
+  ASSERT_TRUE(before->discSetId.has_value());
+  const auto previousSetId = *before->discSetId;
+
+  ASSERT_TRUE(m_discSets.detachDisc(only));
+
+  EXPECT_FALSE(m_repo.getDiscSet(previousSetId).has_value()) << "the set it left is still there holding nothing";
+  EXPECT_EQ(entryCount(), 1);
+
+  const auto after = m_repo.getEntryWithContentHash("disc1");
+  ASSERT_TRUE(after.has_value());
+  ASSERT_TRUE(after->discSetId.has_value());
+  EXPECT_NE(*after->discSetId, previousSetId);
+}
+
+// TODO
+// Renumbering records that a person decided it, so placement running again leaves the number alone
+TEST_F(DiscSetServiceTest, RenumberingADiscIsRecordedAsThePersonsChoice) {
+  addTitledDisc("Grandia", "disc1", 1);
+  const auto second = addTitledDisc("Grandia", "disc2", 2);
+
+  const auto member = m_repo.getDiscSetMemberForContentFile(second);
+  ASSERT_TRUE(member.has_value());
+  EXPECT_EQ(member->m_source, DiscSource::Filename);
+
+  auto renumbered = *member;
+  renumbered.m_discNumber = 3;
+  renumbered.m_source = DiscSource::User;
+  renumbered.m_isUncertain = false;
+  ASSERT_TRUE(m_repo.create(renumbered));
+
+  const auto after = m_repo.getDiscSetMemberForContentFile(second);
+  ASSERT_TRUE(after.has_value());
+  EXPECT_EQ(after->m_discNumber, 3);
+  EXPECT_EQ(after->m_source, DiscSource::User);
+  EXPECT_FALSE(after->m_isUncertain);
+}
+
+// TODO
+// A disc a person took out of a set stays out of it when a playlist claims that set afterwards.
+// The person's choice sits above the playlist on the ladder
+TEST_F(DiscSetServiceTest, APlaylistDoesNotUndoADetach) {
+  const auto firstDisc = addTitledDisc("Riven", "disc1", 1);
+  const auto secondDisc = addTitledDisc("Riven", "disc2", 2);
+
+  ASSERT_TRUE(m_discSets.detachDisc(secondDisc));
+
+  const auto detachedInto = m_repo.getDiscSetMemberForContentFile(secondDisc);
+  ASSERT_TRUE(detachedInto.has_value());
+  EXPECT_EQ(detachedInto->m_source, DiscSource::User);
+
+  const auto firstPath = m_repo.getContentFile(firstDisc)->m_filePath;
+  const auto secondPath = m_repo.getContentFile(secondDisc)->m_filePath;
+
+  ASSERT_TRUE(m_discSets.claimPlaylist(romsPath() + "/riven.m3u", {firstPath, secondPath}).has_value());
+
+  const auto after = m_repo.getDiscSetMemberForContentFile(secondDisc);
+  ASSERT_TRUE(after.has_value());
+  EXPECT_EQ(after->m_discSetId, detachedInto->m_discSetId) << "a playlist pulled back a disc a person took out";
+  EXPECT_EQ(after->m_source, DiscSource::User);
+}
+
+// TODO
+// A disc whose name carries no number is the only one anything knows about, so it takes first
+// place in a set of its own rather than being left out of the model
+TEST_F(DiscSetServiceTest, ADiscWithNoNumberIsDiscOneOfItsOwnSet) {
+  addDisc("Mega Man Legends", "onlyDisc", 0);
+
+  const auto entry = m_repo.getEntryWithContentHash("onlyDisc");
+  ASSERT_TRUE(entry.has_value());
+  ASSERT_TRUE(entry->discSetId.has_value()) << "a disc carrying no number joined nothing";
+
+  const auto members = m_repo.getDiscSetMembers(*entry->discSetId);
+  ASSERT_EQ(members.size(), 1u);
+  EXPECT_EQ(members.front().m_discNumber, 1);
+}
+
+// TODO
+// One disc dumped twice is two files of one disc, and both have to reach the renderer so it can
+// pick the one it can open
+TEST_F(DiscSetServiceTest, OneDiscDumpedTwiceIsTwoMembersOfOneSet) {
+  const auto asCue = addDisc("Mega Man Legends", "sameDump", 1);
+
+  ContentFile asChd;
+  asChd.m_type = ContentType::Disc;
+  asChd.m_filePath = romsPath() + "/Mega Man Legends.chd";
+  asChd.m_platformId = 7;
+  asChd.m_contentHash = "sameDump";
+  asChd.m_discNumber = 1;
+  asChd.m_normalizedTitle = normalizeTitle("Mega Man Legends");
+  asChd.m_fileSizeBytes = 2000;
+  ASSERT_TRUE(m_repo.create(asChd));
+
+  const auto placed = m_repo.getDiscSetMemberForContentFile(asChd.m_id);
+  ASSERT_TRUE(placed.has_value()) << "the second copy of one disc joined nothing";
+
+  const auto held = m_repo.getDiscSetMemberForContentFile(asCue);
+  ASSERT_TRUE(held.has_value());
+  EXPECT_EQ(placed->m_discSetId, held->m_discSetId) << "two copies of one disc landed in different sets";
+
+  EXPECT_EQ(m_repo.getDiscSetMembers(placed->m_discSetId).size(), 2u);
+  EXPECT_EQ(entryCount(), 1) << "one disc dumped twice read as two games";
+}
+
+// TODO
+// A file at the path a set's playlist would take that is not one of ours is left exactly as it is,
+// because it is somebody else's and the path is one anybody can write to
+TEST_F(DiscSetServiceTest, APlaylistWeDidNotWriteIsNeverOverwritten) {
+  addTitledDisc("Riven", "disc1", 1);
+  addTitledDisc("Riven", "disc2", 2);
+
+  const auto entry = m_repo.getEntryWithContentHash("disc1");
+  ASSERT_TRUE(entry.has_value());
+  ASSERT_TRUE(entry->discSetId.has_value());
+
+  const auto path = playlistFor("disc1");
+  const std::string theirs = "somebody else wrote this\n";
+  std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+  {
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    out << theirs;
+  }
+
+  EXPECT_FALSE(m_discSets.materializePlaylist(*entry->discSetId, "disc1")) << "somebody else's file was overwritten";
+  EXPECT_EQ(readFile(path), theirs);
+}
+
+// TODO
+// The same rule when a set stops launching under a hash: a file at that path we did not write is
+// not ours to delete
+TEST_F(DiscSetServiceTest, APlaylistWeDidNotWriteIsNeverDeleted) {
+  const auto path = playlistFor("someHash");
+  const std::string theirs = "somebody else wrote this\n";
+  std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+  {
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    out << theirs;
+  }
+
+  addTitledDisc("Xenogears", "disc2", 2);
+  addTitledDisc("Xenogears", "disc1", 1);
+
+  EXPECT_TRUE(std::filesystem::exists(path)) << "somebody else's file was deleted";
+  EXPECT_EQ(readFile(path), theirs);
 }
 
 } // namespace firelight::library

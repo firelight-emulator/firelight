@@ -184,6 +184,7 @@ Item {
     EmulatorLoader {
         id: emulatorLoader
         anchors.fill: parent
+        anchors.topMargin: AppStyle.titleBarHeight
         blurAmount: gameplay.mode === "quickMenu" ? 1 : 0
         onSuspended: gameplay.openQuickMenu()
     }

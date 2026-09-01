@@ -71,6 +71,7 @@ Item {
             bottomRightRadius: root.bottomRightRadius
             fillMode: Image.PreserveAspectCrop
             background: "transparent"
+            sourceSizePx: 256
         }
 
         // Rectangle {

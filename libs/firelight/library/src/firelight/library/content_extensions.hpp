@@ -29,8 +29,9 @@ inline constexpr std::array DISC_SHEET_EXTENSIONS{"cue", "gdi", "m3u"};
 // TODO
 // Sheets that can name a track, which is a wider set than the sheets we can read as content: a
 // .ccd is not a format anything here identifies, but a track it names is still spoken for and must
-// not be catalogued in its own right
-inline constexpr std::array TRACK_NAMING_EXTENSIONS{"cue", "gdi", "m3u", "ccd"};
+// not be catalogued in its own right. A playlist is not one of them: it names discs, and
+// suppressing those leaves the game with nothing to launch through
+inline constexpr std::array TRACK_NAMING_EXTENSIONS{"cue", "gdi", "ccd"};
 
 [[nodiscard]] inline bool namesTracks(const std::string &extension) {
   return std::ranges::find(TRACK_NAMING_EXTENSIONS, extension) != TRACK_NAMING_EXTENSIONS.end();

@@ -2,6 +2,7 @@
 
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/input/gamepad_input.hpp>
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
@@ -24,6 +25,7 @@ namespace firelight::emulation {
 class EmulatorInstanceTest : public testing::Test {
 protected:
   std::unique_ptr<library::SqliteUserLibraryRepository> m_library;
+  std::unique_ptr<library::DiscSetService> m_discSets;
   std::unique_ptr<library::LibraryIngestService> m_ingest;
   std::unique_ptr<library::UserLibraryService> m_service;
   std::unique_ptr<library::EntryResolver> m_resolver;
@@ -34,7 +36,8 @@ protected:
 
   void SetUp() override {
     m_library = std::make_unique<library::SqliteUserLibraryRepository>(":memory:");
-    m_ingest = std::make_unique<library::LibraryIngestService>(*m_library);
+    m_discSets = std::make_unique<library::DiscSetService>(*m_library, "");
+    m_ingest = std::make_unique<library::LibraryIngestService>(*m_library, *m_discSets);
     m_service = std::make_unique<library::UserLibraryService>(*m_library, ".");
     m_resolver = std::make_unique<library::EntryResolver>(*m_library, "");
     m_settingsService =

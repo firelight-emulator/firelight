@@ -66,6 +66,7 @@ FLPopup {
         implicitWidth: column.implicitWidth
         implicitHeight: Math.min(600, column.implicitHeight)
         contentHeight: column.implicitHeight
+        boundsBehavior: Flickable.StopAtBounds
 
         onActiveFocusChanged: {
             if (activeFocus) {

@@ -1,3 +1,5 @@
+// TODO: NEEDS REVIEW
+#include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/library_events.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/user_library_repository.hpp>
@@ -24,12 +26,25 @@ private:
 
 thread_local bool LibraryIngestService::s_applying = false;
 
-LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library) : m_library(library) {
+LibraryIngestService::LibraryIngestService(IUserLibraryRepository &library, DiscSetService &discSets)
+    : m_library(library), m_discSets(discSets) {
   // A newly added content file gets a run configuration. These events are
   // published on the scanner thread, so the handlers run synchronously there
   // (the per-thread database connection makes this safe)
   m_contentFileAddedConnection =
       EventDispatcher::instance().subscribe<ContentFileAddedEvent>([this](const ContentFileAddedEvent &event) {
+        const auto file = m_library.getContentFile(event.id);
+
+        // TODO
+        // A disc finds its set first, because the set is what decides how it launches. Only the
+        // disc a set is identified by keeps a way in; the rest are reached through it
+        if (file.has_value()) {
+          if (const auto setId = m_discSets.place(*file)) {
+            m_discSets.syncSetWayIn(*setId);
+            return;
+          }
+        }
+
         m_library.createRunConfiguration(event.id, event.filePath, event.platformId, event.contentHash);
       });
 

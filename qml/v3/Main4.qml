@@ -2,6 +2,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
+import QtQuick.Window
 import Firelight 1.0
 
 MainWindow {
@@ -13,12 +14,12 @@ MainWindow {
 
     background: FLUserBackground {
         mode: AppearanceSettings.backgroundMode
-        color1: AppearanceSettings.backgroundColor
-        color2: AppearanceSettings.backgroundColor2
+        // color1: AppearanceSettings.backgroundColor
+        // color2: AppearanceSettings.backgroundColor2
         backgroundFile: AppearanceSettings.backgroundFile
-        blurAmount: AppearanceSettings.backgroundBlur
-        dimAmount: AppearanceSettings.backgroundDim
-        defaultColor: "#12131A"
+        blurAmount: 0
+        dimAmount: 0
+        defaultColor: "#1A1A1C"
     }
 
     // Hosts overlay routes (e.g. /settings) as a popup over the current view
@@ -57,6 +58,35 @@ MainWindow {
     }
 
     // TODO
+    // Dev-only: the disc set manager, in a window of its own until it has a home in the UI
+    Shortcut {
+        sequence: "F10"
+        context: Qt.ApplicationShortcut
+        onActivated: {
+            if (discSetWindow.visible) {
+                discSetWindow.close()
+            } else {
+                DiscSetModel.refresh()
+                discSetWindow.show()
+            }
+        }
+    }
+
+    Window {
+        id: discSetWindow
+
+        objectName: "DiscSetManagerWindow"
+        width: 1000
+        height: 640
+        title: qsTr("Disc sets")
+        color: Theme.surface
+
+        DiscSetManager {
+            anchors.fill: parent
+        }
+    }
+
+    // TODO
     // Toggles the performance overlay, on the key RetroArch uses for the same thing so the two can
     // be brought up side by side without relearning it
     Shortcut {
@@ -75,11 +105,13 @@ MainWindow {
     }
 
     onActiveFocusItemChanged: {
+        Qt.callLater(guideBarActions.refresh);
+
         if (!activeFocusItem) {
             return;
         }
 
-        console.log("Active focus item changed to: " + activeFocusItem.FLFocus.collectActions(activeFocusItem).map(a => a.label).join(", "));
+        // console.log("Active focus item changed to: " + activeFocusItem.FLFocus.collectActions(activeFocusItem).map(a => a.label).join(", "));
     }
 
     // Pane {
@@ -208,7 +240,10 @@ MainWindow {
 
             const info = contentContainer.FLFocus.find(focused);
 
-            if (contentContainer.runAction(info !== null ? info.getActionFor(key, modifiers) : null)) {
+            // TODO
+            // Looks outward from the focused item, so an action a container declares answers for
+            // everything inside it, which is what the guide bar already lists
+            if (contentContainer.runAction(contentContainer.FLFocus.findActionFor(focused, key, modifiers))) {
                 return true;
             }
 
@@ -243,7 +278,7 @@ MainWindow {
                 return;
             }
 
-            // TODO
+            // TODO: Add allowAutoRepeat
             // Holding a face button repeats ~33 times a second, so only the
             // press itself activates
             if (!event.isAutoRepeat && contentContainer.activate(event.key, event.modifiers)) {
@@ -286,9 +321,11 @@ MainWindow {
 
         RouteView {
             id: contentStack
+            clip: true
 
             objectName: "RouteView"
 
+            anchors.bottomMargin: guideBar.height
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
@@ -308,27 +345,103 @@ MainWindow {
         }
 
         Pane {
+            id: guideBar
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.leftMargin: AppStyle.windowPadding
+            anchors.rightMargin: AppStyle.windowPadding
+            verticalPadding: AppStyle.spacingXs
+            horizontalPadding: 0
+            height: 60
+            z: focusHighlight.z + 1
+
+            parent: Overlay.overlay
+
+            background: Item {
+                Rectangle {
+                    color: "transparent"
+                    anchors.fill: parent
+                }
+                Rectangle {
+                    color: "#4c4c4c"
+                    height: 1
+                    width: parent.width
+                }
+            }
+
+            RowLayout {
+                anchors.fill: parent
+                spacing: AppStyle.spacingXs
+
+                FLGuideBarPill {
+                    text: qsTr("Open menu")
+                    bindings: [
+                        {
+                            text: qsTr("Open menu"),
+                            key: Qt.Key_Home
+                        }
+                    ]
+                    actionEnabled: true
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+
+                Repeater {
+                    id: guideBarActions
+
+                    Layout.alignment: Qt.AlignVCenter
+
+                    property var groups: []
+
+                    function refresh() {
+                        const focused = window.activeFocusItem;
+                        guideBarActions.groups = focused === null ? [] : focused.FLFocus.collectActionGroups(focused).reverse();
+                    }
+
+                    Component.onCompleted: guideBarActions.refresh()
+
+                    model: guideBarActions.groups
+                    delegate: FLGuideBarPill {
+                        required property var modelData
+
+                        text: modelData.label
+                        bindings: modelData.bindings
+                        actionEnabled: modelData.enabled
+                    }
+                }
+            }
+        }
+
+        Pane {
             id: titleBar
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.right: parent.right
             height: AppStyle.titleBarHeight
             padding: AppStyle.titleBarPadding
-            z: 10001
 
-            background: Rectangle {
-                color: "transparent"
-                anchors.fill: parent
+            background: Item {
+                Rectangle {
+                    color: Theme.border
+                    height: 1
+                    anchors.left: parent.left
+                    anchors.leftMargin: AppStyle.windowPadding
+                    anchors.right: parent.right
+                    anchors.rightMargin: AppStyle.windowPadding
+                    anchors.bottom: parent.bottom
+                }
             }
-
             TitleBar {
                 id: actualTitleBar
                 anchors.fill: parent
 
-                onMaximizeClicked: {
-                    window.maximize();
-                    // emulatorLoader.setSource("NewEmulatorPage.qml", {stackView: contentStack})
-                }
+                page: contentStack.currentItem
+
+                onMaximizeClicked: window.maximize();
                 onMinimizeClicked: window.showMinimized()
                 onCloseClicked: window.close()
             }

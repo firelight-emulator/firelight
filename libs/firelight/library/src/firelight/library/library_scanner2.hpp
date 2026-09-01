@@ -26,13 +26,20 @@ class IPlatformService;
 }
 
 namespace firelight::library {
+class DiscSetService;
+}
+
+namespace firelight::library {
 class LibraryScanner2 : public QObject {
   Q_OBJECT
   Q_PROPERTY(bool scanning MEMBER m_scanRunning NOTIFY scanningChanged)
 
 public:
+  // TODO
+  // The disc sets a playlist speaks for. Optional, because a scan without one still catalogues
+  // content; it just has nothing to tell about which discs belong together
   LibraryScanner2(IUserLibraryRepository &library, platforms::IPlatformService &platformService,
-                  IPatchAssociator *patchAssociator = nullptr);
+                  IPatchAssociator *patchAssociator = nullptr, DiscSetService *discSets = nullptr);
 
   ~LibraryScanner2() override;
 
@@ -87,6 +94,7 @@ private:
   // takes them and does nothing rather than the scanner logging that it skipped what it just stored
   NullPatchAssociator m_nullPatchAssociator;
   IPatchAssociator &m_patchAssociator;
+  DiscSetService *m_discSets = nullptr;
   bool m_shuttingDown = false;
   QFileSystemWatcher m_watcher;
 
@@ -122,10 +130,10 @@ private:
   void scanDirectory(const QString &path);
 
   // TODO
-  // The four steps that turn one discovered file into a catalogue row: skip what is already
+  // The four steps that turn one discovered file into a catalog row: skip what is already
   // known, clear any stale drop, identify, and record either the row or why there is none.
   // Written once, so a field cannot be set for a loose file and forgotten for an archived one
-  bool catalogue(const DiscoveredFile &file, const ContentIdentifier &identifier);
+  bool catalog(const DiscoveredFile &file, const ContentIdentifier &identifier);
 
   // Hashes a patch and records it, wherever its bytes came from
   void catalogPatch(const DiscoveredFile &file);
@@ -137,7 +145,15 @@ private:
   // QFileSystemWatcher is not thread-safe
   void scheduleWatch(const QString &path);
 
-  void persistDiscMembers(int contentFileId, const std::vector<IdentifiedDiscMember> &members);
+  void persistContentFileTracks(int contentFileId, const std::vector<IdentifiedDiscMember> &members);
+
+  // TODO
+  /**
+   * Records the discs a playlist names as one set
+   *
+   * @return True when it named any, which is what makes it a claim rather than content
+   */
+  bool claimPlaylist(const DiscoveredFile &file, const std::vector<IdentifiedDiscMember> &members);
 
   void recordDrop(const std::string &filePath, const std::string &archivePath, const std::string &extension,
                   size_t fileSizeBytes, IdentifyOutcome outcome, const std::string &identifiedAs = "");

@@ -3,52 +3,33 @@ import Firelight 1.0
 
 import "focus_nav.js" as Nav
 
-// TODO
-// A grid the cursor navigates. Movement stays inside the grid, and a press that
-// would leave it is refused rather than swallowed, so it can reach whatever sits
-// beside the grid
-//
-//   FLGridView { model: games; delegate: GameTile {} }
 GridView {
     id: root
 
-    // TODO
-    // Answers for its children when a press asks what it can reach, so something
-    // level with any part of this is level with the whole of it
     FLFocus.container: true
 
-    // TODO
-    // The ring drives scrolling with its own margins, so the view must not also
-    // chase the current item — the two would fight over contentY
     highlightFollowsCurrentItem: false
 
-    // TODO
-    // Qt's own key navigation wraps between rows and strands a short final row,
-    // so moveFocus() replaces it entirely
     keyNavigationEnabled: false
     keyNavigationWraps: false
+
+    // populate: FLGridViewPopulateTransition {}
 
     // TODO
     // A held direction stops at the top and bottom rows rather than running out
     // of the grid; sideways it may leave as soon as the row ends
     FLFocus.holdEdges: FLFocus.Vertical
 
-    // TODO
-    // How long after a move a held direction is ignored, so a repeat that
-    // arrives faster than this does not outrun the ring's scrolling
-    property int repeatInterval: 60
+    property int repeatInterval: 45
 
     readonly property int columns: Math.max(1, Math.floor(width / Math.max(1, cellWidth)))
 
-    // TODO
-    // Moves the cursor within the grid, reporting whether it consumed the press.
-    // Refusing is how a press reaches the rest of the screen
     function moveFocus(direction: int): bool {
         root.adoptFocusedIndex();
 
         const next = Nav.gridStep(root.currentIndex, root.count, root.columns, direction);
 
-        if (next < 0 || next === root.currentIndex) {
+        if (next < 0 || next === root.currentIndex || next >= root.count) {
             return false;
         }
 
@@ -69,21 +50,42 @@ GridView {
             root.currentIndex = focused;
         }
     }
-
-    // TODO
-    // Nothing links the current index to focus on its own, and an index that has
-    // not been realized has no item to focus until the view is told to reach it
     function focusCurrentItem() {
-        let item = root.itemAtIndex(root.currentIndex);
-
-        if (item === null) {
-            root.positionViewAtIndex(root.currentIndex, GridView.Contain);
-            item = root.itemAtIndex(root.currentIndex);
-        }
-
-        if (item !== null) {
-            item.forceActiveFocus();
-        }
+        // const index = root.currentIndex;
+        // let item = root.itemAtIndex(index);
+        //
+        // if (item === null) {
+        //     // TODO
+        //     // Nothing to focus and nothing to scroll toward, so the view is moved to build one.
+        //     // The cursor is told where it is going separately, so this does not decide the scroll
+        //     if (index === 0) {0
+        //         root.positionViewAtBeginning();
+        //     } else {
+        //         root.positionViewAtIndex(index, GridView.Contain);
+        //     }
+        //     root.forceLayout();
+        //     item = root.itemAtIndex(index);
+        // }
+        //
+        // if (item !== null) {
+        //     item.forceActiveFocus();
+        //     return;
+        // }
+        //
+        // // TODO
+        // // A delegate far enough away is built with a later layout rather than this one, so the
+        // // focus waits for it. Dropping it here is what leaves the view moved and the cursor behind
+        // Qt.callLater(function () {
+        //     if (root.currentIndex !== index) {
+        //         return;
+        //     }
+        //
+        //     const built = root.itemAtIndex(index);
+        //
+        //     if (built !== null) {
+        //         built.forceActiveFocus();
+        //     }
+        // });
     }
 
     Timer {
@@ -106,9 +108,6 @@ GridView {
             return;
         }
 
-        // TODO
-        // A held direction is consumed while the gate runs, so it neither moves
-        // nor falls through to the edge bump
         if (event.isAutoRepeat) {
             if (repeatGate.running) {
                 event.accepted = true;
