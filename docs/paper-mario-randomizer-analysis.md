@@ -13,6 +13,9 @@ repo, not estimated.
 **Scope: backend only.** Nothing here costs or designs the screens — this is about where the seed gets
 generated, what crosses the boundary, and how the result becomes a library entry.
 
+See `randomizer-platform-design.md` for the general case: multiple randomizers, multiworld, and the
+store. This doc is one instance of that shape, costed in detail.
+
 ## Verdict up front
 
 The library-side work is small, because Firelight already has almost all of it. The blocker is one
