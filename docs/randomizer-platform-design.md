@@ -99,8 +99,8 @@ GUARD · READ · WRITE
 `READ` takes `(address, size, domain)`. `WRITE` takes `(address, value, domain)` with the value
 base64'd. `GUARD` is a compare-and-proceed: a batch only applies if the guarded bytes still match, which
 is how clients avoid writing into a loading screen. `LOCK`/`UNLOCK` hold the frame so a batch is atomic.
-Domains in use across the shipped worlds are just `RAM`, `EWRAM`, `IWRAM`, `WRAM`, `ROM`, and
-`System Bus`.
+Domains in use across the shipped worlds are just `RAM`, `EWRAM`, `IWRAM`, `WRAM`, `ROM`,
+`System Bus`, `CartRAM` and `PRG ROM` — eight names to map onto libretro's memory ids.
 
 **Firelight can speak this protocol natively.** And if it does, every existing Archipelago BizHawk
 client works against Firelight *unmodified* — no changes to Archipelago, no Lua, no BizHawk, no core
@@ -143,25 +143,53 @@ The SNES worlds go through SNI instead, which is a **usb2snes/QUsb2Snes websocke
 requests, `DeviceList` and friends) rather than the BizHawk socket. That's a second, independent
 adapter — worth doing, but it can wait, and it's the same shape of work.
 
-### The three rungs of ambition
+### Where the per-game logic actually lives
 
-Pick how far up to climb; each rung is independently shippable and each is useful on its own.
+This is the part that decides everything else, so it's worth being precise. Three files, three jobs:
 
-1. **Connector endpoint.** Firelight answers the BizHawk protocol. Existing AP clients drive it. The
-   user still runs the Archipelago client app, but the emulator half of the pain is gone. *Small.*
-2. **Native AP client.** Firelight speaks the Archipelago websocket protocol itself — `Connect` /
-   `Connected`, `ReceivedItems` (with index-based dedup), `LocationChecks`, `StatusUpdate`,
-   `LocationScouts`, `Bounce`, `DataPackage` with checksum caching. Join a room from inside Firelight;
-   no external client at all. The protocol is plain JSON over a websocket and is well documented. *Medium
-   — and the per-game logic is still Python's, so this rung only pays off combined with rung 3.*
-3. **Native per-game logic.** The 13 BizHawk clients' game logic (which addresses mean which checks,
-   how to inject an item) reimplemented in Firelight. *This is the long tail and should be treated as
-   per-game work forever, not a project with an end.* Data-driven where possible so a game is a
-   manifest, not a code change.
+| File | Lines | Job |
+|---|---|---|
+| `worlds/_bizhawk/__init__.py` | 336 | **The connector transport** — the twelve commands. The only piece Firelight would replace |
+| `worlds/_bizhawk/context.py` | 377 | Generic loop. Holds *both* connections — the AP server socket and the emulator socket — identifies the ROM by hash and system, dispatches to a game handler |
+| `worlds/<game>/client.py` | 139–783 | **The game logic.** One per game |
 
-**Recommendation: build rung 1, design for rung 2, treat rung 3 as opportunistic.** Rung 1 delivers most
-of the felt improvement for a fraction of the work, and it does it without asking Archipelago for
-anything or forking their game logic.
+A per-game client is a small class with `validate_rom`, `set_auth`, `game_watcher`, and `on_package`.
+The critical property is that **it talks to both sides**. From `worlds/marioland2/client.py`:
+
+```python
+game_name = await read(ctx.bizhawk_ctx, [(0x134, 10, "ROM")])       # <- emulator
+...
+await ctx.send_msgs([{"cmd": "LocationChecks", "locations": ...}])  # <- AP server
+```
+
+It is the translation layer *between* the two connections, not a component hanging off either one.
+
+### The ladder, and why rung 3 is a different bet
+
+**Rung 1 — connector endpoint.** Firelight replaces the first row only. `context.py` and every
+`client.py` keep running untouched, and the per-game client keeps both of its connections. **No
+per-game work in Firelight, now or ever** — the game logic stays upstream's, including for games added
+after this ships.
+
+Better still, it needs no changes to Archipelago whatsoever. AP's client already launches the emulator
+itself, and its `bizhawkclient_options.rom_start` setting accepts an arbitrary command line
+(`shlex.split(auto_start)`). Point that at Firelight and the existing plumbing does the rest.
+
+**Rung 2 — own the launch.** Firelight ships or drives the AP Python client so the user only ever sees
+one app. Per-game logic is still Archipelago's; the cost is packaging, and it isn't trivial — the AP
+client pulls in kivy, kivymd (from a git ref), websockets, orjson, cython and bsdiff4.
+
+**Rung 3 — native AP client.** Firelight speaks the Archipelago websocket protocol itself. This is where
+per-game logic becomes mandatory, and the reason is structural rather than incidental: **taking over the
+server connection removes one of the two connections every per-game client is written against.**
+`context.py` goes, and all thirteen `client.py` files go with it — 139 to 783 lines each, re-derived in
+C++ and then chased forever as upstream fixes them.
+
+So rungs 2 and 3 are not successive refinements of one idea. Rung 3 is a decision to fork Archipelago's
+game logic, and nothing about rungs 1 or 2 requires it.
+
+**Recommendation: rung 1, and stop there until there's a concrete reason not to.** It delivers nearly
+all of the felt improvement, asks Archipelago for nothing, and forks nothing.
 
 ### What layer 2 buys you beyond multiworld
 
@@ -225,8 +253,11 @@ Each phase is independently useful and independently shippable.
 | **1** | Import a pre-generated patch → library entry. Generator abstraction + ingest path | 1.5–2 wks |
 | **2** | Remote generation (Paper Mario as the first instance) + store `generators` concept | 2–3 wks |
 | **3** | **BizHawk connector endpoint** + memory-domain mapping + session-integrity gating | 2–3 wks |
-| **4** | Native AP client (websocket, DataPackage caching, room join) | 3–4 wks |
-| **5** | usb2snes adapter for the SNES worlds; native per-game logic, opportunistically | ongoing |
+| **4** | usb2snes/SNI adapter, bringing the SNES worlds in | 2–3 wks |
+| **5** | *Optional:* own the launch, so the AP client isn't a separate app (packaging, not protocol) | 1–2 wks |
+
+A native C++ AP client is deliberately not a phase. Per the ladder above, it forces reimplementing every
+per-game client — a fork of Archipelago's game logic rather than an integration with it.
 
 Phase 0–1 alone is worth shipping: it makes every randomizer that emits a patch file usable in
 Firelight, with zero per-randomizer integration. Phase 3 is the one nobody else has.
