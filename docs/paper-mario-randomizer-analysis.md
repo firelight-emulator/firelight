@@ -18,14 +18,23 @@ store. This doc is one instance of that shape, costed in detail.
 
 ## Verdict up front
 
-The library-side work is small, because Firelight already has almost all of it. The blocker is one
-architectural decision: **the randomization logic is 26,250 lines of Python and there is no realistic
-way to run it in-process from C++.** Everything else follows from how that gets answered.
+The library-side work is small, because Firelight already has almost all of it. What's left is
+deciding where the randomization logic runs — and on a second, measured pass that decision is much
+less fraught than it first looked.
 
-The good news is that the seed generator already has a "don't touch the ROM, just hand back a patch"
-code path built for the website, and that path emits a **43 KB blob in a 5-byte-per-op format that a
-C++ applier can consume in well under 100 lines**. So the boundary between "Python that must run
-somewhere" and "C++ that Firelight owns" is clean and narrow, wherever you decide to draw it.
+The generator already has a "don't touch the ROM, just hand back a patch" entry point built for the
+website. Wrapping it so a host process can drive it takes **one 47-line file and no fork of upstream**;
+frozen standalone it is **25 MB on disk, 10 MB compressed**, and returns a seed in about 5 seconds. That
+same binary is what you would host if you ever wanted remote generation, so **local subprocess versus web
+service is a transport switch, not an architecture** — build the wrapper and both stay open.
+
+A native C++ port is also more reasonable than I first said: the real target is **~12,700 lines, not
+26,000** (nearly half the tree is data that exports rather than translates), and seeds are provably
+deterministic, so bit-exact parity is reachable and differentially testable. It is still the expensive
+option and nothing forces it today — but it becomes the answer if randomizers need to work on Android.
+
+The patch it produces is a **43 KB blob in a 5-byte-per-op format a C++ applier consumes in well under
+100 lines**, so the boundary between "generator" and "Firelight" is narrow wherever it gets drawn.
 
 ## What the generator actually is
 
@@ -133,51 +142,134 @@ at a mod and a specific ROM dump. A randomizer differs from `Ultimate Goomboss C
 one way — its patch is *generated per seed* instead of *downloaded*. That is a much smaller delta than
 "build a randomizer feature".
 
-## The one hard problem: where does the Python run?
+## Where does the generation logic run?
 
-26,250 lines of active, frequently-updated Python. Four options, honestly costed.
+Re-reviewed with measurements rather than instinct. The three candidates — native port, web endpoint,
+Python wrapper — turn out to be less far apart than they look, and two of them share an artifact.
 
-### A. Bundle a Python runtime
+### First: it is not 26,250 lines of logic
 
-Ship CPython (embedded, or PyInstaller-frozen) plus the generator inside Firelight.
+Classifying every `.py` file by whether it contains any `def`/`class`/control flow at all:
 
-- **Works offline.** No service to run, no privacy story, no uptime.
-- Adds roughly **15–40 MB** to the installer per platform, and a second toolchain to the build.
-- Cross-platform packaging pain is real and recurring: Windows/MinGW is the primary dev environment
-  today, and Android is already on the roadmap (`docs/android-port-gap-analysis.md`) — CPython on
-  Android is a genuinely miserable path.
-- Upstream updates become a vendoring chore, but a *tractable* one (drop in a new tree).
+| | Lines |
+|---|---|
+| Pure data literals (lists and dicts, no logic) | **14,093** |
+| Actual code | **15,376** |
+| Total | 29,469 |
 
-### B. Firelight-hosted generation service
+Nearly half is data — item tables, location names, formation metadata, graph edges — that a port would
+**export to JSON or SQLite rather than translate**. `maps/` is a further 2.2 MB already sitting in JSON,
+and `default_db.sqlite` (581 KB) is already SQLite, which Firelight already speaks.
 
-Firelight runs the Python; the client POSTs settings and gets back 43 KB of patch bytes.
+The code that would actually have to be ported:
 
-- Client side is **~200 lines of C++**: build JSON, `cpr::Post`, apply ops, recompute CRC. `cpr` is
-  already a dependency (`achievement_service.cpp`, `cpr_http_client.cpp`).
-- Keeps the C++ codebase clean and makes upstream updates a server-side deploy nobody has to ship.
-- But: **you now operate a service.** Uptime, abuse, cost, and a feature that dies without a network.
-- No ROM ever leaves the machine — only settings go up, only a patch comes down. Worth saying out loud
-  because it's the obvious first objection and the answer is good.
+| Area | Code lines | Notes |
+|---|---|---|
+| `rando_modules/` | 6,021 | The algorithms. `logic.py` (1,714) and `modify_entrances.py` (1,518) are the bulk |
+| root | 3,397 | `random_seed.py`, `worldgraph.py`, `table.py`, `parse.py`, `spoilerlog.py` |
+| `models/` | 3,259 | The option set — much of it declarative boilerplate |
+| `db/` | 876 | peewee over the SQLite file; replaced outright by SQLiteCpp, not ported |
+| `plandomizer/` | 1,151 | Skippable in a first cut |
 
-### C. Call the official pm64randomizer.com generator
+So the honest port target is roughly **12,700 lines of C++**, not 26,000. Still large, still
+correctness-critical, but a different order of problem than I first described.
 
-- Cheapest by far if it's on the table.
-- **There is no documented public API.** `get_seed_json.py` talks to a private Firestore
-  (`seeds-prod`) with a `service_account.json` credential, so the web frontend is not a REST surface
-  anyone can just call.
-- This is a *conversation with icebound777 and the PMR dev team*, not an engineering task. It may also
-  be the best outcome for everyone — worth asking before building anything.
+### Second: bit-exactness is required, and it is achievable
 
-### D. Port the logic to C++
+A port that produces different items for the same seed is a *different randomizer*. Communities share
+seed numbers for races and weekly events; a permalink that doesn't reproduce is a broken feature, not a
+minor incompatibility. So a port has to match upstream byte-for-byte.
 
-- Months of work, and then you own a permanent fork that must chase upstream's logic fixes forever.
-  The `CHANGELOG` for a single patch release is dozens of logic corrections.
-- **Not recommended.** The only argument for it is Android + offline, and that's not worth this price.
+I assumed that was the fatal problem. It isn't. Generating seed `424242` three times in separate
+processes:
 
-**Recommendation: ask about C first, build B, and keep A in your pocket** if offline generation turns
-out to matter to users. B and A share everything except transport — the ops applier, the CRC, the
-settings model, and all the library plumbing are identical either way, so starting with B does not
-strand the work.
+```
+PLACEMENT_MD5 360061ef0e33eb5b285409cc2dc35e0c  n=718
+PLACEMENT_MD5 360061ef0e33eb5b285409cc2dc35e0c  n=718
+PLACEMENT_MD5 360061ef0e33eb5b285409cc2dc35e0c  n=718
+```
+
+Placement is **fully deterministic**. The whole-patch hash *does* vary between runs, which looks alarming
+until you find why: `set_seed_hash()` calls bare `random.seed()` on purpose, reseeding from OS entropy to
+pick the four item icons shown on the save-select screen. That is a cosmetic fingerprint of the file, not
+of the seed, and it is the only non-determinism in the output.
+
+Notably this held without pinning `PYTHONHASHSEED`, despite `logic.py` iterating a `set` of strings inside
+the placement loop — so set ordering does not appear to reach placement. That's worth re-testing across
+settings before betting on it, but three-for-three over 718 placements is decent evidence.
+
+What a port would have to reproduce exactly:
+
+- **CPython's `random`** — 112 call sites: `randint` (55), `choice` (33), `shuffle` (21), `randrange`,
+  `sample`, `choices`, `random`. All of it is MT19937 plus `_randbelow`'s rejection sampling, and all of it
+  is documented and readable. A faithful clone is on the order of 300 lines and is a *bounded* problem —
+  you either match the reference vectors or you don't.
+- **Insertion-ordered dicts**, since Python 3.7 guarantees them and the code relies on it.
+
+And critically, the port is **differentially testable**: run Python and C++ over the same (seed × settings)
+matrix and compare placement hashes. That turns "months of hoping" into a measurable convergence, which is
+the single biggest thing in the port's favour and something I under-weighted the first time.
+
+### Third: the wrapper is 47 lines, and I tested it
+
+The generator already has the entry point — `web_randomizer()`, the one the official site uses, which
+returns patch bytes instead of writing a ROM. Wrapping it for a host process needs **one new file, no fork,
+no patches to upstream**: read JSON settings on stdin, write one JSON envelope on stdout, redirect the
+generator's progress chatter to stderr so stdout stays clean.
+
+That file is 47 lines. Built and run against the real generator, it returns:
+
+```
+ok: true   seed: 424242   patch: 42,540 bytes   spoiler: 109,692 chars   settings: 329 keys
+```
+
+Frozen with PyInstaller into a standalone bundle that needs no installed Python:
+
+| | Measured |
+|---|---|
+| Bundle on disk | **25 MB** |
+| Compressed (installer impact) | **10 MB** |
+| Cold run, subprocess round trip | **4.4–5.0 s** |
+| Same, in-process | 2.5 s |
+
+The ~2 s difference is interpreter startup plus the 1.4 s world-graph build, both paid per invocation. A
+persistent worker process that builds the graph once would recover nearly all of it, and 5 s is inside
+"press generate and watch a spinner" regardless.
+
+Two things this settles:
+
+- **Subprocess, not embedding.** There is no reason to link CPython into Firelight. A binary that reads
+  stdin and writes stdout needs no Python C API, no GIL handling, no ABI coupling, and a crash in the
+  generator cannot take the app down.
+- **10 MB compressed is not the objection I made it out to be**, in an app already shipping ffmpeg, Qt and
+  a dozen cores.
+
+### The thing that collapses the decision
+
+**The wrapper and the web service are the same artifact.** If you host generation, what you host is this
+binary behind an HTTP handler. If you ship it locally, you ship the same binary and spawn it.
+
+So "local subprocess" versus "remote service" stops being an architecture choice and becomes a transport
+switch behind `IContentGenerator` — decidable later, changeable later, and testable both ways from day one.
+That is not true of the port, which forecloses nothing but costs 12,700 lines up front.
+
+### Recommendation
+
+**Build the wrapper.** It is 47 lines against 12,700, it works offline, there is no service to operate, and
+upstream updates are a rebuild rather than a re-port. Ship it as a frozen sidecar; add the remote transport
+later if hosting turns out to be worth it, reusing the identical binary.
+
+**Keep the port as a real option, not a strawman.** It is smaller than I said, bit-exactness is reachable,
+and there is one scenario where it stops being optional: **Android.** A 25 MB CPython bundle per ABI is
+genuinely bad there, and if randomizers matter on mobile, the port is the answer. The good news is that
+sequencing costs nothing — the wrapper is exactly the reference implementation a differential test harness
+needs, so building it first makes the port *cheaper and safer* if it ever happens.
+
+### One robustness finding
+
+Upstream validates almost nothing. Passing `{"SeedValue": "not-a-number"}` produced a cheerful success
+envelope with a string where the seed should be, rather than an error. Whatever calls the generator has to
+validate input itself; it will not be told when something is wrong.
 
 ## Settings: the surprise scope
 
@@ -228,29 +320,31 @@ Consequences to decide on, not to discover later:
 
 ## Rough effort
 
-Backend only — no UI work counted. Assuming option B and the preset-plus-subset settings approach:
+Backend only — no UI work counted. Assuming the frozen-wrapper transport and the preset-plus-subset
+settings approach:
 
 | Work | Estimate |
 |---|---|
 | Ops applier + CIC-6103 CRC + tests | 1–2 days |
 | Base-mod acquisition & verification (detect dump, apply BPS, cache the result) | 2–3 days |
-| Generation client (`cpr`, JSON settings, errors, cancellation) | 2–3 days |
+| Wrapper contract + frozen build in CI, per platform | 3–5 days |
+| Subprocess driver (spawn, JSON in/out, timeout, cancellation, input validation) | 2–3 days |
 | Settings model, preset handling, serialization | 3–5 days |
 | Library integration (patch storage, entry creation, grouping) | 3–5 days |
-| Service + proxy/model surface for whatever drives it | 2–3 days |
-| **Backend total** | **~2.5–3.5 weeks** |
-| Server (containerize generator, thin API, deploy, monitoring) | 1–2 weeks, plus ongoing |
+| Service + model surface for whatever drives it | 2–3 days |
+| **Backend total** | **~3–4 weeks** |
 
-Option A instead of B trades the server line for roughly 1–2 weeks of packaging work per platform, and
-a permanent tax on the build.
+Adding the remote transport later is roughly 1 week of client work plus hosting the *same* binary. The
+native port instead is on the order of **12,700 lines plus a differential test harness** — call it
+2–4 months to reach provable parity, and only worth costing if Android forces it.
 
 ## Open questions
 
-1. **Has anyone talked to the PMR team?** Option C changes the whole shape of this. They may have an
-   API, or want one, or object to a third-party client on principle. This is the highest-leverage
-   question and it costs one message.
-2. **Is a Firelight-operated backend acceptable at all?** If Firelight is meant to stay a purely local
-   app, option B is off the table and this becomes "bundle Python", with everything that implies.
+1. **Has anyone talked to the PMR team?** Shipping a frozen build of their generator inside Firelight
+   is squarely within MIT, but it is still their project and their support burden when a seed misbehaves.
+   Worth one message before it ships, not after.
+2. **Do randomizers need to work on Android?** This is now the question that decides port-versus-wrapper,
+   and nothing else does. A 25 MB CPython bundle per ABI is bad; if mobile matters, budget the port.
 3. **Is the shop meant to be server-backed generally?** `ShopItemModel` carries `capsule_image_url`,
    `creator_name`, `user_has_required_game` — that reads like a remote catalogue, but the data is
    currently in the local `content.db`. Which is it going to be? A randomizer is a much easier sell if
