@@ -259,11 +259,50 @@ That is not true of the port, which forecloses nothing but costs 12,700 lines up
 upstream updates are a rebuild rather than a re-port. Ship it as a frozen sidecar; add the remote transport
 later if hosting turns out to be worth it, reusing the identical binary.
 
-**Keep the port as a real option, not a strawman.** It is smaller than I said, bit-exactness is reachable,
-and there is one scenario where it stops being optional: **Android.** A 25 MB CPython bundle per ABI is
-genuinely bad there, and if randomizers matter on mobile, the port is the answer. The good news is that
-sequencing costs nothing — the wrapper is exactly the reference implementation a differential test harness
-needs, so building it first makes the port *cheaper and safer* if it ever happens.
+**Keep the port as a real option, not a strawman.** It is smaller than I said and bit-exactness is
+reachable. But see the next section: the scenario I expected to force it does not.
+
+### Android does not force the port
+
+I previously said Android was the one scenario that made the port mandatory. Having checked rather than
+asserted, that's wrong, for three independent reasons — any one of them is sufficient.
+
+**1. Generation does not have to happen on the device.** Generation never touches the user's ROM: PMR
+emits ops against a known base-mod image, so what crosses the wire is settings up and 43 KB down. That is
+close to the ideal thing to move server-side on mobile. The part that *must* be local — apply the ops,
+recompute the CRC, create the entry — is pure C++ that already runs everywhere Firelight does. Desktop
+spawns the binary; Android calls the hosted copy of the same binary. Transport switch, again.
+
+**2. CPython on Android is now officially supported.** [PEP 738](https://peps.python.org/pep-0738/) made
+Android a tier-3 CPython platform as of 3.13, covering `aarch64-linux-android` and `x86_64-linux-android`
+— exactly the ABIs the port plan cares about. Python ships as `libpython3.x.so` invoked over JNI, there is
+a [Using Python on Android](https://docs.python.org/3/using/android.html) guide, and dependencies build as
+Android wheels via cibuildwheel. My earlier "genuinely miserable path" was simply out of date.
+
+And PMR's native footprint is unusually small. Instrumenting a real generation run, the compiled extensions
+it loads are:
+
+```
+[stdlib] _bz2 _decimal _hashlib _json _lzma _sqlite3 _uuid
+[third-party] playhouse._sqlite_ext        <- peewee's optional SQLite accelerator
+```
+
+Seven stdlib extensions that come with any CPython build, and **one** optional third-party accelerator.
+That is about as easy as an embedding target gets, so even on-device generation is viable if offline seeds
+on mobile turn out to matter.
+
+**3. Paper Mario is N64, and N64 is deferred in Firelight's own Android plan.**
+`android-port-gap-analysis.md` defers `mupen64plus_next` and `ppsspp` to Phase 3, gated on a Qt-Quick +
+`RETRO_HW_RENDER` GLES handshake it calls "an untested hypothesis... the single most likely place the port
+stalls," with an explicit fallback if the prototype fails. So Paper Mario on Android is blocked behind the
+riskiest, latest stage of a 5–9 engineer-month port — not behind where Python runs. Writing 12,700 lines of
+C++ now to unblock a platform that cannot yet run the game would be solving the right problem in the wrong
+order.
+
+**What would actually force the port:** needing *offline* generation on Android specifically. That is a
+much narrower requirement than "randomizers work on Android", and even then embedded CPython is now the
+cheaper answer. Nothing about building the wrapper forecloses either path — it is also the reference
+implementation a differential harness would need.
 
 ### One robustness finding
 
@@ -343,8 +382,10 @@ native port instead is on the order of **12,700 lines plus a differential test h
 1. **Has anyone talked to the PMR team?** Shipping a frozen build of their generator inside Firelight
    is squarely within MIT, but it is still their project and their support burden when a seed misbehaves.
    Worth one message before it ships, not after.
-2. **Do randomizers need to work on Android?** This is now the question that decides port-versus-wrapper,
-   and nothing else does. A 25 MB CPython bundle per ABI is bad; if mobile matters, budget the port.
+2. **Does generation need to work *offline* on Android?** Not "do randomizers work on Android" — that is
+   answered by the remote transport, and by N64 being a Phase 3 item on that port regardless. Only the
+   offline-on-mobile requirement changes the calculus, and it points at embedded CPython (now officially
+   supported) before it points at a port.
 3. **Is the shop meant to be server-backed generally?** `ShopItemModel` carries `capsule_image_url`,
    `creator_name`, `user_has_required_game` — that reads like a remote catalogue, but the data is
    currently in the local `content.db`. Which is it going to be? A randomizer is a much easier sell if
