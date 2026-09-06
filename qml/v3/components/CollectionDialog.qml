@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -39,28 +40,15 @@ FirelightDialog {
     property var selectedDirIds: []
     property var selectedPlatformIds: []
 
+    // TODO
+    // The one sort table the library view offers, behind the entry that means the collection pins
+    // nothing
     readonly property var sortOptions: [
         {
-            label: "Default (name)",
+            text: "Default (name)",
             role: ""
-        },
-        {
-            label: "Name",
-            role: "displayName"
-        },
-        {
-            label: "Recently played",
-            role: "lastPlayedAt"
-        },
-        {
-            label: "Most played",
-            role: "numSecondsPlayed"
-        },
-        {
-            label: "Release year",
-            role: "releaseYear"
         }
-    ]
+    ].concat(LibraryFolderModel.sortOptions)
 
     // Preset folder glyphs (stored as qrc:/icons/<name>, rendered by the row)
     readonly property var iconChoices: ["folder", "star", "bookmark-star", "favorite", "controller", "trophy", "book", "history", "kid-star", "play-circle", "home", "photo-library"]
@@ -436,7 +424,7 @@ FirelightDialog {
                 FLComboBox {
                     Layout.fillWidth: true
                     model: control.sortOptions
-                    textRole: "label"
+                    textRole: "text"
                     currentIndex: {
                         for (var i = 0; i < control.sortOptions.length; i++) {
                             if (control.sortOptions[i].role === control.selectedSortRole) {

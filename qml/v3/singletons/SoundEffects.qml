@@ -74,4 +74,9 @@ QtObject {
         source: "qrc:/sfx/snap-medium"
         volume: 0.4
     }
+
+    readonly property FLSoundEffect tabBarShoulderButtonNav: FLSoundEffect {
+        source: "qrc:/sfx/paper-slide"
+        volume: 1.0
+    }
 }

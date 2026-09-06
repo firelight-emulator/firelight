@@ -43,7 +43,7 @@ TestCase {
             const action = target.FLFocus.getActionFor(event.key, event.modifiers);
 
             if (action !== null) {
-                action.triggered();
+                action.trigger();
                 event.accepted = true;
             }
         }

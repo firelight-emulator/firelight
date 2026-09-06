@@ -3,43 +3,35 @@ import Firelight 1.0
 
 import "focus_nav.js" as Nav
 
-// TODO
-// A vertical list the cursor navigates. Same contract as FLGridView: movement
-// stays inside the list, and a press that would leave it is refused so it can
-// reach whatever sits beside the list
-//
-//   FLListView { model: games; delegate: GameListViewItem {} }
 ListView {
     id: root
 
-    // TODO
-    // Answers for its children when a press asks what it can reach, so something
-    // level with any part of this is level with the whole of it
     FLFocus.container: true
 
-    // TODO
-    // The ring drives scrolling with its own margins, so the view must not also
-    // chase the current item — the two would fight over contentY
+    focus: true
+
+    onActiveFocusChanged: {
+        if (!root.activeFocus) {
+            return;
+        }
+
+        root.adoptFocusedIndex();
+
+        if (Nav.focusedDelegate(root, root.Window.activeFocusItem) < 0) {
+            root.focusCurrentItem();
+        }
+    }
+
+    boundsBehavior: Flickable.StopAtBounds
+
     highlightFollowsCurrentItem: false
 
-    // TODO
-    // Qt's own key navigation swallows the presses at both ends, which would
-    // strand the cursor in the list
     keyNavigationEnabled: false
     keyNavigationWraps: false
 
-    // TODO
-    // A held direction stops at the first and last row rather than running out
-    // of the list
     FLFocus.holdEdges: FLFocus.Vertical
 
-    // TODO
-    // How long after a move a held direction is ignored, so a repeat that
-    // arrives faster than this does not outrun the ring's scrolling
-    property int repeatInterval: 60
-
-    // TODO
-    // Moves the cursor within the list, reporting whether it consumed the press
+    property int repeatInterval: 45
     function moveFocus(direction: int): bool {
         root.adoptFocusedIndex();
 
@@ -54,11 +46,11 @@ ListView {
 
         return true;
     }
+    function resetCursor() {
+        root.currentIndex = 0;
+        root.positionViewAtBeginning();
+    }
 
-    // TODO
-    // Takes the current index from wherever the cursor actually is. A tap, or a
-    // move in from outside the list, lands on a delegate without going through
-    // this view, and stepping from a stale index jumps the cursor somewhere else
     function adoptFocusedIndex() {
         const focused = Nav.focusedDelegate(root, root.Window.activeFocusItem);
 
@@ -66,18 +58,16 @@ ListView {
             root.currentIndex = focused;
         }
     }
-
-    // TODO
-    // Nothing links the current index to focus on its own, and an index that has
-    // not been realized has no item to focus until the view is told to reach it
     function focusCurrentItem() {
-        const index = root.currentIndex;
+        if (root.count === 0) {
+            return;
+        }
+
+        const index = Math.min(Math.max(root.currentIndex, 0), root.count - 1);
+        root.currentIndex = index;
         let item = root.itemAtIndex(index);
 
         if (item === null) {
-            // TODO
-            // Nothing to focus and nothing to scroll toward, so the view is moved to build one.
-            // The cursor is told where it is going separately, so this does not decide the scroll
             root.positionViewAtIndex(index, ListView.Contain);
             root.forceLayout();
             item = root.itemAtIndex(index);
@@ -88,9 +78,7 @@ ListView {
             return;
         }
 
-        // TODO
-        // A delegate far enough away is built with the next layout rather than this one, so the
-        // focus waits for it. Dropping it here is what leaves the view moved and the cursor behind
+        // Called later in case the item isn't built yet
         Qt.callLater(function () {
             if (root.currentIndex !== index) {
                 return;

@@ -174,7 +174,6 @@ file(GLOB QML_FILES
 # JS libraries aren't matched by the .qml glob above; add them explicitly.
 list(APPEND QML_FILES qml/v3/routing/routing.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/focus_nav.js)
-list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/folder_tree.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/slider_slide.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/focus_bump.js)
 
@@ -600,6 +599,7 @@ add_executable(fl_test
         tests/app/library/content_loader_test.cpp
         tests/app/library/disc_set_list_model_test.cpp
         tests/app/library/entry_list_model_test.cpp
+        tests/app/library/folder_list_model_test.cpp
         tests/app/library/library_ingest_service_test.cpp
         tests/app/library/variant_group_service_test.cpp
         tests/app/library/disc_set_service_test.cpp

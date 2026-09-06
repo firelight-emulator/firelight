@@ -15,8 +15,6 @@ Button {
     // Allows the button to be disabled but still allow it to receive focus
     property bool canInteract: true
 
-    // TODO
-    // Icon/label tint when checked; subtle toggles only
     property color checkedColor: Theme.textPrimary
     FLFocus.showCursor: true
 
@@ -70,11 +68,7 @@ Button {
     readonly property bool cursorFocused: FocusCursor.isOn(control)
     readonly property var activationKeys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
 
-    // TODO
-    // Space and Select never leave a button — it takes both for itself and turns
-    // them into a click — so a declared action answering to either has to run
-    // here rather than at the window. A Connections because a derived type
-    // declaring Keys.onPressed would replace an instance handler
+    // Handle Qt's built-in space and select stuff for buttons
     Connections {
         target: control.Keys
 
@@ -82,19 +76,11 @@ Button {
             const action = control.FLFocus.getActionFor(event.key, event.modifiers);
 
             if (action !== null) {
-                if (action.sound) {
-                    action.sound.play(false);
-                }
-
-                action.triggered();
+                action.trigger();
                 event.accepted = true;
                 return;
             }
 
-            // TODO
-            // Activation happens on the press for every key. Left alone, the
-            // button takes Space and Select for itself and commits them on the
-            // release
             if (control.activationKeys.indexOf(event.key) !== -1) {
                 control.click();
                 event.accepted = true;
@@ -108,7 +94,6 @@ Button {
     }
 
     background: Rectangle {
-        // radius: AppStyle.radiusMd
         radius: control.rounded ? width / 2 : AppStyle.radiusMd
         color: control._subtle ? "transparent" : control._fill
         border.width: control.variant === "default" ? 1 : 0

@@ -7,6 +7,8 @@ FLMenu {
     property alias valueRole: radioGroup.valueRole
     property alias currentValue: radioGroup.currentValue
 
+    signal activated(var value)
+
     property bool closeOnActivate: true
     property real closeDelay: InputMethodManager.usingMouse ? 0 : AppStyle.confirmPause
 
@@ -34,7 +36,7 @@ FLMenu {
         id: radioGroup
 
         onActivated: value => {
-            control.currentValue = value;
+            control.activated(value);
             if (control.closeOnActivate) {
                 closeTimer.restart();
             }

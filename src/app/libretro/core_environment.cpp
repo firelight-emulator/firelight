@@ -44,15 +44,14 @@ bool Core::handleEnvironmentCall(unsigned int cmd, void *data) {
   if (m_envHandlers.empty()) {
     buildEnvironmentHandlers();
   }
+
   const auto it = m_envHandlers.find(cmd);
   if (it == m_envHandlers.end()) {
-    // Intentionally unhandled libretro env commands (camera, location, MIDI,
-    // JIT, device-power, throttle, playlist dirs, proc-address, …): declining
-    // is correct — the core falls back to its defaults
     spdlog::debug("Unhandled libretro env command: {}", cmd);
-    environmentCalls.emplace_back("UNIMPLEMENTED");
+    environmentCalls.emplace_back("UNIMPLEMENTED: " + std::to_string(cmd));
     return false;
   }
+
   environmentCalls.emplace_back(it->second.name);
   return it->second.handler(data);
 }

@@ -44,19 +44,26 @@ FLPopup {
         }
     }
 
-    Connections {
-        target: control
-
-        function onAboutToShow() {
-            SoundEffects.showDialog.play();
-        }
-    }
-
     property string headerText
     default property alias content: column.data
 
+    property bool showCancel: false
+    property string acceptText: qsTr("OK")
+    property string rejectText: qsTr("Cancel")
+
     signal accepted
     signal rejected
+
+    property bool _accepting: false
+
+    onClosed: {
+        if (control._accepting) {
+            control._accepting = false;
+            return;
+        }
+
+        control.rejected();
+    }
 
     contentItem: FocusScope {
         implicitWidth: Math.max(column.implicitWidth, buttonRow.implicitWidth)
@@ -108,28 +115,27 @@ FLPopup {
             spacing: AppStyle.spacingMd
             anchors {
                 bottom: parent.bottom
-                left: parent.left
-                right: parent.right
+                horizontalCenter: parent.horizontalCenter
             }
 
-            // FLButton {
-            //     id: cancelButton
-            //     text: qsTr("Cancel")
-            //     Layout.fillWidth: true
-            //     Layout.horizontalStretchFactor: 1
-            //     focus: true
-            //     onClicked: {
-            //         control.rejected();
-            //         control.close();
-            //     }
-            // }
-
             FLButton {
-                text: qsTr("OK")
+                text: control.rejectText
+                visible: control.showCancel
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: AppStyle.buttonStandardWidth
-                focus: true
+
+                focus: control.showCancel
+
+                onClicked: control.close()
+            }
+
+            FLButton {
+                text: control.acceptText
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: AppStyle.buttonStandardWidth
+                focus: !control.showCancel
                 onClicked: {
+                    control._accepting = true;
                     control.accepted();
                     control.close();
                 }

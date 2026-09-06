@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtTest
 // Absolute qrc path so the import resolves both when this file runs from the
@@ -83,6 +84,36 @@ TestCase {
         compare(r.params.entryId, "7");
     }
 
+    // TODO
+    // /library owns its subtree, so a collection path resolves to the library screen, which
+    // reads the rest of the path itself
+    function test_resolve_library_collection_maps_to_owner() {
+        var r = R.resolve("/library/collections/7", routes);
+        compare(r.pattern, "/library");
+    }
+
+    // TODO
+    // The entries drill-down is declared, so subtree ownership does not claim it
+    function test_resolve_declared_drilldown_beats_subtree_owner() {
+        var r = R.resolve("/library/entries/7", routes);
+        compare(r.pattern, "/library/entries/:entryId");
+        compare(r.params.entryId, "7");
+    }
+
+    // TODO
+    // Declaring a pattern under /library waives that subtree's ownership, which is the only reason
+    // a sibling screen can be routed to at all
+    function test_resolve_declared_sibling_beats_subtree_owner() {
+        var r = R.resolve("/library/reorder-collections", routes);
+        compare(r.pattern, "/library/reorder-collections");
+    }
+
+    // The hazard the path shape avoids: a tail that is not a number would resolve as a collection id
+    function test_reorder_path_is_not_read_as_a_collection() {
+        var m = R.match("/library/reorder-collections", ["/library/collections/:collectionId"]);
+        verify(!m.matched);
+    }
+
     // --- transition inference ---
 
     function test_transition_peer_is_replace() {
@@ -100,6 +131,16 @@ TestCase {
     function test_transition_within_subtree_is_none() {
         compare(R.inferTransition("/settings", "/settings/appearance", routes), "none");
         compare(R.inferTransition("/settings/appearance", "/settings/audio", routes), "none");
+    }
+
+    function test_transition_within_library_subtree_is_none() {
+        compare(R.inferTransition("/library", "/library/collections", routes), "none");
+        compare(R.inferTransition("/library/collections/7", "/library/collections", routes), "none");
+    }
+
+    function test_transition_into_a_library_sibling_is_replace() {
+        compare(R.inferTransition("/library/collections", "/library/reorder-collections", routes), "replace");
+        compare(R.inferTransition("/library/reorder-collections", "/library/collections", routes), "replace");
     }
 
     function test_transition_initial_navigation_is_replace() {
@@ -162,6 +203,90 @@ TestCase {
         var before = s.entries.length;
         s = R.pushHistory(s, "/library");
         compare(s.entries.length, before);
+    }
+
+    // A blocked move must be distinguishable from one that happened, which is what lets a key
+    // decline its own sound
+    function test_attempt_reports_whether_the_move_happened() {
+        var allowed = R.attemptLeave(R.initialGuard(), "back", null);
+        verify(allowed.allowed);
+
+        var refusing = R.setGuard(R.initialGuard(), function () {
+            return false;
+        });
+        verify(!R.attemptLeave(refusing, "back", null).allowed);
+    }
+
+    // --- leave guard ---
+
+    function test_guard_absent_allows_everything() {
+        var g = R.initialGuard();
+        var r = R.attemptLeave(g, "back", null);
+        verify(r.allowed);
+        compare(r.state.pending, null);
+    }
+
+    function test_guard_that_agrees_allows_and_remembers_nothing() {
+        var g = R.setGuard(R.initialGuard(), function () {
+            return true;
+        });
+        var r = R.attemptLeave(g, "navigate", "/shop");
+        verify(r.allowed);
+        compare(r.state.pending, null);
+    }
+
+    function test_guard_that_refuses_blocks_and_remembers_the_move() {
+        var g = R.setGuard(R.initialGuard(), function () {
+            return false;
+        });
+        var r = R.attemptLeave(g, "navigate", "/shop");
+        verify(!r.allowed);
+        compare(r.state.pending.kind, "navigate");
+        compare(r.state.pending.arg, "/shop");
+        // the guard survives, so a second attempt is refused too
+        verify(!R.attemptLeave(r.state, "back", null).allowed);
+    }
+
+    // Releasing is what the confirm dialog does on Discard: the guard goes and the move comes back
+    function test_release_drops_the_guard_and_returns_the_move() {
+        var g = R.setGuard(R.initialGuard(), function () {
+            return false;
+        });
+        var blocked = R.attemptLeave(g, "back", null).state;
+
+        var released = R.releaseGuard(blocked);
+        compare(released.pending.kind, "back");
+        compare(released.state.guard, null);
+        compare(released.state.pending, null);
+        // nothing refuses any more
+        verify(R.attemptLeave(released.state, "back", null).allowed);
+    }
+
+    // Cancelling keeps the guard, so the next attempt is refused again
+    function test_cancel_forgets_the_move_but_keeps_the_guard() {
+        var g = R.setGuard(R.initialGuard(), function () {
+            return false;
+        });
+        var blocked = R.attemptLeave(g, "navigate", "/shop").state;
+
+        var cancelled = R.forgetPending(blocked);
+        compare(cancelled.pending, null);
+        verify(!R.attemptLeave(cancelled, "back", null).allowed);
+    }
+
+    function test_setting_a_guard_clears_any_remembered_move() {
+        var g = R.setGuard(R.initialGuard(), function () {
+            return false;
+        });
+        var blocked = R.attemptLeave(g, "back", null).state;
+
+        compare(R.setGuard(blocked, null).pending, null);
+        compare(R.setGuard(blocked, null).guard, null);
+    }
+
+    // Releasing when nothing was blocked must not invent a move to replay
+    function test_release_with_nothing_pending_returns_null() {
+        compare(R.releaseGuard(R.initialGuard()).pending, null);
     }
 
     function test_history_back_at_root_noop() {

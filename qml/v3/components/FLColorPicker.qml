@@ -1,9 +1,5 @@
 import QtQuick
 
-// TODO
-// Inline swatch color picker: a row of preset accent colors plus a leading
-// "none" option. `selectedColor` is the current value ("" = none); tapping a
-// swatch updates it and emits `picked`
 Flow {
     id: root
 
@@ -36,11 +32,9 @@ Flow {
             }
 
             TapHandler {
-                onTapped: {
-                    root.selectedColor = parent.modelData;
-                    root.picked(parent.modelData);
-                }
+                onTapped: root.picked(parent.modelData)
             }
+
             HoverHandler {
                 cursorShape: Qt.PointingHandCursor
             }

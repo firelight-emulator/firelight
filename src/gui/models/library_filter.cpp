@@ -4,8 +4,6 @@
 namespace firelight::gui {
 namespace {
 
-// TODO
-// Reads an optional criterion as the enum QML sees
 LibraryFilter::Tristate toTristate(const std::optional<bool> &value) {
   if (!value.has_value()) {
     return LibraryFilter::Unset;
@@ -14,8 +12,6 @@ LibraryFilter::Tristate toTristate(const std::optional<bool> &value) {
   return *value ? LibraryFilter::Yes : LibraryFilter::No;
 }
 
-// TODO
-// The other direction. Unset clears the criterion rather than storing a third value
 std::optional<bool> fromTristate(const LibraryFilter::Tristate value) {
   if (value == LibraryFilter::Unset) {
     return std::nullopt;
@@ -48,7 +44,9 @@ std::vector<int> toIntVector(const QVariantList &values) {
 
 } // namespace
 
-LibraryFilter::LibraryFilter(QObject *parent) : QObject(parent) {}
+LibraryFilter::LibraryFilter(QObject *parent) : QObject(parent) {
+  connect(this, &LibraryFilter::changed, this, &LibraryFilter::dirtyChanged);
+}
 
 const library::SmartFolderCriteria &LibraryFilter::getCriteria() const { return m_criteria; }
 
@@ -75,6 +73,26 @@ void LibraryFilter::setCriteria(const library::SmartFolderCriteria &criteria) {
   emit minMinutesPlayedChanged();
   emit playedWithinDaysChanged();
   emit changed();
+}
+
+QString LibraryFilter::getSavedJson() const { return m_savedJson; }
+
+void LibraryFilter::setSavedJson(const QString &savedJson) {
+  if (m_savedJson == savedJson) {
+    return;
+  }
+
+  m_savedJson = savedJson;
+  emit savedJsonChanged();
+  emit dirtyChanged();
+}
+
+bool LibraryFilter::isDirty() const {
+  if (m_savedJson.isEmpty()) {
+    return false;
+  }
+
+  return m_criteria != library::SmartFolderCriteria::parse(m_savedJson.toStdString());
 }
 
 QVariantList LibraryFilter::getContentDirectoryIds() const { return toVariantList(m_criteria.contentDirectoryIds); }
@@ -241,9 +259,7 @@ void LibraryFilter::setYearMax(const int year) {
   emit changed();
 }
 
-qint64 LibraryFilter::getPlayedAfterMillis() const {
-  return static_cast<qint64>(m_criteria.playedAfterMillis.value_or(NO_TIMESTAMP));
-}
+qint64 LibraryFilter::getPlayedAfterMillis() const { return m_criteria.playedAfterMillis.value_or(NO_TIMESTAMP); }
 
 void LibraryFilter::setPlayedAfterMillis(const qint64 millis) {
   if (getPlayedAfterMillis() == millis) {
@@ -295,7 +311,7 @@ void LibraryFilter::setJson(const QString &json) {
 
 void LibraryFilter::clear() { setCriteria({}); }
 
-void LibraryFilter::copyFrom(LibraryFilter *other) {
+void LibraryFilter::copyFrom(const LibraryFilter *other) {
   if (other == nullptr) {
     return;
   }

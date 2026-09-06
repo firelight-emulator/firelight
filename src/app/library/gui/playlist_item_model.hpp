@@ -10,6 +10,9 @@
 namespace firelight::gui {
 class LibraryFolderListModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
+  Q_PROPERTY(QVariantList sortOptions READ getSortOptions CONSTANT)
+  Q_PROPERTY(int count READ getCount NOTIFY countChanged)
+  Q_PROPERTY(QVariantList manualFolders READ getManualFolders NOTIFY countChanged)
 
 public:
   enum Roles {
@@ -38,43 +41,67 @@ public:
 
   [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
 
+  /**
+   * Moves count rows so they sit before destinationChild, and writes the new order back. Both ends
+   * must be in one parent scope, which is what a position is numbered within
+   */
+  bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent,
+                int destinationChild) override;
+
+  /**
+   * @return Every sort a collection may pin, from the one table the library view offers
+   */
+  [[nodiscard]] static QVariantList getSortOptions();
+
+  /**
+   * @return How many collections there are
+   */
+  [[nodiscard]] int getCount() const;
+
+  /**
+   * @return Each manual collection as its id and name
+   */
+  [[nodiscard]] QVariantList getManualFolders() const;
+
+  /**
+   * Every folder in a parent scope, in the order they are shown in
+   */
+  [[nodiscard]] Q_INVOKABLE QVariantList foldersInParent(int parentId) const;
+
+  /**
+   * @return Every field of one collection, or an empty map when there is no such collection
+   */
+  [[nodiscard]] Q_INVOKABLE QVariantMap folderById(int folderId) const;
+
+  /**
+   * The cached row for a folder, or nullptr when there is none
+   */
+  [[nodiscard]] const library::FolderInfo *findFolder(int folderId) const;
+
   Q_INVOKABLE bool addFolder(const QString &displayName);
 
-  // Creates a manual folder under `parentId` (-1 = root). Returns the new
-  // folder's id, or -1 on failure
   Q_INVOKABLE int createFolder(const QString &displayName, int parentId);
 
-  // Creates a smart folder whose membership is computed live from the given
-  // SmartFolderCriteria JSON (see smart_folder.hpp). Returns the new folder's
-  // id, or -1 on failure (so the caller can then set color/sort on it)
   Q_INVOKABLE int addSmartFolder(const QString &displayName, const QString &filterJson);
 
-  // Replaces a smart folder's criteria JSON
   Q_INVOKABLE bool updateSmartFolder(int folderId, const QString &filterJson);
 
-  // Sets a folder's accent color (empty string clears it)
+  // TODO: setData
   Q_INVOKABLE bool setFolderColor(int folderId, const QString &color);
 
-  // Renames a folder
   Q_INVOKABLE bool setFolderName(int folderId, const QString &displayName);
 
-  // Remembers a folder's game sort (role name + direction). An empty role
-  // clears the override so the view falls back to its default
   Q_INVOKABLE bool setFolderSort(int folderId, const QString &sortRole, bool ascending);
 
-  // Manual folder ordering. reorderFolders sets the order of the folders in
-  // orderedIds within a parent scope (parentId -1 = root); setFolderParent
-  // moves a folder under a new parent (appended at the end). The UI for these
-  // is a later step; the model API exists now
   Q_INVOKABLE bool reorderFolders(int parentId, const QVariantList &orderedIds);
   Q_INVOKABLE bool setFolderParent(int folderId, int newParentId);
 
   Q_INVOKABLE void deleteFolder(int folderId);
 
-  // Q_INVOKABLE void renamePlaylist(int playlistId, const QString &newName);
-
 signals:
   void folderDeleted(int folderId);
+
+  void countChanged();
 
 private:
   struct Item {

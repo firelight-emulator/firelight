@@ -128,7 +128,7 @@ TestCase {
             fired++;
         });
 
-        action.triggered();
+        action.trigger();
 
         compare(fired, 1);
     }

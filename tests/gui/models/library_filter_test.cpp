@@ -110,5 +110,58 @@ TEST(LibraryFilterTest, CopyFromTakesTheOtherFiltersCriteria) {
   EXPECT_NO_FATAL_FAILURE(folder.copyFrom(nullptr));
 }
 
+// TODO
+// Nothing to compare against means nothing to save, so a filter outside a smart collection never
+// offers it
+TEST(LibraryFilterTest, WithNothingSavedAFilterIsNotDirty) {
+  LibraryFilter filter;
+  filter.setNameContains("metroid");
+
+  EXPECT_FALSE(filter.isDirty());
+}
+
+// TODO
+// The same criteria reached through different JSON text are the same criteria. Comparing the text
+// would call this dirty: minutes at the surface are seconds underneath
+TEST(LibraryFilterTest, IdenticalCriteriaAreNotDirtyHoweverTheyWereWritten) {
+  LibraryFilter filter;
+  filter.setSavedJson(R"({"minSecondsPlayed":3600})");
+  filter.setMinMinutesPlayed(60);
+
+  EXPECT_EQ(filter.getMinMinutesPlayed(), 60);
+  EXPECT_FALSE(filter.isDirty());
+}
+
+// TODO
+// Editing away from what the collection holds is what lights the save control
+TEST(LibraryFilterTest, AnEditMakesItDirtyAndSavingSettlesIt) {
+  LibraryFilter filter;
+  filter.setJson(R"({"nameContains":"metroid"})");
+  filter.setSavedJson(filter.getJson());
+
+  ASSERT_FALSE(filter.isDirty());
+
+  filter.setNameContains("zelda");
+  EXPECT_TRUE(filter.isDirty());
+
+  filter.setSavedJson(filter.getJson());
+  EXPECT_FALSE(filter.isDirty());
+}
+
+// TODO
+// The flag has to move when either side does, or a bound control never re-reads it
+TEST(LibraryFilterTest, DirtyIsAnnouncedFromBothSides) {
+  LibraryFilter filter;
+  auto announced = 0;
+  QObject::connect(&filter, &LibraryFilter::dirtyChanged, [&announced] { ++announced; });
+
+  filter.setSavedJson(R"({"nameContains":"metroid"})");
+  EXPECT_GT(announced, 0);
+
+  const auto afterSaved = announced;
+  filter.setNameContains("zelda");
+  EXPECT_GT(announced, afterSaved);
+}
+
 } // namespace
 } // namespace firelight::gui

@@ -11,6 +11,7 @@ QtObject {
             "add-circle": "\ue3ba",
             "arrow": "\ue5c8",
             "arrow-back": "\ue5c4",
+            "arrow_back_2": "\uf43a",
             "arrow-forward": "\ue5c8",
             "arrow-down": "\ue5db",
             "arrow-up": "\ue5d8",
@@ -66,7 +67,9 @@ QtObject {
             "view_list": "\ue8ef",
             "more_vert": "\ue5d4",
             "open_in_new": "\ue89e",
+            "open_with": "\ue89f",
             "subdirectory_arrow_right": "\ue5da",
+            "edit": "\ue3c9",
             "wifi": "\ue63e",
             "wifi_off": "\ue648"
         })

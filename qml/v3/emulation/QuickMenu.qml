@@ -1,4 +1,3 @@
-// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
@@ -487,7 +486,7 @@ Pane {
                             id: restartGameButton
                             labelText: "Restart Game"
                             Layout.fillWidth: true
-                            KeyNavigation.down: rewindButton
+                            KeyNavigation.down: closeGameButton
                             // Layout.preferredWidth: parent.width / 2
                             Layout.preferredHeight: 40
                             Layout.alignment: Qt.AlignLeft | Qt.AlignTop

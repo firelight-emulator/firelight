@@ -36,19 +36,6 @@ Button {
         onDoubleTapped: control.doubleTapped(control.model.entryId)
     }
 
-    // ContextMenu.menu: GameContextMenu {
-    //     primaryEntryId: control.model.entryId
-    //     primaryFavorite: control.model.favorite
-    //     contentHash: control.model.contentHash
-    //     displayName: control.model.displayName
-    //     platformId: control.model.platformId
-    //     targetIds: control.selectedIds
-    //
-    //     onRequestAddToFolder: control.requestAddToFolder
-    //     onRequestChangeArt: control.requestChangeArt
-    //     onRequestEditGame: control.requestEditGame
-    // }
-
     FLFocus.actions: [
         FLAction {
             keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
@@ -273,13 +260,9 @@ Button {
                 anchors.left: parent.left
                 // starSize: AppStyle.iconSizeSm
 
-                Component.onCompleted: {
-                    value = control.model.rating;
-                }
+                value: control.model.rating
 
-                onValueChanged: {
-                    control.model.rating = value;
-                }
+                onEdited: rating => control.model.rating = rating
             }
         }
 

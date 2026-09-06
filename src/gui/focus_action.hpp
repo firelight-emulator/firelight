@@ -8,6 +8,29 @@
 namespace firelight::gui {
 
 /**
+ * What a handler reports back about a press it was given.
+ *
+ * Accepted unless the handler says otherwise, so an action that does nothing needs to say nothing.
+ * A handler that declines — a navigation a screen refused, a control that could not act — sets
+ * accepted false, and the press makes no sound
+ */
+class FocusActionEvent : public QObject {
+  Q_OBJECT
+  Q_PROPERTY(bool accepted READ isAccepted WRITE setAccepted)
+  QML_ANONYMOUS
+
+public:
+  explicit FocusActionEvent(QObject *parent = nullptr) : QObject(parent) {}
+
+  [[nodiscard]] bool isAccepted() const { return m_accepted; }
+
+  void setAccepted(const bool accepted) { m_accepted = accepted; }
+
+private:
+  bool m_accepted = true;
+};
+
+/**
  * One thing a focused item can do, bound to the keys that trigger it.
  *
  * An item lists several of these so a single focus target can offer more than one outcome — a game
@@ -21,6 +44,7 @@ class FocusAction : public QObject {
   Q_PROPERTY(QList<int> keys READ getKeys WRITE setKeys NOTIFY keysChanged)
   Q_PROPERTY(int modifiers READ getModifiers WRITE setModifiers NOTIFY modifiersChanged)
   Q_PROPERTY(QString label READ getLabel WRITE setLabel NOTIFY labelChanged)
+  Q_PROPERTY(bool hidden READ isHidden WRITE setHidden NOTIFY hiddenChanged)
   Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
   Q_PROPERTY(QObject *sound READ getSound WRITE setSound NOTIFY soundChanged)
   QML_ELEMENT
@@ -29,35 +53,40 @@ public:
   explicit FocusAction(QObject *parent = nullptr) : QObject(parent) {}
 
   /**
+   * Fires this action and makes its sound, and answers whether the handler accepted the press.
+   * A press the handler declined made nothing happen, so it makes no sound either
+   */
+  Q_INVOKABLE bool trigger() {
+    m_event.setAccepted(true);
+    emit triggered(&m_event);
+
+    if (m_event.isAccepted() && m_sound != nullptr) {
+      QMetaObject::invokeMethod(m_sound, "play", Q_ARG(bool, false));
+    }
+
+    return m_event.isAccepted();
+  }
+
+  /**
    * @return The Qt::Key values that trigger this action
    */
   [[nodiscard]] QList<int> getKeys() const { return m_keys; }
 
-  /**
-   * @return The modifiers that have to be held with one of the keys, none by default
-   */
   [[nodiscard]] int getModifiers() const { return m_modifiers; }
 
-  /**
-   * @return Text describing the action, for a prompt showing what the buttons do
-   */
   [[nodiscard]] QString getLabel() const { return m_label; }
 
-  /**
-   * @return Whether the action can currently be triggered
-   */
   [[nodiscard]] bool isEnabled() const { return m_enabled; }
 
-  /**
-   * @return The sound to play when the action fires, or null for none
-   */
+  [[nodiscard]] bool isHidden() const { return m_hidden; }
+
   [[nodiscard]] QObject *getSound() const { return m_sound; }
 
   /**
    * @return Whether this action is enabled and answers to key pressed with modifiers held
    */
   [[nodiscard]] bool handles(const int key, const int modifiers = Qt::NoModifier) const {
-    return m_enabled && m_keys.contains(key) && (modifiers & MEANINGFUL) == (m_modifiers & MEANINGFUL);
+    return m_enabled && m_keys.contains(key) && (modifiers & HANDLED_MODIFIERS) == (m_modifiers & HANDLED_MODIFIERS);
   }
 
   void setKeys(const QList<int> &keys) {
@@ -88,6 +117,13 @@ public:
     }
   }
 
+  void setHidden(const bool hidden) {
+    if (m_hidden != hidden) {
+      m_hidden = hidden;
+      emit hiddenChanged();
+    }
+  }
+
   void setSound(QObject *sound) {
     if (m_sound != sound) {
       m_sound = sound;
@@ -104,24 +140,25 @@ signals:
 
   void enabledChanged();
 
+  void hiddenChanged();
+
   void soundChanged();
 
   /**
    * One of this action's keys was pressed while its item held focus
    */
-  void triggered();
+  void triggered(FocusActionEvent *event);
 
 private:
-  // TODO
-  // The modifiers a press is judged by. Keypad and group-switch say where a key came from rather than
-  // what was held down with it — numpad Enter carries the keypad bit — so neither decides a match
-  static constexpr int MEANINGFUL = Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier;
+  static constexpr int HANDLED_MODIFIERS = Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier;
 
   QList<int> m_keys;
   int m_modifiers = Qt::NoModifier;
   QString m_label;
   bool m_enabled = true;
+  bool m_hidden = false;
   QObject *m_sound = nullptr;
+  FocusActionEvent m_event;
 };
 
 } // namespace firelight::gui

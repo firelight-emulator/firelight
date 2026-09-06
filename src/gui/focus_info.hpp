@@ -217,10 +217,12 @@ public:
       auto bindings = group.value("bindings").toList();
       const auto modifiers = action->getModifiers();
 
-      // TODO
-      // One way in still working is enough for the label to be reachable
       if (action->isEnabled()) {
         group["enabled"] = true;
+      }
+
+      if (action->isHidden()) {
+        group["hidden"] = true;
       }
 
       for (const auto key : action->getKeys()) {
@@ -228,7 +230,8 @@ public:
         bindings.append(QVariantMap{{"key", key},
                                     {"modifiers", modifiers},
                                     {"text", QKeySequence(combination).toString(QKeySequence::NativeText)},
-                                    {"enabled", action->isEnabled()}});
+                                    {"enabled", action->isEnabled()},
+                                    {"hidden", action->isHidden()}});
       }
 
       group["bindings"] = bindings;
@@ -347,6 +350,43 @@ public:
     }
 
     return nullptr;
+  }
+
+  /**
+   * Runs whatever answers a press on focused, looking outward from it and then at the attached
+   * item's own actions, and falls back to pressing the focused item.
+   *
+   * @return Whether anything answered, so the caller knows whether to accept the event
+   */
+  Q_INVOKABLE bool dispatch(QQuickItem *focused, const int key, const int modifiers = Qt::NoModifier) const {
+    if (focused == nullptr) {
+      return false;
+    }
+
+    if (runAction(findActionFor(focused, key, modifiers))) {
+      return true;
+    }
+
+    // TODO
+    // The attached item's own actions, which is what a container declaring Back answers with
+    if (runAction(getActionFor(key, modifiers))) {
+      return true;
+    }
+
+    // TODO
+    // An item offering actions of its own has already had its say, so nothing presses it by default
+    if (const auto *info = find(focused); info != nullptr && info->getActionCount() > 0) {
+      return false;
+    }
+
+    // TODO
+    // Modifiers are ignored here on purpose: a modified press nothing declared still presses the
+    // thing, the way a modified click does
+    if (key != Qt::Key_Select && key != Qt::Key_Return && key != Qt::Key_Enter) {
+      return false;
+    }
+
+    return QMetaObject::invokeMethod(focused, "click");
   }
 
   /**
@@ -493,6 +533,17 @@ signals:
   void holdEdgesChanged();
 
 private:
+  // TODO
+  // Sounds an action and fires it, reporting that it ran so each lookup above reads as one line
+  static bool runAction(FocusAction *action) {
+    if (action == nullptr) {
+      return false;
+    }
+
+    action->trigger();
+    return true;
+  }
+
   static void appendAction(QQmlListProperty<FocusAction> *list, FocusAction *action) {
     static_cast<FocusInfo *>(list->data)->m_actions.append(action);
   }

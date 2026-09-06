@@ -1,4 +1,3 @@
-// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/library/smart_folder.hpp>
@@ -11,22 +10,14 @@ namespace firelight::gui {
 
 /**
  * A set of library filter criteria, editable from QML.
- *
- * The criteria themselves are a plain struct in firelight_library with no Qt in it, so that the
- * predicate stays a pure function. This is the seam: one property per criterion, typed, over one
- * SmartFolderCriteria. The library view holds a live unsaved instance and a saved smart folder is
- * the same object under a name, which is why loading a folder into the view is setJson rather than
- * a second code path
  */
 class LibraryFilter : public QObject {
   Q_OBJECT
 
-  // --- Source ---
   Q_PROPERTY(QVariantList contentDirectoryIds READ getContentDirectoryIds WRITE setContentDirectoryIds NOTIFY
                  contentDirectoryIdsChanged)
   Q_PROPERTY(QString pathContains READ getPathContains WRITE setPathContains NOTIFY pathContainsChanged)
 
-  // --- Filters ---
   Q_PROPERTY(QVariantList platformIds READ getPlatformIds WRITE setPlatformIds NOTIFY platformIdsChanged)
   Q_PROPERTY(QString nameContains READ getNameContains WRITE setNameContains NOTIFY nameContainsChanged)
   Q_PROPERTY(Tristate favorite READ getFavorite WRITE setFavorite NOTIFY favoriteChanged)
@@ -42,20 +33,15 @@ class LibraryFilter : public QObject {
   Q_PROPERTY(int minMinutesPlayed READ getMinMinutesPlayed WRITE setMinMinutesPlayed NOTIFY minMinutesPlayedChanged)
   Q_PROPERTY(int playedWithinDays READ getPlayedWithinDays WRITE setPlayedWithinDays NOTIFY playedWithinDaysChanged)
 
-  // --- Derived ---
   Q_PROPERTY(bool empty READ isEmpty NOTIFY changed)
   Q_PROPERTY(QString json READ getJson NOTIFY changed)
+  Q_PROPERTY(QString savedJson READ getSavedJson WRITE setSavedJson NOTIFY savedJsonChanged)
+  Q_PROPERTY(bool dirty READ isDirty NOTIFY dirtyChanged)
 
 public:
-  // TODO
-  // A criterion that can require a thing, require its absence, or not ask. Unset is the default,
-  // so a view that never touches a control does not pin what it did not ask about
   enum Tristate { Unset = -1, No = 0, Yes = 1 };
   Q_ENUM(Tristate)
 
-  // TODO
-  // What an unset numeric criterion reads as. None of these has a meaningful zero, so a sentinel
-  // beats a has-value flag per field
   static constexpr int NO_YEAR = 0;
   static constexpr int NO_DAYS = 0;
   static constexpr qint64 NO_TIMESTAMP = 0;
@@ -105,7 +91,6 @@ public:
   [[nodiscard]] qint64 getPlayedAfterMillis() const;
   void setPlayedAfterMillis(qint64 millis);
 
-  // TODO
   // Minutes at the surface and seconds underneath, so the one place that conversion happens is here
   [[nodiscard]] int getMinMinutesPlayed() const;
   void setMinMinutesPlayed(int minutes);
@@ -124,6 +109,18 @@ public:
   [[nodiscard]] QString getJson() const;
 
   /**
+   * @return The criteria last saved, as JSON
+   */
+  [[nodiscard]] QString getSavedJson() const;
+
+  void setSavedJson(const QString &savedJson);
+
+  /**
+   * @return Whether the criteria differ from the ones last saved. False when nothing was saved
+   */
+  [[nodiscard]] bool isDirty() const;
+
+  /**
    * Replaces every criterion with what the JSON carries. Criteria this object has no property for
    * are preserved rather than dropped, which is what makes editing a saved folder lossless
    */
@@ -137,7 +134,7 @@ public:
   /**
    * Takes another filter's criteria wholesale, for saving the current view as a folder
    */
-  Q_INVOKABLE void copyFrom(firelight::gui::LibraryFilter *other);
+  Q_INVOKABLE void copyFrom(const LibraryFilter *other);
 
 signals:
   void contentDirectoryIdsChanged();
@@ -156,13 +153,15 @@ signals:
   void minMinutesPlayedChanged();
   void playedWithinDaysChanged();
 
-  // TODO
-  // Any criterion changed. Emitted alongside the property's own signal, because a listener that
-  // only cares that something moved should not have to connect to fifteen of them
   void changed();
+
+  void savedJsonChanged();
+
+  void dirtyChanged();
 
 private:
   library::SmartFolderCriteria m_criteria;
+  QString m_savedJson;
 };
 
 } // namespace firelight::gui

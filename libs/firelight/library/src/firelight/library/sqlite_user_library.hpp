@@ -190,8 +190,6 @@ public:
   std::vector<UnrecognizedExtension> getUnrecognizedExtensions() override;
 
 private:
-  // TODO
-  // TODO
   /**
    * What one dump row says about the entry it belongs to
    */
@@ -226,17 +224,10 @@ private:
   // Writes what an entry launches through: whether anything does, and the set when that is one
   static void applyWayIn(Entry &entry, const std::unordered_map<std::string, std::optional<int>> &waysIn);
 
-  // TODO
-  // The set a file is a disc of, read from its membership row. Announced with a file going
-  // missing or coming back, so the set's other discs know to look again
   [[nodiscard]] std::optional<int> discSetOfContentFile(int contentFileId);
 
-  // TODO
-  // The listing behind getContentFiles, getPresentContentFiles and getRecordedFiles
   [[nodiscard]] std::vector<ContentFile> contentFiles(bool presentOnly, bool dumpsOnly);
 
-  // TODO
-  // The listing behind getDiscsInSet and getPresentDiscsInSet
   [[nodiscard]] std::vector<ContentFile> discsInSet(int setId, bool presentOnly);
 
   void ensureColumnExists(const std::string &table, const std::string &column, const std::string &definition);
@@ -248,6 +239,8 @@ private:
   void backfillContentDirectoryIds();
 
   int nextFolderPosition(int parentId);
+
+  int nextEntryPosition(int folderId);
 
   std::string m_databasePath;
   std::unique_ptr<SQLite::Database> m_db;

@@ -1,18 +1,16 @@
 import QtQuick
 import QtQuick.Layouts
 
-// TODO
-// A row of stars: `value` of `count` are filled. Interactive by default —
-// clicking a star emits `edited` with the new value (clicking the current value
-// clears to 0). Set `interactive: false` for a read-only display
 //
-//   FLStarRating { value: 3 }                                  // display
+//   FLStarRating { value: 3 }
 //   FLStarRating { value: entry.rating; onEdited: v => entry.rating = v }
 RowLayout {
     id: control
 
     property int count: 5
     property int value: 0
+
+    signal edited(int rating)
     property bool interactive: true
     property int starSize: AppStyle.iconSizeMd
     property color filledColor: Theme.gold
@@ -40,7 +38,7 @@ RowLayout {
 
             TapHandler {
                 enabled: control.interactive
-                onTapped: control.value = (control.value === star.index + 1 ? 0 : star.index + 1)
+                onTapped: control.edited(control.value === star.index + 1 ? 0 : star.index + 1)
             }
 
             HoverHandler {

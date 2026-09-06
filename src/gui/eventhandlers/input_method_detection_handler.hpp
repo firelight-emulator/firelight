@@ -14,13 +14,6 @@ public:
 
   bool usingMouse() const;
 
-  /**
-   * Whether the key press being delivered right now is a hold repeating rather than a fresh press.
-   *
-   * Filtering the window sees every key before the focused item does, so anything reacting to a
-   * press — including code with no key event of its own, like the focus ring reacting to focus
-   * moving — can tell a held direction from a deliberate one.
-   */
   [[nodiscard]] bool isKeyRepeating() const;
 
 signals:

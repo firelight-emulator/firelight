@@ -41,21 +41,21 @@ Pane {
     TapHandler {
         acceptedButtons: Qt.RightButton
         onTapped: {
-            rightClickMenu.popup();
+            // rightClickMenu.popup();
         }
     }
 
-    RightClickMenu {
-        id: rightClickMenu
-
-        RightClickMenuItem {
-            text: "Open at RetroAchievements.org"
-            externalLink: true
-            onTriggered: {
-                Qt.openUrlExternally("https://retroachievements.org/achievement/" + row.model.achievement_id);
-            }
-        }
-    }
+    // RightClickMenu {
+    //     id: rightClickMenu
+    //
+    //     RightClickMenuItem {
+    //         text: "Open at RetroAchievements.org"
+    //         externalLink: true
+    //         onTriggered: {
+    //             Qt.openUrlExternally("https://retroachievements.org/achievement/" + row.model.achievement_id);
+    //         }
+    //     }
+    // }
 
     contentItem: RowLayout {
         spacing: 8
@@ -141,7 +141,7 @@ Pane {
         DetailsButton {
             Layout.alignment: Qt.AlignRight | Qt.AlignTop
             onClicked: function () {
-                rightClickMenu.popup();
+                // rightClickMenu.popup();
             }
         }
     }

@@ -18,15 +18,11 @@
 namespace firelight::library {
 
 namespace {
-// Everything a sentence needs that a bare problem cannot carry. Empty where it is unknown, and
-// every sentence below falls back to its plain form rather than naming a blank
 struct StatusDetail {
   QString platformName;
   QString missingBios;
   QString unreachableRoot;
   QList<int> missingDiscs;
-  // TODO
-  // Where the files were when they were last seen
   QString lastKnownPath;
   // TODO
   // Whether the folder they were under was taken out of the library, rather than the files
@@ -34,7 +30,7 @@ struct StatusDetail {
   bool wasFolderRemoved = false;
 };
 
-// Reads as a sentence rather than a list: "1", "1 and 2", "1, 2 and 4"
+// Makes a sentence rather than a list, like: "1", "1 and 2", "1, 2 and 4"
 QString joinNumbers(const QList<int> &numbers) {
   QStringList parts;
   for (const auto number : numbers) {
@@ -49,15 +45,11 @@ QString joinNumbers(const QList<int> &numbers) {
   return QObject::tr("%1 and %2").arg(parts.join(QStringLiteral(", ")), last);
 }
 
-// What is wrong, in the order somebody can act on it. Built here rather than in QML because
-// assembling a sentence from a list of numbers is the view doing the model's job
 QString statusText(const EntryStatus &status, const StatusDetail &detail) {
   QStringList sentences;
 
   for (const auto problem : status.problems) {
     switch (problem) {
-    // Both mean the same thing to somebody looking at the grid, and neither is theirs to fix
-    // today: no core can be installed by hand yet
     case EntryProblem::PlatformNotSupported:
     case EntryProblem::CoreNotInstalled:
       sentences << (detail.platformName.isEmpty()
@@ -106,9 +98,7 @@ QString statusText(const EntryStatus &status, const StatusDetail &detail) {
   return sentences.join(QStringLiteral(" "));
 }
 
-// TODO
-// QML reads and writes these as one comma-separated string, so the list shape stops
-// at the model boundary
+// TODO: refactor out
 QString joinList(const std::vector<std::string> &values) {
   QStringList parts;
 
@@ -119,6 +109,7 @@ QString joinList(const std::vector<std::string> &values) {
   return parts.join(QStringLiteral(", "));
 }
 
+// TODO: refactor out
 std::vector<std::string> splitList(const QString &value) {
   std::vector<std::string> values;
 
@@ -140,7 +131,6 @@ EntryListModel::EntryListModel(UserLibraryService &userLibrary, activity::IActiv
                                settings::SettingsService &settings, QObject *parent)
     : QAbstractListModel(parent), m_userLibrary(userLibrary), m_activityLog(activityLog),
       m_platformService(platformService), m_achievementService(achievementService), m_settings(settings) {
-  // Pointing a platform at a different core changes what every game on it can do
   m_coreSettingChangedConnection = EventDispatcher::instance().subscribe<settings::PlatformSettingChangedEvent>(
       [this](const settings::PlatformSettingChangedEvent &event) {
         if (event.key != CoreRegistry::CORE_SETTING_KEY) {
@@ -159,24 +149,13 @@ EntryListModel::EntryListModel(UserLibraryService &userLibrary, activity::IActiv
         QMetaObject::invokeMethod(this, [this] { refreshStatuses(); }, Qt::QueuedConnection);
       });
 
-  // TODO
-  // A folder's criteria are cached, so an edit anywhere has to reach the cache without the view
-  // being asked to poke it
   m_folderChangedConnection =
       EventDispatcher::instance().subscribe<FolderChangedEvent>([this](const FolderChangedEvent &) {
-        QMetaObject::invokeMethod(
-            this,
-            [this] {
-              invalidateSmartFolderCache();
-              emit countByFolderIdChanged();
-            },
-            Qt::QueuedConnection);
+        QMetaObject::invokeMethod(this, [this] { invalidateSmartFolderCache(); }, Qt::QueuedConnection);
       });
 
   m_gamePlayedConnection = EventDispatcher::instance().subscribe<emulation::EmulationStartedEvent>(
       [this](const emulation::EmulationStartedEvent &event) {
-        // Published on the render thread; hop to the GUI thread before
-        // touching the model
         const auto contentHash = event.contentHash;
         QMetaObject::invokeMethod(
             this,
@@ -197,7 +176,7 @@ EntryListModel::EntryListModel(UserLibraryService &userLibrary, activity::IActiv
   connect(&m_countsChangedTimer, &QTimer::timeout, this, [this] {
     emit countChanged();
     emit numFavoritesChanged();
-    emit countByFolderIdChanged();
+    invalidateCountByFolderId();
   });
 
   m_entryCreatedConnection =
@@ -211,25 +190,18 @@ EntryListModel::EntryListModel(UserLibraryService &userLibrary, activity::IActiv
         QMetaObject::invokeMethod(this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
       });
 
-  // Folding a disc set destroys the entries it absorbs, and syncEntry only takes a row away for an
-  // id it is handed
   m_entryDeletedConnection =
       EventDispatcher::instance().subscribe<EntryDeletedEvent>([this](const EntryDeletedEvent &event) {
         const int id = event.entryId;
         QMetaObject::invokeMethod(this, [this, id] { syncEntry(id); }, Qt::QueuedConnection);
       });
 
-  // A finished session may have unlocked achievements; refresh every row's
-  // counts (cheap indexed lookups) on the GUI thread
   m_achievementSessionEndedConnection =
       EventDispatcher::instance().subscribe<achievements::AchievementSessionEndedEvent>(
           [this](const achievements::AchievementSessionEndedEvent &) {
             QMetaObject::invokeMethod(this, [this] { refreshAllAchievementCounts(); }, Qt::QueuedConnection);
           });
 
-  // Login completes asynchronously, after this constructor's reset() has
-  // already computed counts with no user; recompute when the user arrives
-  // (and on logout, which zeroes earned)
   m_userLoggedInConnection = EventDispatcher::instance().subscribe<achievements::UserLoggedInEvent>(
       [this](const achievements::UserLoggedInEvent &) {
         QMetaObject::invokeMethod(this, [this] { refreshAllAchievementCounts(); }, Qt::QueuedConnection);
@@ -261,6 +233,7 @@ QHash<int, QByteArray> EntryListModel::roleNames() const {
   roles[ContentDirectoryIds] = "contentDirectoryIds";
   roles[ContentPaths] = "contentPaths";
   roles[CreatedAt] = "createdAt";
+  roles[Position] = "position";
   roles[LastPlayedAt] = "lastPlayedAt";
   roles[NumSecondsPlayed] = "numSecondsPlayed";
   roles[AchievementsEarned] = "achievementsEarned";
@@ -360,6 +333,8 @@ QVariant EntryListModel::data(const QModelIndex &index, int role) const {
     return joinList(item.entry.metadata.regions);
   case CreatedAt:
     return QVariant::fromValue(item.entry.createdAt);
+  case Position:
+    return item.entry.position;
   case FolderIds:
     return QVariant::fromValue(QList(item.entry.folderIds.begin(), item.entry.folderIds.end()));
   case ContentDirectoryIds:
@@ -438,9 +413,6 @@ bool EntryListModel::setData(const QModelIndex &index, const QVariant &value, in
     return false;
   }
 
-  // TODO
-  // The row derives searchText and its filter fields from what was just written, so they are
-  // rebuilt before anyone is told the row changed
   item.searchText = computeSearchText(item);
   item.fields = buildEntryFields(item);
 
@@ -476,7 +448,7 @@ void EntryListModel::addEntryToFolder(int entryId, int folderId) {
       item.entry.folderIds.push_back(folderId);
       item.fields = buildEntryFields(item);
       emit dataChanged(createIndex(0, 0), createIndex(m_items.size() - 1, 0), {FolderIds});
-      emit countByFolderIdChanged();
+      invalidateCountByFolderId();
       break;
     }
   }
@@ -496,7 +468,7 @@ void EntryListModel::removeEntryFromFolder(int entryId, int folderId) {
         item.entry.folderIds.erase(it);
         item.fields = buildEntryFields(item);
         emit dataChanged(createIndex(0, 0), createIndex(m_items.size() - 1, 0), {FolderIds});
-        emit countByFolderIdChanged();
+        invalidateCountByFolderId();
         break;
       }
 
@@ -540,11 +512,11 @@ void EntryListModel::setGroupMode(const QString &mode) {
   }
   m_groupMode = mode;
   emit groupModeChanged();
-  // Recompute the cached key once per row for the new mode, then notify so the
-  // proxy re-sorts and the section headers re-evaluate
+
   for (auto &item : m_items) {
     item.groupKey = computeGroupKey(item);
   }
+
   if (!m_items.empty()) {
     emit dataChanged(createIndex(0, 0), createIndex(static_cast<int>(m_items.size()) - 1, 0), {GroupKey});
   }
@@ -555,29 +527,37 @@ QString EntryListModel::computeGroupKey(const Item &item) const {
     const auto platform = m_platformService.getPlatform(item.entry.platformId);
     return platform.has_value() ? QString::fromStdString(platform->name) : QStringLiteral("Unknown platform");
   }
+
   if (m_groupMode == "decade") {
     if (item.entry.metadata.releaseYear == 0) {
       return QStringLiteral("Unknown");
     }
+
     return QString::number((item.entry.metadata.releaseYear / 10) * 10) + QStringLiteral("s");
   }
+
   if (m_groupMode == "year") {
     return item.entry.metadata.releaseYear == 0 ? QStringLiteral("Unknown")
                                                 : QString::number(item.entry.metadata.releaseYear);
   }
+
   if (m_groupMode == "genre") {
     if (item.entry.metadata.genres.empty()) {
       return QStringLiteral("No genre");
     }
+
     return QString::fromStdString(item.entry.metadata.genres.front()).trimmed();
   }
+
   if (m_groupMode == "title") {
     if (item.entry.displayName.empty()) {
       return QStringLiteral("#");
     }
+
     const QChar first = QString::fromStdString(item.entry.displayName).at(0).toUpper();
     return first.isLetter() ? QString(first) : QStringLiteral("#");
   }
+
   return {};
 }
 
@@ -592,6 +572,10 @@ QVariantMap EntryListModel::getCountByPlatform() const {
 }
 
 QVariantMap EntryListModel::getCountByFolderId() const {
+  if (m_countByFolderId.has_value()) {
+    return *m_countByFolderId;
+  }
+
   QVariantMap countByFolderId;
 
   // Manual folders
@@ -620,6 +604,7 @@ QVariantMap EntryListModel::getCountByFolderId() const {
     countByFolderId[QString::number(folder.id)] = count;
   }
 
+  m_countByFolderId = countByFolderId;
   return countByFolderId;
 }
 
@@ -646,9 +631,6 @@ const SmartFolderCriteria &EntryListModel::criteriaForFolder(int folderId) const
     return it->second;
   }
 
-  // TODO
-  // Every folder is parsed on the first miss, because reaching the one asked for costs the same
-  // listFolders() call as reaching all of them
   for (const auto &folder : m_userLibrary.listFolders()) {
     m_smartFolderCache.insert_or_assign(folder.id, SmartFolderCriteria::parse(folder.filterJson));
   }
@@ -658,12 +640,14 @@ const SmartFolderCriteria &EntryListModel::criteriaForFolder(int folderId) const
 
 void EntryListModel::invalidateSmartFolderCache() {
   m_smartFolderCache.clear();
+  invalidateCountByFolderId();
+}
+
+void EntryListModel::invalidateCountByFolderId() {
+  m_countByFolderId.reset();
   emit countByFolderIdChanged();
 }
 
-// TODO
-// Rebuilds what every row derives rather than stores. Variant grouping is not wired up, so each
-// row stands for itself: its own name, its own play stats, and nothing folded away behind it
 void EntryListModel::refreshRowFields() {
   for (auto &item : m_items) {
     item.variantGroupId = -1;
@@ -702,9 +686,6 @@ void EntryListModel::refreshPlatformProblems() {
   m_unreachableRoots.clear();
   m_knownContentDirectoryIds.clear();
 
-  // TODO
-  // A root that cannot be read makes every game under it unplayable for as long as that lasts,
-  // which is a folder fact rather than an entry one
   for (const auto &directory : m_userLibrary.getContentDirectories()) {
     const auto path = QString::fromStdString(directory.path);
     m_knownContentDirectoryIds.insert(directory.id);
@@ -729,8 +710,6 @@ void EntryListModel::refreshPlatformProblems() {
       continue;
     }
 
-    // Only the ones actually standing in the way. An optional file is never the reason a game
-    // will not start, so naming it here would send somebody after the wrong thing
     QStringList names;
     for (const auto &bios : CoreRegistry::instance().biosStatusForPlatform(platformId, &m_settings)) {
       if (bios.isSatisfied) {
@@ -768,9 +747,6 @@ EntryStatus EntryListModel::statusOf(const Entry &entry) const {
       facts.expectedDiscCount = set->discCount;
     }
 
-    // TODO
-    // Widens what the entry's own files already said, because the rest of a set is other content
-    // files that the entry does not carry
     facts.isDiscInArchive =
         facts.isDiscInArchive || std::ranges::any_of(discs, [](const ContentFile &disc) { return disc.m_inArchive; });
   }
@@ -778,9 +754,6 @@ EntryStatus EntryListModel::statusOf(const Entry &entry) const {
   return evaluateEntryStatus(facts);
 }
 
-// TODO
-// Both halves in one place: the verdict and the sentence were assigned separately at three call
-// sites, and a new one only updated the first
 void EntryListModel::applyStatus(Item &item) const {
   item.status = statusOf(item.entry);
   item.statusText = describeStatus(item.entry, item.status);
@@ -793,14 +766,11 @@ QString EntryListModel::unreachableRootFor(const Entry &entry) const {
 
   QString behindAnUnreachableRoot;
 
-  // One copy on an unplugged drive says nothing while another sits on a disk that is right here,
-  // so this answers only when every copy still on disk is somewhere that cannot be read
   for (const auto &path : entry.readableContentPaths) {
     const auto candidate = QDir::cleanPath(QString::fromStdString(path));
     auto isBehindOne = false;
 
     for (const auto &root : m_unreachableRoots) {
-      // A separator on the end, so D:/Games does not claim D:/GamesArchive
       if (candidate == root || candidate.startsWith(root + QLatin1Char('/'))) {
         isBehindOne = true;
         behindAnUnreachableRoot = root;
@@ -824,9 +794,6 @@ QString EntryListModel::describeStatus(const Entry &entry, const EntryStatus &st
   detail.missingBios = m_missingBiosByPlatformId.value(platformId);
   detail.unreachableRoot = QDir::toNativeSeparators(unreachableRootFor(entry));
 
-  // TODO
-  // The rows outlive the files, so the path a game had is still there to be named. Which of the
-  // two sentences it gets turns on whether the folder it sat under is still in the library
   if (!entry.contentPaths.empty()) {
     detail.lastKnownPath = QDir::toNativeSeparators(QString::fromStdString(entry.contentPaths.front()));
     detail.wasFolderRemoved = std::ranges::any_of(entry.contentDirectoryIds, [this](const int id) {
@@ -871,8 +838,6 @@ void EntryListModel::reset() {
     s.lastEndMillis = std::max(s.lastEndMillis, session.endedAt);
   }
 
-  // A game whose files are gone stays in the library and is badged. Taking the row away is
-  // what left somebody unable to find out why their game had disappeared
   for (const auto &entry : m_userLibrary.getEntries()) {
     auto item = Item{.entry = entry};
 
@@ -894,7 +859,7 @@ void EntryListModel::reset() {
   emit endResetModel();
   emit countChanged();
   emit numFavoritesChanged();
-  emit countByFolderIdChanged();
+  invalidateCountByFolderId();
 }
 
 void EntryListModel::removeFolderId(const int folderId) {
@@ -953,7 +918,6 @@ void EntryListModel::syncEntry(const int entryId) {
   const bool present = it != m_indexByEntryId.end();
   const bool visible = entry.has_value();
 
-  // Only a row that is genuinely gone leaves the model
   if (!visible) {
     if (present) {
       const int row = it->second;

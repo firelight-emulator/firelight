@@ -1,4 +1,3 @@
-// TODO: NEEDS REVIEW
 #pragma once
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/library/entry.hpp>
@@ -10,6 +9,7 @@
 
 #include <QAbstractListModel>
 #include <QTimer>
+#include <optional>
 #include <unordered_map>
 
 namespace firelight::activity {
@@ -31,8 +31,6 @@ class EntryListModel : public QAbstractListModel {
   Q_PROPERTY(int numFavorites READ numFavorites NOTIFY numFavoritesChanged)
   Q_PROPERTY(QVariantMap countByPlatform READ getCountByPlatform NOTIFY countChanged)
   Q_PROPERTY(QVariantMap countByFolderId READ getCountByFolderId NOTIFY countByFolderIdChanged)
-  // Grouping key mode read by the GroupKey role: "none" | "platform" | "decade"
-  // | "year" | "genre" | "title"
   Q_PROPERTY(QString groupMode READ getGroupMode WRITE setGroupMode NOTIFY groupModeChanged)
 
 public:
@@ -62,6 +60,7 @@ public:
     ContentDirectoryIds,
     ContentPaths,
     CreatedAt,
+    Position,
     LastPlayedAt,
     NumSecondsPlayed,
     AchievementsEarned,
@@ -73,17 +72,10 @@ public:
     VariantCount,
     IsVariantPrimary,
     VariantAutoLaunch,
-    // Whether the game would start. False means the row is shown with a badge rather than
-    // hidden, so nobody has to guess why a game will not play
     Playable,
-    // Every EntryProblem that applies, worst first
     Problems,
-    // What is wrong, in a sentence. Empty when nothing is
     StatusText,
     SearchText,
-    // TODO
-    // The row's cached filter fields, by pointer. Valid only for the duration of the call that
-    // asked for it, because appending a row moves the ones already there
     FilterFields
   };
 
@@ -116,39 +108,17 @@ public:
     int achievementsEarned{};
     int achievementsTotal{};
     int achievementSetCount{};
-    // Cached group-header label for the current group mode, so data(GroupKey)
-    // (read O(n log n) times by the proxy sorter) is a plain string return rather
-    // than a per-call platform lookup
     QString groupKey;
-    // TODO
-    // Cached for the same reason as groupKey: data() reads it per row per role, and
-    // answering it for a disc set costs two queries
     EntryStatus status;
-    // TODO
-    // Composed alongside the status, because naming the system, the BIOS files and the missing
-    // discs costs lookups that must not happen once per row per role
     QString statusText;
-    // TODO
-    // An entry in no variant group reads as a group of one, so nothing downstream has
-    // to branch on whether grouping applies
     int variantGroupId = -1;
     int variantCount = 1;
     bool isVariantPrimary = true;
     bool variantAutoLaunch = false;
     QString variantTitle;
-    // TODO
-    // Playtime across the whole group, and the most recent session any of it saw
     uint64_t variantSecondsPlayed{};
     uint64_t variantLastPlayedMillis{};
-    // TODO
-    // Everything a text filter should match on one line: this entry's name, the group's
-    // title, and the names of the variants it stands for
     QString searchText;
-
-    // TODO
-    // Everything the filter predicate reads, rebuilt whenever the row changes. Cached for the
-    // same reason as groupKey: the proxy asks per row per pass, and rebuilding it there would
-    // cost an allocation a row and a second copy of the mapping
     EntryFields fields;
   };
 
@@ -173,14 +143,8 @@ public:
 
   Q_INVOKABLE void removeEntryFromFolder(int entryId, int folderId);
 
-  // Sets an entry's favorite flag by entry id. Multi-select bulk actions and
-  // the context menu act on ids, not a delegate, so they can't go through
-  // setData like the per-row heart does
+  // Only exists for bulk updates
   Q_INVOKABLE void setEntryFavorite(int entryId, bool favorite);
-
-  // True if the entry satisfies the given smart folder's criteria. Used by
-  // the client-side folder filter for smart folders (manual folders use
-  // folderIds membership). Parsed criteria are cached per folder; call
 
   int getCount() const;
 
@@ -209,8 +173,6 @@ signals:
   void groupModeChanged();
 
 private:
-  // The group-header label for an item under the current group mode (platform
-  // name, decade, year, first letter, ...). Empty when grouping is off
   [[nodiscard]] QString computeGroupKey(const Item &item) const;
 
   // Reconciles a single entry with the model after a create/update event:
@@ -219,17 +181,10 @@ private:
   // the source order doesn't matter). Runs on the GUI thread only
   void syncEntry(int entryId);
 
-  // Fills an item's play stats (total + last-played) from the activity log
   void applyPlayStats(Item &item) const;
 
-  // Fills an item's earned/total achievement counts from the achievement
-  // service (offline, by content hash). Cheap indexed lookups; run on reset
-  // and after a play session ends (a session may have unlocked achievements)
   void applyAchievementCounts(Item &item) const;
 
-  // Recomputes every row's achievement counts and notifies. Counts are
-  // per-user, so this runs after login (which completes async, post-reset)
-  // and after a session ends. Must run on the GUI thread
   void refreshAllAchievementCounts();
 
   // Rebuilds m_indexByEntryId to match m_items (after a structural change)
@@ -247,57 +202,31 @@ private:
   QList<Item> m_items{};
   QString m_groupMode = "none";
 
-  // Flattens an item (entry attributes + joined play stats) into the Qt-free
-  // struct the smart-folder evaluator consumes
-  // TODO
-  // Drops cached smart-folder criteria, so the next count re-reads them. Driven by
-  // FolderChangedEvent rather than by a caller remembering to ask
   void invalidateSmartFolderCache();
+  void invalidateCountByFolderId();
+
+  mutable std::optional<QVariantMap> m_countByFolderId;
 
   [[nodiscard]] static EntryFields buildEntryFields(const Item &item);
 
-  // Resolves (and memoizes) a smart folder's parsed criteria by id
   const SmartFolderCriteria &criteriaForFolder(int folderId) const;
   mutable std::unordered_map<int, SmartFolderCriteria> m_smartFolderCache;
 
-  // entry id -> index into m_items, rebuilt on reset(); lets the per-entry
-  // matchesSmartFolder lookup avoid an O(n) scan (so a filter pass is O(n),
-  // not O(n^2))
   std::unordered_map<int, int> m_indexByEntryId;
 
-  // What stands between each platform and running anything, read once per reset rather than
-  // per row. Absent means nothing does
+  // What stands between each platform and running anything
   QHash<int, EntryProblem> m_problemByPlatformId;
 
-  // What a sentence needs to name the platform's half of a problem, cached beside it because
-  // both come from the same pass over the platforms
   QHash<int, QString> m_platformNameById;
   QHash<int, QString> m_missingBiosByPlatformId;
 
-  // Content roots that cannot be read at the moment, resolved once per refresh for the same
-  // reason the platform problems are. Empty is the ordinary case
+  // Drive disconnected and stuff like that
   QStringList m_unreachableRoots;
 
-  // TODO
-  // The content directories still in the library, so a file whose directory is not among them
-  // reads as one whose folder was taken out rather than one that was deleted
   QSet<int> m_knownContentDirectoryIds;
 
-  // TODO
-  // The entries of each group, so re-picking a primary after one member changes reads
-  // what is already loaded rather than the database
-
-  // TODO
-  // Fills in the variant fields and the group's totals across every row, then hands back
-  // which entry stands for each group
   void refreshRowFields();
 
-  // TODO
-  // Re-picks the primary for one group and tells the view about every row that changed,
-  // including the one that stopped standing for it
-
-  // TODO
-  // Name, group title, and the variants' names, lowercased for the filter to match against
   [[nodiscard]] QString computeSearchText(const Item &item) const;
 
   ScopedConnection m_folderChangedConnection;
@@ -310,13 +239,11 @@ private:
   ScopedConnection m_coreSettingChangedConnection;
   ScopedConnection m_coreSettingResetConnection;
 
-  // Fires once (single-shot, 0ms) after a burst of syncEntry calls to emit the
-  // count-property change signals a single time
+  // Debounce for sync entry
   QTimer m_countsChangedTimer;
 };
 } // namespace firelight::library
 
-// TODO
 // Handed to the proxy through the FilterFields role, so the predicate reads the row's cached
 // record rather than rebuilding one
 Q_DECLARE_METATYPE(const firelight::library::EntryFields *)

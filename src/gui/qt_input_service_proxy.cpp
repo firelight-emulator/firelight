@@ -56,12 +56,12 @@ bool steamClientRunning() {
 } // namespace
 
 static QMap<input::GamepadInput, Qt::Key> gamepadToQtKeyMap = {
-    {input::DpadRight, Qt::Key_Right},  {input::DpadLeft, Qt::Key_Left},         {input::DpadUp, Qt::Key_Up},
-    {input::DpadDown, Qt::Key_Down},    {input::LeftStickRight, Qt::Key_Right},  {input::LeftStickLeft, Qt::Key_Left},
-    {input::LeftStickUp, Qt::Key_Up},   {input::LeftStickDown, Qt::Key_Down},    {input::WestFace, Qt::Key_Menu},
-    {input::SouthFace, Qt::Key_Enter},  {input::EastFace, Qt::Key_Back},         {input::LeftBumper, Qt::Key_Minus},
-    {input::RightBumper, Qt::Key_Plus}, {input::RightTrigger, Qt::Key_PageDown}, {input::LeftTrigger, Qt::Key_PageUp},
-    {input::Start, Qt::Key_Menu},       {input::Select, Qt::Key_Home},           {input::Home, Qt::Key_Home}};
+    {input::DpadRight, Qt::Key_Right},   {input::DpadLeft, Qt::Key_Left},         {input::DpadUp, Qt::Key_Up},
+    {input::DpadDown, Qt::Key_Down},     {input::LeftStickRight, Qt::Key_Right},  {input::LeftStickLeft, Qt::Key_Left},
+    {input::LeftStickUp, Qt::Key_Up},    {input::LeftStickDown, Qt::Key_Down},    {input::WestFace, Qt::Key_Menu},
+    {input::SouthFace, Qt::Key_Enter},   {input::EastFace, Qt::Key_Back},         {input::LeftBumper, Qt::Key_Minus},
+    {input::RightBumper, Qt::Key_Equal}, {input::RightTrigger, Qt::Key_PageDown}, {input::LeftTrigger, Qt::Key_PageUp},
+    {input::Start, Qt::Key_Menu},        {input::Select, Qt::Key_Home},           {input::Home, Qt::Key_Home}};
 
 static QMap<GamepadType, QMap<int, QString>> gamepadButtonIcons = {
     {KEYBOARD,
@@ -166,7 +166,7 @@ static QMap<GamepadType, QMap<int, QString>> gamepadButtonIcons = {
       {Qt::Key_Back, "qrc:/images/gamepad-buttons/xbox-series/button_color_b"},
       {Qt::Key_Menu, "qrc:/images/gamepad-buttons/xbox-series/button_menu"},
       {Qt::Key_Minus, "qrc:/images/gamepad-buttons/xbox-series/lb"},
-      {Qt::Key_Plus, "qrc:/images/gamepad-buttons/xbox-series/rb"},
+      {Qt::Key_Equal, "qrc:/images/gamepad-buttons/xbox-series/rb"},
       {Qt::Key_PageDown, "qrc:/images/gamepad-buttons/xbox-series/rt"},
       {Qt::Key_PageUp, "qrc:/images/gamepad-buttons/xbox-series/lt"},
       {Qt::Key_Up, "qrc:/images/gamepad-buttons/xbox-series/dpad_up"},

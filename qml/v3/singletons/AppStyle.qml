@@ -113,7 +113,7 @@ Item {
     // Breathing room under a row on a settings page; a menu row does without it
     readonly property int rowSpacerPage: Math.round(13 * scale * density)
 
-
+    readonly property int reorderingLiftHeight: Math.round(10 * scale)
 
     //*************************************************************
     // Title Bar
@@ -152,10 +152,8 @@ Item {
 
     readonly property real gameViewHeaderHeight: Math.round(40 * scale)
 
-    // TODO
     //*************************************************************
-    // Motion — durations (ms) and a default easing curve, replacing the raw
-    // duration literals scattered through the QML
+    // Durations
     //*************************************************************
     readonly property int durationVeryFast: 50
     readonly property int durationFast: 80
@@ -168,10 +166,8 @@ Item {
     // Beat between a menu choice showing as selected and the menu closing, so
     // the selection is seen before the surface goes away
     readonly property int confirmPause: 180
-    // TODO
-    // How far the focus cursor's edge bump carries on a game-tile-sized item, in px at its furthest.
-    // Smaller items bump less, as the square root of their shorter side, so this is the one number
-    // to tune. Unscaled: the law reads a measured size, which already carries scale
+
+    // Largest distance the focus ring overshoots in a bump
     readonly property real focusBumpPeak: 5
     // TODO
     // Time a held arrow takes to carry a slider's handle across its whole track, whatever its range

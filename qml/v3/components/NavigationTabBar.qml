@@ -10,7 +10,10 @@ FocusScope {
     required property list<string> tabs
 
     property int tabWidth: 160
+
     property int currentIndex: 0
+
+    signal tabSelected(int index)
 
     property var clickAction: null
 
@@ -68,18 +71,16 @@ FocusScope {
                 }
 
                 onClicked: {
-                    control.currentIndex = index
+                    control.tabSelected(index)
 
-                    console.log("click action? ", control.clickAction)
-
-                    if (control.clickAction) {
+                    if (control.clickAction && !InputMethodManager.usingMouse) {
                         control.clickAction()
                     }
                 }
 
                 onActiveFocusChanged: {
                     if (activeFocus) {
-                        control.currentIndex = index
+                        control.tabSelected(index)
                     }
                 }
             }
@@ -88,7 +89,7 @@ FocusScope {
 
     FLInputGlyph {
         id: rightIcon
-        input: Qt.Key_Plus
+        input: Qt.Key_Equal
         anchors.left: contents.right
         anchors.leftMargin: AppStyle.spacingXl
         anchors.verticalCenter: parent.verticalCenter

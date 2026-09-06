@@ -2,272 +2,339 @@ import QtQuick
 import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
-import "folder_tree.js" as FolderTree
+import Firelight 1.0
 
 FocusScope {
     id: root
 
-    // TODO
-    // Where the cursor enters the page. Focus landing on the scope itself means nothing inside
-    // holds it yet; focus handed straight to a descendant — coming back from a popup — is left
-    // where it is
-    // onActiveFocusChanged: {
-    //     if (root.activeFocus && root.Window.activeFocusItem === root) {
-    //         gameView.enterFocus();
-    //     }
-    // }
+    // **********************************
+    // Title bar stuff
+    // **********************************
+    property Component headerLeading: root.openCollectionId !== -1 ? collectionHeader : null
+    property Component headerCenter: root.openCollectionId !== -1 ? null : tabsHeader
+    property Component headerTrailing: null
 
-    property Component headerLeading: null
-    property Component headerCenter: Component {
+    property Component collectionHeader: Component {
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.openCollectionRow !== null ? root.openCollectionRow.displayName : ""
+            color: Theme.textPrimary
+            font.family: AppStyle.fontFamily
+            font.pixelSize: AppStyle.fontSizeLarge
+            font.weight: Font.Medium
+        }
+    }
+
+    property Component tabsHeader: Component {
         NavigationTabBar {
             tabs: ["Games", "Collections"]
 
-            clickAction: function() {
-                gameView.enterFocus();
+            currentIndex: root.libraryTab
+
+            clickAction: function () {
+                root.enterFocus();
             }
 
-            onCurrentIndexChanged: {
-                console.log("Tab changed to index: " + currentIndex);
+            Keys.onPressed: (event) => {
+                if (event.key !== Qt.Key_Down || !libraryContentStack.currentItem || !libraryContentStack.currentItem.focusFirstItem) {
+                    return;
+                }
+
+                libraryContentStack.currentItem.focusFirstItem();
+                event.accepted = true;
             }
+
+            onTabSelected: index => root.showTab(index)
         }
     }
-    property Component headerTrailing: null
 
-    SplitView {
-        id: splitView
+    // **********************************
+    // Tab management
+    // **********************************
+    property int libraryTab: 0
+    property int openCollectionId: -1
+
+    function syncFromPath() {
+        if (!Router.isActive("/library") || Router.matchedPattern !== "/library") {
+            return;
+        }
+
+        const matched = Router.match(Router.path, ["/library/collections/:collectionId"]);
+        root.openCollectionId = matched.matched ? parseInt(matched.params.collectionId) : -1;
+        root.libraryTab = Router.isActive("/library/collections") ? 1 : 0;
+        root.syncStack();
+    }
+
+    Connections {
+        target: Router
+
+        function onNavigated() {
+            root.syncFromPath();
+        }
+    }
+
+    function showTab(index) {
+        if (index === root.libraryTab) {
+            return;
+        }
+
+        Router.replace(index === 1 ? "/library/collections" : "/library");
+    }
+
+    function openCollection(collectionId) {
+        Router.navigate("/library/collections/" + collectionId);
+    }
+
+    function enterFocus() {
+        libraryContentStack.forceActiveFocus();
+    }
+
+    property int lastStackRank: 0
+
+    function syncStack() {
+        const target = root.openCollectionId !== -1 ? collectionPanel : root.libraryTab === 1 ? collectionsPanel : gameView;
+
+        if (libraryContentStack.currentItem === null || libraryContentStack.currentItem === target) {
+            return;
+        }
+
+        const rank = root.openCollectionId !== -1 ? 2 : root.libraryTab;
+        const forward = rank > root.lastStackRank;
+        root.lastStackRank = rank;
+        libraryContentStack.replaceCurrentItem(target, {}, forward ? StackView.PushTransition : StackView.PopTransition);
+    }
+
+    property var openCollectionRow: null
+
+    function refreshOpenCollection() {
+        root.openCollectionRow = root.openCollectionId === -1 ? null : LibraryFolderModel.folderById(root.openCollectionId);
+    }
+
+    property int shownCollectionId: -1
+
+    onOpenCollectionIdChanged: {
+        root.refreshOpenCollection();
+
+        if (root.openCollectionId !== -1) {
+            root.shownCollectionId = root.openCollectionId;
+            root.collectionPanelUsed = true;
+        }
+    }
+
+    Component.onCompleted: {
+        root.syncFromPath();
+        root.refreshOpenCollection();
+        Qt.callLater(root.syncStack);
+    }
+
+    Connections {
+        target: LibraryFolderModel
+
+        function onDataChanged() {
+            root.refreshOpenCollection();
+        }
+    }
+
+    property bool collectionPanelUsed: false
+
+    // **********************************
+    // The actual content
+    // **********************************
+    StackView {
+        id: libraryContentStack
+
+        readonly property int _stackSlideDistance: AppStyle.spacingSm
+        readonly property real _stackSlideDuration: AppStyle.durationSlow
+        readonly property var _stackSlideEasing: AppStyle.easingStandard
+
         anchors.fill: parent
         anchors.leftMargin: AppStyle.windowPadding
         anchors.rightMargin: AppStyle.windowPadding
-        orientation: Qt.Horizontal
-        spacing: 0
 
-        // clip: true
-
-        // Collapse the sidebar to an icon-only rail to reclaim grid width
-        property bool sidebarCollapsed: false
-
-        // FolderDialog {
-        //     id: folderDialog
-        // }
-
-        // Owned platforms first: hide platforms with no games until "Show all"
-        property bool showAllPlatforms: false
-        SortFilterProxyModel {
-            id: ownedPlatformsModel
-            model: PlatformModel
-            filters: FunctionFilter {
-                enabled: !splitView.showAllPlatforms
-                // Counts populate after entries finish loading; binding the map here
-                // re-invalidates the filter when it changes, so owned platforms
-                // appear once the library is ready instead of staying empty
-                // property var counts: LibraryEntryModel.countByPlatform
-                // onCountsChanged: invalidate()
-                // data must be typed: this proxy exposes model roles only through a
-                // declared parameter type, so an untyped `data` leaves platformId
-                // undefined and filters every platform out
-                function filter(data: PlatformRoleData): bool {
-                    return true;
-                    // if (!data) {
-                    //     return false;
-                    // }
-                    // return (counts[data.platformId] || 0) > 0;
+        FLFocus.actions: [
+            FLAction {
+                label: "Previous tab"
+                keys: [Qt.Key_Minus]
+                hidden: true
+                enabled: root.libraryTab === 1
+                onTriggered: {
+                    if (root.libraryTab === 1) {
+                        root.showTab(0);
+                    }
                 }
-            }
-        }
-
-        // Folder tree: the folder model is flat, so flatten its parentId/position
-        // into a pre-ordered, depth-tagged list gated by an expanded set. Collapsed
-        // folders (id present with value false) hide their descendants
-        property var expandedFolders: ({})
-        property var folderRows: []
-
-        function toggleFolderExpanded(folderId) {
-            var e = splitView.expandedFolders;
-            e[folderId] = (e[folderId] === false);
-            splitView.expandedFolders = e;
-            rebuildFolderTree();
-        }
-
-        function rebuildFolderTree() {
-            var all = [];
-            for (var i = 0; i < folderCollector.count; i++) {
-                var o = folderCollector.objectAt(i);
-                if (!o) {
-                    continue;
+                sound: SoundEffects.tabBarShoulderButtonNav
+            },
+            FLAction {
+                label: "Next tab"
+                keys: [Qt.Key_Equal]
+                hidden: true
+                enabled: root.libraryTab === 0
+                onTriggered: {
+                    if (root.libraryTab === 0) {
+                        root.showTab(1);
+                    }
                 }
-                all.push({
-                    folderId: o.folderId,
-                    parentId: o.parentId,
-                    position: o.position,
-                    displayName: o.displayName,
-                    description: o.description,
-                    filterJson: o.filterJson,
-                    color: o.color,
-                    folderType: o.folderType,
-                    icon1x1SourceUrl: o.icon1x1SourceUrl,
-                    sortRole: o.sortRole,
-                    sortAscending: o.sortAscending
-                });
+                sound: SoundEffects.tabBarShoulderButtonNav
             }
-            splitView.folderRows = FolderTree.flatten(all, splitView.expandedFolders, false);
-        }
+        ]
 
-        // A folder + every folder nested under it, split by kind (manual vs smart),
-        // so selecting a parent scope shows all of its descendants' games too
-        function collectFolderSubtree(folderId) {
-            var kids = {};
-            var typeOf = {};
-            for (var i = 0; i < folderCollector.count; i++) {
-                var o = folderCollector.objectAt(i);
-                if (!o) {
-                    continue;
+        bottomPadding: 0
+        horizontalPadding: 0
+        topPadding: 0
+        verticalPadding: 0
+
+        initialItem: gameView
+
+        focus: true
+
+        background: Item {}
+
+        pushEnter: Transition {
+            SequentialAnimation {
+                ScriptAction {
+                    script: {
+                        if (root.activeFocus) {
+                            FocusCursor.startBlink();
+                        }
+                    }
                 }
-                (kids[o.parentId] = kids[o.parentId] || []).push(o.folderId);
-                typeOf[o.folderId] = o.folderType;
-            }
-            var manual = [], smart = [];
-            function walk(id) {
-                if (typeOf[id] === 1) {
-                    smart.push(id);
-                } else
-                    manual.push(id);
-                (kids[id] || []).forEach(walk);
-            }
-            walk(folderId);
-            return {
-                manual: manual,
-                smart: smart
-            };
-        }
-
-        // Moves `draggedId` next to `targetFolderId` (into the target's parent scope,
-        // just before or after it) and renumbers that scope's positions
-        function reorderFolderTo(draggedId, targetFolderId, before) {
-            var parentOf = {};
-            var byParent = {};
-            for (var i = 0; i < folderCollector.count; i++) {
-                var o = folderCollector.objectAt(i);
-                if (!o) {
-                    continue;
-                }
-                parentOf[o.folderId] = o.parentId;
-                (byParent[o.parentId] = byParent[o.parentId] || []).push({
-                    id: o.folderId,
-                    pos: o.position
-                });
-            }
-            var targetParent = parentOf[targetFolderId];
-            if (targetParent === undefined) {
-                return;
-            }
-            if (parentOf[draggedId] !== targetParent) {
-                LibraryFolderModel.setFolderParent(draggedId, targetParent);
-            }
-            var sibs = (byParent[targetParent] || []).slice().sort(function (a, b) {
-                return a.pos - b.pos;
-            }).map(function (s) {
-                return s.id;
-            }).filter(function (id) {
-                return id !== draggedId;
-            });
-            var idx = sibs.indexOf(targetFolderId);
-            if (idx === -1) {
-                idx = sibs.length - 1;
-            }
-            sibs.splice(before ? idx : idx + 1, 0, draggedId);
-            LibraryFolderModel.reorderFolders(targetParent, sibs);
-        }
-
-        Instantiator {
-            id: folderCollector
-            model: LibraryFolderModel
-            delegate: QtObject {
-                required property int folderId
-                required property int parentId
-                required property int position
-                required property string displayName
-                required property string description
-                required property string filterJson
-                required property string color
-                required property int folderType
-                required property string icon1x1SourceUrl
-                required property string sortRole
-                required property bool sortAscending
-            }
-            onObjectAdded: Qt.callLater(splitView.rebuildFolderTree)
-            onObjectRemoved: Qt.callLater(splitView.rebuildFolderTree)
-        }
-        Connections {
-            target: LibraryFolderModel
-            function onDataChanged() {
-                Qt.callLater(splitView.rebuildFolderTree);
-            }
-            function onModelReset() {
-                Qt.callLater(splitView.rebuildFolderTree);
-            }
-            function onLayoutChanged() {
-                Qt.callLater(splitView.rebuildFolderTree);
-            }
-        }
-
-        handle: Item {
-            SplitView.fillHeight: true
-            implicitWidth: 0
-
-            containmentMask: Item {
-                height: splitView.height
-                width: AppStyle.spacingSm
-                x: -AppStyle.spacingXs
-
-                HoverHandler {
-                    id: handleHoverHandler
-                }
-            }
-
-            Rectangle {
-                anchors.centerIn: parent
-                color: Theme.borderStrong
-                height: parent.height - AppStyle.spacingLg
-                opacity: handleHoverHandler.hovered ? 0.25 : 0
-                width: 2
-
-                Behavior on opacity {
+                ParallelAnimation {
                     NumberAnimation {
-                        duration: 160
-                        easing.type: Easing.InOutQuad
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: libraryContentStack._stackSlideDuration
+                        easing.type: libraryContentStack._stackSlideEasing
+                    }
+                    NumberAnimation {
+                        property: "x"
+                        from: libraryContentStack._stackSlideDistance
+                        to: 0
+                        duration: libraryContentStack._stackSlideDuration
+                        easing.type: libraryContentStack._stackSlideEasing
+                    }
+                }
+                ScriptAction {
+                    script: {
+                        FocusCursor.endBlink();
                     }
                 }
             }
+
+            onRunningChanged: {
+                if (!running) {
+                    Qt.callLater(FocusCursor.endBlink);
+                }
+            }
         }
 
-        // LibrarySidebar {
-        //     page: splitView
-        //     gameView: gameView
-        //     ownedPlatformsModel: ownedPlatformsModel
-        //     folderDialog: folderDialog
-        // }
+        pushExit: Transition {
+            ParallelAnimation {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: libraryContentStack._stackSlideDuration
+                    easing.type: libraryContentStack._stackSlideEasing
+                }
+                NumberAnimation {
+                    property: "x"
+                    from: 0
+                    to: -libraryContentStack._stackSlideDistance
+                    duration: libraryContentStack._stackSlideDuration
+                    easing.type: libraryContentStack._stackSlideEasing
+                }
+            }
+        }
 
-        Pane {
-            id: gamesPanel
+        popEnter: Transition {
+            SequentialAnimation {
+                ScriptAction {
+                    script: {
+                        if (root.activeFocus) {
+                            FocusCursor.startBlink();
+                        }
+                    }
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: libraryContentStack._stackSlideDuration
+                        easing.type: libraryContentStack._stackSlideEasing
+                    }
+                    NumberAnimation {
+                        property: "x"
+                        from: -libraryContentStack._stackSlideDistance
+                        to: 0
+                        duration: libraryContentStack._stackSlideDuration
+                        easing.type: libraryContentStack._stackSlideEasing
+                    }
+                }
+                ScriptAction {
+                    script: {
+                        FocusCursor.endBlink();
+                    }
+                }
+            }
 
-            SplitView.fillHeight: true
-            SplitView.fillWidth: true
-            bottomPadding: 0
-            horizontalPadding: 0
-            topPadding: 0
-            verticalPadding: 0
+            onRunningChanged: {
+                if (!running) {
+                    Qt.callLater(FocusCursor.endBlink);
+                }
+            }
+        }
 
-            focus: true
-
-            background: Item {}
-
-            contentItem: GameView {
-                id: gameView
+        popExit: Transition {
+            ParallelAnimation {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 1
+                    to: 0
+                    duration: libraryContentStack._stackSlideDuration
+                    easing.type: libraryContentStack._stackSlideEasing
+                }
+                NumberAnimation {
+                    property: "x"
+                    from: 0
+                    to: libraryContentStack._stackSlideDistance
+                    duration: libraryContentStack._stackSlideDuration
+                    easing.type: libraryContentStack._stackSlideEasing
+                }
             }
         }
     }
 
-    component PlatformRoleData: QtObject {
-        property int platformId
+    CollectionDialog {
+        id: collectionDialog
+    }
+
+    FocusScope {
+        GameView {
+            id: gameView
+        }
+
+        CollectionsView {
+            id: collectionsPanel
+            visible: false
+
+            onCollectionOpened: collectionId => root.openCollection(collectionId)
+            onNewCollectionRequested: collectionDialog.openForCreate(false, -1)
+        }
+
+        Loader {
+            id: collectionPanel
+            active: root.collectionPanelUsed
+            sourceComponent: collectionGameView
+        }
+    }
+
+    Component {
+        id: collectionGameView
+
+        GameView {
+            filterFolderId: root.shownCollectionId
+        }
     }
 }

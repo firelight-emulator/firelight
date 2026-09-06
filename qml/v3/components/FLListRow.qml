@@ -3,10 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// A standard selectable row: optional leading icon, a label, and an optional
-// trailing item (placed as a child). Height derives from content and is floored
-// at listRowHeight, so it reflows when text grows
-//
 //   FLListRow { iconName: "settings"; label: "Appearance" }
 //   FLListRow { label: "Name"; FLRadioIndicator { selected: true } }
 ItemDelegate {
@@ -28,22 +24,13 @@ ItemDelegate {
     implicitWidth: rowLayout.implicitWidth + leftPadding + rightPadding
     focusPolicy: Qt.StrongFocus
 
-    // TODO
-    // Focus as the controller cursor shows it, shared with every other control
-    // so a row never stays lit while the ring is blinked out
     readonly property bool cursorFocused: FocusCursor.isOn(control)
 
     highlighted: control.cursorFocused || control.pressed || rowHover.hovered
 
-    // TODO
-    // The keys that activate a row when it declared no action answering to them
     readonly property var activationKeys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
 
-    // TODO
-    // Space and Select never leave a row — ItemDelegate takes both for itself and
-    // turns them into a click — so a declared action answering to either has to
-    // run here rather than at the window. A Connections because a derived type
-    // declaring Keys.onPressed would replace an instance handler
+    // Handle space and select for buttons (Qt normally handles it)
     Connections {
         target: control.Keys
 
@@ -55,18 +42,11 @@ ItemDelegate {
             const action = control.FLFocus.getActionFor(event.key, event.modifiers);
 
             if (action !== null) {
-                if (action.sound) {
-                    action.sound.play(false);
-                }
-
-                action.triggered();
+                action.trigger();
                 event.accepted = true;
                 return;
             }
 
-            // TODO
-            // Activation happens on the press for every key. Left alone, the row
-            // takes Space and Select for itself and commits them on the release
             if (control.activationKeys.indexOf(event.key) !== -1) {
                 control.click();
                 event.accepted = true;
@@ -112,9 +92,6 @@ ItemDelegate {
         }
     }
 
-    // TODO
-    // Hover and keyboard focus read the same; pressing drops a step down the
-    // surface ladder so the row darkens under the finger
     background: Rectangle {
         radius: 6
         color: control.pressed ? Theme.surfaceElevated : control.highlighted ? Theme.surfaceHover : "transparent"

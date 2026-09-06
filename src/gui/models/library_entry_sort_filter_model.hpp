@@ -1,21 +1,14 @@
+// TODO: NEEDS REVIEW
 #pragma once
 #include "library_filter.hpp"
 
 #include <QSortFilterProxyModel>
 #include <library/gui/entry_list_model.hpp>
+#include <library/gui/playlist_item_model.hpp>
+#include <unordered_set>
 
 namespace firelight::gui {
 
-/**
- * A sorted, filtered view over the library entries.
- *
- * Filter values are staged rather than applied as they are set: a setter records what the user asked
- * for and applyFilters commits it, so changing several at once costs one pass. Mapping rows, telling
- * the view what moved, and forwarding a source change through to the delegate are all the proxy's job.
- *
- * The rule, without exception: every property reads the pending edit, and filterAcceptsRow is the
- * only thing that reads the applied snapshot
- */
 class LibraryEntrySortFilterModel : public QSortFilterProxyModel {
   Q_OBJECT
   Q_PROPERTY(QAbstractListModel *sourceModel READ getSourceModel WRITE setSourceModel NOTIFY sourceModelChanged)
@@ -28,6 +21,12 @@ class LibraryEntrySortFilterModel : public QSortFilterProxyModel {
   Q_PROPERTY(QVariantList sortOptions READ getSortOptions CONSTANT)
   Q_PROPERTY(firelight::gui::LibraryFilter *filter READ getFilter CONSTANT)
   Q_PROPERTY(bool pending READ isPending NOTIFY filtersOrSortChanged)
+  Q_PROPERTY(int scopeFolderId READ getScopeFolderId WRITE setScopeFolderId NOTIFY filtersOrSortChanged)
+  Q_PROPERTY(LibraryFolderListModel *folderModel READ getFolderModel WRITE setFolderModel NOTIFY folderModelChanged)
+  Q_PROPERTY(int openFolderId READ getOpenFolderId WRITE setOpenFolderId NOTIFY openFolderChanged)
+  Q_PROPERTY(bool openFolderIsSmart READ isOpenFolderSmart NOTIFY openFolderChanged)
+  Q_PROPERTY(bool sortPinnedToOpenFolder READ isSortPinnedToOpenFolder WRITE setSortPinnedToOpenFolder NOTIFY
+                 sortPinnedChanged)
 
 public:
   enum SortRole {
@@ -36,9 +35,15 @@ public:
     NumSecondsPlayed = library::EntryListModel::NumSecondsPlayed,
     AchievementsEarned = library::EntryListModel::AchievementsEarned,
     CreatedAt = library::EntryListModel::CreatedAt,
-    ReleaseYear = library::EntryListModel::ReleaseYear
+    ReleaseYear = library::EntryListModel::ReleaseYear,
+    Custom = library::EntryListModel::Position
   };
   Q_ENUM(SortRole)
+
+  // TODO
+  // Roles this view adds on top of the entry model's
+  enum ProxyRole { RemovedFromScope = Qt::UserRole + 900 };
+  Q_ENUM(ProxyRole)
 
   explicit LibraryEntrySortFilterModel(QObject *parent = nullptr);
 
@@ -68,6 +73,17 @@ public:
   [[nodiscard]] bool isPending() const;
 
   /**
+   * @return The folder rows must belong to, or -1 for no scope
+   */
+  [[nodiscard]] int getScopeFolderId() const;
+
+  void setScopeFolderId(int scopeFolderId);
+
+  [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
+
+  [[nodiscard]] QVariant data(const QModelIndex &index, int role) const override;
+
+  /**
    * @return Every sort a view can offer: the label, the enum value, and the role name a folder
    *         stores. One table, so a folder's remembered sort and the menu cannot name different
    *         sets
@@ -90,9 +106,6 @@ public:
    */
   [[nodiscard]] Q_INVOKABLE int getEntryIdAt(int row) const;
 
-  // TODO
-  // Forwarded because this model stands where the entry model used to, under the
-  // name QML already reaches for
   /**
    * @return How many entries each platform holds, before filtering
    */
@@ -107,8 +120,63 @@ public:
    */
   Q_INVOKABLE void clearAllFilters();
 
+  /**
+   * The model the open collection's row is read from
+   */
+  [[nodiscard]] LibraryFolderListModel *getFolderModel() const;
+
+  void setFolderModel(LibraryFolderListModel *folderModel);
+
+  /**
+   * The collection on screen, or -1 for the whole library
+   */
+  [[nodiscard]] int getOpenFolderId() const;
+
+  /**
+   * Adopts a collection: membership for a manual one, saved criteria for a smart one, plus whatever
+   * sort it has pinned. Commits in one pass
+   */
+  void setOpenFolderId(int folderId);
+
+  /**
+   * Puts the open collection's saved criteria back, discarding anything refined on top
+   */
+  Q_INVOKABLE void resetToSaved();
+
+  /**
+   * Whether the open collection computes its members from criteria
+   */
+  [[nodiscard]] bool isOpenFolderSmart() const;
+
+  /**
+   * Whether the open collection has a sort of its own
+   */
+  [[nodiscard]] bool isSortPinnedToOpenFolder() const;
+
+  /**
+   * Clearing the pin hands the collection back to the default sort. Setting it is a no-op; a pin is
+   * made by sorting
+   */
+  void setSortPinnedToOpenFolder(bool pinned);
+
+  /**
+   * The sortOptions role name for a sort role, or empty when there is none
+   */
+  [[nodiscard]] static QString sortRoleName(SortRole sortRole);
+
+  /**
+   * The sort role a sortOptions role name names, or DisplayName when it names none
+   */
+  [[nodiscard]] static SortRole sortRoleForName(const QString &roleName);
+
 signals:
   void sourceModelChanged();
+
+  void folderModelChanged();
+
+  void openFolderChanged();
+
+  void sortPinnedChanged();
 
   void countChanged();
 
@@ -120,6 +188,8 @@ signals:
 
   void filtersOrSortChanged();
 
+  void refinementChanged();
+
 protected:
   [[nodiscard]] bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
@@ -130,11 +200,24 @@ private:
   LibraryFilter *m_filter;
   SortRole m_pendingSortRole{DisplayName};
   bool m_pendingSortAscending{true};
+  int m_scopeFolderId{-1};
+  LibraryFolderListModel *m_folderModel{};
+  int m_openFolderId{-1};
+  bool m_adoptingFolder{false};
 
-  // What the current pass is filtering by. Read only by filterAcceptsRow, so a getter cannot
-  // hand one of these back by mistake
   library::SmartFolderCriteria m_appliedCriteria{};
   qint64 m_nowMillis{0};
+  int m_appliedScopeFolderId{-1};
+
+  // Which entries the scoped collection held when the pass ran. A row taken out of the collection
+  // while it is on screen stays until the next pass rather than vanishing under the cursor
+  std::unordered_set<int> m_appliedScopeMembers;
+
+  [[nodiscard]] bool isInScope(const QModelIndex &sourceIndex) const;
+
+  [[nodiscard]] const library::FolderInfo *openFolder() const;
+
+  void pinSortToOpenFolder();
 };
 
 } // namespace firelight::gui

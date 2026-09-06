@@ -2,11 +2,14 @@
 #include "gui/models/library_entry_sort_filter_model.hpp"
 
 #include "app/library/gui/entry_list_model.hpp"
+#include "app/library/gui/playlist_item_model.hpp"
+#include "app/service_accessor.hpp"
 #include "sqlite_achievement_repository.hpp"
 
 #include <firelight/achievement_service.hpp>
 #include <firelight/activity/sqlite_activity_log.hpp>
 #include <firelight/library/disc_set_service.hpp>
+#include <firelight/library/folder_info.hpp>
 #include <firelight/library/library_ingest_service.hpp>
 #include <firelight/library/sqlite_user_library.hpp>
 #include <firelight/library/user_library_service.hpp>
@@ -15,6 +18,7 @@
 
 #include <QDir>
 #include <QEventLoop>
+#include <QSignalSpy>
 #include <QTimer>
 #include <algorithm>
 #include <gtest/gtest.h>
@@ -76,10 +80,25 @@ protected:
 
     m_source.emplace(m_service, m_activityLog, m_platformService, m_achievementService, m_settingsService);
     m_model.setSourceModel(&m_source.value());
+
+    ServiceAccessor::setLibraryService(&m_service);
+    m_folders.emplace();
+    m_model.setFolderModel(&m_folders.value());
   }
 
+  void TearDown() override { ServiceAccessor::setLibraryService(nullptr); }
+
   std::optional<library::EntryListModel> m_source;
+  std::optional<LibraryFolderListModel> m_folders;
   LibraryEntrySortFilterModel m_model;
+
+  // A hand-picked collection the folder model knows about
+  int makeManualCollection(const QString &name) { return m_folders->createFolder(name, -1); }
+
+  // A criteria-driven collection the folder model knows about
+  int makeSmartCollection(const QString &name, const QString &filterJson) {
+    return m_folders->addSmartFolder(name, filterJson);
+  }
 
   bool catalogue(const std::string &hash) {
     library::ContentFile file{
@@ -115,6 +134,25 @@ protected:
     pump();
 
     return m_variantGroups.createGroupFrom({usa.id, japan.id}).has_value();
+  }
+
+  // Makes a hand-picked collection and returns its id
+  int makeCollection(const std::string &name) {
+    library::FolderInfo folder;
+    folder.displayName = name;
+
+    return m_repo.create(folder) ? folder.id : -1;
+  }
+
+  // The id behind a visible row, so a test can name a game rather than an id
+  int entryIdNamed(const QString &name) {
+    for (auto row = 0; row < m_model.rowCount(QModelIndex()); ++row) {
+      if (m_model.data(m_model.index(row, 0), library::EntryListModel::DisplayName).toString() == name) {
+        return m_model.getEntryIdAt(row);
+      }
+    }
+
+    return -1;
   }
 
   std::vector<QString> names() {
@@ -481,6 +519,363 @@ TEST_F(LibraryEntrySortFilterModelTest, TheClockIsStampedOncePerPass) {
   m_model.applyFilters(now + 30 * day);
   pump();
   EXPECT_TRUE(names().empty()) << "the window was resolved against a clock the caller did not set";
+}
+
+// A collection narrows by membership, which no criterion can express
+TEST_F(LibraryEntrySortFilterModelTest, AScopeNarrowsToTheCollectionsMembers) {
+  const auto collection = makeCollection("Favourites");
+  ASSERT_NE(collection, -1);
+  m_source->addEntryToFolder(entryIdNamed("Bravo"), collection);
+
+  m_model.setScopeFolderId(collection);
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
+}
+
+// The scope is staged the way every other value is, so it cannot move a pass that is already running
+TEST_F(LibraryEntrySortFilterModelTest, TheScopeTakesEffectOnlyWhenApplied) {
+  const auto collection = makeCollection("Favourites");
+  ASSERT_NE(collection, -1);
+  m_source->addEntryToFolder(entryIdNamed("Bravo"), collection);
+
+  m_model.setScopeFolderId(collection);
+
+  EXPECT_EQ(m_model.getCount(), 3);
+  EXPECT_TRUE(m_model.isPending());
+
+  m_model.applyFilters();
+
+  EXPECT_EQ(m_model.getCount(), 1);
+  EXPECT_FALSE(m_model.isPending());
+}
+
+// Standing in a collection is not something the user filtered, so the filter-active affordances stay
+// off and the empty view reads as an empty collection rather than as filters matching nothing
+TEST_F(LibraryEntrySortFilterModelTest, AScopeIsNotAFilterTheUserSet) {
+  const auto collection = makeCollection("Favourites");
+  ASSERT_NE(collection, -1);
+
+  m_model.setScopeFolderId(collection);
+  m_model.applyFilters();
+
+  EXPECT_FALSE(m_model.anyFiltersActive());
+}
+
+// Clearing the filters must not take the view out of the collection it is showing
+TEST_F(LibraryEntrySortFilterModelTest, ClearingFiltersLeavesTheScope) {
+  const auto collection = makeCollection("Favourites");
+  ASSERT_NE(collection, -1);
+  m_source->addEntryToFolder(entryIdNamed("Bravo"), collection);
+  m_source->addEntryToFolder(entryIdNamed("Charlie"), collection);
+
+  m_model.setScopeFolderId(collection);
+  m_model.getFilter()->setNameContains("Bravo");
+  m_model.applyFilters();
+
+  ASSERT_EQ(names(), (std::vector<QString>{"Bravo"}));
+
+  m_model.clearAllFilters();
+
+  EXPECT_EQ(m_model.getScopeFolderId(), collection);
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo", "Charlie"}));
+}
+
+// TODO
+// Every consumer of this table reads the same three keys — the sort menu and the collection
+// dialog both render "text" and store "role". Renaming one silently renders blank rows
+TEST_F(LibraryEntrySortFilterModelTest, EverySortOptionCarriesTextRoleAndValue) {
+  const auto options = LibraryEntrySortFilterModel::getSortOptions();
+
+  ASSERT_FALSE(options.isEmpty());
+
+  for (const auto &option : options) {
+    const auto fields = option.toMap();
+
+    EXPECT_TRUE(fields.contains("text")) << "a sort with no text renders as a blank row";
+    EXPECT_TRUE(fields.contains("role"));
+    EXPECT_TRUE(fields.contains("value"));
+    EXPECT_FALSE(fields.value("text").toString().isEmpty());
+    EXPECT_FALSE(fields.value("role").toString().isEmpty());
+  }
+}
+
+// TODO
+// Taking a game out of the collection you are looking at should not pull the tile out from under
+// the cursor. The pass that is on screen keeps showing what it was built from
+TEST_F(LibraryEntrySortFilterModelTest, ARowTakenOutOfTheCollectionStaysUntilTheNextPass) {
+  const auto collection = makeCollection("Favourites");
+  ASSERT_NE(collection, -1);
+
+  const auto bravo = entryIdNamed("Bravo");
+  const auto charlie = entryIdNamed("Charlie");
+  m_source->addEntryToFolder(bravo, collection);
+  m_source->addEntryToFolder(charlie, collection);
+
+  m_model.setScopeFolderId(collection);
+  m_model.applyFilters();
+  ASSERT_EQ(names(), (std::vector<QString>{"Bravo", "Charlie"}));
+
+  m_source->removeEntryFromFolder(bravo, collection);
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo", "Charlie"})) << "the row vanished under the cursor";
+
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Charlie"}));
+}
+
+// TODO
+// The row that is on its way out says so, so a delegate can show it as removed rather than looking
+// like the press did nothing
+TEST_F(LibraryEntrySortFilterModelTest, ARowOnItsWayOutOfTheCollectionSaysSo) {
+  const auto collection = makeCollection("Favourites");
+  ASSERT_NE(collection, -1);
+
+  const auto bravo = entryIdNamed("Bravo");
+  const auto charlie = entryIdNamed("Charlie");
+  m_source->addEntryToFolder(bravo, collection);
+  m_source->addEntryToFolder(charlie, collection);
+
+  m_model.setScopeFolderId(collection);
+  m_model.applyFilters();
+
+  m_source->removeEntryFromFolder(bravo, collection);
+
+  for (auto row = 0; row < m_model.rowCount(QModelIndex()); ++row) {
+    const auto index = m_model.index(row, 0);
+    const auto removed = m_model.data(index, LibraryEntrySortFilterModel::RemovedFromScope).toBool();
+
+    EXPECT_EQ(removed, m_model.getEntryIdAt(row) == bravo);
+  }
+}
+
+// TODO
+// Nothing is on its way out when the view is not scoped to a collection
+TEST_F(LibraryEntrySortFilterModelTest, WithNoCollectionNothingReadsAsRemoved) {
+  m_model.applyFilters();
+
+  for (auto row = 0; row < m_model.rowCount(QModelIndex()); ++row) {
+    EXPECT_FALSE(m_model.data(m_model.index(row, 0), LibraryEntrySortFilterModel::RemovedFromScope).toBool());
+  }
+}
+
+// Opening a hand-picked collection narrows by membership, which is the only axis it has
+TEST_F(LibraryEntrySortFilterModelTest, OpeningAManualCollectionNarrowsToItsMembers) {
+  const auto collection = makeManualCollection("Favourites");
+  ASSERT_NE(collection, -1);
+  m_source->addEntryToFolder(entryIdNamed("Bravo"), collection);
+
+  m_model.setOpenFolderId(collection);
+
+  EXPECT_FALSE(m_model.isOpenFolderSmart());
+  EXPECT_EQ(m_model.getScopeFolderId(), collection);
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
+}
+
+// A smart collection carries criteria instead of members, so membership must stay out of it
+TEST_F(LibraryEntrySortFilterModelTest, OpeningASmartCollectionAdoptsItsCriteriaAndNotMembership) {
+  const auto collection = makeSmartCollection("Platform 7", R"({"platformIds":[7]})");
+  ASSERT_NE(collection, -1);
+
+  m_model.setOpenFolderId(collection);
+
+  EXPECT_TRUE(m_model.isOpenFolderSmart());
+  EXPECT_EQ(m_model.getScopeFolderId(), -1);
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
+}
+
+// Opening a collection is something the app did, so the view has no reason to announce a refinement
+TEST_F(LibraryEntrySortFilterModelTest, OpeningACollectionIsNotARefinement) {
+  const auto collection = makeSmartCollection("Platform 7", R"({"platformIds":[7]})");
+  ASSERT_NE(collection, -1);
+
+  const QSignalSpy spy(&m_model, &LibraryEntrySortFilterModel::refinementChanged);
+  m_model.setOpenFolderId(collection);
+
+  EXPECT_EQ(spy.count(), 0);
+}
+
+// A refinement the user made still announces itself, or nothing would ever redraw
+TEST_F(LibraryEntrySortFilterModelTest, ARefinementInsideACollectionStillAnnouncesItself) {
+  const auto collection = makeManualCollection("Favourites");
+  ASSERT_NE(collection, -1);
+  m_model.setOpenFolderId(collection);
+
+  const QSignalSpy spy(&m_model, &LibraryEntrySortFilterModel::refinementChanged);
+  m_model.getFilter()->setNameContains("Bravo");
+
+  EXPECT_GT(spy.count(), 0);
+}
+
+// A collection remembers how it was last sorted
+TEST_F(LibraryEntrySortFilterModelTest, OpeningACollectionAdoptsItsPinnedSort) {
+  const auto collection = makeManualCollection("Favourites");
+  ASSERT_NE(collection, -1);
+  ASSERT_TRUE(m_folders->setFolderSort(collection, "releaseYear", false));
+
+  m_model.setOpenFolderId(collection);
+
+  EXPECT_TRUE(m_model.isSortPinnedToOpenFolder());
+  EXPECT_EQ(m_model.getSortRole(), LibraryEntrySortFilterModel::ReleaseYear);
+  EXPECT_FALSE(m_model.isSortAscending());
+}
+
+// A collection with no sort of its own uses the one everything else uses
+TEST_F(LibraryEntrySortFilterModelTest, ACollectionWithNoPinnedSortUsesTheDefault) {
+  const auto collection = makeManualCollection("Favourites");
+  ASSERT_NE(collection, -1);
+
+  m_model.setOpenFolderId(collection);
+
+  EXPECT_FALSE(m_model.isSortPinnedToOpenFolder());
+  EXPECT_EQ(m_model.getSortRole(), LibraryEntrySortFilterModel::DisplayName);
+  EXPECT_TRUE(m_model.isSortAscending());
+}
+
+// Sorting inside a collection is what makes the pin, so it is there next time
+TEST_F(LibraryEntrySortFilterModelTest, SortingInsideACollectionPinsItToTheCollection) {
+  const auto collection = makeManualCollection("Favourites");
+  ASSERT_NE(collection, -1);
+  m_model.setOpenFolderId(collection);
+
+  m_model.setSortRole(LibraryEntrySortFilterModel::ReleaseYear);
+
+  const auto *folder = m_folders->findFolder(collection);
+  ASSERT_NE(folder, nullptr);
+  EXPECT_EQ(folder->sortRole, "releaseYear");
+  EXPECT_TRUE(m_model.isSortPinnedToOpenFolder());
+}
+
+// Clearing the pin is the only way back out of one
+TEST_F(LibraryEntrySortFilterModelTest, ClearingThePinHandsTheCollectionBackToTheDefaultSort) {
+  const auto collection = makeManualCollection("Favourites");
+  ASSERT_NE(collection, -1);
+  ASSERT_TRUE(m_folders->setFolderSort(collection, "releaseYear", false));
+  m_model.setOpenFolderId(collection);
+
+  m_model.setSortPinnedToOpenFolder(false);
+
+  EXPECT_FALSE(m_model.isSortPinnedToOpenFolder());
+  EXPECT_EQ(m_model.getSortRole(), LibraryEntrySortFilterModel::DisplayName);
+  EXPECT_TRUE(m_model.isSortAscending());
+}
+
+// Leaving a collection puts the whole library back, criteria and all
+TEST_F(LibraryEntrySortFilterModelTest, LeavingACollectionRestoresTheWholeLibrary) {
+  const auto collection = makeSmartCollection("Platform 7", R"({"platformIds":[7]})");
+  ASSERT_NE(collection, -1);
+  m_model.setOpenFolderId(collection);
+  ASSERT_EQ(m_model.getCount(), 1);
+
+  m_model.setOpenFolderId(-1);
+
+  EXPECT_FALSE(m_model.anyFiltersActive());
+  EXPECT_EQ(m_model.getCount(), 3);
+}
+
+// Moving between collections shows the one just opened, not the one before it
+TEST_F(LibraryEntrySortFilterModelTest, SwitchingCollectionsShowsTheOneJustOpened) {
+  const auto alpha = makeManualCollection("Alpha");
+  const auto beta = makeManualCollection("Beta");
+  ASSERT_NE(alpha, -1);
+  ASSERT_NE(beta, -1);
+  m_source->addEntryToFolder(entryIdNamed("Bravo"), alpha);
+  m_source->addEntryToFolder(entryIdNamed("Charlie"), beta);
+
+  m_model.setOpenFolderId(alpha);
+  ASSERT_EQ(names(), (std::vector<QString>{"Bravo"}));
+
+  m_model.setOpenFolderId(-1);
+  m_model.setOpenFolderId(beta);
+
+  EXPECT_EQ(m_model.getOpenFolderId(), beta);
+  EXPECT_EQ(names(), (std::vector<QString>{"Charlie"}));
+}
+
+// Going straight from one collection to another, without passing through the library
+TEST_F(LibraryEntrySortFilterModelTest, SwitchingCollectionsDirectlyShowsTheOneJustOpened) {
+  const auto alpha = makeManualCollection("Alpha");
+  const auto beta = makeSmartCollection("Platform 7", R"({"platformIds":[7]})");
+  ASSERT_NE(alpha, -1);
+  ASSERT_NE(beta, -1);
+  m_source->addEntryToFolder(entryIdNamed("Charlie"), alpha);
+
+  m_model.setOpenFolderId(alpha);
+  ASSERT_EQ(names(), (std::vector<QString>{"Charlie"}));
+
+  m_model.setOpenFolderId(beta);
+
+  EXPECT_TRUE(m_model.isOpenFolderSmart());
+  EXPECT_EQ(m_model.getScopeFolderId(), -1);
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
+}
+
+// Resetting puts the collection's saved criteria back without the view having to re-assign the id,
+// which is what used to leave the collection stuck on whichever one was open last
+TEST_F(LibraryEntrySortFilterModelTest, ResetToSavedPutsTheCollectionsCriteriaBack) {
+  const auto collection = makeSmartCollection("Platform 7", R"({"platformIds":[7]})");
+  ASSERT_NE(collection, -1);
+  m_model.setOpenFolderId(collection);
+  ASSERT_EQ(names(), (std::vector<QString>{"Bravo"}));
+
+  m_model.getFilter()->setNameContains("nothing matches this");
+  m_model.applyFilters();
+  ASSERT_EQ(m_model.getCount(), 0);
+
+  m_model.resetToSaved();
+
+  EXPECT_EQ(m_model.getOpenFolderId(), collection);
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
+}
+
+// Resetting must not move which collection is open, or the next one opened inherits this one
+TEST_F(LibraryEntrySortFilterModelTest, ResetToSavedLeavesTheOpenCollectionAlone) {
+  const auto alpha = makeSmartCollection("Platform 7", R"({"platformIds":[7]})");
+  const auto beta = makeManualCollection("Beta");
+  ASSERT_NE(alpha, -1);
+  ASSERT_NE(beta, -1);
+  m_source->addEntryToFolder(entryIdNamed("Charlie"), beta);
+
+  m_model.setOpenFolderId(alpha);
+  m_model.resetToSaved();
+  m_model.setOpenFolderId(beta);
+
+  EXPECT_FALSE(m_model.isOpenFolderSmart());
+  EXPECT_EQ(names(), (std::vector<QString>{"Charlie"}));
+}
+
+// The custom order is the one the user arranged, which starts as the order things were added
+TEST_F(LibraryEntrySortFilterModelTest, CustomSortsByTheArrangedOrder) {
+  m_model.setSortRole(LibraryEntrySortFilterModel::Custom);
+  m_model.setSortAscending(true);
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Charlie", "alpha", "Bravo"}));
+}
+
+// Reversing it is the same order backwards, not a different one
+TEST_F(LibraryEntrySortFilterModelTest, CustomReversesCleanly) {
+  m_model.setSortRole(LibraryEntrySortFilterModel::Custom);
+  m_model.setSortAscending(false);
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo", "alpha", "Charlie"}));
+}
+
+// The menu offers it, and by the role name the folder table stores
+TEST_F(LibraryEntrySortFilterModelTest, CustomIsOfferedAsASortOption) {
+  auto found = false;
+
+  for (const auto &option : LibraryEntrySortFilterModel::getSortOptions()) {
+    if (option.toMap().value("value").toInt() == LibraryEntrySortFilterModel::Custom) {
+      found = true;
+      EXPECT_EQ(option.toMap().value("role").toString(), QString("position"));
+      EXPECT_EQ(option.toMap().value("text").toString(), QString("Custom"));
+    }
+  }
+
+  EXPECT_TRUE(found);
 }
 
 } // namespace firelight::gui

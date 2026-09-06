@@ -249,6 +249,7 @@ std::vector<QString> VerifyUiRunner::getDefaultRoutes() {
   std::vector<QString> routes = {
       QStringLiteral("/library"),
       QStringLiteral("/library/entries/:entryId"),
+      QStringLiteral("/library/reorder-collections"),
       QStringLiteral("/shop"),
       QStringLiteral("/shop/mods/:modId"),
       QStringLiteral("/controllers"),

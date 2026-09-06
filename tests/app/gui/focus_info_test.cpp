@@ -220,9 +220,26 @@ TEST(FocusInfoTest, TriggeringAnActionNotifies) {
   auto fired = 0;
   QObject::connect(action, &FocusAction::triggered, [&fired] { fired++; });
 
-  info->getActionFor(Qt::Key_Select)->triggered();
+  info->getActionFor(Qt::Key_Select)->trigger();
 
   EXPECT_EQ(fired, 1);
+}
+
+// A press is accepted unless the handler says otherwise, so an action that reports nothing sounds
+TEST(FocusInfoTest, APressIsAcceptedUnlessTheHandlerDeclines) {
+  QObject object;
+  auto *info = attach(&object);
+  auto *action = addAction(info, {Qt::Key_Select});
+
+  EXPECT_TRUE(action->trigger());
+
+  auto declining =
+      QObject::connect(action, &FocusAction::triggered, [](FocusActionEvent *event) { event->setAccepted(false); });
+  EXPECT_FALSE(action->trigger());
+
+  // The next press starts accepted again rather than inheriting the last answer
+  QObject::disconnect(declining);
+  EXPECT_TRUE(action->trigger());
 }
 
 // A popup declares its own barrier on content it was handed rather than
