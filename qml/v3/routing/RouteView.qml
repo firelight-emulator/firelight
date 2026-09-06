@@ -42,7 +42,8 @@ StackView {
     // initial properties, so a pattern's :name captures must match the screen's
     // property names (e.g. :entryId -> FLGameDetailsPanel.entryId)
     readonly property var routes: ({
-            "/library": libraryComponent
+            "/library": libraryComponent,
+            "/library/reorder-collections": collectionOrderComponent
         // "/library/entries/:entryId": gameDetailsComponent,
         // "/shop": shopComponent,
         // "/shop/mods/:modId": shopItemComponent,
@@ -61,6 +62,11 @@ StackView {
     Component {
         id: libraryComponent
         LibraryPageV2 {}
+    }
+
+    Component {
+        id: collectionOrderComponent
+        CollectionOrderPage {}
     }
     // Component {
     //     id: gameDetailsComponent
@@ -143,6 +149,14 @@ StackView {
                 easing.type: Easing.InOutQuad
             }
         }
+
+        onRunningChanged: {
+            if (!running) {
+                FocusCursor.endBlink()
+            } else {
+                FocusCursor.startBlink()
+            }
+        }
     }
     pushExit: Transition {
         ParallelAnimation {
@@ -180,6 +194,14 @@ StackView {
                 easing.type: Easing.InOutQuad
             }
         }
+
+        onRunningChanged: {
+            if (!running) {
+                FocusCursor.endBlink()
+            } else {
+                FocusCursor.startBlink()
+            }
+        }
     }
 
     popExit: Transition {
@@ -201,8 +223,42 @@ StackView {
         }
     }
 
-    replaceEnter: Transition {}
-    replaceExit: Transition {}
+    replaceEnter: Transition {
+        SequentialAnimation {
+            PropertyAction {
+                property: "opacity"
+                value: 0
+            }
+            PauseAnimation {
+                duration: AppStyle.durationBase
+            }
+            NumberAnimation {
+                property: "opacity"
+                from: 0
+                to: 1
+                duration: AppStyle.durationBase
+                easing.type: AppStyle.easingStandard
+            }
+        }
+
+        onRunningChanged: {
+            if (!running) {
+                FocusCursor.endBlink()
+            } else {
+                FocusCursor.startBlink()
+            }
+        }
+    }
+
+    replaceExit: Transition {
+        NumberAnimation {
+            property: "opacity"
+            from: 1
+            to: 0
+            duration: AppStyle.durationBase
+            easing.type: AppStyle.easingStandard
+        }
+    }
 
     // Off-screen, invisible parent where pages are built asynchronously before
     // they're shown. Sized like the stack so layout matches their final home

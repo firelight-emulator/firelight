@@ -13,12 +13,12 @@ MainWindow {
     }
 
     background: FLUserBackground {
-        mode: AppearanceSettings.backgroundMode
+        // mode: AppearanceSettings.backgroundMode
         // color1: AppearanceSettings.backgroundColor
         // color2: AppearanceSettings.backgroundColor2
-        backgroundFile: AppearanceSettings.backgroundFile
-        blurAmount: 0
-        dimAmount: 0
+        // backgroundFile: AppearanceSettings.backgroundFile
+        // blurAmount: 0
+        // dimAmount: 0
         defaultColor: "#1A1A1C"
     }
 
@@ -64,12 +64,17 @@ MainWindow {
         context: Qt.ApplicationShortcut
         onActivated: {
             if (discSetWindow.visible) {
-                discSetWindow.close()
+                discSetWindow.close();
             } else {
-                DiscSetModel.refresh()
-                discSetWindow.show()
+                DiscSetModel.refresh();
+                discSetWindow.show();
             }
         }
+    }
+    Shortcut {
+        sequence: "F9"
+        context: Qt.ApplicationShortcut
+        onActivated: navigationPopup.visible ? navigationPopup.close() : navigationPopup.open()
     }
 
     Window {
@@ -102,16 +107,6 @@ MainWindow {
         anchors.left: parent.left
         anchors.margins: AppStyle.spacingLg
         z: 9999
-    }
-
-    onActiveFocusItemChanged: {
-        Qt.callLater(guideBarActions.refresh);
-
-        if (!activeFocusItem) {
-            return;
-        }
-
-        // console.log("Active focus item changed to: " + activeFocusItem.FLFocus.collectActions(activeFocusItem).map(a => a.label).join(", "));
     }
 
     // Pane {
@@ -207,6 +202,25 @@ MainWindow {
         id: contentContainer
         anchors.fill: parent
 
+        FLFocus.actions: [
+            FLAction {
+                keys: [Qt.Key_Back, Qt.Key_Escape]
+                label: qsTr("Back")
+                enabled: Router.canGoBack
+                hidden: !Router.canGoBack
+                sound: SoundEffects.back
+                onTriggered: event => {
+                    // TODO
+                    // A screen may refuse to be left, and a refused press makes no sound
+                    if (!Router.back()) {
+                        event.accepted = false;
+                    }
+
+                    guideBar.refresh();
+                }
+            }
+        ]
+
         // TODO
         // Arrow presses no container used end up here — the cursor's edge bump.
         // Fires once per continuous hold: the first dead press bumps, repeats
@@ -220,17 +234,11 @@ MainWindow {
                 return false;
             }
 
-            if (action.sound) {
-                action.sound.play(false);
-            }
-
-            action.triggered();
+            action.trigger();
+            guideBar.refresh();
             return true;
         }
 
-        // TODO
-        // Runs whatever the focused item declared for this key. Falls back to
-        // click() so an ordinary button needs no declaration at all
         function activate(key: int, modifiers: int): bool {
             const focused = window.activeFocusItem;
 
@@ -279,17 +287,11 @@ MainWindow {
             }
 
             // TODO: Add allowAutoRepeat
-            // Holding a face button repeats ~33 times a second, so only the
-            // press itself activates
             if (!event.isAutoRepeat && contentContainer.activate(event.key, event.modifiers)) {
                 event.accepted = true;
                 return;
             }
 
-            // TODO
-            // A direction no container claimed is answered against whatever
-            // else is on screen, so the cursor crosses between them without
-            // either knowing the other exists
             if (FocusNavigator.move(window.activeFocusItem, event.key, event.isAutoRepeat) !== FocusNavigator.NoTarget) {
                 event.accepted = true;
                 return;
@@ -344,76 +346,95 @@ MainWindow {
             z: 10
         }
 
-        Pane {
+        FLPanel {
+            id: navigationPopup
+            z: guideBar.z + 1
+
+            height: parent.height
+            width: 300
+
+            background: Rectangle {
+                color: "#292929"
+            }
+
+            enter: Transition {
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "x"
+                        from: -navigationPopup.width * 1.2
+                        to: 0
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+                    NumberAnimation {
+                        target: contentStack
+                        property: "scale"
+                        from: 1
+                        to: 0.975
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+
+            exit: Transition {
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "x"
+                        from: 0
+                        to: -navigationPopup.width * 1.2
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+
+                    NumberAnimation {
+                        target: contentStack
+                        property: "scale"
+                        to: 1
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+
+            contentItem: FLColumnLayout {
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+                FLButton {
+                    Layout.fillWidth: true
+                    text: "Library"
+                }
+                FLButton {
+                    Layout.fillWidth: true
+                    text: "Controllers"
+                }
+                FLButton {
+                    Layout.fillWidth: true
+                    text: "Settings"
+                }
+                FLButton {
+                    Layout.fillWidth: true
+                    text: "Power"
+                }
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                }
+            }
+        }
+
+        FLGuideBar {
             id: guideBar
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.leftMargin: AppStyle.windowPadding
             anchors.rightMargin: AppStyle.windowPadding
-            verticalPadding: AppStyle.spacingXs
-            horizontalPadding: 0
-            height: 60
-            z: focusHighlight.z + 1
+            z: focusHighlight.z - 2
 
             parent: Overlay.overlay
-
-            background: Item {
-                Rectangle {
-                    color: "transparent"
-                    anchors.fill: parent
-                }
-                Rectangle {
-                    color: "#4c4c4c"
-                    height: 1
-                    width: parent.width
-                }
-            }
-
-            RowLayout {
-                anchors.fill: parent
-                spacing: AppStyle.spacingXs
-
-                FLGuideBarPill {
-                    text: qsTr("Open menu")
-                    bindings: [
-                        {
-                            text: qsTr("Open menu"),
-                            key: Qt.Key_Home
-                        }
-                    ]
-                    actionEnabled: true
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
-
-                Repeater {
-                    id: guideBarActions
-
-                    Layout.alignment: Qt.AlignVCenter
-
-                    property var groups: []
-
-                    function refresh() {
-                        const focused = window.activeFocusItem;
-                        guideBarActions.groups = focused === null ? [] : focused.FLFocus.collectActionGroups(focused).reverse();
-                    }
-
-                    Component.onCompleted: guideBarActions.refresh()
-
-                    model: guideBarActions.groups
-                    delegate: FLGuideBarPill {
-                        required property var modelData
-
-                        text: modelData.label
-                        bindings: modelData.bindings
-                        actionEnabled: modelData.enabled
-                    }
-                }
-            }
         }
 
         Pane {
@@ -441,7 +462,7 @@ MainWindow {
 
                 page: contentStack.currentItem
 
-                onMaximizeClicked: window.maximize();
+                onMaximizeClicked: window.maximize()
                 onMinimizeClicked: window.showMinimized()
                 onCloseClicked: window.close()
             }
@@ -466,7 +487,7 @@ MainWindow {
         FLFocusHighlight {
             id: focusHighlight
             parent: Overlay.overlay
-            z: 100000
+            z: 1000000
             target: window.activeFocusItem
             usingMouse: InputMethodManager.usingMouse
 

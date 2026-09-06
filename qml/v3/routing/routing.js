@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 .pragma library
 
 // Pure routing logic: path parsing, pattern matching, transition inference, and
@@ -7,8 +8,9 @@
 // parent; `ownsSubtree` marks a screen that handles its own sub-paths internally
 // (the top-level view doesn't change as you move within it).
 var ROUTES = [
-    { pattern: "/library" },
+    { pattern: "/library", ownsSubtree: true },
     { pattern: "/library/entries/:entryId", stacksOn: "/library" },
+    { pattern: "/library/reorder-collections", stacksOn: "/library" },
     { pattern: "/shop" },
     { pattern: "/shop/mods/:modId", stacksOn: "/shop" },
     { pattern: "/settings", ownsSubtree: true, overlay: true },
@@ -157,9 +159,12 @@ function isActive(path, prefix) {
 // --- resolution: which component + params a path maps to ---
 
 function subtreeOwner(path, routes) {
+    var m = match(path, patterns(routes));
     for (var i = 0; i < routes.length; i++) {
         if (routes[i].ownsSubtree && isActive(path, routes[i].pattern)) {
-            return routes[i].pattern;
+            // TODO
+            // A path with a declared route of its own resolves to that route rather than the owner
+            return (m.matched && m.pattern !== routes[i].pattern) ? "" : routes[i].pattern;
         }
     }
     return "";
@@ -253,4 +258,36 @@ function canGoBack(state) {
 
 function canGoForward(state) {
     return state.cursor < state.entries.length - 1;
+}
+
+// --- leave guard --- state = { guard, pending }
+
+// A screen holding unsaved work registers a guard; every move asks it before going anywhere.
+// A blocked move is kept so the screen can let it through once the user has answered
+
+function initialGuard() {
+    return { guard: null, pending: null };
+}
+
+function setGuard(state, fn) {
+    return { guard: fn === undefined ? null : fn, pending: null };
+}
+
+// Asks the guard whether the move may happen, remembering the move in the same step that refuses it
+function attemptLeave(state, kind, arg) {
+    if (state.guard === null || state.guard()) {
+        return { state: state, allowed: true };
+    }
+
+    return { state: { guard: state.guard, pending: { kind: kind, arg: arg } }, allowed: false };
+}
+
+// Drops the guard and hands back the move it was blocking
+function releaseGuard(state) {
+    return { state: initialGuard(), pending: state.pending };
+}
+
+// Forgets the blocked move; the guard stays
+function forgetPending(state) {
+    return { guard: state.guard, pending: null };
 }

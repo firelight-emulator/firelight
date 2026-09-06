@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -12,6 +13,19 @@ FLMenuItem {
 
     property var currentValues: []
     checked: currentValues.length > 0
+
+    // TODO
+    // Where the selection lives. External means toggling reports the change and records nothing,
+    // for a caller whose truth is a model rather than this list
+    property bool selectionIsExternal: false
+
+    // TODO
+    // A row was ticked or unticked. Not `toggled`, which AbstractButton already declares
+    signal optionToggled(var value, bool selected)
+
+    // TODO
+    // Every row was unticked at once, for a caller whose truth is a model rather than this list
+    signal cleared
 
     // TODO
     // How long the cursor rests on the row before the submenu opens, so sweeping
@@ -122,6 +136,12 @@ FLMenuItem {
             }
 
             onClicked: function (event) {
+                control.cleared();
+
+                if (control.selectionIsExternal) {
+                    return;
+                }
+
                 control.currentValues = [];
             }
 
@@ -154,11 +174,18 @@ FLMenuItem {
                 checked: control.currentValues.indexOf(modelData[control.valueRole]) !== -1
 
                 onSelected: function (selected) {
+                    const value = modelData[control.valueRole];
+                    control.optionToggled(value, selected);
+
+                    if (control.selectionIsExternal) {
+                        return;
+                    }
+
                     if (selected) {
-                        control.currentValues.push(modelData[control.valueRole]);
+                        control.currentValues.push(value);
                         control.currentValuesChanged();
                     } else {
-                        control.currentValues.splice(control.currentValues.indexOf(modelData[control.valueRole]), 1);
+                        control.currentValues.splice(control.currentValues.indexOf(value), 1);
                         control.currentValuesChanged();
                     }
                 }
