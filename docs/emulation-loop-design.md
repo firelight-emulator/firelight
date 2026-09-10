@@ -121,6 +121,84 @@ about 11 ms. Input poll to scanout, 59.959 Hz, zero frames lost at every target:
 The target should be adaptive: `1 - (measured core time + upload time + margin) / period`. Start at
 75 %. This is a refinement, not part of the correctness fix.
 
+### Late polling, and the target as an arbitrary knob
+
+The phase target is not only a latency dial — it is the whole of what RetroArch calls frame delay.
+Scheduling the frame late means the core's `input_poll` fires late, so the player's input is sampled
+closer to the scanout that will show its effect. The target is one number in 0..1 saying where in the
+refresh interval the frame completes, so the run loop can be shifted arbitrarily against the frame
+boundary by changing it. It should be settable and sweepable, not hard-coded.
+
+**The input path is already built for this.** Three things have to be true and all three are:
+
+- `SDLInputService::run()` is a blocking `SDL_WaitEvent` loop on its own thread, so device state is
+  updated as HID reports arrive rather than on a polling tick. There is no stale frame to fight.
+- `Core` wires `input_poll` straight to `CoreInputRouter::pollInput()`, which runs on whatever thread
+  calls `retro_run`, at the moment the core asks for it. That is RetroArch's "late" poll behaviour.
+- `pollInput()` captures a fresh `InputFrame` per port, so the core reads stable values for the
+  duration of the frame while the snapshot itself is taken as late as possible.
+
+Measured over 300 s against a modelled display, with the frame scheduled to complete at the target and
+input polled at its start:
+
+| core load | target | mean | p99 | worst | lost |
+|---|---|---|---|---|---|
+| steady 1 ms | 50 % | 9.34 ms | 9.91 | 10.41 | 0 |
+| | 98 % | 1.33 ms | 1.90 | 2.41 | 0 |
+| 1 ms, 4 ms spikes at 1 % | 98 % | 1.36 ms | 2.14 | 5.14 | 0 |
+| 3 ms, 8 ms spikes at 2 % | 50 % | 11.43 ms | 16.24 | 18.76 | 0 |
+| | 98 % | 3.42 ms | 8.23 | 10.75 | 0 |
+
+**Nothing is lost at any target, even at 98 %, even with spikes** — and that is structural rather than
+lucky. With a latest-frame slot an overrunning frame is not dropped; it lands on the next refresh and
+the phase term pulls it back. The cost appears in tail latency, not in judder.
+
+That inverts the tradeoff every blocking-loop implementation makes. In RetroArch's vsync-blocked loop,
+overrunning the budget misses the vblank and costs a frame, which is why its automatic frame delay
+backs off so defensively — 8-frame averages against 1.25x, 1.5x and 1.75x the target. Here the target
+can be tuned for the mean and the failure mode is a latency spike.
+
+Two limits on what this buys. The phase is locked to the **submit** grid, because `frameSwapped` fires
+at submit; Qt's 3-image FIFO chain then adds up to two more refreshes to scanout that we can neither
+see nor change, so these figures cover produce-to-submit only. And a true vblank reference may be
+available: on Windows `DwmGetCompositionTimingInfo` reports `qpcVBlank` and `qpcRefreshPeriod` to any
+process independently of Qt, which is the same fallback RetroArch's threaded display pacing uses
+(device timing, then compositor vblank, then clock). Unverified here, and fullscreen-exclusive may
+bypass DWM.
+
+**This is the thing that requires the core off the render thread.** Late polling needs control over
+when `retro_run` starts. Inside `render()` it starts when Qt schedules a pass; the only way to delay
+it there is to sleep on Qt's render thread, which stalls compositing for the whole window, QML
+overlays included. The pacing fix works either way (see "Work"); this does not.
+
+### What to measure, and the frame record
+
+The adaptive target needs core work time, and nothing measures it — `m_measureTime`,
+`m_averageEmulationTime` and `m_emulationWorkTimeBuffer` are declared in `emulator_item_renderer.hpp`
+and referenced by no `.cpp`. That is the smallest prerequisite for any of the above.
+
+It is also the same data a per-frame timeline wants, so build one thing. `PaceProbe` counts events per
+second, which cannot show where inside a frame the time went; a frame record is its successor. One
+POD per frame in a fixed-size ring with an atomic write index — no locks and no allocation on the
+emulation thread — carrying timestamps from a single clock:
+
+| stamp | thread | what it marks |
+|---|---|---|
+| `dueNs` | emulation | where the anchor put this frame |
+| `wokeNs` | emulation | the wait returned |
+| `polledNs` | emulation | `input_poll` fired |
+| `runEndNs` | emulation | `retro_run` returned |
+| `publishedNs` | emulation | the frame reached `FrameSlot` |
+| `syncedNs` | render | `synchronize()` took it |
+| `submittedNs` | render | `frameSwapped` |
+| `vblankEstimateNs` | render | the grid the phase term is tracking |
+
+`FrameSlot::publish` already stamps a strictly increasing id, which is the natural key for joining the
+emulation-thread and render-thread halves of one frame. Derive rather than store: work time is
+`runEndNs - polledNs`, achieved phase is `(publishedNs - lastVblank) / period`, and a repeat or a drop
+is visible from whether a refresh saw a new id. Alongside those, the audio buffer level and the
+resample ratio make the audio side legible on the same timeline.
+
 ## Where the core has to run
 
 **libretro does not require a render thread, and never mentions one.** Nothing in `libretro.h` says
@@ -353,7 +431,7 @@ chooses which cost.
 
 ## Work, in dependency order
 
-Items 2 to 5 are the pacing fix and **do not depend on item 6**. With the loop asking for exactly one
+Items 2 to 5 are the pacing fix and **do not depend on item 7**. With the loop asking for exactly one
 frame per period and dropping rather than doubling when a pass is late, the paired-pass fault goes
 away even with the core still running inside `render()`. Moving the core buys immunity to GUI-thread
 stalls and removes the dependency on Qt scheduling a pass; it is not required for correctness, and it
@@ -373,21 +451,28 @@ can be skipped indefinitely for GL cores if their context stays on the render th
    `PrecisionWaiter` is already the right shape.
 5. **Phase estimator, display mode only.** Consumes `frameSwapped` timestamps, keeps a slow vblank-grid
    average, returns a phase correction and never a count.
-6. **Resolve the `AudioManager` thread affinity**, then move `runFrame()` to the emulation thread.
-7. **Report the resolved mode, not the request.** `Pacing:` shows `getSyncMethod()`, and an
+6. **Build the frame record.** A fixed-size ring of one POD per frame, keyed by the id `FrameSlot`
+   already stamps, with the timestamps in "What to measure". It replaces `PaceProbe`, supplies the
+   core work time the adaptive phase target needs, and is the data behind a per-frame timeline. Small,
+   and everything after it is easier to judge with it in place.
+7. **Resolve the `AudioManager` thread affinity**, then move `runFrame()` to the emulation thread.
+   This is what makes late polling possible; the pacing fix does not need it.
+8. **Adaptive phase target.** `1 - (core + upload + margin) / period`, from the measurements in 6.
+   Expose the target so it can be swept by hand.
+9. **Report the resolved mode, not the request.** `Pacing:` shows `getSyncMethod()`, and an
    unrecognised `sync-method` becomes `Native` silently. Both cost a wrong diagnosis once already.
-8. **Make the hardware-render handlers answer honestly.** Independent of the pacing work and a
+10. **Make the hardware-render handlers answer honestly.** Independent of the pacing work and a
    prerequisite for any backend beyond Vulkan: refuse in `SET_HW_RENDER` what cannot be provided,
    return the real flexibility from `GET_PREFERRED_HW_RENDER`, and stop returning `true` from
    `GET_HW_RENDER_INTERFACE` and `GET_CURRENT_SOFTWARE_FRAMEBUFFER` after writing nothing.
-9. **Later, and not standalone: the blit fence.** Replacing the unconditional `WaitForFences` with
+11. **Later, and not standalone: the blit fence.** Replacing the unconditional `WaitForFences` with
    `setQueueSubmitParams()` also requires real sync-index rotation. Today `get_sync_index` returns 0,
    `get_sync_index_mask` returns 1 and `wait_sync_index` is a no-op, which is only correct *because*
    that fence makes the frontend fully synchronous. Remove it without implementing those and the core
    is told the frontend has finished with an image while it is still being read — corruption, not a
    missed optimisation. `set_command_buffers` being null is fine and stays fine: the header makes it
    optional and cores must null-check it.
-10. **Later:** DRC gain 0.02 to 0.005.
+12. **Later:** DRC gain 0.02 to 0.005.
 
 ## Open
 

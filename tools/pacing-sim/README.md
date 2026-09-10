@@ -12,6 +12,7 @@ drive it against synthetic present trains and modelled displays.
 | `policies` | no | pass counting vs. a display-matched clock, across refresh rates |
 | `phase` | no | what clock drift costs, and what phase-locking buys back |
 | `modes` | no | what native / display / auto resolve to on each panel, and the pitch cost |
+| `latepoll` | no | how late input can be polled before frames miss their refresh |
 
 ## What is modelled and what is not
 

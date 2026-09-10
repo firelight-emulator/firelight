@@ -15,5 +15,6 @@ g++ -std=c++20 -O2 -I "$emulation" noise_sweep.cpp $production -o out/noise_swee
 g++ -std=c++20 -O2 policies.cpp -o out/policies
 g++ -std=c++20 -O2 phase.cpp -o out/phase
 g++ -std=c++20 -O2 modes.cpp -o out/modes
+g++ -std=c++20 -O2 latepoll.cpp -o out/latepoll
 
-echo "built: out/noise_sweep out/policies out/phase out/modes"
+echo "built: out/noise_sweep out/policies out/phase out/modes out/latepoll"
