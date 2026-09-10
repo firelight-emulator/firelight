@@ -123,8 +123,40 @@ The target should be adaptive: `1 - (measured core time + upload time + margin) 
 
 ## Where the core has to run
 
-The premise that the core must run on the render thread is inherited from OpenGL, and OpenGL is not
-hooked up. `getPreferredHwRender()` returns `RETRO_HW_CONTEXT_VULKAN` under the Vulkan RHI and
+**libretro does not require a render thread, and never mentions one.** Nothing in `libretro.h` says
+`retro_run` must be called on any particular thread; the concept does not exist in the API. The only
+threading language is about something else: callbacks the core registers *"can be invoked from any
+thread, so their implementations must be thread-safe"* (`:1114`), the camera callback *"runs in the
+same thread as `retro_run()`"* (`:1204`) — which treats that thread as a given the frontend chose —
+and netpacket and microphone calls that *"must be called during `retro_run`"* (`:5520`, `:5532`,
+`:7185`), which is about when, not where.
+
+`libretro_vulkan.h` says the opposite of a render-thread requirement, three times:
+
+> *"The Vulkan API is heavily designed around multi-threading, and the libretro interface for it
+> should also be threading friendly. A core should be able to build command buffers and submit
+> command buffers to the GPU from any thread."* (`:113-118`)
+
+> *"Vulkan cores should be able to be freely threaded without lots of fuzz."* (`:252`)
+
+> *"Queue submission can happen on any thread. Even if queue submission happens on the same thread as
+> `retro_run()`, the lock/unlock functions must still be called."* (`:476-478`)
+
+That last is the only unconditional threading mandate in either header, and the current code honours
+it — `emulator_vulkan_renderer.cpp:167` takes `m_vkQueueMutex` around its own submit, which is
+required even for same-thread submission because the frontend also submits to that queue.
+
+So the render-thread premise comes from this repository's own comments
+(`emulator_instance.hpp:29-31/44/52`, `emulator_instance.cpp:464-465`, `CLAUDE.md`), and the
+reasoning is GL-shaped: it holds only when the core draws into *the frontend's* context.
+
+**The real constraint is a pairing, not a location.** A GL context is thread-affine — current on at
+most one thread at a time — so `retro_run` must be called on whichever thread holds the context. Which
+thread that is, is the frontend's choice. Putting the context on the emulation thread and putting it
+on the render thread are both legal; the first keeps one threading model for every core type, the
+second lets a GL core render straight into Qt's framebuffer when Qt is also on GL.
+
+`getPreferredHwRender()` returns `RETRO_HW_CONTEXT_VULKAN` under the Vulkan RHI and
 `RETRO_HW_CONTEXT_NONE` otherwise; there is no third answer. The hardware set is two cores,
 mupen64plus-next and PPSSPP, both Vulkan.
 
@@ -183,10 +215,11 @@ matrix: every pair works, and specific pairs get a zero-copy path.
 The interop extension names are not verified against any driver here; readback is the baseline that
 always works and the fast paths are optimisations on top of it.
 
-### The protocol expects honest answers, and we give it six wrong ones
+### Negotiation handlers: what each one owes the core
 
-Negotiation only works if the frontend says what it can actually do. Every relevant handler currently
-answers yes regardless of truth, which is what makes the matrix above unreachable today.
+Negotiation only works if the frontend says what it can actually do, and every relevant handler
+currently answers yes regardless. These are the ones to reconnect before any backend beyond Vulkan
+can work; the list is what each is supposed to return, not a claim that any of it is news.
 
 - **`SET_HW_RENDER`** returns `true` for any `context_type`, without inspecting it. The header says to
   return *"`false` if `data` is `NULL` or the frontend can't provide the requested rendering API"*
@@ -201,17 +234,47 @@ answers yes regardless of truth, which is what makes the matrix above unreachabl
   uninitialised pointer.
 - **`GET_CURRENT_SOFTWARE_FRAMEBUFFER`** returns `true` without touching `data` at all. A core that
   takes the offer renders into an uninitialised `retro_framebuffer`.
-- **`GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT`** answers Vulkan unconditionally, with no
-  check against the active backend.
+- **`GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT`** answers the wrong field. `data` is a
+  `retro_hw_render_context_negotiation_interface *` — a struct of `{interface_type,
+  interface_version}` — and the handler casts it to the *enum* type and writes `VULKAN` (which is
+  `0`), clobbering `interface_type` and never setting `interface_version`. The header wants the
+  reverse: *"Frontend looks at `retro_hw_render_interface_type` and returns the maximum supported
+  context negotiation interface version. If the type is not supported … a version of 0 must be
+  returned in `interface_version` and `true` is returned"* (`libretro.h:2434-2438`).
 - **`SET_HW_SHARED_CONTEXT`** is `// TODO: ?` followed by `return true`.
 
-Fixing these is the whole of the negotiation work. `getPreferredHwRender()` should name the API with
-the best path for the current backend and return `true` only once others genuinely work; every other
-handler should refuse what it cannot serve.
+`getPreferredHwRender()` should name the API with the best path for the current backend and return
+`true` only once others genuinely work; every other handler should refuse what it cannot serve.
+
+### Negotiation version, and why it matters now
+
+The vendored header is negotiation **v2** (`RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN_VERSION 2`),
+where `create_device2` *"takes precedence over `create_device`"* and v1 `create_device` is deprecated
+because *"it cannot express PDF2 features or optional extensions"*. `emulator_vulkan_renderer.cpp:280`
+calls `create_device` with no null guard and no version check; `create_device2` and `create_instance`
+appear nowhere in the tree. Since the support query above never reports a version, a v2 core may fill
+only `create_device2` and leave `create_device` null.
+
+Two further obligations the header places on a frontend that does implement v2: it *"must not reject a
+negotiation interface version that is larger than what the frontend supports"* — downgrade to the
+entry points you recognise instead — and `destroy_device` is *"called even if `context_reset` was not
+called"*, always before the frontend's `VkInstance` goes.
+
+### Do not mask `RETRO_ENVIRONMENT_EXPERIMENTAL`
+
+`libretro.h:722` advises *"Frontends should mask out this bit before handling the environment call."*
+Taking that advice would break things: `SET_HW_SHARED_CONTEXT` is `(44 | EXPERIMENTAL)` and
+`SET_SERIALIZATION_QUIRKS` is a plain `44`, so masking collides them. They are the only such pair.
+`Core::environmentCallback` dispatches on the full value through `m_envHandlers.find(cmd)` and never
+masks, which is correct — leave it that way.
 
 ### OpenGL, when it is wired up
 
-Verified against the headers. A GL core gets `get_proc_address` and `get_current_framebuffer`, both
+The GL path worked before the Vulkan work and was taken apart during it; most of the graphics
+callbacks are known to be disconnected rather than newly broken. What follows is what the headers
+require, as a checklist for reconnecting it.
+
+A GL core gets `get_proc_address` and `get_current_framebuffer`, both
 marked *"Set by frontend"* (`libretro.h:5110-5117`); the frontend creates and owns the context. The
 context need not be Qt's, and should not be — borrowing Qt's is what makes GL look like it forces the
 core onto the render thread. Create a `QOpenGLContext`, `moveToThread()` it to the emulation thread
@@ -224,9 +287,10 @@ from a third thread `QOpenGLContext::makeCurrent()` calls `qFatal` rather than w
 Two header details worth having:
 
 - `get_current_framebuffer` carries *"TODO: This is rather obsolete. The frontend should not be
-  providing preallocated framebuffers"*, but cores still call it. Handing back an FBO the frontend
-  owns is stable, which removes the current bug where `m_currentFramebufferId` is sampled once inside
-  `context_reset` and goes stale as Qt rotates framebuffers.
+  providing preallocated framebuffers"*, but cores still call it, and the typedef notes it *"could
+  change every frame potentially"*. Handing back an FBO the frontend owns is stable, which is simpler
+  than the arrangement where `m_currentFramebufferId` is sampled once inside `context_reset` and goes
+  stale as Qt rotates framebuffers.
 - `context_reset` *"is possible … called multiple times during an application lifecycle"*, and when it
   is called without a preceding `context_destroy` the core's resources are already gone and must be
   recreated rather than freed (`libretro.h:5095-5107`). Whatever owns the context has to survive that.
@@ -263,6 +327,14 @@ Two header details worth having:
   before the scene graph initialises, and `create_device` happens when a game loads.
 - **`makeThreadLocalNativeContextCurrent()`** as a route to a GL context on another thread. It makes
   Qt's own context current, and from a third thread `QOpenGLContext::makeCurrent` calls `qFatal`.
+- **Metal as a core-facing API.** `retro_hw_context_type` is NONE, OPENGL, OPENGLES2, OPENGL_CORE,
+  OPENGLES3, OPENGLES_VERSION, VULKAN, D3D11, D3D10, D3D12, D3D9 — there is no Metal. A core can never
+  request it and we can never advertise it. This does not block Qt on Metal, since the core's API is
+  independent of Qt's; it means the core-facing set is GL, GLES, Vulkan and D3D, and nothing else.
+- **Assuming a refused core retries.** The headers are silent on whether `SET_HW_RENDER` may be called
+  more than once — no permission, no prohibition, no described frontend behaviour. All
+  `GET_PREFERRED_HW_RENDER` promises is that a core which cannot use the preferred API *"should exit
+  or fall back to software rendering"*. Any belief about a second attempt is RetroArch convention.
 
 ## What is inherent
 
@@ -280,6 +352,12 @@ chooses which cost.
   removes it, and that collides with QML glass over gameplay.
 
 ## Work, in dependency order
+
+Items 2 to 5 are the pacing fix and **do not depend on item 6**. With the loop asking for exactly one
+frame per period and dropping rather than doubling when a pass is late, the paired-pass fault goes
+away even with the core still running inside `render()`. Moving the core buys immunity to GUI-thread
+stalls and removes the dependency on Qt scheduling a pass; it is not required for correctness, and it
+can be skipped indefinitely for GL cores if their context stays on the render thread.
 
 1. **Stop the stats resetting mid-game.** `SET_GEOMETRY` reaches `setSystemAVInfo`, which calls
    `PerformanceStats::reset()` unconditionally, re-zeroing a 120-frame warm-up. If SNES cores send
@@ -302,7 +380,14 @@ chooses which cost.
    prerequisite for any backend beyond Vulkan: refuse in `SET_HW_RENDER` what cannot be provided,
    return the real flexibility from `GET_PREFERRED_HW_RENDER`, and stop returning `true` from
    `GET_HW_RENDER_INTERFACE` and `GET_CURRENT_SOFTWARE_FRAMEBUFFER` after writing nothing.
-9. **Later:** replace the blit fence with `setQueueSubmitParams()`; DRC gain 0.02 to 0.005.
+9. **Later, and not standalone: the blit fence.** Replacing the unconditional `WaitForFences` with
+   `setQueueSubmitParams()` also requires real sync-index rotation. Today `get_sync_index` returns 0,
+   `get_sync_index_mask` returns 1 and `wait_sync_index` is a no-op, which is only correct *because*
+   that fence makes the frontend fully synchronous. Remove it without implementing those and the core
+   is told the frontend has finished with an image while it is still being read — corruption, not a
+   missed optimisation. `set_command_buffers` being null is fine and stays fine: the header makes it
+   optional and cores must null-check it.
+10. **Later:** DRC gain 0.02 to 0.005.
 
 ## Open
 
@@ -311,8 +396,7 @@ chooses which cost.
 - `layer.enabled: true` on the EmulatorItem inserts an extra FBO pass before the swapchain.
 - Which backend/core-API pairs are worth a zero-copy path, and which are fine on readback. The
   extension names above are unverified against any driver.
-- Whether a core that is refused its first choice reliably retries with another. The header says a
-  core "should exit or fall back to software rendering" when it cannot use the preferred API, which
-  is not the same as promising a second attempt.
+- What real cores do when refused, given the protocol does not define it (see "Ruled out"). Worth
+  testing against mupen64plus-next and PPSSPP before relying on any fallback behaviour.
 - `k = round()` at 144 Hz gives 72 fps, 20 % fast. `k = 3` would give 48 fps, 20 % slow. Both are the
   same distance out, but fast and slow do not play the same.
