@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import Firelight 1.0
 
@@ -5,6 +6,8 @@ import "focus_nav.js" as Nav
 
 GridView {
     id: root
+
+    property SelectionGroup selectionGroup: SelectionGroup {}
 
     FLFocus.container: true
 
@@ -54,6 +57,10 @@ GridView {
     readonly property bool canMoveDown: root.lifted && Nav.gridStep(root.liftedIndex, root.count, root.columns, Nav.Down) >= 0
 
     signal moveRequested(int from, int to)
+
+    function isSelected(index: int): bool {
+        return root.selectionGroup && root.selectionGroup.isSelected(index);
+    }
 
     Item {
         id: reorderArrows
@@ -141,7 +148,10 @@ GridView {
 
     FLFocus.holdEdges: FLFocus.Vertical
 
-    property int repeatInterval: 45
+    // TODO
+    // How long a held direction waits between moves. Declared where every other region declares
+    // it, though this view paces itself rather than going through the navigator
+    FLFocus.repeatInterval: 45
 
     readonly property int columns: Math.max(1, Math.floor(width / Math.max(1, cellWidth)))
 
@@ -214,7 +224,19 @@ GridView {
 
     Timer {
         id: repeatGate
-        interval: root.repeatInterval
+        interval: root.FLFocus.repeatInterval
+    }
+
+    Keys.onReleased: event => {
+        if (event.isAutoRepeat) {
+            return;
+        }
+
+        if (event.key === Qt.Key_Shift || event.key === Qt.Key_Enter || event.key === Qt.Key_Return) {
+            selectionGroup.editingRange = false;
+            // TODO: SFX
+            return;
+        }
     }
 
     Keys.onPressed: event => {
@@ -256,5 +278,10 @@ GridView {
         }
 
         event.accepted = root.moveFocus(direction);
+
+        // TODO: If holding A or Enter or whatever
+        if (selectionGroup.editingRange) {
+            selectionGroup.select(root.currentIndex, Qt.ShiftModifier);
+        }
     }
 }

@@ -1,6 +1,8 @@
 // TODO: NEEDS REVIEW
 #include "qt_performance_stats_proxy.hpp"
 
+#include <cmath>
+
 namespace firelight::gui {
 
 namespace {
@@ -117,6 +119,23 @@ QString QtPerformanceStatsProxy::getWakeOvershoot() const {
 QString QtPerformanceStatsProxy::getFramesRun() const { return QString::number(m_snapshot.framesRun); }
 
 QString QtPerformanceStatsProxy::getFramesLost() const { return QString::number(m_snapshot.framesLost); }
+
+QString QtPerformanceStatsProxy::getFramesNotShown() const { return QString::number(m_snapshot.framesNotShown); }
+
+QString QtPerformanceStatsProxy::getTargetRate() const {
+  return figureOrDash(m_snapshot.targetFps, 3, QStringLiteral(" fps"));
+}
+
+// TODO
+// A tenth of a percent is well inside what a mode may legitimately round to and well outside the
+// 0.23% that a mode silently running at the display's rate instead of its own produces
+bool QtPerformanceStatsProxy::isRateMatchingTarget() const {
+  if (m_snapshot.targetFps <= 0.0 || m_snapshot.frameRate <= 0.0) {
+    return true;
+  }
+
+  return std::abs(m_snapshot.frameRate - m_snapshot.targetFps) / m_snapshot.targetFps < 0.001;
+}
 
 QString QtPerformanceStatsProxy::getPacingMode() const {
   return m_snapshot.pacingMode.empty() ? QStringLiteral("—") : QString::fromStdString(m_snapshot.pacingMode);

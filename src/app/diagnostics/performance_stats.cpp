@@ -22,11 +22,13 @@ void PerformanceStats::setCoreInfo(const int baseWidth, const int baseHeight, co
   m_snapshot.coreFps = coreFps;
 }
 
-void PerformanceStats::setPacing(const std::string &mode, const double displayHz, const double audioRatio) {
+void PerformanceStats::setPacing(const std::string &mode, const double displayHz, const double audioRatio,
+                                 const double targetFps) {
   std::lock_guard lock(m_mutex);
   m_snapshot.pacingMode = mode;
   m_snapshot.displayHz = displayHz;
   m_snapshot.audioRatio = audioRatio;
+  m_snapshot.targetFps = targetFps;
 }
 
 void PerformanceStats::setVideo(const std::string &graphicsApi, const int renderWidth, const int renderHeight) {
@@ -45,6 +47,15 @@ void PerformanceStats::setViewport(const int width, const int height) {
 void PerformanceStats::recordDroppedFrame() {
   std::lock_guard lock(m_mutex);
   m_snapshot.framesLost++;
+}
+
+void PerformanceStats::recordFramesNotShown(const int count) {
+  if (count <= 0) {
+    return;
+  }
+
+  std::lock_guard lock(m_mutex);
+  m_snapshot.framesNotShown += count;
 }
 
 void PerformanceStats::recordFrame(const int64_t frameTimeNs, const int framesRun) {
@@ -193,6 +204,7 @@ void PerformanceStats::reset() {
   std::lock_guard lock(m_mutex);
   m_snapshot.framesRun = 0;
   m_snapshot.framesLost = 0;
+  m_snapshot.framesNotShown = 0;
   m_snapshot.samplesDelivered = 0;
   m_frameTimeMeanNs = 0.0;
   m_frameTimeVarianceNs = 0.0;

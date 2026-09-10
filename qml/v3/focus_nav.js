@@ -21,19 +21,6 @@ function isFocusable(child) {
     return !!child && child.visible && child.enabled && child.focusPolicy !== undefined && child.focusPolicy !== NO_FOCUS;
 }
 
-// Where the cursor actually is among `children`, or -1 when it is elsewhere.
-// activeFocus propagates through focus scopes but not through plain wrappers, so
-// a child that merely contains the focused item is found by descending into it
-function focusedIndex(children) {
-    for (var i = 0; i < children.length; i++) {
-        if (children[i] && children[i].activeFocus) {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
 // Which delegate of `view` the cursor is on, or -1 when it is elsewhere. A view
 // steps from its own current index, and a tap or a move in from outside puts the
 // cursor on a delegate without touching that index

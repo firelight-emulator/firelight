@@ -1,5 +1,8 @@
 #include "emulator_item.hpp"
 
+#include "emulation/pace_probe.hpp"
+
+
 #include "diagnostics/performance_stats.hpp"
 #include "emulation/emulation_service.hpp"
 #include "emulation/shortcut_actions.hpp"
@@ -97,13 +100,17 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
 
           m_loopWake.notify_one();
 
+          if (firelight::emulation::PaceProbe::isEnabled()) {
+            firelight::emulation::PaceProbe::instance().presents.fetch_add(1);
+          }
+
           // TODO
           // Counting the frames that reach the display only works while they keep arriving, and one
-          // only arrives if something asked to draw. Safe here and nowhere else, because this runs
-          // on the thread that draws
-          if (m_renderContinuously.load()) {
-            update();
-          }
+          // only arrives if something asked to draw. Asked for on every present rather than only
+          // while following the display: a pass per frame is what stops two of them collapsing into
+          // one and costing the game the frame in between. Queued because the signal arrives on the
+          // render thread and update() belongs to the GUI's
+          QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
         },
         Qt::DirectConnection);
 
@@ -167,7 +174,8 @@ void EmulatorItem::waitForNextFrame() {
     std::unique_lock lock(m_loopMutex);
     // Audio asks the sink often enough that a frame is never late by more than this, and Display
     // is woken by a refresh rather than the timeout
-    m_loopWake.wait_for(lock, std::chrono::milliseconds(1), [this] { return m_emulationStopping.load(); });
+    m_loopWake.wait_for(lock, std::chrono::milliseconds(1),
+                        [this] { return m_emulationStopping.load() || m_pacer.hasPendingPresents(); });
     return;
   }
 
@@ -197,6 +205,10 @@ void EmulatorItem::runEmulationLoop() {
   while (!m_emulationStopping) {
     waitForNextFrame();
 
+    if (firelight::emulation::PaceProbe::isEnabled()) {
+      firelight::emulation::PaceProbe::instance().wakes.fetch_add(1);
+    }
+
     if (m_emulationStopping) {
       return;
     }
@@ -213,6 +225,10 @@ void EmulatorItem::runEmulationLoop() {
 
     const auto decision = m_pacer.tick(nowNs);
 
+    if (firelight::emulation::PaceProbe::isEnabled()) {
+      firelight::emulation::PaceProbe::instance().reportIfDue(nowNs);
+    }
+
     if (decision.shouldRequestRender && decision.framesToRun == 0) {
       QMetaObject::invokeMethod(this, "update", Qt::QueuedConnection);
     }
@@ -222,6 +238,10 @@ void EmulatorItem::runEmulationLoop() {
     }
 
     const auto frames = decision.framesToRun;
+
+    if (firelight::emulation::PaceProbe::isEnabled()) {
+      firelight::emulation::PaceProbe::instance().ticks.fetch_add(1);
+    }
 
     // TODO
     // The frame itself runs on the render thread, inside the pass that puts it on screen — deciding
@@ -434,7 +454,7 @@ void EmulatorItem::reconfigurePacing() {
                                                                    static_cast<int>(height() * pixelRatio));
 
   firelight::diagnostics::PerformanceStats::instance().setPacing(fmt::format("{}{}", emulator->getSyncMethod(), chose),
-                                                                 refreshHz, audioRatio);
+                                                                 refreshHz, audioRatio, effectiveFps);
   emulator->setAudioPlaybackRateRatio(audioRatio);
 }
 

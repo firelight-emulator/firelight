@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
@@ -76,8 +77,14 @@ Button {
             const action = control.FLFocus.getActionFor(event.key, event.modifiers);
 
             if (action !== null) {
-                action.trigger();
+                action.triggerForPress(event.isAutoRepeat);
                 event.accepted = true;
+                return;
+            }
+
+            // TODO
+            // Only an action opts into repeating: a held key never presses the control itself
+            if (event.isAutoRepeat) {
                 return;
             }
 
@@ -94,7 +101,7 @@ Button {
     }
 
     background: Rectangle {
-        radius: control.rounded ? width / 2 : AppStyle.radiusMd
+        radius: control.rounded ? width / 2 : AppStyle.radiusSm
         color: control._subtle ? "transparent" : control._fill
         border.width: control.variant === "default" ? 1 : 0
         border.color: Theme.border

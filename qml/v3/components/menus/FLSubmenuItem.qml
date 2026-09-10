@@ -66,7 +66,6 @@ FLMenuItem {
         hoverTimer.stop();
 
         if (submenu.opened) {
-            SoundEffects.back.play();
             submenu.close();
         }
     }
@@ -103,15 +102,10 @@ FLMenuItem {
 
     FLMenu {
         id: submenu
-        //
-        // x: control.width + AppStyle.spacingXs
-        // y: -200
 
         openSound: SoundEffects.openPopup
 
-        onOpened: {
-            submenu.focusFirstChild();
-        }
+        onOpened: {}
 
         FLButton {
             id: clearButton

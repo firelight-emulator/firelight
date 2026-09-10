@@ -1,27 +1,68 @@
 pragma Singleton
 import QtQuick
+import QtQuick.Effects
 
 Rectangle {
     id: root
     property Item target: null
+    property Item blurTarget: null
 
-    readonly property real maxOpacity: 0.75
+    readonly property real maxOpacity: 0.6
+
+    readonly property int transitionMs: AppStyle.durationDimmer
+
+    property bool blurEnabled: false
+    readonly property real maxBlur: 1.0
+    property real currentBlur: callers.length > 0 && blurEnabled ? maxBlur : 0
 
     readonly property list<Item> callers: []
     readonly property Item currentCaller: callers.length > 0 ? callers[callers.length - 1] : null
 
     parent: target
     anchors.fill: parent
-    color: "black"
-    opacity: callers.length > 0 ? maxOpacity : 0
+    color: "transparent"
 
-    onCurrentCallerChanged: root.redrawCaller()
+    ShaderEffectSource {
+        id: blurSource
+        sourceItem: root.blurTarget
+        live: root.currentBlur > 0
+        anchors.fill: parent
+        visible: root.currentBlur > 0
 
-    onOpacityChanged: {
-        if (root.opacity === 0) {
-            callerOverlay.source = "";
+        hideSource: root.currentBlur > 0
+
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            blurEnabled: true
+            blurMultiplier: 0
+            blurMax: 64
+            blur: root.currentBlur
+            autoPaddingEnabled: false
         }
     }
+
+    Rectangle {
+        id: blurOverlay
+        anchors.fill: parent
+
+        color: "black"
+        opacity: root.callers.length > 0 ? root.maxOpacity : 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: root.transitionMs
+                easing.type: AppStyle.easingStandard
+            }
+        }
+
+        onOpacityChanged: {
+            if (blurOverlay.opacity === 0) {
+                callerOverlay.source = "";
+            }
+        }
+    }
+
+    onCurrentCallerChanged: root.redrawCaller()
 
     Timer {
         id: hideTimer
@@ -30,34 +71,24 @@ Rectangle {
         onTriggered: root.hide()
     }
 
-    Behavior on opacity {
+    Behavior on currentBlur {
         NumberAnimation {
-            duration: AppStyle.durationBase
+            duration: root.transitionMs
             easing.type: AppStyle.easingStandard
         }
     }
 
-    // The caller sits under the dim and cannot be raised out of it, so what shows through is a
-    // picture of it drawn on top
     Image {
         id: callerOverlay
         parent: root.target
         z: root.z + 1
-        visible: root.opacity > 0
+        visible: blurOverlay.opacity > 0
     }
 
-    // Grabs the current caller and draws it over the dim. The grab finishes later, by which time
-    // the caller may have changed or gone, so the result is dropped unless it is still wanted
     function redrawCaller() {
         const caller = root.currentCaller;
 
         if (caller === null) {
-
-            // Only clear the overlay if the dim is NOT being removed - we want the overlay to be cleared
-            // after the dim is removed for the last caller
-            if (callers.length > 1) {
-                callerOverlay.source = "";
-            }
             return;
         }
 
@@ -80,11 +111,18 @@ Rectangle {
         }
     }
 
-    function show(caller: Item) {
+    function show(caller: Item, blur :bool) {
+        if (!root.blurEnabled && blur) {
+            root.blurEnabled = true;
+        }
+
         callers.push(caller ?? null);
     }
 
     function hide() {
+        if (callers.length === 1) {
+            root.blurEnabled = false;
+        }
         if (callers.length > 0) {
             callers.pop();
         }

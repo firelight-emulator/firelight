@@ -58,6 +58,7 @@ QtObject {
     readonly property FLSoundEffect showDialog: FLSoundEffect {
         source: "qrc:/sfx/show-dialog"
         volume: 0.4
+        requiresInput: false
     }
 
     readonly property FLSoundEffect startSliderMove: FLSoundEffect {
@@ -78,5 +79,21 @@ QtObject {
     readonly property FLSoundEffect tabBarShoulderButtonNav: FLSoundEffect {
         source: "qrc:/sfx/paper-slide"
         volume: 1.0
+    }
+
+    // TODO: These files might be named wrong...
+    readonly property FLSoundEffect selectItem: FLSoundEffect {
+        source: "qrc:/sfx/sticky-pop-low"
+        volume: 1.0
+    }
+
+    readonly property FLSoundEffect deselectItem: FLSoundEffect {
+        source: "qrc:/sfx/sticky-pop-high"
+        volume: 1.0
+    }
+
+    readonly property FLSoundEffect menuItemFocus: FLSoundEffect {
+        source: "qrc:/sfx/sneaker-squeak"
+        volume: 0.75
     }
 }

@@ -11,8 +11,20 @@ QtObject {
     id: root
 
     readonly property var routes: Routing.ROUTES
+    readonly property var transitions: Routing.TRANSITIONS
+
+    // TODO
+    // The preset naming how a move should animate, or "" when no rule covers it
+    function transitionFor(fromPath, toPath) {
+        return Routing.transitionFor(fromPath, toPath, root.transitions);
+    }
 
     property string path: ""
+
+    // TODO
+    // Where the last move came from, which is what a per-pair transition rule is matched against
+    property string previousPath: ""
+
     property var params: ({})
     property var query: ({})
     property string matchedPattern: ""
@@ -86,9 +98,10 @@ QtObject {
         if (!root._allowed("navigate", rawPath)) {
             return false;
         }
-        var transition = Routing.inferTransition(Routing.currentPath(_state), parsed.path, routes);
+        var from = Routing.currentPath(_state);
+        var transition = Routing.inferTransition(from, parsed.path, routes);
         _state = Routing.pushHistory(_state, parsed.path);
-        _apply(parsed, transition);
+        _apply(parsed, transition, from);
         return true;
     }
 
@@ -97,9 +110,10 @@ QtObject {
             return false;
         }
         var parsed = Routing.parse(rawPath);
-        var transition = Routing.inferTransition(Routing.currentPath(_state), parsed.path, routes);
+        var from = Routing.currentPath(_state);
+        var transition = Routing.inferTransition(from, parsed.path, routes);
         _state = Routing.replaceHistory(_state, parsed.path);
-        _apply(parsed, transition);
+        _apply(parsed, transition, from);
         return true;
     }
 
@@ -113,7 +127,7 @@ QtObject {
         var from = Routing.currentPath(_state);
         _state = Routing.backHistory(_state);
         var to = Routing.currentPath(_state);
-        _apply(Routing.parse(to), Routing.inferTransition(from, to, routes));
+        _apply(Routing.parse(to), Routing.inferTransition(from, to, routes), from);
         return true;
     }
 
@@ -127,7 +141,7 @@ QtObject {
         var from = Routing.currentPath(_state);
         _state = Routing.forwardHistory(_state);
         var to = Routing.currentPath(_state);
-        _apply(Routing.parse(to), Routing.inferTransition(from, to, routes));
+        _apply(Routing.parse(to), Routing.inferTransition(from, to, routes), from);
         return true;
     }
 
@@ -149,10 +163,12 @@ QtObject {
         matchedPattern = "";
         canGoBack = false;
         canGoForward = false;
+        previousPath = "";
     }
 
-    function _apply(parsed, transition) {
+    function _apply(parsed, transition, fromPath) {
         var resolved = Routing.resolve(parsed.path, routes);
+        previousPath = fromPath === undefined ? "" : fromPath;
         path = parsed.path;
         query = parsed.query;
         params = resolved.params;

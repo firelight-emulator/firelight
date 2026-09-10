@@ -21,6 +21,7 @@ struct GamepadDisconnectedEvent {
 struct GamepadOrderChangedEvent {};
 
 struct GamepadInputEvent {
+  IGamepad *gamepad;
   int playerIndex;
   GamepadInput input;
   bool pressed;

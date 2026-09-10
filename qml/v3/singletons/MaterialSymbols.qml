@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 pragma Singleton
 import QtQuick
 
@@ -71,7 +72,15 @@ QtObject {
             "subdirectory_arrow_right": "\ue5da",
             "edit": "\ue3c9",
             "wifi": "\ue63e",
-            "wifi_off": "\ue648"
+            "wifi_off": "\ue648",
+            "backspace": "\ue14a",
+            "shift": "\ue5f2",
+            "shift_lock": "\uf7ae",
+            "keyboard_return": "\ue31b",
+            "space_bar": "\ue256",
+            "abc": "\ueb94",
+            "visibility": "\ue417",
+            "visibility_off": "\ue8f5"
         })
 
     function glyph(name) {

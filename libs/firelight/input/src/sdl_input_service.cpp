@@ -411,9 +411,10 @@ void SDLInputService::setGamepadInputState(const int playerIndex, IGamepad *game
   }
   m_gamepadLastStates[playerIndex][input] = pressed;
 
-  m_shortcutEngine.onInput(playerIndex, gamepad, static_cast<int>(input), pressed);
+  m_shortcutEngine.onInput(playerIndex, gamepad, input, pressed);
 
   EventDispatcher::instance().publish(GamepadInputEvent{
+      .gamepad = gamepad,
       .playerIndex = playerIndex,
       .input = input,
       .pressed = pressed,
@@ -449,6 +450,7 @@ void SDLInputService::run() {
         m_shortcutEngine.onInput(gamepad->getPlayerIndex(), gamepad.get(), static_cast<int>(input), false);
 
         EventDispatcher::instance().publish(GamepadInputEvent{
+            .gamepad = gamepad.get(),
             .playerIndex = gamepad->getPlayerIndex(),
             .input = input,
             .pressed = false,
@@ -470,6 +472,7 @@ void SDLInputService::run() {
         m_shortcutEngine.onInput(gamepad->getPlayerIndex(), gamepad.get(), static_cast<int>(input), true);
 
         EventDispatcher::instance().publish(GamepadInputEvent{
+            .gamepad = gamepad.get(),
             .playerIndex = gamepad->getPlayerIndex(),
             .input = input,
             .pressed = true,

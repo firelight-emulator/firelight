@@ -31,6 +31,8 @@ class QtPerformanceStatsProxy final : public QObject {
   Q_PROPERTY(QString renderSize READ getRenderSize NOTIFY updated)
   Q_PROPERTY(QString refreshRate READ getRefreshRate NOTIFY updated)
   Q_PROPERTY(QString frameRate READ getFrameRate NOTIFY updated)
+  Q_PROPERTY(QString targetRate READ getTargetRate NOTIFY updated)
+  Q_PROPERTY(bool rateMatchesTarget READ isRateMatchingTarget NOTIFY updated)
   Q_PROPERTY(QString frameTime READ getFrameTime NOTIFY updated)
   Q_PROPERTY(QString frameTimeDeviation READ getFrameTimeDeviation NOTIFY updated)
   Q_PROPERTY(QString submitTime READ getSubmitTime NOTIFY updated)
@@ -39,6 +41,7 @@ class QtPerformanceStatsProxy final : public QObject {
   Q_PROPERTY(QString wakeOvershoot READ getWakeOvershoot NOTIFY updated)
   Q_PROPERTY(QString framesRun READ getFramesRun NOTIFY updated)
   Q_PROPERTY(QString framesLost READ getFramesLost NOTIFY updated)
+  Q_PROPERTY(QString framesNotShown READ getFramesNotShown NOTIFY updated)
   Q_PROPERTY(QString pacingMode READ getPacingMode NOTIFY updated)
   Q_PROPERTY(QString audioRatio READ getAudioRatio NOTIFY updated)
 
@@ -74,6 +77,10 @@ public:
   [[nodiscard]] QString getRenderSize() const;
   [[nodiscard]] QString getRefreshRate() const;
   [[nodiscard]] QString getFrameRate() const;
+
+  [[nodiscard]] QString getTargetRate() const;
+
+  [[nodiscard]] bool isRateMatchingTarget() const;
   [[nodiscard]] QString getFrameTime() const;
   [[nodiscard]] QString getFrameTimeDeviation() const;
   [[nodiscard]] QString getSubmitTime() const;
@@ -82,6 +89,8 @@ public:
   [[nodiscard]] QString getWakeOvershoot() const;
   [[nodiscard]] QString getFramesRun() const;
   [[nodiscard]] QString getFramesLost() const;
+
+  [[nodiscard]] QString getFramesNotShown() const;
   [[nodiscard]] QString getPacingMode() const;
   [[nodiscard]] QString getAudioRatio() const;
 

@@ -45,6 +45,7 @@ int64_t FramePacer::noteSubmit(const int64_t nowNs) {
     refreshes = m_refreshCounter.observe(gapNs, periodNs, m_refreshCeiling.load());
   }
 
+  m_lastPresentRefreshes.store(refreshes);
   m_submitCount.fetch_add(refreshes);
   return gapNs;
 }

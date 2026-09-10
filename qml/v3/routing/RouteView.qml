@@ -27,6 +27,12 @@ StackView {
     padding: 0
     initialItem: Item {}
 
+    // TODO
+    // Holds this stack's copies of the named presets and hides the focus ring while a move runs
+    property StackTransitions transitions: StackTransitions {
+        view: stack
+    }
+
     // How many screen instances to keep alive (current + recent). Older ones are
     // destroyed and rebuilt fresh when revisited
     property int cacheSize: 5
@@ -43,7 +49,8 @@ StackView {
     // property names (e.g. :entryId -> FLGameDetailsPanel.entryId)
     readonly property var routes: ({
             "/library": libraryComponent,
-            "/library/reorder-collections": collectionOrderComponent
+            "/library/reorder-collections": collectionOrderComponent,
+            "/settings": settingsComponent
         // "/library/entries/:entryId": gameDetailsComponent,
         // "/shop": shopComponent,
         // "/shop/mods/:modId": shopItemComponent,
@@ -68,6 +75,12 @@ StackView {
         id: collectionOrderComponent
         CollectionOrderPage {}
     }
+
+    Component {
+        id: settingsComponent
+        SettingsScreen {}
+    }
+
     // Component {
     //     id: gameDetailsComponent
     //     FLGameDetailsPanel {}
@@ -129,134 +142,6 @@ StackView {
                 font.pixelSize: AppStyle.fontSizeMedium
                 text: "Page not found: " + Router.path
             }
-        }
-    }
-
-    pushEnter: Transition {
-        ParallelAnimation {
-            PropertyAnimation {
-                property: "opacity"
-                from: 0
-                to: 1
-                duration: 160
-                easing.type: Easing.InOutQuad
-            }
-            PropertyAnimation {
-                property: "x"
-                from: 20
-                to: 0
-                duration: 160
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        onRunningChanged: {
-            if (!running) {
-                FocusCursor.endBlink()
-            } else {
-                FocusCursor.startBlink()
-            }
-        }
-    }
-    pushExit: Transition {
-        ParallelAnimation {
-            PropertyAnimation {
-                property: "opacity"
-                from: 1
-                to: 0
-                duration: 160
-                easing.type: Easing.InOutQuad
-            }
-            PropertyAnimation {
-                property: "x"
-                from: 0
-                to: -20
-                duration: 160
-                easing.type: Easing.InOutQuad
-            }
-        }
-    }
-
-    popEnter: Transition {
-        ParallelAnimation {
-            PropertyAnimation {
-                property: "opacity"
-                from: 0
-                to: 1
-                duration: 160
-                easing.type: Easing.InOutQuad
-            }
-            PropertyAnimation {
-                property: "x"
-                from: -20
-                to: 0
-                duration: 160
-                easing.type: Easing.InOutQuad
-            }
-        }
-
-        onRunningChanged: {
-            if (!running) {
-                FocusCursor.endBlink()
-            } else {
-                FocusCursor.startBlink()
-            }
-        }
-    }
-
-    popExit: Transition {
-        ParallelAnimation {
-            PropertyAnimation {
-                property: "opacity"
-                from: 1
-                to: 0
-                duration: 160
-                easing.type: Easing.InOutQuad
-            }
-            PropertyAnimation {
-                property: "x"
-                from: 0
-                to: 20
-                duration: 160
-                easing.type: Easing.InOutQuad
-            }
-        }
-    }
-
-    replaceEnter: Transition {
-        SequentialAnimation {
-            PropertyAction {
-                property: "opacity"
-                value: 0
-            }
-            PauseAnimation {
-                duration: AppStyle.durationBase
-            }
-            NumberAnimation {
-                property: "opacity"
-                from: 0
-                to: 1
-                duration: AppStyle.durationBase
-                easing.type: AppStyle.easingStandard
-            }
-        }
-
-        onRunningChanged: {
-            if (!running) {
-                FocusCursor.endBlink()
-            } else {
-                FocusCursor.startBlink()
-            }
-        }
-    }
-
-    replaceExit: Transition {
-        NumberAnimation {
-            property: "opacity"
-            from: 1
-            to: 0
-            duration: AppStyle.durationBase
-            easing.type: AppStyle.easingStandard
         }
     }
 
@@ -344,7 +229,7 @@ StackView {
         }
     }
 
-    function _show(item, transition) {
+    function _show(item, preset) {
         stack.loading = false;
         // Keep the depth-1 invariant: if a screen ever pushes onto our stack
         // directly (outside the router), drop those extras so nothing lingers
@@ -358,8 +243,7 @@ StackView {
             return;
         }
         var previous = stack.currentItem;
-        var op = transition === "push" ? StackView.PushTransition : transition === "pop" ? StackView.PopTransition : StackView.ReplaceTransition;
-        stack.replaceCurrentItem(item, {}, op);
+        stack.replaceCurrentItem(item, {}, stack.transitions.apply(preset, item));
         _setActive(previous, false);
         _setActive(item, true);
 
@@ -378,6 +262,11 @@ StackView {
                 return;
             }
 
+            // TODO
+            // A rule for this exact move wins; otherwise the structural inference stands. Captured
+            // here so an asynchronous build still animates the move that asked for it
+            var preset = Router.transitionFor(Router.previousPath, Router.path) || transition;
+
             var key = stack._mountKey();
             var idx = stack._cacheIndex(key);
             if (idx >= 0) {
@@ -387,7 +276,7 @@ StackView {
                     key: key,
                     item: item
                 });
-                stack._show(item, transition);
+                stack._show(item, preset);
                 return;
             }
 
@@ -405,7 +294,7 @@ StackView {
                     delete stack._incubators[key];
                     stack._cacheTouch(key, incubator.object);
                     if (stack._mountKey() === key) {
-                        stack._show(incubator.object, transition);
+                        stack._show(incubator.object, preset);
                     }
                 } else if (incubator.status === Component.Error) {
                     delete stack._incubators[key];

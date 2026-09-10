@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 
 // TODO
@@ -29,6 +30,10 @@ QtObject {
     property real pitchVariation: 0
 
     // TODO
+    // Whether this sound needs a person's input behind it. False for one the app makes on its own
+    property bool requiresInput: true
+
+    // TODO
     // Whether the sound decoded, and so whether play() will be heard
     readonly property bool ready: root._clipId >= 0
 
@@ -41,6 +46,22 @@ QtObject {
     // are all busy. A play the caller marks as auto-repeat is scaled by
     // repeatGain
     function play(autoRepeat: bool) {
+        root._send(autoRepeat, root.requiresInput);
+    }
+
+    // TODO
+    // Takes this input's one sound before a handler runs, so nothing the handler sets off takes it
+    function claim() {
+        UiSoundPlayer.claim();
+    }
+
+    // TODO
+    // Plays a sound whose slot claim() already took
+    function playClaimed() {
+        root._send(false, false);
+    }
+
+    function _send(autoRepeat: bool, arbitrated: bool) {
         if (root.muted || root._clipId < 0) {
             return;
         }
@@ -48,6 +69,11 @@ QtObject {
         const gain = root.volume * (autoRepeat ? root.repeatGain : 1);
         const spread = root.pitchVariation;
         const pitch = spread > 0 ? 1 + (Math.random() * 2 - 1) * spread : 1;
+
+        if (arbitrated) {
+            UiSoundPlayer.request(root._clipId, gain, root.voices, pitch);
+            return;
+        }
 
         UiSoundPlayer.play(root._clipId, gain, root.voices, pitch);
     }

@@ -1,6 +1,7 @@
 // TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import QtQuick.Layouts 1.0
 import QtQuick.Window
 import Firelight 1.0
@@ -75,6 +76,22 @@ MainWindow {
         sequence: "F9"
         context: Qt.ApplicationShortcut
         onActivated: navigationPopup.visible ? navigationPopup.close() : navigationPopup.open()
+    }
+
+    Shortcut {
+        sequence: "F8"
+        context: Qt.ApplicationShortcut
+        onActivated: {
+            FLKeyboard.open({
+                "text": "",
+                "placeholderText": "Enter whatever man I don't care",
+                "maxLength": 128,
+                "sensitive": false,
+                "acceptLabel": "Submit"
+            }, function (result) {
+                console.log("Got result from keyboard: " + result);
+            });
+        }
     }
 
     Window {
@@ -227,72 +244,25 @@ MainWindow {
         // stay quiet, and the release (or focus moving) re-arms it
         property bool deadHeld: false
 
-        // TODO
-        // Runs an action and reports that it ran, so each lookup below reads as one line
-        function runAction(action: FLAction): bool {
-            if (action === null) {
-                return false;
-            }
-
-            action.trigger();
-            guideBar.refresh();
-            return true;
-        }
-
-        function activate(key: int, modifiers: int): bool {
-            const focused = window.activeFocusItem;
-
-            if (focused === null) {
-                return false;
-            }
-
-            const info = contentContainer.FLFocus.find(focused);
-
-            // TODO
-            // Looks outward from the focused item, so an action a container declares answers for
-            // everything inside it, which is what the guide bar already lists
-            if (contentContainer.runAction(contentContainer.FLFocus.findActionFor(focused, key, modifiers))) {
-                return true;
-            }
-
-            // TODO
-            // This handler is the container's own, so what the container declares answers here the
-            // way a button's own actions answer in its handler
-            if (contentContainer.runAction(contentContainer.FLFocus.getActionFor(key, modifiers))) {
-                return true;
-            }
-
-            if (info !== null && info.getActionCount() > 0) {
-                return false;
-            }
-
-            // TODO
-            // The fallback ignores modifiers on purpose: a modified press no declared action
-            // answered still presses the thing, the way a modified click does
-            if (key !== Qt.Key_Select && key !== Qt.Key_Return && key !== Qt.Key_Enter) {
-                return false;
-            }
-
-            if (typeof focused.click !== "function") {
-                return false;
-            }
-
-            focused.click();
-            return true;
-        }
-
         Keys.onPressed: event => {
             if (gameplay.foregrounded) {
                 return;
             }
 
-            // TODO: Add allowAutoRepeat
-            if (!event.isAutoRepeat && contentContainer.activate(event.key, event.modifiers)) {
+            if (contentContainer.FLFocus.dispatch(window.activeFocusItem, event.key, event.modifiers, event.isAutoRepeat)) {
+                // TODO
+                // A held key changes nothing the bar lists, and answering is not running, so only a
+                // fresh press is worth recollecting for
+                if (!event.isAutoRepeat) {
+                    guideBar.refresh();
+                }
+
                 event.accepted = true;
                 return;
             }
 
             if (FocusNavigator.move(window.activeFocusItem, event.key, event.isAutoRepeat) !== FocusNavigator.NoTarget) {
+                console.log("Input method detection handler key repeat: " + InputMethodManager.keyRepeating);
                 event.accepted = true;
                 return;
             }
@@ -325,6 +295,17 @@ MainWindow {
             id: contentStack
             clip: true
 
+            // layer.enabled: FLDimmer.isVisible
+            // layer.effect: MultiEffect {
+            //     source: contentStack
+            //     anchors.fill: contentStack
+            //     blurEnabled: true
+            //     blurMultiplier: 0
+            //     blurMax: 64
+            //     blur: 1.0
+            //     autoPaddingEnabled: false
+            // }
+
             objectName: "RouteView"
 
             anchors.bottomMargin: guideBar.height
@@ -351,10 +332,10 @@ MainWindow {
             z: guideBar.z + 1
 
             height: parent.height
-            width: 300
+            width: 360
 
             background: Rectangle {
-                color: "#292929"
+                color: Theme.surfaceElevated
             }
 
             enter: Transition {
@@ -397,30 +378,54 @@ MainWindow {
                 }
             }
 
-            contentItem: FLColumnLayout {
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                }
-                FLButton {
-                    Layout.fillWidth: true
-                    text: "Library"
-                }
-                FLButton {
-                    Layout.fillWidth: true
-                    text: "Controllers"
-                }
-                FLButton {
-                    Layout.fillWidth: true
-                    text: "Settings"
-                }
-                FLButton {
-                    Layout.fillWidth: true
-                    text: "Power"
-                }
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+            // TODO
+            // A scope rather than the column itself, so focus arriving here is handed on to the row that
+            // declares it rather than stopping on something that only lays out
+            contentItem: FocusScope {
+                // TODO
+                // The popup item above this is a focus scope of its own and keeps what it is given, so the
+                // surface has to claim it for anything inside to be reached
+                focus: true
+                FLColumnLayout {
+                    anchors.fill: parent
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    NavDrawerButton {
+                        Layout.fillWidth: true
+                        text: "Library"
+                        checked: Router.isActive("/library")
+                        focus: true
+
+                        onClicked: {
+                            Qt.callLater(() => Router.navigate("/library"));
+                            navigationPopup.close();
+                        }
+                    }
+
+                    NavDrawerButton {
+                        Layout.fillWidth: true
+                        text: "Settings"
+                        checked: Router.isActive("/settings")
+                        focus: checked
+
+                        onClicked: {
+                            Qt.callLater(() => Router.navigate("/settings"));
+                            navigationPopup.close();
+                        }
+                    }
+
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+
+                    NavDrawerButton {
+                        Layout.fillWidth: true
+                        text: "Power"
+                    }
                 }
             }
         }
@@ -444,6 +449,7 @@ MainWindow {
             anchors.right: parent.right
             height: AppStyle.titleBarHeight
             padding: AppStyle.titleBarPadding
+            z: onScreenKeyboard + 1
 
             background: Item {
                 Rectangle {
@@ -476,11 +482,22 @@ MainWindow {
             z: 90
         }
 
+        // TODO
+        // Lives outside the content it samples: a blur source drawn inside its own source item
+        // renders into the texture it is reading from
         Item {
             id: dimmer
+
+            parent: Overlay.overlay
             anchors.fill: parent
+
+            // TODO
+            // Under every popup, which take the overlay's default
+            z: -1
+
             Component.onCompleted: {
                 FLDimmer.target = dimmer;
+                FLDimmer.blurTarget = contentContainer;
             }
         }
 
@@ -499,6 +516,17 @@ MainWindow {
         id: launchCinematic
         parent: Overlay.overlay
         z: 200000
+    }
+
+    // TODO
+    // Mounted once and raised through the FLKeyboard singleton, which has no scene graph of its own
+    FLKeyboardOverlay {
+        id: onScreenKeyboard
+        z: guideBar.z - 1
+        topPadding: 36
+        bottomReservedHeight: guideBar.height
+
+        Component.onCompleted: FLKeyboard.overlay = onScreenKeyboard
     }
 
     Connections {

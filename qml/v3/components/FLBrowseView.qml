@@ -90,13 +90,51 @@ FocusScope {
         }
     }
 
+    // TODO
+    // The rail button the cursor was last on, so returning to the rail returns to where it was
+    property Item _lastRailItem: null
+
+    // TODO
+    // Puts the cursor on the rail: at the top when a press asks for the top, otherwise back where
+    // it was
+    function _focusRail(top: bool) {
+        const kids = toolbarColumn.children;
+        let target = null;
+
+        if (!top && root._lastRailItem !== null && Nav.isFocusable(root._lastRailItem)) {
+            target = root._lastRailItem;
+        } else {
+            const index = Nav.firstFocusable(kids, 0);
+            target = index >= 0 ? kids[index] : null;
+        }
+
+        if (target !== null) {
+            target.forceActiveFocus();
+        }
+    }
+
+    Connections {
+        target: root.Window.window
+
+        function onActiveFocusItemChanged() {
+            const focused = root.Window.window ? root.Window.window.activeFocusItem : null;
+
+            for (let at = focused; at; at = at.parent) {
+                if (at.parent === toolbarColumn) {
+                    root._lastRailItem = at;
+                    return;
+                }
+            }
+        }
+    }
+
     function _ensureCursor() {
         if (!root.activeFocus || !root.Window.window) {
             return;
         }
 
         if (root.Window.window.activeFocusItem === viewLoader) {
-            toolbarColumn.focusFirstChild(toolbarColumn.currentIndex);
+            root._focusRail(false);
         }
     }
 
@@ -106,7 +144,7 @@ FocusScope {
             return;
         }
 
-        toolbarColumn.focusFirstChild(toolbarColumn.currentIndex);
+        root._focusRail(false);
     }
 
     function enterFocus() {
@@ -117,7 +155,7 @@ FocusScope {
             return;
         }
 
-        toolbarColumn.focusFirstChild(toolbarColumn.currentIndex);
+        root._focusRail(false);
     }
 
     Keys.onPressed: event => {
@@ -125,13 +163,10 @@ FocusScope {
             return;
         }
 
-        const top = Nav.firstFocusable(toolbarColumn.children, 0);
-
-        if (top < 0) {
-            return;
-        }
-
-        toolbarColumn.focusFirstChild(top);
+        // TODO
+        // Leaving the very first cell goes to the top of the rail rather than to whatever lies
+        // beside it
+        root._focusRail(true);
         event.accepted = true;
     }
 

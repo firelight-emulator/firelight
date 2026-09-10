@@ -12,6 +12,8 @@ FocusScope {
     required property string currentSortLabel
     required property bool sortAscending
 
+    property alias selectionGroup: root.selectionGroup
+
     // Multi-select state owned by GameView and bound in
     property var selectedIds: ({})
 
@@ -163,6 +165,7 @@ FocusScope {
             onClicked: (tapPoint) =>{
                 gameDelegate.GridView.view.currentIndex = gameDelegate.index;
                 gridRoot.gameClicked(gameDelegate.model.entryId, gameDelegate.index, tapPoint.modifiers);
+                // gameDelegate.GridView.view.selectionGroup.select(gameDelegate.index, tapPoint.modifiers)
             }
 
             onLaunchRequested: (entryId, contentHash, platformId, playable, statusText) => {

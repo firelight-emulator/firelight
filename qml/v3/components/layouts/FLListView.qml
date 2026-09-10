@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import Firelight 1.0
 
@@ -31,7 +32,10 @@ ListView {
 
     FLFocus.holdEdges: FLFocus.Vertical
 
-    property int repeatInterval: 45
+    // TODO
+    // How long a held direction waits between moves. Declared where every other region declares
+    // it, though this view paces itself rather than going through the navigator
+    FLFocus.repeatInterval: 45
     function moveFocus(direction: int): bool {
         root.adoptFocusedIndex();
 
@@ -94,7 +98,7 @@ ListView {
 
     Timer {
         id: repeatGate
-        interval: root.repeatInterval
+        interval: root.FLFocus.repeatInterval
     }
 
     Keys.onPressed: event => {

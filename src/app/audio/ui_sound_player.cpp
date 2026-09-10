@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "ui_sound_player.hpp"
 
 #include "audio_device_selection.hpp"
@@ -390,6 +391,25 @@ void UiSoundPlayer::play(const int clipId, const qreal gain, const int voices, c
   }
 
   m_mixer.play(clipId, static_cast<float>(gain), voices, static_cast<float>(pitch));
+}
+
+bool UiSoundPlayer::request(const int clipId, const qreal gain, const int voices, const qreal pitch) {
+  if (m_inputDepth == 0 || m_soundSpent) {
+    return false;
+  }
+
+  m_soundSpent = true;
+  play(clipId, gain, voices, pitch);
+
+  return true;
+}
+
+void UiSoundPlayer::claim() {
+  if (m_inputDepth == 0) {
+    return;
+  }
+
+  m_soundSpent = true;
 }
 
 void UiSoundPlayer::stop(const int clipId) {

@@ -22,7 +22,7 @@ Popup {
 
     // Overlay route pattern -> screen Component
     readonly property var routes: ({
-            "/settings": settingsComponent
+            // "/settings": settingsComponent
         })
 
     Component {

@@ -94,6 +94,12 @@ public:
 
   [[nodiscard]] bool paused() const override;
 
+  /**
+   * @return How many refreshes the last present was held for. A pass reads this to decide whether it
+   *         can afford to run a second frame
+   */
+  [[nodiscard]] int getLastPresentRefreshes() const { return m_pacer.getLastPresentRefreshes(); }
+
   void setPaused(bool paused) override;
 
   // Runs a single frame and pauses again, so a paused game can be stepped

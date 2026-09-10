@@ -42,12 +42,6 @@ QtObject {
     property SettingBinding glassBinding: SettingBinding {
         key: "glass-opacity"
     }
-    property SettingBinding tileSizeBinding: SettingBinding {
-        key: "library-tile-size"
-    }
-    property SettingBinding tileSpacingBinding: SettingBinding {
-        key: "library-tile-spacing"
-    }
     property SettingBinding scaleBinding: SettingBinding {
         key: "interface-scale"
     }
@@ -121,10 +115,6 @@ QtObject {
     readonly property real themeIntensity: parseFloat(tintBinding.value)
     // Opacity of translucent "glass" surfaces over the background
     readonly property real glassOpacity: parseFloat(glassBinding.value) || 0.55
-    // Library grid cover-art edge, in px. The grid binds cellWidth/cellHeight
-    // to this and GameTile decodes to match
-    readonly property int libraryTileSize: parseInt(tileSizeBinding.value) || 160
-    readonly property int libraryTileSpacing: parseInt(tileSpacingBinding.value) || 12
 
     // TODO
     // A tile size being previewed while a control is dragged, or -1 when none is. Following it

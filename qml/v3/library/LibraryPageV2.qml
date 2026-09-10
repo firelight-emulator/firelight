@@ -89,8 +89,6 @@ FocusScope {
         libraryContentStack.forceActiveFocus();
     }
 
-    property int lastStackRank: 0
-
     function syncStack() {
         const target = root.openCollectionId !== -1 ? collectionPanel : root.libraryTab === 1 ? collectionsPanel : gameView;
 
@@ -98,10 +96,8 @@ FocusScope {
             return;
         }
 
-        const rank = root.openCollectionId !== -1 ? 2 : root.libraryTab;
-        const forward = rank > root.lastStackRank;
-        root.lastStackRank = rank;
-        libraryContentStack.replaceCurrentItem(target, {}, forward ? StackView.PushTransition : StackView.PopTransition);
+        const preset = Router.transitionFor(Router.previousPath, Router.path);
+        libraryContentStack.replaceCurrentItem(target, {}, libraryContentStack.transitions.apply(preset, target));
     }
 
     property var openCollectionRow: null
@@ -143,9 +139,12 @@ FocusScope {
     StackView {
         id: libraryContentStack
 
-        readonly property int _stackSlideDistance: AppStyle.spacingSm
-        readonly property real _stackSlideDuration: AppStyle.durationSlow
-        readonly property var _stackSlideEasing: AppStyle.easingStandard
+        // TODO
+        // Holds this stack's copies of the named presets and hides the focus ring while a move runs
+        property StackTransitions transitions: StackTransitions {
+            view: libraryContentStack
+            blinksCursor: root.activeFocus
+        }
 
         anchors.fill: parent
         anchors.leftMargin: AppStyle.windowPadding
@@ -188,122 +187,6 @@ FocusScope {
         focus: true
 
         background: Item {}
-
-        pushEnter: Transition {
-            SequentialAnimation {
-                ScriptAction {
-                    script: {
-                        if (root.activeFocus) {
-                            FocusCursor.startBlink();
-                        }
-                    }
-                }
-                ParallelAnimation {
-                    NumberAnimation {
-                        property: "opacity"
-                        from: 0
-                        to: 1
-                        duration: libraryContentStack._stackSlideDuration
-                        easing.type: libraryContentStack._stackSlideEasing
-                    }
-                    NumberAnimation {
-                        property: "x"
-                        from: libraryContentStack._stackSlideDistance
-                        to: 0
-                        duration: libraryContentStack._stackSlideDuration
-                        easing.type: libraryContentStack._stackSlideEasing
-                    }
-                }
-                ScriptAction {
-                    script: {
-                        FocusCursor.endBlink();
-                    }
-                }
-            }
-
-            onRunningChanged: {
-                if (!running) {
-                    Qt.callLater(FocusCursor.endBlink);
-                }
-            }
-        }
-
-        pushExit: Transition {
-            ParallelAnimation {
-                NumberAnimation {
-                    property: "opacity"
-                    from: 1
-                    to: 0
-                    duration: libraryContentStack._stackSlideDuration
-                    easing.type: libraryContentStack._stackSlideEasing
-                }
-                NumberAnimation {
-                    property: "x"
-                    from: 0
-                    to: -libraryContentStack._stackSlideDistance
-                    duration: libraryContentStack._stackSlideDuration
-                    easing.type: libraryContentStack._stackSlideEasing
-                }
-            }
-        }
-
-        popEnter: Transition {
-            SequentialAnimation {
-                ScriptAction {
-                    script: {
-                        if (root.activeFocus) {
-                            FocusCursor.startBlink();
-                        }
-                    }
-                }
-                ParallelAnimation {
-                    NumberAnimation {
-                        property: "opacity"
-                        from: 0
-                        to: 1
-                        duration: libraryContentStack._stackSlideDuration
-                        easing.type: libraryContentStack._stackSlideEasing
-                    }
-                    NumberAnimation {
-                        property: "x"
-                        from: -libraryContentStack._stackSlideDistance
-                        to: 0
-                        duration: libraryContentStack._stackSlideDuration
-                        easing.type: libraryContentStack._stackSlideEasing
-                    }
-                }
-                ScriptAction {
-                    script: {
-                        FocusCursor.endBlink();
-                    }
-                }
-            }
-
-            onRunningChanged: {
-                if (!running) {
-                    Qt.callLater(FocusCursor.endBlink);
-                }
-            }
-        }
-
-        popExit: Transition {
-            ParallelAnimation {
-                NumberAnimation {
-                    property: "opacity"
-                    from: 1
-                    to: 0
-                    duration: libraryContentStack._stackSlideDuration
-                    easing.type: libraryContentStack._stackSlideEasing
-                }
-                NumberAnimation {
-                    property: "x"
-                    from: 0
-                    to: libraryContentStack._stackSlideDistance
-                    duration: libraryContentStack._stackSlideDuration
-                    easing.type: libraryContentStack._stackSlideEasing
-                }
-            }
-        }
     }
 
     CollectionDialog {

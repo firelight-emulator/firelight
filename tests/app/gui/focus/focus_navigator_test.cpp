@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "gui/focus/focus_navigator.hpp"
 
 #include "gui/focus_info.hpp"
@@ -5,6 +6,7 @@
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQuickItem>
+#include <QQuickWindow>
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -504,19 +506,137 @@ TEST(FocusNavigatorTest, ThePressStaysInsideAnOpenPanel) {
   EXPECT_FALSE(outside->hasFocus());
 }
 
-// The cursor may be drawn around something other than the focused item, and the
-// move has to be measured by the same shape
-TEST(FocusNavigatorTest, AStandInShapeIsWhatTheMoveIsMeasuredBy) {
+// The cursor may be drawn around something other than the focused item, but a move is measured by
+// the item itself: a stand-in shape moves with what it represents, and a target that moves is one
+// nothing else reliably lines up with
+TEST(FocusNavigatorTest, AStandInShapeIsNotWhatTheMoveIsMeasuredBy) {
   FocusNavigator navigator;
   QQuickItem root;
   auto *button = item(&root, 0.0, 0.0, 10.0, 10.0);
   auto *shape = item(&root, 500.0, 500.0, 100.0, 100.0, Qt::NoFocus);
-  auto *below = item(&root, 500.0, 700.0, 100.0, 100.0);
+  auto *belowTheShape = item(&root, 500.0, 700.0, 100.0, 100.0);
 
   info(button)->setProxy(shape);
 
-  EXPECT_EQ(navigator.move(button, Qt::Key_Down, false), FocusNavigator::Moved);
-  EXPECT_TRUE(below->hasFocus());
+  // Only the shape shares a lane with it, and the shape is not what the button is measured by
+  EXPECT_EQ(navigator.move(button, Qt::Key_Down, false), FocusNavigator::NoTarget);
+  EXPECT_FALSE(belowTheShape->hasFocus());
+}
+
+// Two rows that draw their cursor on a small moving part still reach each other, because each is
+// measured by the row rather than by the part
+TEST(FocusNavigatorTest, RowsDrawingOnAMovingPartStillReachEachOther) {
+  FocusNavigator navigator;
+  QQuickItem root;
+  auto *topRow = item(&root, 0.0, 0.0, 400.0, 40.0);
+  auto *topHandle = item(topRow, 20.0, 8.0, 26.0, 26.0, Qt::NoFocus);
+  auto *bottomRow = item(&root, 0.0, 60.0, 400.0, 40.0);
+  auto *bottomHandle = item(bottomRow, 340.0, 8.0, 26.0, 26.0, Qt::NoFocus);
+
+  info(topRow)->setProxy(topHandle);
+  info(bottomRow)->setProxy(bottomHandle);
+
+  EXPECT_EQ(navigator.move(topRow, Qt::Key_Down, false), FocusNavigator::Moved);
+  EXPECT_TRUE(bottomRow->hasFocus());
+}
+
+// A press with nowhere wholly on display to go takes something partly shown rather than nothing.
+// The cursor arriving there is what scrolls it the rest of the way in
+//****************
+// a parked cursor
+//****************
+
+// Opening a popup or loading a page leaves the focus on a scope, which is not somewhere the cursor
+// can sit. Rather than asking every one of them to hand focus on, the navigator notices and lands
+TEST(FocusNavigatorTest, FocusParkedOnSomethingUnreachableIsMovedInside) {
+  FocusNavigator navigator;
+  QQuickWindow window;
+  auto *scope = new QQuickItem(window.contentItem());
+  scope->setSize(QSizeF(200.0, 200.0));
+  scope->setFlag(QQuickItem::ItemIsFocusScope);
+
+  auto *first = item(scope, 0.0, 0.0, 200.0, 40.0);
+  item(scope, 0.0, 50.0, 200.0, 40.0);
+
+  scope->forceActiveFocus();
+  ASSERT_TRUE(scope->hasActiveFocus());
+
+  EXPECT_TRUE(navigator.settleFor(scope));
+  EXPECT_TRUE(first->hasActiveFocus());
+}
+
+// Somewhere the cursor can already sit is left exactly where it is
+TEST(FocusNavigatorTest, FocusOnSomethingReachableIsLeftAlone) {
+  FocusNavigator navigator;
+  QQuickWindow window;
+  auto *scope = new QQuickItem(window.contentItem());
+  scope->setSize(QSizeF(200.0, 200.0));
+  scope->setFlag(QQuickItem::ItemIsFocusScope);
+
+  item(scope, 0.0, 0.0, 200.0, 40.0);
+  auto *second = item(scope, 0.0, 50.0, 200.0, 40.0);
+
+  second->forceActiveFocus();
+
+  EXPECT_FALSE(navigator.settleFor(second));
+  EXPECT_TRUE(second->hasActiveFocus());
+}
+
+// Closing a popup parks the focus on the root on its way to restoring what opened it, and
+// correcting that would land somewhere arbitrary before the restore arrives
+TEST(FocusNavigatorTest, FocusPassingThroughTheRootIsLeftForWhateverIsRestoringIt) {
+  FocusNavigator navigator;
+  QQuickWindow window;
+  item(window.contentItem(), 0.0, 0.0, 200.0, 40.0);
+
+  EXPECT_FALSE(navigator.settleFor(window.contentItem()));
+}
+
+// A press from a parked cursor spends itself putting the cursor somewhere real, which is a move
+// rather than a press that went nowhere
+TEST(FocusNavigatorTest, APressFromAParkedCursorLandsItRatherThanReportingNowhereToGo) {
+  FocusNavigator navigator;
+  QQuickWindow window;
+  auto *scope = new QQuickItem(window.contentItem());
+  scope->setSize(QSizeF(200.0, 200.0));
+  scope->setFlag(QQuickItem::ItemIsFocusScope);
+
+  auto *first = item(scope, 0.0, 0.0, 200.0, 40.0);
+  item(scope, 0.0, 50.0, 200.0, 40.0);
+
+  scope->forceActiveFocus();
+
+  EXPECT_EQ(navigator.move(scope, Qt::Key_Down, false), FocusNavigator::Moved);
+  EXPECT_TRUE(first->hasActiveFocus());
+}
+
+TEST(FocusNavigatorTest, APressWithNowhereElseToGoReachesSomethingPartlyOnDisplay) {
+  FocusNavigator navigator;
+  QQuickItem root;
+  auto *frame = container(&root, 0.0, 0.0, 200.0, 200.0);
+  frame->setClip(true);
+
+  auto *whole = item(frame, 10.0, 100.0, 180.0, 40.0);
+  auto *half = item(frame, 10.0, 180.0, 180.0, 40.0);
+
+  EXPECT_EQ(navigator.move(whole, Qt::Key_Down, false), FocusNavigator::Moved);
+  EXPECT_TRUE(half->hasFocus());
+}
+
+// Something wholly on display is still preferred, so the fallback never changes a press that
+// already had an answer
+TEST(FocusNavigatorTest, SomethingWhollyOnDisplayIsStillPreferred) {
+  FocusNavigator navigator;
+  QQuickItem root;
+  auto *frame = container(&root, 0.0, 0.0, 200.0, 200.0);
+  frame->setClip(true);
+
+  auto *from = item(frame, 10.0, 10.0, 180.0, 40.0);
+  auto *shown = item(frame, 10.0, 60.0, 180.0, 40.0);
+  item(frame, 10.0, 180.0, 180.0, 40.0);
+
+  EXPECT_EQ(navigator.move(from, Qt::Key_Down, false), FocusNavigator::Moved);
+  EXPECT_TRUE(shown->hasFocus());
 }
 
 TEST(FocusNavigatorTest, AHeldDirectionStopsAtAContainersEdgeRatherThanLeavingIt) {

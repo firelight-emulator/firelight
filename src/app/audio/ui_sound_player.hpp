@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/audio/sfx_mixer.hpp>
@@ -57,6 +58,53 @@ public:
    * @param pitch Playback rate multiplier; 1.0 plays the clip at its recorded pitch
    */
   Q_INVOKABLE void play(int clipId, qreal gain, int voices, qreal pitch = 1.0);
+
+  // TODO
+  /**
+   * The span of one user input, during which at most one requested sound is heard.
+   *
+   * A nested span keeps its own slot, so a press handled inside another one still gets a sound
+   */
+  class GuiInputScope {
+  public:
+    explicit GuiInputScope(UiSoundPlayer *player) : m_player(player), m_wasSpent(player->m_soundSpent) {
+      m_player->m_soundSpent = false;
+      ++m_player->m_inputDepth;
+    }
+
+    ~GuiInputScope() {
+      --m_player->m_inputDepth;
+      m_player->m_soundSpent = m_wasSpent;
+    }
+
+    GuiInputScope(const GuiInputScope &) = delete;
+
+    GuiInputScope &operator=(const GuiInputScope &) = delete;
+
+  private:
+    UiSoundPlayer *m_player;
+    bool m_wasSpent;
+  };
+
+  // TODO
+  /**
+   * Asks for a sound, which is heard only while a user input is being handled and nothing has
+   * sounded for that input yet
+   *
+   * @param clipId An id from registerClip
+   * @param gain Linear gain, already scaled by the caller's own volume
+   * @param voices How many voices of this clip may sound at once
+   * @param pitch Playback rate multiplier; 1.0 plays the clip at its recorded pitch
+   * @return Whether the request took the input's sound
+   */
+  Q_INVOKABLE bool request(int clipId, qreal gain, int voices, qreal pitch = 1.0);
+
+  // TODO
+  /**
+   * Takes the current input's one sound before anything else can, for a caller that knows it
+   * answers the press
+   */
+  Q_INVOKABLE void claim();
 
   /**
    * Fades out every voice currently playing a clip
@@ -126,6 +174,16 @@ private:
    * Turns a qrc: or file: URL into a path QFile can open
    */
   [[nodiscard]] static QString resolveResourcePath(const QUrl &source);
+
+  // TODO
+  // How many user inputs are being handled, nested ones included; zero means nothing a person did
+  // is in flight
+  int m_inputDepth = 0;
+
+  // TODO
+  // Whether the input being handled has already sounded. Starts spent, so anything with no input
+  // behind it is silent
+  bool m_soundSpent = true;
 
   settings::SettingsService &m_settingsService;
   SfxMixer m_mixer;

@@ -127,6 +127,15 @@ Rectangle {
 
         StatValue {
             text: PerformanceStats.frameRate
+            color: PerformanceStats.rateMatchesTarget ? Theme.textPrimary : Theme.danger
+        }
+
+        StatName {
+            text: " - Target:"
+        }
+
+        StatValue {
+            text: PerformanceStats.targetRate
         }
 
         StatName {
@@ -191,6 +200,14 @@ Rectangle {
 
         StatValue {
             text: PerformanceStats.framesLost
+        }
+
+        StatName {
+            text: " - Not shown:"
+        }
+
+        StatValue {
+            text: PerformanceStats.framesNotShown
         }
 
         StatName {

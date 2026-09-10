@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQml
 import QtQuick.Controls
@@ -66,14 +67,12 @@ FLPopup {
     }
 
     contentItem: FocusScope {
+        // TODO
+        // The popup item above this is a focus scope of its own and keeps what it is given, so the
+        // surface has to claim it for anything inside to be reached
+        focus: true
         implicitWidth: Math.max(column.implicitWidth, buttonRow.implicitWidth)
         implicitHeight: contentFlickable.implicitHeight + control.contentButtonSpacing + buttonRow.implicitHeight
-
-        onActiveFocusChanged: {
-            if (activeFocus) {
-                buttonRow.forceActiveFocus();
-            }
-        }
 
         FLFocus.actions: [
             FLAction {

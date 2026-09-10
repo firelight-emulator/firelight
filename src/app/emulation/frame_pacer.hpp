@@ -51,6 +51,18 @@ public:
   int64_t noteSubmit(int64_t nowNs);
 
   /**
+   * @return How many refreshes the last present was held for, or 0 before two have been seen. One
+   *         means the present arrived on its own refresh; more means it missed one
+   */
+  [[nodiscard]] int getLastPresentRefreshes() const { return m_lastPresentRefreshes.load(); }
+
+  // TODO
+  /**
+   * @return Whether a frame has reached the display that a tick has not taken yet
+   */
+  [[nodiscard]] bool hasPendingPresents() const { return m_submitCount.load() > 0; }
+
+  /**
    * Whether the game is stopped, which owes nothing for the time it is stopped for
    */
   void setPaused(bool paused);
@@ -96,6 +108,7 @@ private:
   std::atomic<int> m_submitCount = 0;
   std::atomic<int64_t> m_lastSubmitAtNs = 0;
   std::atomic<int64_t> m_displayPeriodNs = 0;
+  std::atomic<int> m_lastPresentRefreshes = 0;
   std::atomic<int> m_refreshCeiling = RefreshCounter::MIN_CEILING;
 
   std::atomic<bool> m_paused = false;

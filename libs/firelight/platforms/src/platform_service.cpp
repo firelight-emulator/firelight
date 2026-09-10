@@ -23,6 +23,7 @@ constexpr std::array PLATFORM_RC_CONSOLES = {
     PlatformRcConsole{PlatformService::PLATFORM_ID_NES, RC_CONSOLE_NINTENDO},
     PlatformRcConsole{PlatformService::PLATFORM_ID_SNES, RC_CONSOLE_SUPER_NINTENDO},
     PlatformRcConsole{PlatformService::PLATFORM_ID_N64, RC_CONSOLE_NINTENDO_64},
+    PlatformRcConsole{PlatformService::PLATFORM_ID_GAMECUBE, RC_CONSOLE_GAMECUBE},
     PlatformRcConsole{PlatformService::PLATFORM_ID_NINTENDO_DS, RC_CONSOLE_NINTENDO_DS},
     PlatformRcConsole{PlatformService::PLATFORM_ID_SEGA_MASTER_SYSTEM, RC_CONSOLE_MASTER_SYSTEM},
     PlatformRcConsole{PlatformService::PLATFORM_ID_SEGA_GENESIS, RC_CONSOLE_MEGA_DRIVE},
@@ -40,8 +41,7 @@ constexpr std::array PLATFORM_RC_CONSOLES = {
     PlatformRcConsole{PlatformService::PLATFORM_ID_SG1000, RC_CONSOLE_SG1000},
     PlatformRcConsole{PlatformService::PLATFORM_ID_FAMICOM_DISK_SYSTEM, RC_CONSOLE_FAMICOM_DISK_SYSTEM},
     PlatformRcConsole{PlatformService::PLATFORM_ID_NEOGEO_POCKET, RC_CONSOLE_NEOGEO_POCKET},
-    PlatformRcConsole{PlatformService::PLATFORM_ID_3DO, RC_CONSOLE_3DO},
-};
+    PlatformRcConsole{PlatformService::PLATFORM_ID_3DO, RC_CONSOLE_3DO}};
 
 // TODO
 // Neither a platform nor a console may appear twice: the reverse lookup would otherwise answer
@@ -259,6 +259,12 @@ PlatformService::PlatformService() {
                                    {"Analog Stick Right", input::GamepadInput::LeftStickRight},
                                }}},
   });
+  m_platforms.emplace_back(Platform{.id = PLATFORM_ID_GAMECUBE,
+                                    .name = "GameCube",
+                                    .abbreviation = "GameCube",
+                                    .slug = "gcn",
+                                    .fileAssociations = {"gcn"},
+                                    .controllerTypes = {}});
   m_platforms.emplace_back(Platform{
       .id = PLATFORM_ID_NINTENDO_DS,
       .name = "Nintendo DS",

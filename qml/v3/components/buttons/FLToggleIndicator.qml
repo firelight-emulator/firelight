@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 
 Item {
@@ -9,14 +10,6 @@ Item {
 
     implicitWidth: AppStyle.iconSizeMd
     implicitHeight: AppStyle.iconSizeMd
-
-    onCheckedChanged: {
-        if (checked) {
-            SoundEffects.check.play();
-        } else {
-            SoundEffects.uncheck.play();
-        }
-    }
 
     Rectangle {
         anchors.fill: parent

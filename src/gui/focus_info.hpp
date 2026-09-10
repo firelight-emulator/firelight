@@ -29,6 +29,7 @@ class FocusInfo : public QObject {
   Q_PROPERTY(bool showCursor READ showsCursor WRITE setShowCursor NOTIFY showCursorChanged)
   Q_PROPERTY(QQuickItem *proxy READ getProxy WRITE setProxy NOTIFY proxyChanged)
   Q_PROPERTY(qreal spacing READ getSpacing WRITE setSpacing NOTIFY spacingChanged)
+  Q_PROPERTY(qreal repeatInterval READ getRepeatInterval WRITE setRepeatInterval NOTIFY repeatIntervalChanged)
   Q_PROPERTY(qreal radius READ getRadius WRITE setRadius NOTIFY radiusChanged)
   Q_PROPERTY(qreal topLeftRadius READ getTopLeftRadius WRITE setTopLeftRadius NOTIFY topLeftRadiusChanged)
   Q_PROPERTY(qreal topRightRadius READ getTopRightRadius WRITE setTopRightRadius NOTIFY topRightRadiusChanged)
@@ -257,6 +258,11 @@ public:
   [[nodiscard]] qreal getSpacing() const { return m_spacing; }
 
   /**
+   * @return How long a held direction waits between moves inside this item, or NaN when unset
+   */
+  [[nodiscard]] qreal getRepeatInterval() const { return m_repeatInterval; }
+
+  /**
    * @return The corner radius the cursor should take, or NaN when unset
    */
   [[nodiscard]] qreal getRadius() const { return m_radius; }
@@ -358,19 +364,26 @@ public:
    *
    * @return Whether anything answered, so the caller knows whether to accept the event
    */
-  Q_INVOKABLE bool dispatch(QQuickItem *focused, const int key, const int modifiers = Qt::NoModifier) const {
+  Q_INVOKABLE bool dispatch(QQuickItem *focused, const int key, const int modifiers = Qt::NoModifier,
+                            const bool isAutoRepeat = false) const {
     if (focused == nullptr) {
       return false;
     }
 
-    if (runAction(findActionFor(focused, key, modifiers))) {
+    if (runAction(findActionFor(focused, key, modifiers), isAutoRepeat)) {
       return true;
     }
 
     // TODO
     // The attached item's own actions, which is what a container declaring Back answers with
-    if (runAction(getActionFor(key, modifiers))) {
+    if (runAction(getActionFor(key, modifiers), isAutoRepeat)) {
       return true;
+    }
+
+    // TODO
+    // Nothing presses the focused item on a held key: only an action opts into repeating
+    if (isAutoRepeat) {
+      return false;
     }
 
     // TODO
@@ -423,6 +436,13 @@ public:
     if (!qFuzzyCompare(m_spacing, spacing)) {
       m_spacing = spacing;
       emit spacingChanged();
+    }
+  }
+
+  void setRepeatInterval(const qreal repeatInterval) {
+    if (!qFuzzyCompare(m_repeatInterval, repeatInterval)) {
+      m_repeatInterval = repeatInterval;
+      emit repeatIntervalChanged();
     }
   }
 
@@ -510,6 +530,8 @@ signals:
 
   void spacingChanged();
 
+  void repeatIntervalChanged();
+
   void radiusChanged();
 
   void topLeftRadiusChanged();
@@ -535,12 +557,16 @@ signals:
 private:
   // TODO
   // Sounds an action and fires it, reporting that it ran so each lookup above reads as one line
-  static bool runAction(FocusAction *action) {
+  /**
+   * @return Whether an action answered the press, which is not whether it ran: a held key an action
+   *         did not opt into repeating still counts as answered, so nothing further acts on it
+   */
+  static bool runAction(FocusAction *action, const bool isAutoRepeat) {
     if (action == nullptr) {
       return false;
     }
 
-    action->trigger();
+    action->triggerForPress(isAutoRepeat);
     return true;
   }
 
@@ -563,6 +589,7 @@ private:
   bool m_showCursor = false;
   QQuickItem *m_proxy = nullptr;
   qreal m_spacing = qQNaN();
+  qreal m_repeatInterval = qQNaN();
   qreal m_radius = qQNaN();
   qreal m_topLeftRadius = qQNaN();
   qreal m_topRightRadius = qQNaN();

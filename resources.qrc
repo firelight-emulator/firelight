@@ -28,6 +28,9 @@
         <file alias="sticky-small">assets/sfx/switch2/Water, Splash, Splat, Single, Small SND58962.wav</file>
         <file alias="snap-medium">assets/sfx/switch2/Toys, Misc, Sticky Hand, Impact, Hit Human Hand SND79065 - Pitch 126_0.wav</file>
         <file alias="paper-slide">assets/sfx/switch2/Paper, Handle, Sliding Hand Across, Gentle Movement, Variations, Close SND104288.wav</file>
+        <file alias="sticky-pop-high">assets/sfx/switch2/Toys, Misc, Sticky Hand, Impact, Against Skin SND79055 HIGH.wav</file>
+        <file alias="sticky-pop-low">assets/sfx/switch2/Toys, Misc, Sticky Hand, Impact, Against Skin SND79055 LOW.wav</file>
+        <file alias="sneaker-squeak">assets/sfx/switch2/Footsteps, Human, Linoleum, Sneaker, Fast Squeak In End SND1084.wav</file>
     </qresource>
     <qresource prefix="/fonts">
         <file alias="lexend">assets/fonts/Lexend-VariableFont_wght.ttf</file>

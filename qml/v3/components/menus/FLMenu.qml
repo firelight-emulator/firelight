@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -57,22 +58,15 @@ FLPopup {
         }
     }
 
-    function focusFirstChild() {
-        column.focusFirstChild(-1);
-    }
-
-    contentItem: Flickable {
-        id: contentFlickable
-        implicitWidth: column.implicitWidth
-        implicitHeight: Math.min(600, column.implicitHeight)
-        contentHeight: column.implicitHeight
-        boundsBehavior: Flickable.StopAtBounds
-
-        onActiveFocusChanged: {
-            if (activeFocus) {
-                control.focusFirstChild();
-            }
-        }
+    // TODO
+    // A scope rather than the flickable itself, so focus arriving here is handed on to the row
+    // adoptRows named rather than stopping on something that only scrolls
+    contentItem: FocusScope {
+        // TODO
+        // The popup item above this is a focus scope of its own and keeps what it is given, so the
+        // surface has to claim it for anything inside to be reached
+        implicitWidth: contentFlickable.implicitWidth
+        implicitHeight: contentFlickable.implicitHeight
 
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Back || event.key === Qt.Key_Escape) {
@@ -82,11 +76,19 @@ FLPopup {
             }
         }
 
-        FLColumnLayout {
-            id: column
+        Flickable {
+            id: contentFlickable
             anchors.fill: parent
-            spacing: AppStyle.spacingXs
-            focus: true
+            implicitWidth: column.implicitWidth
+            implicitHeight: Math.min(600, column.implicitHeight)
+            contentHeight: column.implicitHeight
+            boundsBehavior: Flickable.StopAtBounds
+
+            FLColumnLayout {
+                id: column
+                anchors.fill: parent
+                spacing: AppStyle.spacingXs
+            }
         }
     }
 }

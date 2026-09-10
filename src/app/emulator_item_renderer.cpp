@@ -21,6 +21,7 @@
 #include <vulkan/vulkan_win32.h>
 #endif
 #include "emulator_item.hpp"
+#include "emulation/pace_probe.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -430,6 +431,11 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   }
 
   m_emulatorItem = emulatorItem;
+  m_lastPresentRefreshes = emulatorItem->getLastPresentRefreshes();
+
+  if (firelight::emulation::PaceProbe::isEnabled()) {
+    firelight::emulation::PaceProbe::instance().syncs.fetch_add(1);
+  }
 
   if (m_emulatorInstance && !m_hooksInstalled) {
     m_hooksInstalled = true;
@@ -521,6 +527,10 @@ void EmulatorItemRenderer::handleCommand(const firelight::emulation::EmulatorCom
     // TODO
     // A frame asked for with the pass already full is one the player never gets, and the only point
     // at which one is actually lost
+    if (firelight::emulation::PaceProbe::isEnabled()) {
+      firelight::emulation::PaceProbe::instance().framesRequested.fetch_add(1);
+    }
+
     if (m_framesToRun >= MAX_FRAMES_PER_PASS) {
       firelight::diagnostics::PerformanceStats::instance().recordDroppedFrame();
     } else {
@@ -661,6 +671,14 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     return;
   }
 
+  if (firelight::emulation::PaceProbe::isEnabled()) {
+    firelight::emulation::PaceProbe::instance().renders.fetch_add(1);
+
+    if (m_framesToRun == 0) {
+      firelight::emulation::PaceProbe::instance().idleRenders.fetch_add(1);
+    }
+  }
+
   // TODO
   // No frame is due, so there is nothing new to show — leave what is on screen alone
   if (m_framesToRun == 0) {
@@ -682,8 +700,25 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
   // Fast forward runs each frame owed more than once, so this is what the core actually advances by
   // and what the statistics have to be told
   const auto repeats = m_playbackMultiplier > 1 ? static_cast<int>(m_playbackMultiplier) : 1;
-  const auto framesThisPass = m_framesToRun * repeats;
-  m_framesToRun = 0;
+
+  // TODO
+  // At most two, so a pass that is behind catches up while a stall does not come back as a burst
+  const auto owedThisPass = std::min(m_framesToRun, 2);
+
+  m_framesToRun -= owedThisPass;
+
+  const auto framesThisPass = owedThisPass * repeats;
+
+  if (firelight::emulation::PaceProbe::isEnabled()) {
+    firelight::emulation::PaceProbe::instance().framesRun.fetch_add(framesThisPass);
+    firelight::emulation::PaceProbe::instance().notePass(framesThisPass);
+  }
+
+  // TODO
+  // A frame still owed brings its own pass rather than waiting on whatever asks next
+  if (m_framesToRun > 0) {
+    update();
+  }
 
   // TODO
   // Named as the overlay shows it, so it lines up with what another emulator reports for the same
@@ -709,6 +744,11 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     const auto sinceLastNs = m_lastPassNs > 0 ? nowNs - m_lastPassNs : 0;
     m_lastPassNs = nowNs;
     firelight::diagnostics::PerformanceStats::instance().recordFrame(sinceLastNs, framesThisPass);
+
+    // TODO
+    // Only the last frame of a pass reaches the display, so the rest ran to keep the core's time
+    // rather than to be seen
+    firelight::diagnostics::PerformanceStats::instance().recordFramesNotShown(framesThisPass - 1);
   }
 
   // ------------------------------------------------------------

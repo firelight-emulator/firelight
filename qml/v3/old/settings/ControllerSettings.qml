@@ -275,21 +275,21 @@ FocusScope {
                     shortcutDialog.open();
                 }
 
-                ContextMenu.menu: RightClickMenu {
-                    RightClickMenuItem {
-                        text: "Assign"
-                        onTriggered: shortcutRow.assign()
-                    }
-                    RightClickMenuItem {
-                        text: "Reset to default"
-                        onTriggered: profile.shortcutsModel.resetToDefault(shortcutRow.model.shortcutId)
-                    }
-                    RightClickMenuItem {
-                        // Unbinding is what turning a hotkey off means
-                        text: "Clear (turns it off)"
-                        onTriggered: profile.shortcutsModel.clearBindings(shortcutRow.model.shortcutId)
-                    }
-                }
+                // ContextMenu.menu: RightClickMenu {
+                //     RightClickMenuItem {
+                //         text: "Assign"
+                //         onTriggered: shortcutRow.assign()
+                //     }
+                //     RightClickMenuItem {
+                //         text: "Reset to default"
+                //         onTriggered: profile.shortcutsModel.resetToDefault(shortcutRow.model.shortcutId)
+                //     }
+                //     RightClickMenuItem {
+                //         // Unbinding is what turning a hotkey off means
+                //         text: "Clear (turns it off)"
+                //         onTriggered: profile.shortcutsModel.clearBindings(shortcutRow.model.shortcutId)
+                //     }
+                // }
 
                 contentItem: RowLayout {
                     spacing: AppStyle.spacingMd

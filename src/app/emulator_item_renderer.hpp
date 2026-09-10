@@ -21,12 +21,15 @@
 #include <QQuickRhiItemRenderer>
 #include <QSGRenderNode>
 #include <QVideoFrameInput>
+#include <atomic>
+#include <cstdlib>
 #include <libretro/libretro_vulkan.h>
 #include <memory>
 #include <mutex>
 #include <qchronotimer.h>
 #include <qsgrendererinterface.h>
 #include <rhi/qrhi.h>
+#include <string>
 
 class EmulatorItem;
 
@@ -208,6 +211,11 @@ private:
   QImage::Format m_pixelFormat = QImage::Format_RGB16;
   unsigned m_screenRotation = 0;
   bool m_paused = false;
+
+  // TODO
+  // Refreshes the last present was held for, copied across in synchronize(). A pass that already
+  // overran its slot must not take a second frame and overrun it further
+  int m_lastPresentRefreshes = 1;
   bool m_shouldSave = false;
 
   // TODO

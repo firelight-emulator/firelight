@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Templates as T
 import Firelight 1.0
@@ -22,6 +23,8 @@ QtObject {
     // Whether this popup is the one holding a dim up, so the two calls stay paired
     property bool isDimming: false
 
+    property bool blurOnDim: false
+
     property bool deadHeld: false
 
     property FLAction backAction: FLAction {
@@ -40,7 +43,7 @@ QtObject {
                 behavior.isDimming = behavior.popup.modal;
 
                 if (behavior.isDimming) {
-                    FLDimmer.show(behavior.caller);
+                    FLDimmer.show(behavior.caller, behavior.blurOnDim);
                 }
 
                 if (behavior.openSound) {
@@ -80,7 +83,7 @@ QtObject {
 
                 const focused = behavior.surface.Window.activeFocusItem;
 
-                if (!event.isAutoRepeat && behavior.surface.FLFocus.dispatch(focused, event.key, event.modifiers)) {
+                if (behavior.surface.FLFocus.dispatch(focused, event.key, event.modifiers, event.isAutoRepeat)) {
                     event.accepted = true;
                     return;
                 }

@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "focus_navigator.hpp"
 
 #include "candidate_collector.hpp"
@@ -13,6 +14,19 @@ namespace {
 /**
  * The edge flag standing for a direction
  */
+// TODO
+// The cadence a held direction runs at where it is, taken from the nearest declaration on the way
+// out. Nothing declaring one leaves the governor's own default in place
+qint64 repeatIntervalFor(QQuickItem *item) {
+  for (auto *at = item; at != nullptr; at = at->parentItem()) {
+    if (const auto *info = FocusInfo::find(at); info != nullptr && !qIsNaN(info->getRepeatInterval())) {
+      return static_cast<qint64>(info->getRepeatInterval());
+    }
+  }
+
+  return RepeatGovernor::INTERVAL_MS;
+}
+
 FocusInfo::Edge edgeFor(const Direction direction) {
   switch (direction) {
   case Direction::Up:
@@ -69,10 +83,11 @@ QQuickItem *rootOf(QQuickItem *item) {
 }
 } // namespace
 
-bool RepeatGovernor::allows(const Direction direction, const bool isAutoRepeat, const qint64 nowMs) {
+bool RepeatGovernor::allows(const Direction direction, const bool isAutoRepeat, const qint64 nowMs,
+                            const qint64 intervalMs) {
   const auto isSustained = isAutoRepeat && m_hasMoved && direction == m_lastDirection;
 
-  if (isSustained && nowMs - m_lastMoveMs < INTERVAL_MS) {
+  if (isSustained && nowMs - m_lastMoveMs < intervalMs) {
     return false;
   }
 
@@ -156,6 +171,38 @@ int FocusNavigator::enterContainer(const QRectF &origin, const Direction directi
   return row == SpatialResolver::NONE ? SpatialResolver::NONE : indexes[row];
 }
 
+bool FocusNavigator::settle(QQuickItem *item) {
+  if (m_settling || item == nullptr) {
+    return false;
+  }
+
+  // The window is read from the item rather than the watch, so this works on the first press too
+  const auto *window = item->window();
+
+  // TODO
+  // Closing a popup parks the focus on the root on its way to restoring the caller, and correcting
+  // that would land somewhere arbitrary before the restore arrives
+  if (window == nullptr || item == window->contentItem()) {
+    return false;
+  }
+
+  if (CandidateCollector::candidateFor(item) != nullptr) {
+    return false;
+  }
+
+  const auto candidates = CandidateCollector::collect(item);
+
+  if (candidates.empty()) {
+    return false;
+  }
+
+  m_settling = true;
+  land(nullptr, candidates.front().item, Direction::Down);
+  m_settling = false;
+
+  return true;
+}
+
 void FocusNavigator::forget() {
   m_steppedFrom = nullptr;
   m_steppedTo = nullptr;
@@ -200,6 +247,8 @@ void FocusNavigator::watch(QQuickItem *item) {
     if (!m_landing) {
       forget();
     }
+
+    settle(m_window.isNull() ? nullptr : m_window->activeFocusItem());
   });
 }
 
@@ -213,14 +262,17 @@ int FocusNavigator::move(QQuickItem *origin, const int key, const bool isAutoRep
   auto *from = CandidateCollector::candidateFor(origin);
 
   if (from == nullptr) {
-    return NoTarget;
+    // TODO
+    // The cursor is parked on something it cannot sit on, so the press spends itself putting it
+    // somewhere real rather than reporting nowhere to go
+    return settle(origin) ? Moved : NoTarget;
   }
 
   watch(from);
 
   // Thinning happens before the search, so a held direction costs one tree walk per move rather
   // than one per event
-  if (!m_governor.allows(direction, isAutoRepeat, QDateTime::currentMSecsSinceEpoch())) {
+  if (!m_governor.allows(direction, isAutoRepeat, QDateTime::currentMSecsSinceEpoch(), repeatIntervalFor(from))) {
     return Moved;
   }
 
@@ -229,7 +281,26 @@ int FocusNavigator::move(QQuickItem *origin, const int key, const bool isAutoRep
     return Moved;
   }
 
-  const auto candidates = CandidateCollector::collect(CandidateCollector::scopeFor(from, rootOf(from)));
+  auto *to = resolveTarget(from, direction, isAutoRepeat, false);
+
+  if (to == nullptr) {
+    // Nothing wholly on display lies that way, so a partly shown one will do rather than nothing
+    to = resolveTarget(from, direction, isAutoRepeat, true);
+  }
+
+  if (to == nullptr) {
+    return NoTarget;
+  }
+
+  land(from, to, direction);
+
+  return Moved;
+}
+
+QQuickItem *FocusNavigator::resolveTarget(QQuickItem *from, const Direction direction, const bool isAutoRepeat,
+                                          const bool admitStraddling) const {
+  const auto candidates =
+      CandidateCollector::collect(CandidateCollector::scopeFor(from, rootOf(from)), admitStraddling);
 
   std::vector<QRectF> rects;
   rects.reserve(candidates.size());
@@ -246,18 +317,12 @@ int FocusNavigator::move(QQuickItem *origin, const int key, const bool isAutoRep
   }
 
   if (picked == SpatialResolver::NONE) {
-    return NoTarget;
+    return nullptr;
   }
 
   auto *to = candidates[picked].item;
 
-  if (isHeldBack(from, to, direction, isAutoRepeat)) {
-    return NoTarget;
-  }
-
-  land(from, to, direction);
-
-  return Moved;
+  return isHeldBack(from, to, direction, isAutoRepeat) ? nullptr : to;
 }
 
 } // namespace firelight::gui

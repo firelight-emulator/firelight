@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <QQuickItem>
@@ -27,9 +28,13 @@ public:
   /**
    * Everything below root that could take the cursor, in walk order.
    *
-   * Walk order is what breaks exact geometric ties, so it has to be stable
+   * Walk order is what breaks exact geometric ties, so it has to be stable.
+   *
+   * `admitStraddling` offers items a clipping ancestor only partly shows, which is what a press
+   * with nowhere else to go falls back on. A view's own bounds still apply either way: what it
+   * keeps alive off screen sits at a position that means nothing
    */
-  static std::vector<FocusCandidate> collect(QQuickItem *root);
+  static std::vector<FocusCandidate> collect(QQuickItem *root, bool admitStraddling = false);
 
   /**
    * The subtree a press starting at origin is confined to: the nearest ancestor that declares
@@ -40,7 +45,8 @@ public:
   static QQuickItem *scopeFor(QQuickItem *origin, QQuickItem *fallback);
 
   /**
-   * The scene rectangle an item is navigated by, which is the one the cursor draws around
+   * The scene rectangle an item is navigated by, which is its own: the cursor may be drawn
+   * elsewhere, but a shape that moves is not one anything else lines up with
    */
   static QRectF rectFor(QQuickItem *item);
 

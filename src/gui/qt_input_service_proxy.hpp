@@ -16,8 +16,8 @@ class QtInputServiceProxy final : public QObject {
                  setPrioritizeControllerOverKeyboard NOTIFY prioritizeControllerOverKeyboardChanged)
   Q_PROPERTY(bool onlyPlayerOneCanNavigateMenus READ getOnlyPlayerOneCanNavigateMenus WRITE
                  setOnlyPlayerOneCanNavigateMenus NOTIFY onlyPlayerOneCanNavigateMenusChanged)
-  Q_PROPERTY(
-      QVariantMap currentGamepadButtonIcons READ getCurrentGamepadButtonIcons NOTIFY currentGamepadButtonIconsChanged)
+  Q_PROPERTY(QVariantMap currentGamepadButtonIcons READ getCurrentGamepadButtonIcons NOTIFY currentGamepadTypeChanged)
+  Q_PROPERTY(int currentGamepadType READ getCurrentGamepadType NOTIFY currentGamepadTypeChanged)
 public:
   explicit QtInputServiceProxy(input::InputService &inputService);
 
@@ -31,6 +31,8 @@ public:
 
   QVariantMap getCurrentGamepadButtonIcons() const;
 
+  [[nodiscard]] int getCurrentGamepadType() const;
+
   // Switches shortcut scope between in-game and menu contexts (driven by the UI)
   Q_INVOKABLE void setShortcutsInGame(bool inGame);
 
@@ -43,9 +45,14 @@ public:
 signals:
   void prioritizeControllerOverKeyboardChanged();
   void onlyPlayerOneCanNavigateMenusChanged();
-  void currentGamepadButtonIconsChanged();
+  void currentGamepadTypeChanged();
+
+protected:
+  bool eventFilter(QObject *obj, QEvent *event) override;
 
 private:
+  void markGamepadTypeChanged();
+
   input::InputService *m_inputService;
 
   QSettings m_settings;
@@ -62,6 +69,9 @@ private:
     int playerIndex;
     input::GamepadInput input;
   };
+
+  GamepadType m_currentGamepadType = KEYBOARD;
+  QVariantMap m_currentGamepadButtonIcons;
 
   std::map<std::pair<int, input::GamepadInput>, AutoRepeatState> m_autoRepeatStates;
 

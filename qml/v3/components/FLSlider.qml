@@ -20,7 +20,6 @@ Slider {
 
     FLFocus.proxy: theHandle
     FLFocus.showCursor: true
-    FLFocus.spacing: -1
 
     // TODO
     // Which way a held arrow is carrying the handle, and whether the hold has lasted long enough to
@@ -226,6 +225,9 @@ Slider {
         color: Theme.textPrimary
         border.width: 1
         border.color: control._focusRing || control.pressed || sliderHover.hovered ? "transparent" : Theme.textMuted
+
+        FLFocus.spacing: 1
+        FLFocus.fill: "black"
 
         Rectangle {
             width: parent.width + 6

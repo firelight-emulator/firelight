@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
@@ -142,99 +143,41 @@ FocusScope {
                 verticalAlignment: Text.AlignVCenter
             }
 
-            Pane {
-                id: thePane
+            FLKeyboardField {
+                id: usernameTextInput
+
+                objectName: "RetroAchievementsAccountPane|username"
                 Layout.topMargin: AppStyle.spacingSm
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 280
-                Layout.preferredHeight: 48
-                background: Rectangle {
-                    color: Theme.surface
-                    radius: AppStyle.radiusSm
-                }
 
                 focus: true
+                placeholderText: qsTr("Username")
+                limit: 32
+                acceptLabel: qsTr("Done")
 
-                HoverHandler {
-                    acceptedDevices: PointerDevice.Mouse
-                    cursorShape: Qt.IBeamCursor
-                }
-
-                contentItem: Item {
-                    Text {
-                        anchors.fill: parent
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: AppStyle.fontFamily
-                        color: Theme.textMuted
-                        text: "Username"
-                        verticalAlignment: Text.AlignVCenter
-                        visible: usernameTextInput.length === 0
-                    }
-                    TextInput {
-                        id: usernameTextInput
-                        anchors.fill: parent
-                        activeFocusOnTab: true
-                        KeyNavigation.down: passwordTextInput
-                        property bool showGlobalCursor: true
-                        property var globalCursorProxy: thePane
-                        font.family: AppStyle.fontFamily
-                        focus: true
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        color: Theme.textPrimary
-                        verticalAlignment: Text.AlignVCenter
-
-                        onAccepted: {
-                            if (submitButton.enabled) {
-                                submitButton.clicked();
-                            }
-                        }
+                onAccepted: {
+                    if (submitButton.enabled) {
+                        submitButton.clicked();
                     }
                 }
             }
 
-            Pane {
-                id: theOtherPane
+            FLKeyboardField {
+                id: passwordTextInput
+
+                objectName: "RetroAchievementsAccountPane|password"
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 280
-                Layout.preferredHeight: 48
-                background: Rectangle {
-                    color: Theme.surface
-                    radius: AppStyle.radiusSm
-                }
 
-                HoverHandler {
-                    acceptedDevices: PointerDevice.Mouse
-                    cursorShape: Qt.IBeamCursor
-                }
+                placeholderText: qsTr("Password")
+                sensitive: true
+                limit: 64
+                acceptLabel: qsTr("Log in")
 
-                contentItem: FocusScope {
-                    Text {
-                        anchors.fill: parent
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        font.family: AppStyle.fontFamily
-                        color: Theme.textMuted
-                        text: "Password"
-                        verticalAlignment: Text.AlignVCenter
-                        visible: passwordTextInput.length === 0
-                    }
-                    TextInput {
-                        id: passwordTextInput
-                        activeFocusOnTab: true
-                        anchors.fill: parent
-                        echoMode: TextInput.Password
-                        KeyNavigation.down: submitButton
-                        property bool showGlobalCursor: true
-                        property var globalCursorProxy: theOtherPane
-                        font.family: AppStyle.fontFamily
-                        font.pixelSize: AppStyle.fontSizeMedium
-                        color: Theme.textPrimary
-                        verticalAlignment: Text.AlignVCenter
-
-                        onAccepted: {
-                            if (submitButton.enabled) {
-                                submitButton.clicked();
-                            }
-                        }
+                onAccepted: {
+                    if (submitButton.enabled) {
+                        submitButton.clicked();
                     }
                 }
             }

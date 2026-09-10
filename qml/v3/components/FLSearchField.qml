@@ -52,7 +52,7 @@ FocusScope {
             padding: 0
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
-            Layout.preferredHeight: AppStyle.controlHeight
+            Layout.preferredHeight: AppStyle.textEntryFieldHeight
             placeholderText: root.placeholder
             font.weight: Font.Normal
             color: Theme.textPrimary

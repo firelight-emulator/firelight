@@ -24,11 +24,12 @@ FocusScope {
     implicitWidth: col.width
     implicitHeight: col.implicitHeight
 
-    ColumnLayout {
+    FLColumnLayout {
         id: col
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
+        anchors.bottom: parent.bottom
         spacing: 0
 
         Repeater {

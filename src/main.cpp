@@ -14,6 +14,7 @@
 #include "app/emulation/emulation_service.hpp"
 #include "app/emulation/shortcut_dispatcher.hpp"
 #include "app/emulator_item.hpp"
+#include "app/firelight_application.hpp"
 #include "app/input/gui/analog_settings_model.hpp"
 #include "app/input/gui/binding_list_model.hpp"
 #include "app/input/gui/controller_list_model.hpp"
@@ -80,6 +81,7 @@
 #include "gui/qt_save_manager_proxy.hpp"
 #include "gui/qt_settings_catalog_proxy.hpp"
 #include "gui/qt_variant_group_proxy.hpp"
+#include "gui/selection_group.hpp"
 #include "gui/settings_level_shim.hpp"
 #include "library/entry_merge_service.hpp"
 #include "library/variant_group_service.hpp"
@@ -224,7 +226,7 @@ int main(int argc, char *argv[]) {
   format.setSwapInterval(1);
   QSurfaceFormat::setDefaultFormat(format);
 
-  QApplication app(argc, argv);
+  firelight::FirelightApplication app(argc, argv);
   app.setWindowIcon(QIcon(":/images/app-icon"));
 
   std::signal(SIGINT, [](int signal) { QApplication::quit(); });
@@ -467,7 +469,19 @@ int main(int argc, char *argv[]) {
   // destroyed first, and that call would hit freed memory (Discord SDK assert
   // / crash). `initialize()` still runs later, once the window exists
 
-  QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+  // TEMP DIAGNOSTIC - remove
+  // Qt's Vulkan backend asks for 3 swapchain images and Qt Quick never sets MinimalBufferCount, so a
+  // present waits behind two others. D3D11 is here only to see whether that extra image is the frame
+  // of lag; hardware-rendered cores need Vulkan and will not work under it
+  if (const auto backend = qgetenv("FL_RHI_BACKEND"); backend == "d3d11") {
+    spdlog::warn("FL_RHI_BACKEND=d3d11 - hardware-rendered cores (N64/PSP) will not work");
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Direct3D11);
+  } else if (backend == "opengl") {
+    spdlog::warn("FL_RHI_BACKEND=opengl - hardware-rendered cores (N64/PSP) will not work");
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+  } else {
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+  }
 
   auto gameImageProvider = new firelight::gui::GameImageProvider();
   firelight::ServiceAccessor::setGameImageProvider(gameImageProvider);
@@ -600,6 +614,8 @@ int main(int argc, char *argv[]) {
   qmlRegisterType<firelight::gui::FocusAction>("Firelight", 1, 0, "FLAction");
   qmlRegisterType<firelight::gui::FocusInfo>("Firelight", 1, 0, "FLFocus");
   qmlRegisterSingletonInstance("Firelight", 1, 0, "FocusNavigator", new firelight::gui::FocusNavigator(&app));
+
+  qmlRegisterType<firelight::gui::SelectionGroup>("Firelight", 1, 0, "SelectionGroup");
 
   QNetworkInformation::loadDefaultBackend();
   if (QNetworkInformation::instance()->reachability() == QNetworkInformation::Reachability::Online) {
@@ -777,6 +793,11 @@ int main(int argc, char *argv[]) {
   // which is what otherwise eats the head of each UI sound
   firelight::audio::UiSoundPlayer uiSoundPlayer(settingsService);
 
+  // TODO
+  // Every sound goes through the player, so this is what lets it tell a sound a person caused from
+  // one the app made on its own
+  app.setSoundPlayer(&uiSoundPlayer);
+
   QQmlApplicationEngine engine;
   engine.setNetworkAccessManagerFactory(cache);
   // engine.networkAccessManager()->setCache(diskCache);
@@ -902,6 +923,7 @@ int main(int argc, char *argv[]) {
 
   window->installEventFilter(resizeHandler);
   window->installEventFilter(inputMethodDetectionHandler);
+  window->installEventFilter(&inputServiceProxy);
 
   auto keyboardHandler = new firelight::input::KeyboardInputHandler();
   window->installEventFilter(keyboardHandler);

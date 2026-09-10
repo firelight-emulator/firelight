@@ -47,6 +47,7 @@ public:
   static constexpr int PLATFORM_ID_NES = 5;
   static constexpr int PLATFORM_ID_SNES = 6;
   static constexpr int PLATFORM_ID_N64 = 7;
+  static constexpr int PLATFORM_ID_GAMECUBE = 8;
   static constexpr int PLATFORM_ID_NINTENDO_DS = 10;
   static constexpr int PLATFORM_ID_SEGA_MASTER_SYSTEM = 12;
   static constexpr int PLATFORM_ID_SEGA_GENESIS = 13;

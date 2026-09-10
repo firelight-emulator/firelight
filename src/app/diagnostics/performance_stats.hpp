@@ -37,6 +37,14 @@ struct PerformanceSnapshot {
   double wakeOvershootPeakMs = 0.0;
   int64_t framesRun = 0;
   int64_t framesLost = 0;
+  // TODO
+  // Ran so the core kept its own time, but overwritten before it reached the display. Separate from
+  // framesLost, which is a frame the core never advanced through at all
+  int64_t framesNotShown = 0;
+  // TODO
+  // What the pacing resolved to, next to the rate the core is actually managing. A mode that claims
+  // one rate and delivers another is the shape of every pacing bug worth finding
+  double targetFps = 0.0;
   std::string pacingMode;
   double audioRatio = 1.0;
 
@@ -73,7 +81,7 @@ public:
   /**
    * Records how the frame loop resolved, which changes only when pacing is reconfigured
    */
-  void setPacing(const std::string &mode, double displayHz, double audioRatio);
+  void setPacing(const std::string &mode, double displayHz, double audioRatio, double targetFps);
 
   /**
    * Records the size being drawn and the API drawing it
@@ -94,6 +102,11 @@ public:
    * Records a frame the pacer asked for that the render pass had no room to run
    */
   void recordDroppedFrame();
+
+  /**
+   * Records frames the core advanced through whose pictures were replaced before being shown
+   */
+  void recordFramesNotShown(int count);
 
   /**
    * Records the gap between one frame being handed to the display and the next.

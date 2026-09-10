@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -98,10 +99,6 @@ FocusScope {
         } else if (repeater.count > 0) {
             focusOption(0);
         }
-    }
-
-    function enterFrom(step: int) {
-        focusOption(step < 0 ? root.model.length - 1 : 0);
     }
 
     FLColumnLayout {

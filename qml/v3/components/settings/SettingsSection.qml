@@ -68,14 +68,6 @@ FocusScope {
         }
     }
 
-    // TODO
-    // The column above this hands focus in through here, the way it does for any other row. Without
-    // it the column forces focus on the FocusScope and lets Qt pick a descendant, which two of these
-    // on screen at once turn into a race
-    function enterFrom(step: int) {
-        rows.enterFrom(step);
-    }
-
     readonly property var rowVisibility: {
         const out = [];
         for (let i = 0; i < rows.children.length; i++) {
@@ -128,6 +120,7 @@ FocusScope {
                 anchors.top: parent.top
                 anchors.left: parent.left
                 anchors.right: parent.right
+                focus: true
                 spacing: 0
             }
         }

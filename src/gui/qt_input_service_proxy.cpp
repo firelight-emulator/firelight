@@ -190,12 +190,16 @@ QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService) {
 
   gamepadInputConnection =
       EventDispatcher::instance().subscribe<input::GamepadInputEvent>([this](const input::GamepadInputEvent &event) {
-        // Handle auto-repeat logic
+        if (event.gamepad) {
+          if (const auto type = event.gamepad->getType(); m_currentGamepadType != type) {
+            m_currentGamepadType = type;
+            markGamepadTypeChanged();
+          }
+        }
+
         if (event.pressed && !event.autoRepeat) {
-          // Button press - start auto-repeat
           startAutoRepeat(event.playerIndex, event.input);
         } else if (!event.pressed) {
-          // Button release - stop auto-repeat
           stopAutoRepeat(event.playerIndex, event.input);
         }
 
@@ -245,16 +249,9 @@ void QtInputServiceProxy::setOnlyPlayerOneCanNavigateMenus(bool onlyPlayerOneCan
 
 bool QtInputServiceProxy::getOnlyPlayerOneCanNavigateMenus() const { return m_onlyPlayerOneCanNavigateMenus; }
 
-QVariantMap QtInputServiceProxy::getCurrentGamepadButtonIcons() const {
-  QVariantMap result;
+QVariantMap QtInputServiceProxy::getCurrentGamepadButtonIcons() const { return m_currentGamepadButtonIcons; }
 
-  for (auto it = gamepadButtonIcons[MICROSOFT_XBOX_ONE].cbegin(); it != gamepadButtonIcons[MICROSOFT_XBOX_ONE].cend();
-       ++it) {
-    result.insert(QString::number(it.key()), it.value());
-  }
-
-  return result;
-}
+int QtInputServiceProxy::getCurrentGamepadType() const { return m_currentGamepadType; }
 
 void QtInputServiceProxy::setShortcutsInGame(const bool inGame) {
   m_inputService->setShortcutContext(inGame ? input::ScopeInGame : input::ScopeInMenu);
@@ -262,13 +259,36 @@ void QtInputServiceProxy::setShortcutsInGame(const bool inGame) {
 
 bool QtInputServiceProxy::isSteamRunning() const { return steamClientRunning(); }
 
+bool QtInputServiceProxy::eventFilter(QObject *obj, QEvent *event) {
+  if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
+    if (!input::GamepadKeyEvent::isGamepad(event) && m_currentGamepadType != KEYBOARD) {
+      m_currentGamepadType = KEYBOARD;
+      markGamepadTypeChanged();
+    }
+  }
+
+  return QObject::eventFilter(obj, event);
+}
+
+void QtInputServiceProxy::markGamepadTypeChanged() {
+  QVariantMap result;
+
+  for (auto it = gamepadButtonIcons[m_currentGamepadType].cbegin();
+       it != gamepadButtonIcons[m_currentGamepadType].cend(); ++it) {
+    result.insert(QString::number(it.key()), it.value());
+  }
+
+  m_currentGamepadButtonIcons = result;
+  emit currentGamepadTypeChanged();
+}
+
 void QtInputServiceProxy::startAutoRepeat(int playerIndex, input::GamepadInput input) {
   if (input == input::None) {
     return;
   }
 
-  auto key = std::make_pair(playerIndex, input);
-  auto now = std::chrono::steady_clock::now();
+  const auto key = std::make_pair(playerIndex, input);
+  const auto now = std::chrono::steady_clock::now();
   m_autoRepeatStates[key] = AutoRepeatState{
       .pressTime = now, .lastRepeatTime = now, .isRepeating = false, .playerIndex = playerIndex, .input = input};
 }
@@ -278,12 +298,12 @@ void QtInputServiceProxy::stopAutoRepeat(int playerIndex, input::GamepadInput in
     return;
   }
 
-  auto key = std::make_pair(playerIndex, input);
+  const auto key = std::make_pair(playerIndex, input);
   m_autoRepeatStates.erase(key);
 }
 
 void QtInputServiceProxy::processAutoRepeat() {
-  auto now = std::chrono::steady_clock::now();
+  const auto now = std::chrono::steady_clock::now();
 
   for (auto &[key, state] : m_autoRepeatStates) {
     auto timeSincePress = now - state.pressTime;

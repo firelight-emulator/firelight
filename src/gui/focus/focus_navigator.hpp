@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include "candidate_collector.hpp"
@@ -25,9 +26,10 @@ public:
   /**
    * Whether a press should be acted on, recording it when so.
    *
-   * A fresh press and a change of direction always pass, so only a sustained hold is thinned
+   * A fresh press and a change of direction always pass, so only a sustained hold is thinned.
+   * `intervalMs` is what the region being moved through asks for
    */
-  bool allows(Direction direction, bool isAutoRepeat, qint64 nowMs);
+  bool allows(Direction direction, bool isAutoRepeat, qint64 nowMs, qint64 intervalMs = INTERVAL_MS);
 
   /**
    * Forgets the last press, so the next one counts as fresh
@@ -89,6 +91,12 @@ public:
   static bool isHeldBack(QQuickItem *from, QQuickItem *to, Direction direction, bool isAutoRepeat);
 
   /**
+   * settle(), reachable for tests. The behaviour it guards is not otherwise observable without
+   * driving a real window through a popup
+   */
+  bool settleFor(QQuickItem *item) { return settle(item); }
+
+  /**
    * Forgets the way back, so the next press is answered by geometry alone
    */
   void forget();
@@ -105,6 +113,15 @@ private:
    */
   static int enterContainer(const QRectF &origin, Direction direction, QQuickItem *leaving,
                             const std::vector<FocusCandidate> &candidates);
+
+  /**
+   * Where a press would land, without going there.
+   *
+   * `admitStraddling` widens the search to what a clipping ancestor only partly shows, which is
+   * what a press with nowhere else to go falls back on
+   */
+  [[nodiscard]] QQuickItem *resolveTarget(QQuickItem *from, Direction direction, bool isAutoRepeat,
+                                          bool admitStraddling) const;
 
   /**
    * Where the reverse of the last move would return to, or null when this press is not that
@@ -125,6 +142,23 @@ private:
    * back. It is only good while the cursor has not moved on
    */
   void watch(QQuickItem *item);
+
+  /**
+   * Puts the cursor somewhere it can actually be, when whatever took the focus is not a place the
+   * cursor can sit.
+   *
+   * Opening a popup or loading a page leaves the focus on a scope or a layout, which is not a
+   * target: no cursor is drawn there and a press has nowhere to go from it. This notices that and
+   * lands on the first thing inside instead, so nothing has to ask to be entered
+   *
+   * @return Whether the cursor was moved
+   */
+  bool settle(QQuickItem *item);
+
+  // TODO
+  // Set while settle() is landing, so the focus change it causes is not taken for another parked
+  // cursor to correct
+  bool m_settling = false;
 
   RepeatGovernor m_governor;
   QPointer<QQuickItem> m_steppedFrom;

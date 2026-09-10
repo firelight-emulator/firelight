@@ -13,7 +13,7 @@ var ROUTES = [
     { pattern: "/library/reorder-collections", stacksOn: "/library" },
     { pattern: "/shop" },
     { pattern: "/shop/mods/:modId", stacksOn: "/shop" },
-    { pattern: "/settings", ownsSubtree: true, overlay: true },
+    { pattern: "/settings", ownsSubtree: true },
     { pattern: "/controllers" },
     { pattern: "/controllers/profiles/:playerNumber", stacksOn: "/controllers" },
     { pattern: "/controllers/manage", stacksOn: "/controllers" },
@@ -25,6 +25,24 @@ var ROUTES = [
     { pattern: "/dev/gallery" },
     { pattern: "/quick-menu", overlay: true }
 ];
+
+// TODO
+// Per-pair page transitions. A rule matches one concrete move (fromPath -> toPath); either side may
+// be "*". `preset` names an enter/exit pair in the PageTransitions catalog. Both directions are
+// declared, so going back matches its own reversed-pair rule.
+// A rule with "*" on both sides would answer every move on every stack; nothing should declare one
+var TRANSITIONS = [
+    { from: "/library", to: "/library/collections", preset: "panelForward" },
+    { from: "/library/collections", to: "/library", preset: "panelBack" },
+    { from: "/library/collections", to: "/library/collections/:collectionId", preset: "panelForward" },
+    { from: "/library/collections/:collectionId", to: "/library/collections", preset: "panelBack" },
+    { from: "/library", to: "/library/collections/:collectionId", preset: "panelForward" },
+    { from: "/library/collections/:collectionId", to: "/library", preset: "panelBack" }
+];
+
+// TODO
+// Every preset name a rule may use. The catalog's keys mirror this
+var TRANSITION_PRESETS = ["none", "push", "pop", "replace", "panelForward", "panelBack"];
 
 function patterns(routes) {
     var out = [];
@@ -208,6 +226,58 @@ function inferTransition(fromPath, toPath, routes) {
         return "pop";
     }
     return "replace";
+}
+
+// TODO
+// How specific one side of a rule is against a path: 2 all literal, 1 holds a param, 0 the wildcard,
+// -1 no match
+function transitionSideRank(side, path) {
+    if (side === "*") {
+        return 0;
+    }
+
+    var m = matchOne(side, path);
+
+    if (!m.matched) {
+        return -1;
+    }
+
+    for (var i = 0; i < m.score.length; i++) {
+        if (m.score[i] === 0) {
+            return 1;
+        }
+    }
+
+    return 2;
+}
+
+// TODO
+// The preset naming how a move should animate, or "" when no rule covers it. The most specific rule
+// wins rather than the first declared; a tie goes to the more specific destination, then to
+// declaration order
+function transitionFor(fromPath, toPath, table) {
+    var best = "";
+    var bestSum = -1;
+    var bestTo = -1;
+
+    for (var i = 0; i < table.length; i++) {
+        var fromRank = transitionSideRank(table[i].from, fromPath);
+        var toRank = transitionSideRank(table[i].to, toPath);
+
+        if (fromRank < 0 || toRank < 0) {
+            continue;
+        }
+
+        var sum = fromRank + toRank;
+
+        if (sum > bestSum || (sum === bestSum && toRank > bestTo)) {
+            best = table[i].preset;
+            bestSum = sum;
+            bestTo = toRank;
+        }
+    }
+
+    return best;
 }
 
 // --- history reducer --- state = { entries: [path...], cursor }

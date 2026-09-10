@@ -157,6 +157,147 @@ TestCase {
         compare(R.inferTransition("/controllers", "/controllers/manage", routes), "push");
     }
 
+    // --- per-pair transitions ---
+
+    property var seedTransitions: R.TRANSITIONS
+
+    function test_transition_rule_wildcard_matches_anything() {
+        var table = [
+            {
+                from: "*",
+                to: "*",
+                preset: "wild"
+            }
+        ];
+
+        compare(R.transitionFor("/library", "/shop", table), "wild");
+        compare(R.transitionFor("", "/library", table), "wild");
+    }
+
+    function test_transition_rule_most_specific_wins_regardless_of_order() {
+        var general = {
+            from: "*",
+            to: "*",
+            preset: "wild"
+        };
+        var half = {
+            from: "*",
+            to: "/shop",
+            preset: "half"
+        };
+        var exact = {
+            from: "/library",
+            to: "/shop",
+            preset: "exact"
+        };
+
+        compare(R.transitionFor("/library", "/shop", [general, half, exact]), "exact");
+        compare(R.transitionFor("/library", "/shop", [exact, half, general]), "exact");
+        compare(R.transitionFor("/gallery", "/shop", [general, half, exact]), "half");
+        compare(R.transitionFor("/gallery", "/activity", [general, half, exact]), "wild");
+    }
+
+    function test_transition_rule_matches_a_param_pattern() {
+        var table = [
+            {
+                from: "*",
+                to: "/library/collections/:collectionId",
+                preset: "param"
+            }
+        ];
+
+        compare(R.transitionFor("/library", "/library/collections/42", table), "param");
+        compare(R.transitionFor("/library", "/library/collections", table), "");
+    }
+
+    function test_transition_rule_literal_beats_param() {
+        var table = [
+            {
+                from: "*",
+                to: "/library/collections/:collectionId",
+                preset: "param"
+            },
+            {
+                from: "*",
+                to: "/library/collections/new",
+                preset: "literal"
+            }
+        ];
+
+        compare(R.transitionFor("/library", "/library/collections/new", table), "literal");
+        compare(R.transitionFor("/library", "/library/collections/42", table), "param");
+    }
+
+    function test_transition_rule_tie_goes_to_the_destination() {
+        var table = [
+            {
+                from: "/library",
+                to: "*",
+                preset: "fromExact"
+            },
+            {
+                from: "*",
+                to: "/shop",
+                preset: "toExact"
+            }
+        ];
+
+        compare(R.transitionFor("/library", "/shop", table), "toExact");
+    }
+
+    function test_transition_rule_even_tie_goes_to_declaration_order() {
+        var table = [
+            {
+                from: "*",
+                to: "/shop",
+                preset: "first"
+            },
+            {
+                from: "*",
+                to: "/shop",
+                preset: "second"
+            }
+        ];
+
+        compare(R.transitionFor("/library", "/shop", table), "first");
+    }
+
+    function test_transition_rule_no_match_is_empty() {
+        compare(R.transitionFor("/library", "/shop", []), "");
+        compare(R.transitionFor("/library", "/shop", [
+            {
+                from: "/gallery",
+                to: "*",
+                preset: "nope"
+            }
+        ]), "");
+    }
+
+    // TODO
+    // How the route layer composes the two: a rule wins, otherwise the structural inference stands
+    function test_transition_rule_falls_back_to_inference() {
+        compare(R.transitionFor("/library", "/shop", seedTransitions) || R.inferTransition("/library", "/shop", routes), "replace");
+        compare(R.transitionFor("/controllers", "/controllers/manage", seedTransitions) || R.inferTransition("/controllers", "/controllers/manage", routes), "push");
+    }
+
+    // TODO
+    // The seeded rules are what keep the library panels animating, so an edit to them fails here
+    // rather than silently going still
+    function test_seeded_rules_cover_every_library_move() {
+        compare(R.transitionFor("/library", "/library/collections", seedTransitions), "panelForward");
+        compare(R.transitionFor("/library/collections", "/library/collections/7", seedTransitions), "panelForward");
+        compare(R.transitionFor("/library", "/library/collections/7", seedTransitions), "panelForward");
+        compare(R.transitionFor("/library/collections", "/library", seedTransitions), "panelBack");
+        compare(R.transitionFor("/library/collections/7", "/library/collections", seedTransitions), "panelBack");
+        compare(R.transitionFor("/library/collections/7", "/library", seedTransitions), "panelBack");
+    }
+
+    function test_seeded_rules_name_known_presets() {
+        for (var i = 0; i < seedTransitions.length; i++) {
+            verify(R.TRANSITION_PRESETS.indexOf(seedTransitions[i].preset) !== -1, "unknown preset: " + seedTransitions[i].preset);
+        }
+    }
+
     // --- history reducer ---
 
     function test_history_navigate_and_back_forward() {

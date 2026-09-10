@@ -128,7 +128,6 @@ FocusScope {
         id: cannotLaunchGamePopup
 
         property string text: "Cannot launch game"
-        openSound: null
 
         function openWithText(dialogText) {
             cannotLaunchGamePopup.text = dialogText;
@@ -406,6 +405,7 @@ FocusScope {
                     showHeader: false
                     group: "library-view-mode"
                     surface: FLMenuItem.Surface.InMenu
+                    focus: true
                 }
 
                 FLMenuSeparator {}
@@ -476,6 +476,11 @@ FocusScope {
             currentSortLabel: gameModel.sortDisplayName
             sortAscending: gameModel.sortAscending
             selectedIds: root.selectedIds
+
+            selectionGroup: SelectionGroup {
+                active: true
+            }
+
             onGameClicked: (entryId, rowIndex, modifiers) => root.handleGameClick(entryId, rowIndex, modifiers)
             onRequestLaunch: (id, hash, platformId, playable, statusText) => {
                 if (!playable) {

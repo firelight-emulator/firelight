@@ -3,6 +3,8 @@
 #include <QObject>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <QQuickItem>
+#include <QThread>
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -240,6 +242,133 @@ TEST(FocusInfoTest, APressIsAcceptedUnlessTheHandlerDeclines) {
   // The next press starts accepted again rather than inheriting the last answer
   QObject::disconnect(declining);
   EXPECT_TRUE(action->trigger());
+}
+
+// A held key must not run an action that did not ask for it, which is what stops a held Enter
+// pressing a button over and over
+TEST(FocusInfoTest, AHeldKeyIsRefusedUnlessTheActionOptedIn) {
+  QObject object;
+  auto *info = attach(&object);
+  auto *action = addAction(info, {Qt::Key_Select});
+
+  auto fired = 0;
+  QObject::connect(action, &FocusAction::triggered, [&fired] { fired++; });
+
+  EXPECT_TRUE(action->triggerForPress(false));
+  EXPECT_EQ(fired, 1);
+
+  EXPECT_FALSE(action->triggerForPress(true));
+  EXPECT_EQ(fired, 1);
+}
+
+// The same held key runs an action that asked for it
+TEST(FocusInfoTest, AHeldKeyRunsAnActionThatOptedIn) {
+  QObject object;
+  auto *info = attach(&object);
+  auto *action = addAction(info, {Qt::Key_Select});
+  action->setTriggerOnAutoRepeat(true);
+
+  auto fired = 0;
+  QObject::connect(action, &FocusAction::triggered, [&fired] { fired++; });
+
+  EXPECT_TRUE(action->triggerForPress(true));
+  EXPECT_EQ(fired, 1);
+}
+
+// A repeating action paces itself, so it does not fire at whatever rate the keyboard repeats at
+TEST(FocusInfoTest, ARepeatingActionIsPaced) {
+  QObject object;
+  auto *info = attach(&object);
+  auto *action = addAction(info, {Qt::Key_Select});
+  action->setTriggerOnAutoRepeat(true);
+
+  auto fired = 0;
+  QObject::connect(action, &FocusAction::triggered, [&fired] { fired++; });
+
+  EXPECT_TRUE(action->triggerForPress(true));
+  EXPECT_FALSE(action->triggerForPress(true));
+  EXPECT_EQ(fired, 1);
+
+  QThread::msleep(80);
+
+  EXPECT_TRUE(action->triggerForPress(true));
+  EXPECT_EQ(fired, 2);
+}
+
+// The pacing is for held keys only: a run of real presses is the user's own doing
+TEST(FocusInfoTest, DeliberatePressesAreNotPaced) {
+  QObject object;
+  auto *info = attach(&object);
+  auto *action = addAction(info, {Qt::Key_Select});
+
+  auto fired = 0;
+  QObject::connect(action, &FocusAction::triggered, [&fired] { fired++; });
+
+  EXPECT_TRUE(action->triggerForPress(false));
+  EXPECT_TRUE(action->triggerForPress(false));
+  EXPECT_TRUE(action->triggerForPress(false));
+
+  EXPECT_EQ(fired, 3);
+}
+
+//****************
+// dispatch
+//****************
+
+// An action a container declares answers for everything inside it, which is what the guide bar lists
+TEST(FocusInfoTest, DispatchRunsAnActionDeclaredOnAnAncestor) {
+  QQuickItem container;
+  auto *focused = new QQuickItem(&container);
+  auto *action = addAction(attach(&container), {Qt::Key_Select});
+
+  auto fired = 0;
+  QObject::connect(action, &FocusAction::triggered, [&fired] { fired++; });
+
+  EXPECT_TRUE(attach(&container)->dispatch(focused, Qt::Key_Select));
+  EXPECT_EQ(fired, 1);
+}
+
+// A held key an action refused is still answered, so nothing further acts on the press
+TEST(FocusInfoTest, DispatchAnswersAHeldKeyItRefusedToRun) {
+  QQuickItem container;
+  auto *focused = new QQuickItem(&container);
+  auto *action = addAction(attach(focused), {Qt::Key_Select});
+
+  auto fired = 0;
+  QObject::connect(action, &FocusAction::triggered, [&fired] { fired++; });
+
+  EXPECT_TRUE(attach(&container)->dispatch(focused, Qt::Key_Select, Qt::NoModifier, true));
+  EXPECT_EQ(fired, 0);
+}
+
+// Without this a held key falls past the actions and presses the item on every repeat
+TEST(FocusInfoTest, DispatchNeverPressesTheItemOnAHeldKey) {
+  QQmlEngine engine;
+  QQmlComponent component(&engine);
+  component.setData(R"(
+        import QtQuick
+        Item {
+            property int clicks: 0
+            function click() { clicks++; }
+        }
+    )",
+                    QUrl());
+
+  std::unique_ptr<QObject> created(component.create());
+  ASSERT_NE(created, nullptr) << component.errorString().toStdString();
+
+  auto *focused = qobject_cast<QQuickItem *>(created.get());
+  ASSERT_NE(focused, nullptr);
+
+  QQuickItem container;
+  auto *info = attach(&container);
+
+  EXPECT_FALSE(info->dispatch(focused, Qt::Key_Select, Qt::NoModifier, true));
+  EXPECT_EQ(focused->property("clicks").toInt(), 0);
+
+  // The same press that was refused while held still presses the item on its own
+  EXPECT_TRUE(info->dispatch(focused, Qt::Key_Select));
+  EXPECT_EQ(focused->property("clicks").toInt(), 1);
 }
 
 // A popup declares its own barrier on content it was handed rather than

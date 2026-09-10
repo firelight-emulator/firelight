@@ -7,6 +7,7 @@ Popup {
 
     property alias openSound: behavior.openSound
     property alias caller: behavior.caller
+    property alias blurOnDim: behavior.blurOnDim
 
     focus: true
 

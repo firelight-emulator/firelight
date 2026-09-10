@@ -88,6 +88,8 @@ Item {
 
     readonly property int tabBarHeight: Math.max(minTarget, Math.round(38 * scale * density))
 
+    readonly property int textEntryFieldHeight: Math.max(minTarget, Math.round(46 * scale))
+
     // TODO
     // Comfortable default width for value inputs (slider/combobox) so they don't
     // collapse to their content width in a right-aligned settings slot
@@ -136,6 +138,25 @@ Item {
     readonly property int dialogContentMinHeight: Math.round(100 * scale * density)
     readonly property real dialogContentMaxHeightFraction: 0.6
 
+    //*************************************************************
+    // On-screen keyboard
+    //*************************************************************
+
+    // TODO
+    // A key cap is sized so the grid stays legible at any scale; width comes from the
+    // available row width, height does not
+    readonly property int keyboardKeyHeight: Math.max(minTarget, Math.round(46 * scale * density))
+    readonly property int keyboardKeyGap: Math.round(5 * scale * density)
+
+    // TODO
+    // How much of the window the keyboard panel takes, leaving the rest for the entered text
+    readonly property real keyboardHeightFraction: 0.55
+
+    // TODO
+    // The entered-text area above the panel
+    readonly property int keyboardPreviewMinHeight: Math.round(120 * scale * density)
+    readonly property int keyboardPreviewFontSize: Math.round(28 * scale)
+
     // TODO
     //*************************************************************
     // Library layout — sidebar full width, its collapsed icon rail, the width
@@ -159,6 +180,9 @@ Item {
     readonly property int durationFast: 80
     readonly property int durationBase: 120
     readonly property int durationSlow: 200
+
+
+    readonly property int durationDimmer: 240
     // TODO
     // Near-instant crossfade for the focus cursor's tile-to-tile handoff
     readonly property int durationSnap: 40

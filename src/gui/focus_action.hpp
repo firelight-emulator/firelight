@@ -1,5 +1,7 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
+#include <QDateTime>
 #include <QList>
 #include <QObject>
 #include <QString>
@@ -46,6 +48,8 @@ class FocusAction : public QObject {
   Q_PROPERTY(QString label READ getLabel WRITE setLabel NOTIFY labelChanged)
   Q_PROPERTY(bool hidden READ isHidden WRITE setHidden NOTIFY hiddenChanged)
   Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
+  Q_PROPERTY(
+      bool triggerOnAutoRepeat READ triggerOnAutoRepeat WRITE setTriggerOnAutoRepeat NOTIFY triggerOnAutoRepeatChanged)
   Q_PROPERTY(QObject *sound READ getSound WRITE setSound NOTIFY soundChanged)
   QML_ELEMENT
 
@@ -58,13 +62,38 @@ public:
    */
   Q_INVOKABLE bool trigger() {
     m_event.setAccepted(true);
+
+    // TODO
+    // Claimed before the handler runs, so a screen the handler builds cannot sound in its place
+    if (m_sound != nullptr) {
+      QMetaObject::invokeMethod(m_sound, "claim");
+    }
+
     emit triggered(&m_event);
 
     if (m_event.isAccepted() && m_sound != nullptr) {
-      QMetaObject::invokeMethod(m_sound, "play", Q_ARG(bool, false));
+      QMetaObject::invokeMethod(m_sound, "playClaimed");
     }
 
     return m_event.isAccepted();
+  }
+
+  /**
+   * Fires this action for one press. A held key runs it only when it opted into repeating, and no
+   * faster than the interval, so a repeating action paces the way a held direction does.
+   *
+   * @param isAutoRepeat Whether this press comes from a held key
+   * @return Whether the action ran and the handler accepted it
+   */
+  Q_INVOKABLE bool triggerForPress(const bool isAutoRepeat) {
+    const auto nowMs = QDateTime::currentMSecsSinceEpoch();
+
+    if (isAutoRepeat && (!m_triggerOnAutoRepeat || nowMs - m_lastTriggerMs < REPEAT_INTERVAL_MS)) {
+      return false;
+    }
+
+    m_lastTriggerMs = nowMs;
+    return trigger();
   }
 
   /**
@@ -77,6 +106,8 @@ public:
   [[nodiscard]] QString getLabel() const { return m_label; }
 
   [[nodiscard]] bool isEnabled() const { return m_enabled; }
+
+  [[nodiscard]] bool triggerOnAutoRepeat() const { return m_triggerOnAutoRepeat; }
 
   [[nodiscard]] bool isHidden() const { return m_hidden; }
 
@@ -117,6 +148,13 @@ public:
     }
   }
 
+  void setTriggerOnAutoRepeat(const bool triggerOnAutoRepeat) {
+    if (m_triggerOnAutoRepeat != triggerOnAutoRepeat) {
+      m_triggerOnAutoRepeat = triggerOnAutoRepeat;
+      emit triggerOnAutoRepeatChanged();
+    }
+  }
+
   void setHidden(const bool hidden) {
     if (m_hidden != hidden) {
       m_hidden = hidden;
@@ -140,6 +178,8 @@ signals:
 
   void enabledChanged();
 
+  void triggerOnAutoRepeatChanged();
+
   void hiddenChanged();
 
   void soundChanged();
@@ -152,13 +192,19 @@ signals:
 private:
   static constexpr int HANDLED_MODIFIERS = Qt::ShiftModifier | Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier;
 
+  // TODO
+  // Matches the pacing a held direction navigates at, so the two kinds of repeat feel the same
+  static constexpr qint64 REPEAT_INTERVAL_MS = 60;
+
   QList<int> m_keys;
   int m_modifiers = Qt::NoModifier;
   QString m_label;
   bool m_enabled = true;
+  bool m_triggerOnAutoRepeat = false;
   bool m_hidden = false;
   QObject *m_sound = nullptr;
   FocusActionEvent m_event;
+  qint64 m_lastTriggerMs = 0;
 };
 
 } // namespace firelight::gui

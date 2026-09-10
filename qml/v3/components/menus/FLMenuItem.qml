@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -102,15 +103,17 @@ ItemDelegate {
         target: root.Keys
 
         function onPressed(event) {
-            if (event.isAutoRepeat) {
-                return;
-            }
-
             const action = root.FLFocus.getActionFor(event.key, event.modifiers);
 
             if (action !== null) {
-                action.trigger();
+                action.triggerForPress(event.isAutoRepeat);
                 event.accepted = true;
+                return;
+            }
+
+            // TODO
+            // Only an action opts into repeating: a held key never presses the item itself
+            if (event.isAutoRepeat) {
                 return;
             }
 

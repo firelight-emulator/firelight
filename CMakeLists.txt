@@ -176,6 +176,7 @@ list(APPEND QML_FILES qml/v3/routing/routing.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/focus_nav.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/slider_slide.js)
 list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/focus_bump.js)
+list(APPEND QML_FILES ${CMAKE_CURRENT_SOURCE_DIR}/qml/v3/components/keyboard/keyboard_layout.js)
 
 foreach (QML_FILE ${QML_FILES})
     get_filename_component(QML_FILE_NAME ${QML_FILE} NAME)
@@ -188,11 +189,13 @@ set_source_files_properties(qml/v3/singletons/GeneralSettings.qml PROPERTIES QT_
 set_source_files_properties(qml/v3/singletons/WindowGeometry.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/singletons/AppearanceSettings.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/routing/Router.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/routing/PageTransitions.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/singletons/Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/singletons/MaterialSymbols.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/singletons/FLUtil.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/FocusCursor.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 set_source_files_properties(qml/v3/singletons/SoundEffects.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+set_source_files_properties(qml/v3/singletons/FLKeyboard.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 
 # The libretro/emulation core: the ABI wrapper + emulation lifecycle. Depends
 # only on domain interfaces (audio/mic/achievement clients are injected), so it
@@ -367,6 +370,8 @@ add_library(firelight_lib STATIC
         src/gui/models/library_entry_sort_filter_model.hpp
         src/gui/models/library_filter.cpp
         src/gui/models/library_filter.hpp
+        src/gui/selection_group.cpp
+        src/gui/selection_group.hpp
 )
 
 # Single source of truth for the app version, consumed by the CLI --version and
@@ -612,11 +617,13 @@ add_executable(fl_test
         tests/gui/models/library_filter_test.cpp
         tests/app/gui/filesystem_utils_test.cpp
         tests/app/gui/focus_info_test.cpp
+        tests/app/gui/selection_group_test.cpp
         tests/app/gui/focus/candidate_collector_test.cpp
         tests/app/gui/focus/focus_navigator_test.cpp
         tests/app/gui/focus/root_key_filter_test.cpp
         tests/app/gui/focus/spatial_resolver_test.cpp
         tests/app/gui/input_method_detection_handler_test.cpp
+        tests/app/audio/ui_sound_arbitration_test.cpp
         tests/app/library/entry_resolver_test.cpp
         tests/app/library/smart_folder_test.cpp
         tests/app/db/daos/play_session_test.cpp
@@ -680,6 +687,8 @@ file(GLOB QML_TEST_FILES
         qml_tests/tst_click_blocking.qml
         qml_tests/tst_setting_row_focus.qml
         qml_tests/tst_slider_keys.qml
+        qml/v3/components/keyboard/keyboard_layout.js
+        qml_tests/tst_keyboard.qml
         qml/v3/focus_nav.js
         qml/v3/slider_slide.js
         qml/v3/focus_bump.js

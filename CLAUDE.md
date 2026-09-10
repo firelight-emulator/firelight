@@ -10,7 +10,7 @@ Firelight is a libretro-based emulation frontend built with Qt6/QML (C++20). It 
 
 **Platform**: Windows with MSYS2/MinGW64 is the primary dev environment.
 
-**Prerequisites** (via MSYS2 `pacboy`): Qt6.8, SDL2, spdlog, GTest, cmake, clang/gcc, nlohmann-json, cpr, libarchive, ffmpeg (libavcodec/libavformat/libavutil/libswscale/libswresample), pkg-config.
+**Prerequisites** (via MSYS2 `pacboy`): Qt6.11, SDL2, spdlog, GTest, cmake, clang/gcc, nlohmann-json, cpr, libarchive, ffmpeg (libavcodec/libavformat/libavutil/libswscale/libswresample), pkg-config.
 
 ```bash
 # Configure (MinGW Makefiles on Windows)
@@ -58,6 +58,31 @@ Three things that will waste your time otherwise:
 
 `--fatal-warnings` promotes every QML warning to fatal. There is a nonzero baseline today, so it is
 opt-in rather than the default.
+
+## When something doesn't work
+
+**Re-read the file before responding.** When a change is reported as not working, or a symptom is
+reported in a file that was read earlier in the session, the first tool call of that turn is a read of
+that file. Not a second hypothesis — a read. A picture of a file goes stale the moment it is edited
+while still feeling current, and the thing that is actually wrong is usually in a part of the file
+that was never read or in an edit that differed from what was suggested.
+
+Do not propose a fix for a file whose current contents have not been read this turn.
+
+**Focus, layout and binding problems get a probe, not an argument.** A twenty-line offscreen QML file
+that prints the real focus chain, or a small harness that prints what a binding actually evaluates
+to, settles in one run what several rounds of reasoning will not:
+
+```bash
+QT_ASSUME_STDERR_HAS_CONSOLE=1 QT_QPA_PLATFORM=offscreen qml probe.qml
+```
+
+The same applies to a C++ question about a Qt API or a type conversion: compile a few lines against
+the real class rather than recalling how it behaves.
+
+State what the evidence shows, label anything unverified as unverified, and say "I don't know yet"
+rather than producing the next plausible story. Ruling a theory out with evidence is progress worth
+reporting; inventing the next theory to fill the silence is not.
 
 ## Code Style
 

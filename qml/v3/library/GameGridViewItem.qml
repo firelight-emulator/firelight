@@ -17,6 +17,9 @@ FocusScope {
     required property int achievementsEarned
     required property int achievementsTotal
 
+    readonly property bool selecting: root.GridView.view.selectionGroup.active
+    readonly property bool selected: root.GridView.view.selectionGroup.selected[root.index] === true
+
     property var titleBoxHeight: 0
 
     signal clicked(var tapPoint)
@@ -42,9 +45,20 @@ FocusScope {
         TapHandler {
             id: selectTap
             acceptedButtons: Qt.LeftButton
-            onSingleTapped: root.clicked(selectTap.point)
+            onSingleTapped: {
+                if (root.selecting) {
+                    root.GridView.view.selectionGroup.select(root.index, selectTap.point.modifiers);
+                    return;
+                }
 
-            onDoubleTapped: activatedAnimation.restart()
+                root.clicked(selectTap.point)
+            }
+
+            onDoubleTapped: {
+                if (!root.selecting) {
+                    activatedAnimation.restart()
+                }
+            }
         }
 
         HoverHandler {
@@ -58,14 +72,23 @@ FocusScope {
         FLFocus.actions: [
             FLAction {
                 keys: [Qt.Key_Enter, Qt.Key_Select, Qt.Key_Return, Qt.Key_Space]
-                label: qsTr("Play")
-                sound: SoundEffects.activateGame
-                onTriggered: activatedAnimation.restart()
+                label: root.selecting ? root.selected ? qsTr("Deselect") : qsTr("Select") : qsTr("Play")
+                sound: root.selecting ? root.selected ? SoundEffects.deselectItem : SoundEffects.selectItem : SoundEffects.activateGame
+                onTriggered: {
+                    if (root.selecting) {
+                        root.GridView.view.selectionGroup.select(root.index, Qt.NoModifier);
+                        return;
+                    }
+
+                    activatedAnimation.restart()
+                }
             },
             FLAction {
                 keys: [Qt.Key_Menu]
                 label: qsTr("Options")
                 sound: SoundEffects.openPopup
+                enabled: !root.selecting
+                hidden: root.selecting
                 onTriggered: control.ContextMenu.menu.popupFor(control, control.width + AppStyle.spacingSm, 0)
             },
             FLAction {
@@ -73,6 +96,8 @@ FocusScope {
                 modifiers: Qt.ControlModifier
                 label: qsTr("Options")
                 sound: SoundEffects.openPopup
+                enabled: !root.selecting
+                hidden: root.selecting
                 onTriggered: control.ContextMenu.menu.popupFor(control, control.width + AppStyle.spacingSm, 0)
             }
         ]
@@ -131,6 +156,16 @@ FocusScope {
                 platformId: root.platformId
                 title: root.displayName
                 titleVisible: control.hovered || control.activeFocus
+
+                GridItemSelectionOverlay {
+                    selectionGroup: root.GridView.view.selectionGroup
+                    index: root.index
+
+                    topLeftRadius: gameTile.topLeftRadius
+                    topRightRadius: gameTile.topRightRadius
+                    bottomLeftRadius: gameTile.bottomLeftRadius
+                    bottomRightRadius: gameTile.bottomRightRadius
+                }
             }
 
             Rectangle {
@@ -185,6 +220,7 @@ FocusScope {
             z: 2
             anchors.fill: parent
             anchors.margins: AppStyle.spacingXs
+            visible: !root.selecting
 
             Row {
                 anchors.left: parent.left

@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "candidate_collector.hpp"
 
 #include "gui/focus_info.hpp"
@@ -17,22 +18,6 @@ constexpr qreal VISIBLE_SLACK = 0.5;
  */
 QRectF sceneRect(const QQuickItem *item) {
   return item->mapRectToScene(QRectF(0.0, 0.0, item->width(), item->height()));
-}
-
-/**
- * The shape a candidate is measured by, which is the one the cursor draws around: an item may hand
- * that job to something else, and navigation has to agree with what is on screen
- */
-QRectF targetRect(const QQuickItem *item, const FocusInfo *info) {
-  if (info != nullptr && info->getProxy() != nullptr) {
-    const auto proxied = sceneRect(info->getProxy());
-
-    if (!proxied.isEmpty()) {
-      return proxied;
-    }
-  }
-
-  return sceneRect(item);
 }
 
 /**
@@ -94,7 +79,7 @@ bool isTarget(const QQuickItem *item, const FocusInfo *info) {
  * Adds everything below item, narrowing clip as clipping ancestors are passed
  */
 void walk(QQuickItem *item, const std::optional<QRectF> &clip, QQuickItem *container,
-          std::vector<FocusCandidate> &found) {
+          std::vector<FocusCandidate> &found, const std::optional<QRectF> &viewClip, const bool admitStraddling) {
   if (item == nullptr || !item->isVisible() || !item->isEnabled() || item->opacity() <= 0.0) {
     return;
   }
@@ -115,12 +100,14 @@ void walk(QQuickItem *item, const std::optional<QRectF> &clip, QQuickItem *conta
   // An item with no size of its own still lays out children around it, so it is passed through
   // rather than treated as absent
   if (isTarget(item, info)) {
-    const auto drawn = targetRect(item, info);
+    // TODO
+    // An item is navigated by its own shape, whatever the cursor draws around: a proxy moves with
+    // what it stands for, and a target that moves is one nothing else lines up with
+    // A relaxed pass keeps a view's bounds, and only loosens the ones that merely scroll
+    const auto &bounds = admitStraddling ? viewClip : clip;
 
-    // Half a row showing is not somewhere to move to: landing there would drag the whole container
-    // along to finish showing it. The container's own stepping reaches it instead
-    if (!drawn.isEmpty() && isWhollyWithin(drawn, clip)) {
-      found.push_back({item, drawn, container});
+    if (!rect.isEmpty() && isWhollyWithin(rect, bounds)) {
+      found.push_back({item, rect, container});
       return;
     }
   }
@@ -130,19 +117,24 @@ void walk(QQuickItem *item, const std::optional<QRectF> &clip, QQuickItem *conta
   }
 
   auto childClip = clip;
+  auto childViewClip = viewClip;
   auto *childContainer = info != nullptr && info->isContainer() ? item : container;
 
   if (boundsCandidates(item)) {
     childClip = clip.has_value() ? clip->intersected(rect) : rect;
+
+    if (item->inherits("QQuickItemView")) {
+      childViewClip = viewClip.has_value() ? viewClip->intersected(rect) : rect;
+    }
   }
 
   for (auto *child : item->childItems()) {
-    walk(child, childClip, childContainer, found);
+    walk(child, childClip, childContainer, found, childViewClip, admitStraddling);
   }
 }
 } // namespace
 
-std::vector<FocusCandidate> CandidateCollector::collect(QQuickItem *root) {
+std::vector<FocusCandidate> CandidateCollector::collect(QQuickItem *root, const bool admitStraddling) {
   std::vector<FocusCandidate> found;
 
   if (root == nullptr || !root->isVisible() || !root->isEnabled() || root->opacity() <= 0.0) {
@@ -152,9 +144,11 @@ std::vector<FocusCandidate> CandidateCollector::collect(QQuickItem *root) {
   // The root is where the search happens rather than something found by it, so it is descended into
   // even when it would otherwise be a target
   const auto clip = boundsCandidates(root) ? std::optional(sceneRect(root)) : std::nullopt;
+  const auto viewClip =
+      root->inherits("QQuickItemView") ? std::optional(sceneRect(root)) : std::optional<QRectF>(std::nullopt);
 
   for (auto *child : root->childItems()) {
-    walk(child, clip, containerFor(root), found);
+    walk(child, clip, containerFor(root), found, viewClip, admitStraddling);
   }
 
   return found;
@@ -165,7 +159,7 @@ QRectF CandidateCollector::rectFor(QQuickItem *item) {
     return {};
   }
 
-  return targetRect(item, FocusInfo::find(item));
+  return sceneRect(item);
 }
 
 QQuickItem *CandidateCollector::containerFor(QQuickItem *item) {

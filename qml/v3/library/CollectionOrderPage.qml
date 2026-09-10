@@ -245,17 +245,9 @@ FocusScope {
         }
     }
 
-    Rectangle {
+    FLColumnDivider {
         id: separator
         anchors.right: menuColumn.left
-        width: 1
-        height: parent.height
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "transparent" }
-            GradientStop { position: 0.05; color: Theme.border }
-            GradientStop { position: 0.95; color: Theme.border }
-            GradientStop { position: 1.0; color: "transparent" }
-        }
     }
 
     FLColumnLayout {
