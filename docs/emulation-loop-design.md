@@ -144,6 +144,96 @@ The real obstacle to moving `runFrame()` is not graphics. `AudioManager` is cons
 `initialize()` "on the render thread for Qt audio thread-affinity", and `QAudioSink`/`QIODevice` are
 not thread-safe with `receive()` called from that thread. Settle where the sink lives first.
 
+### Hardware rendering on any backend, with any core API
+
+The goal is that the app runs on whatever QRhi backend suits the host and the core uses whatever
+graphics API it supports. libretro is built for that, and the protocol is not one mechanism but
+three. Read from the vendored headers:
+
+| core API | how the frontend supplies it | can the core own its device? |
+|---|---|---|
+| OpenGL, GLES | plain `retro_hw_render_callback` — the frontend sets `get_proc_address` and `get_current_framebuffer`, and the context is whatever is current on the thread calling `retro_run` | No |
+| Vulkan | negotiation interface (`create_device`) plus `retro_hw_render_interface_vulkan` | **Yes**, uniquely |
+| D3D9, D3D10, D3D11, D3D12 | `retro_hw_render_interface_*` only — the frontend hands over its own device | No |
+
+`retro_hw_render_interface_type` (`libretro.h:3128-3157`) lists Vulkan, D3D9, D3D10, D3D11, D3D12 and
+GSKIT_PS2. `retro_hw_render_context_negotiation_interface_type` (`libretro.h:3387`) lists **Vulkan and
+nothing else**. So Vulkan is the only API where a core creates its own device; everywhere else the
+frontend owns it. Note also that only `libretro.h` and `libretro_vulkan.h` are vendored here — the
+D3D interface structs live in `libretro_d3d.h` upstream and would have to be added.
+
+There is no OpenGL entry in either enum, and that is correct rather than an omission: GL needs no
+interface struct, because a GL core simply renders into whatever framebuffer is bound in whatever
+context is current. `GET_HW_RENDER_INTERFACE` documents this directly — *"Since not every
+libretro-supported hardware rendering API has a `retro_hw_render_interface` implementation, a result
+of `false` is not necessarily an error"* (`libretro.h:1634-1637`).
+
+**The two layers are independent.** Giving the core a context is one problem; getting its image into
+Qt is another, and neither constrains the other. The second always has a working fallback — read the
+frame back to the CPU, publish to `FrameSlot`, and let the existing `uploadTexture` path show it,
+which is exactly what software cores already do. So this is a performance matrix, not a capability
+matrix: every pair works, and specific pairs get a zero-copy path.
+
+| core API vs. Qt backend | same API | different API |
+|---|---|---|
+| Vulkan | external memory, as `EmulatorVulkanRenderer` already does | GL imports the Vulkan allocation, or read back |
+| OpenGL | share group (`AA_ShareOpenGLContexts`) | `GL_EXT_memory_object_win32` onto the shared allocation, or read back |
+| D3D11/12 | DXGI shared handle | Vulkan imports the DXGI handle, or read back |
+
+The interop extension names are not verified against any driver here; readback is the baseline that
+always works and the fast paths are optimisations on top of it.
+
+### The protocol expects honest answers, and we give it six wrong ones
+
+Negotiation only works if the frontend says what it can actually do. Every relevant handler currently
+answers yes regardless of truth, which is what makes the matrix above unreachable today.
+
+- **`SET_HW_RENDER`** returns `true` for any `context_type`, without inspecting it. The header says to
+  return *"`false` if `data` is `NULL` or the frontend can't provide the requested rendering API"*
+  (`libretro.h:933-936`). A core asking for `OPENGL_CORE` under Vulkan is told yes, then runs no
+  frames, because `render()` has only a Vulkan hardware branch.
+- **`GET_PREFERRED_HW_RENDER`** always returns `true`. That return value is not "did it work" — it
+  means *"the frontend is able to use a hardware rendering API besides the one returned"*
+  (`libretro.h:1981-1985`). We claim flexibility while `getPreferredHwRender()` writes
+  `RETRO_HW_CONTEXT_NONE` on every non-Vulkan backend.
+- **`GET_HW_RENDER_INTERFACE`** returns `true` even on the path where `getHwRenderInterface()` logged
+  an error and wrote nothing to `*iface` (`emulator_item_renderer.cpp:192-200`), handing the core an
+  uninitialised pointer.
+- **`GET_CURRENT_SOFTWARE_FRAMEBUFFER`** returns `true` without touching `data` at all. A core that
+  takes the offer renders into an uninitialised `retro_framebuffer`.
+- **`GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT`** answers Vulkan unconditionally, with no
+  check against the active backend.
+- **`SET_HW_SHARED_CONTEXT`** is `// TODO: ?` followed by `return true`.
+
+Fixing these is the whole of the negotiation work. `getPreferredHwRender()` should name the API with
+the best path for the current backend and return `true` only once others genuinely work; every other
+handler should refuse what it cannot serve.
+
+### OpenGL, when it is wired up
+
+Verified against the headers. A GL core gets `get_proc_address` and `get_current_framebuffer`, both
+marked *"Set by frontend"* (`libretro.h:5110-5117`); the frontend creates and owns the context. The
+context need not be Qt's, and should not be — borrowing Qt's is what makes GL look like it forces the
+core onto the render thread. Create a `QOpenGLContext`, `moveToThread()` it to the emulation thread
+while it is current nowhere, and make it current against a `QOffscreenSurface` created on the GUI
+thread. Under a Vulkan or D3D Qt backend there is no Qt GL context to share with anyway.
+
+`QRhi::makeThreadLocalNativeContextCurrent()` is not the route. It makes Qt's own context current, and
+from a third thread `QOpenGLContext::makeCurrent()` calls `qFatal` rather than warning.
+
+Two header details worth having:
+
+- `get_current_framebuffer` carries *"TODO: This is rather obsolete. The frontend should not be
+  providing preallocated framebuffers"*, but cores still call it. Handing back an FBO the frontend
+  owns is stable, which removes the current bug where `m_currentFramebufferId` is sampled once inside
+  `context_reset` and goes stale as Qt rotates framebuffers.
+- `context_reset` *"is possible … called multiple times during an application lifecycle"*, and when it
+  is called without a preceding `context_destroy` the core's resources are already gone and must be
+  recreated rather than freed (`libretro.h:5095-5107`). Whatever owns the context has to survive that.
+
+`depth`, `stencil` and `bottom_left_origin` are all still in the struct and all marked obsolete;
+`bottom_left_origin` is the one that still matters, since it decides whether the frame needs flipping.
+
 ### Qt interop facts, read from the 6.11 source
 
 - `QRhi::setQueueSubmitParams()` with `QRhiVulkanQueueSubmitParams` (6.9+) hands Qt semaphores to wait
@@ -208,14 +298,21 @@ chooses which cost.
 6. **Resolve the `AudioManager` thread affinity**, then move `runFrame()` to the emulation thread.
 7. **Report the resolved mode, not the request.** `Pacing:` shows `getSyncMethod()`, and an
    unrecognised `sync-method` becomes `Native` silently. Both cost a wrong diagnosis once already.
-8. **Later:** replace the blit fence with `setQueueSubmitParams()`; DRC gain 0.02 to 0.005.
+8. **Make the hardware-render handlers answer honestly.** Independent of the pacing work and a
+   prerequisite for any backend beyond Vulkan: refuse in `SET_HW_RENDER` what cannot be provided,
+   return the real flexibility from `GET_PREFERRED_HW_RENDER`, and stop returning `true` from
+   `GET_HW_RENDER_INTERFACE` and `GET_CURRENT_SOFTWARE_FRAMEBUFFER` after writing nothing.
+9. **Later:** replace the blit fence with `setQueueSubmitParams()`; DRC gain 0.02 to 0.005.
 
 ## Open
 
 - Does `QScreen::refreshRate()` round on real panels?
 - How often do SNES cores send `SET_GEOMETRY`?
 - `layer.enabled: true` on the EmulatorItem inserts an extra FBO pass before the swapchain.
-- `SET_HW_RENDER` inspects neither `context_type` nor version and returns true to anything. A core
-  asking for `OPENGL_CORE` under Vulkan is accepted, then runs no frames.
+- Which backend/core-API pairs are worth a zero-copy path, and which are fine on readback. The
+  extension names above are unverified against any driver.
+- Whether a core that is refused its first choice reliably retries with another. The header says a
+  core "should exit or fall back to software rendering" when it cannot use the preferred API, which
+  is not the same as promising a second attempt.
 - `k = round()` at 144 Hz gives 72 fps, 20 % fast. `k = 3` would give 48 fps, 20 % slow. Both are the
   same distance out, but fast and slow do not play the same.
