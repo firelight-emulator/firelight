@@ -479,8 +479,8 @@ int main(int argc, char *argv[]) {
   } else if (backend == "opengl") {
     spdlog::warn("FL_RHI_BACKEND=opengl - hardware-rendered cores (N64/PSP) will not work");
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
-  } else {
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+  // } else {
+    // QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
   }
 
   auto gameImageProvider = new firelight::gui::GameImageProvider();

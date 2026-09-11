@@ -438,6 +438,7 @@ MainWindow {
             anchors.leftMargin: AppStyle.windowPadding
             anchors.rightMargin: AppStyle.windowPadding
             z: focusHighlight.z - 2
+            showDivider: !onScreenKeyboard.visible
 
             parent: Overlay.overlay
         }

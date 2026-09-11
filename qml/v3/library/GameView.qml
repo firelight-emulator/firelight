@@ -588,6 +588,12 @@ FocusScope {
         ColumnLayout {
             spacing: AppStyle.spacingXl
 
+            property bool showDad: false
+
+            Component.onCompleted: {
+                showDad = Math.random() < 0.5
+            }
+
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -596,13 +602,21 @@ FocusScope {
             Text {
                 Layout.preferredWidth: 400
                 Layout.alignment: Qt.AlignHCenter
-                text: "You don't have any games in your library yet"
+                text: "Here's where your games would go\n\nIF YOU HAD ANY"
+                visible: !parent.showDad
                 color: Theme.textPrimary
                 font.family: AppStyle.fontFamily
                 font.pixelSize: AppStyle.fontSizeMedium
                 font.weight: Font.Normal
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
+            }
+
+            Image {
+                visible: parent.showDad
+                Layout.alignment: Qt.AlignHCenter
+                source: "file:///Users/alexcharles/Documents/this-is-where.webp"
+
             }
 
             Item {

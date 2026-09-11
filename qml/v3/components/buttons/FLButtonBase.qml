@@ -127,7 +127,7 @@ Button {
             }
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 64
+                    duration: 64 // TODO
                 }
             }
         }

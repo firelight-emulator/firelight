@@ -47,6 +47,7 @@ FocusScope {
             filled: false
             compact: false
             onClicked: Router.navigate("/library/reorder-collections")
+            canInteract: !browse.isEmpty
         }
 
         Item {

@@ -10,6 +10,7 @@ Pane {
     readonly property var buttonOrder: [Qt.Key_Menu, Qt.Key_Back, Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
 
     property var groups: []
+    property bool showDivider: true
 
     verticalPadding: AppStyle.spacingSm
     horizontalPadding: 0
@@ -59,6 +60,7 @@ Pane {
             color: "#4c4c4c"
             height: 1
             width: parent.width
+            visible: root.showDivider
         }
     }
 
