@@ -59,6 +59,19 @@ SettingsModel::SettingsModel(QObject *parent) : QAbstractListModel(parent) {
         onMatch(e.contentHash == m_contentHash.toStdString(), e.key);
       });
 
+  // TODO
+  // A reset from another model showing the same setting refreshes this one too
+  m_globalSettingResetConnection = EventDispatcher::instance().subscribe<GlobalSettingResetEvent>(
+      [this](const GlobalSettingResetEvent &) { refreshValues(); });
+
+  m_platformSettingResetConnection = EventDispatcher::instance().subscribe<PlatformSettingResetEvent>(
+      [this, onMatch](const PlatformSettingResetEvent &e) { onMatch(e.platformId == m_platformId, e.key); });
+
+  m_gameSettingResetConnection =
+      EventDispatcher::instance().subscribe<GameSettingResetEvent>([this, onMatch](const GameSettingResetEvent &e) {
+        onMatch(e.contentHash == m_contentHash.toStdString(), e.key);
+      });
+
   // An audio-device row's options are the machine's outputs, so plugging in
   // headphones has to rebuild them
   m_mediaDevices = new QMediaDevices(this);

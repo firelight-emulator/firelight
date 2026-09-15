@@ -335,7 +335,7 @@ MainWindow {
             width: 360
 
             background: Rectangle {
-                color: Theme.surfaceElevated
+                color: Theme.surface
             }
 
             enter: Transition {
@@ -388,9 +388,45 @@ MainWindow {
                 focus: true
                 FLColumnLayout {
                     anchors.fill: parent
-                    Item {
+
+                    Pane {
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        Layout.preferredHeight: 240
+                        Layout.margins: AppStyle.spacingSm
+
+                        background: Rectangle {
+                            radius: AppStyle.radiusMd
+                            color: Theme.surfaceElevated
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "You're not currently playing anything"
+                            color: Theme.textPrimary
+                            font.family: AppStyle.fontFamily
+                            font.pixelSize: AppStyle.fontSizeSmall
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                    }
+
+                    FLDivider {
+                        Layout.topMargin: AppStyle.spacingSm
+                        Layout.bottomMargin: AppStyle.spacingSm
+                        Layout.fillWidth: true
+                    }
+
+                    NavDrawerButton {
+                        Layout.fillWidth: true
+                        text: "Home"
+                        checked: Router.isActive("/home")
+                        focus: true
+
+                        onClicked: {
+                            if (!checked) {
+                                Qt.callLater(() => Router.navigate("/home"));
+                                navigationPopup.close();
+                            }
+                        }
                     }
 
                     NavDrawerButton {
@@ -400,8 +436,24 @@ MainWindow {
                         focus: true
 
                         onClicked: {
-                            Qt.callLater(() => Router.navigate("/library"));
-                            navigationPopup.close();
+                            if (!checked) {
+                                Qt.callLater(() => Router.navigate("/library"));
+                                navigationPopup.close();
+                            }
+                        }
+                    }
+
+                    NavDrawerButton {
+                        Layout.fillWidth: true
+                        text: "Gallery"
+                        checked: Router.isActive("/gallery")
+                        focus: true
+
+                        onClicked: {
+                            if (!checked) {
+                                Qt.callLater(() => Router.navigate("/gallery"));
+                                navigationPopup.close();
+                            }
                         }
                     }
 
@@ -412,8 +464,10 @@ MainWindow {
                         focus: checked
 
                         onClicked: {
-                            Qt.callLater(() => Router.navigate("/settings"));
-                            navigationPopup.close();
+                            if (!checked) {
+                                Qt.callLater(() => Router.navigate("/settings"));
+                                navigationPopup.close();
+                            }
                         }
                     }
 

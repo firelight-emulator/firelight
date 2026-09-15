@@ -574,7 +574,9 @@ add_custom_target(deploy_runtime_data ALL
         $<TARGET_FILE_DIR:firelight>/system/shortcuts.json
         COMMENT "Deploying data/settings + shortcuts.json")
 
-add_dependencies(deploy_runtime_data firelight)
+# TODO
+# Building the app deploys the catalog first, so a binary never runs against another build's settings
+add_dependencies(firelight deploy_runtime_data)
 
 #if (DISCORD_SDK_RUNTIME_LIBRARY_FILE AND EXISTS "${DISCORD_SDK_RUNTIME_LIBRARY_FILE}")
 #    add_custom_command(TARGET firelight POST_BUILD

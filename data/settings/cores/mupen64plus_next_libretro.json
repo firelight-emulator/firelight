@@ -6,8 +6,6 @@
         {
           "key": "transfer-pak-game",
           "label": "Transfer Pak cartridge",
-          "group": "emulation-hardware",
-          "order": 100,
           "description": "The Game Boy / Game Boy Color cartridge inserted into the controller's Transfer Pak.",
           "keywords": [
             "gameboy",

@@ -6,8 +6,6 @@
         {
           "key": "gba-color-correction",
           "label": "Color correction",
-          "group": "emulation-video",
-          "order": 100,
           "description": "Simulate the GBA screen's washed-out colors.",
           "keywords": [
             "colour",
@@ -39,8 +37,6 @@
         {
           "key": "gba-solar-sensor",
           "label": "Solar sensor",
-          "group": "emulation-hardware",
-          "order": 100,
           "description": "Emulate the Boktai solar sensor.",
           "keywords": [
             "boktai",
@@ -53,8 +49,6 @@
         {
           "key": "gba-solar-level",
           "label": "Solar sensor level",
-          "group": "emulation-hardware",
-          "order": 110,
           "type": "slider",
           "default": "0",
           "keywords": [

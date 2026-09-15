@@ -124,8 +124,6 @@ SettingDefinition parseSetting(const nlohmann::json &j, std::vector<std::string>
   s.label = j.value("label", std::string{});
   s.description = j.value("description", std::string{});
   s.defaultValue = j.value("default", std::string{});
-  s.groupId = j.value("group", std::string{});
-  s.order = j.value("order", 0);
   s.requiresRestart = j.value("requiresRestart", false);
   s.advanced = j.value("advanced", false);
   s.trueStringValue = j.value("trueValue", std::string("true"));
@@ -206,23 +204,25 @@ SettingsPage parsePage(const nlohmann::json &j) {
   p.label = j.value("label", std::string{});
   p.icon = j.value("icon", std::string{});
   p.route = j.value("route", std::string{});
-  p.order = j.value("order", 0);
   parseStringArray(j, "keywords", p.keywords);
+  parseStringArray(j, "groups", p.groupIds);
   return p;
 }
 
 SettingsGroup parseGroup(const nlohmann::json &j) {
   SettingsGroup g;
   g.id = j.value("id", std::string{});
-  g.pageId = j.value("page", std::string{});
   g.label = j.value("label", std::string{});
-  g.order = j.value("order", 0);
+  parseStringArray(j, "settings", g.settingKeys);
   return g;
 }
 
-void sortByOrder(std::vector<SettingDefinition> &settings) {
-  std::stable_sort(settings.begin(), settings.end(),
-                   [](const SettingDefinition &a, const SettingDefinition &b) { return a.order < b.order; });
+// TODO
+/** The entry for `key` in a lookup, or nullptr */
+template <typename T>
+const T *findIn(const std::unordered_map<std::string, const T *> &lookup, const std::string &key) {
+  const auto it = lookup.find(key);
+  return it != lookup.end() ? it->second : nullptr;
 }
 
 } // namespace
@@ -232,22 +232,22 @@ void SettingsCatalog::parseInto(const std::string &json, Accumulator &into, cons
 
   if (root.contains("pages")) {
     for (const auto &p : root["pages"]) {
-      into.pages.push_back(parsePage(p));
+      into.contents.pages.push_back(parsePage(p));
     }
   }
   if (root.contains("groups")) {
     for (const auto &g : root["groups"]) {
-      into.groups.push_back(parseGroup(g));
+      into.contents.groups.push_back(parseGroup(g));
     }
   }
   if (root.contains("app")) {
     for (const auto &s : root["app"]) {
-      into.app.push_back(parseAppSetting(s, into.problems));
+      into.contents.app.push_back(parseAppSetting(s, into.problems));
     }
   }
   if (root.contains("common")) {
     for (const auto &s : root["common"]) {
-      into.common.push_back(parseSetting(s, into.problems));
+      into.contents.common.push_back(parseSetting(s, into.problems));
     }
   }
   if (root.contains("cores")) {
@@ -256,7 +256,7 @@ void SettingsCatalog::parseInto(const std::string &json, Accumulator &into, cons
       const auto &core = it.value();
       if (core.contains("settings")) {
         for (const auto &s : core["settings"]) {
-          into.perCore[coreName].push_back(parseSetting(s, into.problems));
+          into.contents.perCore[coreName].push_back(parseSetting(s, into.problems));
         }
       }
       if (core.contains("defaults")) {
@@ -264,7 +264,7 @@ void SettingsCatalog::parseInto(const std::string &json, Accumulator &into, cons
           // TODO
           // Nothing else notices a core default declared twice: the second silently wins and the
           // core runs with an option nobody chose
-          auto &defaults = into.coreDefaults[coreName];
+          auto &defaults = into.contents.coreDefaults[coreName];
 
           if (const auto existing = defaults.find(d.key());
               existing != defaults.end() && existing->second != d.value().get<std::string>()) {
@@ -280,25 +280,56 @@ void SettingsCatalog::parseInto(const std::string &json, Accumulator &into, cons
 }
 
 bool SettingsCatalog::commit(Accumulator &&accumulated) {
-  std::stable_sort(accumulated.pages.begin(), accumulated.pages.end(),
-                   [](const SettingsPage &a, const SettingsPage &b) { return a.order < b.order; });
-  std::stable_sort(accumulated.groups.begin(), accumulated.groups.end(),
-                   [](const SettingsGroup &a, const SettingsGroup &b) { return a.order < b.order; });
-
-  m_pages = std::move(accumulated.pages);
-  m_groups = std::move(accumulated.groups);
-  m_app = std::move(accumulated.app);
-  m_common = std::move(accumulated.common);
-  m_perCore = std::move(accumulated.perCore);
-  m_coreDefaults = std::move(accumulated.coreDefaults);
+  m_contents = std::move(accumulated.contents);
+  buildLookups();
 
   for (const auto &problem : accumulated.problems) {
     spdlog::warn("Settings catalog: {}", problem);
   }
+
   for (const auto &problem : validate()) {
     spdlog::warn("Settings catalog: {}", problem);
   }
+
   return true;
+}
+
+void SettingsCatalog::buildLookups() {
+  m_settingsByKey.clear();
+  m_pagesById.clear();
+  m_groupsById.clear();
+  m_groupsBySettingKey.clear();
+  m_pagesByGroupId.clear();
+
+  for (const auto &setting : m_contents.app) {
+    m_settingsByKey.try_emplace(setting.key, IndexedSetting{.definition = &setting, .isApp = true});
+  }
+
+  for (const auto &setting : m_contents.common) {
+    m_settingsByKey.try_emplace(setting.key, IndexedSetting{.definition = &setting});
+  }
+
+  for (const auto &[coreName, settings] : m_contents.perCore) {
+    for (const auto &setting : settings) {
+      m_settingsByKey.try_emplace(setting.key, IndexedSetting{.definition = &setting, .coreName = coreName});
+    }
+  }
+
+  for (const auto &page : m_contents.pages) {
+    m_pagesById.try_emplace(page.id, &page);
+
+    for (const auto &groupId : page.groupIds) {
+      m_pagesByGroupId.try_emplace(groupId, &page);
+    }
+  }
+
+  for (const auto &group : m_contents.groups) {
+    m_groupsById.try_emplace(group.id, &group);
+
+    for (const auto &key : group.settingKeys) {
+      m_groupsBySettingKey.try_emplace(key, &group);
+    }
+  }
 }
 
 bool SettingsCatalog::loadFromJson(const std::string &json) {
@@ -349,7 +380,6 @@ bool SettingsCatalog::loadFromDirectory(const std::string &path) {
     return false;
   }
 
-  // Ties in `order` keep declaration order, so the files have to be read the same way everywhere
   std::ranges::sort(files);
 
   Accumulator accumulated;
@@ -381,7 +411,7 @@ std::vector<std::string> SettingsCatalog::validate() const {
   std::vector<std::string> problems;
 
   std::set<std::string> pageIds;
-  for (const auto &page : m_pages) {
+  for (const auto &page : m_contents.pages) {
     if (page.id.empty()) {
       problems.push_back("a page has no id");
     } else if (!pageIds.insert(page.id).second) {
@@ -390,7 +420,7 @@ std::vector<std::string> SettingsCatalog::validate() const {
   }
 
   std::set<std::string> groupIds;
-  for (const auto &group : m_groups) {
+  for (const auto &group : m_contents.groups) {
     if (group.id.empty()) {
       problems.push_back("a group has no id");
       continue;
@@ -398,8 +428,19 @@ std::vector<std::string> SettingsCatalog::validate() const {
     if (!groupIds.insert(group.id).second) {
       problems.push_back("duplicate group id '" + group.id + "'");
     }
-    if (!group.pageId.empty() && !pageIds.count(group.pageId)) {
-      problems.push_back("group '" + group.id + "' names undeclared page '" + group.pageId + "'");
+  }
+
+  std::set<std::string> listedGroupIds;
+
+  for (const auto &page : m_contents.pages) {
+    for (const auto &groupId : page.groupIds) {
+      if (!groupIds.contains(groupId)) {
+        problems.push_back("page '" + page.id + "' lists undeclared group '" + groupId + "'");
+      }
+
+      if (!listedGroupIds.insert(groupId).second) {
+        problems.push_back("group '" + groupId + "' is listed more than once (page '" + page.id + "')");
+      }
     }
   }
 
@@ -411,9 +452,6 @@ std::vector<std::string> SettingsCatalog::validate() const {
     }
     if (!keys.insert(s.key).second) {
       problems.push_back("duplicate setting key '" + s.key + "' (" + where + ")");
-    }
-    if (!s.groupId.empty() && !groupIds.count(s.groupId)) {
-      problems.push_back("setting '" + s.key + "' names undeclared group '" + s.groupId + "'");
     }
     if (s.type == SettingType::CUSTOM && s.widget.empty()) {
       problems.push_back("setting '" + s.key + "' is custom but names no widget");
@@ -428,45 +466,60 @@ std::vector<std::string> SettingsCatalog::validate() const {
     }
   };
 
-  for (const auto &s : m_app) {
+  for (const auto &s : m_contents.app) {
     checkSetting(s, "app");
   }
-  for (const auto &s : m_common) {
+  for (const auto &s : m_contents.common) {
     checkSetting(s, "common");
   }
-  for (const auto &[coreName, settings] : m_perCore) {
+  for (const auto &[coreName, settings] : m_contents.perCore) {
     for (const auto &s : settings) {
       checkSetting(s, "core " + coreName);
+    }
+  }
+
+  for (const auto &group : m_contents.groups) {
+    std::set<std::string> listedKeys;
+    for (const auto &key : group.settingKeys) {
+      if (!keys.contains(key)) {
+        problems.push_back("group '" + group.id + "' lists undeclared setting '" + key + "'");
+      }
+
+      if (!listedKeys.insert(key).second) {
+        problems.push_back("group '" + group.id + "' lists setting '" + key + "' more than once");
+      }
     }
   }
 
   return problems;
 }
 
-const SettingsPage *SettingsCatalog::findPage(const std::string &id) const {
-  const auto it = std::find_if(m_pages.begin(), m_pages.end(), [&](const SettingsPage &p) { return p.id == id; });
-  return it != m_pages.end() ? &*it : nullptr;
+const SettingsPage *SettingsCatalog::findPage(const std::string &id) const { return findIn(m_pagesById, id); }
+
+const SettingsGroup *SettingsCatalog::findGroup(const std::string &id) const { return findIn(m_groupsById, id); }
+
+const SettingsGroup *SettingsCatalog::findGroupForSetting(const std::string &key) const {
+  return findIn(m_groupsBySettingKey, key);
 }
 
-const SettingsGroup *SettingsCatalog::findGroup(const std::string &id) const {
-  const auto it = std::find_if(m_groups.begin(), m_groups.end(), [&](const SettingsGroup &g) { return g.id == id; });
-  return it != m_groups.end() ? &*it : nullptr;
+const SettingsPage *SettingsCatalog::findPageForGroup(const std::string &groupId) const {
+  return findIn(m_pagesByGroupId, groupId);
 }
 
 const std::vector<SettingDefinition> &SettingsCatalog::coreSpecificSettings(const std::string &coreName) const {
   static const std::vector<SettingDefinition> EMPTY;
-  const auto it = m_perCore.find(coreName);
-  return it != m_perCore.end() ? it->second : EMPTY;
+  const auto it = m_contents.perCore.find(coreName);
+  return it != m_contents.perCore.end() ? it->second : EMPTY;
 }
 
 const std::map<std::string, std::string> &SettingsCatalog::coreDefaults(const std::string &coreName) const {
   static const std::map<std::string, std::string> EMPTY;
-  const auto it = m_coreDefaults.find(coreName);
-  return it != m_coreDefaults.end() ? it->second : EMPTY;
+  const auto it = m_contents.coreDefaults.find(coreName);
+  return it != m_contents.coreDefaults.end() ? it->second : EMPTY;
 }
 
 std::vector<SettingDefinition> SettingsCatalog::settingsForCore(const std::string &coreName) const {
-  std::vector<SettingDefinition> result = m_common;
+  std::vector<SettingDefinition> result = m_contents.common;
   const auto &specific = coreSpecificSettings(coreName);
   result.insert(result.end(), specific.begin(), specific.end());
   return result;
@@ -475,44 +528,49 @@ std::vector<SettingDefinition> SettingsCatalog::settingsForCore(const std::strin
 std::vector<SettingDefinition> SettingsCatalog::settingsForGroup(const std::string &groupId,
                                                                  const std::string &coreName) const {
   std::vector<SettingDefinition> result;
+
   if (groupId.empty()) {
     return result;
   }
-  const auto collect = [&](const std::vector<SettingDefinition> &from) {
-    for (const auto &s : from) {
-      if (s.groupId == groupId) {
-        result.push_back(s);
-      }
-    }
-  };
-  collect(m_app);
-  collect(m_common);
-  if (!coreName.empty()) {
-    collect(coreSpecificSettings(coreName));
+
+  const auto *group = findGroup(groupId);
+
+  if (group == nullptr) {
+    return result;
   }
-  sortByOrder(result);
+
+  for (const auto &key : group->settingKeys) {
+    const auto it = m_settingsByKey.find(key);
+
+    if (it == m_settingsByKey.end()) {
+      continue;
+    }
+
+    if (!it->second.coreName.empty() && it->second.coreName != coreName) {
+      continue;
+    }
+
+    result.push_back(*it->second.definition);
+  }
+
   return result;
 }
 
 const SettingDefinition *SettingsCatalog::findByKey(const std::string &key) const {
-  for (const auto *s : allSettings()) {
-    if (s->key == key) {
-      return s;
-    }
-  }
-  return nullptr;
+  const auto it = m_settingsByKey.find(key);
+  return it != m_settingsByKey.end() ? it->second.definition : nullptr;
 }
 
 std::vector<const SettingDefinition *> SettingsCatalog::allSettings() const {
   std::vector<const SettingDefinition *> result;
-  result.reserve(m_app.size() + m_common.size());
-  for (const auto &s : m_app) {
+  result.reserve(m_contents.app.size() + m_contents.common.size());
+  for (const auto &s : m_contents.app) {
     result.push_back(&s);
   }
-  for (const auto &s : m_common) {
+  for (const auto &s : m_contents.common) {
     result.push_back(&s);
   }
-  for (const auto &[coreName, settings] : m_perCore) {
+  for (const auto &[coreName, settings] : m_contents.perCore) {
     for (const auto &s : settings) {
       result.push_back(&s);
     }
@@ -521,16 +579,18 @@ std::vector<const SettingDefinition *> SettingsCatalog::allSettings() const {
 }
 
 bool SettingsCatalog::isAppSetting(const std::string &key) const {
-  return std::any_of(m_app.begin(), m_app.end(), [&](const SettingDefinition &s) { return s.key == key; });
+  const auto it = m_settingsByKey.find(key);
+  return it != m_settingsByKey.end() && it->second.isApp;
 }
 
 std::string SettingsCatalog::defaultForCommonKey(const std::string &key) const {
-  for (const auto &setting : m_common) {
-    if (setting.key == key) {
-      return setting.defaultValue;
-    }
+  const auto it = m_settingsByKey.find(key);
+
+  if (it == m_settingsByKey.end() || it->second.isApp || !it->second.coreName.empty()) {
+    return {};
   }
-  return {};
+
+  return it->second.definition->defaultValue;
 }
 
 } // namespace firelight::settings

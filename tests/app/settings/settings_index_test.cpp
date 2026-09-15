@@ -10,32 +10,33 @@ const char *INDEX_JSON = R"JSON(
 {
   "pages": [
     {"id": "appearance", "label": "Appearance", "route": "/settings/appearance",
-     "order": 10, "keywords": ["theme", "look"]},
+     "keywords": ["theme", "look"], "groups": ["theme"]},
     {"id": "emulation", "label": "Emulation", "route": "/settings/emulation",
-     "order": 20}
+     "groups": ["video"]}
   ],
   "groups": [
-    {"id": "theme", "page": "appearance", "label": "Theme", "order": 10},
-    {"id": "video", "page": "emulation", "label": "Video", "order": 10}
+    {"id": "theme", "label": "Theme", "settings": ["accent-color"]},
+    {"id": "video", "label": "Video",
+     "settings": ["sync-method", "target-framerate", "gba-color-correction"]}
   ],
   "app": [
-    {"key": "accent-color", "group": "theme", "label": "Accent color",
+    {"key": "accent-color", "label": "Accent color",
      "type": "color", "default": "#f76b15", "keywords": ["highlight"]}
   ],
   "common": [
-    {"key": "sync-method", "group": "video", "label": "Sync method",
+    {"key": "sync-method", "label": "Sync method",
      "description": "How gameplay is paced.",
      "keywords": ["vsync", "refresh rate", "tearing"],
      "type": "options", "default": "audio",
      "options": [{"label": "Audio", "value": "audio"}]},
-    {"key": "target-framerate", "group": "video", "label": "Target framerate",
+    {"key": "target-framerate", "label": "Target framerate",
      "type": "spinbox", "default": "60", "advanced": true,
      "keywords": ["fps"]}
   ],
   "cores": {
     "mgba_libretro": {
       "settings": [
-        {"key": "gba-color-correction", "group": "video",
+        {"key": "gba-color-correction",
          "label": "Color correction", "type": "options", "default": "Off",
          "options": [{"label": "Off", "value": "Off"}]}
       ]

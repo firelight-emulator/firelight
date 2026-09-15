@@ -2,29 +2,33 @@
   "groups": [
     {
       "id": "library-view-mode",
-      "page": "appearance",
       "label": "View as",
-      "order": 10
+      "settings": [
+        "library-view-mode"
+      ]
     },
     {
       "id": "library-grid-appearance",
-      "page": "appearance",
       "label": "Grid View Settings",
-      "order": 20
+      "settings": [
+        "library-icon-grid-tile-size",
+        "library-icon-grid-tile-spacing",
+        "library-icon-grid-show-title-box",
+        "library-icon-grid-show-favorite-icon"
+      ]
     },
     {
       "id": "library-list-appearance",
-      "page": "appearance",
       "label": "List View Settings",
-      "order": 30
+      "settings": [
+        "library-list-view-mode"
+      ]
     }
   ],
   "app": [
     {
       "key": "library-view-mode",
       "label": "View as",
-      "group": "library-view-mode",
-      "order": 10,
       "keywords": [
           "grid",
           "list",
@@ -46,8 +50,6 @@
     {
       "key": "library-icon-grid-tile-size",
       "label": "Game tile size",
-      "group": "library-grid-appearance",
-      "order": 20,
       "subItem": false,
       "keywords": [
         "grid",
@@ -74,8 +76,6 @@
     {
       "key": "library-icon-grid-tile-spacing",
       "label": "Game tile spacing",
-      "group": "library-grid-appearance",
-      "order": 30,
       "subItem": false,
       "visibleWhen": [
         {
@@ -102,8 +102,6 @@
     {
       "key": "library-icon-grid-show-title-box",
       "label": "Show title box",
-      "group": "library-grid-appearance",
-      "order": 40,
       "subItem": false,
       "visibleWhen": [
         {
@@ -125,8 +123,6 @@
     {
       "key": "library-icon-grid-show-favorite-icon",
       "label": "Show favorite icon",
-      "group": "library-grid-appearance",
-      "order": 50,
       "subItem": false,
       "visibleWhen": [
         {
@@ -148,8 +144,6 @@
     {
       "key": "library-list-view-mode",
       "label": "Compact",
-      "group": "library-list-appearance",
-      "order": 10,
       "subItem": false,
       "visibleWhen": [
         {

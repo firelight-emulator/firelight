@@ -52,7 +52,8 @@ struct CoreOptionMapping {
   std::map<std::string, std::string> valueMap;
 };
 
-// One declared setting: what it is and where it lives. App settings and
+// TODO
+// One declared setting: what it is and how it behaves. App settings and
 // emulation settings share this shape — an app setting is simply one with no
 // core mapping, read only at the global tier. Which array a setting is authored
 // in decides that, not a field here
@@ -62,15 +63,9 @@ struct SettingDefinition {
   std::string description;
   std::string defaultValue;
   SettingType type = SettingType::OPTIONS;
-  // The SettingsGroup this row belongs to; the group in turn names the page
-  // Empty => the setting still resolves and still indexes, but no group-filtered
-  // view renders it
-  std::string groupId;
   // Terms search should match beyond label/description: the words users actually
   // think in ("vsync" for Sync method)
   std::vector<std::string> keywords;
-  // Sort position within the group; ties keep declaration order
-  int order = 0;
   bool requiresRestart = false;
   std::string trueStringValue = "true";
   std::string falseStringValue = "false";
@@ -130,17 +125,20 @@ struct SettingsPage {
   std::string label;
   std::string icon;
   std::string route;
-  int order = 0;
   // Terms that should match the page itself, distinct from its settings'
   std::vector<std::string> keywords;
+  // TODO
+  // The ids of the groups on this page, in render order
+  std::vector<std::string> groupIds;
 };
 
 // A titled group of rows within a page — the section card the rows render into
 struct SettingsGroup {
   std::string id;
-  std::string pageId;
   std::string label;
-  int order = 0;
+  // TODO
+  // The keys of the settings in this group, in render order
+  std::vector<std::string> settingKeys;
 };
 
 // Whether a setting should be shown / editable given the current values of the

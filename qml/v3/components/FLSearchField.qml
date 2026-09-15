@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Firelight 1.0
 
 FocusScope {
     id: root
@@ -27,6 +28,7 @@ FocusScope {
     }
 
     Rectangle {
+        id: background
         anchors.fill: parent
         radius: AppStyle.radiusMd
         color: Theme.backgroundInset
@@ -63,6 +65,10 @@ FocusScope {
             background: Item {}
             onAccepted: root.accepted()
             Keys.onEscapePressed: field.text = ""
+            focus: true
+
+            FLFocus.showCursor: true
+            FLFocus.proxy: background
         }
 
         FLIconButton {

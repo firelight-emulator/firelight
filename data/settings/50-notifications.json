@@ -3,8 +3,6 @@
     {
       "key": "notify-achievement-earned",
       "label": "Achievement earned",
-      "group": "notifications-achievements",
-      "order": 10,
       "keywords": [
         "retroachievements",
         "popup",
@@ -18,8 +16,6 @@
     {
       "key": "notify-all-achievements-earned",
       "label": "All achievements earned",
-      "group": "notifications-achievements",
-      "order": 20,
       "keywords": [
         "retroachievements",
         "popup",
@@ -33,8 +29,6 @@
     {
       "key": "notify-TODO",
       "label": "All achievements earned",
-      "group": "notifications-achievements",
-      "order": 30,
       "keywords": [
         "retroachievements",
         "popup",
@@ -48,8 +42,6 @@
     {
       "key": "notify-controller-connected",
       "label": "Controller connected",
-      "group": "notifications-controllers",
-      "order": 10,
       "keywords": [
         "gamepad",
         "popup",
@@ -63,8 +55,6 @@
     {
       "key": "notify-controller-disconnected",
       "label": "Controller disconnected",
-      "group": "notifications-controllers",
-      "order": 20,
       "keywords": [
         "gamepad",
         "popup",
@@ -78,8 +68,6 @@
     {
       "key": "notify-low-battery",
       "label": "Low battery warning",
-      "group": "notifications-controllers",
-      "order": 30,
       "keywords": [
         "gamepad",
         "popup",

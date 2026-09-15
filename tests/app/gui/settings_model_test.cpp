@@ -20,12 +20,15 @@ constexpr int GBA_PLATFORM_ID = 3;
 
 const char *CATALOG = R"JSON(
 {
-  "groups": [{"id": "emulation", "label": "Emulation"},
-             {"id": "rowstyle", "label": "Row style"}],
+  "groups": [{"id": "emulation", "label": "Emulation",
+              "settings": ["rewind-enabled", "aspect-ratio", "solar-sensor", "solar-level", "adv-opt"]},
+             {"id": "rowstyle", "label": "Row style",
+              "settings": ["rowstyle-parent", "rowstyle-inferred", "rowstyle-optout", "rowstyle-optin",
+                           "rowstyle-crossgroup"]}],
   "common": [
-    {"key": "rewind-enabled", "label": "Rewind", "group": "emulation",
+    {"key": "rewind-enabled", "label": "Rewind",
      "type": "boolean", "default": "true"},
-    {"key": "aspect-ratio", "label": "Aspect ratio", "group": "emulation",
+    {"key": "aspect-ratio", "label": "Aspect ratio",
      "type": "options", "default": "corrected",
      "options": [{"label": "Pixel", "value": "pixel"},
                  {"label": "Corrected", "value": "corrected"}]}
@@ -33,24 +36,24 @@ const char *CATALOG = R"JSON(
   "cores": {
     "mgba_libretro": {
       "settings": [
-        {"key": "solar-sensor", "label": "Solar sensor", "group": "emulation",
+        {"key": "solar-sensor", "label": "Solar sensor",
          "type": "boolean", "default": "false"},
-        {"key": "solar-level", "label": "Solar level", "group": "emulation",
+        {"key": "solar-level", "label": "Solar level",
          "type": "slider", "default": "0", "min": 0, "max": 10, "step": 1,
          "visibleWhen": [{"key": "solar-sensor", "values": ["true"]}]},
-        {"key": "adv-opt", "label": "Advanced option", "group": "emulation",
+        {"key": "adv-opt", "label": "Advanced option",
          "type": "boolean", "default": "false", "advanced": true},
-        {"key": "rowstyle-parent", "label": "Row style parent", "group": "rowstyle",
+        {"key": "rowstyle-parent", "label": "Row style parent",
          "type": "boolean", "default": "true"},
-        {"key": "rowstyle-inferred", "label": "Inferred", "group": "rowstyle",
+        {"key": "rowstyle-inferred", "label": "Inferred",
          "type": "boolean", "default": "false",
          "visibleWhen": [{"key": "rowstyle-parent", "values": ["true"]}]},
-        {"key": "rowstyle-optout", "label": "Opted out", "group": "rowstyle",
+        {"key": "rowstyle-optout", "label": "Opted out",
          "type": "boolean", "default": "false", "subItem": false,
          "visibleWhen": [{"key": "rowstyle-parent", "values": ["true"]}]},
-        {"key": "rowstyle-optin", "label": "Opted in", "group": "rowstyle",
+        {"key": "rowstyle-optin", "label": "Opted in",
          "type": "boolean", "default": "false", "subItem": true},
-        {"key": "rowstyle-crossgroup", "label": "Cross group", "group": "rowstyle",
+        {"key": "rowstyle-crossgroup", "label": "Cross group",
          "type": "boolean", "default": "false",
          "visibleWhen": [{"key": "rewind-enabled", "values": ["true"]}]}
       ]
@@ -283,6 +286,35 @@ TEST_F(SettingsModelTest, ResetFallsBackToInherited) {
   EXPECT_FALSE(value(model, row, "resettable").toBool());
 }
 
+// TODO
+// Two models showing the same setting, as when a setting sits in two groups on screen: a reset in
+// one shows up in the other
+TEST_F(SettingsModelTest, AResetInOneModelRefreshesAnotherShowingTheSameSetting) {
+  m_service.setPlatformValue(GBA_PLATFORM_ID, "aspect-ratio", "pixel");
+
+  SettingsModel editing;
+  SettingsModel watching;
+
+  for (auto *model : {&editing, &watching}) {
+    model->setGroup("emulation");
+    model->setPlatformId(GBA_PLATFORM_ID);
+    model->setContentHash("hash1");
+    model->setLevel(Game);
+  }
+
+  const int editingRow = findRow(editing, "aspect-ratio");
+  const int watchingRow = findRow(watching, "aspect-ratio");
+  ASSERT_NE(editingRow, -1);
+  ASSERT_NE(watchingRow, -1);
+
+  ASSERT_TRUE(editing.setData(editing.index(editingRow), "corrected", roleFor(editing, "value")));
+  ASSERT_EQ(value(watching, watchingRow, "value").toString(), "corrected");
+
+  editing.resetValue(editingRow);
+  EXPECT_EQ(value(watching, watchingRow, "value").toString(), "pixel");
+  EXPECT_FALSE(value(watching, watchingRow, "resettable").toBool());
+}
+
 TEST_F(SettingsModelTest, VisibleWhenTracksDependency) {
   SettingsModel model;
   model.setGroup("emulation");
@@ -328,11 +360,12 @@ TEST_F(SettingsModelTest, AdvancedHiddenUnlessShowAdvanced) {
 // when the model is scoped to platform 3
 const char *GAME_PICKER_CATALOG = R"JSON(
 {
+  "groups": [{"id": "emulation", "label": "Emulation", "settings": ["tpak"]}],
   "common": [],
   "cores": {
     "mgba_libretro": {
       "settings": [
-        {"key": "tpak", "label": "Cartridge", "group": "emulation",
+        {"key": "tpak", "label": "Cartridge",
          "type": "game-picker", "eligiblePlatformIds": [1], "default": ""}
       ]
     }
@@ -374,19 +407,19 @@ TEST_F(SettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatform) {
 
 const char *NEW_WIDGETS_CATALOG = R"JSON(
 {
-  "groups": [{"id": "emulation", "label": "Emulation"},
+  "groups": [{"id": "emulation", "label": "Emulation", "settings": ["title", "bios", "romdir", "cheats"]},
              {"id": "rowstyle", "label": "Row style"}],
   "common": [],
   "cores": {
     "mgba_libretro": {
       "settings": [
-        {"key": "title", "label": "Title", "group": "emulation", "type": "text",
+        {"key": "title", "label": "Title", "type": "text",
          "placeholder": "Enter a name", "default": "hi"},
-        {"key": "bios", "label": "BIOS", "group": "emulation", "type": "file-picker",
+        {"key": "bios", "label": "BIOS", "type": "file-picker",
          "extensions": ["bin", "bios"], "default": ""},
-        {"key": "romdir", "label": "ROM folder", "group": "emulation", "type": "folder-picker",
+        {"key": "romdir", "label": "ROM folder", "type": "folder-picker",
          "default": ""},
-        {"key": "cheats", "label": "Cheats", "group": "emulation", "type": "multi-select",
+        {"key": "cheats", "label": "Cheats", "type": "multi-select",
          "default": "[]",
          "options": [{"label": "A", "value": "a"}, {"label": "B", "value": "b"}]}
       ]
@@ -438,21 +471,22 @@ namespace {
 const char *GROUP_CATALOG = R"JSON(
 {
   "pages": [
-    {"id": "appearance", "label": "Appearance", "route": "/settings/appearance"}
+    {"id": "appearance", "label": "Appearance", "route": "/settings/appearance",
+     "groups": ["theme", "other"]}
   ],
   "groups": [
-    {"id": "theme", "page": "appearance", "label": "Theme", "order": 10},
-    {"id": "other", "page": "appearance", "label": "Other", "order": 20}
+    {"id": "theme", "label": "Theme", "settings": ["in-theme-too", "accent-color"]},
+    {"id": "other", "label": "Other", "settings": ["elsewhere"]}
   ],
   "app": [
-    {"key": "accent-color", "group": "theme", "label": "Accent color",
-     "type": "color", "default": "#f76b15", "order": 20},
-    {"key": "elsewhere", "group": "other", "label": "Elsewhere",
+    {"key": "accent-color", "label": "Accent color",
+     "type": "color", "default": "#f76b15"},
+    {"key": "elsewhere", "label": "Elsewhere",
      "type": "boolean", "default": "false"}
   ],
   "common": [
-    {"key": "in-theme-too", "group": "theme", "label": "In theme too",
-     "type": "boolean", "default": "true", "order": 10}
+    {"key": "in-theme-too", "label": "In theme too",
+     "type": "boolean", "default": "true"}
   ]
 }
 )JSON";
@@ -472,7 +506,8 @@ TEST_F(SettingsModelGroupTest, ShowsOnlyTheGroupInDeclaredOrder) {
   model.setGroup("theme");
 
   ASSERT_EQ(model.rowCount({}), 2);
-  // Ordered by `order`, across both arrays
+  // TODO
+  // Ordered by the group's list, across both arrays
   EXPECT_EQ(value(model, 0, "key").toString(), "in-theme-too");
   EXPECT_EQ(value(model, 1, "key").toString(), "accent-color");
   EXPECT_EQ(findRow(model, "elsewhere"), -1);

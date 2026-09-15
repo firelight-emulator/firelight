@@ -29,19 +29,41 @@ FocusScope {
     // catalog, alongside the settings themselves, so one index covers both
     property var sections: [
         {
-            "title": "System",
+            "title": "",
+            "items": [
+                {
+                    "displayName": "Notifications",
+                    "iconName": "info",
+                    "route": "notifications",
+                    "page": placeholderSettings
+                }
+            ]
+        },
+        {
+            "title": "",
+            "items": [
+                {
+                    "displayName": "Controllers",
+                    "iconName": "controller",
+                    "route": "controllers",
+                    "page": controllerSettings
+                }
+            ]
+        },
+        {
+            "title": "",
             "items": [
                 {
                     "displayName": "Video",
                     "iconName": "display",
-                    "route": "system-video",
-                    "page": placeholderSettings
+                    "route": "video",
+                    "page": systemVideoSettings
                 },
                 {
                     "displayName": "Audio",
                     "iconName": "display",
-                    "route": "system-audio",
-                    "page": placeholderSettings
+                    "route": "audio",
+                    "page": systemAudioSettings
                 }
             ]
         },
@@ -69,23 +91,6 @@ FocusScope {
             ]
         },
         {
-            "title": "Emulation",
-            "items": [
-                {
-                    "displayName": "Picture",
-                    "iconName": "display",
-                    "route": "emulation-picture",
-                    "page": placeholderSettings
-                },
-                {
-                    "displayName": "Sound",
-                    "iconName": "display",
-                    "route": "emulation-picture",
-                    "page": placeholderSettings
-                }
-            ]
-        },
-        {
             "title": "Main stuff",
             "items": [
                 {
@@ -95,28 +100,10 @@ FocusScope {
                     "page": appearanceSettings
                 },
                 {
-                    "displayName": "System",
-                    "iconName": "display",
-                    "route": "system",
-                    "page": systemSettings
-                },
-                {
                     "displayName": "Emulation",
                     "iconName": "controller",
                     "route": "emulation",
                     "page": emulationSettings
-                },
-                {
-                    "displayName": "Controllers",
-                    "iconName": "controller",
-                    "route": "controllers",
-                    "page": controllerSettings
-                },
-                {
-                    "displayName": "Notifications",
-                    "iconName": "bell",
-                    "route": "notifications",
-                    "page": notificationSettings
                 },
                 {
                     "displayName": "Captures",
@@ -146,12 +133,6 @@ FocusScope {
                     "iconName": "palette",
                     "route": "appearance",
                     "page": appearanceSettings
-                },
-                {
-                    "displayName": "System",
-                    "iconName": "display",
-                    "route": "system",
-                    "page": systemSettings
                 }
             ]
         }
@@ -308,14 +289,16 @@ FocusScope {
 
                     // Divider between sections (not before the first)
                     FLDivider {
-                        Layout.topMargin: AppStyle.spacingSm
-                        Layout.bottomMargin: AppStyle.spacingSm
+                        // Layout.topMargin: AppStyle.spacingSm
+                        Layout.bottomMargin: AppStyle.spacingMd
                         visible: index > 0
                     }
 
                     Text {
+                        id: labelText
                         Layout.topMargin: AppStyle.spacingSm
                         Layout.bottomMargin: AppStyle.spacingSm
+                        visible: text !== ""
                         color: Theme.textMuted
                         text: navSection.modelData.title
                         font.pixelSize: AppStyle.fontSizeSmall
@@ -327,61 +310,19 @@ FocusScope {
 
                     Repeater {
                         model: navSection.modelData.items
-                        delegate: FLButtonBase {
-                            id: button
+                        delegate: MenuNavigationItem {
                             required property var modelData
                             required property var index
 
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 50
-                            variant: "subtle"
-                            rounded: false
+                            label: modelData.displayName
                             focus: index === 0
-
-                            FLFocus.focusSound: SoundEffects.menuItemFocus
-
-                            checkedColor: Theme.switch2Color
-
-                            checkable: false
                             checked: modelData.route === root.currentRoute
 
-                            onActiveFocusChanged: {
-                                if (activeFocus) {
-                                    root.navigateTo(modelData.route)
-                                }
-                            }
-
-                            onClicked: {
+                            onActivated: {
                                 root.navigateTo(modelData.route)
-                                if (!InputMethodManager.usingMouse) {
-                                    contentStack.forceActiveFocus();
-                                }
-                            }
-
-                            contentItem: Row {
-                                spacing: 12
-                                Item {
-                                    y: AppStyle.spacingMd / 2
-                                    height: parent.height - AppStyle.spacingMd
-                                    width: 4
-
-                                    Rectangle {
-                                        anchors.fill: parent
-                                        color: Theme.switch2Color
-                                        visible: button.checked
-                                    }
-                                }
-
-                                Text {
-                                    color: button._fg
-                                    text: button.modelData.displayName
-                                    font.pixelSize: AppStyle.fontSizeMedium
-                                    font.family: AppStyle.fontFamily
-                                    font.weight: Font.DemiBold
-                                    height: parent.height
-                                    verticalAlignment: Text.AlignVCenter
-                                    horizontalAlignment: Text.AlignLeft
-                                }
+                                // if (!InputMethodManager.usingMouse) {
+                                //     contentStack.forceActiveFocus();
+                                // }
                             }
                         }
                     }
@@ -726,13 +667,30 @@ FocusScope {
             page: "appearance"
         }
     }
+
     Component {
-        id: systemSettings
+        id: systemVideoSettings
 
         SettingsPage {
-            page: "system"
+            page: "video"
         }
     }
+
+    Component {
+        id: systemAudioSettings
+
+        SettingsPage {
+            page: "audio"
+        }
+    }
+    //
+    // Component {
+    //     id: systemSettings
+    //
+    //     SettingsPage {
+    //         page: "system"
+    //     }
+    // }
     Component {
         id: controllerSettings
 

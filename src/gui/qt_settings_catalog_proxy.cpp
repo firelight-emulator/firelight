@@ -7,14 +7,23 @@ namespace firelight::gui {
 QtSettingsCatalogProxy::QtSettingsCatalogProxy(QObject *parent) : QObject(parent) {}
 
 QStringList QtSettingsCatalogProxy::groupsForPage(const QString &pageId) const {
+  const auto &catalog = settings::SettingsCatalog::instance();
+  const auto *page = catalog.findPage(pageId.toStdString());
+
+  if (page == nullptr) {
+    return {};
+  }
+
   QStringList ids;
-  // groups() is already sorted by `order`, so declaration order is the render
-  // order and nothing here re-sorts
-  for (const auto &group : settings::SettingsCatalog::instance().groups()) {
-    if (group.pageId == pageId.toStdString()) {
-      ids.append(QString::fromStdString(group.id));
+
+  // TODO
+  // Only groups the catalog declares, in the order the page lists them
+  for (const auto &groupId : page->groupIds) {
+    if (catalog.findGroup(groupId) != nullptr) {
+      ids.append(QString::fromStdString(groupId));
     }
   }
+
   return ids;
 }
 

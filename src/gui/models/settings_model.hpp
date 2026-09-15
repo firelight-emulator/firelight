@@ -171,6 +171,9 @@ private:
   ScopedConnection m_globalSettingChangedConnection;
   ScopedConnection m_platformSettingChangedConnection;
   ScopedConnection m_gameSettingChangedConnection;
+  ScopedConnection m_globalSettingResetConnection;
+  ScopedConnection m_platformSettingResetConnection;
+  ScopedConnection m_gameSettingResetConnection;
 
   QString m_contentHash;
   QString m_group;

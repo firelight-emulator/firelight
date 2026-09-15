@@ -6,8 +6,6 @@
         {
           "key": "melonds_screen_gap",
           "label": "Screen gap",
-          "group": "emulation-video",
-          "order": 100,
           "type": "options",
           "default": "0",
           "keywords": [

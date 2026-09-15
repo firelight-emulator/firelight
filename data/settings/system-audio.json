@@ -1,0 +1,62 @@
+{
+  "app": [
+    {
+      "key": "audio-output-device",
+      "label": "Audio output device",
+      "keywords": [
+        "speaker",
+        "headphones",
+        "sound card",
+        "playback"
+      ],
+      "_note": "Options are the machine's audio outputs, enumerated at runtime by the app layer (the settings lib knows nothing about hardware). '' means the system default.",
+      "type": "audio-device",
+      "default": ""
+    },
+    {
+      "key": "master-volume",
+      "label": "Master volume",
+      "keywords": [
+        "loud",
+        "sound",
+        "gain",
+        "quiet"
+      ],
+      "type": "slider",
+      "default": "100",
+      "min": 0,
+      "max": 100,
+      "step": 1
+    },
+    {
+      "key": "audio-muted",
+      "label": "Mute audio",
+      "description": "Silences all game audio. Applies to every game, not just the one you're playing.",
+      "keywords": [
+        "mute",
+        "silence",
+        "quiet",
+        "sound off"
+      ],
+      "type": "boolean",
+      "default": "false"
+    },
+    {
+      "key": "ui-sfx-master-volume",
+      "label": "UI sound effect volume",
+      "keywords": [
+        "ui",
+        "menu",
+        "interface",
+        "navigation",
+        "click",
+        "sound"
+      ],
+      "type": "slider",
+      "default": "100",
+      "min": 0,
+      "max": 100,
+      "step": 1
+    }
+  ]
+}

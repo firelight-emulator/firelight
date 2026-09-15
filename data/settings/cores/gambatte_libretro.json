@@ -6,8 +6,6 @@
         {
           "key": "gambatte_mix_frames",
           "label": "Simulate LCD ghosting effects",
-          "group": "emulation-video",
-          "order": 100,
           "type": "options",
           "default": "disabled",
           "keywords": [
@@ -42,8 +40,6 @@
         {
           "key": "gambatte_up_down_allowed",
           "label": "Allow opposing D-Pad directions",
-          "group": "emulation-input",
-          "order": 100,
           "type": "boolean",
           "keywords": [
             "dpad",
@@ -57,8 +53,6 @@
         {
           "key": "gambatte_gbc_color_correction",
           "label": "Color correction",
-          "group": "emulation-video",
-          "order": 110,
           "type": "options",
           "default": "GBC only",
           "keywords": [
@@ -84,8 +78,6 @@
         {
           "key": "gambatte_gbc_frontlight_position",
           "label": "Frontlight position",
-          "group": "emulation-video",
-          "order": 120,
           "type": "options",
           "default": "central",
           "keywords": [
@@ -111,8 +103,6 @@
         {
           "key": "gambatte_gb_internal_palette",
           "label": "Color palette",
-          "group": "emulation-video",
-          "order": 130,
           "description": "Palette used for original Game Boy games.",
           "keywords": [
             "colour",

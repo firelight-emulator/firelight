@@ -2,13 +2,13 @@ import QtQuick
 import QtQuick.Layouts
 import Firelight 1.0
 
-// Renders every group the catalog declares for a page, in declared order. This
-// is what a settings page normally is:
+// TODO
+// Renders every group the catalog's page lists, in list order. This is what a
+// settings page normally is:
 //
 //     SettingsPage { page: "appearance" }
 //
-// The group list comes from the catalog rather than being spelled out here, so a
-// new group appears just by being declared — no page can silently omit one
+// The group list comes from the catalog rather than being spelled out here
 //
 // `level`/`platformId`/`contentHash` only matter for emulation settings; app
 // settings ignore them and always use the global tier

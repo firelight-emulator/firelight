@@ -44,8 +44,8 @@ void SettingsIndex::rebuild(const SettingsCatalog &catalog) {
   }
 
   for (const auto *setting : catalog.allSettings()) {
-    const auto *group = catalog.findGroup(setting->groupId);
-    const auto *page = group ? catalog.findPage(group->pageId) : nullptr;
+    const auto *group = catalog.findGroupForSetting(setting->key);
+    const auto *page = group ? catalog.findPageForGroup(group->id) : nullptr;
 
     Entry entry;
     entry.result.kind = SearchResultKind::Setting;

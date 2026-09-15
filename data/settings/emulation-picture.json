@@ -1,0 +1,115 @@
+{
+  "common": [
+    {
+      "key": "picture-mode",
+      "label": "Picture mode",
+      "keywords": [
+        "scaling",
+        "stretch",
+        "fill",
+        "integer"
+      ],
+      "type": "options",
+      "default": "aspect-ratio-fill",
+      "options": [
+        {
+          "label": "Fill (keep aspect)",
+          "value": "aspect-ratio-fill"
+        },
+        {
+          "label": "Integer scale",
+          "value": "integer-scale"
+        },
+        {
+          "label": "Stretch",
+          "value": "stretch"
+        }
+      ]
+    },
+    {
+      "key": "aspect-ratio",
+      "label": "Aspect ratio",
+      "keywords": [
+        "widescreen",
+        "4:3",
+        "pixel",
+        "stretch"
+      ],
+      "type": "options",
+      "default": "emulator-corrected",
+      "options": [
+        {
+          "label": "Pixel perfect",
+          "value": "pixel-perfect"
+        },
+        {
+          "label": "Emulator corrected",
+          "value": "emulator-corrected"
+        }
+      ]
+    },
+    {
+      "key": "sync-method",
+      "label": "Sync method",
+      "description": "How gameplay is paced. Automatic (recommended) matches your display's refresh rate when your display can show the game's rate, and uses the game's own rate when it can't. Sync to monitor does the same thing explicitly: matching the display removes repeated and skipped frames entirely, and the pitch change it needs to do so is far too small to hear. Native timer runs at exactly the rate the game asks for and leaves audio completely untouched, at the cost of a repeated or skipped frame every few seconds on most displays. Fixed framerate runs at a rate you choose. Audio paces off your sound device instead of a clock, which keeps audio untouched but is usually less smooth, because sound devices report their progress in coarse steps.",
+      "keywords": [
+        "vsync",
+        "v-sync",
+        "refresh rate",
+        "pacing",
+        "stutter",
+        "tearing",
+        "framerate"
+      ],
+      "type": "options",
+      "default": "auto",
+      "advanced": true,
+      "options": [
+        {
+          "label": "Automatic",
+          "value": "auto"
+        },
+        {
+          "label": "Audio",
+          "value": "audio"
+        },
+        {
+          "label": "Sync to monitor",
+          "value": "monitor"
+        },
+        {
+          "label": "Native timer",
+          "value": "native"
+        },
+        {
+          "label": "Fixed framerate",
+          "value": "fixed"
+        }
+      ]
+    },
+    {
+      "key": "target-framerate",
+      "label": "Target framerate",
+      "description": "Frames per second to target when using Fixed framerate sync.",
+      "keywords": [
+        "fps",
+        "hz",
+        "refresh rate"
+      ],
+      "type": "spinbox",
+      "default": "60",
+      "min": 30,
+      "max": 240,
+      "step": 1,
+      "advanced": true,
+      "enabledWhen": [
+        {
+          "key": "sync-method",
+          "values": [
+            "fixed"
+          ]
+        }
+      ]
+    }
+  ]
+}

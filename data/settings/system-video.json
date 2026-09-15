@@ -1,0 +1,29 @@
+{
+  "app": [
+    {
+      "key": "fullscreen",
+      "label": "Fullscreen",
+      "keywords": [
+        "window",
+        "borderless",
+        "maximise",
+        "maximize",
+        "screen"
+      ],
+      "type": "boolean",
+      "default": "false"
+    },
+    {
+      "key": "vsync",
+      "label": "VSync",
+      "keywords": [
+        "refresh",
+        "tearing",
+        "sync",
+        "fps"
+      ],
+      "type": "boolean",
+      "default": "true"
+    }
+  ]
+}

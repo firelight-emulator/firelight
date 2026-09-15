@@ -301,31 +301,30 @@ const char *LAYOUT_JSON = R"JSON(
 {
   "pages": [
     {"id": "emulation", "label": "Emulation", "icon": "chip",
-     "route": "/settings/emulation", "order": 20, "keywords": ["core"]},
+     "route": "/settings/emulation", "keywords": ["core"], "groups": ["video"]},
     {"id": "appearance", "label": "Appearance", "icon": "palette",
-     "route": "/settings/appearance", "order": 10}
+     "route": "/settings/appearance", "groups": ["theme"]}
   ],
   "groups": [
-    {"id": "video", "page": "emulation", "label": "Video", "order": 20},
-    {"id": "theme", "page": "appearance", "label": "Theme", "order": 10}
+    {"id": "video", "label": "Video", "settings": ["gba-blend", "aspect-ratio"]},
+    {"id": "theme", "label": "Theme", "settings": ["background-mode", "accent-color"]}
   ],
   "app": [
-    {"key": "accent-color", "group": "theme", "label": "Accent color",
-     "type": "color", "default": "#f76b15", "keywords": ["highlight"],
-     "order": 20},
-    {"key": "background-mode", "group": "theme", "label": "Background",
-     "type": "options", "default": "solid", "order": 10,
+    {"key": "accent-color", "label": "Accent color",
+     "type": "color", "default": "#f76b15", "keywords": ["highlight"]},
+    {"key": "background-mode", "label": "Background",
+     "type": "options", "default": "solid",
      "options": [{"label": "Solid", "value": "solid"}]}
   ],
   "common": [
-    {"key": "aspect-ratio", "group": "video", "label": "Aspect ratio",
+    {"key": "aspect-ratio", "label": "Aspect ratio",
      "type": "options", "default": "corrected",
      "options": [{"label": "Corrected", "value": "corrected"}]}
   ],
   "cores": {
     "mgba_libretro": {
       "settings": [
-        {"key": "gba-blend", "group": "video", "label": "Interframe blending",
+        {"key": "gba-blend", "label": "Interframe blending",
          "type": "boolean", "default": "false"}
       ]
     }
@@ -338,21 +337,24 @@ TEST(SettingsCatalogLayoutTest, ParsesPagesAndGroupsInOrder) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(LAYOUT_JSON));
 
-  // Both are sorted by `order`, not declaration order
+  // TODO
+  // Both keep declaration order
   ASSERT_EQ(c.pages().size(), 2u);
-  EXPECT_EQ(c.pages()[0].id, "appearance");
-  EXPECT_EQ(c.pages()[1].id, "emulation");
+  EXPECT_EQ(c.pages()[0].id, "emulation");
+  EXPECT_EQ(c.pages()[1].id, "appearance");
 
   const auto *page = c.findPage("appearance");
   ASSERT_NE(page, nullptr);
   EXPECT_EQ(page->label, "Appearance");
   EXPECT_EQ(page->icon, "palette");
   EXPECT_EQ(page->route, "/settings/appearance");
+  EXPECT_EQ(page->groupIds, (std::vector<std::string>{"theme"}));
 
   const auto *group = c.findGroup("theme");
   ASSERT_NE(group, nullptr);
-  EXPECT_EQ(group->pageId, "appearance");
   EXPECT_EQ(group->label, "Theme");
+  EXPECT_EQ(group->settingKeys, (std::vector<std::string>{"background-mode", "accent-color"}));
+  EXPECT_EQ(c.findPageForGroup("theme"), page);
 
   EXPECT_EQ(c.findPage("nope"), nullptr);
   EXPECT_EQ(c.findGroup("nope"), nullptr);
@@ -365,7 +367,8 @@ TEST(SettingsCatalogLayoutTest, ParsesAppSettingsWithKeywords) {
   ASSERT_EQ(c.appSettings().size(), 2u);
   const auto *accent = find(c.appSettings(), "accent-color");
   ASSERT_NE(accent, nullptr);
-  EXPECT_EQ(accent->groupId, "theme");
+  ASSERT_NE(c.findGroupForSetting("accent-color"), nullptr);
+  EXPECT_EQ(c.findGroupForSetting("accent-color")->id, "theme");
   EXPECT_EQ(accent->widget, "color");
   ASSERT_EQ(accent->keywords.size(), 1u);
   EXPECT_EQ(accent->keywords[0], "highlight");
@@ -379,17 +382,19 @@ TEST(SettingsCatalogLayoutTest, GroupCollectsFromEveryArrayInOrder) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(LAYOUT_JSON));
 
-  // Sorted by `order`, so the later-declared background-mode comes first
+  // TODO
+  // In the group's list order, so the later-declared background-mode comes first
   const auto theme = c.settingsForGroup("theme");
   ASSERT_EQ(theme.size(), 2u);
   EXPECT_EQ(theme[0].key, "background-mode");
   EXPECT_EQ(theme[1].key, "accent-color");
 
-  // A group spanning `common` and the named core's settings gathers both
+  // TODO
+  // A group spanning `common` and the named core's settings gathers both, core first because the list says so
   const auto video = c.settingsForGroup("video", "mgba_libretro");
   ASSERT_EQ(video.size(), 2u);
-  EXPECT_NE(find(video, "aspect-ratio"), nullptr);
-  EXPECT_NE(find(video, "gba-blend"), nullptr);
+  EXPECT_EQ(video[0].key, "gba-blend");
+  EXPECT_EQ(video[1].key, "aspect-ratio");
 
   // No core in scope (the global tier) means the frontend settings only — not
   // every core's settings piled together
@@ -402,6 +407,28 @@ TEST(SettingsCatalogLayoutTest, GroupCollectsFromEveryArrayInOrder) {
 
   EXPECT_TRUE(c.settingsForGroup("nope").empty());
   EXPECT_TRUE(c.settingsForGroup("").empty());
+}
+
+// TODO
+// A group no page lists and a setting no group lists still load, with nothing above them
+TEST(SettingsCatalogLayoutTest, UnlistedGroupsAndSettingsHaveNoParent) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromJson(R"JSON(
+  {
+    "groups": [{"id": "loose", "label": "Loose", "settings": ["listed"]}],
+    "app": [
+      {"key": "listed", "label": "Listed", "type": "boolean"},
+      {"key": "unlisted", "label": "Unlisted", "type": "boolean"}
+    ]
+  }
+  )JSON"));
+
+  EXPECT_EQ(c.findPageForGroup("loose"), nullptr);
+  ASSERT_NE(c.findGroupForSetting("listed"), nullptr);
+  EXPECT_EQ(c.findGroupForSetting("listed")->id, "loose");
+  EXPECT_EQ(c.findGroupForSetting("unlisted"), nullptr);
+  EXPECT_NE(c.findByKey("unlisted"), nullptr);
+  EXPECT_TRUE(c.validate().empty());
 }
 
 TEST(SettingsCatalogLayoutTest, FindsAndEnumeratesEverySetting) {
@@ -422,9 +449,9 @@ TEST(SettingsCatalogLayoutTest, AppSettingsDropCoreOnlyFields) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(R"JSON(
   {
-    "groups": [{"id": "theme", "label": "Theme"}],
+    "groups": [{"id": "theme", "label": "Theme", "settings": ["fullscreen"]}],
     "app": [
-      {"key": "fullscreen", "group": "theme", "label": "Fullscreen",
+      {"key": "fullscreen", "label": "Fullscreen",
        "type": "boolean", "default": "false",
        "trueValue": "on", "falseValue": "off",
        "mapping": [{"coreKey": "some_core_key"}]}
@@ -462,17 +489,38 @@ TEST(SettingsCatalogValidationTest, ReportsAuthoringMistakes) {
   })JSON")
                    .empty());
 
-  // A setting pointing at a group nobody declared
+  // TODO
+  // A group listing a setting nobody declared
   EXPECT_FALSE(problemsFor(R"JSON(
   {
-    "app": [{"key": "a", "group": "ghost", "label": "A", "type": "boolean"}]
+    "groups": [{"id": "g", "label": "G", "settings": ["ghost"]}]
   })JSON")
                    .empty());
 
-  // A group pointing at a page nobody declared
+  // TODO
+  // A page listing a group nobody declared
   EXPECT_FALSE(problemsFor(R"JSON(
   {
-    "groups": [{"id": "g", "page": "ghost", "label": "G"}]
+    "pages": [{"id": "p", "label": "P", "groups": ["ghost"]}]
+  })JSON")
+                   .empty());
+
+  // TODO
+  // One group listed by two pages
+  EXPECT_FALSE(problemsFor(R"JSON(
+  {
+    "pages": [{"id": "p", "label": "P", "groups": ["g"]},
+              {"id": "q", "label": "Q", "groups": ["g"]}],
+    "groups": [{"id": "g", "label": "G"}]
+  })JSON")
+                   .empty());
+
+  // TODO
+  // One setting listed twice in the same group
+  EXPECT_FALSE(problemsFor(R"JSON(
+  {
+    "groups": [{"id": "g", "label": "G", "settings": ["a", "a"]}],
+    "app": [{"key": "a", "label": "A", "type": "boolean"}]
   })JSON")
                    .empty());
 
@@ -510,6 +558,25 @@ TEST(SettingsCatalogValidationTest, ReportsAuthoringMistakes) {
     "common": [{"key": "a", "label": "A", "type": "game-picker"}]
   })JSON")
                   .empty());
+}
+
+// TODO
+// A setting can sit in more than one group: it renders in each, and the first group is the one it reports
+TEST(SettingsCatalogValidationTest, ASettingCanBeListedByMoreThanOneGroup) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromJson(R"JSON(
+  {
+    "groups": [{"id": "g", "label": "G", "settings": ["a"]},
+               {"id": "h", "label": "H", "settings": ["a"]}],
+    "app": [{"key": "a", "label": "A", "type": "boolean"}]
+  }
+  )JSON"));
+
+  EXPECT_TRUE(c.validate().empty());
+  EXPECT_EQ(c.settingsForGroup("g").size(), 1u);
+  EXPECT_EQ(c.settingsForGroup("h").size(), 1u);
+  ASSERT_NE(c.findGroupForSetting("a"), nullptr);
+  EXPECT_EQ(c.findGroupForSetting("a")->id, "g");
 }
 
 TEST(SettingsCatalogValidationTest, ParsesTypeAliasesForEveryDelegate) {
@@ -552,14 +619,11 @@ TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
   EXPECT_FALSE(c.groups().empty());
   EXPECT_FALSE(c.commonSettings().empty());
 
-  // Every group lands on a page, and every setting lands in a group — that's
-  // what lets a page auto-render and search say where a result lives
   for (const auto &group : c.groups()) {
-    EXPECT_FALSE(group.pageId.empty()) << "group '" << group.id << "' names no page";
     EXPECT_FALSE(group.label.empty()) << "group '" << group.id << "' has no label";
   }
+
   for (const auto *setting : c.allSettings()) {
-    EXPECT_FALSE(setting->groupId.empty()) << "setting '" << setting->key << "' names no group";
     EXPECT_FALSE(setting->label.empty()) << "setting '" << setting->key << "' has no label";
   }
 }
@@ -771,10 +835,10 @@ private:
 // The point of the folder: a page's settings can live beside that page's other settings
 TEST(CatalogDirectoryTest, SettingsFromEveryFileAreLoaded) {
   const TempCatalog dir;
-  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
-                                "groups":[{"id":"g","page":"p","label":"G"}]})");
-  dir.write("10-first.json", R"({"app":[{"key":"a","label":"A","group":"g","type":"boolean","default":"true"}]})");
-  dir.write("20-second.json", R"({"app":[{"key":"b","label":"B","group":"g","type":"boolean","default":"false"}]})");
+  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
+                                "groups":[{"id":"g","label":"G","settings":["a","b"]}]})");
+  dir.write("10-first.json", R"({"app":[{"key":"a","label":"A","type":"boolean","default":"true"}]})");
+  dir.write("20-second.json", R"({"app":[{"key":"b","label":"B","type":"boolean","default":"false"}]})");
   dir.write("cores/some_core.json",
             R"({"cores":{"some_core":{"settings":[{"key":"c","label":"C","type":"boolean","default":"true"}],
                                       "defaults":{"raw":"1"}}}})");
@@ -791,30 +855,31 @@ TEST(CatalogDirectoryTest, SettingsFromEveryFileAreLoaded) {
   EXPECT_EQ(c.coreDefaults("some_core").at("raw"), "1");
 }
 
-// Ties in `order` keep declaration order, so which file was read first has to be the same everywhere
-TEST(CatalogDirectoryTest, FilesAreReadInNameOrder) {
+// TODO
+// A group's list decides the row order, whichever file declared each setting
+TEST(CatalogDirectoryTest, AGroupListDecidesOrderAcrossFiles) {
   const TempCatalog dir;
-  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
-                                "groups":[{"id":"g","page":"p","label":"G"}]})");
-  dir.write("20-second.json", R"({"app":[{"key":"second","label":"S","group":"g","type":"boolean"}]})");
-  dir.write("10-first.json", R"({"app":[{"key":"first","label":"F","group":"g","type":"boolean"}]})");
+  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
+                                "groups":[{"id":"g","label":"G","settings":["second","first"]}]})");
+  dir.write("20-second.json", R"({"app":[{"key":"second","label":"S","type":"boolean"}]})");
+  dir.write("10-first.json", R"({"app":[{"key":"first","label":"F","type":"boolean"}]})");
 
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(dir.path()));
 
   const auto inGroup = c.settingsForGroup("g", "");
   ASSERT_EQ(inGroup.size(), 2u);
-  EXPECT_EQ(inGroup[0].key, "first") << "the folder was read in whatever order the filesystem gave";
-  EXPECT_EQ(inGroup[1].key, "second");
+  EXPECT_EQ(inGroup[0].key, "second") << "rows followed the files instead of the group's list";
+  EXPECT_EQ(inGroup[1].key, "first");
 }
 
 // One key declared in two files is the mistake the split makes possible, and nothing else catches it
 TEST(CatalogDirectoryTest, AKeyDeclaredTwiceAcrossFilesIsReported) {
   const TempCatalog dir;
-  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
-                                "groups":[{"id":"g","page":"p","label":"G"}]})");
-  dir.write("10-a.json", R"({"app":[{"key":"same","label":"A","group":"g","type":"boolean"}]})");
-  dir.write("20-b.json", R"({"app":[{"key":"same","label":"B","group":"g","type":"boolean"}]})");
+  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
+                                "groups":[{"id":"g","label":"G","settings":["same"]}]})");
+  dir.write("10-a.json", R"({"app":[{"key":"same","label":"A","type":"boolean"}]})");
+  dir.write("20-b.json", R"({"app":[{"key":"same","label":"B","type":"boolean"}]})");
 
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(dir.path()));
@@ -829,9 +894,9 @@ TEST(CatalogDirectoryTest, AKeyDeclaredTwiceAcrossFilesIsReported) {
 // setting the user never touched — so one bad file must cost nothing rather than most things
 TEST(CatalogDirectoryTest, AMalformedFileFailsTheLoadAndKeepsThePreviousCatalog) {
   const TempCatalog good;
-  good.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
-                                 "groups":[{"id":"g","page":"p","label":"G"}]})");
-  good.write("10-a.json", R"({"app":[{"key":"kept","label":"A","group":"g","type":"boolean","default":"true"}]})");
+  good.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
+                                 "groups":[{"id":"g","label":"G","settings":["kept"]}]})");
+  good.write("10-a.json", R"({"app":[{"key":"kept","label":"A","type":"boolean","default":"true"}]})");
 
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(good.path()));
@@ -858,9 +923,9 @@ TEST(CatalogDirectoryTest, AMissingOrEmptyDirectoryFails) {
 // declared beside the settings it sits among
 TEST(CatalogLinkTest, ALinkKeepsItsRouteAndReportsTheLinkWidget) {
   const TempCatalog dir;
-  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
-                                "groups":[{"id":"g","page":"p","label":"G"}]})");
-  dir.write("10-a.json", R"({"app":[{"key":"open-grid","label":"Grid view","group":"g",
+  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
+                                "groups":[{"id":"g","label":"G","settings":["open-grid"]}]})");
+  dir.write("10-a.json", R"({"app":[{"key":"open-grid","label":"Grid view",
                                      "type":"link","route":"/settings/grid-view"}]})");
 
   SettingsCatalog c;
@@ -877,9 +942,9 @@ TEST(CatalogLinkTest, ALinkKeepsItsRouteAndReportsTheLinkWidget) {
 // A link with nowhere to go renders as a row that swallows the press
 TEST(CatalogLinkTest, ALinkWithNoRouteIsReported) {
   const TempCatalog dir;
-  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P"}],
-                                "groups":[{"id":"g","page":"p","label":"G"}]})");
-  dir.write("10-a.json", R"({"app":[{"key":"goes-nowhere","label":"Nowhere","group":"g","type":"link"}]})");
+  dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
+                                "groups":[{"id":"g","label":"G","settings":["goes-nowhere"]}]})");
+  dir.write("10-a.json", R"({"app":[{"key":"goes-nowhere","label":"Nowhere","type":"link"}]})");
 
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(dir.path()));

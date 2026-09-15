@@ -3,8 +3,6 @@
     {
       "key": "accent-color",
       "label": "Accent color",
-      "group": "appearance-theme",
-      "order": 10,
       "description": "Used for highlights, selection and focus throughout the app.",
       "keywords": [
         "highlight",
@@ -18,8 +16,6 @@
     {
       "key": "background-mode",
       "label": "Background type",
-      "group": "appearance-background",
-      "order": 10,
       "keywords": [
         "wallpaper",
         "image",
@@ -46,8 +42,6 @@
     {
       "key": "background-color",
       "label": "Color",
-      "group": "appearance-background",
-      "order": 20,
       "keywords": [
         "colour",
         "wallpaper",
@@ -69,8 +63,6 @@
     {
       "key": "background-color-2",
       "label": "Second color",
-      "group": "appearance-background",
-      "order": 30,
       "description": "The gradient's second stop.",
       "keywords": [
         "colour",
@@ -90,8 +82,6 @@
     {
       "key": "background-file",
       "label": "Image file",
-      "group": "appearance-background",
-      "order": 40,
       "description": "Choose an image or gif to use as your background.",
       "keywords": [
         "wallpaper",
@@ -120,8 +110,6 @@
     {
       "key": "background-blur",
       "label": "Image blur",
-      "group": "appearance-background",
-      "order": 50,
       "keywords": [
         "wallpaper",
         "focus"
@@ -143,8 +131,6 @@
     {
       "key": "background-dim",
       "label": "Background dimming",
-      "group": "appearance-background",
-      "order": 60,
       "keywords": [
         "wallpaper",
         "darken",
@@ -160,8 +146,6 @@
     {
       "key": "theme-intensity",
       "label": "Surface tint",
-      "group": "appearance-surfaces",
-      "order": 10,
       "description": "How strongly solid surfaces take on the background's color.",
       "keywords": [
         "colour",
@@ -177,8 +161,6 @@
     {
       "key": "glass-opacity",
       "label": "Glass translucency",
-      "group": "appearance-surfaces",
-      "order": 20,
       "description": "How much the background shows through translucent panels.",
       "keywords": [
         "transparency",
