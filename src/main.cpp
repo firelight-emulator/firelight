@@ -76,13 +76,16 @@
 #include "gui/qt_game_art_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
 #include "gui/qt_network_service_proxy.hpp"
+#include "gui/qt_performance_monitor_proxy.hpp"
 #include "gui/qt_performance_stats_proxy.hpp"
 #include "gui/qt_platform_service_proxy.hpp"
 #include "gui/qt_save_manager_proxy.hpp"
 #include "gui/qt_settings_catalog_proxy.hpp"
 #include "gui/qt_variant_group_proxy.hpp"
 #include "gui/selection_group.hpp"
+#include "gui/series_chart_item.hpp"
 #include "gui/settings_level_shim.hpp"
+#include "gui/span_chart_item.hpp"
 #include "library/entry_merge_service.hpp"
 #include "library/variant_group_service.hpp"
 #include "libretro/core_registry.hpp"
@@ -129,8 +132,8 @@
 #include <QQmlNetworkAccessManagerFactory>
 #include <QQuickGraphicsConfiguration>
 #include <QQuickWindow>
+#include <rhi/qrhi.h>
 #include <QTimer>
-#include <QVulkanInstance>
 #include <QWindow>
 #include <QtConcurrent>
 #include <csignal>
@@ -469,19 +472,20 @@ int main(int argc, char *argv[]) {
   // destroyed first, and that call would hit freed memory (Discord SDK assert
   // / crash). `initialize()` still runs later, once the window exists
 
-  // TEMP DIAGNOSTIC - remove
-  // Qt's Vulkan backend asks for 3 swapchain images and Qt Quick never sets MinimalBufferCount, so a
-  // present waits behind two others. D3D11 is here only to see whether that extra image is the frame
-  // of lag; hardware-rendered cores need Vulkan and will not work under it
-  if (const auto backend = qgetenv("FL_RHI_BACKEND"); backend == "d3d11") {
-    spdlog::warn("FL_RHI_BACKEND=d3d11 - hardware-rendered cores (N64/PSP) will not work");
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::Direct3D11);
+  // TODO
+  // The window runs on D3D11 unless FL_RHI_BACKEND says otherwise. A hardware-rendered core gets a
+  // Vulkan device of its own either way; only OpenGL cannot show its picture
+#ifdef _WIN32
+  if (const auto backend = qgetenv("FL_RHI_BACKEND"); backend == "vulkan") {
+    spdlog::info("FL_RHI_BACKEND=vulkan - the window presents through Vulkan");
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
   } else if (backend == "opengl") {
     spdlog::warn("FL_RHI_BACKEND=opengl - hardware-rendered cores (N64/PSP) will not work");
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
-  // } else {
-    // QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+  } else {
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Direct3D11);
   }
+#endif
 
   auto gameImageProvider = new firelight::gui::GameImageProvider();
   firelight::ServiceAccessor::setGameImageProvider(gameImageProvider);
@@ -583,6 +587,10 @@ int main(int argc, char *argv[]) {
 
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
   qmlRegisterType<firelight::gui::NetplayStreamItem>("Firelight", 1, 0, "NetplayStreamItem");
+  qmlRegisterType<firelight::gui::SeriesChartItem>("Firelight", 1, 0, "SeriesChartItem");
+  qmlRegisterType<firelight::gui::SpanChartItem>("Firelight", 1, 0, "SpanChartItem");
+  qmlRegisterUncreatableType<firelight::gui::SeriesSource>("Firelight", 1, 0, "SeriesSource",
+                                                           "SeriesSource comes from whoever owns the numbers");
   qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0, "GamepadStatus");
   qmlRegisterType<firelight::gui::GamepadProfileItem>("Firelight", 1, 0, "GamepadProfile");
   qmlRegisterType<firelight::mods::ModInfoItem>("Firelight", 1, 0, "ModInfo");
@@ -833,6 +841,7 @@ int main(int argc, char *argv[]) {
 
   engine.rootContext()->setContextProperty("InputService", &inputServiceProxy);
   engine.rootContext()->setContextProperty("PerformanceStats", new firelight::gui::QtPerformanceStatsProxy());
+  engine.rootContext()->setContextProperty("PerformanceMonitor", new firelight::gui::QtPerformanceMonitorProxy());
   engine.rootContext()->setContextProperty("EmulationService", new firelight::gui::QtEmulationServiceProxy());
   engine.rootContext()->setContextProperty("ShortcutDispatcher", &shortcutDispatcher);
   engine.rootContext()->setContextProperty("AchievementService", &achievementServiceProxy);
@@ -896,29 +905,43 @@ int main(int argc, char *argv[]) {
   // Just doing this to instantiate it
   engine.singletonInstance<QObject *>("QMLFirelight", "SoundEffects");
 
-  //     }
-  //   }
-  //   vulkanInstance.setExtensions(enable);
-  //   if (!vulkanInstance.create()) {
-  //     spdlog::error("Failed to create shared QVulkanInstance (VkResult {})",
-  //                   static_cast<int>(vulkanInstance.errorCode()));
-  //   } else {
-  //     window->setVulkanInstance(&vulkanInstance);
-  //   }
-  // }
-
   // TODO
-  // Qt enables only what its own scene graph needs, and the cross-device semaphore the emulator's
-  // Vulkan renderer imports is not on that list. Without these the import resolves to null and the
-  // renderer falls back to blocking the render thread on a fence every frame. Must be set before
-  // the scene graph initializes, which is on first expose and so after this point
+  // Qt enables only what its own scene graph needs, and importing the shared texture is not on that
+  // list. Must be set before the scene graph initializes, which is on first expose and so after
+  // this point
   if (window && QQuickWindow::graphicsApi() == QSGRendererInterface::Vulkan) {
     QQuickGraphicsConfiguration graphicsConfig;
     graphicsConfig.setDeviceExtensions({"VK_KHR_external_memory", "VK_KHR_external_memory_win32",
-                                        "VK_KHR_external_semaphore", "VK_KHR_external_semaphore_win32",
-                                        "VK_KHR_timeline_semaphore"});
+                                        "VK_KHR_dedicated_allocation", "VK_KHR_get_memory_requirements2"});
     window->setGraphicsConfiguration(graphicsConfig);
-    spdlog::info("Vulkan: requesting device extensions for the shared-image path");
+    spdlog::info("Vulkan: requesting device extensions for the shared-texture path");
+
+    // TODO
+    // Rebuilds the swapchain with two images instead of three, once, on the first frame before it
+    // begins. Runs on the render thread
+    QObject::connect(
+        window, &QQuickWindow::beforeFrameBegin, window,
+        [window] {
+          static bool applied = false;
+
+          if (applied) {
+            return;
+          }
+
+          applied = true;
+          auto *swapChain = static_cast<QRhiSwapChain *>(
+              window->rendererInterface()->getResource(window, QSGRendererInterface::RhiSwapchainResource));
+
+          if (!swapChain) {
+            spdlog::warn("Vulkan: no swapchain to shrink to two images");
+            return;
+          }
+
+          swapChain->setFlags(swapChain->flags() | QRhiSwapChain::MinimalBufferCount);
+          const auto rebuilt = swapChain->createOrResize();
+          spdlog::info("Vulkan: swapchain rebuilt with the minimal image count: {}", rebuilt ? "ok" : "failed");
+        },
+        Qt::DirectConnection);
   }
 
   window->installEventFilter(resizeHandler);

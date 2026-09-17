@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 #include <functional>
 #include <memory>
@@ -68,9 +69,10 @@ struct EmulationContext {
   libretro::IRetropadProvider *retropadProvider = nullptr;
   media::IClipSink *netplayStreamSink = nullptr;
 
-  // Audio output + microphone are created on the render thread inside
-  // EmulatorInstance::initialize(); main.cpp injects the Qt-Multimedia impls
-  // (AudioManager / QtMicrophone). Null in headless/tests -> no audio
+  // TODO
+  // Audio output + microphone are created inside EmulatorInstance::initialize() on whichever
+  // thread runs frames; main.cpp injects the Qt-Multimedia impls (AudioManager / QtMicrophone).
+  // Null in headless/tests -> no audio
   std::function<std::shared_ptr<IAudioOutput>(const std::string &contentHash, int platformId)> audioOutputFactory;
   std::function<std::unique_ptr<libretro::IAudioInputProvider>()> audioInputFactory;
 };

@@ -1,5 +1,5 @@
-#include "fake_core.hpp"
-#include "fake_save_database.hpp"
+// TODO: NEEDS REVIEW
+#include "emulation_service_fixture.hpp"
 
 #include <firelight/cheats/sqlite_cheat_repository.hpp>
 #include <firelight/library/disc_set_service.hpp>
@@ -13,9 +13,11 @@
 
 #include <QString>
 #include <QTemporaryDir>
+#include <atomic>
 #include <emulation/emulation_service.hpp>
 #include <gtest/gtest.h>
 #include <libretro/core_registry.hpp>
+#include <thread>
 
 namespace firelight::emulation {
 
@@ -23,87 +25,7 @@ namespace firelight::emulation {
 // a FakeCore injected via the core factory: load -> initialize -> run frames ->
 // save -> rewind (serialize/deserialize) -> reset -> teardown, with NO real
 // libretro DLL (so no process-exit on core teardown)
-class EmulatorInstanceE2ETest : public testing::Test {
-protected:
-  std::unique_ptr<library::SqliteUserLibraryRepository> m_library;
-  std::unique_ptr<library::DiscSetService> m_discSets;
-  std::unique_ptr<library::LibraryIngestService> m_ingest;
-  std::unique_ptr<library::UserLibraryService> m_libraryService;
-  std::unique_ptr<library::EntryResolver> m_resolver;
-  std::unique_ptr<settings::SettingsService> m_settingsService;
-  std::unique_ptr<settings::SqliteSettingsRepository> m_coreOptionRepo;
-  std::unique_ptr<cheats::SqliteCheatRepository> m_cheatRepo;
-  std::unique_ptr<saves::FakeSaveDatabase> m_userdataDb;
-  std::unique_ptr<saves::SaveManager> m_saveManager;
-  std::unique_ptr<EmulationService> m_emulationService;
-  QTemporaryDir m_saveDir;
-  FakeCore *m_fakeCore = nullptr;
-
-  const std::string m_hash = "e26ee0d44e809351c8ce2d73c7400cdd";
-
-  void SetUp() override {
-    ASSERT_TRUE(m_saveDir.isValid());
-    m_library = std::make_unique<library::SqliteUserLibraryRepository>(":memory:");
-    // Turns created content files into entries (subscribes to library events)
-    m_discSets = std::make_unique<library::DiscSetService>(*m_library, "");
-    m_ingest = std::make_unique<library::LibraryIngestService>(*m_library, *m_discSets);
-    m_libraryService = std::make_unique<library::UserLibraryService>(*m_library, ".");
-    m_resolver = std::make_unique<library::EntryResolver>(*m_library, "");
-    m_settingsService =
-        std::make_unique<settings::SettingsService>(*new settings::SqliteSettingsRepository(":memory:"));
-    settings::SettingsService::setInstance(m_settingsService.get());
-
-    m_userdataDb = std::make_unique<saves::FakeSaveDatabase>();
-    m_saveManager = std::make_unique<saves::SaveManager>(m_saveDir.path().toStdString(), *m_userdataDb);
-    m_saveManager->setSaveDirectory(m_saveDir.path().toStdString());
-
-    m_coreOptionRepo = std::make_unique<settings::SqliteSettingsRepository>(":memory:");
-    m_cheatRepo = std::make_unique<cheats::SqliteCheatRepository>(":memory:");
-
-    CoreFactory factory =
-        [this](const firelight::libretro::CoreRunConfig &config) -> std::unique_ptr<::libretro::ICore> {
-      auto fake = std::make_unique<FakeCore>();
-      fake->setConfigProvider(config.configProvider);
-      fake->setSaveDirectory(config.saveDirectory); // the real Core takes it in its ctor
-      fake->setSystemRamSize(256);                  // so the cheat engine has RAM to poke
-      m_fakeCore = fake.get();
-      return fake;
-    };
-
-    EmulationContext context;
-    context.saveManager = m_saveManager.get();
-    context.coreOptionRepository = m_coreOptionRepo.get();
-    context.cheatRepository = m_cheatRepo.get();
-    m_emulationService = std::make_unique<EmulationService>(*m_libraryService, *m_resolver, *m_settingsService, context,
-                                                            std::move(factory));
-  }
-
-  void TearDown() override {
-    m_emulationService.reset();
-    m_coreOptionRepo.reset();
-    m_cheatRepo.reset();
-    m_saveManager.reset();
-    m_userdataDb.reset();
-    settings::SettingsService::setInstance(nullptr);
-    m_settingsService.reset();
-    m_resolver.reset();
-    m_libraryService.reset();
-    m_ingest.reset();
-    m_library.reset();
-  }
-
-  int ingestEntry() {
-    library::ContentFile info{.m_fileSizeBytes = 16777216,
-                              .m_filePath = "test_resources/testrom.gba",
-                              .m_fileMd5 = m_hash,
-                              .m_inArchive = false,
-                              .m_platformId = 3,
-                              .m_contentHash = m_hash};
-    m_library->create(info);
-    const auto entry = m_library->getEntryWithContentHash(m_hash);
-    return entry.has_value() ? entry->id : -1;
-  }
-};
+class EmulatorInstanceE2ETest : public EmulationServiceFixture {};
 
 TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   const int entryId = ingestEntry();
@@ -202,6 +124,170 @@ TEST_F(EmulatorInstanceE2ETest, AppliesTypedCheatsOnLoad) {
   instance->runFrame();
   ASSERT_GT(m_fakeCore->systemRam().size(), 0x10u);
   EXPECT_EQ(m_fakeCore->systemRam()[0x10], 0x63);
+
+  m_emulationService->stopEmulation();
+}
+
+// TODO
+// The frame thread is the only one that touches the core: a reboot asked for elsewhere waits for it
+TEST_F(EmulatorInstanceE2ETest, ResetGameIsACommandTheFrameThreadRuns) {
+  const int entryId = ingestEntry();
+  ASSERT_NE(entryId, -1);
+  auto *instance = m_emulationService->loadEntry(entryId).get();
+  ASSERT_NE(instance, nullptr);
+  ASSERT_TRUE(instance->initialize(nullptr));
+
+  for (int i = 0; i < 5; ++i) {
+    instance->runFrame();
+  }
+
+  ASSERT_EQ(m_fakeCore->frameCount(), 5);
+
+  m_emulationService->resetGame();
+  EXPECT_EQ(m_fakeCore->frameCount(), 5);
+
+  instance->drainCommands();
+  EXPECT_EQ(m_fakeCore->frameCount(), 0);
+
+  m_emulationService->stopEmulation();
+}
+
+TEST_F(EmulatorInstanceE2ETest, AControllerDeviceReachesTheCoreOnTheNextDrain) {
+  const int entryId = ingestEntry();
+  ASSERT_NE(entryId, -1);
+  auto *instance = m_emulationService->loadEntry(entryId).get();
+  ASSERT_NE(instance, nullptr);
+  ASSERT_TRUE(instance->initialize(nullptr));
+  const auto callsBefore = m_fakeCore->portDeviceCalls().size();
+
+  instance->submitCommand({.type = EmulatorCommandType::SetControllerDevice, .port = 1, .coreDeviceId = 5});
+  EXPECT_EQ(m_fakeCore->portDeviceCalls().size(), callsBefore);
+
+  instance->drainCommands();
+
+  ASSERT_EQ(m_fakeCore->portDeviceCalls().size(), callsBefore + 1);
+  EXPECT_EQ(m_fakeCore->portDeviceCalls().back(), std::make_pair(1u, 5u));
+
+  m_emulationService->stopEmulation();
+}
+
+TEST_F(EmulatorInstanceE2ETest, EmitRewindPointsGoesToTheSink) {
+  const int entryId = ingestEntry();
+  ASSERT_NE(entryId, -1);
+  auto *instance = m_emulationService->loadEntry(entryId).get();
+  ASSERT_NE(instance, nullptr);
+  ASSERT_TRUE(instance->initialize(nullptr));
+
+  std::vector<EmulatorCommandType> handedOn;
+  instance->setCommandSink([&handedOn](const EmulatorCommand &command) { handedOn.push_back(command.type); });
+
+  instance->submitCommand({.type = EmulatorCommandType::WriteRewindPoint});
+  instance->submitCommand({.type = EmulatorCommandType::EmitRewindPoints});
+  instance->drainCommands();
+
+  ASSERT_EQ(handedOn.size(), 1u);
+  EXPECT_EQ(handedOn[0], EmulatorCommandType::EmitRewindPoints);
+  EXPECT_EQ(instance->getRewindPointPictures().size(), 1u);
+
+  instance->setCommandSink(nullptr);
+  m_emulationService->stopEmulation();
+}
+
+// TODO
+// Frames on their own thread while every setter the GUI has is being called: nothing may tear
+TEST_F(EmulatorInstanceE2ETest, FramesOnTheirOwnThreadWhileTheGuiChangesState) {
+  const int entryId = ingestEntry();
+  ASSERT_NE(entryId, -1);
+  auto *instance = m_emulationService->loadEntry(entryId).get();
+  ASSERT_NE(instance, nullptr);
+  ASSERT_TRUE(instance->initialize(nullptr));
+
+  std::atomic<bool> stop{false};
+  std::atomic<int> framesRun{0};
+  std::thread frames([&] {
+    while (!stop.load()) {
+      instance->drainCommands();
+      instance->runFrame();
+      framesRun.fetch_add(1);
+    }
+  });
+
+  while (framesRun.load() == 0) {
+    std::this_thread::yield();
+  }
+
+  for (int round = 0; round < 300; ++round) {
+    instance->submitCommand({.type = EmulatorCommandType::WriteRewindPoint});
+    instance->submitCommand(
+        {.type = EmulatorCommandType::SetPlaybackMultiplier, .playbackMultiplier = round % 2 == 0 ? 2.0F : 1.0F});
+    instance->setMuted(round % 2 == 0);
+    instance->setAudioPlaybackRateRatio(1.0 + round * 0.001);
+    instance->setPictureMode(round % 2 == 0 ? "sharp" : "smooth");
+    instance->setSyncMethod(round % 3 == 0 ? "audio" : "monitor");
+    instance->setAnalogPointerSpeed(0.01 * (round % 3));
+    instance->setMouseControlsPointerDevices(round % 2 == 0);
+    instance->setInstantReplayEnabled(round % 2 == 0);
+    EXPECT_FALSE(instance->getPictureMode().empty());
+    (void)instance->getSyncMethod();
+    (void)instance->getRewindPointPictures();
+    (void)instance->canUndoLoadSuspendPoint();
+
+    if (round % 10 == 0) {
+      instance->submitCommand({.type = EmulatorCommandType::LoadRewindPoint, .rewindPointIndex = 1});
+    }
+
+    if (round % 50 == 0) {
+      m_emulationService->resetGame();
+    }
+  }
+
+  stop.store(true);
+  frames.join();
+
+  EXPECT_GT(framesRun.load(), 0);
+  instance->drainCommands();
+  EXPECT_LE(instance->getRewindPointPictures().size(), EmulatorInstance::MAX_REWIND_POINTS);
+  EXPECT_GE(instance->getRewindPointPictures().size(), 1u);
+
+  m_emulationService->stopEmulation();
+}
+
+TEST_F(EmulatorInstanceE2ETest, SwapDiscIsACommandTheFrameThreadRuns) {
+  auto *instance = loadGame();
+  ASSERT_NE(instance, nullptr);
+  ASSERT_TRUE(instance->initialize(nullptr));
+  m_fakeCore->setDiscCount(2);
+
+  EXPECT_TRUE(instance->swapDisc(1));
+  EXPECT_EQ(m_fakeCore->getCurrentDiskIndex(), 0u);
+
+  instance->drainCommands();
+  EXPECT_EQ(m_fakeCore->getCurrentDiskIndex(), 1u);
+  EXPECT_FALSE(instance->swapDisc(5));
+
+  m_emulationService->stopEmulation();
+}
+
+TEST_F(EmulatorInstanceE2ETest, CheatsApplyOnTheNextDrain) {
+  cheats::Cheat gg{.contentHash = m_hash,
+                   .name = "Infinite Lives",
+                   .type = cheats::CheatType::GameGenie,
+                   .rawCode = "SXIOPO",
+                   .enabled = true};
+  ASSERT_TRUE(m_cheatRepo->addCheat(gg));
+  const auto stored = m_cheatRepo->getCheats(m_hash);
+  ASSERT_EQ(stored.size(), 1u);
+
+  auto *instance = loadGame();
+  ASSERT_NE(instance, nullptr);
+  ASSERT_TRUE(instance->initialize(nullptr));
+  const auto clearedAtLoad = m_fakeCore->cheatsClearedCount();
+
+  instance->setCheatEnabled(stored[0].id, false);
+  EXPECT_EQ(m_fakeCore->cheatsClearedCount(), clearedAtLoad);
+
+  instance->drainCommands();
+  EXPECT_EQ(m_fakeCore->cheatsClearedCount(), clearedAtLoad + 1);
 
   m_emulationService->stopEmulation();
 }

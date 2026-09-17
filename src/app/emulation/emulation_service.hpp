@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 #include "emulation_context.hpp"
 #include "emulator_instance.hpp"
@@ -91,10 +92,19 @@ public:
 
   std::future<EmulatorInstance *> loadEntry(int entryId);
   void stopEmulation();
-  // Reboots the running game, if there is one. Takes m_instanceMutex so callers
-  // don't have to hold a raw instance pointer to do it
+  // TODO
+  /**
+   * Queues a reboot of the running game, if there is one
+   */
   void resetGame();
   EmulatorInstance *getCurrentEmulatorInstance();
+
+  // TODO
+  /**
+   * A handle for whoever draws the game: locked for the length of a pass so the instance cannot be
+   * destroyed under it, and empty once the game has been stopped
+   */
+  std::weak_ptr<EmulatorInstance> getCurrentEmulatorInstanceHandle();
 
   // Audio-buffer level of the running instance, or -1 if none. Safe to call from
   // the frame-pacing thread: the instance can be destroyed on the GUI thread by
@@ -137,8 +147,6 @@ public:
   [[nodiscard]] std::optional<library::Entry> getCurrentEntry();
   [[nodiscard]] std::optional<platforms::Platform> getCurrentPlatform() const;
 
-
-
 private:
   static EmulationService *s_emuServiceInstance;
 
@@ -147,7 +155,7 @@ private:
   CoreFactory m_coreFactory;
   std::unique_ptr<GameLoader> m_loader;
 
-  std::unique_ptr<EmulatorInstance> m_emulatorInstance;
+  std::shared_ptr<EmulatorInstance> m_emulatorInstance;
   // Guards m_emulatorInstance's lifetime against the frame-pacing thread, which
   // reads it (currentAudioBufferLevel) while loadEntry/stopEmulation may reset it
   std::mutex m_instanceMutex;

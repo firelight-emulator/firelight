@@ -225,8 +225,11 @@ void FocusNavigator::land(QQuickItem *from, QQuickItem *to, const Direction dire
   to->forceActiveFocus(Qt::OtherFocusReason);
   m_landing = false;
 
+  const auto *window = to->window();
+  auto *landed = window != nullptr ? CandidateCollector::candidateFor(window->activeFocusItem()) : nullptr;
+
   m_steppedFrom = from;
-  m_steppedTo = to;
+  m_steppedTo = landed != nullptr ? landed : to;
   m_steppedDirection = direction;
 }
 

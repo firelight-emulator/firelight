@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "core_input_router.hpp"
 
 #include "libretro/libretro.h"
@@ -10,6 +11,7 @@ int CoreInputRouter::getPortInputClass(const unsigned port) const {
 }
 
 void CoreInputRouter::pollInput() {
+  const monitoring::ScopedSpan pollSpan(m_pollSpan);
   // Glide the shared cursor from a gamepad stick on any Mouse/Light-Gun port
   if (m_pointerInputProvider && m_retropadProvider) {
     namespace fi = firelight::input;

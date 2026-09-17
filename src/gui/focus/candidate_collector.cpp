@@ -51,13 +51,21 @@ bool isWhollyWithin(const QRectF &rect, const std::optional<QRectF> &clip) {
   return clip->contains(rect.adjusted(VISIBLE_SLACK, VISIBLE_SLACK, -VISIBLE_SLACK, -VISIBLE_SLACK));
 }
 
+// TODO
+/**
+ * Whether a Stop focus scope holds the cursor
+ */
+bool isEntered(const QQuickItem *item, const FocusInfo::Mode mode) {
+  return mode == FocusInfo::Stop && item->isFocusScope() && item->hasActiveFocus();
+}
+
 /**
  * Whether an item stands for the things inside it rather than being a target itself
  */
 bool isTransparent(const QQuickItem *item, const FocusInfo *info) {
   const auto mode = info != nullptr ? info->getMode() : FocusInfo::Normal;
 
-  if (mode == FocusInfo::Group) {
+  if (mode == FocusInfo::Group || isEntered(item, mode)) {
     return true;
   }
 
@@ -112,7 +120,7 @@ void walk(QQuickItem *item, const std::optional<QRectF> &clip, QQuickItem *conta
     }
   }
 
-  if (mode == FocusInfo::Stop) {
+  if (mode == FocusInfo::Stop && !isEntered(item, mode)) {
     return;
   }
 

@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "fake_core.hpp"
 
 #include <firelight/event_dispatcher.hpp>
@@ -397,6 +398,7 @@ TEST_F(EmulatorInstanceTest, DiscControlPassthroughAndEvent) {
       EventDispatcher::instance().subscribe<DiscChangedEvent>([&](const DiscChangedEvent &e) { events.push_back(e); });
 
   EXPECT_TRUE(instance->swapDisc(2));
+  instance->drainCommands();
   EXPECT_EQ(2u, instance->getCurrentDiscIndex());
   ASSERT_EQ(1u, events.size());
   EXPECT_EQ(2u, events[0].index);
@@ -499,6 +501,7 @@ TEST_F(EmulatorInstanceTest, ControllerDevicesExposedAndSelectable) {
 
   // Selecting a variant drives the core and persists per-game (by coreDeviceId)
   instance->setPortControllerVariant(0, 260);
+  instance->drainCommands();
   ASSERT_FALSE(fake->portDeviceCalls().empty());
   EXPECT_EQ(fake->portDeviceCalls().back().first, 0u);
   EXPECT_EQ(fake->portDeviceCalls().back().second, 260u);

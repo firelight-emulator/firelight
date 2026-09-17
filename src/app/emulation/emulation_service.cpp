@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "emulation_service.hpp"
 
 #include "firelight/event_dispatcher.hpp"
@@ -137,12 +138,7 @@ float EmulationService::currentAudioBufferLevel() {
   return m_emulatorInstance ? m_emulatorInstance->getAudioBufferLevel() : -1.0f;
 }
 
-void EmulationService::resetGame() {
-  std::lock_guard lock(m_instanceMutex);
-  if (m_emulatorInstance) {
-    m_emulatorInstance->reset();
-  }
-}
+void EmulationService::resetGame() { submitToCurrentEmulator({.type = EmulatorCommandType::ResetGame}); }
 
 void EmulationService::setCurrentAudioMuted(const bool muted) {
   std::lock_guard lock(m_instanceMutex);
@@ -176,6 +172,11 @@ bool EmulationService::isCurrentEmulatorReady() {
 void EmulationService::setPendingLaunchOverrides(LaunchOverrides overrides) { m_pendingLaunch = overrides; }
 
 EmulatorInstance *EmulationService::getCurrentEmulatorInstance() { return m_emulatorInstance.get(); }
+
+std::weak_ptr<EmulatorInstance> EmulationService::getCurrentEmulatorInstanceHandle() {
+  std::lock_guard lock(m_instanceMutex);
+  return m_emulatorInstance;
+}
 
 bool EmulationService::isGameRunning() const { return m_emulatorInstance != nullptr; }
 

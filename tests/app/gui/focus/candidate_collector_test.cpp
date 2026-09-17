@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "gui/focus/candidate_collector.hpp"
 
 #include "gui/focus_info.hpp"
@@ -5,6 +6,7 @@
 #include <QQmlComponent>
 #include <QQmlEngine>
 #include <QQuickItem>
+#include <QQuickWindow>
 #include <gtest/gtest.h>
 
 namespace firelight::gui {
@@ -180,6 +182,43 @@ TEST(CandidateCollectorTest, StopOnSomethingUnfocusableLeavesNothingReachable) {
   info(wrapper)->setMode(FocusInfo::Stop);
 
   EXPECT_TRUE(CandidateCollector::collect(&root).empty());
+}
+
+TEST(CandidateCollectorTest, AStopScopeHoldingTheCursorOffersWhatIsInside) {
+  QQuickWindow window;
+  auto *entered = item(window.contentItem(), 0.0, 0.0, 200.0, 200.0, Qt::TabFocus);
+  entered->setFlag(QQuickItem::ItemIsFocusScope);
+  auto *first = item(entered, 0.0, 0.0, 200.0, 40.0);
+  auto *second = item(entered, 0.0, 50.0, 200.0, 40.0);
+
+  auto *other = item(window.contentItem(), 300.0, 0.0, 200.0, 200.0, Qt::TabFocus);
+  other->setFlag(QQuickItem::ItemIsFocusScope);
+  item(other, 0.0, 0.0, 200.0, 40.0);
+
+  info(entered)->setMode(FocusInfo::Stop);
+  info(other)->setMode(FocusInfo::Stop);
+
+  second->forceActiveFocus();
+  ASSERT_TRUE(second->hasActiveFocus());
+
+  const auto found = itemsIn(CandidateCollector::collect(window.contentItem()));
+
+  EXPECT_EQ(found, (std::vector<QQuickItem *>{first, second, other}));
+}
+
+TEST(CandidateCollectorTest, AStopScopeHoldingTheCursorItselfIsNotWhereTheCursorIs) {
+  QQuickWindow window;
+  auto *scope = item(window.contentItem(), 0.0, 0.0, 200.0, 200.0, Qt::TabFocus);
+  scope->setFlag(QQuickItem::ItemIsFocusScope);
+  item(scope, 0.0, 0.0, 200.0, 40.0);
+
+  info(scope)->setMode(FocusInfo::Stop);
+  EXPECT_EQ(CandidateCollector::candidateFor(scope), scope);
+
+  scope->forceActiveFocus();
+  ASSERT_TRUE(scope->hasActiveFocus());
+
+  EXPECT_EQ(CandidateCollector::candidateFor(scope), nullptr);
 }
 
 TEST(CandidateCollectorTest, SkipRemovesTheWholeBranch) {

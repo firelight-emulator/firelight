@@ -57,7 +57,8 @@ public:
     Skip,
     /** Not a target itself; offer what is inside it instead */
     Group,
-    /** One target; do not look inside it */
+    // TODO
+    /** One target; once it is a focus scope holding the cursor, offer what is inside it instead */
     Stop
   };
   Q_ENUM(Mode)

@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 namespace firelight::emulation {
@@ -13,9 +14,9 @@ namespace firelight::emulation {
 // Abstract so ShortcutActions can be tested without a QML item — the same reason
 // ICore exists
 //
-// GUI thread only. ShortcutActions holds one of these, or nullptr while no game
-// is running (which is why every action guards on it: screenshot, mute and
-// fullscreen are ScopeAlways and can fire in the library)
+// GUI thread, apart from paused() and playbackMultiplier(), which the emulation loop reads every
+// tick. ShortcutActions holds one of these, or nullptr while no game is running (which is why every
+// action guards on it: screenshot, mute and fullscreen are ScopeAlways and can fire in the library)
 class IEmulatorController {
 public:
   virtual ~IEmulatorController() = default;

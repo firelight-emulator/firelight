@@ -11,6 +11,7 @@ var ROUTES = [
     { pattern: "/library", ownsSubtree: true },
     { pattern: "/library/entries/:entryId", stacksOn: "/library" },
     { pattern: "/library/reorder-collections", stacksOn: "/library" },
+    { pattern: "/library/create-collection", stacksOn: "/library" },
     { pattern: "/shop" },
     { pattern: "/shop/mods/:modId", stacksOn: "/shop" },
     { pattern: "/settings", ownsSubtree: true },
@@ -23,6 +24,7 @@ var ROUTES = [
     { pattern: "/netplay" },
     { pattern: "/help" },
     { pattern: "/dev/gallery" },
+    { pattern: "/dev/monitor" },
     { pattern: "/quick-menu", overlay: true }
 ];
 

@@ -1,13 +1,16 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
 import Firelight 1.0
 
-FocusScope {
+FLTwoColumnPage {
     id: root
+    objectName: "CollectionOrderPage"
 
-    focus: true
+    headerText: qsTr("Reorder Collections")
+    menuOnRight: true
 
     property int parentId: -1
 
@@ -24,21 +27,9 @@ FocusScope {
 
     property bool _dirty: false
 
-    property Component headerLeading: Component {
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: qsTr("Reorder Collections")
-            color: Theme.textPrimary
-            font.family: AppStyle.fontFamily
-            font.pixelSize: AppStyle.fontSizeLarge
-            font.weight: Font.Medium
-        }
-    }
-
-    StackView.onActivating: {
-        grid.resetCursor();
-        grid.focusCurrentItem();
-    }
+    // TODO
+    // Emitted once the staged order is populated, for the grid to put its cursor back on the first tile
+    signal loaded
 
     ListModel {
         id: stagedOrder
@@ -62,6 +53,16 @@ FocusScope {
 
         root.originalIds = ids;
         root.liftOriginIndex = -1;
+
+        if (stagedOrder.count === 0) {
+            root.showPage(noCollectionsView);
+            saveButton.forceActiveFocus();
+            return;
+        }
+
+        root.showPage(orderGrid);
+        root.focusContent();
+        root.loaded();
     }
 
     function isDirty() {
@@ -123,6 +124,22 @@ FocusScope {
         Router.clearLeaveGuard();
     }
 
+    footer: FLButton {
+        id: saveButton
+        Layout.alignment: Qt.AlignHCenter
+        Layout.margins: AppStyle.spacingXl
+        Layout.preferredWidth: root.menuWidth * 0.8
+        text: qsTr("Save")
+        onClicked: {
+            if (!canInteract) {
+                return;
+            }
+
+            root.save();
+        }
+        canInteract: root._dirty
+    }
+
     FLDialog {
         id: confirmDialog
 
@@ -144,138 +161,113 @@ FocusScope {
         }
     }
 
-    FLGridView {
-        id: grid
-        anchors.top: parent.top
-        anchors.topMargin: AppStyle.gameViewHeaderHeight
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.leftMargin: AppStyle.windowPadding + AppStyle.spacingXl
-        anchors.right: separator.left
-        anchors.rightMargin: AppStyle.spacingXl
-        focus: true
+    Component {
+        id: orderGrid
 
-        model: stagedOrder
-        clip: true
-        cellWidth: Math.round(160 * AppStyle.scale)
-        cellHeight: Math.round(210 * AppStyle.scale)
+        FocusScope {
+            FLGridView {
+                id: grid
+                anchors.fill: parent
+                focus: true
 
-        onMoveRequested: (from, to) => {
-            stagedOrder.move(from, to, 1)
-        }
+                model: stagedOrder
+                clip: true
+                cellWidth: Math.round(160 * AppStyle.scale)
+                cellHeight: Math.round(210 * AppStyle.scale)
 
-        FLFocus.actions: [
-            FLAction {
-                keys: [Qt.Key_Back, Qt.Key_Escape]
-                label: qsTr("Cancel")
-                sound: SoundEffects.back
-                enabled: grid.lifted
-                hidden: !grid.lifted
-                onTriggered: {
-                    stagedOrder.move(grid.liftedIndex, root.liftOriginIndex, 1);
-                    grid.currentIndex = root.liftOriginIndex;
-                    grid.drop();
-                    root.liftOriginIndex = -1;
-                    grid.focusCurrentItem();
-                    root._dirty = root.isDirty()
-                }
-            }
-        ]
-
-        move: Transition {
-            NumberAnimation {
-                properties: "x,y"
-                duration: AppStyle.durationBase
-                easing.type: AppStyle.easingStandard
-            }
-        }
-
-        displaced: Transition {
-            NumberAnimation {
-                properties: "x,y"
-                duration: AppStyle.durationBase
-                easing.type: AppStyle.easingStandard
-            }
-        }
-
-        delegate: CollectionTile {
-            id: tile
-
-            required property int index
-
-            width: GridView.view.cellWidth
-            height: GridView.view.cellHeight
-
-            readonly property bool _beingReordered: grid.liftedIndex === tile.index
-
-            actionLabel: grid.lifted ? qsTr("Drop") : qsTr("Move")
-            actionSound: grid.lifted ? SoundEffects.back : SoundEffects.openPopup
-
-            onClicked: {
-                if (grid.lifted) {
-                    grid.drop();
-                    root.liftOriginIndex = -1;
-                    root._dirty = root.isDirty()
-                    return;
+                onMoveRequested: (from, to) => {
+                    stagedOrder.move(from, to, 1);
                 }
 
-                root.liftOriginIndex = tile.index;
-                grid.lift(tile.index);
-            }
+                FLFocus.actions: [
+                    FLAction {
+                        keys: [Qt.Key_Back, Qt.Key_Escape]
+                        label: qsTr("Cancel")
+                        sound: SoundEffects.back
+                        enabled: grid.lifted
+                        hidden: !grid.lifted
+                        onTriggered: {
+                            stagedOrder.move(grid.liftedIndex, root.liftOriginIndex, 1);
+                            grid.currentIndex = root.liftOriginIndex;
+                            grid.drop();
+                            root.liftOriginIndex = -1;
+                            grid.focusCurrentItem();
+                            root._dirty = root.isDirty();
+                        }
+                    }
+                ]
 
-            layer.enabled: _beingReordered
-            layer.effect: MultiEffect {
-                shadowEnabled: true
-                shadowColor: Theme.shadow
-                shadowBlur: AppStyle.elevationBlur
-                shadowVerticalOffset: AppStyle.elevationOffset
-                shadowHorizontalOffset: AppStyle.elevationOffset
-            }
-
-            transform: Translate {
-                y: tile._beingReordered ? -AppStyle.reorderingLiftHeight : 0
-
-                Behavior on y {
+                move: Transition {
                     NumberAnimation {
-                        duration: AppStyle.durationFast
-                        easing.type: Easing.Linear
+                        properties: "x,y"
+                        duration: AppStyle.durationBase
+                        easing.type: AppStyle.easingStandard
+                    }
+                }
+
+                displaced: Transition {
+                    NumberAnimation {
+                        properties: "x,y"
+                        duration: AppStyle.durationBase
+                        easing.type: AppStyle.easingStandard
+                    }
+                }
+
+                delegate: CollectionTile {
+                    id: tile
+
+                    required property int index
+
+                    width: GridView.view.cellWidth
+                    height: GridView.view.cellHeight
+
+                    readonly property bool _beingReordered: grid.liftedIndex === tile.index
+
+                    actionLabel: grid.lifted ? qsTr("Drop") : qsTr("Move")
+                    actionSound: grid.lifted ? SoundEffects.back : SoundEffects.openPopup
+
+                    onClicked: {
+                        if (grid.lifted) {
+                            grid.drop();
+                            root.liftOriginIndex = -1;
+                            root._dirty = root.isDirty();
+                            return;
+                        }
+
+                        root.liftOriginIndex = tile.index;
+                        grid.lift(tile.index);
+                    }
+
+                    layer.enabled: _beingReordered
+                    layer.effect: MultiEffect {
+                        shadowEnabled: true
+                        shadowColor: Theme.shadow
+                        shadowBlur: AppStyle.elevationBlur
+                        shadowVerticalOffset: AppStyle.elevationOffset
+                        shadowHorizontalOffset: AppStyle.elevationOffset
+                    }
+
+                    transform: Translate {
+                        y: tile._beingReordered ? -AppStyle.reorderingLiftHeight : 0
+
+                        Behavior on y {
+                            NumberAnimation {
+                                duration: AppStyle.durationFast
+                                easing.type: Easing.Linear
+                            }
+                        }
                     }
                 }
             }
-        }
-    }
 
-    FLColumnDivider {
-        id: separator
-        anchors.right: menuColumn.left
-    }
+            Connections {
+                target: root
 
-    FLColumnLayout {
-        id: menuColumn
-        anchors.right: parent.right
-        anchors.rightMargin: AppStyle.windowPadding
-        anchors.bottom: parent.bottom
-        anchors.top: parent.top
-        width: 280
-
-        Item {
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-        }
-
-        FLButton {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.margins: AppStyle.spacingXl
-            Layout.preferredWidth: parent.width * 0.8
-            text: qsTr("Save")
-            onClicked: {
-                if (!canInteract) {
-                    return;
+                function onLoaded() {
+                    grid.resetCursor();
+                    grid.focusCurrentItem();
                 }
-
-                root.save()
             }
-            canInteract: root._dirty
         }
     }
 
@@ -283,6 +275,8 @@ FocusScope {
         id: noCollectionsView
 
         Item {
+            FLFocus.mode: FLFocus.Skip
+
             Text {
                 anchors.centerIn: parent
                 text: qsTr("There are no collections to arrange")

@@ -1,20 +1,23 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include "audio/audio_manager.hpp"
+#include "diagnostics/vblank_probe.hpp"
+#include "emulation/emulation_loop.hpp"
 #include "emulation/emulator_command.hpp"
 #include "emulation/emulator_controller.hpp"
-#include "emulation/frame_pacer.hpp"
-#include "emulation/precision_waiter.hpp"
 #include "emulator_item_renderer.hpp"
 #include "libretro/core_configuration.hpp"
 #include "service_accessor.hpp"
 
 #include <firelight/event_dispatcher.hpp>
+#include <firelight/monitoring/monitor.hpp>
 
 #include <QThreadPool>
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <qchronotimer.h>
 #include <rcheevos/ra_client.hpp>
@@ -22,10 +25,11 @@
 
 // TODO
 // Threading: a QML item — constructed and driven (properties/slots) on the GUI
-// thread. Owns the frame-pacing thread (m_emulationThread), which decides when a
-// frame is due and enqueues RunFrame onto the emulator; the frame itself runs on
-// the render thread, in the pass that shows it
-// m_paused is atomic because the pacing thread reads it each tick
+// thread. Owns the emulation thread (m_emulationThread), which runs the loop that
+// brings the game up and runs its frames. paused() and playbackMultiplier() are
+// read by that loop every tick, so what they read is atomic
+class QScreen;
+
 class EmulatorItem : public QQuickRhiItem,
                      public firelight::ServiceAccessor,
                      public firelight::emulation::IEmulatorController {
@@ -57,7 +61,7 @@ public:
 
   ~EmulatorItem() override;
 
-  float m_playbackMultiplier = 1;
+  std::atomic<float> m_playbackMultiplier{1.0F};
 
   bool m_startAfterLoading = true;
   bool m_loaded = false;
@@ -98,7 +102,6 @@ public:
    * @return How many refreshes the last present was held for. A pass reads this to decide whether it
    *         can afford to run a second frame
    */
-  [[nodiscard]] int getLastPresentRefreshes() const { return m_pacer.getLastPresentRefreshes(); }
 
   void setPaused(bool paused) override;
 
@@ -207,16 +210,17 @@ signals:
 protected:
   QQuickRhiItemRenderer *createRenderer() override;
 
+public:
+  /**
+   * How long the pass just run took to put a picture on the target. Render thread
+   */
+  void notePassDuration(int64_t durationNs);
+
 private:
   /**
-   * Runs frames for as long as the emulator is alive, on its own thread
+   * Re-paces when this screen's refresh rate changes, dropping the previous screen's
    */
-  void runEmulationLoop();
-
-  /**
-   * Waits for the next frame to be due: a deadline for a clock-driven mode, a present for Display
-   */
-  void waitForNextFrame();
+  void followScreen(QScreen *screen);
 
   /**
    * Queues something for the running emulator, if there is one
@@ -226,50 +230,48 @@ private:
   bool m_stopping = false;
   QThreadPool m_threadPool;
   QTimer m_rewindPointTimer;
-  EmulatorItemRenderer *m_renderer = nullptr;
+  // TODO
+  // Made on the thread that starts the game, read by the loop
+  std::atomic<EmulatorItemRenderer *> m_renderer{nullptr};
 
   bool m_rewindEnabled = true;
 
-  // TODO
-  // Everything about when a frame is due. Holds no thread of its own; this class drives it
   // TODO
   // What was last asked for, which outlives any one emulator instance and is not the same thing as
   // whether the game can currently be heard
   bool m_muted = false;
 
-  firelight::emulation::FramePacer m_pacer;
+  firelight::monitoring::Marker m_presentMarker =
+      firelight::monitoring::Monitor::instance().marker("present", "A frame was handed to the display");
 
   // TODO
-  // How the pacing thread waits, and how much of the wait it has learned to spin
-  firelight::emulation::PrecisionWaiter m_waiter;
+  // The render thread inside the frame begin, where the swapchain makes it wait. Begun and ended on
+  // that thread only
+  firelight::monitoring::Span m_swapchainWaitSpan = firelight::monitoring::Monitor::instance().span(
+      "swapchain_wait", "The render thread waiting in the frame begin for the swapchain");
+  int64_t m_swapchainWaitStartNs = 0;
+
+  firelight::diagnostics::VblankProbe m_vblankProbe;
+
+  // TODO
+  // The loop and the clock it waits on; m_emulationThread runs it
+  firelight::emulation::PrecisionLoopClock m_clock;
+  std::unique_ptr<firelight::emulation::EmulationLoop> m_loop;
 
   QThread m_emulationThread;
-
-  // The loop runs until this is set; the condition variable is how a sleeping loop is woken early
-  // to shut down rather than sleeping out the rest of its wait
-  std::atomic<bool> m_emulationStopping = false;
-  std::mutex m_loopMutex;
-  std::condition_variable m_loopWake;
-
-  // TODO
-  // Whether a present should ask for the next render. Only true while frames are being put on
-  // refreshes, which is also the only time presentation waits for the display and so the only time
-  // this can't run away. Atomic: written on the GUI thread, read on the render thread
-  std::atomic<bool> m_renderContinuously = false;
-
-  // How much of the wait before a frame is spent spinning rather than sleeping. Sleeping alone
-  // overshoots by more than a frame can afford where presentation follows production; 0 is pure sleep
-  // TODO
-  // How much of the frame is spun rather than slept, learned from how late the sleeps actually
-  // return. A host whose timer is accurate settles at the floor and spins almost nothing; one whose
-  // sleeps overshoot grows this until they are covered. Encoding a constant here instead is a claim
-  // about the host, and the two this runs on do not agree
 
   // TODO
   // Held so the handler can be taken off the window before this object's members go. ~QObject would
   // do it too, but only after every member below has already been destroyed, and the handler runs on
   // the render thread which is still presenting by then
   QMetaObject::Connection m_frameSwappedConnection;
+  QMetaObject::Connection m_frameBeginConnection;
+  QMetaObject::Connection m_frameSyncConnection;
+  QMetaObject::Connection m_frameRenderConnection;
+
+  // TODO
+  // The screen whose refresh-rate changes re-pace, rebound when the window moves to another
+  QMetaObject::Connection m_refreshRateConnection;
 
   // Wall-clock target interval for native/monitor/fixed pacing. Written on the
   // GUI thread (reconfigurePacing), read on the emulation thread

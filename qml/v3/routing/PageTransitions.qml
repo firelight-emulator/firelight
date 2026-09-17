@@ -212,6 +212,86 @@ QtObject {
         }
     }
 
+    readonly property Component sectionDownEnter: Component {
+        Transition {
+            ParallelAnimation {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: AppStyle.durationBase
+                    easing.type: AppStyle.easingStandard
+                }
+                NumberAnimation {
+                    property: "y"
+                    from: AppStyle.spacingLg
+                    to: 0
+                    duration: AppStyle.durationBase
+                    easing.type: AppStyle.easingStandard
+                }
+            }
+        }
+    }
+
+    readonly property Component sectionDownExit: Component {
+        Transition {
+            ParallelAnimation {
+                NumberAnimation {
+                    property: "opacity"
+                    to: 0
+                    duration: AppStyle.durationFast
+                    easing.type: AppStyle.easingStandard
+                }
+                NumberAnimation {
+                    property: "y"
+                    to: -AppStyle.spacingLg
+                    duration: AppStyle.durationBase
+                    easing.type: AppStyle.easingStandard
+                }
+            }
+        }
+    }
+
+    readonly property Component sectionUpEnter: Component {
+        Transition {
+            ParallelAnimation {
+                NumberAnimation {
+                    property: "opacity"
+                    from: 0
+                    to: 1
+                    duration: AppStyle.durationBase
+                    easing.type: AppStyle.easingStandard
+                }
+                NumberAnimation {
+                    property: "y"
+                    from: -AppStyle.spacingLg
+                    to: 0
+                    duration: AppStyle.durationBase
+                    easing.type: AppStyle.easingStandard
+                }
+            }
+        }
+    }
+
+    readonly property Component sectionUpExit: Component {
+        Transition {
+            ParallelAnimation {
+                NumberAnimation {
+                    property: "opacity"
+                    to: 0
+                    duration: AppStyle.durationFast
+                    easing.type: AppStyle.easingStandard
+                }
+                NumberAnimation {
+                    property: "y"
+                    to: AppStyle.spacingLg
+                    duration: AppStyle.durationBase
+                    easing.type: AppStyle.easingStandard
+                }
+            }
+        }
+    }
+
     readonly property var _presets: ({
             "push": {
                 "enter": root.pushEnter,
@@ -232,6 +312,14 @@ QtObject {
             "panelBack": {
                 "enter": root.panelBackEnter,
                 "exit": root.panelBackExit
+            },
+            "sectionDown": {
+                "enter": root.sectionDownEnter,
+                "exit": root.sectionDownExit
+            },
+            "sectionUp": {
+                "enter": root.sectionUpEnter,
+                "exit": root.sectionUpExit
             }
         })
 

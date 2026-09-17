@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 pragma Singleton
 
 import QtQuick
@@ -170,6 +171,10 @@ QtObject {
     // TODO
     // Pickable folder / label swatch colours (data values, not theme roles)
     readonly property var folderColors: ["#e5484d", "#f76b15", "#f5d90a", "#46a758", "#0091ff", "#8e4ec6", "#e93d82"]
+
+    // TODO
+    // Chart series colours, by index (data values, not theme roles)
+    readonly property var chartSeries: ["#0091ff", "#46a758", "#f76b15", "#e5484d", "#8e4ec6", "#f5d90a", "#e93d82", "#12a594", "#a0a0a0"]
 
     readonly property color switch2Color: "#1bcbfd"
 }

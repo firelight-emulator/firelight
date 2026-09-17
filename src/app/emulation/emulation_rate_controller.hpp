@@ -1,6 +1,10 @@
 // TODO: NEEDS REVIEW
 #pragma once
 
+#include "phase_estimator.hpp"
+
+#include <firelight/monitoring/monitor.hpp>
+
 #include <cstdint>
 
 namespace firelight::emulation {
@@ -14,9 +18,12 @@ enum class SyncMode {
   /** Frames run whenever the sink has room for more audio; the device is the clock, and no rate is
       involved at all */
   Audio,
-  /** A wall clock at an explicit rate */
+  /** A wall clock at an explicit rate. Where presentation waits for the display and the rate is
+      close enough, the clock is held to the display's phase and the difference in rate is paid as
+      one frame doubled or repeated per beat */
   Fixed,
-  /** One frame per N display refreshes */
+  /** A wall clock at a whole division of the display's rate, held to the display's phase where
+      presentation waits for it, with the audio bent by the difference */
   Display
 };
 
@@ -29,41 +36,125 @@ struct PacingContext {
   double contentFps = 60.0;
   /** The display's refresh rate, or 0 when it isn't known */
   double displayHz = 0.0;
-  /** Whether the audio sink can be read, which is the only thing Audio mode has to pace against */
   /** Whether presentation waits for the display's refresh. When it doesn't, a present says nothing
-      about when a refresh happened, and no mode that counts them can be right */
+      about when a refresh happened, and the display's phase cannot be followed */
   bool presentationLocked = false;
+  // TODO
+  /** Whether a Fixed clock may be held to the display's grid. When it may not, it steps by its own
+      period whatever the display does */
+  bool shouldHoldFixedClock = true;
+  // TODO
+  /** Whether a Fixed clock is held however far its rate sits from a whole division of the display's */
+  bool isHoldForced = false;
 };
 
 /**
  * Decides when the emulator should advance a frame, and what the audio has to be resampled by for
  * the result to play at the right speed.
  *
- * It owns the policy and nothing else: no threads, no timers, no renderer, no Qt. What drives it is
- * the caller's business — a clock for Audio and Fixed, the display's present callback for Display —
- * and the same decision can therefore be tested against a synthetic sequence of timestamps.
+ * Every clock-driven mode runs on one schedule: an anchor that advances by one period per frame. A
+ * frame that is late by less than a period runs now and the anchor keeps its grid; one later than
+ * that re-anchors, so debt is dropped rather than repaid. While the presents describe a grid and
+ * the mode holds to it, the anchor steps by whole refreshes instead and is nudged toward a target
+ * phase of the refresh. Display mode bends the audio by what that costs in rate; Fixed mode keeps
+ * a tally of what it owes the content's own rate and pays it as one frame per beat.
+ *
+ * It owns the policy and nothing else: no threads, no timers, no renderer, no Qt, so the same
+ * decision can be tested against a synthetic sequence of timestamps.
  */
 class EmulationRateController {
 public:
-  /**
-   * How many frames may be run at once to catch up after a stall. Beyond this the debt is dropped
-   * rather than paid, so a breakpoint or a long hitch doesn't come back as a burst of fast-forward
-   */
-  static constexpr int MAX_CATCH_UP_FRAMES = 4;
-
   /**
    * How full the sink has to get before Audio mode stops asking for frames
    */
   static constexpr double TARGET_BUFFER_LEVEL = 0.5;
 
   /**
-   * How close a whole number of refreshes has to land to the content rate for the display's rate to
-   * be used in its place. The game then runs at the display's rate with its audio stretched by the
+   * How close a whole number of refreshes has to land to the content rate for Auto to take the
+   * display's rate. The game then runs at the display's rate with its audio stretched by the
    * difference, so the bound is what that stretch is worth before it is heard: 1% is about 17 cents.
    * Every rate real content reports lands inside 0.5% of a whole division — 59.94, 60.0988 and
-   * 59.7275 against 60 Hz — so nothing that should match is turned away
+   * 59.7275 against 60 Hz — so nothing that should match is turned away. Display mode named outright
+   * is not gated by this
    */
   static constexpr double DISPLAY_MATCH_TOLERANCE = 0.01;
+
+  // TODO
+  /**
+   * How far a Fixed clock's rate may sit from a whole division of the display's and still be held to
+   * its grid. Further out, a frame moves further against the grid each frame than the timing varies,
+   * so which refresh it reaches never depends on the variation
+   */
+  static constexpr double HOLD_TOLERANCE = 0.01;
+
+  /**
+   * Where in the refresh interval a frame is asked for, as a fraction after the present that starts
+   * it, while the phase is held and nothing has been measured yet
+   */
+  static constexpr double PHASE_TARGET = 0.75;
+
+  /**
+   * The least the measured target leaves between a frame's picture and the pass that takes it, in
+   * ns: the loop waking late, the pass starting, and how much either of them varies. The wake
+   * lateness the loop reports widens it
+   */
+  static constexpr int64_t WAKE_MARGIN_NS = 4000000;
+
+  // TODO
+  /**
+   * The most of a refresh the asserted margin may take, as a divisor: a 4 ms margin is a quarter of a
+   * 60 Hz refresh but most of a 240 Hz one, and a margin that fills the refresh leaves nowhere to aim
+   */
+  static constexpr int64_t MARGIN_SHARE_OF_REFRESH = 3;
+
+  // TODO
+  /**
+   * The most a late wake widens the margin by, so one long stall does not push the frame to the
+   * start of the refresh for seconds
+   */
+  static constexpr int64_t WAKE_PEAK_CAP_NS = 8000000;
+
+  // TODO
+  /**
+   * How far the measured target may go, in refreshes before the one the frame is aimed at. A frame
+   * that cannot fit before the next present with its slowest and its spread allowed for is aimed so
+   * that even its quickest lands past the pass that would take it, and every frame is shown the same
+   * refresh on rather than half of them either side. A step of several refreshes has that many to
+   * reach back through
+   */
+  static constexpr double EARLIEST_PHASE_TARGET = -0.5;
+  static constexpr double MAX_PHASE_TARGET = 0.95;
+
+  // TODO
+  /**
+   * How many spreads of the slow frame the target leaves room for
+   */
+  static constexpr double SLOW_SPREAD_ALLOWANCE = 2.0;
+
+  /**
+   * How much of the distance to the target phase one frame closes
+   */
+  static constexpr double CORRECTION_GAIN = 0.1;
+
+  /**
+   * The most one frame may move the anchor, as a fraction of a period. Half a percent of speed for
+   * one frame, under what the tolerance above lets be heard
+   */
+  static constexpr double MAX_NUDGE = 0.005;
+
+  // TODO
+  /**
+   * How far from the target, as a fraction of a refresh, an anchor that has just come under the
+   * hold is put straight onto it rather than nudged there over frames
+   */
+  static constexpr double SNAP_TOLERANCE = 0.1;
+
+  // TODO
+  /**
+   * How far the measured refresh must sit from the rate the rates were built on before they are
+   * built again on the measurement, as a fraction
+   */
+  static constexpr double MEASURED_RATE_STEP = 0.0002;
 
   /**
    * Applies a new mode, content rate or display rate, keeping the phase that is still meaningful
@@ -80,15 +171,16 @@ public:
    */
   [[nodiscard]] SyncMode getResolvedMode() const { return m_resolvedMode; }
 
-  // TODO
   /**
-   * @return Whether the rate in force came from the display rather than from the content.
-   *
-   * Auto is a choice between the named modes rather than a behaviour of its own, and this is which
-   * one: following the display is what "sync to monitor" does, and not following it is what "native
-   * timer" does
+   * @return Whether the rate in force came from the display rather than from the content
    */
-  [[nodiscard]] bool isFollowingTheDisplay() const { return m_followingDisplay; }
+  [[nodiscard]] bool isFollowingTheDisplay() const { return m_resolvedMode == SyncMode::Display; }
+
+  /**
+   * @return Whether the anchor is held to the display's phase, which needs the display's rate,
+   *   presentation that waits for its refresh, and a mode that holds
+   */
+  [[nodiscard]] bool isPhaseLocked() const;
 
   /**
    * Drops accumulated timing state, so the next call starts a fresh cadence. For a game being
@@ -97,33 +189,66 @@ public:
   void reset();
 
   /**
-   * How many frames are owed as of nowNs, consuming the debt it reports.
+   * Whether a frame is owed as of nowNs, consuming it. Never more than one, and the anchor moved
+   * on exactly when one is.
    *
-   * Returns 0 when the next frame isn't due yet, and always for Display, which counts refreshes.
    * Audio answers from the sink rather than the clock: nowNs means nothing to it
    */
   [[nodiscard]] int framesDue(int64_t nowNs);
 
   /**
-   * How many frames are owed now that the display has presented a frame. This is what Display mode
-   * runs on, and it is the only way a frame lands on a refresh rather than near one.
-   *
-   * It depends on something outside this class: renders have to be requested continuously, not only
-   * when a frame was produced. Held for more than one refresh a frame otherwise stops the presents
-   * that were going to make the next one due, and the mode stalls. A panel that picks its rate from
-   * how often it is asked to draw — ProMotion, or any VRR display — winds itself down the same way:
-   * fewer frames mean fewer requests, a lower refresh, and so fewer frames again. Measured, that
-   * spiral settled at 88 Hz and 44 fps on a 120 Hz panel.
-   *
-   * Which is why the mode is only ever resolved to when presentationLocked says the presents being
-   * counted are refreshes — the same condition that makes rendering continuously safe rather than a
-   * free-running waste of a GPU
+   * Feeds a frame reaching the display, for the phase the anchor is held to
    */
-  [[nodiscard]] int framesDueOnPresent();
+  void notePresent(int64_t nowNs);
 
   /**
-   * When the next frame is due, for a caller that wants to wait rather than poll. 0 when the mode
-   * isn't clock-driven
+   * How long the last frame took from its tick to its picture being ready, which the phase target
+   * leaves room for
+   */
+  void noteFrameDuration(int64_t durationNs);
+
+  /**
+   * How long the last pass took to put a picture on the target
+   */
+  void notePassDuration(int64_t durationNs);
+
+  /**
+   * How late past its deadline the loop woke, which the phase target leaves room for
+   */
+  void noteWakeLateness(int64_t lateNs);
+
+  /**
+   * Pins the phase target to target, or lets it follow the measurements again when negative
+   */
+  void setPhaseTarget(double target);
+
+  /**
+   * @return Where in the refresh a frame is currently asked for, 0 to 1
+   */
+  [[nodiscard]] double getPhaseTarget() const { return m_phaseTarget; }
+
+  [[nodiscard]] int64_t getFrameTimeNs() const { return m_frameTimeNs; }
+
+  [[nodiscard]] int64_t getSlowestFrameNs() const { return m_slowestFrameNs; }
+
+  [[nodiscard]] int64_t getQuickestFrameNs() const { return m_quickestFrameNs; }
+
+  [[nodiscard]] int64_t getSlowSpreadNs() const { return m_slowSpreadNs; }
+
+  /**
+   * @return What the measured target currently leaves for a late wake and the pass starting, in ns
+   */
+  [[nodiscard]] int64_t getWakeMarginNs() const;
+
+  /**
+   * @return How much of the content's time the held clock has not yet run, in ns. Positive when a
+   *   frame is owed, negative when one has been run ahead
+   */
+  [[nodiscard]] int64_t getSlipDebtNs() const { return m_slipDebtNs; }
+
+  /**
+   * When the next frame is due, for a caller that wants to wait rather than poll. 0 for Audio and
+   * before the first frame
    */
   [[nodiscard]] int64_t getNextDeadlineNs() const;
 
@@ -150,40 +275,124 @@ public:
    */
   [[nodiscard]] int getRefreshesPerFrame() const { return m_refreshesPerFrame; }
 
+  /**
+   * @return How many refreshes a held Fixed clock steps by, or 0 when it is not held
+   */
+  [[nodiscard]] int getHeldRefreshes() const { return m_heldRefreshes; }
+
+  /**
+   * @return The grid the phase is held to
+   */
+  [[nodiscard]] const PhaseEstimator &getPhase() const { return m_phase; }
+
 private:
   /**
    * Settles which mode is in force, the rate frames will be produced at, the audio ratio that
-   * follows from it, and — in Display mode — how many refreshes each frame is held for
+   * follows from it, and how many refreshes a held clock steps by, from the refresh rate given
    */
-  void resolveRates();
+  void resolveRates(double displayHz);
 
   /**
-   * @return The rate the display can hold this content at: the refresh divided by the whole number
-   *   of refreshes nearest one frame. 0 when no whole number lands within DISPLAY_MATCH_TOLERANCE,
-   *   which is the display saying it cannot show this content rate
+   * Moves the schedule onto a cadence that has just changed, keeping when the next frame is due and
+   * what the clock owes
    */
-  [[nodiscard]] double displayLockedFps(double contentFps) const;
+  void carryTheScheduleOver(int64_t previousPeriodNs);
+
+  // TODO
+  /**
+   * Rebuilds those from the refresh the presents measure, once they have settled on one that differs
+   * from what the rates were built on
+   */
+  void adoptMeasuredRefresh();
 
   /**
-   * Turns owed frames into a frame count, capping the catch-up and keeping the remainder
+   * Whether the anchor is stepping on the grid right now: held, and the presents agree on one
    */
-  int takeOwedFrames();
+  [[nodiscard]] bool isHolding() const;
+
+  /**
+   * Moves the anchor by whole refreshes, a Fixed clock paying its tally when a frame is owed
+   */
+  void stepOnTheGrid();
+
+  /**
+   * Moves the anchor a bounded step toward the target phase of the refresh grid
+   */
+  void correctPhase();
+
+  /**
+   * The target-phase instant of the refresh the frame at anchorNs would reach anyway
+   */
+  [[nodiscard]] int64_t targetInstantFor(int64_t anchorNs) const;
+
+  /**
+   * Recomputes where a frame is asked for from what the frame, the pass and the wake take
+   */
+  void updatePhaseTarget();
 
   PacingContext m_context;
 
   /** What Auto chose, or the configured mode as given. Never Auto */
   SyncMode m_resolvedMode = SyncMode::Fixed;
 
-  /** Whether the rate came from the display rather than from the content */
-  bool m_followingDisplay = false;
   double m_effectiveFps = 60.0;
   double m_audioRatio = 1.0;
   int m_refreshesPerFrame = 0;
+  int m_heldRefreshes = 0;
 
-  /** Frames owed but not yet run; the fractional part is the phase */
-  double m_owedFrames = 0.0;
-  int64_t m_lastTickNs = 0;
-  int m_refreshesSinceFrame = 0;
+  /** When the next frame is due, or 0 before the first */
+  /** The refresh the rates in force were worked out from */
+  int64_t m_ratesFromPeriodNs = 0;
+
+  int64_t m_anchorNs = 0;
+  int64_t m_periodNs = 0;
+  int64_t m_displayPeriodNs = 0;
+
+  /** Whether the last tick stepped on the grid, so coming under the hold or leaving it is noticed */
+  bool m_wasHolding = false;
+
+  /** Whether the anchor should be put on the target the next time it is moved */
+  bool m_snapPending = false;
+
+  /** How much of the content's time a held Fixed clock has not yet run */
+  int64_t m_slipDebtNs = 0;
+
+  /** How long a frame takes from its tick to its picture, smoothed */
+  int64_t m_frameTimeNs = 0;
+
+  // TODO
+  /**
+   * The typical slow frame and the typical quick one, the frames over and under the smoothed time
+   * each smoothed on their own, and how far the slow ones stray from theirs
+   */
+  int64_t m_slowestFrameNs = 0;
+  int64_t m_quickestFrameNs = 0;
+  int64_t m_slowSpreadNs = 0;
+
+  /** How long a pass takes to put a picture on the target, smoothed */
+  int64_t m_passTimeNs = 0;
+
+  /** How late the loop has recently woken at worst, decaying */
+  int64_t m_wakePeakNs = 0;
+
+  double m_phaseTarget = PHASE_TARGET;
+
+  /** A target set by hand, which the measurements do not move */
+  double m_pinnedPhaseTarget = -1.0;
+
+  PhaseEstimator m_phase;
+
+  monitoring::Marker m_slipMarker = monitoring::Monitor::instance().marker(
+      "slip", "A held clock ran a frame twice in one refresh, or none, to keep the content's rate");
+  // TODO
+  monitoring::Marker m_timeDroppedMarker = monitoring::Monitor::instance().marker(
+      "time_dropped", "A stall dropped the time it took rather than running the frames it covered");
+  monitoring::Series m_slipDebtSeries = monitoring::Monitor::instance().series(
+      "slip_debt", "What a held clock still owes the content's rate, in milliseconds");
+  monitoring::Series m_phaseLockedSeries =
+      monitoring::Monitor::instance().series("phase_locked", "Whether the presents have agreed on a grid, 1 or 0");
+  monitoring::Series m_refreshPeriodSeries = monitoring::Monitor::instance().series(
+      "refresh_period", "The refresh period the presents measure, in milliseconds");
 
   /** 0..1, or negative when the sink can't be read */
   double m_audioBufferLevel = -1.0;

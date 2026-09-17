@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "cli/verify_ui_command.hpp"
 
 #include "app/qml_message_log.hpp"
@@ -261,6 +262,7 @@ std::vector<QString> VerifyUiRunner::getDefaultRoutes() {
       QStringLiteral("/netplay"),
       QStringLiteral("/help"),
       QStringLiteral("/dev/gallery"),
+      QStringLiteral("/dev/monitor"),
       QStringLiteral("/quick-menu"),
       QStringLiteral("/settings"),
   };

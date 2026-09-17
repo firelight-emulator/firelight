@@ -118,6 +118,7 @@ set(CMAKE_CXX_STANDARD 20)
 #include(${CMAKE_SOURCE_DIR}/libs/qwindowkit/CMakeLists.txt)
 include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 add_subdirectory(libs/firelight/util)
+add_subdirectory(libs/firelight/monitoring)
 add_subdirectory(libs/firelight/achievements)
 add_subdirectory(libs/firelight/activity)
 add_subdirectory(libs/firelight/settings)
@@ -216,8 +217,9 @@ add_library(firelight_emulation_lib STATIC
         src/app/emulation/emulator_instance.cpp
         src/app/emulation/emulation_rate_controller.cpp
         src/app/emulation/frame_pacer.cpp
+        src/app/emulation/emulation_loop.cpp
+        src/app/emulation/phase_estimator.cpp
         src/app/emulation/precision_waiter.cpp
-        src/app/emulation/refresh_counter.cpp
 )
 
 target_include_directories(firelight_emulation_lib PUBLIC
@@ -233,6 +235,7 @@ target_link_libraries(firelight_emulation_lib PUBLIC
         firelight_settings
         firelight_platforms
         firelight_cheats
+        firelight_monitoring
         firelight_library
 )
 
@@ -240,7 +243,11 @@ add_library(firelight_lib STATIC
         src/app/emulation/shortcut_actions.cpp
         src/app/emulation/shortcut_dispatcher.cpp
         src/app/diagnostics/performance_stats.cpp
+        src/app/diagnostics/monitor_history.cpp
+        src/app/diagnostics/vblank_probe.cpp
         src/app/audio/audio_manager.cpp
+        src/app/audio/audio_output_stream.cpp
+        src/app/audio/audio_output_stream.hpp
         src/app/audio/audio_device_selection.cpp
         src/app/audio/audio_device_selection.hpp
         src/app/audio/ui_sound_player.cpp
@@ -299,7 +306,10 @@ add_library(firelight_lib STATIC
         src/app/netplay/gui/netplay_stream_item.cpp
         src/gui/qt_network_service_proxy.cpp
         src/app/emulator_item_renderer.cpp
-        src/app/emulator_vulkan_renderer.cpp
+        src/app/vulkan_core_context.cpp
+        src/app/vulkan_presenter.cpp
+        src/app/frame_presenter.cpp
+        $<$<PLATFORM_ID:Windows>:src/app/d3d_presenter.cpp>
         src/app/emulator_item.cpp
         src/app/input/gui/gamepad_status_item.cpp
         src/app/library/gui/library_entry_item.cpp
@@ -321,6 +331,11 @@ add_library(firelight_lib STATIC
         src/gui/EventEmitter.h
         src/gui/qt_input_service_proxy.hpp
         src/gui/qt_performance_stats_proxy.cpp
+        src/gui/qt_performance_monitor_proxy.cpp
+        src/gui/series_source.hpp
+        src/gui/chart_quads.cpp
+        src/gui/series_chart_item.cpp
+        src/gui/span_chart_item.cpp
         src/gui/qt_emulation_service_proxy.cpp
         src/gui/qt_emulation_service_proxy.hpp
         src/image_cache.cpp
@@ -383,7 +398,7 @@ target_include_directories(firelight_lib PRIVATE ${CMAKE_SOURCE_DIR}/thirdparty/
 target_link_directories(firelight_lib PUBLIC ${FFMPEG_LIBRARY_DIRS} ${CMAKE_SOURCE_DIR}/lib/discord_social_sdk/lib/debug)
 
 if (WIN32)
-    target_link_libraries(firelight_lib PUBLIC mingw32 dwmapi)
+    target_link_libraries(firelight_lib PUBLIC mingw32 dwmapi gdi32 d3d11 dxgi dxguid)
 endif ()
 
 target_link_libraries(firelight_lib PUBLIC
@@ -620,6 +635,7 @@ add_executable(fl_test
         tests/app/gui/filesystem_utils_test.cpp
         tests/app/gui/focus_info_test.cpp
         tests/app/gui/selection_group_test.cpp
+        tests/app/gui/span_chart_item_test.cpp
         tests/app/gui/focus/candidate_collector_test.cpp
         tests/app/gui/focus/focus_navigator_test.cpp
         tests/app/gui/focus/root_key_filter_test.cpp
@@ -659,8 +675,11 @@ add_executable(fl_test
         tests/app/emulation/emulator_instance_test.cpp
         tests/app/emulation/emulation_rate_controller_test.cpp
         tests/app/emulation/frame_pacer_test.cpp
+        tests/app/emulation/emulation_loop_test.cpp
+        tests/e2e/emulation_loop_e2e_test.cpp
+        tests/app/emulation/phase_estimator_test.cpp
+        tests/app/emulation/pacing_simulation_test.cpp
         tests/app/emulation/precision_waiter_test.cpp
-        tests/app/emulation/refresh_counter_test.cpp
         tests/app/emulation/frame_slot_test.cpp
         tests/app/emulation/emulator_instance_e2e_test.cpp
         tests/app/emulation/hotkeys_disabled_test.cpp

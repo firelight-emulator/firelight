@@ -39,7 +39,7 @@ double AudioRateController::computeCompensation(const int usedBytes, const int b
 
   // TODO
   // Too full shortens the audio and too empty stretches it, in proportion to how far off it is
-  const auto proportional = -MAX_CORRECTION * error;
+  const auto proportional = -PROPORTIONAL_GAIN * error;
 
   // TODO
   // Walks toward whatever correction the buffer needs on average, so that a mismatch is held by this

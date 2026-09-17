@@ -1,3 +1,4 @@
+# TODO: NEEDS REVIEW
 cmake_minimum_required(VERSION 3.22.1)
 set(CMAKE_CXX_STANDARD 20)
 find_package(spdlog REQUIRED)
@@ -9,6 +10,8 @@ add_library(firelight_audio STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/audio_rate_controller.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/audio_resampler.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/pcm_converter.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/pcm_ring.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/playback_buffer.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/sfx_mixer.cpp
 )
 target_include_directories(firelight_audio
@@ -32,6 +35,8 @@ add_executable(firelight_audio_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/audio_rate_controller_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/audio_resampler_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/pcm_converter_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/pcm_ring_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/playback_buffer_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/sfx_mixer_test.cpp
 )
 target_include_directories(firelight_audio_test

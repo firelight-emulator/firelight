@@ -114,7 +114,10 @@ MainWindow {
     Shortcut {
         sequence: "F3"
         context: Qt.ApplicationShortcut
-        onActivated: PerformanceStats.toggle()
+        onActivated: {
+            PerformanceStats.toggle();
+            window.monitorOverlayShown = !window.monitorOverlayShown;
+        }
     }
 
     PerformanceOverlay {
@@ -124,6 +127,68 @@ MainWindow {
         anchors.left: parent.left
         anchors.margins: AppStyle.spacingLg
         z: 9999
+    }
+
+    // TODO
+    // Whether the new monitor is up as an overlay. Recording runs while any of its three mounts is
+    // showing, which the Binding below is the one place that decides
+    property bool monitorOverlayShown: false
+
+    Binding {
+        target: PerformanceMonitor
+        property: "visible"
+        value: window.monitorOverlayShown || performanceWindow.visible || Router.matchedPattern === "/dev/monitor"
+    }
+
+    Rectangle {
+        id: performanceMonitorOverlay
+
+        visible: window.monitorOverlayShown
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: AppStyle.spacingLg
+        width: monitorPanel.implicitWidth
+        height: Math.min(monitorPanel.implicitHeight, parent.height - AppStyle.spacingLg * 2)
+        z: 9999
+        color: Qt.rgba(Theme.surface.r, Theme.surface.g, Theme.surface.b, 0.82)
+        border.color: Theme.border
+        border.width: 1
+        radius: AppStyle.spacingXs
+        clip: true
+
+        PerformanceMonitorPanel {
+            id: monitorPanel
+
+            width: parent.width
+        }
+    }
+
+    // TODO
+    // The same monitor in a window of its own, for a second screen
+    Shortcut {
+        sequence: "Shift+F3"
+        context: Qt.ApplicationShortcut
+        onActivated: performanceWindow.visible ? performanceWindow.close() : performanceWindow.show()
+    }
+
+    Shortcut {
+        sequence: "Ctrl+F3"
+        context: Qt.ApplicationShortcut
+        onActivated: PerformanceMonitor.togglePaused()
+    }
+
+    Window {
+        id: performanceWindow
+
+        objectName: "PerformanceMonitorWindow"
+        width: 900
+        height: 820
+        title: qsTr("Performance monitor")
+        color: Theme.surface
+
+        PerformanceMonitorPage {
+            anchors.fill: parent
+        }
     }
 
     // Pane {
@@ -563,7 +628,10 @@ MainWindow {
             target: window.activeFocusItem
             usingMouse: InputMethodManager.usingMouse
 
-            Component.onCompleted: FocusCursor.register(focusHighlight)
+            Component.onCompleted: {
+                FocusCursor.register(focusHighlight);
+                FocusNavigator.watch(focusHighlight);
+            }
         }
     }
 

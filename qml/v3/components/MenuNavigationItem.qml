@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -5,12 +6,12 @@ import Firelight 1.0
 
 FLButtonBase {
     id: control
+    objectName: "MenuNavigationItem|" + control.label
 
     property string label: ""
-    property bool activateOnFocus: true
 
     Layout.fillWidth: true
-    Layout.preferredHeight: 50
+    implicitHeight: AppStyle.listRowHeight
     variant: "subtle"
     rounded: false
 
@@ -21,24 +22,12 @@ FLButtonBase {
 
     checkable: false
 
-    signal activated
-
-    onActiveFocusChanged: {
-        if (activeFocus && control.activateOnFocus) {
-            activated()
-        }
-    }
-
-    onClicked: {
-        activated()
-    }
-
     contentItem: Row {
-        spacing: 12
+        spacing: AppStyle.spacingMd
         Item {
             y: AppStyle.spacingMd / 2
             height: parent.height - AppStyle.spacingMd
-            width: 4
+            width: AppStyle.spacingXs
 
             Rectangle {
                 anchors.fill: parent

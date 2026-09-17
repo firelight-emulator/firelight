@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.0
@@ -432,8 +433,11 @@ Pane {
 
         Component {
             id: emulationView
-            FocusScope {
-                id: emuMenuScope
+
+            FLTwoColumnPage {
+                id: emuMenu
+                objectName: "QuickMenuEmulationView"
+                activateOnFocus: false
 
                 // Bumped whenever the running game's device selection changes, to
                 // re-evaluate the invokable-backed properties below
@@ -442,7 +446,7 @@ Pane {
                 // empty for standard-controller-only games, so the Controls entry
                 // stays hidden and nothing extra clutters the menu
                 property var deviceChoicePorts: {
-                    emuMenuScope.deviceRefreshTick; // re-evaluate on device changes
+                    emuMenu.deviceRefreshTick; // re-evaluate on device changes
                     var list = [];
                     var count = EmulationService.controllerPortCount();
                     for (var p = 0; p < count; p++) {
@@ -452,172 +456,114 @@ Pane {
                     }
                     return list;
                 }
+
                 Connections {
                     target: EmulationService
                     function onControllerDevicesChanged() {
-                        emuMenuScope.deviceRefreshTick++;
+                        emuMenu.deviceRefreshTick++;
                     }
                 }
 
-                RowLayout {
-                    anchors.fill: parent
-                    spacing: 32
-                    ColumnLayout {
-                        id: menuColumn
-                        KeyNavigation.right: quickMenuStack
-                        Layout.maximumWidth: 400
-                        Layout.alignment: Qt.AlignCenter
-                        FirelightMenuItem {
-                            id: resumeGameButton
-                            labelText: "Resume Game"
-                            focus: true
-                            Layout.fillWidth: true
-                            KeyNavigation.down: restartGameButton
-                            // Layout.preferredWidth: parent.width / 2
-                            Layout.preferredHeight: 40
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                            checkable: false
-                            alignRight: true
-                            onClicked: function () {
-                                root.resumeGame();
-                            }
-                        }
-                        FirelightMenuItem {
-                            id: restartGameButton
-                            labelText: "Restart Game"
-                            Layout.fillWidth: true
-                            KeyNavigation.down: closeGameButton
-                            // Layout.preferredWidth: parent.width / 2
-                            Layout.preferredHeight: 40
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                            checkable: false
-                            alignRight: true
-                            onClicked: {
-                                resetGameDialog.open();
-                            }
-                        }
-                        // FirelightMenuItem {
-                        //     id: rewindButton
-                        //     labelText: "Rewind"
-                        //     KeyNavigation.down: suspendPointButton
-                        //     Layout.fillWidth: true
-                        //     // Layout.preferredWidth: parent.width / 2
-                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        //     Layout.preferredHeight: 40
-                        //     checkable: false
-                        //     enabled: EmulationService.rewindEnabled
-                        //     alignRight: true
-                        //     onClicked: {
-                        //         root.rewindPressed();
-                        //     }
-                        // }
-                        // FirelightMenuItem {
-                        //     id: suspendPointButton
-                        //     labelText: "Suspend Points"
-                        //     Layout.fillWidth: true
-                        //     KeyNavigation.down: controlsButton.visible ? controlsButton : backToMenuButton
-                        //     // Layout.preferredWidth: parent.width / 2
-                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        //     Layout.preferredHeight: 40
-                        //     checkable: false
-                        //     alignRight: true
-                        //     // enabled: false
-                        //     onClicked: {
-                        //         quickMenuStack.replaceCurrentItem(suspendPointMenu, {}, StackView.Immediate);
-                        //         quickMenuStack.forceActiveFocus();
-                        //     }
-                        // }
-                        // // These route through the dispatcher rather than doing the
-                        // // work here, so the menu and the hotkey can't drift: same
-                        // // save slot, same hardcore gate, same toast
-                        // FirelightMenuItem {
-                        //     id: screenshotButton
-                        //     labelText: "Screenshot"
-                        //     Layout.fillWidth: true
-                        //     KeyNavigation.down: muteButton
-                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        //     Layout.preferredHeight: 40
-                        //     checkable: false
-                        //     alignRight: true
-                        //     onClicked: ShortcutDispatcher.trigger("screenshot")
-                        // }
-                        // SettingBinding {
-                        //     id: muteBinding
-                        //     key: "audio-muted"
-                        // }
-                        //
-                        // FirelightMenuItem {
-                        //     id: muteButton
-                        //     // Follows the setting, so it stays right when the
-                        //     // hotkey is what changed it
-                        //     labelText: muteBinding.value === "true" ? "Unmute" : "Mute"
-                        //     Layout.fillWidth: true
-                        //     KeyNavigation.down: controlsButton.visible ? controlsButton : backToMenuButton
-                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        //     Layout.preferredHeight: 40
-                        //     checkable: false
-                        //     alignRight: true
-                        //     onClicked: ShortcutDispatcher.trigger("toggle_mute")
-                        // }
-                        // FirelightMenuItem {
-                        //     id: controlsButton
-                        //     labelText: "Controls"
-                        //     Layout.fillWidth: true
-                        //     KeyNavigation.down: backToMenuButton
-                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        //     Layout.preferredHeight: 40
-                        //     checkable: false
-                        //     alignRight: true
-                        //     // Only when the game offers a real device choice
-                        //     // (Gamepad / Mouse / Light Gun)
-                        //     visible: emuMenuScope.deviceChoicePorts.length > 0
-                        //     onClicked: {
-                        //         quickMenuStack.replaceCurrentItem(controlsMenu, {}, StackView.Immediate);
-                        //         quickMenuStack.forceActiveFocus();
-                        //     }
-                        // }
-                        // FirelightMenuItem {
-                        //     id: backToMenuButton
-                        //     labelText: "Back to Menu"
-                        //     Layout.fillWidth: true
-                        //     KeyNavigation.down: closeGameButton
-                        //     Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                        //     Layout.preferredHeight: 40
-                        //     checkable: false
-                        //     alignRight: true
-                        //     onClicked: {
-                        //         root.backToMenu();
-                        //     }
-                        // }
-                        FirelightMenuItem {
-                            id: closeGameButton
-                            labelText: "Close Game"
-                            Layout.fillWidth: true
-                            // Layout.preferredWidth: parent.width / 2
-                            Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                            Layout.preferredHeight: 40
-                            checkable: false
-                            alignRight: true
+                // SettingBinding {
+                //     id: muteBinding
+                //     key: "audio-muted"
+                // }
 
-                            onClicked: {
-                                closeGameDialog.open();
-                            }
-                        }
+                model: [
+                    {
+                        "type": "action",
+                        "key": "resume",
+                        "label": qsTr("Resume Game")
+                    },
+                    {
+                        "type": "action",
+                        "key": "restart",
+                        "label": qsTr("Restart Game")
+                    },
+                    // {
+                    //     "type": "action",
+                    //     "key": "rewind",
+                    //     "label": qsTr("Rewind"),
+                    //     "enabled": () => EmulationService.rewindEnabled
+                    // },
+                    // {
+                    //     "type": "page",
+                    //     "key": "suspend-points",
+                    //     "label": qsTr("Suspend Points"),
+                    //     "page": suspendPointMenu
+                    // },
+                    // {
+                    //     "type": "action",
+                    //     "key": "screenshot",
+                    //     "label": qsTr("Screenshot")
+                    // },
+                    // {
+                    //     "type": "action",
+                    //     "key": "mute",
+                    //     "label": () => muteBinding.value === "true" ? qsTr("Unmute") : qsTr("Mute")
+                    // },
+                    // {
+                    //     "type": "page",
+                    //     "key": "controls",
+                    //     "label": qsTr("Controls"),
+                    //     "page": controlsMenu,
+                    //     "visible": () => emuMenu.deviceChoicePorts.length > 0
+                    // },
+                    // {
+                    //     "type": "action",
+                    //     "key": "back-to-menu",
+                    //     "label": qsTr("Back to Menu")
+                    // },
+                    {
+                        "type": "action",
+                        "key": "close",
+                        "label": qsTr("Close Game")
+                    }
+                ]
+
+                onActionTriggered: key => {
+                    if (key === "resume") {
+                        root.resumeGame();
+                        return;
                     }
 
-                    StackView {
-                        id: quickMenuStack
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                    if (key === "restart") {
+                        resetGameDialog.open();
+                        return;
+                    }
 
-                        KeyNavigation.left: resumeGameButton
+                    // if (key === "rewind") {
+                    //     root.rewindPressed();
+                    //     return;
+                    // }
+                    //
+                    // if (key === "screenshot") {
+                    //     ShortcutDispatcher.trigger("screenshot");
+                    //     return;
+                    // }
+                    //
+                    // if (key === "mute") {
+                    //     ShortcutDispatcher.trigger("toggle_mute");
+                    //     return;
+                    // }
+                    //
+                    // if (key === "back-to-menu") {
+                    //     root.backToMenu();
+                    //     return;
+                    // }
 
-                        Keys.onBackPressed: {
-                            if (quickMenuStack.depth >= 1) {
-                                quickMenuStack.pop();
-                                resumeGameButton.forceActiveFocus();
-                            }
-                        }
+                    if (key === "close") {
+                        closeGameDialog.open();
+                    }
+                }
+
+                // TODO
+                // Directional presses, which the window handler leaves alone while a game is foregrounded
+                Keys.onPressed: event => {
+                    const focused = emuMenu.Window.activeFocusItem;
+
+                    if (FocusNavigator.move(focused, event.key, event.isAutoRepeat) !== FocusNavigator.NoTarget) {
+                        event.accepted = true;
                     }
                 }
             }

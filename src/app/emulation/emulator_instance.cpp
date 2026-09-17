@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "emulator_instance.hpp"
 
 #include "core_settings_applier.hpp"
@@ -111,16 +112,19 @@ EmulatorInstance::~EmulatorInstance() {
 }
 
 bool EmulatorInstance::initialize(libretro::IVideoDataReceiver *videoDataReceiver) {
-  // Audio output + microphone are injected as factories (main.cpp supplies the
-  // Qt-Multimedia impls); both are created here on the render thread for Qt
-  // audio thread-affinity. Null in headless/tests -> no audio
+  // TODO
+  // Audio output + microphone are injected as factories (main.cpp supplies the Qt-Multimedia
+  // impls). Null in headless/tests -> no audio
   if (m_context.audioOutputFactory) {
     m_audioOutput = m_context.audioOutputFactory(m_contentHash, m_platformId);
     // TODO
     // Through the same two flags everything else uses, because a binding that fired before the
     // output existed has already set one of them and writing past it would strand that value
-    m_mutedByRequest = m_mutedByRequest || m_startMuted;
-    applyMuted();
+    {
+      std::lock_guard lock(m_audioStateMutex);
+      m_mutedByRequest = m_mutedByRequest || m_startMuted;
+      applyMuted();
+    }
     // Apply the resolved DRC setting (refreshAllSettings may have run before
     // the output existed, so it only stored the value on this instance)
     applyAudioRateControl();
@@ -202,11 +206,11 @@ unsigned EmulatorInstance::getDiscCount() const { return m_core ? m_core->getDis
 unsigned EmulatorInstance::getCurrentDiscIndex() const { return m_core ? m_core->getCurrentDiskIndex() : 0; }
 
 bool EmulatorInstance::swapDisc(const unsigned index) {
-  if (!m_core || !m_core->setDiskIndex(index)) {
+  if (!m_core || index >= m_core->getDiskCount()) {
     return false;
   }
-  EventDispatcher::instance().publish(
-      DiscChangedEvent{.contentHash = m_contentHash, .index = index, .count = m_core->getDiskCount()});
+
+  submitCommand({.type = EmulatorCommandType::SwapDisc, .discIndex = index});
   return true;
 }
 
@@ -302,18 +306,26 @@ void EmulatorInstance::setPortControllerVariant(const unsigned port, const unsig
   if (!m_core) {
     return;
   }
-  m_core->setControllerPortDevice(port, coreDeviceId);
+  // TODO
+  // The core hears about it between frames; the settings are written here
+  EmulatorCommand command;
+  command.type = EmulatorCommandType::SetControllerDevice;
+  command.port = port;
+  command.coreDeviceId = coreDeviceId;
+
   if (auto *settings = m_context.settingsService) {
     settings->setGameValue(m_contentHash, "port" + std::to_string(port) + "-controllervariant",
                            std::to_string(coreDeviceId));
   }
   for (const auto &variant : getAvailableControllerVariants(port)) {
     if (variant.coreDeviceId == coreDeviceId) {
-      m_core->setPortInputDeviceClass(port, static_cast<int>(variant.deviceClass));
+      command.deviceClass = static_cast<int>(variant.deviceClass);
       applyCompanionOptions(variant);
       break;
     }
   }
+
+  submitCommand(command);
 }
 
 void EmulatorInstance::applyCheats() {
@@ -358,7 +370,7 @@ void EmulatorInstance::setCheatEnabled(const int cheatId, const bool enabled) {
     return;
   }
   m_context.cheatRepository->setEnabled(cheatId, enabled);
-  applyCheats();
+  submitCommand({.type = EmulatorCommandType::ApplyCheats});
 }
 
 void EmulatorInstance::addCheat(cheats::Cheat cheat) {
@@ -367,7 +379,7 @@ void EmulatorInstance::addCheat(cheats::Cheat cheat) {
   }
   cheat.contentHash = m_contentHash;
   m_context.cheatRepository->addCheat(cheat);
-  applyCheats();
+  submitCommand({.type = EmulatorCommandType::ApplyCheats});
 }
 
 void EmulatorInstance::updateCheat(const cheats::Cheat &cheat) {
@@ -375,7 +387,7 @@ void EmulatorInstance::updateCheat(const cheats::Cheat &cheat) {
     return;
   }
   m_context.cheatRepository->updateCheat(cheat);
-  applyCheats();
+  submitCommand({.type = EmulatorCommandType::ApplyCheats});
 }
 
 void EmulatorInstance::removeCheat(const int cheatId) {
@@ -383,10 +395,11 @@ void EmulatorInstance::removeCheat(const int cheatId) {
     return;
   }
   m_context.cheatRepository->removeCheat(cheatId);
-  applyCheats();
+  submitCommand({.type = EmulatorCommandType::ApplyCheats});
 }
 
 void EmulatorInstance::runFrame() {
+  const monitoring::ScopedSpan frameSpan(m_runFrameSpan);
   drainKeyboardEvents();
 
   const auto now = std::chrono::steady_clock::now();
@@ -396,16 +409,26 @@ void EmulatorInstance::runFrame() {
   //                  .time_since_epoch()
   //                  .count());
   if (now - std::chrono::seconds(m_saveIntervalSeconds) > m_lastSaveTime) {
+    const monitoring::ScopedSpan saveSpan(m_saveKickSpan);
     m_lastSaveTime = now;
     // Keep the future so its destructor doesn't block this (render) thread
     // until the write completes. The write runs on its own copy of the data
     m_pendingSave = save();
   }
 
-  m_core->run(0);
-  // Re-apply RAM cheats after each frame so values the game overwrites stick
-  m_cheatEngine.apply(*m_core);
+  {
+    const monitoring::ScopedSpan runSpan(m_retroRunSpan);
+    m_core->run(0);
+  }
+
+  {
+    // Re-apply RAM cheats after each frame so values the game overwrites stick
+    const monitoring::ScopedSpan cheatsSpan(m_cheatsSpan);
+    m_cheatEngine.apply(*m_core);
+  }
+
   if (const auto achievements = m_context.achievementManager) {
+    const monitoring::ScopedSpan achievementsSpan(m_achievementsSpan);
     achievements->doFrame(m_core.get());
   }
 }
@@ -440,8 +463,13 @@ SuspendPoint EmulatorInstance::capturePoint() {
           .count();
   point.saveSlot = m_saveSlotNumber;
 
-  if (m_thumbnailProvider) {
-    point.image = m_thumbnailProvider();
+  const auto thumbnailProvider = [this] {
+    std::lock_guard lock(m_hooksMutex);
+    return m_thumbnailProvider;
+  }();
+
+  if (thumbnailProvider) {
+    point.image = thumbnailProvider();
   }
 
   if (const auto achievements = m_context.achievementManager) {
@@ -452,29 +480,50 @@ SuspendPoint EmulatorInstance::capturePoint() {
 }
 
 void EmulatorInstance::restoreFrame(const Image &image) {
-  if (m_frameRestorer && !image.isNull()) {
-    m_frameRestorer(image);
+  const auto frameRestorer = [this] {
+    std::lock_guard lock(m_hooksMutex);
+    return m_frameRestorer;
+  }();
+
+  if (frameRestorer && !image.isNull()) {
+    frameRestorer(image);
   }
 }
 
+std::vector<EmulatorInstance::RewindPointPicture> EmulatorInstance::getRewindPointPictures() const {
+  std::lock_guard lock(m_rewindPointsMutex);
+  std::vector<RewindPointPicture> pictures;
+  pictures.reserve(m_rewindPoints.size());
+
+  for (const auto &point : m_rewindPoints) {
+    pictures.push_back({.timestamp = point.timestamp, .image = point.image});
+  }
+
+  return pictures;
+}
+
+bool EmulatorInstance::canUndoLoadSuspendPoint() const {
+  std::lock_guard lock(m_rewindPointsMutex);
+  return !m_beforeLastLoadSuspendPoint.state.empty();
+}
+
 void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
+  const auto sink = [this] {
+    std::lock_guard lock(m_hooksMutex);
+    return m_commandSink;
+  }();
+
   switch (command.type) {
   case EmulatorCommandType::RunFrame:
-    // TODO
-    // A hardware core draws into the graphics context whatever is showing the game holds, so the
-    // frame has to run there. With nothing showing it, this side runs it
-    if (m_commandSink) {
-      m_commandSink(command);
-      break;
-    }
-
     runFrame();
     break;
 
   case EmulatorCommandType::WriteRewindPoint: {
     // Rolling snapshots take whatever picture is on hand rather than forcing a readback, which
     // stalled hardware cores every few seconds. The state is always current either way
-    m_rewindPoints.push_front(capturePoint());
+    auto point = capturePoint();
+    std::lock_guard lock(m_rewindPointsMutex);
+    m_rewindPoints.push_front(std::move(point));
 
     if (m_rewindPoints.size() > MAX_REWIND_POINTS) {
       m_rewindPoints.pop_back();
@@ -483,12 +532,18 @@ void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
 
   case EmulatorCommandType::LoadRewindPoint: {
     const auto index = static_cast<size_t>(command.rewindPointIndex - 1);
+    SuspendPoint point;
 
-    if (index >= m_rewindPoints.size()) {
-      break;
+    {
+      std::lock_guard lock(m_rewindPointsMutex);
+
+      if (index >= m_rewindPoints.size()) {
+        break;
+      }
+
+      point = m_rewindPoints.at(index);
     }
 
-    const auto &point = m_rewindPoints.at(index);
     deserializeState(point.state);
 
     if (const auto achievements = m_context.achievementManager; achievements && !point.retroachievementsState.empty()) {
@@ -519,7 +574,11 @@ void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
     }
 
     // What was replaced is kept so it can be put back, which is the whole of undo
-    m_beforeLastLoadSuspendPoint = capturePoint();
+    {
+      auto before = capturePoint();
+      std::lock_guard lock(m_rewindPointsMutex);
+      m_beforeLastLoadSuspendPoint = std::move(before);
+    }
 
     deserializeState(point->state);
 
@@ -532,25 +591,32 @@ void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
   } break;
 
   case EmulatorCommandType::UndoLoadSuspendPoint: {
-    if (m_beforeLastLoadSuspendPoint.state.empty()) {
+    SuspendPoint before;
+
+    {
+      std::lock_guard lock(m_rewindPointsMutex);
+      before = std::move(m_beforeLastLoadSuspendPoint);
+      m_beforeLastLoadSuspendPoint = {};
+    }
+
+    if (before.state.empty()) {
       break;
     }
 
-    deserializeState(m_beforeLastLoadSuspendPoint.state);
+    deserializeState(before.state);
 
     if (const auto achievements = m_context.achievementManager;
-        achievements && !m_beforeLastLoadSuspendPoint.retroachievementsState.empty()) {
-      achievements->deserializeState(m_beforeLastLoadSuspendPoint.retroachievementsState);
+        achievements && !before.retroachievementsState.empty()) {
+      achievements->deserializeState(before.retroachievementsState);
     }
 
-    restoreFrame(m_beforeLastLoadSuspendPoint.image);
-    m_beforeLastLoadSuspendPoint = {};
+    restoreFrame(before.image);
   } break;
 
   case EmulatorCommandType::SetPlaybackMultiplier:
     setSpeedMultiplier(command.playbackMultiplier);
-    if (m_commandSink) {
-      m_commandSink(command);
+    if (sink) {
+      sink(command);
     }
     break;
 
@@ -558,9 +624,32 @@ void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
   case EmulatorCommandType::CaptureScreenshot:
   case EmulatorCommandType::CaptureVideoClip:
     // Pixels off a GPU, or an image provider QML reads: none of that is the emulator's to do
-    if (m_commandSink) {
-      m_commandSink(command);
+    if (sink) {
+      sink(command);
     }
+    break;
+
+  case EmulatorCommandType::ResetGame:
+    reset();
+    break;
+
+  case EmulatorCommandType::SetControllerDevice:
+    m_core->setControllerPortDevice(command.port, command.coreDeviceId);
+
+    if (command.deviceClass >= 0) {
+      m_core->setPortInputDeviceClass(command.port, command.deviceClass);
+    }
+    break;
+
+  case EmulatorCommandType::SwapDisc:
+    if (m_core && m_core->setDiskIndex(command.discIndex)) {
+      EventDispatcher::instance().publish(
+          DiscChangedEvent{.contentHash = m_contentHash, .index = command.discIndex, .count = m_core->getDiskCount()});
+    }
+    break;
+
+  case EmulatorCommandType::ApplyCheats:
+    applyCheats();
     break;
   }
 }
@@ -581,11 +670,13 @@ std::future<bool> EmulatorInstance::save() {
 }
 
 void EmulatorInstance::setMuted(const bool muted) {
+  std::lock_guard lock(m_audioStateMutex);
   m_mutedByRequest = muted;
   applyMuted();
 }
 
 void EmulatorInstance::setSpeedMultiplier(const float multiplier) {
+  std::lock_guard lock(m_audioStateMutex);
   m_mutedBySpeed = shouldMuteAtSpeed(multiplier);
   applyMuted();
 
@@ -644,21 +735,39 @@ bool EmulatorInstance::isRewindEnabled() const {
   return true;
 }
 
-void EmulatorInstance::setPictureMode(const std::string &pictureMode) { m_pictureMode = pictureMode; }
+void EmulatorInstance::setPictureMode(const std::string &pictureMode) {
+  std::lock_guard lock(m_settingsMutex);
+  m_pictureMode = pictureMode;
+}
 
-std::string EmulatorInstance::getPictureMode() const { return m_pictureMode; }
+std::string EmulatorInstance::getPictureMode() const {
+  std::lock_guard lock(m_settingsMutex);
+  return m_pictureMode;
+}
 
-void EmulatorInstance::setAspectRatioMode(const std::string &aspectRatioMode) { m_aspectRatioMode = aspectRatioMode; }
+void EmulatorInstance::setAspectRatioMode(const std::string &aspectRatioMode) {
+  std::lock_guard lock(m_settingsMutex);
+  m_aspectRatioMode = aspectRatioMode;
+}
 
-std::string EmulatorInstance::getAspectRatioMode() const { return m_aspectRatioMode; }
+std::string EmulatorInstance::getAspectRatioMode() const {
+  std::lock_guard lock(m_settingsMutex);
+  return m_aspectRatioMode;
+}
 
 void EmulatorInstance::setIntegerScale(const int integerScale) { m_integerScale = integerScale; }
 
 int EmulatorInstance::getIntegerScale() const { return m_integerScale; }
 
-void EmulatorInstance::setSyncMethod(const std::string &syncMethod) { m_syncMethod = syncMethod; }
+void EmulatorInstance::setSyncMethod(const std::string &syncMethod) {
+  std::lock_guard lock(m_settingsMutex);
+  m_syncMethod = syncMethod;
+}
 
-std::string EmulatorInstance::getSyncMethod() const { return m_syncMethod; }
+std::string EmulatorInstance::getSyncMethod() const {
+  std::lock_guard lock(m_settingsMutex);
+  return m_syncMethod;
+}
 
 void EmulatorInstance::setTargetFramerate(const int targetFramerate) { m_targetFramerate = targetFramerate; }
 
@@ -667,6 +776,7 @@ int EmulatorInstance::getTargetFramerate() const { return m_targetFramerate; }
 float EmulatorInstance::getAudioBufferLevel() const { return m_audioOutput ? m_audioOutput->getBufferLevel() : -1.0f; }
 
 void EmulatorInstance::setAudioPlaybackRateRatio(const double ratio) {
+  std::lock_guard lock(m_audioStateMutex);
   m_pacingAudioRatio = ratio;
   applyAudioRatio();
 }

@@ -36,7 +36,7 @@ FocusScope {
             tooltipText: "Create collection"
             filled: false
             compact: false
-            onClicked: root.newCollectionRequested()
+            onClicked: Router.navigate("/library/create-collection")
         }
 
         FLIconButton {

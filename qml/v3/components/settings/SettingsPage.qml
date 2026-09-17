@@ -47,5 +47,10 @@ FocusScope {
                 showTopPadding: index > 0
             }
         }
+
+        Item {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
     }
 }

@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include "firelight/libretro/pointer_input_provider.hpp"
@@ -5,8 +6,10 @@
 
 #include <firelight/input/gamepad_input.hpp>
 #include <firelight/input/input_frame.hpp>
+#include <firelight/monitoring/monitor.hpp>
 
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <map>
 #include <utility>
@@ -55,8 +58,11 @@ private:
   std::array<bool, MAX_INPUT_PORTS> m_portActive{};
 
   std::map<unsigned, int> m_portInputClass;
-  double m_analogPointerSpeed = 0.025;
-  bool m_mouseControlsPointerDevices = true;
+  std::atomic<double> m_analogPointerSpeed{0.025};
+  std::atomic<bool> m_mouseControlsPointerDevices{true};
+
+  monitoring::Span m_pollSpan =
+      monitoring::Monitor::instance().span("input_poll", "Snapshotting pointer motion and every port's pad state");
 };
 
 } // namespace firelight::libretro

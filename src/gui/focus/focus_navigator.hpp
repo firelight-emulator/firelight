@@ -101,6 +101,12 @@ public:
    */
   void forget();
 
+  /**
+   * Watches the window item sits in, so that anything else moving the cursor — a container, a tap —
+   * drops the way back, and a cursor parked somewhere it cannot sit is landed
+   */
+  Q_INVOKABLE void watch(QQuickItem *item);
+
 private:
   /**
    * The candidate to enter a container at, when nothing itself shared the press's lane.
@@ -136,12 +142,6 @@ private:
    * Puts the cursor on an item and records the step, so the opposite press can undo it
    */
   void land(QQuickItem *from, QQuickItem *to, Direction direction);
-
-  /**
-   * Watches a window so that anything else moving the cursor — a container, a tap — drops the way
-   * back. It is only good while the cursor has not moved on
-   */
-  void watch(QQuickItem *item);
 
   /**
    * Puts the cursor somewhere it can actually be, when whatever took the focus is not a place the

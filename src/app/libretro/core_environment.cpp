@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "core_environment.hpp"
 
 #include "SDL2/SDL.h"
@@ -163,6 +164,19 @@ void Core::buildEnvironmentHandlers() {
           return false;
         }
         auto *renderCallback = static_cast<retro_hw_render_callback *>(data);
+
+        // TODO
+        // Refused when the display cannot provide the context asked for, so a core with a software
+        // fallback takes it and one without fails to load, instead of running against a context
+        // it was promised and never given
+        const auto preferred = videoReceiver->getPreferredHwRender();
+
+        if (preferred == RETRO_HW_CONTEXT_NONE || renderCallback->context_type != preferred) {
+          spdlog::warn("Core asked for hardware render context {}; the display offers {}",
+                       static_cast<int>(renderCallback->context_type), static_cast<int>(preferred));
+          return false;
+        }
+
         videoReceiver->setHwRenderInterface(renderCallback);
         m_destroyContextFunction = renderCallback->context_destroy;
 
@@ -494,8 +508,9 @@ void Core::buildEnvironmentHandlers() {
         }
 
         auto ptr = static_cast<retro_hw_render_interface **>(data);
+        *ptr = nullptr;
         videoReceiver->getHwRenderInterface(ptr);
-        return true;
+        return *ptr != nullptr;
       }};
   m_envHandlers[RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS] = {"RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS",
                                                                [this](void *data) -> bool {
@@ -510,6 +525,12 @@ void Core::buildEnvironmentHandlers() {
           return false;
         }
         auto ptr = static_cast<retro_hw_render_context_negotiation_interface *>(data);
+
+        if (videoReceiver->getPreferredHwRender() != RETRO_HW_CONTEXT_VULKAN) {
+          spdlog::warn("Core offered a context negotiation interface; the display cannot host a Vulkan core");
+          return false;
+        }
+
         videoReceiver->setHwRenderContextNegotiationInterface(ptr);
         return true;
       }};
@@ -932,6 +953,10 @@ void Core::buildEnvironmentHandlers() {
                                                             }};
   m_envHandlers[RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT] = {
       "RETRO_ENVIRONMENT_GET_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_SUPPORT", [this](void *data) -> bool {
+        if (!videoReceiver || videoReceiver->getPreferredHwRender() != RETRO_HW_CONTEXT_VULKAN) {
+          return false;
+        }
+
         auto ptr = static_cast<retro_hw_render_context_negotiation_interface_type *>(data);
         *ptr = RETRO_HW_RENDER_CONTEXT_NEGOTIATION_INTERFACE_VULKAN;
         return true;

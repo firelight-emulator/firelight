@@ -33,6 +33,19 @@ Item {
     readonly property string fontFamily: _notosans.name
     readonly property string symbolFontFamily: _symbols.name
 
+    // TODO
+    // Monospace face for dense readouts: the first installed of these, since none is bundled
+    readonly property string monoFontFamily: {
+        const installed = Qt.fontFamilies();
+        const candidates = ["Consolas", "Cascadia Mono", "Menlo", "DejaVu Sans Mono", "Courier New"];
+        for (const candidate of candidates) {
+            if (installed.indexOf(candidate) >= 0) {
+                return candidate;
+            }
+        }
+        return "monospace";
+    }
+
     FontLoader {
         id: _lexend
         source: "qrc:/fonts/lexend"
@@ -104,7 +117,15 @@ Item {
     readonly property var buttonIconWeight: Font.Normal
 
 
-    readonly property int listRowHeight: Math.max(minTarget, Math.round(46 * scale * density))
+    readonly property int listRowHeight: Math.max(minTarget, Math.round(54 * scale * density))
+
+    // TODO
+    // Chart metrics
+    readonly property int chartHeight: Math.round(120 * scale)
+    readonly property int chartBarWidth: Math.max(2, Math.round(6 * scale))
+    readonly property int chartBarGap: Math.max(1, Math.round(1 * scale))
+    readonly property int chartPadding: spacingSm
+    readonly property int chartAxisWidth: Math.round(52 * scale)
 
     // TODO
     // One row style, read by every row wherever it is shown, so a settings page and a menu cannot drift
@@ -166,6 +187,7 @@ Item {
     readonly property int sidebarRailWidth: Math.round(56 * scale)
     readonly property int sidebarLabelThreshold: Math.round(64 * scale)
     readonly property int detailPanelWidth: Math.round(320 * scale)
+    readonly property int readableContentWidth: Math.round(720 * scale)
 
     readonly property int artIconSizeSm: Math.round(48 * scale)
     readonly property int artIconSizeMd: Math.round(64 * scale)

@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 
@@ -50,7 +51,9 @@ StackView {
     readonly property var routes: ({
             "/library": libraryComponent,
             "/library/reorder-collections": collectionOrderComponent,
-            "/settings": settingsComponent
+            "/library/create-collection": createCollectionComponent,
+            "/settings": settingsComponent,
+            "/dev/monitor": monitorComponent
         // "/library/entries/:entryId": gameDetailsComponent,
         // "/shop": shopComponent,
         // "/shop/mods/:modId": shopItemComponent,
@@ -74,6 +77,11 @@ StackView {
     Component {
         id: collectionOrderComponent
         CollectionOrderPage {}
+    }
+
+    Component {
+        id: createCollectionComponent
+        CreateCollectionFlow {}
     }
 
     Component {
@@ -129,6 +137,11 @@ StackView {
     //     id: devGalleryComponent
     //     ComponentGallery {}
     // }
+
+    Component {
+        id: monitorComponent
+        PerformanceMonitorPage {}
+    }
 
     Component {
         id: notFoundComponent

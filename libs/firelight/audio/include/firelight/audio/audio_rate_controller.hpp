@@ -8,10 +8,18 @@ class AudioRateController {
 public:
   // TODO
   /**
-   * How far the rate may be pulled either way, as a fraction of the output rate. Half a percent is
-   * around eight cents of pitch, which is below what is heard on program material
+   * How far the rate may be pulled either way, as a fraction of the output rate
    */
   static constexpr double MAX_CORRECTION = 0.02;
+
+  // TODO
+  /**
+   * How much of the smoothed error becomes correction at once, as a fraction of the output rate at a
+   * full-scale error. Small, so that the correction rides on the standing term below rather than on
+   * the error itself; half a percent is around eight cents of pitch, which is below what is heard on
+   * program material
+   */
+  static constexpr double PROPORTIONAL_GAIN = 0.005;
 
   // TODO
   /**

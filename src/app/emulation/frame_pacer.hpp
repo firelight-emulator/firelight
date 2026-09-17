@@ -2,7 +2,6 @@
 #pragma once
 
 #include "emulation_rate_controller.hpp"
-#include "refresh_counter.hpp"
 
 #include <atomic>
 #include <cstdint>
@@ -11,7 +10,7 @@
 namespace firelight::emulation {
 
 /**
- * Decides when frames are due, from a clock or from the frames reaching the display.
+ * Decides when frames are due, from a clock held to the display's phase where the mode asks for it.
  *
  * Holds no thread and reads no clock of its own: the caller drives it and passes the time in, so the
  * whole policy can be exercised without one. Submissions arrive from the thread that draws while
@@ -23,7 +22,7 @@ public:
    * What a tick concluded
    */
   struct Decision {
-    /** How many frames the caller should hand to the renderer */
+    /** How many frames the caller should hand to the renderer, never more than one */
     int framesToRun = 0;
 
     /** Whether a draw should be asked for, nothing having reached the display for a while */
@@ -41,7 +40,7 @@ public:
   void configure(const PacingContext &context);
 
   /**
-   * Forgets what is owed and what has been counted, for time the player did not experience
+   * Forgets the cadence and the grid, for time the player did not experience
    */
   void reset();
 
@@ -51,16 +50,26 @@ public:
   int64_t noteSubmit(int64_t nowNs);
 
   /**
-   * @return How many refreshes the last present was held for, or 0 before two have been seen. One
-   *         means the present arrived on its own refresh; more means it missed one
+   * How long the frame just run took, from its tick to its picture being ready
    */
-  [[nodiscard]] int getLastPresentRefreshes() const { return m_lastPresentRefreshes.load(); }
+  void noteFrameDuration(int64_t durationNs);
 
-  // TODO
   /**
-   * @return Whether a frame has reached the display that a tick has not taken yet
+   * How long the pass just run took to put a picture on the target. Any thread
    */
-  [[nodiscard]] bool hasPendingPresents() const { return m_submitCount.load() > 0; }
+  void notePassDuration(int64_t durationNs);
+
+  /**
+   * How late past its deadline the loop woke for the tick that follows
+   */
+  void noteWakeLateness(int64_t lateNs);
+
+  /**
+   * Pins where in the refresh a frame is asked for, or lets it follow the measurements when negative
+   */
+  void setPhaseTarget(double target);
+
+  [[nodiscard]] double getPhaseTarget();
 
   /**
    * Whether the game is stopped, which owes nothing for the time it is stopped for
@@ -89,27 +98,32 @@ public:
 
   [[nodiscard]] SyncMode getResolvedMode();
   [[nodiscard]] bool isFollowingTheDisplay();
+
+  /**
+   * @return Whether the mode holds the anchor to the display's phase at all
+   */
+  [[nodiscard]] bool isHoldingPhase();
+
+  /**
+   * @return Whether the phase is held and the presents have agreed on a grid to hold it to
+   */
+  [[nodiscard]] bool isPhaseLocked();
   [[nodiscard]] double getEffectiveFps();
   [[nodiscard]] double getAudioRatio();
   [[nodiscard]] int getRefreshesPerFrame();
+  [[nodiscard]] int getHeldRefreshes();
 
 private:
   /**
-   * Clears the counted refreshes and the rate controller's phase, under the lock
+   * Clears the rate controller's cadence, under the lock
    */
   void forgetLocked(int64_t nowNs);
 
   std::mutex m_mutex;
   EmulationRateController m_rateController;
-  RefreshCounter m_refreshCounter;
 
-  // TODO
-  // Written by the thread that draws and taken by the thread that paces
-  std::atomic<int> m_submitCount = 0;
   std::atomic<int64_t> m_lastSubmitAtNs = 0;
-  std::atomic<int64_t> m_displayPeriodNs = 0;
-  std::atomic<int> m_lastPresentRefreshes = 0;
-  std::atomic<int> m_refreshCeiling = RefreshCounter::MIN_CEILING;
+  std::atomic<bool> m_submitted = false;
 
   std::atomic<bool> m_paused = false;
   std::atomic<bool> m_ready = false;

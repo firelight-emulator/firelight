@@ -4,6 +4,7 @@
 #include <firelight/libretro/icore.hpp>
 
 #include <cstring>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -77,7 +78,13 @@ public:
     if (!m_sram.empty()) {
       m_sram[0] = static_cast<char>(m_frameCount & 0xFF); // observable mutation
     }
+    if (m_onRun) {
+      m_onRun();
+    }
   }
+
+  // Called from run(), for a test that wants a frame to take time or leave a mark
+  std::function<void()> m_onRun;
 
   void reset() override {
     m_frameCount = 0;

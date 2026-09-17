@@ -193,7 +193,6 @@ FocusScope {
         id: toolbarColumn
         focus: false
         anchors.left: parent.left
-        anchors.leftMargin: AppStyle.spacingLg
         anchors.top: parent.top
         anchors.topMargin: root.toolbarTopMargin
         anchors.bottom: parent.bottom
@@ -207,7 +206,6 @@ FocusScope {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.right: parent.right
-        anchors.rightMargin: AppStyle.spacingLg
         anchors.leftMargin: AppStyle.spacingXl
         spacing: 0
 

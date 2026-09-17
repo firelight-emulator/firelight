@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 #include "emulation_context.hpp"
 #include "emulator_command.hpp"
@@ -11,6 +12,7 @@
 #include <firelight/libretro/audio_input_provider.hpp>
 #include <firelight/libretro/audio_output.hpp>
 #include <firelight/libretro/icore.hpp>
+#include <firelight/monitoring/monitor.hpp>
 #include <firelight/saves/suspend_point.hpp>
 
 #include <atomic>
@@ -26,9 +28,9 @@ namespace firelight::emulation {
 
 class CoreSettingsApplier;
 
-// Threading: owned by EmulatorItemRenderer and confined to the render thread —
-// initialize()/runFrame()/state calls all run there. getAudioBufferLevel() is
-// the exception: it's read from the pacing thread (backed by an atomic)
+// TODO
+// Threading: initialize(), runFrame() and drainCommands() run on the thread that runs frames. The
+// setters and getters may be called from any thread; what they touch is guarded here
 class EmulatorInstance {
 public:
   /**
@@ -142,30 +144,45 @@ public:
    * Where commands this instance doesn't own are sent — the ones that need pixels off a GPU, or a
    * QML image provider. Unset in a headless run, where those commands are simply dropped
    */
-  void setCommandSink(std::function<void(const EmulatorCommand &)> sink) { m_commandSink = std::move(sink); }
+  void setCommandSink(std::function<void(const EmulatorCommand &)> sink) {
+    std::lock_guard lock(m_hooksMutex);
+    m_commandSink = std::move(sink);
+  }
 
   /**
    * Where the picture attached to a suspend or rewind point comes from. Unset means points are
    * stored without one, which is what a run with nothing on screen wants
    */
-  void setThumbnailProvider(std::function<Image()> provider) { m_thumbnailProvider = std::move(provider); }
+  void setThumbnailProvider(std::function<Image()> provider) {
+    std::lock_guard lock(m_hooksMutex);
+    m_thumbnailProvider = std::move(provider);
+  }
 
   /**
    * Where a point's own picture goes when the emulator is put back to it. Without this the screen
    * keeps the frame from the state that was just left, which for a game that is stopped is the last
    * thing it shows — the point was chosen by its picture, so that picture is what has to appear
    */
-  void setFrameRestorer(std::function<void(const Image &)> restorer) { m_frameRestorer = std::move(restorer); }
+  void setFrameRestorer(std::function<void(const Image &)> restorer) {
+    std::lock_guard lock(m_hooksMutex);
+    m_frameRestorer = std::move(restorer);
+  }
+
+  /** When a rewind point was taken and what was on screen then */
+  struct RewindPointPicture {
+    int64_t timestamp = 0;
+    Image image;
+  };
 
   /**
-   * The rewind points held in memory, newest first
+   * The rewind points held in memory, newest first. Any thread
    */
-  [[nodiscard]] const std::deque<SuspendPoint> &getRewindPoints() const { return m_rewindPoints; }
+  [[nodiscard]] std::vector<RewindPointPicture> getRewindPointPictures() const;
 
   /**
-   * @return Whether undoing the last suspend-point load would do anything
+   * @return Whether undoing the last suspend-point load would do anything. Any thread
    */
-  [[nodiscard]] bool canUndoLoadSuspendPoint() const { return !m_beforeLastLoadSuspendPoint.state.empty(); }
+  [[nodiscard]] bool canUndoLoadSuspendPoint() const;
 
   // Forward the two core-side input settings (glide speed for stick-driven
   // pointer devices; whether the physical mouse drives mouse/light-gun devices)
@@ -235,10 +252,12 @@ private:
   std::function<void(const EmulatorCommand &)> m_commandSink;
   std::function<Image()> m_thumbnailProvider;
   std::function<void(const Image &)> m_frameRestorer;
+  mutable std::mutex m_hooksMutex;
 
   // Rolling rewind snapshots, newest first, and the state replaced by the last suspend-point load
   std::deque<SuspendPoint> m_rewindPoints;
   SuspendPoint m_beforeLastLoadSuspendPoint;
+  mutable std::mutex m_rewindPointsMutex;
 
   FrameSlot m_frameSlot;
 
@@ -300,18 +319,21 @@ private:
 
   // Applied by m_settingsApplier (in the constructor); the declared defaults live
   // in the settings catalog, not here. These initial values are just placeholders
-  bool m_isRewindEnabled = false;
+  std::atomic<bool> m_isRewindEnabled{false};
   // Initial mute state applied when the AudioManager is created in initialize()
   bool m_startMuted = false;
   std::string m_pictureMode;
   std::string m_aspectRatioMode;
-  int m_integerScale = 0;
+  std::atomic<int> m_integerScale{0};
   std::string m_syncMethod;
-  int m_targetFramerate = 0;
-  bool m_dynamicRateControl = true;
-  // Read from the render thread (renderer's clip feed); written from the GUI
-  // thread when settings change. A bool toggle, so a benign 1-frame-stale read
-  bool m_instantReplayEnabled = false;
+  std::atomic<int> m_targetFramerate{0};
+  std::atomic<bool> m_dynamicRateControl{true};
+
+  // TODO
+  // Guards the string settings above
+  mutable std::mutex m_settingsMutex;
+
+  std::atomic<bool> m_instantReplayEnabled{false};
 
   // Observes setting changes and applies this game's resolved common settings
   /**
@@ -339,8 +361,17 @@ private:
   // speed the player asked for. They multiply
   double m_pacingAudioRatio = 1.0;
   double m_speedAudioRatio = 1.0;
+  mutable std::mutex m_audioStateMutex;
 
   std::unique_ptr<CoreSettingsApplier> m_settingsApplier;
+
+  monitoring::Span m_runFrameSpan = monitoring::Monitor::instance().span("run_frame", "The core advancing one frame");
+  monitoring::Span m_saveKickSpan =
+      monitoring::Monitor::instance().span("save_kick", "Starting the periodic save on its own thread");
+  monitoring::Span m_retroRunSpan = monitoring::Monitor::instance().span("retro_run", "The core's own work");
+  monitoring::Span m_cheatsSpan = monitoring::Monitor::instance().span("cheats", "Re-applying RAM cheats");
+  monitoring::Span m_achievementsSpan =
+      monitoring::Monitor::instance().span("achievements", "Evaluating achievements against the core's memory");
 };
 
 } // namespace firelight::emulation

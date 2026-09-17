@@ -405,18 +405,29 @@ Item {
     // Whether the cursor was on anything before this change
     property bool _hadCursor: false
 
+    // TODO
+    // Hides the rings when the cursor is still on nothing a turn later
+    function _applyCursorLoss() {
+        if (root.cursorItem !== null) {
+            return;
+        }
+
+        root._hadCursor = false;
+        ringA.opacity = 0;
+        ringB.opacity = 0;
+    }
+
     onCursorItemChanged: {
+        if (cursorItem === null) {
+            Qt.callLater(root._applyCursorLoss);
+            return;
+        }
+
         // TODO
         // Whether the cursor came from somewhere rather than out of nothing —
         // the window regaining focus, or a page arriving, is not a move
         const arriving = !root._hadCursor;
-        root._hadCursor = cursorItem !== null;
-
-        if (cursorItem === null) {
-            ringA.opacity = 0;
-            ringB.opacity = 0;
-            return;
-        }
+        root._hadCursor = true;
 
         const prevFlick = _flick;
         const interval = _lastChangeAt >= 0 ? _clock - _lastChangeAt : -1;

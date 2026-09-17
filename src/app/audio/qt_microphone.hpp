@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/libretro/audio_input_provider.hpp>
@@ -6,9 +7,15 @@
 
 namespace firelight::audio {
 
-// Captures the system default input device via Qt Multimedia and presents it to
-// a libretro core as a microphone. One microphone, opened lazily when a core
-// asks for it
+class MicrophoneStream;
+
+/**
+ * Captures the system default input device via Qt Multimedia and presents it to a libretro core as
+ * a microphone. One microphone, opened lazily when a core asks for it.
+ *
+ * Threading: called on whichever thread runs frames. The capture source lives on the GUI thread
+ * and what it hears crosses to readMicrophone() through a lock-free ring
+ */
 class QtMicrophone final : public firelight::libretro::IAudioInputProvider {
 public:
   QtMicrophone();
@@ -23,6 +30,10 @@ public:
 
 private:
   std::unique_ptr<retro_microphone> m_mic;
+
+  // TODO
+  // On the GUI thread, so deleted through the event loop rather than here
+  MicrophoneStream *m_stream = nullptr;
 };
 
 } // namespace firelight::audio

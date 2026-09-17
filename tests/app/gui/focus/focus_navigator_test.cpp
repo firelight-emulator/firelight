@@ -32,6 +32,14 @@ FocusInfo *info(QObject *object) {
   return qobject_cast<FocusInfo *>(qmlAttachedPropertiesObject<FocusInfo>(object, true));
 }
 
+QQuickItem *stopScope(QQuickItem *parent, const qreal x, const qreal y, const qreal width, const qreal height) {
+  auto *scope = item(parent, x, y, width, height, Qt::TabFocus);
+  scope->setFlag(QQuickItem::ItemIsFocusScope);
+  info(scope)->setMode(FocusInfo::Stop);
+
+  return scope;
+}
+
 bool heldBack(QQuickItem *from, QQuickItem *to, const Direction direction, const bool isAutoRepeat = true) {
   return FocusNavigator::isHeldBack(from, to, direction, isAutoRepeat);
 }
@@ -608,6 +616,77 @@ TEST(FocusNavigatorTest, APressFromAParkedCursorLandsItRatherThanReportingNowher
 
   EXPECT_EQ(navigator.move(scope, Qt::Key_Down, false), FocusNavigator::Moved);
   EXPECT_TRUE(first->hasActiveFocus());
+}
+
+//****************
+// stop scopes
+//****************
+
+TEST(FocusNavigatorTest, LandingOnAStopScopeSettlesOnWhatIsInside) {
+  FocusNavigator navigator;
+  QQuickWindow window;
+  auto *left = item(window.contentItem(), 0.0, 0.0, 100.0, 40.0);
+  auto *scope = stopScope(window.contentItem(), 200.0, 0.0, 200.0, 200.0);
+  auto *first = item(scope, 0.0, 0.0, 200.0, 40.0);
+  item(scope, 0.0, 50.0, 200.0, 40.0);
+
+  left->forceActiveFocus();
+
+  EXPECT_EQ(navigator.move(left, Qt::Key_Right, false), FocusNavigator::Moved);
+  EXPECT_TRUE(first->hasActiveFocus());
+}
+
+TEST(FocusNavigatorTest, AStopScopeHoldingTheCursorIsMovedAroundInside) {
+  FocusNavigator navigator;
+  QQuickWindow window;
+  auto *scope = stopScope(window.contentItem(), 0.0, 0.0, 200.0, 200.0);
+  auto *first = item(scope, 0.0, 0.0, 200.0, 40.0);
+  auto *second = item(scope, 0.0, 50.0, 200.0, 40.0);
+
+  first->forceActiveFocus();
+
+  EXPECT_EQ(navigator.move(first, Qt::Key_Down, false), FocusNavigator::Moved);
+  EXPECT_TRUE(second->hasActiveFocus());
+}
+
+TEST(FocusNavigatorTest, CrossingBetweenStopScopesReturnsToWhatEachLastHeld) {
+  FocusNavigator navigator;
+  QQuickWindow window;
+  auto *menu = stopScope(window.contentItem(), 0.0, 0.0, 100.0, 300.0);
+  item(menu, 0.0, 0.0, 100.0, 40.0);
+  auto *checkedRow = item(menu, 0.0, 100.0, 100.0, 40.0);
+
+  auto *content = stopScope(window.contentItem(), 200.0, 0.0, 300.0, 300.0);
+  auto *firstControl = item(content, 0.0, 0.0, 300.0, 40.0);
+  auto *lastControl = item(content, 0.0, 250.0, 300.0, 40.0);
+
+  checkedRow->forceActiveFocus();
+
+  EXPECT_EQ(navigator.move(checkedRow, Qt::Key_Right, false), FocusNavigator::Moved);
+  EXPECT_TRUE(firstControl->hasActiveFocus());
+
+  EXPECT_EQ(navigator.move(firstControl, Qt::Key_Down, false), FocusNavigator::Moved);
+  EXPECT_TRUE(lastControl->hasActiveFocus());
+
+  EXPECT_EQ(navigator.move(lastControl, Qt::Key_Left, false), FocusNavigator::Moved);
+  EXPECT_TRUE(checkedRow->hasActiveFocus());
+}
+
+TEST(FocusNavigatorTest, TheWayBackOutOfAStopScopeStartsWhereTheCursorSettled) {
+  FocusNavigator navigator;
+  QQuickWindow window;
+  item(window.contentItem(), 0.0, 0.0, 100.0, 40.0);
+  auto *left = item(window.contentItem(), 0.0, 160.0, 100.0, 40.0);
+  auto *scope = stopScope(window.contentItem(), 200.0, 0.0, 200.0, 400.0);
+  auto *first = item(scope, 0.0, 0.0, 200.0, 40.0);
+
+  left->forceActiveFocus();
+
+  ASSERT_EQ(navigator.move(left, Qt::Key_Right, false), FocusNavigator::Moved);
+  ASSERT_TRUE(first->hasActiveFocus());
+
+  EXPECT_EQ(navigator.move(first, Qt::Key_Left, false), FocusNavigator::Moved);
+  EXPECT_TRUE(left->hasActiveFocus());
 }
 
 TEST(FocusNavigatorTest, APressWithNowhereElseToGoReachesSomethingPartlyOnDisplay) {

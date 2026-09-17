@@ -30,6 +30,29 @@ void submitRefreshes(FramePacer &pacer, const int count, int64_t &nowNs, const i
     pacer.noteSubmit(nowNs);
   }
 }
+
+/**
+ * Drives the pacer the way the loop does: a tick every millisecond, a present every refresh, for
+ * `seconds`. Returns the frames it asked for
+ */
+int runFor(FramePacer &pacer, const double seconds, const int64_t refreshNs) {
+  auto nowNs = SECOND_NS;
+  auto nextPresentNs = nowNs;
+  auto frames = 0;
+
+  for (auto elapsed = int64_t(0); elapsed < static_cast<int64_t>(seconds * SECOND_NS); elapsed += SECOND_NS / 1000) {
+    nowNs += SECOND_NS / 1000;
+
+    while (nextPresentNs <= nowNs) {
+      pacer.noteSubmit(nextPresentNs);
+      nextPresentNs += refreshNs;
+    }
+
+    frames += pacer.tick(nowNs).framesToRun;
+  }
+
+  return frames;
+}
 } // namespace
 
 // TODO
@@ -75,24 +98,28 @@ TEST(FramePacerTest, TheFirstSubmissionHasNoGap) {
 }
 
 // TODO
-// Display holds a frame for a whole number of the frames that reach the display, so two refreshes on
-// a 120Hz panel is one frame of 60Hz content
+// Display holds a frame for a whole number of refreshes, so two refreshes on a 120 Hz panel is one
+// frame of 60 Hz content, run on the clock rather than counted off the presents
 TEST(FramePacerTest, DisplayRunsAFrameEveryOtherRefreshAt120) {
   FramePacer pacer;
   startRunning(pacer, SyncMode::Display, 60.0, DISPLAY_120, true);
-  const auto periodNs = static_cast<int64_t>(1e9 / DISPLAY_120);
+  const auto refreshNs = static_cast<int64_t>(1e9 / DISPLAY_120);
+
+  EXPECT_EQ(pacer.getRefreshesPerFrame(), 2);
+  EXPECT_NEAR(runFor(pacer, 2.0, refreshNs), 120, 2) << "sixty frames a second over two seconds";
+}
+
+TEST(FramePacerTest, NeverAsksForMoreThanOneFrameAtOnce) {
+  FramePacer pacer;
+  startRunning(pacer, SyncMode::Fixed, 60.0, 0.0, false);
 
   auto nowNs = SECOND_NS;
   pacer.noteSubmit(nowNs);
   pacer.tick(nowNs);
 
-  auto frames = 0;
-  for (auto i = 0; i < 60; ++i) {
-    submitRefreshes(pacer, 2, nowNs, periodNs);
-    frames += pacer.tick(nowNs).framesToRun;
-  }
-
-  EXPECT_EQ(frames, 60) << "sixty frames should take a hundred and twenty refreshes";
+  // Late by three frames, still inside continuous play
+  submitRefreshes(pacer, 1, nowNs, 3 * FRAME_NS);
+  EXPECT_LE(pacer.tick(nowNs).framesToRun, 1);
 }
 
 // TODO
@@ -169,9 +196,21 @@ TEST(FramePacerTest, ReconfiguringForgetsTheOldCadence) {
   EXPECT_EQ(pacer.getRefreshesPerFrame(), 0) << "a refresh count means nothing to a clock";
 }
 
-// TODO
-// A clock still owes frames when nothing is reaching the display, because it does not count them —
-// but the stall rule holds them back all the same
+TEST(FramePacerTest, NativeHoldsThePhaseWhenPresentationWaits) {
+  FramePacer pacer;
+  pacer.configure({.mode = SyncMode::Fixed, .contentFps = 60.0988, .displayHz = 59.959, .presentationLocked = true});
+
+  EXPECT_TRUE(pacer.isHoldingPhase());
+  EXPECT_FALSE(pacer.isFollowingTheDisplay());
+  EXPECT_EQ(pacer.getRefreshesPerFrame(), 0);
+  EXPECT_EQ(pacer.getHeldRefreshes(), 1);
+
+  pacer.configure({.mode = SyncMode::Fixed, .contentFps = 60.0988, .displayHz = 59.959, .presentationLocked = false});
+
+  EXPECT_FALSE(pacer.isHoldingPhase());
+  EXPECT_EQ(pacer.getHeldRefreshes(), 0);
+}
+
 TEST(FramePacerTest, ResetForgetsWhatWasOwed) {
   FramePacer pacer;
   startRunning(pacer, SyncMode::Fixed, 60.0, 0.0, false);
@@ -182,4 +221,22 @@ TEST(FramePacerTest, ResetForgetsWhatWasOwed) {
 
   pacer.reset();
   EXPECT_EQ(pacer.tick(nowNs + 10 * SECOND_NS).framesToRun, 0) << "a reset pacer starts owing nothing";
+}
+
+// TODO
+// With presentation waiting for the display, the presents describe its grid and the anchor is held
+// to a fixed phase of it; the lock reports once enough presents have agreed
+TEST(FramePacerTest, ReportsThePhaseLockOnceThePresentsAgree) {
+  FramePacer pacer;
+  startRunning(pacer, SyncMode::Display, 60.0, 60.0, true);
+  const auto refreshNs = SECOND_NS / 60;
+
+  EXPECT_FALSE(pacer.isPhaseLocked());
+  runFor(pacer, 2.0, refreshNs);
+  EXPECT_TRUE(pacer.isPhaseLocked());
+
+  FramePacer unlocked;
+  startRunning(unlocked, SyncMode::Display, 60.0, 60.0, false);
+  runFor(unlocked, 2.0, refreshNs);
+  EXPECT_FALSE(unlocked.isPhaseLocked()) << "presents that do not wait for the display hold no phase";
 }

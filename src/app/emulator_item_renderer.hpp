@@ -1,14 +1,17 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include "audio/audio_manager.hpp"
 #include "emulation/emulator_command.hpp"
 #include "emulation/emulator_instance.hpp"
-#include "emulator_vulkan_renderer.hpp"
 #include "libretro/core.hpp"
 #include "libretro/core_configuration.hpp"
+#include "frame_presenter.hpp"
+#include "vulkan_core_context.hpp"
 
 #include <firelight/activity/activity_log.hpp>
 #include <firelight/libretro/video_data_receiver.hpp>
+#include <firelight/monitoring/monitor.hpp>
 #include <firelight/video_frame.hpp>
 
 #include <QElapsedTimer>
@@ -23,6 +26,8 @@
 #include <QVideoFrameInput>
 #include <atomic>
 #include <cstdlib>
+#include <condition_variable>
+#include <deque>
 #include <libretro/libretro_vulkan.h>
 #include <memory>
 #include <mutex>
@@ -54,16 +59,16 @@ class ClipRecorder;
 
 // TODO
 // Threading: created, used, and destroyed on the QML render thread — Qt drives
-// initialize()/synchronize()/render() there. The emulator's command queue is
-// drained in synchronize(), so frames and the state work around them all happen
-// on this thread; RunFrame only raises a flag, because the frame itself belongs
-// in render() where the graphics context is live
+// initialize()/synchronize()/render() there, and a pass only shows the newest frame. The instance is
+// held for the length of a pass. The core's callbacks (receive, setSystemAVInfo, the hardware
+// interface) and prepareForFrames() run on the emulation thread. Commands that need the screen
+// arrive on the renderer's own queue from that thread and run in synchronize()
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver {
 public:
-  EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api, QWindow *window,
-                       firelight::emulation::EmulatorInstance *emulatorInstance,
+  EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api, QWindow *window, void *windowHandle,
+                       std::weak_ptr<firelight::emulation::EmulatorInstance> emulatorInstance,
                        firelight::activity::IActivityLog *activityLog,
                        firelight::achievements::RAClient *achievementManager,
                        firelight::gui::GameImageProvider *gameImageProvider,
@@ -95,9 +100,13 @@ public:
   QString m_contentHash;
   int m_saveSlotNumber;
   QString m_contentPath;
-  float m_playbackMultiplier = 1;
 
   using EmulatorCommand = firelight::emulation::EmulatorCommand;
+
+  /**
+   * Takes a command the emulator handed on because it needs a screen. Any thread
+   */
+  void enqueueCommand(const firelight::emulation::EmulatorCommand &command);
 
   /**
    * Handles a command the emulator handed on because it needs a screen
@@ -115,9 +124,22 @@ public:
   [[nodiscard]] QImage currentFrameImage() const;
 
   /**
-   * Puts the emulator's current frame on colorTexture()
+   * Puts the emulator's current frame on colorTexture() when it is not there already
+   * @return Whether anything was uploaded
    */
-  void uploadCurrentFrame(QRhiResourceUpdateBatch *batch);
+  bool uploadCurrentFrame(QRhiResourceUpdateBatch *batch);
+
+  /**
+   * Brings a hardware-rendered core's device up once the display's handles are there
+   * @return Whether frames may run. Emulation thread
+   */
+  bool prepareForFrames();
+
+  /**
+   * Whether the display's handles have been captured, which a hardware-rendered core needs before it
+   * can be brought up. Any thread
+   */
+  [[nodiscard]] bool isHostReady() const { return m_hostReady.load(std::memory_order_acquire); }
 
 protected:
   ~EmulatorItemRenderer() override;
@@ -130,9 +152,28 @@ protected:
 
 private:
   QWindow *m_window = nullptr;
+  void *m_windowHandle = nullptr;
   EmulatorItem *m_emulatorItem = nullptr;
   const QSGRendererInterface::GraphicsApi m_graphicsApi;
-  firelight::emulation::EmulatorInstance *m_emulatorInstance;
+
+  // TODO
+  // Locked into m_emulatorInstance for the length of a pass and released after, so the instance
+  // can be destroyed between passes
+  std::weak_ptr<firelight::emulation::EmulatorInstance> m_instanceHandle;
+  std::shared_ptr<firelight::emulation::EmulatorInstance> m_emulatorInstance;
+
+  std::mutex m_pendingCommandsMutex;
+  std::deque<EmulatorCommand> m_pendingCommands;
+
+  // TODO
+  // What colorTexture() was last given, so a pass that shows the same frame again uploads nothing
+  uint64_t m_uploadedFrameId = 0;
+  QRhiTexture *m_uploadedTexture = nullptr;
+  QSize m_uploadedSize;
+
+  // TODO
+  // The id of the software frame last counted as shown, which initialize() leaves alone
+  uint64_t m_lastShownFrameId = 0;
 
   // Services, injected by EmulatorItem (which is the ServiceAccessor). The
   // renderer is one level removed from QML, so it takes its dependencies rather
@@ -147,7 +188,31 @@ private:
   // rolling window is snapshotted + muxed to mp4 on CaptureVideoClip. Software
   // cores only — HW (Vulkan) cores don't deliver pixels to receive()
   std::unique_ptr<firelight::media::ClipRecorder> m_clipRecorder;
-  double m_clipFps = 60.0;
+  std::atomic<double> m_clipFps{60.0};
+  double m_announcedFps = 0.0;
+
+  firelight::monitoring::Span m_syncSpan = firelight::monitoring::Monitor::instance().span(
+      "sync", "Taking the item's state and the queued commands while the GUI thread is blocked");
+  firelight::monitoring::Span m_drainCommandsSpan =
+      firelight::monitoring::Monitor::instance().span("drain_commands", "Running the commands queued between frames");
+  firelight::monitoring::Span m_renderPassSpan = firelight::monitoring::Monitor::instance().span(
+      "render_pass", "One render pass, whether or not a frame ran in it");
+  firelight::monitoring::Span m_uploadFrameSpan = firelight::monitoring::Monitor::instance().span(
+      "upload_frame", "Uploading a software core's pixels to the target");
+  firelight::monitoring::Span m_readbackSpan = firelight::monitoring::Monitor::instance().span(
+      "readback", "Scheduling the copy of a hardware core's picture back to the CPU");
+  firelight::monitoring::Marker m_frameRequestedMarker =
+      firelight::monitoring::Monitor::instance().marker("frame_requested", "The pacer asked for a frame");
+  firelight::monitoring::Marker m_frameDroppedMarker = firelight::monitoring::Monitor::instance().marker(
+      "frame_dropped", "A frame was asked for with the pass already full, so it was never run");
+  firelight::monitoring::Marker m_frameRepeatedMarker = firelight::monitoring::Monitor::instance().marker(
+      "frame_repeated", "A pass found nothing newer than what the target already held");
+  firelight::monitoring::Marker m_frameShownMarker =
+      firelight::monitoring::Monitor::instance().marker("frame_shown", "A pass put a new frame on the target");
+  firelight::monitoring::Marker m_frameGrabMarker = firelight::monitoring::Monitor::instance().marker(
+      "frame_grab", "A pass took the newest frame there was, whether or not it was new");
+  firelight::monitoring::Marker m_frameNoPictureMarker = firelight::monitoring::Monitor::instance().marker(
+      "frame_no_picture", "The core finished a frame without handing over a new picture");
   int m_clipWidth = 0;
   int m_clipHeight = 0;
   int64_t m_clipFrameIndex = 0;
@@ -164,18 +229,18 @@ private:
 
   bool m_quitting = false;
 
-  // TODO
-  // The most frames one pass will run at once. Beyond this the debt is dropped rather than paid, so a
-  // stall does not come back as a burst of fast-forward
-  static constexpr int MAX_FRAMES_PER_PASS = 4;
+  bool m_hooksInstalled = false;
+  bool m_vulkanFailed = false;
 
   // TODO
-  // Frames asked for but not yet run, taken by the next render(), which is what makes a frame and the
-  // pass that shows it the same piece of work. A count rather than a flag because the requests arrive
-  // as a queued update() that Qt coalesces into one dirty flag — two landing before a pass would
-  // collapse into a single frame, and the rest would be time the game simply never got
-  int m_framesToRun = 1;
-  bool m_hooksInstalled = false;
+  // How long a pass with nothing new waits for the next frame before showing the old one again
+  static constexpr int64_t FRAME_WAIT_NS = 20000000;
+
+  // TODO
+  // Counts frames published, so a pass can wait for one newer than what it found
+  std::atomic<uint64_t> m_framesPublished = 0;
+  std::mutex m_frameWaitMutex;
+  std::condition_variable m_frameArrived;
 
   QThread m_emulatorThread;
   QChronoTimer m_emulatorTimer{};
@@ -190,8 +255,6 @@ private:
   int64_t m_averageEmulationTime = 0;
 
   int m_frameNumber = 0;
-  int m_currentWaitFrames = 0;
-  int m_waitFrames = 0;
 
   std::function<void(int, int, float, double)> m_geometryChangedCallback = nullptr;
 
@@ -215,13 +278,7 @@ private:
   // TODO
   // Refreshes the last present was held for, copied across in synchronize(). A pass that already
   // overran its slot must not take a second frame and overrun it further
-  int m_lastPresentRefreshes = 1;
   bool m_shouldSave = false;
-
-  // TODO
-  // When the last pass ran, for the interval between one frame and the next. Per renderer, because
-  // two of them running at once would otherwise time each other
-  int64_t m_lastPassNs = 0;
 
   uint m_coreBaseWidth = 0;
   uint m_coreBaseHeight = 0;
@@ -230,9 +287,21 @@ private:
   float m_coreAspectRatio = 0.0f;
   float m_calculatedAspectRatio = 0.0f;
 
-  void initializeEmulatorInstance(QRhiCommandBuffer *cb);
+  /**
+   * Runs every command handed on since the last pass
+   */
+  void drainOwnCommands();
 
-  void displayPauseImage(QRhiCommandBuffer *cb);
+  /**
+   * Wakes a pass waiting for a frame. Emulation thread
+   */
+  void noteFramePublished();
+
+  /**
+   * Puts the newest frame on the target
+   * @return Whether it was newer than what the target held
+   */
+  bool showNewestFrame(QRhiResourceUpdateBatch *batch);
 
   // Reads the composited colorTexture() back and publishes it as the current frame
   // and feeds it to the clip recorder and netplay stream. Works for software
@@ -260,11 +329,17 @@ private:
   // before the first render() where initialize() is invoked
   const retro_hw_render_context_negotiation_interface_vulkan *m_negotiation = nullptr;
 
-  std::unique_ptr<EmulatorVulkanRenderer> m_vulkanRenderer;
+  std::unique_ptr<VulkanCoreContext> m_vulkanCore;
+
+  // TODO
+  // Chosen from the backend the window is on; null when that backend cannot show a shared picture
+  std::unique_ptr<IFramePresenter> m_presenter;
+  VulkanHostHandles m_hostHandles;
+  std::atomic<bool> m_hostReady = false;
 
   void destroyHwContext() override {
-    if (m_vulkanRenderer) {
-      m_vulkanRenderer->destroy();
+    if (m_vulkanCore) {
+      m_vulkanCore->destroy();
     }
   }
 };
