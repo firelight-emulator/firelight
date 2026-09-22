@@ -1,6 +1,9 @@
 name: Build win64_x86
 
 on:
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
@@ -64,39 +67,26 @@ jobs:
         run: ctest --output-on-failure
 
       - name: Build zip
+        if: github.ref == 'refs/heads/main'
         working-directory: build
         run: cpack -G ZIP && mv Firelight-0.12.2-win64.zip Firelight-0.12.2-win64-portable.zip
 
       - name: Build installer
+        if: github.ref == 'refs/heads/main'
         working-directory: build
         run: cpack -G NSIS && mv Firelight-0.12.2-win64.exe Firelight-0.12.2-win64-installer.exe
 
       - name: Upload portable zip artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: Firelight-0.12.2-win64-portable
           path: build/Firelight-0.12.2-win64-portable.zip
 
       - name: Upload installer artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: Firelight-0.12.2-win64-installer
           path: build/Firelight-0.12.2-win64-installer.exe
-
-        # - name: Prepare artifact
-        #   run: |
-        #     cp /mingw64/bin/SDL2.dll build/
-        #     cp /mingw64/bin/libcrypto-3-x64.dll build/
-        #     ${GITHUB_WORKSPACE}/../Qt/6.6.2/mingw_64/bin/windeployqt build/firelight.exe --compiler-runtime
-
-
-        # - name: Build
-        #   # Build your program with the given configuration
-        #   run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-        # - name: Test
-        #   working-directory: ${{github.workspace}}/build
-        # Execute tests defined by the CMake configuration.
-        # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        # run: ctest -C ${{env.BUILD_TYPE}}
 
