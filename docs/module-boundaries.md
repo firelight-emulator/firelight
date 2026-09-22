@@ -8,6 +8,8 @@ target graphs and include-resolution checks. Nothing here was reproduced at runt
 environment is Windows/MSYS2 and this pass was static. Every claim cites `file:line` so it can be
 checked in one jump. Where a finding is an inference rather than a direct reading, it says so.
 
+The input system is covered in depth, with a restructure plan, in `input-restructure.md`.
+
 **How to read it.** Findings are numbered `L1`…`L22` and grouped by boundary. Each carries a tag:
 
 - **[structural]** — the boundary is not enforceable; the current state is luck
@@ -37,7 +39,7 @@ checked in one jump. Where a finding is an inference rather than a direct readin
 | L14 | Whole-`Platform` copies to read one string, one of them inside `data()` | leak | `entry_list_model.cpp:273` |
 | L15 | `RAClient` (private header, QObject) is a QML context property | leak | `main.cpp:822` |
 | L16 | `LibraryScanner2` (private header, QObject) is exposed to QML, unused | cleanup | `main.cpp:853` |
-| L17 | `ServiceAccessor` holds 5 concrete classes among 9 interfaces | leak | `service_accessor.hpp:124-137` |
+| L17 | `ServiceAccessor` holds 7 concrete classes beside 7 interfaces | leak | `service_accessor.hpp:124-137` |
 | L18 | 3 locator users are constructed by us, against the locator's stated contract | leak | see §5 |
 | L19 | `ControllerType` shredded into 3 index-aligned QML arrays | leak | `platform_list_model.cpp:32-64` |
 | L20 | Domain enums cross into QML as bare ints; QML re-derives the labels | leak | `QuickMenu.qml:667` |
@@ -263,21 +265,26 @@ removes one reason for `library/src` to be on the app include path.
 
 ### L17 — `ServiceAccessor` mixes concrete classes and interfaces **[leak]**
 
-`service_accessor.hpp:124-137`. Nine slots hold interfaces (`IControllerRepository`,
-`ICoreOptionRepository`, `IActivityLog`, `ISaveManager`, `IModRepository`, `IDiscordManager`, …);
-five hold concrete classes:
+`service_accessor.hpp:124-137` has 14 slots. Seven hold interfaces: `InputService`,
+`IControllerRepository`, `ICoreOptionRepository`, `IActivityLog`, `ISaveManager`, `IModRepository`,
+`IDiscordManager`. (`InputService` is abstract — 14 pure virtuals — and only lacks the `I` prefix
+CLAUDE.md asks for.) Seven hold concrete classes:
 
 ```cpp
-static input::InputService         *s_inputService;
-static platforms::PlatformService  *s_platformService;      // not IPlatformService
+static platforms::PlatformService       *s_platformService;    // IPlatformService exists
+static achievements::RAClient           *s_achievementManager; // IAchievementClient exists
 static achievements::AchievementService *s_achievementService;
-static library::UserLibraryService *s_libraryService;
-static achievements::RAClient      *s_achievementManager;
+static library::UserLibraryService      *s_libraryService;
+static emulation::ShortcutActions       *s_shortcutActions;
+static gui::GameImageProvider           *s_gameImageProvider;
+static media::MediaService              *s_mediaService;
 ```
 
-Every QML-constructed model that reaches `getPlatformService()` is therefore bound to the concrete
-class even where `IPlatformService` would do. Four interfaces already exist for these; the slots just
-do not use them.
+Two of those have an interface already, and switching the slot is mechanical. Every QML-constructed
+model that reaches `getPlatformService()` is bound to the concrete class even where
+`IPlatformService` would do. The other five have no interface today, so each is a decision:
+`GameImageProvider` is a Qt type and reasonably stays concrete, while `AchievementService`,
+`UserLibraryService` and `MediaService` are domain services that tests would benefit from faking.
 
 ### L18 — three locator users are constructed by us **[leak]**
 
@@ -482,9 +489,10 @@ That removes six hand-rolled loops, seven display derivations, the `data()` hot-
 `EmulationService` drop its `Platform` value member for a `getCurrentPlatformName()`.
 
 **4. Fix the injections (L9, L17, L18).**
-`SqliteControllerRepository` takes `IPlatformService&`. `ServiceAccessor`'s five concrete slots become
-their existing interfaces. The three self-constructed locator users take constructor arguments, and
-`QtPlatformServiceProxy` drops the inheritance it never uses.
+`SqliteControllerRepository` takes `IPlatformService&`. `ServiceAccessor`'s `PlatformService` and
+`RAClient` slots become their existing interfaces, and `InputService` is renamed `IInputService`. The
+three self-constructed locator users take constructor arguments, and `QtPlatformServiceProxy` drops the
+inheritance it never uses.
 
 **5. Type the QML boundary (L19, L20, L21).**
 `FolderInfo::type` becomes `FolderType`. Add `settings_level_shim`-style `Q_NAMESPACE` shims for
