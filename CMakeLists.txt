@@ -6,8 +6,13 @@ project(firelight
         LANGUAGES CXX
 )
 
-set(QT_QML_GENERATE_QMLLS_INI ON)
+set(FL_VER_FULL "${PROJECT_VERSION}")
+set(FL_VER_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(FL_VER_MINOR "${PROJECT_VERSION_MINOR}")
+set(FL_VER_PATCH "${PROJECT_VERSION_PATCH}")
+set(FL_DESCRIPTION "${PROJECT_DESCRIPTION}")
 
+set(QT_QML_GENERATE_QMLLS_INI ON)
 
 #include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)
@@ -87,6 +92,8 @@ find_package(LibArchive REQUIRED)
 #pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavcodec libavformat libswresample)
 qt6_standard_project_setup(REQUIRES 6.11)
 
+# Discover tests at test time rather than build time to avoid issues with test discovery in certain environments
+set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
 
 #add_compile_definitions(QT_QML_DEBUG)
 set(CMAKE_CXX_STANDARD 20)
