@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23.5...3.31.6)
+cmake_minimum_required(VERSION 3.24.0...3.31.6)
 project(firelight
         VERSION 0.12.2
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
@@ -26,6 +26,9 @@ list(APPEND CMAKE_PREFIX_PATH "C:/msys64/mingw64")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+# Build static libraries by default to avoid issues with shared library deployment
+set(BUILD_SHARED_LIBS OFF)
 
 #option(ENABLE_ASAN "Enable Address Sanitizer" ON)
 #if(ENABLE_ASAN)
@@ -70,19 +73,19 @@ pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
 # find_package(FFMPEG REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
-find_package(Qt6 6.8 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg REQUIRED)
+find_package(Qt6 6.11 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg ShaderTools REQUIRED)
 if (Qt6_VERSION VERSION_GREATER_EQUAL 6.10.0)
     find_package(Qt6 OPTIONAL_COMPONENTS
-        GuiPrivate
+            GuiPrivate
     )
-endif()
+endif ()
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(LibArchive REQUIRED)
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavcodec libavformat libswresample)
-qt6_standard_project_setup(REQUIRES 6.8)
+qt6_standard_project_setup(REQUIRES 6.11)
 
 
 #add_compile_definitions(QT_QML_DEBUG)
@@ -98,6 +101,14 @@ include_directories(/opt/homebrew/include)
 add_subdirectory(src/app)
 add_subdirectory(libs/discord)
 add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
+
+# libchdr gives rcheevos a way to read CHD, which its bundled cdreader cannot do.
+# Bundled zlib/zstd rather than system ones so the codecs a CHD may use are always
+# present regardless of what the build host has installed
+set(WITH_SYSTEM_ZLIB OFF CACHE BOOL "" FORCE)
+set(WITH_SYSTEM_ZSTD OFF CACHE BOOL "" FORCE)
+set(INSTALL_STATIC_LIBS OFF CACHE BOOL "" FORCE)
+add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/libchdr EXCLUDE_FROM_ALL)
 
 file(GLOB QML_FILES
         qml/*.qml
