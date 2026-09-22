@@ -1,0 +1,33 @@
+* text=auto eol=lf
+
+*.cpp   text
+*.hpp   text
+*.h     text
+*.qml   text
+*.js    text
+*.json  text
+*.md    text
+*.txt   text
+*.cmake text
+*.yml   text
+*.ini   text
+*.svg   text
+*.fsh   text
+*.vsh   text
+*.csh   text
+
+*.png   binary
+*.jpg   binary
+*.wav   binary
+*.ttf   binary
+*.dll   binary
+*.so    binary
+*.lib   binary
+*.db    binary
+*.zip   binary
+*.z64   binary
+*.ups   binary
+*.bps   binary
+*.dat   binary
+*.pgf   binary
+*.zim   binary
