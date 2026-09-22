@@ -16,9 +16,9 @@ purposes.
 Here are the things you need to build the application:
 
 - A C++17 compiler. I use Clang, but other stuff should work too... I think.
-- CMake 3.22.1 or later.
+- CMake 3.24.0 or later.
 - The following libraries:
-    - Qt6 (6.7)
+    - Qt6 (6.11)
         - Components:
             - Quick
             - Gui
@@ -26,6 +26,12 @@ Here are the things you need to build the application:
             - QuickControls2
             - Quick3D
             - Sql
+            - QuickTest 
+            - Multimedia 
+            - Network 
+            - Widgets 
+            - Svg 
+            - ShaderTools
     - SDL2
     - spdlog
     - GTest (currently required even without running tests, but this will be fixed later)

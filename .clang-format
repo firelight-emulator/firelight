@@ -1,1 +1,15 @@
 BasedOnStyle: LLVM
+
+ColumnLimit: 120
+InsertBraces: true
+SeparateDefinitionBlocks: Always
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeIsMainRegex: '(_impl|_test|_tests|Test)?$'
+IncludeCategories:
+  - Regex: '^"'
+    Priority: 1
+  - Regex: '^<firelight/'
+    Priority: 2
+  - Regex: '^<'
+    Priority: 3

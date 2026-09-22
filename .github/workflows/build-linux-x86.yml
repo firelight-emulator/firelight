@@ -26,10 +26,17 @@ jobs:
             ninja-build \
             nlohmann-json3-dev \
             nsis \
-            qt6-base-dev \
-            qt6-tools-dev \
             libsdl2-dev \
-            libspdlog-dev
+            libspdlog-dev \
+            libgl1-mesa-dev \
+            libvulkan-dev \
+            libxkbcommon-dev \
+            libavcodec-dev \
+            libavformat-dev \
+            libavutil-dev \ 
+            libswscale-dev \ 
+            libswresample-dev \
+            libsqlite3-dev
 
       - name: Install CPR
         run: |
@@ -43,6 +50,16 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Qt 6.11
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.11.2'
+          host: linux
+          target: desktop
+          arch: linux_gcc_64
+          modules: qtmultimedia qtquick3d qtquicktimeline qtshadertools
+          cache: true
+
       - name: Configure CMake
         run: cmake -B build -G "${{env.CMAKE_GENERATOR}}" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
@@ -51,6 +68,8 @@ jobs:
 
       - name: Run unit tests
         working-directory: build
+        env:
+          QT_QPA_PLATFORM: offscreen
         run: ctest --output-on-failure
 
       # - name: Build zip

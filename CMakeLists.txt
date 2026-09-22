@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.23.5...3.31.6)
+cmake_minimum_required(VERSION 3.24.0...3.31.6)
 project(firelight
         VERSION 0.12.2
         DESCRIPTION "A libretro-based emulation frontend that aims to be the easiest way to play your retro games, discover awesome mods for those games, and just have a dang good time."
@@ -6,8 +6,13 @@ project(firelight
         LANGUAGES CXX
 )
 
-set(QT_QML_GENERATE_QMLLS_INI ON)
+set(FL_VER_FULL "${PROJECT_VERSION}")
+set(FL_VER_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(FL_VER_MINOR "${PROJECT_VERSION_MINOR}")
+set(FL_VER_PATCH "${PROJECT_VERSION_PATCH}")
+set(FL_DESCRIPTION "${PROJECT_DESCRIPTION}")
 
+set(QT_QML_GENERATE_QMLLS_INI ON)
 
 #include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/clang-checks.cmake)
@@ -26,6 +31,9 @@ list(APPEND CMAKE_PREFIX_PATH "C:/msys64/mingw64")
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+# Build static libraries by default to avoid issues with shared library deployment
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 #option(ENABLE_ASAN "Enable Address Sanitizer" ON)
 #if(ENABLE_ASAN)
@@ -70,20 +78,22 @@ pkg_check_modules(SWRESAMPLE REQUIRED IMPORTED_TARGET libswresample)
 find_package(SDL2 REQUIRED)
 find_package(spdlog REQUIRED)
 # find_package(FFMPEG REQUIRED COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE SWRESAMPLE)
-find_package(Qt6 6.8 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg REQUIRED)
+find_package(Qt6 6.11 REQUIRED COMPONENTS Quick Gui OpenGL QuickControls2 Quick3D Sql QuickTest Multimedia Network Widgets Svg ShaderTools REQUIRED)
 if (Qt6_VERSION VERSION_GREATER_EQUAL 6.10.0)
     find_package(Qt6 OPTIONAL_COMPONENTS
-        GuiPrivate
+            GuiPrivate
     )
-endif()
+endif ()
 find_package(cpr REQUIRED)
 find_package(GTest REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(LibArchive REQUIRED)
 #find_package(PkgConfig REQUIRED)
 #pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libavcodec libavformat libswresample)
-qt6_standard_project_setup(REQUIRES 6.8)
+qt6_standard_project_setup(REQUIRES 6.11)
 
+# Discover tests at test time rather than build time to avoid issues with test discovery in certain environments
+set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
 
 #add_compile_definitions(QT_QML_DEBUG)
 set(CMAKE_CXX_STANDARD 20)
@@ -98,6 +108,14 @@ include_directories(/opt/homebrew/include)
 add_subdirectory(src/app)
 add_subdirectory(libs/discord)
 add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/SQLiteCpp)
+
+# libchdr gives rcheevos a way to read CHD, which its bundled cdreader cannot do.
+# Bundled zlib/zstd rather than system ones so the codecs a CHD may use are always
+# present regardless of what the build host has installed
+set(WITH_SYSTEM_ZLIB OFF CACHE BOOL "" FORCE)
+set(WITH_SYSTEM_ZSTD OFF CACHE BOOL "" FORCE)
+set(INSTALL_STATIC_LIBS OFF CACHE BOOL "" FORCE)
+add_subdirectory(${CMAKE_SOURCE_DIR}/thirdparty/libchdr EXCLUDE_FROM_ALL)
 
 file(GLOB QML_FILES
         qml/*.qml
