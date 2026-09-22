@@ -101,7 +101,11 @@ set(CMAKE_CXX_STANDARD 20)
 
 #include(${CMAKE_SOURCE_DIR}/libs/qwindowkit/CMakeLists.txt)
 include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
-#include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
+
+##################################################
+# Add Firelight modules
+##################################################
+add_subdirectory(libs/firelight/util)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(/opt/homebrew/include)
@@ -265,6 +269,7 @@ target_link_libraries(firelight_lib PUBLIC
         patching
         rcheevos
         discord
+        firelight_util
 )
 
 # qt_import_plugins(firelight_lib
