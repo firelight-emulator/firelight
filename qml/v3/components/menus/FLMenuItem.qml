@@ -20,6 +20,7 @@ ItemDelegate {
     property string iconName: ""
     property string label: ""
     property string description: ""
+    property string longDescription: ""
 
     property Item controlItem: null
     property bool controlBelow: false

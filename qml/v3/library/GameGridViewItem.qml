@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
@@ -21,9 +22,28 @@ FocusScope {
     readonly property bool selected: root.GridView.view.selectionGroup.selected[root.index] === true
 
     property var titleBoxHeight: 0
+    property bool canLaunch: true
 
     signal clicked(var tapPoint)
     signal launchRequested(string entryId, string contentHash, string platformId, bool playable, string statusText)
+
+    property GameContextMenu _contextMenu: null
+
+    function contextMenu(): GameContextMenu {
+        if (root._contextMenu === null) {
+            root._contextMenu = contextMenuComponent.createObject(control);
+        }
+
+        return root._contextMenu;
+    }
+
+    Component {
+        id: contextMenuComponent
+
+        GameContextMenu {
+            entry: root.model
+        }
+    }
 
     Button {
         id: control
@@ -55,7 +75,7 @@ FocusScope {
             }
 
             onDoubleTapped: {
-                if (!root.selecting) {
+                if (!root.selecting && root.canLaunch) {
                     activatedAnimation.restart()
                 }
             }
@@ -65,8 +85,12 @@ FocusScope {
             cursorShape: Qt.PointingHandCursor
         }
 
-        ContextMenu.menu: GameContextMenu {
-            entry: root.model
+        ContextMenu.onRequested: position => {
+            if (root.selecting || !root.canLaunch) {
+                return;
+            }
+
+            root.contextMenu().popup(position);
         }
 
         FLFocus.actions: [
@@ -74,6 +98,8 @@ FocusScope {
                 keys: [Qt.Key_Enter, Qt.Key_Select, Qt.Key_Return, Qt.Key_Space]
                 label: root.selecting ? root.selected ? qsTr("Deselect") : qsTr("Select") : qsTr("Play")
                 sound: root.selecting ? root.selected ? SoundEffects.deselectItem : SoundEffects.selectItem : SoundEffects.activateGame
+                enabled: root.selecting || root.canLaunch
+                hidden: !root.selecting && !root.canLaunch
                 onTriggered: {
                     if (root.selecting) {
                         root.GridView.view.selectionGroup.select(root.index, Qt.NoModifier);
@@ -87,18 +113,18 @@ FocusScope {
                 keys: [Qt.Key_Menu]
                 label: qsTr("Options")
                 sound: SoundEffects.openPopup
-                enabled: !root.selecting
-                hidden: root.selecting
-                onTriggered: control.ContextMenu.menu.popupFor(control, control.width + AppStyle.spacingSm, 0)
+                enabled: !root.selecting && root.canLaunch
+                hidden: root.selecting || !root.canLaunch
+                onTriggered: root.contextMenu().popupFor(control, control.width + AppStyle.spacingSm, 0)
             },
             FLAction {
                 keys: [Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space, Qt.Key_Select]
                 modifiers: Qt.ControlModifier
                 label: qsTr("Options")
                 sound: SoundEffects.openPopup
-                enabled: !root.selecting
-                hidden: root.selecting
-                onTriggered: control.ContextMenu.menu.popupFor(control, control.width + AppStyle.spacingSm, 0)
+                enabled: !root.selecting && root.canLaunch
+                hidden: root.selecting || !root.canLaunch
+                onTriggered: root.contextMenu().popupFor(control, control.width + AppStyle.spacingSm, 0)
             }
         ]
 

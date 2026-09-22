@@ -234,6 +234,128 @@ TEST_F(SelectionGroupTest, ClearingEndsARangeGestureWithNothingSelected) {
 }
 
 //****************
+// selecting all
+//****************
+
+TEST_F(SelectionGroupTest, SelectingAllSelectsEveryIndexBelowTheCount) {
+  m_group.selectAll(4);
+
+  EXPECT_EQ(selected(), (std::vector{0, 1, 2, 3}));
+  EXPECT_TRUE(m_group.areMultipleSelected());
+}
+
+TEST_F(SelectionGroupTest, SelectingAllDropsWhatWasSelectedPastTheCount) {
+  m_group.select(2, NONE);
+  m_group.select(9, NONE);
+
+  m_group.selectAll(4);
+
+  EXPECT_EQ(selected(), (std::vector{0, 1, 2, 3}));
+}
+
+TEST_F(SelectionGroupTest, TheMapFollowsSelectingAll) {
+  m_group.select(9, NONE);
+  ASSERT_TRUE(m_group.getSelected().contains("9"));
+
+  m_group.selectAll(2);
+
+  const auto map = m_group.getSelected();
+  EXPECT_EQ(map.size(), 2);
+  EXPECT_TRUE(map.value("0").toBool());
+  EXPECT_TRUE(map.value("1").toBool());
+  EXPECT_FALSE(map.contains("9"));
+}
+
+TEST_F(SelectionGroupTest, SelectingAllClearsTheReportedRange) {
+  m_group.select(5, NONE);
+  m_group.select(10, SHIFT);
+
+  m_group.selectAll(4);
+
+  EXPECT_EQ(m_group.getRangeStart(), -1);
+  EXPECT_EQ(m_group.getRangeEnd(), -1);
+  EXPECT_FALSE(m_group.isEditingRange());
+}
+
+TEST_F(SelectionGroupTest, APlainSelectionAfterSelectingAllDeselectsThatIndex) {
+  m_group.selectAll(4);
+
+  m_group.select(2, NONE);
+
+  EXPECT_EQ(selected(), (std::vector{0, 1, 3}));
+}
+
+TEST_F(SelectionGroupTest, SelectingAllResetsTheAnchorSoAShiftStartsFresh) {
+  m_group.select(1, NONE);
+  m_group.selectAll(4);
+
+  m_group.select(3, SHIFT);
+
+  EXPECT_EQ(selected(), (std::vector{0, 1, 2}));
+}
+
+TEST_F(SelectionGroupTest, WhatSelectingAllSelectedSurvivesALaterRange) {
+  m_group.selectAll(4);
+  m_group.select(6, NONE);
+  m_group.select(9, SHIFT);
+  m_group.select(7, SHIFT);
+
+  EXPECT_EQ(selected(), (std::vector{0, 1, 2, 3, 6, 7}));
+}
+
+TEST_F(SelectionGroupTest, SelectingAllAnnouncesOnce) {
+  m_group.select(5, NONE);
+  m_group.select(10, SHIFT);
+
+  QSignalSpy spy(&m_group, &SelectionGroup::selectedChanged);
+  m_group.selectAll(4);
+
+  EXPECT_EQ(spy.count(), 1);
+}
+
+TEST_F(SelectionGroupTest, SelectingAllOfNothingClearsTheSelection) {
+  m_group.select(5, NONE);
+  m_group.select(10, SHIFT);
+
+  QSignalSpy spy(&m_group, &SelectionGroup::selectedChanged);
+  m_group.selectAll(0);
+
+  EXPECT_TRUE(selected().empty());
+  EXPECT_EQ(m_group.getRangeStart(), -1);
+  EXPECT_EQ(m_group.getRangeEnd(), -1);
+  EXPECT_FALSE(m_group.isEditingRange());
+  EXPECT_EQ(spy.count(), 1);
+}
+
+TEST_F(SelectionGroupTest, SelectingAllOfANegativeCountClearsTheSelection) {
+  m_group.select(5, NONE);
+
+  m_group.selectAll(-3);
+
+  EXPECT_TRUE(selected().empty());
+}
+
+TEST_F(SelectionGroupTest, SelectingAllOfNothingWithNothingSelectedAnnouncesNothing) {
+  QSignalSpy spy(&m_group, &SelectionGroup::selectedChanged);
+
+  m_group.selectAll(0);
+
+  EXPECT_EQ(spy.count(), 0);
+}
+
+TEST_F(SelectionGroupTest, SelectingAllLeavesTheModeAlone) {
+  QSignalSpy spy(&m_group, &SelectionGroup::activeChanged);
+
+  m_group.selectAll(4);
+  EXPECT_FALSE(m_group.isActive());
+
+  m_group.setActive(true);
+  m_group.selectAll(2);
+  EXPECT_TRUE(m_group.isActive());
+  EXPECT_EQ(spy.count(), 1);
+}
+
+//****************
 // notifications
 //****************
 

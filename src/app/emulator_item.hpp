@@ -23,11 +23,6 @@
 #include <rcheevos/ra_client.hpp>
 #include <string>
 
-// TODO
-// Threading: a QML item — constructed and driven (properties/slots) on the GUI
-// thread. Owns the emulation thread (m_emulationThread), which runs the loop that
-// brings the game up and runs its frames. paused() and playbackMultiplier() are
-// read by that loop every tick, so what they read is atomic
 class QScreen;
 
 class EmulatorItem : public QQuickRhiItem,

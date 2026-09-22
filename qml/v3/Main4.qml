@@ -280,6 +280,12 @@ MainWindow {
     //     }
     // }
 
+    GameplayPage {
+        id: gameplayPage
+        anchors.fill: parent
+        // visible: Router.isActive("/quick-menu")
+    }
+
     Item {
         id: contentContainer
         anchors.fill: parent
@@ -310,10 +316,6 @@ MainWindow {
         property bool deadHeld: false
 
         Keys.onPressed: event => {
-            if (gameplay.foregrounded) {
-                return;
-            }
-
             if (contentContainer.FLFocus.dispatch(window.activeFocusItem, event.key, event.modifiers, event.isAutoRepeat)) {
                 // TODO
                 // A held key changes nothing the bar lists, and answering is not running, so only a
@@ -454,10 +456,11 @@ MainWindow {
                 FLColumnLayout {
                     anchors.fill: parent
 
-                    Pane {
+                    FLButton {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 240
                         Layout.margins: AppStyle.spacingSm
+                        checked: Router.isActive("/quick-menu")
 
                         background: Rectangle {
                             radius: AppStyle.radiusMd
@@ -471,6 +474,13 @@ MainWindow {
                             font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                             horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        onClicked: {
+                            if (!checked) {
+                                Qt.callLater(() => Router.navigate("/quick-menu"));
+                                navigationPopup.close();
+                            }
                         }
                     }
 
@@ -594,13 +604,10 @@ MainWindow {
             }
         }
 
-        // The running game + quick menu, layered above the router. It grows to full
-        // screen when foregrounded and shrinks into a bottom bar when backgrounded —
-        // the game render itself becomes the "now playing" bar
-        GameplayLayer {
-            id: gameplay
-            z: 90
-        }
+        // GameplayLayer {
+        //     id: gameplay
+        //     z: 90
+        // }
 
         // TODO
         // Lives outside the content it samples: a blur source drawn inside its own source item
@@ -667,16 +674,17 @@ MainWindow {
     Connections {
         target: launchCinematic
         function onBlackFull() {
-            gameplay.markBlackFull();
-        }
-    }
-
-    Connections {
-        target: gameplay
-        function onReadyToReveal() {
+            gameplayPage.startGame();
             launchCinematic.reveal();
         }
     }
+
+    // Connections {
+    //     target: gameplay
+    //     function onReadyToReveal() {
+    //         launchCinematic.reveal();
+    //     }
+    // }
 
     // Netplay status has to outlive the /netplay page: both of these sit above
     // the gameplay layer so they stay visible wherever the user has navigated

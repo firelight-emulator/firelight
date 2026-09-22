@@ -1,6 +1,6 @@
 import QtQuick
 
-Item {
+FocusScope {
     id: gameplay
 
     anchors.left: parent.left
@@ -164,12 +164,11 @@ Item {
     EmulatorLoader {
         id: emulatorLoader
         anchors.fill: parent
-        anchors.topMargin: AppStyle.titleBarHeight
         blurAmount: gameplay.mode === "quickMenu" ? 1 : 0
         onSuspended: gameplay.openQuickMenu()
     }
 
-    QuickMenu {
+    QuickMenu2 {
         id: quickMenu
         anchors.fill: parent
         opacity: gameplay.mode === "quickMenu" ? 1 : 0
@@ -181,18 +180,18 @@ Item {
             }
         }
 
-        onResumeGame: gameplay.foreground()
-        onResetGame: {
-            EmulationService.resetGame();
-            gameplay.foreground();
-        }
-        onRewindPressed: {
-            if (emulatorLoader.item) {
-                emulatorLoader.item.createRewindPoints();
-            }
-        }
-        onBackToMenu: gameplay.background()
-        onCloseGame: EmulationService.stopEmulation()
+        // onResumeGame: gameplay.foreground()
+        // onResetGame: {
+        //     EmulationService.resetGame();
+        //     gameplay.foreground();
+        // }
+        // onRewindPressed: {
+        //     if (emulatorLoader.item) {
+        //         emulatorLoader.item.createRewindPoints();
+        //     }
+        // }
+        // onBackToMenu: gameplay.background()
+        // onCloseGame: EmulationService.stopEmulation()
 
         Keys.onEscapePressed: gameplay.foreground()
     }

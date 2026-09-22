@@ -99,6 +99,7 @@ void SettingsModel::rebuildItems() {
     item.label = QString::fromStdString(setting.label);
     item.key = QString::fromStdString(setting.key);
     item.description = QString::fromStdString(setting.description);
+    item.longDescription = QString::fromStdString(setting.longDescription);
     item.widget = widgetFor(setting);
     item.defaultValue = QString::fromStdString(setting.defaultValue);
     item.trueValue = QString::fromStdString(setting.trueStringValue);
@@ -393,6 +394,8 @@ QVariant SettingsModel::data(const QModelIndex &index, int role) const {
     return item.key;
   case DescriptionRole:
     return item.description;
+  case LongDescriptionRole:
+    return item.longDescription;
   case WidgetRole:
     return item.widget;
   case ValueRole:
@@ -446,6 +449,7 @@ QHash<int, QByteArray> SettingsModel::roleNames() const {
   return {{LabelRole, "label"},
           {KeyRole, "key"},
           {DescriptionRole, "description"},
+          {LongDescriptionRole, "longDescription"},
           {WidgetRole, "widget"},
           {ValueRole, "value"},
           {DefaultValueRole, "defaultValue"},

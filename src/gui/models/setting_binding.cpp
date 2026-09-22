@@ -91,6 +91,11 @@ QString SettingBinding::description() const {
   return definition ? QString::fromStdString(definition->description) : QString();
 }
 
+QString SettingBinding::longDescription() const {
+  const auto *definition = definitionFor(m_key);
+  return definition ? QString::fromStdString(definition->longDescription) : QString();
+}
+
 QString SettingBinding::defaultValue() const {
   const auto *definition = definitionFor(m_key);
   return definition ? QString::fromStdString(definition->defaultValue) : QString();

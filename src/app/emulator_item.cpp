@@ -179,7 +179,7 @@ EmulatorItem::EmulatorItem(QQuickItem *parent) : QQuickRhiItem(parent) {
   // Re-pace when the sync method or target framerate changes (any tier)
   m_settingChangedConnection = EventDispatcher::instance().subscribe<firelight::settings::EmulationSettingChangedEvent>(
       [this](const firelight::settings::EmulationSettingChangedEvent &e) {
-        if (e.key == "sync-method" || e.key == "target-framerate") {
+        if (e.key == "emulation-sync-method" || e.key == "emulation-target-framerate") {
           QMetaObject::invokeMethod(this, "reconfigurePacing", Qt::QueuedConnection);
         }
       });
@@ -349,7 +349,7 @@ EmulatorItem::SyncMethod EmulatorItem::syncMethodFromString(const std::string &m
   }
 
   if (method != "native") {
-    spdlog::warn("Unrecognised sync-method '{}', pacing as 'native'", method);
+    spdlog::warn("Unrecognised emulation-sync-method '{}', pacing as 'native'", method);
   }
 
   return SyncMethod::Native;

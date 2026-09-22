@@ -878,4 +878,140 @@ TEST_F(LibraryEntrySortFilterModelTest, CustomIsOfferedAsASortOption) {
   EXPECT_TRUE(found);
 }
 
+TEST_F(LibraryEntrySortFilterModelTest, ThePickedSetTakesEffectOnlyWhenApplied) {
+  const auto alpha = entryIdNamed("alpha");
+  const auto bravo = entryIdNamed("Bravo");
+
+  m_model.setPickedEntryIds({bravo});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::OnlyPicked);
+
+  EXPECT_EQ(m_model.getCount(), 3);
+
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
+
+  m_model.setPickedEntryIds({alpha, bravo});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::HidePicked);
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
+
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Charlie"}));
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, ThePickedGettersReadTheStagedValue) {
+  m_model.setPickedEntryIds(QVariantList{4, 9});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::HidePicked);
+
+  EXPECT_EQ(m_model.getPickedEntryIds(), (QVariantList{4, 9}));
+  EXPECT_EQ(m_model.getPickedMode(), LibraryEntrySortFilterModel::HidePicked);
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, OnlyPickedShowsThePickedRowsWhateverTheCriteria) {
+  m_model.setPickedEntryIds({entryIdNamed("Bravo"), entryIdNamed("Charlie")});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::OnlyPicked);
+  m_model.getFilter()->setNameContains("alpha");
+  m_model.getFilter()->setPlatformIds({3});
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo", "Charlie"}));
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, OnlyPickedShowsThePickedRowsWhateverTheScope) {
+  const auto collection = makeCollection("Favourites");
+  ASSERT_NE(collection, -1);
+  m_source->addEntryToFolder(entryIdNamed("Bravo"), collection);
+
+  m_model.setPickedEntryIds({entryIdNamed("Charlie")});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::OnlyPicked);
+  m_model.setScopeFolderId(collection);
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Charlie"}));
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, OnlyPickedWithNothingPickedShowsNothing) {
+  m_model.setPickedMode(LibraryEntrySortFilterModel::OnlyPicked);
+  m_model.applyFilters();
+
+  EXPECT_EQ(m_model.getCount(), 0);
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, HidePickedTakesThePickedRowsAway) {
+  m_model.setPickedEntryIds({entryIdNamed("Bravo")});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::HidePicked);
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"alpha", "Charlie"}));
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, HidePickedComposesWithTheCriteria) {
+  m_model.setPickedEntryIds({entryIdNamed("alpha")});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::HidePicked);
+  m_model.getFilter()->setPlatformIds({3});
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Charlie"}));
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, HidePickedComposesWithTheScope) {
+  const auto collection = makeCollection("Favourites");
+  ASSERT_NE(collection, -1);
+  m_source->addEntryToFolder(entryIdNamed("Bravo"), collection);
+  m_source->addEntryToFolder(entryIdNamed("Charlie"), collection);
+
+  m_model.setPickedEntryIds({entryIdNamed("Bravo")});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::HidePicked);
+  m_model.setScopeFolderId(collection);
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Charlie"}));
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, ShowAllIgnoresThePickedSet) {
+  m_model.setPickedEntryIds({entryIdNamed("Bravo")});
+  m_model.applyFilters();
+
+  EXPECT_EQ(m_model.getPickedMode(), LibraryEntrySortFilterModel::ShowAll);
+  EXPECT_EQ(names(), (std::vector<QString>{"alpha", "Bravo", "Charlie"}));
+
+  m_model.getFilter()->setPlatformIds({7});
+  m_model.applyFilters();
+
+  EXPECT_EQ(names(), (std::vector<QString>{"Bravo"}));
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, StagingThePickedSetAnnouncesOnlyItself) {
+  const QSignalSpy refinementSpy(&m_model, &LibraryEntrySortFilterModel::refinementChanged);
+  const QSignalSpy filtersOrSortSpy(&m_model, &LibraryEntrySortFilterModel::filtersOrSortChanged);
+  const QSignalSpy pickedEntryIdsSpy(&m_model, &LibraryEntrySortFilterModel::pickedEntryIdsChanged);
+  const QSignalSpy pickedModeSpy(&m_model, &LibraryEntrySortFilterModel::pickedModeChanged);
+
+  m_model.setPickedEntryIds({entryIdNamed("Bravo")});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::HidePicked);
+
+  EXPECT_EQ(refinementSpy.count(), 0);
+  EXPECT_EQ(filtersOrSortSpy.count(), 0);
+  EXPECT_EQ(pickedEntryIdsSpy.count(), 1);
+  EXPECT_EQ(pickedModeSpy.count(), 1);
+  EXPECT_FALSE(m_model.isPending());
+  EXPECT_FALSE(m_model.anyFiltersActive());
+}
+
+TEST_F(LibraryEntrySortFilterModelTest, RestagingTheSamePickedSetAnnouncesNothing) {
+  m_model.setPickedEntryIds({entryIdNamed("Bravo")});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::HidePicked);
+
+  const QSignalSpy pickedEntryIdsSpy(&m_model, &LibraryEntrySortFilterModel::pickedEntryIdsChanged);
+  const QSignalSpy pickedModeSpy(&m_model, &LibraryEntrySortFilterModel::pickedModeChanged);
+
+  m_model.setPickedEntryIds({entryIdNamed("Bravo")});
+  m_model.setPickedMode(LibraryEntrySortFilterModel::HidePicked);
+
+  EXPECT_EQ(pickedEntryIdsSpy.count(), 0);
+  EXPECT_EQ(pickedModeSpy.count(), 0);
+}
+
 } // namespace firelight::gui

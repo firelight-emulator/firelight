@@ -28,9 +28,6 @@ namespace firelight::emulation {
 
 class CoreSettingsApplier;
 
-// TODO
-// Threading: initialize(), runFrame() and drainCommands() run on the thread that runs frames. The
-// setters and getters may be called from any thread; what they touch is guarded here
 class EmulatorInstance {
 public:
   /**
@@ -43,7 +40,6 @@ public:
                    EmulationContext context);
   ~EmulatorInstance();
 
-  // Must be called from the render thread (with active graphics context)
   bool initialize(libretro::IVideoDataReceiver *videoDataReceiver);
   bool isInitialized();
 
@@ -51,7 +47,6 @@ public:
   int getPlatformId() const;
   int getSaveSlotNumber() const;
 
-  // Must be called from the render thread (with active graphics context)
   void runFrame();
   void reset();
   std::future<bool> save();
@@ -96,25 +91,13 @@ public:
   void setTargetFramerate(int targetFramerate);
   int getTargetFramerate() const;
 
-  // Audio buffer fill ratio (0.0-1.0), or -1.0 when there is no audio device
-  // (used by the "audio" sync method to pace frames). Safe to call from the
-  // emulation pacing thread
   float getAudioBufferLevel() const;
 
-  // Biases audio playback rate (1.0 = native); set by sync-to-monitor to
-  // resample audio to the display refresh rate
   void setAudioPlaybackRateRatio(double ratio);
 
-  // Enables/disables audio Dynamic Rate Control (the "dynamic-rate-control"
-  // advanced setting). Stored so it can be applied when the AudioManager is
-  // (re)created, and forwarded live when it already exists
   void setDynamicRateControlEnabled(bool enabled);
-
   bool getDynamicRateControlEnabled() const;
 
-  // Whether the instant-replay recorder should keep a rolling window while this
-  // game runs (the "instant-replay-enabled" advanced setting). Stored here as the
-  // resolved value; the renderer reads it to gate its ClipRecorder
   void setInstantReplayEnabled(bool enabled);
   [[nodiscard]] bool getInstantReplayEnabled() const;
 
@@ -317,10 +300,7 @@ private:
   int m_platformId;
   int m_saveSlotNumber;
 
-  // Applied by m_settingsApplier (in the constructor); the declared defaults live
-  // in the settings catalog, not here. These initial values are just placeholders
   std::atomic<bool> m_isRewindEnabled{false};
-  // Initial mute state applied when the AudioManager is created in initialize()
   bool m_startMuted = false;
   std::string m_pictureMode;
   std::string m_aspectRatioMode;
@@ -329,8 +309,6 @@ private:
   std::atomic<int> m_targetFramerate{0};
   std::atomic<bool> m_dynamicRateControl{true};
 
-  // TODO
-  // Guards the string settings above
   mutable std::mutex m_settingsMutex;
 
   std::atomic<bool> m_instantReplayEnabled{false};
@@ -351,14 +329,9 @@ private:
    */
   void applyAudioRatio() const;
 
-  // TODO
-  // Two reasons to be silent, kept apart so that leaving one does not undo the other
   bool m_mutedByRequest = false;
   bool m_mutedBySpeed = false;
 
-  // TODO
-  // Two reasons the audio is not at its nominal rate: the rate the game is being paced at, and the
-  // speed the player asked for. They multiply
   double m_pacingAudioRatio = 1.0;
   double m_speedAudioRatio = 1.0;
   mutable std::mutex m_audioStateMutex;

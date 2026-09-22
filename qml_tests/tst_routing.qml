@@ -108,6 +108,15 @@ TestCase {
         compare(r.pattern, "/library/reorder-collections");
     }
 
+    function test_resolve_declared_param_sibling_beats_subtree_owner() {
+        var r = R.resolve("/library/create-collection/smart", routes);
+        compare(r.pattern, "/library/create-collection/:kind");
+        compare(r.params.kind, "smart");
+
+        var collection = R.resolve("/library/collections/7", routes);
+        compare(collection.pattern, "/library");
+    }
+
     // The hazard the path shape avoids: a tail that is not a number would resolve as a collection id
     function test_reorder_path_is_not_read_as_a_collection() {
         var m = R.match("/library/reorder-collections", ["/library/collections/:collectionId"]);

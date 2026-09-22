@@ -51,9 +51,10 @@ StackView {
     readonly property var routes: ({
             "/library": libraryComponent,
             "/library/reorder-collections": collectionOrderComponent,
-            "/library/create-collection": createCollectionComponent,
+            "/library/create-collection/:kind": createCollectionComponent,
             "/settings": settingsComponent,
-            "/dev/monitor": monitorComponent
+            "/dev/monitor": monitorComponent,
+            "/quick-menu": quickMenuComponent
         // "/library/entries/:entryId": gameDetailsComponent,
         // "/shop": shopComponent,
         // "/shop/mods/:modId": shopItemComponent,
@@ -87,6 +88,11 @@ StackView {
     Component {
         id: settingsComponent
         SettingsScreen {}
+    }
+
+    Component {
+        id: quickMenuComponent
+        QuickMenu2 {}
     }
 
     // Component {

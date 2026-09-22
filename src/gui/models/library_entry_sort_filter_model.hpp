@@ -27,6 +27,8 @@ class LibraryEntrySortFilterModel : public QSortFilterProxyModel {
   Q_PROPERTY(bool openFolderIsSmart READ isOpenFolderSmart NOTIFY openFolderChanged)
   Q_PROPERTY(bool sortPinnedToOpenFolder READ isSortPinnedToOpenFolder WRITE setSortPinnedToOpenFolder NOTIFY
                  sortPinnedChanged)
+  Q_PROPERTY(QVariantList pickedEntryIds READ getPickedEntryIds WRITE setPickedEntryIds NOTIFY pickedEntryIdsChanged)
+  Q_PROPERTY(PickedMode pickedMode READ getPickedMode WRITE setPickedMode NOTIFY pickedModeChanged)
 
 public:
   enum SortRole {
@@ -44,6 +46,9 @@ public:
   // Roles this view adds on top of the entry model's
   enum ProxyRole { RemovedFromScope = Qt::UserRole + 900 };
   Q_ENUM(ProxyRole)
+
+  enum PickedMode { ShowAll, OnlyPicked, HidePicked };
+  Q_ENUM(PickedMode)
 
   explicit LibraryEntrySortFilterModel(QObject *parent = nullptr);
 
@@ -78,6 +83,30 @@ public:
   [[nodiscard]] int getScopeFolderId() const;
 
   void setScopeFolderId(int scopeFolderId);
+
+  // TODO
+  /**
+   * @return The staged ids of the picked entries
+   */
+  [[nodiscard]] QVariantList getPickedEntryIds() const;
+
+  // TODO
+  /**
+   * Stages the ids of the picked entries
+   */
+  void setPickedEntryIds(const QVariantList &pickedEntryIds);
+
+  // TODO
+  /**
+   * @return The staged way picked entries narrow the rows
+   */
+  [[nodiscard]] PickedMode getPickedMode() const;
+
+  // TODO
+  /**
+   * Stages the way picked entries narrow the rows
+   */
+  void setPickedMode(PickedMode pickedMode);
 
   [[nodiscard]] QHash<int, QByteArray> roleNames() const override;
 
@@ -190,6 +219,10 @@ signals:
 
   void refinementChanged();
 
+  void pickedEntryIdsChanged();
+
+  void pickedModeChanged();
+
 protected:
   [[nodiscard]] bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
 
@@ -201,6 +234,8 @@ private:
   SortRole m_pendingSortRole{DisplayName};
   bool m_pendingSortAscending{true};
   int m_scopeFolderId{-1};
+  QVariantList m_pendingPickedEntryIds;
+  PickedMode m_pendingPickedMode{ShowAll};
   LibraryFolderListModel *m_folderModel{};
   int m_openFolderId{-1};
   bool m_adoptingFolder{false};
@@ -212,6 +247,9 @@ private:
   // Which entries the scoped collection held when the pass ran. A row taken out of the collection
   // while it is on screen stays until the next pass rather than vanishing under the cursor
   std::unordered_set<int> m_appliedScopeMembers;
+
+  std::unordered_set<int> m_appliedPickedEntryIds;
+  PickedMode m_appliedPickedMode{ShowAll};
 
   [[nodiscard]] bool isInScope(const QModelIndex &sourceIndex) const;
 

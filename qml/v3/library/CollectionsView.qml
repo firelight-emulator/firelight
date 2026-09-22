@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -19,6 +20,51 @@ FocusScope {
         browse.enterFocus();
     }
 
+    FLDialog {
+        id: kindDialog
+
+        acceptText: qsTr("Cancel")
+
+        function choose(kind: string) {
+            kindDialog.close();
+            Router.navigate("/library/create-collection/" + kind);
+        }
+
+        onAboutToShow: manualChoice.forceActiveFocus()
+
+        Text {
+            Layout.fillWidth: true
+            Layout.bottomMargin: AppStyle.spacingSm
+            text: qsTr("What kind of collection?")
+            color: Theme.textPrimary
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
+            font.family: AppStyle.fontFamily
+            font.pixelSize: AppStyle.fontSizeMedium
+        }
+
+        FLMenuItem {
+            id: manualChoice
+            objectName: "CollectionKindChoice|manual"
+            surface: FLMenuItem.Surface.InPopup
+            iconName: "folder"
+            label: qsTr("Manual")
+            description: qsTr("Pick the games yourself")
+            showDescription: true
+            onClicked: kindDialog.choose("manual")
+        }
+
+        FLMenuItem {
+            objectName: "CollectionKindChoice|smart"
+            surface: FLMenuItem.Surface.InPopup
+            iconName: "filter-alt"
+            label: qsTr("Smart")
+            description: qsTr("Fills itself from filters")
+            showDescription: true
+            onClicked: kindDialog.choose("smart")
+        }
+    }
+
     FLBrowseView {
         id: browse
         anchors.fill: parent
@@ -36,7 +82,7 @@ FocusScope {
             tooltipText: "Create collection"
             filled: false
             compact: false
-            onClicked: Router.navigate("/library/create-collection")
+            onClicked: kindDialog.open()
         }
 
         FLIconButton {
@@ -136,11 +182,11 @@ FocusScope {
                         keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
                         label: qsTr("Select")
                         sound: SoundEffects.openPopup
-                        onTriggered: root.newCollectionRequested()
+                        onTriggered: kindDialog.open()
                     }
                 ]
 
-                onClicked: root.newCollectionRequested()
+                onClicked: kindDialog.open()
             }
 
             Item {

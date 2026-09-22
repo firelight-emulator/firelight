@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQml
 import QtQuick.Controls
@@ -184,207 +185,18 @@ FocusScope {
             }
         }
 
-        FLIconButton {
+        GameFilterButton {
             id: filterButton
-            Layout.alignment: Qt.AlignHCenter
-            iconName: "filter-alt"
-            tooltipText: "Filter"
-            filled: false
-            compact: false
-            iconColor: filterPopup.visible || gameModel.anyFiltersActive ? Theme.switch2Color : Theme.textPrimary
-            onClicked: filterPopup.opened ? filterPopup.close() : filterPopup.open()
-
-            Rectangle {
-                color: Theme.switch2Color
-                height: 6
-                width: 6
-                radius: width / 2
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                anchors.rightMargin: 8
-                anchors.bottomMargin: 8
-                visible: gameModel.anyFiltersActive
-            }
-
-            FLMenu {
-                id: filterPopup
-                x: filterButton.width + AppStyle.spacingXs
-                minWidth: 300
-
-                FLButton {
-                    id: saveFiltersButton
-                    visible: root.scopeIsSmart
-                    text: "Save current filters"
-                    Layout.fillWidth: true
-                    Layout.leftMargin: AppStyle.spacingSm
-                    Layout.rightMargin: AppStyle.spacingSm
-                    Layout.topMargin: AppStyle.spacingSm
-                    canInteract: gameModel.filter.dirty
-
-                    FLFocus.focusSound: SoundEffects.menuNavigate
-                    FLFocus.actions: [
-                        FLAction {
-                            keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
-                            label: qsTr("Select")
-                            sound: saveFiltersButton.canInteract ? SoundEffects.openPopup : SoundEffects.cursorBump
-                            onTriggered: root.saveFiltersToCollection()
-                        }
-                    ]
-
-                    onClicked: root.saveFiltersToCollection()
-                }
-
-                FLButton {
-                    id: clearButton
-                    text: root.scopeIsSmart ? "Reset to saved filters" : "Clear all filters"
-                    Layout.fillWidth: true
-                    Layout.leftMargin: AppStyle.spacingSm
-                    Layout.rightMargin: AppStyle.spacingSm
-                    Layout.topMargin: AppStyle.spacingSm
-                    Layout.bottomMargin: AppStyle.spacingSm
-                    canInteract: gameModel.anyFiltersActive
-
-                    FLFocus.focusSound: SoundEffects.menuNavigate
-                    FLFocus.actions: [
-                        FLAction {
-                            keys: [Qt.Key_Select, Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space]
-                            label: qsTr("Select")
-                            sound: clearButton.canInteract ? SoundEffects.openPopup : SoundEffects.cursorBump
-                            onTriggered: root.clearOrResetFilters()
-                        }
-                    ]
-
-                    onClicked: {
-                        root.clearOrResetFilters();
-                    }
-                }
-
-                FLToggleMenuItem {
-                    label: "Favorites"
-                    checked: gameModel.filter.favorite === LibraryFilter.Yes
-                    onSelected: function (selected) {
-                        gameModel.filter.favorite = selected ? LibraryFilter.Yes : LibraryFilter.Unset;
-                    }
-                }
-
-                FLSubmenuItem {
-                    label: "Platform"
-                    model: PlatformModel
-                    textRole: "displayName"
-                    valueRole: "platformId"
-
-                    selectionIsExternal: true
-                    currentValues: gameModel.filter.platformIds
-
-                    onCleared: gameModel.filter.platformIds = []
-
-                    onOptionToggled: (value, selected) => {
-                        const ids = gameModel.filter.platformIds.filter(id => id !== value);
-
-                        if (selected) {
-                            ids.push(value);
-                        }
-
-                        gameModel.filter.platformIds = ids;
-                    }
-                }
-
-                FLSubmenuItem {
-                    id: playtimeItem
-                    label: "Time played"
-                    model: [
-                        {
-                            "text": "Over 1 hour",
-                            "value": 60
-                        },
-                        {
-                            "text": "Over 5 hours",
-                            "value": 300
-                        },
-                        {
-                            "text": "Over 10 hours",
-                            "value": 600
-                        },
-                        {
-                            "text": "Over 25 hours",
-                            "value": 1500
-                        }
-                    ]
-
-                    onCurrentValuesChanged: {
-                        gameModel.filter.minMinutesPlayed = playtimeItem.currentValues.length > 0 ? Math.min(...playtimeItem.currentValues) : -1;
-                    }
-                }
-
-                FLToggleMenuItem {
-                    label: "Never played"
-                    checked: gameModel.filter.unplayed === LibraryFilter.Yes
-                    onSelected: function (selected) {
-                        gameModel.filter.unplayed = selected ? LibraryFilter.Yes : LibraryFilter.Unset;
-                    }
-                }
-
-                FLSubmenuItem {
-                    label: "Developer"
-                    model: []
-                }
-
-                FLSubmenuItem {
-                    label: "Publisher"
-                    model: []
-                }
-
-                FLSubmenuItem {
-                    label: "Genre"
-                    model: []
-                }
-
-                FLSubmenuItem {
-                    label: "Tags"
-                    model: []
-                }
-
-                FLToggleMenuItem {
-                    label: "Hide unplayable"
-                    checked: gameModel.filter.playable === LibraryFilter.Yes
-                    onSelected: function (selected) {
-                        gameModel.filter.playable = selected ? LibraryFilter.Yes : LibraryFilter.Unset;
-                    }
-                }
-            }
+            entryModel: gameModel
+            scopeIsSmart: root.scopeIsSmart
+            onSaveRequested: root.saveFiltersToCollection()
+            onClearRequested: root.clearOrResetFilters()
         }
 
-        FLIconButton {
+        GameSortButton {
             id: sortButton
-            Layout.alignment: Qt.AlignHCenter
-            iconName: "list-arrow"
-            tooltipText: "Sort"
-            compact: false
-            iconColor: gameSortPopup.visible ? Theme.switch2Color : Theme.textPrimary
-            onClicked: gameSortPopup.opened ? gameSortPopup.close() : gameSortPopup.open()
-
-            FLRadioMenu {
-                id: gameSortPopup
-                x: sortButton.width + AppStyle.spacingXs
-
-                model: gameModel.sortOptions
-                currentValue: gameModel.sortRole
-
-                onActivated: value => {
-                    gameModel.sortRole = value;
-                }
-
-                FLMenuSeparator {
-                    visible: root.filterFolderId !== -1
-                }
-
-                FLMenuItem {
-                    label: root.sortIsPinnedToCollection ? "Reset to default sort" : "Using the default sort"
-                    enabled: root.sortIsPinnedToCollection
-                    visible: root.filterFolderId !== -1
-                    onClicked: gameModel.sortPinnedToOpenFolder = false
-                }
-            }
+            entryModel: gameModel
+            showsPinRow: root.filterFolderId !== -1
         }
 
         FLIconButton {
@@ -476,10 +288,6 @@ FocusScope {
             currentSortLabel: gameModel.sortDisplayName
             sortAscending: gameModel.sortAscending
             selectedIds: root.selectedIds
-
-            selectionGroup: SelectionGroup {
-                active: true
-            }
 
             onGameClicked: (entryId, rowIndex, modifiers) => root.handleGameClick(entryId, rowIndex, modifiers)
             onRequestLaunch: (id, hash, platformId, playable, statusText) => {

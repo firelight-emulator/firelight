@@ -129,6 +129,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
 
             controlItem: Icon {
                 name: "chevron-forward"
@@ -154,6 +155,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             resettable: model.resettable
             binding: model.value
 
@@ -171,26 +173,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
-            checked: model.value
-            resettable: model.resettable
-
-            onReset: settingsModel.resetValue(index)
-            onClicked: function () {
-                model.value = !checked;
-            }
-        }
-    }
-
-    Component {
-        id: checkboxDelegate
-        FLToggleMenuItem {
-            required property var model
-            required property var index
-            shown: model.visible
-            subItem: model.subItem
-            enabled: model.enabled
-            label: model.label
-            description: model.description
+            longDescription: model.longDescription
             checked: model.value
             resettable: model.resettable
 
@@ -211,6 +194,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             resettable: model.resettable
             from: model.minimumValue
             to: model.maximumValue
@@ -238,6 +222,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             resettable: model.resettable
             from: model.minimumValue
             to: model.maximumValue
@@ -261,6 +246,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             resettable: model.resettable
             options: model.options
             currentValue: model.value
@@ -282,6 +268,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             resettable: model.resettable
             options: model.options
             storedValue: model.value
@@ -303,6 +290,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             options: model.options
             value: model.value
             resettable: model.resettable
@@ -324,6 +312,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             resettable: model.resettable
             value: model.value
             placeholder: model.placeholder
@@ -345,6 +334,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             resettable: model.resettable
             value: model.value
             presets: model.options
@@ -366,6 +356,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             resettable: model.resettable
             value: model.value
             directoryMode: model.directoryMode
@@ -388,6 +379,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             resettable: model.resettable
             value: model.value
             options: model.options
@@ -410,6 +402,7 @@ SettingsSection {
             enabled: model.enabled
             label: model.label
             description: model.description
+            longDescription: model.longDescription
             resettable: model.resettable
 
             textRole: "label"

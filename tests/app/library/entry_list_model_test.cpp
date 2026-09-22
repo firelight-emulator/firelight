@@ -15,7 +15,9 @@
 
 #include <QDir>
 #include <QEventLoop>
+#include <QSignalSpy>
 #include <QTimer>
+#include <algorithm>
 #include <gtest/gtest.h>
 
 // Verifies that EntryListModel stays in sync with the library incrementally:
@@ -430,6 +432,153 @@ TEST_F(EntryListModelSyncTest, UpdateOfVisibleEntryDoesNotDuplicate) {
 
   EXPECT_EQ(rows(), 1);
   EXPECT_EQ(m_model.numFavorites(), 1);
+}
+
+// TODO
+// Adding several entries to a manual folder in one call
+class EntryListModelBatchMembershipTest : public EntryListModelSyncTest {
+protected:
+  static constexpr int UNKNOWN_ENTRY_ID = 9999;
+
+  // TODO
+  // Creates that many entries and returns their ids in creation order
+  std::vector<int> makeEntries(const int count) {
+    std::vector<int> entryIds;
+
+    for (auto i = 0; i < count; ++i) {
+      Entry entry = makeEntry("Game " + std::to_string(i), "hash" + std::to_string(i), 3);
+      EXPECT_TRUE(m_repo.createEntry(entry));
+      entryIds.push_back(entry.id);
+    }
+
+    pump();
+    return entryIds;
+  }
+
+  // TODO
+  // Creates an empty manual folder and returns its id
+  int makeManualFolder(const std::string &name) {
+    FolderInfo folder;
+    folder.displayName = name;
+    EXPECT_TRUE(m_repo.create(folder));
+    pump();
+    return folder.id;
+  }
+
+  // TODO
+  // Wraps each id in a QVariant
+  [[nodiscard]] static QVariantList toVariantList(const std::vector<int> &entryIds) {
+    QVariantList values;
+    for (const auto entryId : entryIds) {
+      values.append(entryId);
+    }
+
+    return values;
+  }
+
+  // TODO
+  // The entry's row, or -1 when the model does not have it
+  [[nodiscard]] int rowOf(const int entryId) {
+    for (auto i = 0; i < rows(); ++i) {
+      if (m_model.data(m_model.index(i, 0), EntryListModel::Id).toInt() == entryId) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  // TODO
+  // The folder ids the model reports for the entry
+  [[nodiscard]] QList<int> folderIdsOf(const int entryId) {
+    const auto row = rowOf(entryId);
+    if (row < 0) {
+      return {};
+    }
+
+    return m_model.data(m_model.index(row, 0), EntryListModel::FolderIds).value<QList<int>>();
+  }
+
+  // TODO
+  // Whether the database has the entry in the folder
+  [[nodiscard]] bool isStoredInFolder(const int entryId, const int folderId) {
+    const auto entry = m_repo.getEntry(entryId);
+    return entry.has_value() && std::ranges::find(entry->folderIds, folderId) != entry->folderIds.end();
+  }
+};
+
+// TODO
+// Every listed entry ends up in the folder, in the model and in the database
+TEST_F(EntryListModelBatchMembershipTest, AddsEveryListedEntry) {
+  const auto entryIds = makeEntries(3);
+  const auto folderId = makeManualFolder("Picks");
+
+  m_model.addEntriesToFolder(folderId, toVariantList(entryIds));
+
+  for (const auto entryId : entryIds) {
+    EXPECT_TRUE(folderIdsOf(entryId).contains(folderId)) << "the model row for entry " << entryId;
+    EXPECT_TRUE(isStoredInFolder(entryId, folderId)) << "the database row for entry " << entryId;
+  }
+
+  EXPECT_EQ(m_model.getCountByFolderId().value(QString::number(folderId)).toInt(), 3);
+}
+
+// TODO
+// An entry already in the folder and an id the model does not have are both left alone
+TEST_F(EntryListModelBatchMembershipTest, SkipsExistingMembersAndUnknownIds) {
+  const auto entryIds = makeEntries(3);
+  const auto folderId = makeManualFolder("Picks");
+  m_model.addEntryToFolder(entryIds[0], folderId);
+
+  m_model.addEntriesToFolder(folderId, toVariantList({entryIds[0], UNKNOWN_ENTRY_ID, entryIds[1]}));
+
+  EXPECT_EQ(folderIdsOf(entryIds[0]).count(folderId), 1);
+  EXPECT_TRUE(folderIdsOf(entryIds[1]).contains(folderId));
+  EXPECT_TRUE(isStoredInFolder(entryIds[1], folderId));
+  EXPECT_FALSE(folderIdsOf(entryIds[2]).contains(folderId));
+  EXPECT_EQ(m_model.getCountByFolderId().value(QString::number(folderId)).toInt(), 2);
+
+  FolderEntry unknown{.folderId = folderId, .entryId = UNKNOWN_ENTRY_ID};
+  EXPECT_TRUE(m_repo.create(unknown)) << "a membership was written for an id the model does not have";
+}
+
+// TODO
+// The whole batch is one dataChanged over the changed rows and one count invalidation
+TEST_F(EntryListModelBatchMembershipTest, EmitsOneDataChangedForTheBatch) {
+  const auto entryIds = makeEntries(3);
+  const auto folderId = makeManualFolder("Picks");
+  const auto firstRow = std::min(rowOf(entryIds[0]), rowOf(entryIds[2]));
+  const auto lastRow = std::max(rowOf(entryIds[0]), rowOf(entryIds[2]));
+
+  const QSignalSpy dataChangedSpy(&m_model, &QAbstractItemModel::dataChanged);
+  const QSignalSpy countsSpy(&m_model, &EntryListModel::countByFolderIdChanged);
+
+  m_model.addEntriesToFolder(folderId, toVariantList({entryIds[0], entryIds[2]}));
+
+  ASSERT_EQ(dataChangedSpy.count(), 1);
+  EXPECT_EQ(countsSpy.count(), 1);
+
+  const auto arguments = dataChangedSpy.first();
+  EXPECT_LE(arguments.at(0).value<QModelIndex>().row(), firstRow);
+  EXPECT_GE(arguments.at(1).value<QModelIndex>().row(), lastRow);
+  EXPECT_EQ(arguments.at(2).value<QList<int>>(), QList<int>{EntryListModel::FolderIds});
+}
+
+// TODO
+// An empty list, or one with nothing left to add, emits nothing
+TEST_F(EntryListModelBatchMembershipTest, NothingToAddEmitsNothing) {
+  const auto entryIds = makeEntries(1);
+  const auto folderId = makeManualFolder("Picks");
+  m_model.addEntryToFolder(entryIds[0], folderId);
+
+  const QSignalSpy dataChangedSpy(&m_model, &QAbstractItemModel::dataChanged);
+  const QSignalSpy countsSpy(&m_model, &EntryListModel::countByFolderIdChanged);
+
+  m_model.addEntriesToFolder(folderId, {});
+  m_model.addEntriesToFolder(folderId, toVariantList({entryIds[0], UNKNOWN_ENTRY_ID}));
+
+  EXPECT_EQ(dataChangedSpy.count(), 0);
+  EXPECT_EQ(countsSpy.count(), 0);
 }
 
 } // namespace firelight::library

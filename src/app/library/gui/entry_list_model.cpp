@@ -454,6 +454,47 @@ void EntryListModel::addEntryToFolder(int entryId, int folderId) {
   }
 }
 
+void EntryListModel::addEntriesToFolder(const int folderId, const QVariantList &entryIds) {
+  auto firstChangedRow = -1;
+  auto lastChangedRow = -1;
+
+  for (const auto &entryId : entryIds) {
+    const auto it = m_indexByEntryId.find(entryId.toInt());
+    if (it == m_indexByEntryId.end()) {
+      continue;
+    }
+
+    const auto row = it->second;
+    if (row < 0 || row >= m_items.size()) {
+      continue;
+    }
+
+    auto &item = m_items[row];
+    if (std::ranges::find(item.entry.folderIds, folderId) != item.entry.folderIds.end()) {
+      continue;
+    }
+
+    auto folderEntry = FolderEntry{.folderId = folderId, .entryId = item.entry.id};
+    if (!m_userLibrary.create(folderEntry)) {
+      spdlog::error("Failed to add entry {} to folder {}", item.entry.id, folderId);
+      continue;
+    }
+
+    item.entry.folderIds.push_back(folderId);
+    item.fields = buildEntryFields(item);
+
+    firstChangedRow = firstChangedRow == -1 ? row : std::min(firstChangedRow, row);
+    lastChangedRow = std::max(lastChangedRow, row);
+  }
+
+  if (firstChangedRow == -1) {
+    return;
+  }
+
+  emit dataChanged(createIndex(firstChangedRow, 0), createIndex(lastChangedRow, 0), {FolderIds});
+  invalidateCountByFolderId();
+}
+
 void EntryListModel::removeEntryFromFolder(int entryId, int folderId) {
   if (auto entryInfo = FolderEntry{.folderId = folderId, .entryId = entryId};
       !m_userLibrary.deleteFolderEntry(entryInfo)) {

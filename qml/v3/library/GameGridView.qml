@@ -12,6 +12,8 @@ FocusScope {
     required property string currentSortLabel
     required property bool sortAscending
 
+    property bool canLaunch: true
+
     property alias selectionGroup: root.selectionGroup
 
     // Multi-select state owned by GameView and bound in
@@ -137,13 +139,7 @@ FocusScope {
             initialContentY = contentY;
         }
 
-        ScrollBar.vertical: FLScrollBar {
-            parent: gridRoot.Window.window.contentItem
-            anchors.right: parent.right
-            anchors.rightMargin: (AppStyle.windowPadding / 2) - width / 2
-            y: gridRoot.mapToItem(parent, Qt.point(0, 0)).y
-            height: gridRoot.height
-        }
+        ScrollBar.vertical: FLScrollBar {}
         boundsBehavior: Flickable.StopAtBounds
 
         delegate: tileComponent
@@ -161,6 +157,7 @@ FocusScope {
             height: GridView.view.cellHeight
 
             titleBoxHeight: gridRoot.labelHeight
+            canLaunch: gridRoot.canLaunch
 
             onClicked: (tapPoint) =>{
                 gameDelegate.GridView.view.currentIndex = gameDelegate.index;

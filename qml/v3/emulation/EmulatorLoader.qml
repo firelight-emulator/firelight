@@ -1,10 +1,6 @@
 import QtQuick
 import QtQuick.Effects
 
-// Hosts the emulator page. Pause and blur are owned by the host (GameplayLayer):
-// it drives `blurAmount` when something is layered over the game and toggles the
-// page's `paused`. This just loads/unloads the page, applies the blur/dim, and
-// reports the Esc/Home "suspend" key
 Loader {
     id: emulatorLoader
 

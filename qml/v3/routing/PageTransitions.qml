@@ -214,20 +214,29 @@ QtObject {
 
     readonly property Component sectionDownEnter: Component {
         Transition {
-            ParallelAnimation {
-                NumberAnimation {
+            SequentialAnimation {
+                PropertyAction {
                     property: "opacity"
-                    from: 0
-                    to: 1
-                    duration: AppStyle.durationBase
-                    easing.type: AppStyle.easingStandard
+                    value: 0
                 }
-                NumberAnimation {
-                    property: "y"
-                    from: AppStyle.spacingLg
-                    to: 0
-                    duration: AppStyle.durationBase
-                    easing.type: AppStyle.easingStandard
+                PauseAnimation {
+                    duration: AppStyle.durationFast
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: AppStyle.durationBase
+                        easing.type: AppStyle.easingStandard
+                    }
+                    NumberAnimation {
+                        property: "y"
+                        from: AppStyle.spacingLg
+                        to: 0
+                        duration: AppStyle.durationBase
+                        easing.type: AppStyle.easingStandard
+                    }
                 }
             }
         }
@@ -254,20 +263,29 @@ QtObject {
 
     readonly property Component sectionUpEnter: Component {
         Transition {
-            ParallelAnimation {
-                NumberAnimation {
+            SequentialAnimation {
+                PropertyAction {
                     property: "opacity"
-                    from: 0
-                    to: 1
-                    duration: AppStyle.durationBase
-                    easing.type: AppStyle.easingStandard
+                    value: 0
                 }
-                NumberAnimation {
-                    property: "y"
-                    from: -AppStyle.spacingLg
-                    to: 0
-                    duration: AppStyle.durationBase
-                    easing.type: AppStyle.easingStandard
+                PauseAnimation {
+                    duration: AppStyle.durationFast
+                }
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: AppStyle.durationBase
+                        easing.type: AppStyle.easingStandard
+                    }
+                    NumberAnimation {
+                        property: "y"
+                        from: -AppStyle.spacingLg
+                        to: 0
+                        duration: AppStyle.durationBase
+                        easing.type: AppStyle.easingStandard
+                    }
                 }
             }
         }

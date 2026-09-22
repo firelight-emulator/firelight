@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import Firelight 1.0
@@ -32,6 +33,7 @@ Item {
     }
 
     anchors.fill: parent
+    visible: root.selectionGroup.active
 
     Rectangle {
         color: {

@@ -39,8 +39,6 @@ struct GameLoadStarted {};
 struct GameLoadedEvent {};
 
 struct GameLoadFailedEvent {
-  // TODO
-  // Why it did not start, meant to be shown. Empty when nothing worked out a reason
   std::string reason;
 };
 
@@ -55,8 +53,6 @@ struct EmulationStartedEvent {
 
 struct EmulationStoppedEvent {};
 
-// Published when the active disc changes (or once on load for multi-disc
-// content), so the disc UI / Discord presence / activity can react
 struct DiscChangedEvent {
   std::string contentHash;
   unsigned index;
@@ -106,15 +102,8 @@ public:
    */
   std::weak_ptr<EmulatorInstance> getCurrentEmulatorInstanceHandle();
 
-  // Audio-buffer level of the running instance, or -1 if none. Safe to call from
-  // the frame-pacing thread: the instance can be destroyed on the GUI thread by
-  // loadEntry/stopEmulation, so this reads it under m_instanceMutex rather than
-  // handing out a raw pointer the caller might dereference after a reset()
   float currentAudioBufferLevel();
 
-  // Transient silencing of the running instance (pause, fast-forward) — not the
-  // user's audio-muted setting, which the audio output reads for itself. Guarded
-  // like currentAudioBufferLevel, and for the same reason
   void setCurrentAudioMuted(bool muted);
   bool currentAudioMuted();
 
@@ -122,18 +111,10 @@ public:
   /**
    * Queues work on the running instance, if there is one that has come up.
    *
-   * Guarded like currentAudioBufferLevel, and for the same reason: the frame-pacing thread queues
-   * every frame, and the instance can be destroyed under it on the GUI thread
-   *
    * @return Whether there was an instance to take it
    */
   bool submitToCurrentEmulator(const EmulatorCommand &command);
 
-  // TODO
-  /**
-   * @return Whether a running instance has come up far enough to be given work. Guarded like
-   *   currentAudioBufferLevel, and for the same reason
-   */
   bool isCurrentEmulatorReady();
 
   // Sets the one-shot launch knobs applied to (and consumed by) the next

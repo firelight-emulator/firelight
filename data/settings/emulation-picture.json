@@ -1,7 +1,7 @@
 {
   "common": [
     {
-      "key": "picture-mode",
+      "key": "emulation-picture-mode",
       "label": "Picture mode",
       "keywords": [
         "scaling",
@@ -27,7 +27,7 @@
       ]
     },
     {
-      "key": "aspect-ratio",
+      "key": "emulation-aspect-ratio",
       "label": "Aspect ratio",
       "keywords": [
         "widescreen",
@@ -49,7 +49,7 @@
       ]
     },
     {
-      "key": "sync-method",
+      "key": "emulation-sync-method",
       "label": "Sync method",
       "description": "How gameplay is paced. Automatic (recommended) matches your display's refresh rate when your display can show the game's rate, and uses the game's own rate when it can't. Sync to monitor does the same thing explicitly: matching the display removes repeated and skipped frames entirely, and the pitch change it needs to do so is far too small to hear. Native timer runs at exactly the rate the game asks for and leaves audio completely untouched, at the cost of a repeated or skipped frame every few seconds on most displays. Fixed framerate runs at a rate you choose. Audio paces off your sound device instead of a clock, which keeps audio untouched but is usually less smooth, because sound devices report their progress in coarse steps.",
       "keywords": [
@@ -88,7 +88,7 @@
       ]
     },
     {
-      "key": "target-framerate",
+      "key": "emulation-target-framerate",
       "label": "Target framerate",
       "description": "Frames per second to target when using Fixed framerate sync.",
       "keywords": [

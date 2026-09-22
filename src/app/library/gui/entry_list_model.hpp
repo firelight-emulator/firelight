@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/library/entry.hpp>
@@ -140,6 +141,10 @@ public:
   [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
 
   Q_INVOKABLE void addEntryToFolder(int entryId, int folderId);
+
+  // TODO
+  /** Adds each listed entry that is in the model and not yet in the folder */
+  Q_INVOKABLE void addEntriesToFolder(int folderId, const QVariantList &entryIds);
 
   Q_INVOKABLE void removeEntryFromFolder(int entryId, int folderId);
 

@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include "../../service_accessor.hpp"
@@ -73,6 +74,12 @@ public:
    */
   [[nodiscard]] Q_INVOKABLE QVariantMap folderById(int folderId) const;
 
+  // TODO
+  /**
+   * @return Whether a collection already has exactly this name, once trimmed
+   */
+  [[nodiscard]] Q_INVOKABLE bool hasFolderNamed(const QString &displayName) const;
+
   /**
    * The cached row for a folder, or nullptr when there is none
    */
@@ -83,6 +90,12 @@ public:
   Q_INVOKABLE int createFolder(const QString &displayName, int parentId);
 
   Q_INVOKABLE int addSmartFolder(const QString &displayName, const QString &filterJson);
+
+  // TODO
+  /**
+   * Creates a collection from fields keyed by role name and returns its id, or -1 when none was created
+   */
+  Q_INVOKABLE int createCollection(const QVariantMap &fields);
 
   Q_INVOKABLE bool updateSmartFolder(int folderId, const QString &filterJson);
 

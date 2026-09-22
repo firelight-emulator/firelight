@@ -4,19 +4,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
-// A menu beside the page it selects. Each model entry is one of:
-//   { type: "page", key, label, page, route? }   route defaults to key, read only when routeBase is set
-//   { type: "action", key, label }               emits actionTriggered(key)
-//   { type: "header", label }
-//   { type: "divider" }
-//
-// A row's label, enabled and visible may each be a function. The row re-reads it whenever what it
-// reads changes; the content swap reads it only when model, currentKey or the route changes
-// An entry with enabled false dims the row and blocks activation; the cursor still reaches it.
-//
-// menuOnRight also starts the cursor in the content and lets Back fall through to the router.
-// header and footer children size from menuWidth, never from parent.width
 FLPage {
     id: root
     objectName: "FLTwoColumnPage|" + root.currentKey
@@ -78,8 +65,6 @@ FLPage {
         root.showCurrentPage();
     }
 
-    // TODO
-    // Selects a row and moves the cursor into its page
     function _open(key: string) {
         if (InputMethodManager.usingMouse) {
             root._select(key);
@@ -321,7 +306,7 @@ FLPage {
 
                     Item {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: AppStyle.spacingLg
+                        Layout.preferredHeight: AppStyle.windowPadding
                         visible: headerColumn.children.length === 0
                     }
 

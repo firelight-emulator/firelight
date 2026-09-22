@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "playlist_item_model.hpp"
 
 #include "gui/models/library_entry_sort_filter_model.hpp"
@@ -188,6 +189,17 @@ QVariantMap LibraryFolderListModel::folderById(const int folderId) const {
   return {};
 }
 
+bool LibraryFolderListModel::hasFolderNamed(const QString &displayName) const {
+  const auto name = displayName.trimmed().toStdString();
+  for (const auto &item : m_items) {
+    if (item.displayName == name) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 QVariantList LibraryFolderListModel::getManualFolders() const {
   QVariantList folders;
 
@@ -266,6 +278,33 @@ int LibraryFolderListModel::addSmartFolder(const QString &displayName, const QSt
   m_items.push_back(folder);
   endInsertRows();
   emit countChanged();
+  return folder.id;
+}
+
+int LibraryFolderListModel::createCollection(const QVariantMap &fields) {
+  const auto displayName = fields.value("displayName").toString().trimmed();
+  if (displayName.isEmpty()) {
+    return -1;
+  }
+
+  auto folder = library::FolderInfo{.displayName = displayName.toStdString(),
+                                    .description = fields.value("description").toString().toStdString(),
+                                    .iconSourceUrl = fields.value("icon1x1SourceUrl").toString().toStdString(),
+                                    .type = fields.value("folderType").toInt(),
+                                    .filterJson = fields.value("filterJson").toString().toStdString(),
+                                    .color = fields.value("color").toString().toStdString(),
+                                    .sortRole = fields.value("sortRole").toString().toStdString(),
+                                    .sortAscending = fields.value("sortAscending", true).toBool(),
+                                    .parentId = fields.value("parentId", -1).toInt()};
+  if (!getLibraryService()->create(folder)) {
+    return -1;
+  }
+
+  beginResetModel();
+  m_items = getLibraryService()->listFolders();
+  endResetModel();
+  emit countChanged();
+
   return folder.id;
 }
 

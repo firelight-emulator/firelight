@@ -67,23 +67,63 @@
       ]
     },
     {
-      "id": "emulation",
-      "label": "Emulation",
-      "icon": "controller",
-      "route": "/settings/emulation",
+      "id": "emulation-picture",
+      "label": "Picture",
+      "icon": "image",
+      "route": "/settings/emulation-picture",
       "keywords": [
-        "core",
-        "game",
-        "performance",
-        "rewind",
-        "cores"
+        "video",
+        "screen",
+        "refresh",
+        "monitor",
+        "resolution",
+        "output",
+        "aspect ratio",
+        "scaling"
       ],
       "groups": [
-        "emulation-general",
-        "emulation-video",
-        "emulation-audio",
-        "emulation-input",
-        "emulation-hardware"
+        "emulation-video"
+      ]
+    },
+    {
+      "id": "emulation-sound",
+      "label": "Sound",
+      "icon": "speaker",
+      "route": "/settings/emulation-sound",
+      "keywords": [
+        "volume",
+        "loud",
+        "audio",
+        "sound",
+        "output"
+      ],
+      "groups": [
+        "emulation-audio"
+      ]
+    },
+    {
+      "id": "emulation-input",
+      "label": "Input",
+      "icon": "controller",
+      "route": "/settings/emulation-input",
+      "keywords": [
+        "controller",
+        "lightgun",
+        "accessory",
+        "gamepad",
+        "controls",
+        "hotkeys",
+        "keyboard",
+        "mouse",
+        "touchscreen",
+        "pointer",
+        "analog",
+        "joystick",
+        "dpad",
+        "buttons"
+      ],
+      "groups": [
+        "emulation-input"
       ]
     },
     {
@@ -239,12 +279,11 @@
       "id": "emulation-video",
       "label": "Video",
       "settings": [
-        "picture-mode",
-        "aspect-ratio",
+        "emulation-picture-mode",
+        "emulation-aspect-ratio",
         "vsync",
-        "sync-method",
-        "target-framerate",
-        "dynamic-rate-control",
+        "emulation-sync-method",
+        "emulation-target-framerate",
         "gambatte_mix_frames",
         "gambatte_gbc_color_correction",
         "gambatte_gbc_frontlight_position",
@@ -259,7 +298,8 @@
       "settings": [
         "emulation-audio-latency",
         "mute-on-fast-forward",
-        "mute-on-slow-motion"
+        "mute-on-slow-motion",
+        "dynamic-rate-control"
       ]
     },
     {

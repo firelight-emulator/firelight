@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 #include <QVariantMap>
 
@@ -29,6 +30,11 @@ public:
   void setEditingRange(bool editing);
 
   Q_INVOKABLE void select(int index, int modifiersMask);
+
+  // TODO
+  /** Selects indices 0 to count - 1 and nothing else */
+  Q_INVOKABLE void selectAll(int count);
+
   Q_INVOKABLE void clearSelection();
   Q_INVOKABLE bool isSelected(int index) const;
 

@@ -13,6 +13,7 @@ FLRadioGroup {
     property var options: []
     property string label: ""
     property string description: ""
+    property string longDescription: ""
     property bool shown: true
     property bool resettable: false
 

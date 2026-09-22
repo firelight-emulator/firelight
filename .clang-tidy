@@ -147,11 +147,6 @@ readability-uniqueptr-delete-release,
 readability-use-anyofallof,
 readability-identifier-naming'
 
-# Naming rules. clang-tidy is not wired into the build (see cmake/clang-checks.cmake,
-# which is commented out in CMakeLists.txt), so these are reported only when
-# clang-tidy is run by hand. Do not blanket --fix: renaming anything reachable from
-# QML (Q_PROPERTY, Q_INVOKABLE, model role names) breaks at runtime, not compile
-# time, because QML resolves those dynamically.
 CheckOptions:
   - key: readability-identifier-naming.ClassCase
     value: CamelCase

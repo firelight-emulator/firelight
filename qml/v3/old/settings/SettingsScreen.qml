@@ -17,16 +17,6 @@ FLTwoColumnPage {
     model: [
         {
             "type": "page",
-            "key": "notifications",
-            "label": "Notifications",
-            "iconName": "info",
-            "page": placeholderSettings
-        },
-        {
-            "type": "divider"
-        },
-        {
-            "type": "page",
             "key": "controllers",
             "label": "Controllers",
             "iconName": "controller",
@@ -54,7 +44,7 @@ FLTwoColumnPage {
         },
         {
             "type": "header",
-            "label": "Emulation"
+            "label": "Gameplay"
         },
         {
             "type": "page",
@@ -68,14 +58,21 @@ FLTwoColumnPage {
             "key": "emulation-picture",
             "label": "Picture",
             "iconName": "display",
-            "page": placeholderSettings
+            "page": emulationPictureSettings
         },
         {
             "type": "page",
             "key": "emulation-sound",
             "label": "Sound",
             "iconName": "display",
-            "page": placeholderSettings
+            "page": emulationSoundSettings
+        },
+        {
+            "type": "page",
+            "key": "emulation-input",
+            "label": "Input",
+            "iconName": "controller",
+            "page": emulationInputSettings
         },
         {
             "type": "divider"
@@ -83,27 +80,6 @@ FLTwoColumnPage {
         {
             "type": "header",
             "label": "Main stuff"
-        },
-        {
-            "type": "page",
-            "key": "appearance",
-            "label": "Appearance",
-            "iconName": "palette",
-            "page": appearanceSettings
-        },
-        {
-            "type": "page",
-            "key": "emulation",
-            "label": "Emulation",
-            "iconName": "controller",
-            "page": emulationSettings
-        },
-        {
-            "type": "page",
-            "key": "captures",
-            "label": "Captures",
-            "iconName": "photo-library",
-            "page": placeholderSettings
         },
         {
             "type": "page",
@@ -118,21 +94,6 @@ FLTwoColumnPage {
             "label": "About",
             "iconName": "info",
             "page": about
-        },
-        {
-            "type": "divider"
-        },
-        {
-            "type": "header",
-            "label": "testing"
-        },
-        {
-            "type": "page",
-            "key": "testing-appearance",
-            "route": "appearance",
-            "label": "Appearance",
-            "iconName": "palette",
-            "page": appearanceSettings
         }
     ]
 
@@ -284,6 +245,30 @@ FLTwoColumnPage {
 
         SettingsPage {
             page: "notifications"
+        }
+    }
+
+    Component {
+        id: emulationPictureSettings
+
+        SettingsPage {
+            page: "emulation-picture"
+        }
+    }
+
+    Component {
+        id: emulationSoundSettings
+
+        SettingsPage {
+            page: "emulation-sound"
+        }
+    }
+
+    Component {
+        id: emulationInputSettings
+
+        SettingsPage {
+            page: "emulation-input"
         }
     }
 

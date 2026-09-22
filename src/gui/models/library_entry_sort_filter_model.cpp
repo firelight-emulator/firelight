@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "library_entry_sort_filter_model.hpp"
 
 #include <QDateTime>
@@ -112,6 +113,30 @@ void LibraryEntrySortFilterModel::setScopeFolderId(const int scopeFolderId) {
 
   m_scopeFolderId = scopeFolderId;
   emit filtersOrSortChanged();
+}
+
+QVariantList LibraryEntrySortFilterModel::getPickedEntryIds() const { return m_pendingPickedEntryIds; }
+
+void LibraryEntrySortFilterModel::setPickedEntryIds(const QVariantList &pickedEntryIds) {
+  if (m_pendingPickedEntryIds == pickedEntryIds) {
+    return;
+  }
+
+  m_pendingPickedEntryIds = pickedEntryIds;
+  emit pickedEntryIdsChanged();
+}
+
+LibraryEntrySortFilterModel::PickedMode LibraryEntrySortFilterModel::getPickedMode() const {
+  return m_pendingPickedMode;
+}
+
+void LibraryEntrySortFilterModel::setPickedMode(const PickedMode pickedMode) {
+  if (m_pendingPickedMode == pickedMode) {
+    return;
+  }
+
+  m_pendingPickedMode = pickedMode;
+  emit pickedModeChanged();
 }
 
 LibraryFolderListModel *LibraryEntrySortFilterModel::getFolderModel() const { return m_folderModel; }
@@ -274,6 +299,13 @@ void LibraryEntrySortFilterModel::applyFilters(const qint64 nowMillis) {
     }
   }
 
+  m_appliedPickedMode = m_pendingPickedMode;
+  m_appliedPickedEntryIds.clear();
+
+  for (const auto &entryId : m_pendingPickedEntryIds) {
+    m_appliedPickedEntryIds.insert(entryId.toInt());
+  }
+
   QSortFilterProxyModel::setSortRole(m_pendingSortRole);
   sort(0, m_pendingSortAscending ? Qt::AscendingOrder : Qt::DescendingOrder);
 
@@ -287,6 +319,19 @@ bool LibraryEntrySortFilterModel::filterAcceptsRow(const int sourceRow, const QM
   }
 
   const auto sourceIndex = m_sourceModel->index(sourceRow, 0, sourceParent);
+
+  if (m_appliedPickedMode != ShowAll) {
+    const auto isPicked =
+        m_appliedPickedEntryIds.contains(m_sourceModel->data(sourceIndex, library::EntryListModel::Id).toInt());
+
+    if (m_appliedPickedMode == OnlyPicked) {
+      return isPicked;
+    }
+
+    if (isPicked) {
+      return false;
+    }
+  }
 
   const auto *fields =
       m_sourceModel->data(sourceIndex, library::EntryListModel::FilterFields).value<const library::EntryFields *>();

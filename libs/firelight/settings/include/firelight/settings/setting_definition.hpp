@@ -52,15 +52,11 @@ struct CoreOptionMapping {
   std::map<std::string, std::string> valueMap;
 };
 
-// TODO
-// One declared setting: what it is and how it behaves. App settings and
-// emulation settings share this shape — an app setting is simply one with no
-// core mapping, read only at the global tier. Which array a setting is authored
-// in decides that, not a field here
 struct SettingDefinition {
   std::string label;
   std::string key;
   std::string description;
+  std::string longDescription;
   std::string defaultValue;
   SettingType type = SettingType::OPTIONS;
   // Terms search should match beyond label/description: the words users actually

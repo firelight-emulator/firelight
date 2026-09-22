@@ -123,6 +123,7 @@ SettingDefinition parseSetting(const nlohmann::json &j, std::vector<std::string>
   s.key = j.value("key", std::string{});
   s.label = j.value("label", std::string{});
   s.description = j.value("description", std::string{});
+  s.longDescription = j.value("longDescription", std::string{});
   s.defaultValue = j.value("default", std::string{});
   s.requiresRestart = j.value("requiresRestart", false);
   s.advanced = j.value("advanced", false);

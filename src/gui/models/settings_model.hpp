@@ -77,6 +77,7 @@ private:
     LabelRole = Qt::UserRole + 1,
     KeyRole,
     DescriptionRole,
+    LongDescriptionRole,
     WidgetRole,
     ValueRole,
     DefaultValueRole,
@@ -99,6 +100,7 @@ private:
     QString label;
     QString key;
     QString description;
+    QString longDescription;
     QString widget; // UI control id: toggle / dropdown / slider / spinbox / ...
 
     QString stringValue;   // effective value (string form)

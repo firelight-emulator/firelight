@@ -4,9 +4,9 @@
 #include "audio/audio_manager.hpp"
 #include "emulation/emulator_command.hpp"
 #include "emulation/emulator_instance.hpp"
+#include "frame_presenter.hpp"
 #include "libretro/core.hpp"
 #include "libretro/core_configuration.hpp"
-#include "frame_presenter.hpp"
 #include "vulkan_core_context.hpp"
 
 #include <firelight/activity/activity_log.hpp>
@@ -25,8 +25,8 @@
 #include <QSGRenderNode>
 #include <QVideoFrameInput>
 #include <atomic>
-#include <cstdlib>
 #include <condition_variable>
+#include <cstdlib>
 #include <deque>
 #include <libretro/libretro_vulkan.h>
 #include <memory>
@@ -234,7 +234,7 @@ private:
 
   // TODO
   // How long a pass with nothing new waits for the next frame before showing the old one again
-  static constexpr int64_t FRAME_WAIT_NS = 20000000;
+  static constexpr int64_t FRAME_WAIT_NS = 20'000'000;
 
   // TODO
   // Counts frames published, so a pass can wait for one newer than what it found

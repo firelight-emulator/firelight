@@ -23,6 +23,7 @@ class SettingBinding : public QObject {
   Q_PROPERTY(QString value READ value WRITE setValue NOTIFY valueChanged)
   Q_PROPERTY(QString label READ label NOTIFY keyChanged)
   Q_PROPERTY(QString description READ description NOTIFY keyChanged)
+  Q_PROPERTY(QString longDescription READ longDescription NOTIFY keyChanged)
   Q_PROPERTY(QString defaultValue READ defaultValue NOTIFY keyChanged)
   Q_PROPERTY(QString widget READ widget NOTIFY keyChanged)
   Q_PROPERTY(QVariantList options READ options NOTIFY keyChanged)
@@ -43,6 +44,7 @@ public:
 
   [[nodiscard]] QString label() const;
   [[nodiscard]] QString description() const;
+  [[nodiscard]] QString longDescription() const;
   [[nodiscard]] QString defaultValue() const;
   [[nodiscard]] QString widget() const;
   [[nodiscard]] QVariantList options() const;

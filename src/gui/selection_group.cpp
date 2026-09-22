@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "selection_group.hpp"
 
 namespace firelight::gui {
@@ -59,6 +60,27 @@ void SelectionGroup::select(const int index, const int modifiersMask) {
   }
 
   toggle(index);
+}
+
+void SelectionGroup::selectAll(const int count) {
+  if (count <= 0) {
+    clearSelection();
+    return;
+  }
+
+  m_selectedIndices.clear();
+
+  for (auto i = 0; i < count; ++i) {
+    m_selectedIndices.insert(i, true);
+  }
+
+  m_baseline = m_selectedIndices;
+  m_anchorIndex = -1;
+  m_rangeStart = -1;
+  m_rangeEnd = -1;
+  m_editingRange = false;
+
+  markChanged();
 }
 
 void SelectionGroup::clearSelection() {
