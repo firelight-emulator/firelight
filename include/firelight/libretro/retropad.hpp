@@ -46,12 +46,7 @@ public:
 
   virtual bool isButtonPressed(int platformId, int controllerTypeId, Input t_button) = 0;
 
-  // Evaluates a mapped mouse/light-gun input (a raw input::GamepadInput value)
-  // for the given device class, so a physical gamepad can drive a light-gun
-  // trigger / mouse button. Returns false when unmapped — the physical mouse is
-  // supplied separately by the pointer provider. Non-joypad devices only;
-  // joypad buttons continue to use isButtonPressed. Default: unmapped
-  virtual bool isVirtualInputActive(int /*platformId*/, int /*controllerTypeId*/, int /*virtualInput*/) {
+  virtual bool isVirtualInputActive(int platformId, int controllerTypeId, int virtualInput) {
     return false;
   }
 

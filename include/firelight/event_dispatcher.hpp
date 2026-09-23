@@ -37,14 +37,6 @@ private:
   std::function<void()> m_disconnect;
 };
 
-// Threading: subscribe()/publish() are called from many threads (render, SDL
-// input, GUI) and are mutex-guarded. Callbacks run synchronously on the
-// publishing thread, so a subscriber must not assume its own thread affinity (a
-// render-thread publish runs GUI subscribers there)
-//
-// Owned objects should take an EventDispatcher& by injection; instance() is the
-// process-wide default, kept for QML-constructed types that can't receive
-// constructor arguments
 class EventDispatcher {
 public:
   EventDispatcher() = default;
@@ -61,7 +53,7 @@ public:
     {
       std::lock_guard lock(m_mutex);
       auto &subscribers = m_subscribers[type];
-      // Using a list to prevent iterator invalidation on add/remove
+
       it = subscribers.emplace(subscribers.end(), [cb = std::move(callback)](const std::any &event) {
         cb(std::any_cast<const TEvent &>(event));
       });
@@ -74,9 +66,9 @@ public:
   }
 
   template <typename TEvent> void publish(const TEvent &event) {
-    auto type = std::type_index(typeid(TEvent));
-    // Snapshot the callbacks under the lock, then invoke them outside it: a
-    // callback may (un)subscribe or re-publish, which would otherwise deadlock
+    const auto type = std::type_index(typeid(TEvent));
+
+    // Snapshot the callbacks under the lock, then invoke them outside it
     std::list<std::function<void(const std::any &)>> callbacks;
     {
       std::lock_guard lock(m_mutex);
