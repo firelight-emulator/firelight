@@ -7,10 +7,7 @@
 
 namespace firelight::settings {
 
-// TODO
-// Persistence for settings.db: the global / platform / game settings tiers and
-// the per-core option cache
-class SqliteSettingsRepository : public ISettingsRepository, public ICoreOptionRepository {
+class SqliteSettingsRepository final : public ISettingsRepository, public ICoreOptionRepository {
 public:
   explicit SqliteSettingsRepository(std::string databaseFile);
   ~SqliteSettingsRepository() override;
@@ -27,9 +24,7 @@ public:
   bool setGameValue(const std::string &contentHash, const std::string &key, const std::string &value) override;
   bool resetGameValue(const std::string &contentHash, const std::string &key) override;
 
-  // Canonical resolution: game override -> platform override -> global -> the
-  // caller's catalog default
-  std::string getEffectiveValue(const std::string &contentHash, int platformId, const std::string &key,
+  std::string getEffectiveValue(const std::string &contentHash, const int platformId, const std::string &key,
                                 const std::string &defaultValue) {
     if (auto v = getGameValue(contentHash, key)) {
       return *v;

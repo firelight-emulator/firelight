@@ -11,8 +11,7 @@ add_library(firelight_settings STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/firelight/settings/sqlite_settings_repository.hpp
 )
 
-# The module is Qt-free (no Q_OBJECT), so no moc is needed. Turn off AUTOMOC
-# (inherited ON from the parent) to avoid an empty-autogen dependency cycle.
+# TODO remove once I move the automoc stuff below the imports
 set_target_properties(firelight_settings PROPERTIES AUTOMOC OFF)
 
 target_include_directories(firelight_settings

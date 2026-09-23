@@ -1,4 +1,3 @@
-// TODO: NEEDS REVIEW
 #include "firelight/settings/settings_catalog.hpp"
 
 #include <algorithm>
@@ -45,8 +44,7 @@ void parseStringArray(const nlohmann::json &j, const char *field, std::vector<st
   }
 }
 
-// Author-friendly `type` aliases. Each implies a widget; an explicit `widget`
-// overrides it. Value semantics collapse to the SettingType set
+// type string -> type and widget. Widgets are defined in SettingsGroup.qml
 bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
   if (typeStr == "boolean" || typeStr == "toggle") {
     s.type = SettingType::BOOLEAN;
@@ -63,15 +61,10 @@ bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
   } else if (typeStr == "custom") {
     s.type = SettingType::CUSTOM;
   } else if (typeStr == "game-picker") {
-    // A dropdown whose options are the user's eligible library games (filled in
-    // by the app layer at runtime); value semantics are OPTIONS (the chosen
-    // game's content hash)
     s.type = SettingType::OPTIONS;
     s.widget = "dropdown";
     s.libraryGameSource = true;
   } else if (typeStr == "audio-device") {
-    // A dropdown of the machine's audio outputs, filled in by the app layer at
-    // runtime (the settings lib knows nothing about hardware)
     s.type = SettingType::OPTIONS;
     s.widget = "dropdown";
     s.audioDeviceSource = true;
@@ -89,8 +82,6 @@ bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
     s.widget = "folder-picker";
     s.directoryMode = true;
   } else if (typeStr == "multi-select" || typeStr == "multiselect") {
-    // A checklist over `options`; the value is a JSON array of selected option
-    // values (serialized/parsed in the UI delegate)
     s.type = SettingType::OPTIONS;
     s.widget = "multi-select";
   } else if (typeStr == "segmented") {
@@ -103,8 +94,6 @@ bool applyTypeAlias(const std::string &typeStr, SettingDefinition &s) {
     s.type = SettingType::STRING;
     s.widget = "key-binding";
   } else if (typeStr == "link") {
-    // A row that opens `route` rather than holding a value. STRING because the value semantics have
-    // to be something, and nothing ever reads it
     s.type = SettingType::STRING;
     s.widget = "link";
   } else if (typeStr == "options" || typeStr == "dropdown") {
@@ -157,7 +146,7 @@ SettingDefinition parseSetting(const nlohmann::json &j, std::vector<std::string>
   s.placeholder = j.value("placeholder", std::string{});
   s.route = j.value("route", std::string{});
   parseStringArray(j, "extensions", s.fileExtensions);
-  // A file-picker can opt into directory mode explicitly, too
+
   s.directoryMode = j.value("directory", s.directoryMode);
 
   if (j.contains("mapping")) {
@@ -182,9 +171,7 @@ SettingDefinition parseSetting(const nlohmann::json &j, std::vector<std::string>
   return s;
 }
 
-// App settings are single-valued and never reach a core, so the core-facing
-// fields are meaningless there. Strip them rather than let them look load-
-// bearing
+// Pulls out just the global app-level settings
 SettingDefinition parseAppSetting(const nlohmann::json &j, std::vector<std::string> &problems) {
   auto s = parseSetting(j, problems);
   for (const char *field : {"mapping", "trueValue", "falseValue"}) {
@@ -218,8 +205,6 @@ SettingsGroup parseGroup(const nlohmann::json &j) {
   return g;
 }
 
-// TODO
-/** The entry for `key` in a lookup, or nullptr */
 template <typename T>
 const T *findIn(const std::unordered_map<std::string, const T *> &lookup, const std::string &key) {
   const auto it = lookup.find(key);
@@ -262,9 +247,6 @@ void SettingsCatalog::parseInto(const std::string &json, Accumulator &into, cons
       }
       if (core.contains("defaults")) {
         for (auto d = core["defaults"].begin(); d != core["defaults"].end(); ++d) {
-          // TODO
-          // Nothing else notices a core default declared twice: the second silently wins and the
-          // core runs with an option nobody chose
           auto &defaults = into.contents.coreDefaults[coreName];
 
           if (const auto existing = defaults.find(d.key());
@@ -457,7 +439,7 @@ std::vector<std::string> SettingsCatalog::validate() const {
     if (s.type == SettingType::CUSTOM && s.widget.empty()) {
       problems.push_back("setting '" + s.key + "' is custom but names no widget");
     }
-    // A link with nowhere to go renders as a row that swallows the press
+    // A link with nowhere to go
     if (s.widget == "link" && s.route.empty()) {
       problems.push_back("setting '" + s.key + "' is a link but names no route");
     }

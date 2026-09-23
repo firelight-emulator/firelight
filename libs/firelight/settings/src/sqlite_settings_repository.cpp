@@ -12,8 +12,6 @@ namespace firelight::settings {
 SqliteSettingsRepository::SqliteSettingsRepository(std::string databaseFile) : m_databaseFile(std::move(databaseFile)) {
   m_database = std::make_unique<SQLite::Database>(m_databaseFile, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
 
-  // Forward-only schema migrations (see migration_runner). A future change adds
-  // the next-numbered migration
   const std::vector<migrations::Migration> schema = {
       {1,
        [this] {
@@ -55,9 +53,11 @@ SqliteSettingsRepository::SqliteSettingsRepository(std::string databaseFile) : m
   try {
     SQLite::Transaction transaction(*m_database);
     const int currentVersion = m_database->execAndGet("PRAGMA user_version").getInt();
-    migrations::applyMigrations(currentVersion, schema, [this](const int v) {
+
+    applyMigrations(currentVersion, schema, [this](const int v) {
       m_database->exec("PRAGMA user_version = " + std::to_string(v));
     });
+
     transaction.commit();
   } catch (const std::exception &e) {
     spdlog::error("Failed to initialize settings store: {}", e.what());
@@ -70,9 +70,11 @@ std::optional<std::string> SqliteSettingsRepository::getGlobalValue(const std::s
   try {
     SQLite::Statement query(*m_database, "SELECT value FROM global_settings WHERE key = :key");
     query.bind(":key", key);
+
     if (query.executeStep()) {
       return std::string(query.getColumn(0));
     }
+
     return std::nullopt;
   } catch (const std::exception &e) {
     spdlog::error("Failed to get global value: {}", e.what());
@@ -87,6 +89,7 @@ bool SqliteSettingsRepository::setGlobalValue(const std::string &key, const std:
     query.bind(":key", key);
     query.bind(":value", value);
     query.exec();
+
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to set global value: {}", e.what());
@@ -99,6 +102,7 @@ bool SqliteSettingsRepository::resetGlobalValue(const std::string &key) {
     SQLite::Statement query(*m_database, "DELETE FROM global_settings WHERE key = :key");
     query.bind(":key", key);
     query.exec();
+
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to reset global value: {}", e.what());
@@ -112,9 +116,11 @@ std::optional<std::string> SqliteSettingsRepository::getPlatformValue(int platfo
                                          "platform_id = :platformId AND key = :key");
     query.bind(":platformId", platformId);
     query.bind(":key", key);
+
     if (query.executeStep()) {
       return std::string(query.getColumn(0));
     }
+
     return std::nullopt;
   } catch (const std::exception &e) {
     spdlog::error("Failed to get platform value: {}", e.what());
@@ -130,6 +136,7 @@ bool SqliteSettingsRepository::setPlatformValue(int platformId, const std::strin
     query.bind(":key", key);
     query.bind(":value", value);
     query.exec();
+
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to set platform value: {}", e.what());
@@ -144,6 +151,7 @@ bool SqliteSettingsRepository::resetPlatformValue(int platformId, const std::str
     query.bind(":platformId", platformId);
     query.bind(":key", key);
     query.exec();
+
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to reset platform value: {}", e.what());
@@ -159,9 +167,11 @@ std::optional<std::string> SqliteSettingsRepository::getGameValue(const std::str
     query.bind(":contentHash", contentHash);
     query.bind(":platformId", -1);
     query.bind(":key", key);
+
     if (query.executeStep()) {
       return std::string(query.getColumn(0));
     }
+
     return std::nullopt;
   } catch (const std::exception &e) {
     spdlog::error("Failed to get game value: {}", e.what());
@@ -180,6 +190,7 @@ bool SqliteSettingsRepository::setGameValue(const std::string &contentHash, cons
     query.bind(":key", key);
     query.bind(":value", value);
     query.exec();
+
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to set game value: {}", e.what());
@@ -195,6 +206,7 @@ bool SqliteSettingsRepository::resetGameValue(const std::string &contentHash, co
     query.bind(":platformId", -1);
     query.bind(":key", key);
     query.exec();
+    
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to reset game value: {}", e.what());

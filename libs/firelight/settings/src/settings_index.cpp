@@ -3,7 +3,6 @@
 #include <firelight/util/strings.hpp>
 
 #include <algorithm>
-#include <cctype>
 
 namespace firelight::settings {
 

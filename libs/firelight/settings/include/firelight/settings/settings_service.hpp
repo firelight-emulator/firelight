@@ -8,12 +8,7 @@
 
 namespace firelight::settings {
 
-// A setting override tier. Values resolve Game -> Platform -> Global -> default;
-// there is no stored "current level" per game — inheritance is the fallback
-// chain. `Unknown` is a sentinel for "not a real tier"
-//
-// Kept in step with SettingsLevelShim (src/gui) so QML can name these; the
-// numbers are load-bearing on both sides
+// Don't change these!!!
 enum SettingsLevel { Game, Platform, Global, Unknown };
 
 struct GameSettingChangedEvent {
@@ -75,34 +70,25 @@ public:
 
   bool setValueAtLevel(SettingsLevel level, const std::string &contentHash, int platformId, const std::string &key,
                        const std::string &value);
-  // Reads the value stored *at exactly* `level` (no fallback). Used to tell
-  // whether a level has its own override. Contrast with getEffectiveValue
+
   std::optional<std::string> getValueAtLevel(SettingsLevel level, const std::string &contentHash, int platformId,
                                              const std::string &key);
-  // Clears the override at `level` so the setting falls through to the next tier
   bool resetValueAtLevel(SettingsLevel level, const std::string &contentHash, int platformId, const std::string &key);
 
-  // Canonical resolution: session override -> game override -> platform override
-  // -> global. Returns nullopt if unset at every level (caller applies the
-  // catalog default)
+  // session override -> game -> platform -> global
   std::optional<std::string> getEffectiveValue(const std::string &contentHash, int platformId, const std::string &key);
 
-  // Resolution for settings that have no per-game or per-platform tier (the app
-  // and interface settings): session override -> global
+  // session override -> global for app settings and stuff
   std::optional<std::string> getGlobalEffectiveValue(const std::string &key);
 
   // Sets an in-memory, non-persisted override that wins over every stored tier
-  // in getEffectiveValue. Used by the CLI to apply per-launch config (`--set`)
-  // without mutating the saved settings database. Intended to be populated once
-  // at startup (before any game loads) and not mutated afterwards
+  // in getEffectiveValue. Used by CLI
   void setSessionOverride(const std::string &key, const std::string &value);
   void clearSessionOverrides();
 
 private:
   static SettingsService *s_instance;
   ISettingsRepository &m_settingsRepo;
-
-  // key -> value; content/platform-agnostic (a CLI launch targets one game)
   std::map<std::string, std::string> m_sessionOverrides;
 };
 

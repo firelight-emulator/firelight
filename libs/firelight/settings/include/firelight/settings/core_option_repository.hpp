@@ -8,7 +8,7 @@
 namespace firelight::settings {
 
 // Persists the raw option definitions a core declares at load, keyed by core
-// name, so the advanced options editor can list them before the core runs
+// name, so the advanced options editor can list them outside gameplay
 class ICoreOptionRepository {
 public:
   virtual ~ICoreOptionRepository() = default;

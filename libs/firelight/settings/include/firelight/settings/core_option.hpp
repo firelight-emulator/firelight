@@ -11,17 +11,14 @@ struct CoreOptionValue {
   std::string label;
 };
 
-// A raw libretro core option as the core declares it (SET_CORE_OPTIONS_V2)
-// Cached per core so the advanced options editor can render before a core has
-// been launched in the current session
+// A raw libretro core option as the core declares it
 struct CoreOption {
   std::string key;
   std::string label;
   std::string description;
   std::string defaultValue;
   std::vector<CoreOptionValue> values;
-  // Core-options v2 category grouping ("" = top-level/uncategorized)
-  std::string category;      // category key
+  std::string category;      // category key (empty is uncategorized/top level)
   std::string categoryLabel; // human-readable category name
 };
 

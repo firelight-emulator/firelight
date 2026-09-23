@@ -1,4 +1,3 @@
-// TODO: NEEDS REVIEW
 #pragma once
 
 #include <algorithm>
@@ -11,10 +10,7 @@
 
 namespace firelight::settings {
 
-// Value semantics of a setting. The concrete UI control is chosen separately
-// (see SettingDefinition::widget) so, e.g., an INTEGER can render as a slider or
-// a spinbox and a CUSTOM setting can use a bespoke delegate. STRING is a
-// free-form string value (text field, color, file/folder path)
+// Value semantics of a setting. The concrete UI control is chosen separately (see SettingDefinition::widget)
 enum class SettingType { BOOLEAN, OPTIONS, INTEGER, STRING, CUSTOM };
 
 struct SettingOption {
@@ -22,8 +18,7 @@ struct SettingOption {
   std::string value;
 };
 
-// A dependency clause: holds when the setting identified by `key` currently has
-// one of `values`. Multiple clauses on a setting are AND-ed
+// A dependency clause, matches when key is one of the strings in values
 struct SettingCondition {
   std::string key;
   std::vector<std::string> values;
@@ -39,7 +34,7 @@ inline bool conditionsHold(const std::vector<SettingCondition> &conditions, cons
       return false;
     }
   }
-  return true; // no conditions => always holds
+  return true; // no conditions -> always holds
 }
 
 // Maps a friendly emulation setting onto one libretro core option. A friendly
@@ -47,9 +42,7 @@ inline bool conditionsHold(const std::vector<SettingCondition> &conditions, cons
 // multiple core options)
 struct CoreOptionMapping {
   std::string coreKey;
-  // friendlyValue -> coreValue. Empty means identity: the friendly value is
-  // written to the core option unchanged
-  std::map<std::string, std::string> valueMap;
+  std::map<std::string, std::string> valueMap; // when key is X, set coreKey to value
 };
 
 struct SettingDefinition {
@@ -59,86 +52,59 @@ struct SettingDefinition {
   std::string longDescription;
   std::string defaultValue;
   SettingType type = SettingType::OPTIONS;
-  // Terms search should match beyond label/description: the words users actually
-  // think in ("vsync" for Sync method)
-  std::vector<std::string> keywords;
+  std::vector<std::string> keywords; // for search
   bool requiresRestart = false;
   std::string trueStringValue = "true";
   std::string falseStringValue = "false";
   std::vector<SettingOption> options;
-  // INTEGER numeric range (slider / spinbox)
+
+  // Values for integers TODO: doubles?
   double minValue = 0.0;
   double maxValue = 0.0;
   double stepValue = 1.0;
-  // UI control. Empty => derived from `type` (toggle / dropdown / slider). Set
-  // to a specific control ("spinbox") or, for CUSTOM, a bespoke QML delegate id
-  // (e.g. "gbc-palette"). Keeps custom widgets open-ended without schema churn
-  std::string widget;
-  // Hidden by default; only shown when the user enables "Show advanced settings"
-  // Purely a UI concern — does not affect value resolution
+
+  std::string widget; // widget to use in GUI, see SettingsGroup.qml
+
   bool advanced = false;
-  // Empty => a frontend-only setting (consumed by EmulatorInstance) or a
-  // setting whose `key` is itself the core option key (identity). Non-empty =>
-  // an explicit friendly->core mapping applied when composing core values
-  std::vector<CoreOptionMapping> mapping;
-  // When true, this setting's `options` are not authored here but built at
-  // runtime from the user's library (the app layer fills them, since the
-  // settings lib has no library dependency). The stored value is the chosen
-  // game's content hash. See `gamePickerPlatformIds`
-  bool libraryGameSource = false;
-  // Eligible platform ids for a library-game-source setting (empty => any
-  // platform). e.g. {1, 2} for Game Boy / Game Boy Color
-  std::vector<int> gamePickerPlatformIds;
-  // Like libraryGameSource, but the options are the machine's audio output
-  // devices, enumerated at runtime by the app layer. The stored value is the
-  // device description, or "" for the system default
-  bool audioDeviceSource = false;
-  // Placeholder text for a `text` widget (shown when empty)
-  std::string placeholder;
-  // Accepted file extensions for a `file-picker` widget (no dot, e.g. "gba");
-  // empty => any file
-  std::vector<std::string> fileExtensions;
-  // A `folder-picker` (true) picks a directory rather than a file
-  bool directoryMode = false;
-  // Relationships to other settings. Empty => always visible/enabled
+
+  std::vector<CoreOptionMapping> mapping; // Friendly setting -> core options, if applicable
+
+  bool libraryGameSource = false; // Whether the options are the library's games instead of hardcoded values
+  std::vector<int> gamePickerPlatformIds; // Platform ids to filter on when libraryGameSource is true
+
+  bool audioDeviceSource = false; // Whether the options are the system's audio devices instead of hardcoded values
+
+  std::string placeholder; // Placeholder text for a text widget
+
+  std::vector<std::string> fileExtensions; // Accepted file extensions for a `file-picker` widget (NO DOTS)
+  bool directoryMode = false; // Pick directory rather than file
+
   std::vector<SettingCondition> visibleWhen;
   std::vector<SettingCondition> enabledWhen;
 
-  // TODO
-  // Whether the row draws indented beneath the setting it depends on. Unset means derived from
-  // visibleWhen and enabledWhen
+  // Whether the row draws indented beneath the setting it depends on. If not present then derived from visibleWhen and enabledWhen
   std::optional<bool> subItem;
 
-  // TODO
-  // Where a `link` row goes. A link stores no value; it is a row shaped like a setting whose whole
-  // job is to open somewhere else, which is how a page reached by drilling in stays declarable
-  std::string route;
+  std::string route; // link for the setting row to navigate to another page
 };
 
-// A settings page: one entry in the settings nav, one route
+// A settings page (page has multiple groups)
 struct SettingsPage {
   std::string id;
   std::string label;
   std::string icon;
   std::string route;
-  // Terms that should match the page itself, distinct from its settings'
-  std::vector<std::string> keywords;
-  // TODO
-  // The ids of the groups on this page, in render order
-  std::vector<std::string> groupIds;
+  std::vector<std::string> keywords; // keywords for page itself
+  std::vector<std::string> groupIds; // ordered
 };
 
-// A titled group of rows within a page — the section card the rows render into
+// A titled group of rows within a page
 struct SettingsGroup {
   std::string id;
   std::string label;
-  // TODO
-  // The keys of the settings in this group, in render order
   std::vector<std::string> settingKeys;
 };
 
-// Whether a setting should be shown / editable given the current values of the
-// settings it depends on (resolver returns another setting's effective value)
 inline bool settingIsVisible(const SettingDefinition &setting, const SettingValueResolver &resolve) {
   return conditionsHold(setting.visibleWhen, resolve);
 }
@@ -147,8 +113,7 @@ inline bool settingIsEnabled(const SettingDefinition &setting, const SettingValu
   return conditionsHold(setting.enabledWhen, resolve);
 }
 
-// Resolves the concrete (coreKey, coreValue) pairs a friendly setting value
-// implies via its mapping. Empty if the setting has no core mapping
+// Resolves the concrete (coreKey, coreValue) pairs a friendly setting value maps to
 inline std::vector<std::pair<std::string, std::string>> resolveCoreOptionValues(const SettingDefinition &setting,
                                                                                 const std::string &friendlyValue) {
   std::vector<std::pair<std::string, std::string>> result;
