@@ -2,7 +2,7 @@
 #include "../entry.hpp"
 #include "../user_library.hpp"
 #include <QAbstractListModel>
-#include <event_dispatcher.hpp>
+#include <firelight/event_dispatcher.hpp>
 #include <manager_accessor.hpp>
 
 namespace firelight::library {

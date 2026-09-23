@@ -1,7 +1,7 @@
 #include "sqlite_user_library.hpp"
 
 #include "../../gui/filesystem_utils.hpp"
-#include "../event_dispatcher.hpp"
+#include <firelight/event_dispatcher.hpp>
 
 #include <QSqlError>
 #include <QSqlQuery>

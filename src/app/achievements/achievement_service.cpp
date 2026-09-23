@@ -4,7 +4,7 @@
 
 #include <cpr/api.h>
 #include <cpr/cprtypes.h>
-#include <event_dispatcher.hpp>
+#include <firelight/event_dispatcher.hpp>
 #include <qcryptographichash.h>
 #include <rcheevos/ra_constants.h>
 #include <spdlog/spdlog.h>

@@ -1,5 +1,5 @@
 #include "../../mocks/mock_library.hpp"
-#include "event_dispatcher.hpp"
+#include <firelight/event_dispatcher.hpp>
 #include "library/sqlite_user_library.hpp"
 #include "settings/sqlite_settings_repository.hpp"
 

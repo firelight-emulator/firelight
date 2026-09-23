@@ -2,7 +2,7 @@
 #include "service_accessor.hpp"
 
 #include <audio/audio_manager.hpp>
-#include <event_dispatcher.hpp>
+#include <firelight/event_dispatcher.hpp>
 #include <future>
 #include <libretro/core.hpp>
 #include <manager_accessor.hpp>
