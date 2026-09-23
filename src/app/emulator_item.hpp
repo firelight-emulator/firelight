@@ -5,6 +5,7 @@
 #include "libretro/core_configuration.hpp"
 #include "manager_accessor.hpp"
 
+#include <QThreadPool>
 #include <qchronotimer.h>
 
 class EmulatorItem : public QQuickRhiItem,

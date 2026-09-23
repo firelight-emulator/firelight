@@ -21,13 +21,12 @@
 
 #include <libretro/libretro_vulkan.h>
 #include <qchronotimer.h>
-// #include "../later/video_decoder.h"
-// #include "video_encoder.h"
 
 class EmulatorItem;
 class EmulatorItemRenderer : public QQuickRhiItemRenderer,
                              public QOpenGLFunctions,
                              public firelight::libretro::IVideoDataReceiver,
+public firelight::ServiceAccessor,
                              public firelight::ManagerAccessor {
 public:
   explicit EmulatorItemRenderer(

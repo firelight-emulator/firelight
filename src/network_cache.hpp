@@ -1,9 +1,11 @@
 #pragma once
 
-#include <QQmlNetworkAccessManagerFactory>
-#include <QNetworkAccessManager>
 #include "http2config.hpp"
 
+#include <QNetworkAccessManager>
+#include <QNetworkDiskCache>
+#include <QQmlNetworkAccessManagerFactory>
+#include <qstandardpaths.h>
 
 class CachingNetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {

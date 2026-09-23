@@ -23,7 +23,7 @@ struct EmulationStartedEvent {
 
 struct EmulationStoppedEvent {};
 
-class EmulationService : public ManagerAccessor {
+class EmulationService : public ManagerAccessor, public ServiceAccessor {
 public:
   static EmulationService *getInstance() { return s_emuServiceInstance; }
   static void setInstance(EmulationService *service) {

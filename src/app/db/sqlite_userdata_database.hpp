@@ -14,24 +14,24 @@ namespace firelight::db {
 
     bool tableExists(std::string tableName) override;
 
-    std::optional<SavefileMetadata> getSavefileMetadata(std::string contentId,
+    std::optional<saves::SavefileMetadata> getSavefileMetadata(std::string contentId,
                                                         int slotNumber) override;
 
-    bool updateSavefileMetadata(SavefileMetadata metadata) override;
+    bool updateSavefileMetadata(saves::SavefileMetadata metadata) override;
 
-    bool createSavefileMetadata(SavefileMetadata &metadata) override;
+    bool createSavefileMetadata(saves::SavefileMetadata &metadata) override;
 
-    std::vector<SavefileMetadata>
+    std::vector<saves::SavefileMetadata>
     getSavefileMetadataForContent(std::string contentId) override;
 
-    bool createSuspendPointMetadata(SuspendPointMetadata &metadata) override;
+    bool createSuspendPointMetadata(saves::SuspendPointMetadata &metadata) override;
 
-    std::optional<SuspendPointMetadata> getSuspendPointMetadata(std::string contentId, int saveSlotNumber,
+    std::optional<saves::SuspendPointMetadata> getSuspendPointMetadata(std::string contentId, int saveSlotNumber,
                                                                 int slotNumber) override;
 
-    bool updateSuspendPointMetadata(const SuspendPointMetadata &metadata) override;
+    bool updateSuspendPointMetadata(const saves::SuspendPointMetadata &metadata) override;
 
-    std::vector<SuspendPointMetadata>
+    std::vector<saves::SuspendPointMetadata>
     getSuspendPointMetadataForContent(std::string contentId, int saveSlotNumber) override;
 
     bool deleteSuspendPointMetadata(int id) override;

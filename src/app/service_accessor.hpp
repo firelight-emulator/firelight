@@ -1,6 +1,14 @@
 #pragma once
 
 namespace firelight {
+namespace gui {
+class GameImageProvider;
+}
+
+namespace saves {
+class ISaveManager;
+}
+
 namespace library {
 class IUserLibrary;
 }
@@ -24,6 +32,8 @@ public:
   static void setSettingsService(settings::SettingsService *service);
   static void setAchievementService(achievements::AchievementService *service);
   static void setLibraryService(library::IUserLibrary *service);
+  static void setSaveManager(saves::ISaveManager *manager);
+  static void setGameImageProvider(gui::GameImageProvider *provider);
 
 protected:
   static input::InputService *getInputService();
@@ -31,6 +41,8 @@ protected:
   static settings::SettingsService *getSettingsService();
   static achievements::AchievementService *getAchievementService();
   static library::IUserLibrary *getLibraryService();
+  static saves::ISaveManager *getSaveManager();
+  static gui::GameImageProvider *getGameImageProvider();
 
 private:
   static input::InputService *s_inputService;
@@ -38,6 +50,8 @@ private:
   static settings::SettingsService *s_settingsService;
   static achievements::AchievementService *s_achievementService;
   static library::IUserLibrary *s_libraryService;
+  static saves::ISaveManager *s_saveManager;
+  static gui::GameImageProvider *s_gameImageProvider;
 };
 
 } // namespace firelight

@@ -1,9 +1,12 @@
 #include "emulation_service.hpp"
 
-#include <firelight/event_dispatcher.hpp>
 #include "input2/input_service.hpp"
 #include "platforms/platform_service.hpp"
 
+#include <firelight/event_dispatcher.hpp>
+#include <firelight/saves/isave_manager.hpp>
+
+#include <QFile>
 #include <audio/audio_manager.hpp>
 #include <library/rom_file.hpp>
 #include <libretro/core.hpp>
@@ -99,7 +102,7 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
     std::string corePath = PlatformMetadata::getCoreDllPath(entry->platformId);
 
     QByteArray saveDataBytes;
-    const auto saveData = getSaveManager()->readSaveData(rom.getContentHash(),
+    const auto saveData = getSaveManager()->readSaveData(rom.getContentHash().toStdString(),
                                                          entry->activeSaveSlot);
     if (saveData.has_value()) {
       saveDataBytes = QByteArray(saveData->getSaveRamData().data(),

@@ -4,7 +4,7 @@
 #include <QSqlQuery>
 #include <spdlog/spdlog.h>
 
-#include "../saves/suspend_point.hpp"
+#include <firelight/saves/suspend_point.hpp>
 
 namespace firelight::db {
   constexpr auto DATABASE_PREFIX = "userdata_";
@@ -89,7 +89,7 @@ namespace firelight::db {
     QSqlDatabase::removeDatabase(m_database.connectionName());
   }
 
-  std::vector<SavefileMetadata>
+  std::vector<saves::SavefileMetadata>
   SqliteUserdataDatabase::getSavefileMetadataForContent(
     const std::string contentId) {
     QSqlQuery query(m_database);
@@ -103,12 +103,12 @@ namespace firelight::db {
       return {};
     }
 
-    std::vector<SavefileMetadata> metadataList;
+    std::vector<saves::SavefileMetadata> metadataList;
     while (query.next()) {
-      SavefileMetadata metadata;
+      saves::SavefileMetadata metadata;
       metadata.id = query.value("id").toUInt();
-      metadata.contentId = query.value("content_id").toString().toStdString();
-      metadata.slotNumber = query.value("slot_number").toUInt();
+      metadata.contentHash = query.value("content_id").toString().toStdString();
+      metadata.saveSlot = query.value("slot_number").toUInt();
       metadata.savefileMd5 = query.value("savefile_md5").toString().toStdString();
       metadata.lastModifiedAt = query.value("last_modified_at").toLongLong();
       metadata.createdAt = query.value("created_at").toLongLong();
@@ -118,7 +118,7 @@ namespace firelight::db {
     return metadataList;
   }
 
-  bool SqliteUserdataDatabase::createSuspendPointMetadata(SuspendPointMetadata &metadata) {
+  bool SqliteUserdataDatabase::createSuspendPointMetadata(saves::SuspendPointMetadata &metadata) {
     if (!m_database.open()) {
       spdlog::error("Couldn't open database: {}",
                     m_database.lastError().text().toStdString());
@@ -136,9 +136,9 @@ namespace firelight::db {
 
     QSqlQuery query(m_database);
     query.prepare(queryString);
-    query.bindValue(":contentId", QString::fromStdString(metadata.contentId));
-    query.bindValue(":saveSlotNumber", metadata.saveSlotNumber);
-    query.bindValue(":slotNumber", metadata.slotNumber);
+    query.bindValue(":contentId", QString::fromStdString(metadata.contentHash));
+    query.bindValue(":saveSlotNumber", metadata.saveSlot);
+    query.bindValue(":slotNumber", metadata.pointIndex);
     query.bindValue(":locked", metadata.locked);
     query.bindValue(":lastModifiedAt", QVariant::fromValue(timestamp));
     query.bindValue(":createdAt", QVariant::fromValue(timestamp));
@@ -154,7 +154,7 @@ namespace firelight::db {
     return true;
   }
 
-  std::optional<SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadata(
+  std::optional<saves::SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadata(
     std::string contentId, int saveSlotNumber,
     int slotNumber) {
     const QString queryString =
@@ -176,11 +176,11 @@ namespace firelight::db {
       return std::nullopt;
     }
 
-    SuspendPointMetadata metadata;
+    saves::SuspendPointMetadata metadata;
     metadata.id = query.value("id").toUInt();
-    metadata.contentId = query.value("content_id").toString().toStdString();
-    metadata.saveSlotNumber = query.value("save_slot_number").toUInt();
-    metadata.slotNumber = query.value("slot_number").toUInt();
+    metadata.contentHash = query.value("content_id").toString().toStdString();
+    metadata.saveSlot = query.value("save_slot_number").toUInt();
+    metadata.pointIndex = query.value("slot_number").toUInt();
     metadata.locked = query.value("locked").toBool();
     metadata.lastModifiedAt = query.value("last_modified_at").toLongLong();
     metadata.createdAt = query.value("created_at").toLongLong();
@@ -188,7 +188,7 @@ namespace firelight::db {
     return metadata;
   }
 
-  bool SqliteUserdataDatabase::updateSuspendPointMetadata(const SuspendPointMetadata &metadata) {
+  bool SqliteUserdataDatabase::updateSuspendPointMetadata(const saves::SuspendPointMetadata &metadata) {
     QSqlQuery query(m_database);
     query.prepare("UPDATE suspend_point_metadata SET locked = :locked, "
       "last_modified_at = :lastModifiedAt WHERE id = :id;");
@@ -205,7 +205,7 @@ namespace firelight::db {
     return query.numRowsAffected() >= 1;
   }
 
-  std::vector<SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadataForContent(
+  std::vector<saves::SuspendPointMetadata> SqliteUserdataDatabase::getSuspendPointMetadataForContent(
     std::string contentId, int saveSlotNumber) {
     QSqlQuery query(m_database);
     query.prepare(
@@ -219,13 +219,13 @@ namespace firelight::db {
       return {};
     }
 
-    std::vector<SuspendPointMetadata> metadataList;
+    std::vector<saves::SuspendPointMetadata> metadataList;
     while (query.next()) {
-      SuspendPointMetadata metadata;
+      saves::SuspendPointMetadata metadata;
       metadata.id = query.value("id").toUInt();
-      metadata.contentId = query.value("content_id").toString().toStdString();
-      metadata.saveSlotNumber = query.value("save_slot_number").toUInt();
-      metadata.slotNumber = query.value("slot_number").toUInt();
+      metadata.contentHash = query.value("content_id").toString().toStdString();
+      metadata.saveSlot = query.value("save_slot_number").toUInt();
+      metadata.pointIndex = query.value("slot_number").toUInt();
       metadata.locked = query.value("savefile_md5").toBool();
       metadata.lastModifiedAt = query.value("last_modified_at").toLongLong();
       metadata.createdAt = query.value("created_at").toLongLong();
@@ -246,7 +246,7 @@ namespace firelight::db {
     return query.exec();
   }
 
-  std::optional<SavefileMetadata>
+  std::optional<saves::SavefileMetadata>
   SqliteUserdataDatabase::getSavefileMetadata(const std::string contentId,
                                               const int slotNumber) {
     const QString queryString =
@@ -267,10 +267,10 @@ namespace firelight::db {
       return std::nullopt;
     }
 
-    SavefileMetadata metadata;
+    saves::SavefileMetadata metadata;
     metadata.id = query.value("id").toUInt();
-    metadata.contentId = query.value("content_id").toString().toStdString();
-    metadata.slotNumber = query.value("slot_number").toUInt();
+    metadata.contentHash = query.value("content_id").toString().toStdString();
+    metadata.saveSlot = query.value("slot_number").toUInt();
     metadata.savefileMd5 = query.value("savefile_md5").toString().toStdString();
     metadata.lastModifiedAt = query.value("last_modified_at").toLongLong();
     metadata.createdAt = query.value("created_at").toLongLong();
@@ -278,7 +278,7 @@ namespace firelight::db {
     return metadata;
   }
 
-  bool SqliteUserdataDatabase::updateSavefileMetadata(SavefileMetadata metadata) {
+  bool SqliteUserdataDatabase::updateSavefileMetadata(saves::SavefileMetadata metadata) {
     QSqlQuery query(m_database);
     query.prepare("UPDATE savefile_metadata SET savefile_md5 = :savefileMd5, "
       "last_modified_at = :lastModifiedAt WHERE id = :id;");
@@ -296,7 +296,7 @@ namespace firelight::db {
   }
 
   bool SqliteUserdataDatabase::createSavefileMetadata(
-    SavefileMetadata &metadata) {
+    saves::SavefileMetadata &metadata) {
     if (!m_database.open()) {
       spdlog::error("Couldn't open database: {}",
                     m_database.lastError().text().toStdString());
@@ -310,8 +310,8 @@ namespace firelight::db {
 
     QSqlQuery query(m_database);
     query.prepare(queryString);
-    query.bindValue(":contentId", QString::fromStdString(metadata.contentId));
-    query.bindValue(":slotNumber", metadata.slotNumber);
+    query.bindValue(":contentId", QString::fromStdString(metadata.contentHash));
+    query.bindValue(":slotNumber", metadata.saveSlot);
     query.bindValue(":savefileMd5", QString::fromStdString(metadata.savefileMd5));
     query.bindValue(":lastModifiedAt", metadata.lastModifiedAt);
     query.bindValue(":createdAt",

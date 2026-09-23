@@ -106,6 +106,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 # Add Firelight modules
 ##################################################
 add_subdirectory(libs/firelight/activity)
+add_subdirectory(libs/firelight/saves)
 add_subdirectory(libs/firelight/util)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -154,8 +155,6 @@ add_library(firelight_lib
         src/app/input2/sdl/sdl_controller.cpp
         src/app/manager_accessor.cpp
         src/app/audio/audio_manager.cpp
-        src/app/saves/save_manager.cpp
-        src/app/saves/savefile.cpp
         src/app/db/sqlite_userdata_database.cpp
         src/app/input/gui/controller_list_model.cpp
         src/app/saves/gui/savefile_list_model.cpp
@@ -229,6 +228,7 @@ add_library(firelight_lib
         src/app/achievements/models/achievement_progress.hpp
         src/gui/qt_achievement_service_proxy.cpp
         src/gui/qt_achievement_service_proxy.hpp
+        src/gui/qt_save_manager_proxy.cpp
 )
 
 target_include_directories(firelight_lib PUBLIC ${SDL2_INCLUDE_DIRS} ${FFMPEG_INCLUDE_DIRS} include ${CMAKE_SOURCE_DIR}/src/app)
@@ -269,8 +269,9 @@ target_link_libraries(firelight_lib PUBLIC
         patching
         rcheevos
         discord
-        firelight_util
         firelight_activity
+        firelight_saves
+        firelight_util
 )
 
 # qt_import_plugins(firelight_lib
@@ -382,7 +383,6 @@ add_executable(fl_test
         tests/app/patching/util_test.cpp
         tests/mocks/mock_library_database.hpp
         tests/app/db/sqlite_userdata_database_test.cpp
-        tests/app/saves/save_manager_test.cpp
         tests/app/library/sqlite_library_database_test.cpp
         tests/app/library/playlist_test.cpp
         tests/app/library/library_entry_test.cpp

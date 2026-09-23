@@ -3,12 +3,9 @@
 #include <utility>
 
 namespace firelight {
-saves::SaveManager *ManagerAccessor::m_saveManager;
 db::IUserdataDatabase *ManagerAccessor::m_userdataDatabase;
-db::ILibraryDatabase *ManagerAccessor::m_libraryDatabase;
 achievements::RAClient *ManagerAccessor::m_achievementManager;
 std::shared_ptr<EmulatorConfigManager> ManagerAccessor::m_emulatorConfigManager;
-gui::GameImageProvider *ManagerAccessor::m_gameImageProvider;
 library::IUserLibrary *ManagerAccessor::m_userLibrary;
 activity::IActivityLog *ManagerAccessor::m_activityLog;
 std::string ManagerAccessor::m_coreSystemDirectory;
@@ -17,18 +14,10 @@ settings::ISettingsRepository
     *ManagerAccessor::m_emulationSettingsManager;
 discord::DiscordManager *ManagerAccessor::m_discordManager;
 
-void ManagerAccessor::setSaveManager(saves::SaveManager *t_manager) {
-  m_saveManager = t_manager;
-}
 
 void ManagerAccessor::setUserdataManager(
     db::IUserdataDatabase *t_userdataManager) {
   m_userdataDatabase = t_userdataManager;
-}
-
-void ManagerAccessor::setLibraryDatabase(
-    db::ILibraryDatabase *t_libraryDatabase) {
-  m_libraryDatabase = t_libraryDatabase;
 }
 
 void ManagerAccessor::setAchievementManager(
@@ -39,11 +28,6 @@ void ManagerAccessor::setAchievementManager(
 void ManagerAccessor::setEmulatorConfigManager(
     std::shared_ptr<EmulatorConfigManager> t_emulatorConfigManager) {
   m_emulatorConfigManager = std::move(t_emulatorConfigManager);
-}
-
-void ManagerAccessor::setGameImageProvider(
-    gui::GameImageProvider *t_gameImageProvider) {
-  m_gameImageProvider = t_gameImageProvider;
 }
 
 void ManagerAccessor::setUserLibrary(library::IUserLibrary *t_userLibrary) {
@@ -69,14 +53,8 @@ void ManagerAccessor::setDiscordManager(
   m_discordManager = t_discordManager;
 }
 
-saves::SaveManager *ManagerAccessor::getSaveManager() { return m_saveManager; }
-
 db::IUserdataDatabase *ManagerAccessor::getUserdataManager() {
   return m_userdataDatabase;
-}
-
-db::ILibraryDatabase *ManagerAccessor::getLibraryDatabase() {
-  return m_libraryDatabase;
 }
 
 achievements::RAClient *ManagerAccessor::getAchievementManager() {
@@ -86,10 +64,6 @@ achievements::RAClient *ManagerAccessor::getAchievementManager() {
 std::shared_ptr<EmulatorConfigManager>
 ManagerAccessor::getEmulatorConfigManager() {
   return m_emulatorConfigManager;
-}
-
-gui::GameImageProvider *ManagerAccessor::getGameImageProvider() {
-  return m_gameImageProvider;
 }
 
 library::IUserLibrary *ManagerAccessor::getUserLibrary() {

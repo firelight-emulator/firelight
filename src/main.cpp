@@ -1,6 +1,50 @@
 #define SDL_MAIN_HANDLED
 
+#include "achievements/achievement_service.hpp"
+#include "achievements/sqlite_achievement_repository.hpp"
+#include "activity/gui/game_activity_item.hpp"
 #include "app/achievements/gui/AchievementSetItem.hpp"
+#include "app/audio/SfxPlayer.hpp"
+#include "app/db/sqlite_content_database.hpp"
+#include "app/db/sqlite_userdata_database.hpp"
+#include "app/emulator_item.hpp"
+#include "app/input/gui/controller_list_model.hpp"
+#include "app/input/gui/gamepad_status_item.hpp"
+#include "app/input/sqlite_controller_repository.hpp"
+#include "app/library/gui/content_directory_model.hpp"
+#include "app/library/gui/entry_list_model.hpp"
+#include "app/library/gui/entry_sort_filter_list_model.hpp"
+#include "app/library/gui/library_entry_item.hpp"
+#include "app/library/gui/library_path_model.hpp"
+#include "app/library/gui/playlist_item_model.hpp"
+#include "app/library/library_scanner2.hpp"
+#include "app/library/sqlite_user_library.hpp"
+#include "app/mods/SqliteModRepository.h"
+#include "app/mods/gui/ModInfoItem.hpp"
+#include "app/rcheevos/ra_client.hpp"
+#include "app/saves/gui/suspend_points_item.hpp"
+#include "gui/EventEmitter.h"
+#include "gui/eventhandlers/input_method_detection_handler.hpp"
+#include "gui/eventhandlers/window_resize_handler.hpp"
+#include "gui/filesystem_utils.hpp"
+#include "gui/game_image_provider.hpp"
+#include "gui/gamepad_profile_item.hpp"
+#include "gui/models/emulation_settings_model.hpp"
+#include "gui/models/game_activity_list_model.hpp"
+#include "gui/models/shop/shop_item_model.hpp"
+#include "gui/platform_list_model.hpp"
+#include "gui/qt_achievement_service_proxy.hpp"
+#include "gui/qt_emulation_service_proxy.hpp"
+#include "gui/qt_input_service_proxy.hpp"
+#include "gui/qt_save_manager_proxy.hpp"
+#include "gui/router.hpp"
+#include "input2/sdl/sdl_input_service.hpp"
+#include "network_cache.hpp"
+#include "settings/sqlite_settings_repository.hpp"
+
+#include <firelight/activity/sqlite_activity_log.hpp>
+#include <firelight/saves/isave_manager.hpp>
+
 #include <QApplication>
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
@@ -10,61 +54,18 @@
 #include <QQmlNetworkAccessManagerFactory>
 #include <QQuickWindow>
 #include <QWindow>
+#include <QtConcurrent>
 #include <csignal>
 #include <cstdlib>
 #include <filesystem>
-#include <qstandardpaths.h>
-#include <spdlog/spdlog.h>
-
-#include "achievements/achievement_service.hpp"
-#include "achievements/sqlite_achievement_repository.hpp"
-#include "activity/gui/game_activity_item.hpp"
-#include "app/audio/SfxPlayer.hpp"
-#include "app/db/sqlite_content_database.hpp"
-#include "app/db/sqlite_userdata_database.hpp"
-#include "app/input/gui/controller_list_model.hpp"
-#include "app/input/sqlite_controller_repository.hpp"
-#include "app/library/gui/content_directory_model.hpp"
-#include "app/library/gui/playlist_item_model.hpp"
-#include "app/library/library_scanner2.hpp"
-#include "app/rcheevos/ra_client.hpp"
-#include "app/saves/save_manager.hpp"
-#include "gui/eventhandlers/input_method_detection_handler.hpp"
-#include "gui/eventhandlers/window_resize_handler.hpp"
-#include "gui/game_image_provider.hpp"
-#include "gui/models/shop/shop_item_model.hpp"
-#include "gui/platform_list_model.hpp"
-#include "gui/router.hpp"
-#include "network_cache.hpp"
-
-#include <QtConcurrent>
-
-#include <firelight/activity/sqlite_activity_log.hpp>
-#include "app/emulator_item.hpp"
-#include "app/input/gui/gamepad_status_item.hpp"
-#include "app/library/gui/entry_list_model.hpp"
-#include "app/library/gui/entry_sort_filter_list_model.hpp"
-#include "app/library/gui/library_entry_item.hpp"
-#include "app/library/gui/library_path_model.hpp"
-#include "app/library/sqlite_user_library.hpp"
-#include "app/mods/SqliteModRepository.h"
-#include "app/mods/gui/ModInfoItem.hpp"
-#include "app/saves/gui/suspend_points_item.hpp"
-#include "gui/EventEmitter.h"
-#include "gui/filesystem_utils.hpp"
-#include "gui/gamepad_profile_item.hpp"
-#include "gui/models/emulation_settings_model.hpp"
-#include "gui/models/game_activity_list_model.hpp"
-#include "gui/qt_achievement_service_proxy.hpp"
-#include "gui/qt_emulation_service_proxy.hpp"
-#include "gui/qt_input_service_proxy.hpp"
-#include "input2/sdl/sdl_input_service.hpp"
-#include "settings/sqlite_settings_repository.hpp"
-
 #include <input/gui/input_mappings_model.hpp>
 #include <input/keyboard_input_handler.hpp>
+#include <libs/firelight/saves/src/firelight/saves/save_manager_impl.hpp>
+#include <libs/firelight/saves/src/firelight/saves/sqlite_save_database.hpp>
 #include <platforms/platform_service.hpp>
+#include <qstandardpaths.h>
 #include <saves/gui/save_files_item.hpp>
+#include <spdlog/spdlog.h>
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
@@ -153,14 +154,40 @@ int main(int argc, char *argv[]) {
     spdlog::warn("Unable to createOrUpdate core-system directory");
   }
 
-  firelight::ManagerAccessor::setCoreSystemDirectory(
-      (defaultAppDataPathString + "/core-system").toStdString());
+  // ===== Create and register services =======================================================
 
+  // ===== Input =====
   firelight::input::SqliteControllerRepository controllerRepository(
       baseDir.filePath("controllers.db"));
-
   firelight::input::SDLInputService inputService(controllerRepository);
+
+  // ===== Activity =====
+  firelight::activity::SqliteActivityLog activityLog((defaultAppDataPathString +
+                                                     "/activity.db").toStdString());
+
+  // ===== Savedata =====
+  firelight::saves::SqliteSaveDatabase saveDatabase((defaultAppDataPathString + "/savedata.db").toStdString());
+  QSettings savesSettings;
+  const auto resolvedSaveDir = savesSettings.value("SaveDirectory", savesPath).toString().toStdString();
+  firelight::saves::SaveManager saveManager(resolvedSaveDir, saveDatabase);
+
+  // ===== Game Image Provider =====
+  auto gameImageProvider = new firelight::gui::GameImageProvider();
+
+  // ===== Register services to ServiceAccessor ================================================
+  firelight::ServiceAccessor::setSaveManager(&saveManager);
+  firelight::ManagerAccessor::setActivityLog(&activityLog); // TODO
   firelight::ServiceAccessor::setInputService(&inputService);
+  firelight::ServiceAccessor::setGameImageProvider(gameImageProvider);
+
+  // ===== Create Qt proxy (glue) services =====================================================
+  firelight::gui::QtSaveManagerProxy saveManagerProxy(saveManager);
+
+
+
+  // ===== TODO DO THE NEXT THING =====================================================
+  firelight::ManagerAccessor::setCoreSystemDirectory(
+      (defaultAppDataPathString + "/core-system").toStdString());
 
   QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
@@ -168,20 +195,9 @@ int main(int argc, char *argv[]) {
       defaultAppDataPathString + "/userdata.db");
   firelight::ManagerAccessor::setUserdataManager(&userdata_database);
 
-  firelight::activity::SqliteActivityLog activityLog((defaultAppDataPathString +
-                                                     "/activity.db").toStdString());
-  firelight::ManagerAccessor::setActivityLog(&activityLog);
-
-  auto gameImageProvider = new firelight::gui::GameImageProvider();
-  firelight::ManagerAccessor::setGameImageProvider(gameImageProvider);
-
   //   **** Load Content Database ****
   firelight::db::SqliteContentDatabase contentDatabase(
       defaultAppDataPathString + "/content.db");
-
-  firelight::saves::SaveManager saveManager(savesPath, userdata_database,
-                                            *gameImageProvider);
-  firelight::ManagerAccessor::setSaveManager(&saveManager);
 
   firelight::library::SqliteUserLibrary userLibrary(
       defaultAppDataPathString + "/library.db", romsPath);
@@ -373,7 +389,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("platform_model",
                                            &platformListModel);
   engine.rootContext()->setContextProperty("shop_item_model", &shopItemModel);
-  engine.rootContext()->setContextProperty("SaveManager", &saveManager);
+  engine.rootContext()->setContextProperty("SaveManager", &saveManagerProxy);
   engine.rootContext()->setContextProperty("UserLibrary", &userLibrary);
   engine.rootContext()->setContextProperty("ContentDirectoryModel",
                                            &contentDirectoryModel);

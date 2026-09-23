@@ -1,13 +1,15 @@
 #include "emulator_instance.hpp"
 
 #include "emulation_service.hpp"
-#include <firelight/event_dispatcher.hpp>
 #include "input2/input_service.hpp"
 
-#include <spdlog/spdlog.h>
+#include <firelight/event_dispatcher.hpp>
+#include <firelight/saves/isave_manager.hpp>
+#include <firelight/saves/savefile.hpp>
 
 #include <audio/audio_manager.hpp>
 #include <settings/settings_service.hpp>
+#include <spdlog/spdlog.h>
 #include <utility>
 
 namespace firelight::emulation {

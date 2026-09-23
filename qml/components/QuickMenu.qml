@@ -600,7 +600,7 @@ Pane {
             SuspendPoints {
                 id: suspendData
                 contentHash: emulatorLoader.item ? emulatorLoader.item.contentHash : ""
-                saveSlotNumber: EmulationService.currentSaveSlotNumber
+                saveSlot: EmulationService.currentSaveSlotNumber
             }
 
             FirelightDialog {

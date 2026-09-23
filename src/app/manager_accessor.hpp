@@ -8,29 +8,20 @@
 #include "firelight/userdata_database.hpp"
 #include "mods/mod_repository.hpp"
 #include "rcheevos/ra_client.hpp"
-#include "saves/save_manager.hpp"
 #include "settings/settings_repository.hpp"
 
 namespace firelight {
-namespace gui {
-class GameImageProvider;
-}
 
 class ManagerAccessor {
 public:
-  static void setSaveManager(saves::SaveManager *t_manager);
 
   static void setUserdataManager(db::IUserdataDatabase *t_userdataManager);
-
-  static void setLibraryDatabase(db::ILibraryDatabase *t_libraryDatabase);
 
   static void
   setAchievementManager(achievements::RAClient *t_achievementManager);
 
   static void setEmulatorConfigManager(
       std::shared_ptr<EmulatorConfigManager> t_emulatorConfigManager);
-
-  static void setGameImageProvider(gui::GameImageProvider *t_gameImageProvider);
 
   static void setUserLibrary(library::IUserLibrary *t_userLibrary);
 
@@ -45,17 +36,11 @@ public:
 
   static void setDiscordManager(discord::DiscordManager *t_discordManager);
 
-  static saves::SaveManager *getSaveManager();
-
   static db::IUserdataDatabase *getUserdataManager();
-
-  static db::ILibraryDatabase *getLibraryDatabase();
 
   static achievements::RAClient *getAchievementManager();
 
   static std::shared_ptr<EmulatorConfigManager> getEmulatorConfigManager();
-
-  static gui::GameImageProvider *getGameImageProvider();
 
   static library::IUserLibrary *getUserLibrary();
 
@@ -70,12 +55,9 @@ public:
   static discord::DiscordManager *getDiscordManager();
 
 private:
-  static saves::SaveManager *m_saveManager;
   static db::IUserdataDatabase *m_userdataDatabase;
-  static db::ILibraryDatabase *m_libraryDatabase;
   static achievements::RAClient *m_achievementManager;
   static std::shared_ptr<EmulatorConfigManager> m_emulatorConfigManager;
-  static gui::GameImageProvider *m_gameImageProvider;
   static library::IUserLibrary *m_userLibrary;
   static activity::IActivityLog *m_activityLog;
   static std::string m_coreSystemDirectory;

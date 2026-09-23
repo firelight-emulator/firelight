@@ -1,7 +1,7 @@
 #pragma once
 
-#include <saves/savefile_metadata.hpp>
-#include <saves/suspend_point_metadata.hpp>
+#include <firelight/saves/savefile_metadata.hpp>
+#include <firelight/saves/suspend_point_metadata.hpp>
 
 #include <optional>
 #include <map>
@@ -20,24 +20,24 @@ namespace firelight::db {
      */
     virtual bool tableExists(std::string tableName) = 0;
 
-    virtual bool createSavefileMetadata(SavefileMetadata &metadata) = 0;
+    virtual bool createSavefileMetadata(saves::SavefileMetadata &metadata) = 0;
 
-    virtual std::optional<SavefileMetadata>
+    virtual std::optional<saves::SavefileMetadata>
     getSavefileMetadata(std::string contentId, int slotNumber) = 0;
 
-    virtual bool updateSavefileMetadata(SavefileMetadata metadata) = 0;
+    virtual bool updateSavefileMetadata(saves::SavefileMetadata metadata) = 0;
 
-    virtual std::vector<SavefileMetadata>
+    virtual std::vector<saves::SavefileMetadata>
     getSavefileMetadataForContent(std::string contentId) = 0;
 
-    virtual bool createSuspendPointMetadata(SuspendPointMetadata &metadata) = 0;
+    virtual bool createSuspendPointMetadata(saves::SuspendPointMetadata &metadata) = 0;
 
-    virtual std::optional<SuspendPointMetadata>
+    virtual std::optional<saves::SuspendPointMetadata>
     getSuspendPointMetadata(std::string contentId, int saveSlotNumber, int slotNumber) = 0;
 
-    virtual bool updateSuspendPointMetadata(const SuspendPointMetadata &metadata) = 0;
+    virtual bool updateSuspendPointMetadata(const saves::SuspendPointMetadata &metadata) = 0;
 
-    virtual std::vector<SuspendPointMetadata>
+    virtual std::vector<saves::SuspendPointMetadata>
     getSuspendPointMetadataForContent(std::string contentId, int saveSlotNumber) = 0;
 
     virtual bool deleteSuspendPointMetadata(int id) = 0;

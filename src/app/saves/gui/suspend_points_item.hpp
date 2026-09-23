@@ -1,56 +1,56 @@
 #pragma once
-#include <manager_accessor.hpp>
+#include "suspend_point_list_model.hpp"
+
+#include <firelight/event_dispatcher.hpp>
+#include <firelight/saves/isave_manager.hpp>
+#include <firelight/saves/save_events.hpp>
+
+#include <service_accessor.hpp>
 
 namespace firelight::saves {
-class SuspendPointsItem : public QObject, public ManagerAccessor {
+class SuspendPointsItem : public QObject, public ServiceAccessor {
   Q_OBJECT
-  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY
-                 contentHashChanged)
-  Q_PROPERTY(int saveSlotNumber READ getSaveSlotNumber WRITE setSaveSlotNumber
-                 NOTIFY saveSlotNumberChanged)
-  Q_PROPERTY(QAbstractListModel *suspendPoints READ getSuspendPoints NOTIFY
-                 suspendPointsChanged)
+  Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY contentHashChanged)
+  Q_PROPERTY(int saveSlot READ getSaveSlotNumber WRITE setSaveSlotNumber NOTIFY saveSlotNumberChanged)
+  Q_PROPERTY(QAbstractListModel *suspendPoints READ getSuspendPoints NOTIFY suspendPointsChanged)
 
 public:
   explicit SuspendPointsItem(QObject *parent = nullptr) : QObject(parent) {
     m_suspendPointsModel = new SuspendPointListModel(*getGameImageProvider());
 
-    connect(getSaveManager(), &SaveManager::suspendPointUpdated, this,
-            [this](const QString &contentHash, int saveSlotNumber, int index) {
-              if (contentHash != m_contentHash ||
-                  saveSlotNumber != m_saveSlotNumber) {
-                return;
-              }
+    m_suspendPointUpdatedConnection =
+        EventDispatcher::instance().subscribe<SuspendPointUpdatedEvent>([this](const SuspendPointUpdatedEvent &event) {
+          if (QString::fromStdString(event.contentHash) != m_contentHash || event.saveSlot != m_saveSlotNumber) {
+            return;
+          }
 
-              const auto suspendPoint = getSaveManager()->readSuspendPoint(
-                  contentHash, saveSlotNumber, index);
-              if (suspendPoint.has_value()) {
-                m_suspendPointsModel->updateData(index, *suspendPoint);
-              }
-            });
+          const auto suspendPoint =
+              getSaveManager()->readSuspendPoint(m_contentHash.toStdString(), event.saveSlot, event.index);
+          if (suspendPoint.has_value()) {
+            m_suspendPointsModel->updateData(event.index, *suspendPoint);
+          }
+        });
 
-    connect(getSaveManager(), &SaveManager::suspendPointDeleted, this,
-            [this](const QString &contentHash, int saveSlotNumber, int index) {
-              if (contentHash != m_contentHash ||
-                  saveSlotNumber != m_saveSlotNumber) {
-                return;
-              }
+    m_suspendPointDeletedConnection =
+        EventDispatcher::instance().subscribe<SuspendPointDeletedEvent>([this](const SuspendPointDeletedEvent &event) {
+          if (QString::fromStdString(event.contentHash) != m_contentHash || event.saveSlot != m_saveSlotNumber) {
+            return;
+          }
 
-              m_suspendPointsModel->deleteData(index);
-            });
+          m_suspendPointsModel->deleteData(event.index);
+        });
   }
 
   [[nodiscard]] QString getContentHash() const;
   void setContentHash(const QString &contentHash);
 
   int getSaveSlotNumber() const;
-  void setSaveSlotNumber(int saveSlotNumber);
+  void setSaveSlotNumber(int saveSlot);
 
   [[nodiscard]] SuspendPointListModel *getSuspendPoints() const;
 
   Q_INVOKABLE void deleteSuspendPoint(const int index) {
-    getSaveManager()->deleteSuspendPoint(m_contentHash, m_saveSlotNumber,
-                                         index);
+    getSaveManager()->deleteSuspendPoint(m_contentHash.toStdString(), m_saveSlotNumber, index);
   }
 
 signals:
@@ -63,6 +63,9 @@ private:
   int m_saveSlotNumber = -1;
 
   SuspendPointListModel *m_suspendPointsModel;
+
+  ScopedConnection m_suspendPointUpdatedConnection;
+  ScopedConnection m_suspendPointDeletedConnection;
 };
 
 } // namespace firelight::saves
