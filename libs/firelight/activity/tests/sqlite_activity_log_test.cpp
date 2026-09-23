@@ -81,8 +81,6 @@ TEST_F(SqliteActivityLogTest, GetLatestForUnknownHashIsEmpty) {
   EXPECT_FALSE(m_log.getLatestPlaySession("hash_never_written").has_value());
 }
 
-// The whole point of the migration adoption: a session written to a file DB
-// survives being closed and reopened, and the store reports schema version 1
 TEST(SqliteActivityLogFileTest, DataAndSchemaSurviveReopen) {
   namespace fs = std::filesystem;
   static std::atomic_int counter{0};
@@ -112,8 +110,6 @@ TEST(SqliteActivityLogFileTest, DataAndSchemaSurviveReopen) {
   fs::remove(dbPath, ec);
 }
 
-// Durations used to be stored in seconds while the field was milliseconds, so every session
-// lost its remainder going in and got it back as zeros
 TEST_F(SqliteActivityLogTest, SubSecondDurationSurvives) {
   activity::PlaySession session;
   session.contentHash = "hash_precision";
@@ -128,7 +124,6 @@ TEST_F(SqliteActivityLogTest, SubSecondDurationSurvives) {
   EXPECT_EQ(latest->unpausedDurationMillis, 8456u);
 }
 
-// Two entries turning out to be one game must not split somebody's playtime in half
 TEST_F(SqliteActivityLogTest, TransferMovesSessionsToTheSurvivingHash) {
   auto first = makeSession("discTwoHash", 1000, 2000, 5000);
   auto second = makeSession("discTwoHash", 3000, 4000, 7000);
@@ -144,7 +139,6 @@ TEST_F(SqliteActivityLogTest, TransferMovesSessionsToTheSurvivingHash) {
   EXPECT_EQ(m_log.getPlaySessions("unrelatedHash").size(), 1u);
 }
 
-// Playtime already on the surviving hash is added to rather than replaced
 TEST_F(SqliteActivityLogTest, TransferKeepsWhatTheSurvivorAlreadyPlayed) {
   auto onSurvivor = makeSession("discOneHash", 1000, 2000, 5000);
   auto onAbsorbed = makeSession("discTwoHash", 3000, 4000, 7000);

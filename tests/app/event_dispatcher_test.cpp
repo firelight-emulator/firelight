@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 namespace {
-// TU-local event types so nothing else can perturb these buses
+
 struct FooEvent {
   int value;
 };
@@ -34,8 +34,6 @@ TEST(EventDispatcherTest, ScopedConnectionUnsubscribes) {
   EXPECT_EQ(received, 1);
 }
 
-// The point of making the dispatcher injectable: a locally-owned bus (as a test
-// or a CLI app would supply) is isolated from any other instance
 TEST(EventDispatcherTest, InstancesAreIndependent) {
   EventDispatcher a;
   EventDispatcher b;
