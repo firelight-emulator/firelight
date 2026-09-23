@@ -27,10 +27,13 @@ add_executable(firelight_activity_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/sqlite_activity_log_test.cpp
 )
 target_include_directories(firelight_activity_test
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/libs/firelight/util/include
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/tests
 )
 target_link_libraries(firelight_activity_test
         PRIVATE firelight_activity
+        PRIVATE firelight_util
         PRIVATE GTest::gtest
 )
 gtest_discover_tests(firelight_activity_test)

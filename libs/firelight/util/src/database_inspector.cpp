@@ -1,4 +1,4 @@
-#include "database_inspector.hpp"
+#include <firelight/util/database_inspector.hpp>
 
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <filesystem>
