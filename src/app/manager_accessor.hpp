@@ -1,6 +1,6 @@
 #pragma once
 
-#include <activity/activity_log.hpp>
+#include <firelight/activity/activity_log.hpp>
 #include <library/user_library.hpp>
 
 #include "discord/discord_manager.hpp"

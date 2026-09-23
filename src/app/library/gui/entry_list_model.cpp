@@ -195,7 +195,7 @@ void EntryListModel::reset() {
       auto session =
           activityLog->getLatestPlaySession(entry.contentHash.toStdString());
       if (session) {
-        item.lastPlayedEpochMillis = session->endTime;
+        item.lastPlayedEpochMillis = session->endedAt;
       }
 
       m_items.emplace_back(item);

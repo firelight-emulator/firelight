@@ -5,11 +5,10 @@
 namespace firelight::activity {
 struct PlaySession {
   int id = -1;
-  std::string contentId;
   std::string contentHash;
-  unsigned int slotNumber = 1;
-  uint64_t startTime = 0;
-  uint64_t endTime = 0;
+  unsigned int saveSlot = 1;
+  uint64_t startedAt = 0; // Epoch milliseconds
+  uint64_t endedAt = 0;
   uint64_t unpausedDurationMillis = 0;
 };
-} // namespace firelight::db
+} // namespace firelight::activity

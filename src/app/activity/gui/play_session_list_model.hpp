@@ -1,5 +1,5 @@
 #pragma once
-#include "../play_session.hpp"
+#include <firelight/activity/play_session.hpp>
 #include <QAbstractListModel>
 
 namespace firelight::activity {

@@ -105,6 +105,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/rcheevos.cmake)
 ##################################################
 # Add Firelight modules
 ##################################################
+add_subdirectory(libs/firelight/activity)
 add_subdirectory(libs/firelight/util)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -179,7 +180,6 @@ add_library(firelight_lib
         src/app/emulator_item_renderer.cpp
         src/app/emulator_item.cpp
         src/app/input/gui/gamepad_status_item.cpp
-        src/app/activity/sqlite_activity_log.cpp
         src/app/input/sqlite_controller_repository.cpp
         src/app/library/gui/library_entry_item.cpp
         src/later/video_encoder.cpp
@@ -270,6 +270,7 @@ target_link_libraries(firelight_lib PUBLIC
         rcheevos
         discord
         firelight_util
+        firelight_activity
 )
 
 # qt_import_plugins(firelight_lib
@@ -386,7 +387,6 @@ add_executable(fl_test
         tests/app/library/playlist_test.cpp
         tests/app/library/library_entry_test.cpp
         tests/app/db/daos/savefile_metadata_test.cpp
-        tests/app/db/daos/play_session_test.cpp
         tests/app/db/sqlite_content_database_test.cpp
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
         tests/app/settings/sqlite_settings_repository_test.cpp

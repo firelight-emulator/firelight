@@ -60,7 +60,7 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
     }
   }
 
-  m_playSession.endTime = QDateTime::currentMSecsSinceEpoch();
+  m_playSession.endedAt = QDateTime::currentMSecsSinceEpoch();
   getActivityLog()->createPlaySession(m_playSession);
 
   getAchievementManager()->unloadGame();
@@ -714,8 +714,8 @@ void EmulatorItemRenderer::render(QRhiCommandBuffer *cb) {
     cb->endPass(resourceUpdates);
 
     m_playSession.contentHash = m_contentHash.toStdString();
-    m_playSession.startTime = QDateTime::currentMSecsSinceEpoch();
-    m_playSession.slotNumber = m_saveSlotNumber;
+    m_playSession.startedAt = QDateTime::currentMSecsSinceEpoch();
+    m_playSession.saveSlot = m_saveSlotNumber;
 
     if (!m_paused) {
       m_playSessionTimer.start();

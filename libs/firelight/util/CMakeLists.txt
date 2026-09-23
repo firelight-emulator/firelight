@@ -25,6 +25,7 @@ add_executable(firelight_util_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/strings_test.cpp
 )
 target_include_directories(firelight_util_test
+        PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/tests
 )
 target_link_libraries(firelight_util_test
