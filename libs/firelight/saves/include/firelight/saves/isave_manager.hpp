@@ -11,12 +11,6 @@
 
 namespace firelight::saves {
 
-// The save/suspend-point persistence contract. A plain domain interface: it
-// carries no Qt notification concerns (the QML save-directory binding lives in
-// QtSaveManagerProxy, and suspend-point changes are announced through the
-// EventDispatcher — see save_events.hpp). Content hashes and the save directory
-// are std::string; SuspendPoint's screenshot (QImage) is an accepted boundary
-// type shared with the media/screenshot code
 class ISaveManager {
 public:
   virtual ~ISaveManager() = default;
@@ -37,20 +31,11 @@ public:
 
   virtual void deleteSuspendPoint(const std::string &contentHash, int saveSlotNumber, int index) = 0;
 
-  /**
-   * Moves everything saved under one content hash to another, for when two library entries turn
-   * out to be one game. Slots already present at the destination are left alone rather than
-   * overwritten, because losing a save is worse than leaving a duplicate behind
-   *
-   * @return True when there was something to move and it moved
-   */
   virtual bool transferSaves(const std::string &fromContentHash, const std::string &toContentHash) = 0;
 
   [[nodiscard]] virtual std::string getSaveDirectory() const = 0;
 
-  // The one directory handed to cores for their own file writes. libretro gives
-  // a core a single save directory, so it is kept apart from the per-game tree
-  // this manager owns
+  // The libretro one, shared between cores. Cores write to it, not us
   [[nodiscard]] virtual std::string getSharedCoreSaveDirectory() const = 0;
 
   virtual void setSaveDirectory(const std::string &saveDirectory) = 0;

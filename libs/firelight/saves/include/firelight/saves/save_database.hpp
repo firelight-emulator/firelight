@@ -8,8 +8,7 @@
 #include <vector>
 
 namespace firelight::saves {
-// Persistence contract for the save/suspend-point metadata index. Qt-free so it
-// can be used from the save worker thread. Backed by SqliteSaveDatabase
+
 class ISaveDatabase {
 public:
   virtual ~ISaveDatabase() = default;
@@ -32,10 +31,6 @@ public:
   virtual std::vector<SuspendPointMetadata> getSuspendPointMetadataForContent(std::string contentHash,
                                                                               int saveSlot) = 0;
 
-  /**
-   * Re-keys every savefile and suspend point row from one content hash to another. Rows that
-   * would collide with an existing one at the destination are left where they are
-   */
   virtual bool transferContent(const std::string &fromContentHash, const std::string &toContentHash) = 0;
 
   virtual bool deleteSuspendPointMetadata(int id) = 0;

@@ -1,3 +1,52 @@
+# Design decisions for Firelight
+
+## Terms
+
+- Content hash: the output of the hashing algorithm applied to a file. The hashing algorithm is the same one used by
+ RetroAchievements.
+
+## General
+
+- Everything MUST be keyed on content hash rather than an entry id, content file id, or any other identifier. The content
+ hash is the only identifier that can be derived from the file alone, and it is the only identifier that can be used to
+ reattach activity, saves, and other user data if their game files are ever lost, moved, etc.
+
+- The content hash algorithm MUST be the same one used by RetroAchievements, in the same manner.
+
+- Timestamps MUST be stored as epoch milliseconds.
+
+## Library
+
+### Structure
+| Thing | Description                                                                                                                                                                                                                                                                                                                                                                  |
+| --- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Content file | Represents a physical file on disk. Every file has its own content file row                                                                                                                                                                                                                                                                                                  |
+| Content hash | A hex string representing a logical dump of a game. Independent of file format, container, or compression. Many content files can share one content hash. For example, a .z64, .v64, and .n64 dump of the same N64 game will all produce the same content hash. Same thing with headered and headerless NES and SNES roms. See RetroAchievements hashing docs for more info. |
+| Entry | Represents a game in a user's library. An entry contains the metadata for a game and is backed by one or more run configurations.                                                                                                                                                                                                                                            |
+| Run configuration | Represents a way to launch a game. An entry can have one or more run configurations, and each run configuration is backed by one or more content files.                                                                                                                                                                                                                      |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!-- TODO: NEEDS REVIEW -->
 # Design decisions
 
