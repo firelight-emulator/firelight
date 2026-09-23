@@ -39,10 +39,11 @@ findings come from that one decision:
 - One untyped `int` means "gamepad button" or "`Qt::Key`" depending on a flag stored somewhere else, so
   QML has to know which: `isKeyboard` appears 17 times across 5 QML files.
 
-Along the way: **9 bugs** — 7 live, including a use-after-free and three data races, and 2 latent —
-plus **4 behaviour gaps**, **14 leaks** and **7 dead items**. §6 sketches the target design and §7
-sequences the work: the bugs first as small local changes, then five restructuring steps. **No step
-needs a schema change or a migration pass**; one read-time normalization is covered in §7.
+Along the way: **10 bugs** — 8 live, including a use-after-free and three data races, and 2 latent —
+plus **5 behaviour gaps**, **14 leaks** and **7 dead items**. §6 sketches the target design, including
+what must happen when a mapping changes while a game is running, and §7 sequences the work: the bugs
+first as small local changes, then five restructuring steps. **No step needs a schema change or a
+migration pass**; one read-time normalization is covered in §7.
 
 ---
 
@@ -140,8 +141,19 @@ so the SDL thread is processing that press and its release while the GUI thread 
 
 The same pattern exists for game bindings — `InputMapping::getBindings()` returns a *reference* into
 its map (`input_mapping.cpp:11-15`), which the render thread iterates while the binding editor
-reassigns it (`input_mapping.cpp:46-50`). I did not find a route to the binding editor while a game
-is running, so that half is latent.
+reassigns it (`input_mapping.cpp:46-50`) — and again for analog tuning, where `setProfileAnalogSettings`
+overwrites the cached profile's `AnalogSettings` (`sqlite_controller_repository.cpp:495-497`) while the
+render thread reads it on every stick read (`sdl_controller.cpp:110,149,169,189,209`).
+
+**Which of these a player can reach mid-game.** In the live shell (`qml/v3/Main4.qml`) the running game
+sits beneath the route view (`Main4.qml:283-289`), the navigation drawer opens on F9, an
+application-wide shortcut (`:75-79`), and its Settings entry leads to a `SettingsScreen` that embeds the shortcut editor
+(`qml/v3/old/settings/SettingsScreen.qml:240`, `ControllerSettings.qml:56,68,351`). By reading, nothing
+pauses the game meanwhile (§6, *Changing a mapping while a game runs*). So the shortcut race is
+reachable during play. The binding editor, analog tuning and profile management hang off the
+`/controllers` routes, which are commented out of the live `RouteView` (`RouteView.qml:62-64`), so the
+render-thread races are unreachable in this build. `routing.js` and `verify-ui` still list those
+routes, so they look set to return — and the races with them.
 
 ### B6 — a device's profile is swapped on the render thread while the SDL thread reads it **[live, narrow]**
 
@@ -179,6 +191,19 @@ player's input to the focus window. A separate `only-player-one-hotkeys` setting
 `controller_icons.hpp:23-25` returns `"file:whatever.svg"` for `SONY_DUALSENSE`, with the real path
 commented out above it.
 
+### B10 — a Hold shortcut unbound while it is held never ends **[live, unusual]**
+
+`ShortcutMapping::setBindings` erases an action when it is given no sources
+(`shortcut_mapping.cpp:16-18`). Two live edits do that: *Apply preset* rewrites every action and erases
+the ones the new preset leaves out (`shortcuts_model.cpp:199-201`, `ControllerSettings.qml:68`), and
+*Reset to default* erases an action its preset ships nothing for (`shortcuts_model.cpp:178`,
+`ControllerSettings.qml:351`). The engine only produces a Hold's `Ended` while walking the actions still
+in the mapping, and only when that device sends its next input (`shortcut_engine.cpp:111-178`). So a hold
+that is active at that moment — fast-forward held on the keyboard while applying a preset with the
+mouse — stays on until the action is bound again. *Clear* does the same, but its only live caller is on
+the commented-out `/controllers` route (`ControllerProfilePage.qml:242`). Rebinding instead of erasing
+does end the hold, but only at that device's next input.
+
 ---
 
 ## 3. Behaviour gaps — the binding model promises more than the devices deliver
@@ -191,6 +216,7 @@ These follow directly from binding evaluation living in each device.
 | G2 | Stick directions read only the first binding; alternates are ignored on both devices | `sdl_controller.cpp:158-159,178-179,198-199,218-219`; keyboard uses `getMappedInput` |
 | G3 | `Binding::invert` and `Binding::scale` are serialized and read by nothing, anywhere | `binding.hpp:32-33` |
 | G4 | Shortcut suppression covers every SDL read but only *default* keyboard keys; a key explicitly bound to a game input still reaches the game while a shortcut holds it | `sdl_controller.cpp:310` vs `keyboard_input_handler.cpp:57-73` |
+| G5 | Toggle latches are keyed by a binding's *position* and cleared only when the device changes profile, so removing an earlier binding moves a latched "on" to whichever binding shifts into its slot | `sdl_controller.cpp:17-18,52` |
 
 ---
 
@@ -361,6 +387,44 @@ flowchart LR
 4. **A value carries its own vocabulary.** No `int` whose meaning depends on a flag stored elsewhere.
 5. **Dependencies point one way:** app → input → libretro. libretro includes nothing from input.
 
+### Changing a mapping while a game runs
+
+Invariant 3 makes a mid-game edit *safe*. It does not say what the player should *see*, and today that
+is decided by accident.
+
+**What happens today, by reading.** Nothing in the live shell pauses emulation when another screen
+covers the game. `NewEmulatorPage.paused` is set only by the CLI `--pause` flag
+(`NewEmulatorPage.qml:51,151`); `GameplayPage.suspended` is written and never read
+(`GameplayPage.qml:9,29`); the live quick menu, `QuickMenu2`, has no pause either; and frames are paced
+by their own thread (`emulator_item.cpp:288`). Input isn't gated on focus, so a pad used to navigate
+Settings is also playing the game, and in-game shortcuts stay armed because `shortcutsInGame` only looks
+at `paused` (`NewEmulatorPage.qml:41`). That is a shell decision rather than an input bug, but it is what
+makes a mid-game edit possible at all. I have not run the app; this is the first thing to confirm.
+
+**What a swap has to specify.** Step 3 carries today's accidents over unless the swap is defined:
+
+1. **One snapshot per frame.** `pollFrame()` loads the mapping once, and the mouse and light-gun reads
+   that arrive during `retro_run` use that same snapshot, so one frame never mixes two mappings.
+2. **Held inputs follow the new mapping from the next frame.** A button held across a swap can produce
+   a release, or a press on another input, that the player didn't make. Applying immediately is the
+   simplest rule and matches "saving is live"; deferring each input until it is released is the
+   alternative. Pick one and write it down.
+3. **Latches follow the binding, not its position.** Key toggle state by the binding itself — target and
+   source — and on each swap drop latches whose binding no longer exists (G5).
+4. **A shortcut swap ends orphaned holds at swap time.** Any active hold whose action is gone, or whose
+   trigger changed, ends when the swap happens rather than at that device's next input (B10).
+5. **Analog tuning rides in the same snapshot.** A slider drag becomes many saves: debounce the
+   database write, not the swap — swapping a small immutable struct per tick is cheap.
+6. **Assignment changes get their own event.** `ProfileChangedEvent` covers a profile's *contents*.
+   *Which* profile a device, platform or game uses is applied only in `applyGameContext`
+   (`sdl_input_service.cpp:190`) and on connect, and today no UI calls `setGameProfileOverride` or
+   `updateDeviceInfo`. When one does, it should publish an assignment event that re-resolves just the
+   affected ports.
+
+Switching a port's device class mid-game (Joypad to Zapper) needs no new mechanism: each `PlayerPort`
+holds all three classes' mappings, so the switch is a lookup, and the old class's latches are dropped.
+That picker is commented out of the live quick menu (`QuickMenu2.qml:67`).
+
 ### Key types
 
 Sketches in this codebase's style, not final signatures.
@@ -512,6 +576,10 @@ schema change, and it can ship before anything depends on it.
 - B4: hop to the GUI thread at the top of the proxy's subscriber, the way `ControllerListModel` does
 - B5 stopgap for shortcuts (the live half): guard `ShortcutMapping` with a mutex and have `getAll()`
   return a copy. A copy per button event is trivially cheap. The real fix is step 3
+- B10 stopgap: have the engine end any active hold whose action has left the mapping. Without a
+  swap hook that happens at the device's next input rather than immediately; step 3 makes it immediate
+- Decide whether covering the game pauses it (§6). If it does, the render-thread halves of B5 stay
+  closed for as long as the pause lasts, even once the `/controllers` routes return
 - B7: store both strengths on the device and issue one `SDL_JoystickRumble` call with both
 - B8: implement the setting or remove the toggle
 - B9: point DualSense at its real icon
@@ -548,6 +616,7 @@ schema change, and it can ship before anything depends on it.
 - The config UI loads a copy, saves through the repository, and the repository publishes
   `ProfileChangedEvent`; the session re-resolves and swaps. `sync()` callbacks, mapping ids and the
   virtual methods on `InputMapping` go. B5 and B6 are fixed structurally, and the step-0 mutex comes out
+- The swap follows the rules in §6, *Changing a mapping while a game runs*
 - Touches: devices, `SDLInputService`, `CoreInputRouter`, `RemoteRetroPad`, `guest_stream_receiver`, and
   the editing models
 
