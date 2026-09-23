@@ -46,8 +46,6 @@ TEST(EntryMetadataTest, OmitsEmptyFields) {
   EXPECT_EQ(json.find("genres"), std::string::npos);
 }
 
-// Same contract as SmartFolderCriteria: bad input degrades rather than throwing, because it is read
-// on the path that loads the whole library
 TEST(EntryMetadataTest, MalformedInputYieldsAnEmptyValue) {
   EXPECT_TRUE(GameMetadata::parse("").isEmpty());
   EXPECT_TRUE(GameMetadata::parse("not json at all").isEmpty());

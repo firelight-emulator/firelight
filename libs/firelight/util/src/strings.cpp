@@ -13,7 +13,7 @@ bool isAlphanumeric(const char character) { return std::isalnum(static_cast<unsi
 
 char lower(const char character) { return static_cast<char>(std::tolower(static_cast<unsigned char>(character))); }
 
-// Numerals past 20 are rare enough in titles that spelling them out beats parsing them
+// We probably won't need any past 20, right...?
 constexpr std::array<std::pair<std::string_view, std::string_view>, 20> ROMAN_NUMERALS = {{
     {"xx", "20"},   {"xix", "19"}, {"xviii", "18"}, {"xvii", "17"}, {"xvi", "16"}, {"xv", "15"},  {"xiv", "14"},
     {"xiii", "13"}, {"xii", "12"}, {"xi", "11"},    {"x", "10"},    {"ix", "9"},   {"viii", "8"}, {"vii", "7"},
@@ -169,12 +169,10 @@ std::string foldAmpersand(const std::string_view value) {
       continue;
     }
 
-    // TODO
-    // An ampersand between two letters is part of a name rather than the word
-    const auto glued =
+    const auto surroundedByCharacters =
         (i > 0 && isAlphanumeric(value[i - 1])) && (i + 1 < value.size() && isAlphanumeric(value[i + 1]));
 
-    if (glued) {
+    if (surroundedByCharacters) {
       folded.push_back('&');
       continue;
     }

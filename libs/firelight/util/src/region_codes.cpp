@@ -9,9 +9,7 @@
 namespace firelight {
 
 namespace {
-// Full names, ISO codes and the GoodTools single letters, all keyed lowercase. A token naming both a
-// region and a language (Norway/Norwegian) appears in both tables; the caller decides which reading
-// applies
+// Full names, ISO codes and the GoodTools single letters, all keyed lowercase
 const std::unordered_map<std::string, std::string> &regionTable() {
   static const std::unordered_map<std::string, std::string> table = {
       {"usa", regions::US},         {"us", regions::US},        {"u", regions::US},        {"america", regions::US},

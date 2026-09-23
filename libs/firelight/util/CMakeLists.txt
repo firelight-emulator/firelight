@@ -15,7 +15,6 @@ target_link_libraries(firelight_util
         PRIVATE nlohmann_json::nlohmann_json
 )
 
-# --- Unit tests (self-contained: link only firelight_util) ---
 find_package(GTest REQUIRED)
 include(GoogleTest)
 enable_testing()

@@ -6,10 +6,7 @@
 namespace firelight {
 
 /**
- * The canonical region and language vocabulary.
- *
- * A closed set that ships with the binary, so these are constants rather than a table: nothing
- * renames a region or merges two languages, and there is no screen to manage them from.
+ * The canonical region and language vocabulary
  */
 namespace regions {
 inline constexpr auto US = "US";
@@ -40,7 +37,7 @@ inline constexpr auto UNKNOWN = "UNKNOWN";
 } // namespace regions
 
 /**
- * The region a tag names, or empty when it names no region.
+ * The region a tag names, or empty when it names no region
  *
  * Accepts full names ("Europe"), codes ("EU") and the GoodTools single letters ("E"), case
  * insensitively
@@ -48,19 +45,19 @@ inline constexpr auto UNKNOWN = "UNKNOWN";
 [[nodiscard]] std::string regionForTag(std::string_view tag);
 
 /**
- * The ISO 639-1 code a tag names, or empty when it names no language.
+ * The ISO 639-1 code a tag names, or empty when it names no language
  *
  * Accepts the two-letter code ("En") and the full English name ("English"), case insensitively
  */
 [[nodiscard]] std::string languageForTag(std::string_view tag);
 
 /**
- * @return Whether the code is one this vocabulary knows
+ * @return Whether the code is one we know
  */
 [[nodiscard]] bool isKnownRegion(std::string_view code);
 
 /**
- * @return Whether the code is one this vocabulary knows
+ * @return Whether the code is one we know
  */
 [[nodiscard]] bool isKnownLanguage(std::string_view code);
 

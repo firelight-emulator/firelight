@@ -65,9 +65,9 @@ namespace firelight::strings {
 [[nodiscard]] bool containsIgnoringCase(std::string_view haystack, std::string_view needle);
 
 /**
- * Rewrites an ampersand as the word, so "Ratchet & Clank" and "Ratchet and Clank" agree.
+ * Rewrites an ampersand as the word, for example "Ratchet & Clank" becomes "Ratchet and Clank"
  *
- * Only a standalone ampersand counts, so "AT&T" is left alone
+ * Only a standalone ampersand counts, so something like "AT&T" is left alone
  */
 [[nodiscard]] std::string foldAmpersand(std::string_view value);
 
@@ -77,8 +77,7 @@ namespace firelight::strings {
 [[nodiscard]] std::string stripPunctuation(std::string_view value);
 
 /**
- * Moves a trailing article to the front, so "Legend of Zelda, The" reads as "The Legend of
- * Zelda". Titles are written both ways depending on who dumped them
+ * Moves a trailing article to the front, so "Legend of Zelda, The" becomes "The Legend of Zelda"
  */
 [[nodiscard]] std::string restoreTrailingArticle(std::string_view value);
 
@@ -88,11 +87,7 @@ namespace firelight::strings {
 [[nodiscard]] std::string stripLeadingArticle(std::string_view value);
 
 /**
- * Rewrites roman numerals up to 20 as digits, so "Final Fantasy IV" and "Final Fantasy 4"
- * agree. Only a whole word counts, so "Civilization" keeps its i's.
- *
- * A sequel number is what tells two games apart, so this belongs in a key used for matching
- * rather than one used for deciding that two entries are the same game
+ * Rewrites roman numerals up to 20 as digits (V -> 5, X -> 10, XIV -> 14, etc)
  */
 [[nodiscard]] std::string foldRomanNumerals(std::string_view value);
 
