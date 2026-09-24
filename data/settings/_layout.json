@@ -297,8 +297,8 @@
       "label": "Video",
       "settings": [
         "picture-mode",
+        "integer-scale",
         "aspect-ratio",
-        "vsync",
         "sync-method",
         "target-framerate",
         "gambatte_mix_frames",
