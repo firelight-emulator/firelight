@@ -1,9 +1,5 @@
 #pragma once
 
-// Compact, dependency-free MD5 (replaces QCryptographicHash for the savefile
-// dedup fingerprint). MD5 is used only to detect unchanged save bytes and skip
-// a redundant write — not for security. Public-domain style implementation
-
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -11,14 +7,19 @@
 
 namespace firelight::saves::detail {
 
+// TODO: Probably need to move this to util or something but only used here for now.
+
+/**
+ * This stuff was all written by Claude so don't ask me questions about the algorithm, I can't answer them :-)
+ */
 class Md5 {
 public:
   Md5() { reset(); }
 
   void update(const void *data, size_t len) {
     const auto *p = static_cast<const uint8_t *>(data);
-    size_t index = static_cast<size_t>((m_count >> 3) & 0x3f);
-    m_count += static_cast<uint64_t>(len) << 3;
+    size_t index = m_count >> 3 & 0x3f;
+    m_count += len << 3;
     const size_t partLen = 64 - index;
     size_t i = 0;
     if (len >= partLen) {
@@ -41,7 +42,7 @@ public:
     uint8_t bits[8];
     encode(bits, &m_count, 8);
 
-    const size_t index = static_cast<size_t>((m_count >> 3) & 0x3f);
+    const size_t index = m_count >> 3 & 0x3f;
     const size_t padLen = (index < 56) ? (56 - index) : (120 - index);
     update(padding, padLen);
     update(bits, 8);
@@ -49,7 +50,7 @@ public:
     uint8_t digest[16];
     encode(digest, m_state.data(), 16);
 
-    static const char *hex = "0123456789abcdef";
+    static auto hex = "0123456789abcdef";
     std::string out;
     out.reserve(32);
     for (uint8_t b : digest) {
@@ -71,9 +72,9 @@ private:
     m_state = {0x67452301u, 0xefcdab89u, 0x98badcfeu, 0x10325476u};
   }
 
-  static uint32_t rotl(uint32_t x, int c) { return (x << c) | (x >> (32 - c)); }
+  static uint32_t rotl(const uint32_t x, const int c) { return (x << c) | (x >> (32 - c)); }
 
-  static void encode(uint8_t *out, const void *in, size_t len) {
+  static void encode(uint8_t *out, const void *in, const size_t len) {
     const auto *p = static_cast<const uint32_t *>(in);
     for (size_t i = 0, j = 0; j < len; ++i, j += 4) {
       out[j] = static_cast<uint8_t>(p[i] & 0xff);

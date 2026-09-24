@@ -12,6 +12,6 @@ struct SavefileInfo {
   std::string savefileMd5;
   std::string name;
   std::string description;
-  int64_t lastModifiedAt = 0;  // Epoch milliseconds
+  int64_t lastModifiedAt = 0;
 };
 } // namespace firelight::saves

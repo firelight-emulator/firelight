@@ -43,10 +43,6 @@ SqliteSaveDatabase::SqliteSaveDatabase(const std::string &dbFile) : m_databaseFi
   m_db->exec("PRAGMA journal_mode=WAL;");
   m_db->exec("PRAGMA synchronous=NORMAL;");
 
-  // Forward-only schema migrations (see migration_runner). A future change adds
-  // the next-numbered migration
-  // Fresh schema rather than a chain: nothing has shipped, so the tables are simply
-  // declared correctly. Timestamps are epoch milliseconds throughout
   const std::vector<migrations::Migration> schema = {
       {1,
        [this] {
@@ -59,8 +55,6 @@ SqliteSaveDatabase::SqliteSaveDatabase(const std::string &dbFile) : m_databaseFi
                     "created_at INTEGER NOT NULL,"
                     "UNIQUE(content_hash, save_slot));");
 
-         // A suspend point is addressed by all three, and the key says so. Leaving the
-         // save slot out is what made two playthroughs collide on the same index
          m_db->exec("CREATE TABLE IF NOT EXISTS suspend_point_metadata("
                     "id INTEGER PRIMARY KEY,"
                     "content_hash TEXT NOT NULL,"
@@ -75,9 +69,11 @@ SqliteSaveDatabase::SqliteSaveDatabase(const std::string &dbFile) : m_databaseFi
 
   try {
     SQLite::Transaction transaction(*m_db);
+
     const int currentVersion = m_db->execAndGet("PRAGMA user_version").getInt();
-    migrations::applyMigrations(currentVersion, schema,
+    applyMigrations(currentVersion, schema,
                                 [this](const int v) { m_db->exec("PRAGMA user_version = " + std::to_string(v)); });
+
     transaction.commit();
   } catch (const std::exception &e) {
     spdlog::error("Failed to initialize save database: {}", e.what());
@@ -100,6 +96,7 @@ bool SqliteSaveDatabase::createSavefileMetadata(SavefileMetadata &metadata) {
     q.bind(":createdAt", metadata.createdAt != 0 ? metadata.createdAt : nowMs());
     q.exec();
     metadata.id = static_cast<int>(m_db->getLastInsertRowid());
+
     return true;
   } catch (const std::exception &e) {
     spdlog::error("createSavefileMetadata failed: {}", e.what());
@@ -114,6 +111,7 @@ std::optional<SavefileMetadata> SqliteSaveDatabase::getSavefileMetadata(std::str
                                ":contentHash AND save_slot = :saveSlot LIMIT 1;");
     q.bind(":contentHash", contentHash);
     q.bind(":saveSlot", saveSlot);
+
     if (q.executeStep()) {
       return readSavefile(q);
     }
@@ -131,6 +129,7 @@ bool SqliteSaveDatabase::updateSavefileMetadata(SavefileMetadata metadata) {
     q.bind(":savefileMd5", metadata.savefileMd5);
     q.bind(":lastModifiedAt", metadata.lastModifiedAt);
     q.bind(":id", metadata.id);
+
     return q.exec() >= 1;
   } catch (const std::exception &e) {
     spdlog::error("updateSavefileMetadata failed: {}", e.what());
@@ -144,6 +143,7 @@ std::vector<SavefileMetadata> SqliteSaveDatabase::getSavefileMetadataForContent(
   try {
     SQLite::Statement q(*m_db, "SELECT * FROM savefile_metadata WHERE content_hash = :contentHash;");
     q.bind(":contentHash", contentHash);
+
     while (q.executeStep()) {
       result.emplace_back(readSavefile(q));
     }
@@ -168,7 +168,9 @@ bool SqliteSaveDatabase::createSuspendPointMetadata(SuspendPointMetadata &metada
     q.bind(":lastModifiedAt", metadata.lastModifiedAt != 0 ? metadata.lastModifiedAt : now);
     q.bind(":createdAt", metadata.createdAt != 0 ? metadata.createdAt : now);
     q.exec();
+
     metadata.id = static_cast<int>(m_db->getLastInsertRowid());
+
     return true;
   } catch (const std::exception &e) {
     spdlog::error("createSuspendPointMetadata failed: {}", e.what());
@@ -186,6 +188,7 @@ std::optional<SuspendPointMetadata> SqliteSaveDatabase::getSuspendPointMetadata(
     q.bind(":contentHash", contentHash);
     q.bind(":saveSlot", saveSlot);
     q.bind(":pointIndex", pointIndex);
+
     if (q.executeStep()) {
       return readSuspend(q);
     }
@@ -203,6 +206,7 @@ bool SqliteSaveDatabase::updateSuspendPointMetadata(const SuspendPointMetadata &
     q.bind(":locked", metadata.locked ? 1 : 0);
     q.bind(":lastModifiedAt", metadata.lastModifiedAt);
     q.bind(":id", metadata.id);
+
     return q.exec() >= 1;
   } catch (const std::exception &e) {
     spdlog::error("updateSuspendPointMetadata failed: {}", e.what());
@@ -219,6 +223,7 @@ std::vector<SuspendPointMetadata> SqliteSaveDatabase::getSuspendPointMetadataFor
                                ":contentHash AND save_slot = :saveSlot;");
     q.bind(":contentHash", contentHash);
     q.bind(":saveSlot", saveSlot);
+
     while (q.executeStep()) {
       result.emplace_back(readSuspend(q));
     }
@@ -231,8 +236,6 @@ std::vector<SuspendPointMetadata> SqliteSaveDatabase::getSuspendPointMetadataFor
 bool SqliteSaveDatabase::transferContent(const std::string &fromContentHash, const std::string &toContentHash) {
   std::lock_guard lock(m_mutex);
   try {
-    // OR IGNORE leaves a row alone when the destination already holds that slot, matching what
-    // the file move does
     SQLite::Statement savefiles(*m_db, "UPDATE OR IGNORE savefile_metadata SET content_hash = :to "
                                        "WHERE content_hash = :from;");
     savefiles.bind(":to", toContentHash);
@@ -252,11 +255,12 @@ bool SqliteSaveDatabase::transferContent(const std::string &fromContentHash, con
   return true;
 }
 
-bool SqliteSaveDatabase::deleteSuspendPointMetadata(int id) {
+bool SqliteSaveDatabase::deleteSuspendPointMetadata(const int id) {
   std::lock_guard lock(m_mutex);
   try {
     SQLite::Statement q(*m_db, "DELETE FROM suspend_point_metadata WHERE id = :id;");
     q.bind(":id", id);
+
     return q.exec() >= 1;
   } catch (const std::exception &e) {
     spdlog::error("deleteSuspendPointMetadata failed: {}", e.what());

@@ -11,9 +11,7 @@
 
 namespace firelight::saves {
 
-// In-memory ISaveDatabase for tests. SaveManager persists metadata from a
-// background thread, so this fake is thread-safe and lets tests assert
-// create/update counts
+// In-memory ISaveDatabase for tests
 class FakeSaveDatabase : public ISaveDatabase {
 public:
   bool createSavefileMetadata(SavefileMetadata &metadata) override {
@@ -42,7 +40,6 @@ public:
 
   std::vector<SavefileMetadata> getSavefileMetadataForContent(std::string) override { return {}; }
 
-  // --- suspend points: minimal in-memory behavior ---
   bool createSuspendPointMetadata(SuspendPointMetadata &metadata) override {
     std::lock_guard lock(m_mutex);
     metadata.id = m_nextId++;
@@ -93,7 +90,6 @@ public:
         continue;
       }
 
-      // A slot already held at the destination wins, matching the real one
       const auto destination = std::pair{toContentHash, key.second};
       if (m_savefiles.count(destination) > 0) {
         movedSavefiles[key] = metadata;

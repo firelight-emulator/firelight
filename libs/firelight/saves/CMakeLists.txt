@@ -3,9 +3,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(spdlog REQUIRED)
 
-# Qt-free domain library: the save/suspend metadata index (SQLiteCpp) plus the
-# filesystem-backed SaveManager. QML/Qt bridging lives in the app layer
-# (QtSaveManagerProxy). AUTOMOC OFF because there are no QObjects here.
 add_library(firelight_saves STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/save_manager.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/savefile.cpp
@@ -27,7 +24,6 @@ target_link_libraries(firelight_saves
         PRIVATE sqlite3
 )
 
-# --- Unit tests (self-contained: link only firelight_saves; no Qt) ---
 find_package(GTest REQUIRED)
 include(GoogleTest)
 enable_testing()

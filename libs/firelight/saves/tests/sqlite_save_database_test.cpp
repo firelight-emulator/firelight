@@ -82,8 +82,6 @@ TEST_F(SqliteSaveDatabaseTest, SuspendPointCrudRoundTrips) {
 }
 
 TEST_F(SqliteSaveDatabaseTest, GetSuspendPointsForContentReturnsRows) {
-  // Regression: the old implementation never populated the result vector and
-  // always returned empty
   for (int slot = 1; slot <= 2; ++slot) {
     SuspendPointMetadata m;
     m.contentHash = "hash";
@@ -91,11 +89,11 @@ TEST_F(SqliteSaveDatabaseTest, GetSuspendPointsForContentReturnsRows) {
     m.pointIndex = slot;
     ASSERT_TRUE(db.createSuspendPointMetadata(m));
   }
+
   EXPECT_EQ(db.getSuspendPointMetadataForContent("hash", 1).size(), 2u);
 }
 
 TEST_F(SqliteSaveDatabaseTest, DeleteSuspendPointActuallyDeletes) {
-  // Regression: the old implementation was a no-op that leaked rows
   SuspendPointMetadata m;
   m.contentHash = "hash";
   m.saveSlot = 1;
@@ -106,9 +104,6 @@ TEST_F(SqliteSaveDatabaseTest, DeleteSuspendPointActuallyDeletes) {
   EXPECT_FALSE(db.getSuspendPointMetadata("hash", 1, 1).has_value());
 }
 
-// Two playthroughs of one game each keep their own suspend points, so index 0 of save slot 1
-// and index 0 of save slot 2 are different rows. The table was keyed without the save slot,
-// which made the second one fail to insert
 TEST_F(SqliteSaveDatabaseTest, SuspendPointsAreScopedToTheirSaveSlot) {
   SuspendPointMetadata inSlotOne;
   inSlotOne.contentHash = "hash";
@@ -130,7 +125,6 @@ TEST_F(SqliteSaveDatabaseTest, SuspendPointsAreScopedToTheirSaveSlot) {
   EXPECT_EQ(second->saveSlot, 2);
 }
 
-// The same point in the same slot is still one row
 TEST_F(SqliteSaveDatabaseTest, TheSameSuspendPointTwiceIsOneRow) {
   SuspendPointMetadata point;
   point.contentHash = "hash";

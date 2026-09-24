@@ -163,6 +163,7 @@ const std::map<std::string, Recipe> &recipes() {
       // Accepted so a real library reports them rather than losing them, with nothing able to
       // read one yet
       {"cso", {Expectation::KnownGap}},
+      {"gcn", {Expectation::KnownGap}},
 
       // TODO: fixtures for these need real structure (see the plan's step 10)
       {"nds", {Expectation::AwaitingFixture}},

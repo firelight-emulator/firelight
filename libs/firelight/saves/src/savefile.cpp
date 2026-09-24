@@ -4,6 +4,8 @@
 
 namespace firelight::saves {
 
+// TODO: This stuff can probably move to the header
+
 Savefile::Savefile(const std::vector<char> &saveRamData) {
   m_saveRamData = std::vector(saveRamData.begin(), saveRamData.end());
 }

@@ -41,19 +41,20 @@ protected:
     const auto unique =
         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "_" + std::to_string(g_counter++);
     m_tempDir = fs::temp_directory_path() / ("fl_saves_test_" + unique);
-    fs::create_directories(m_tempDir);
+    create_directories(m_tempDir);
     m_saveManager = std::make_unique<SaveManager>(m_tempDir.string(), m_db);
   }
 
   void TearDown() override {
     std::error_code ec;
-    fs::remove_all(m_tempDir, ec);
+    remove_all(m_tempDir, ec);
   }
 };
 
 TEST_F(SaveManagerTest, EmptySlotsReportNoData) {
   const auto list = m_saveManager->getSaveFileInfoList(m_hash);
   ASSERT_EQ(list.size(), 8u);
+
   for (const auto &info : list) {
     EXPECT_FALSE(info.hasData);
   }
@@ -70,6 +71,7 @@ TEST_F(SaveManagerTest, WriteThenReadRoundTrips) {
 
 TEST_F(SaveManagerTest, WriteCreatesFileAtSlotPath) {
   ASSERT_TRUE(m_saveManager->writeSaveData(m_hash, 3, Savefile(bytesOf("x"))).get());
+
   const auto expected = m_tempDir / m_hash / "slot3" / "savefile.srm";
   EXPECT_TRUE(fs::exists(expected));
 }
@@ -79,7 +81,6 @@ TEST_F(SaveManagerTest, FirstWriteCreatesMetadataSecondUpdates) {
   EXPECT_EQ(m_db.createCount, 1);
   EXPECT_EQ(m_db.updateCount, 0);
 
-  // Different data -> different MD5 -> an update, not a second create
   ASSERT_TRUE(m_saveManager->writeSaveData(m_hash, 1, Savefile(bytesOf("bbbb"))).get());
   EXPECT_EQ(m_db.createCount, 1);
   EXPECT_EQ(m_db.updateCount, 1);
@@ -90,8 +91,6 @@ TEST_F(SaveManagerTest, UnchangedDataSkipsRewrite) {
   ASSERT_TRUE(m_saveManager->writeSaveData(m_hash, 1, Savefile(data)).get());
   EXPECT_EQ(m_db.createCount, 1);
 
-  // Identical bytes: the MD5 matches, so the write short-circuits with no
-  // further metadata churn
   ASSERT_TRUE(m_saveManager->writeSaveData(m_hash, 1, Savefile(data)).get());
   EXPECT_EQ(m_db.createCount, 1);
   EXPECT_EQ(m_db.updateCount, 0);
@@ -104,12 +103,8 @@ TEST_F(SaveManagerTest, SetsLastModifiedTimestamp) {
   EXPECT_GT(md->lastModifiedAt, 0);
 }
 
-//****************
-// suspend points
-//****************
-
 TEST_F(SaveManagerTest, SuspendPointStateRoundTrips) {
-  auto point = makeSuspendPoint(m_hash, 1, "suspend-state-bytes");
+  const auto point = makeSuspendPoint(m_hash, 1, "suspend-state-bytes");
   m_saveManager->writeSuspendPoint(m_hash, 1, 0, point);
 
   const auto readBack = m_saveManager->readSuspendPoint(m_hash, 1, 0);
@@ -121,6 +116,7 @@ TEST_F(SaveManagerTest, SuspendPointRoundTripsRcheevosStateAndImage) {
   auto point = makeSuspendPoint(m_hash, 1, "state");
   point.retroachievementsState = uBytesOf("rcheevos-bytes");
   point.image.pngData = uBytesOf("fake-png-bytes");
+
   m_saveManager->writeSuspendPoint(m_hash, 1, 0, point);
 
   const auto readBack = m_saveManager->readSuspendPoint(m_hash, 1, 0);
@@ -139,8 +135,6 @@ TEST_F(SaveManagerTest, SuspendPointOmitsOptionalFilesWhenEmpty) {
   EXPECT_TRUE(readBack->image.pngData.empty());
 }
 
-// index is zero-based but lands on a one-based slot directory, so the three
-// disk functions have to agree on the conversion
 TEST_F(SaveManagerTest, SuspendPointIndexMapsToOneBasedSlotDirectory) {
   const auto point = makeSuspendPoint(m_hash, 2, "state");
   m_saveManager->writeSuspendPoint(m_hash, 2, 0, point);
@@ -224,8 +218,6 @@ TEST_F(SaveManagerTest, SuspendPointTimestampComesFromTheStateFile) {
   EXPECT_GT(readBack->timestamp, 0);
 }
 
-// The saveSlot parameter is authoritative; a disagreeing struct field must
-// not send the file to a different slot than the one the caller and the event use
 TEST_F(SaveManagerTest, SuspendPointUsesParameterSlotNotStructField) {
   auto point = makeSuspendPoint(m_hash, 5, "state");
   point.saveSlot = 9; // deliberately disagrees with the parameter
@@ -248,7 +240,6 @@ TEST_F(SaveManagerTest, RewritingSuspendPointReplacesState) {
   EXPECT_EQ(readBack->state, uBytesOf("replacement"));
 }
 
-// Two library entries turning out to be one game must not cost anybody a save
 TEST_F(SaveManagerTest, TransferMovesSavesToTheSurvivingHash) {
   const auto data = bytesOf("disc-two-save");
   ASSERT_TRUE(m_saveManager->writeSaveData("discTwoHash", 1, Savefile(data)).get());
@@ -259,11 +250,9 @@ TEST_F(SaveManagerTest, TransferMovesSavesToTheSurvivingHash) {
   ASSERT_TRUE(moved.has_value());
   EXPECT_EQ(moved->getSaveRamData(), data);
 
-  // And it is no longer readable where it was
   EXPECT_FALSE(m_saveManager->readSaveData("discTwoHash", 1).has_value());
 }
 
-// Overwriting a save to tidy up a merge is worse than leaving a duplicate behind
 TEST_F(SaveManagerTest, TransferDoesNotOverwriteAnExistingSlot) {
   const auto keep = bytesOf("keep-me");
   const auto other = bytesOf("other-save");
@@ -276,7 +265,6 @@ TEST_F(SaveManagerTest, TransferDoesNotOverwriteAnExistingSlot) {
   ASSERT_TRUE(survivor.has_value());
   EXPECT_EQ(survivor->getSaveRamData(), keep);
 
-  // The one that could not move is still where it was, not deleted
   const auto stranded = m_saveManager->readSaveData("discTwoHash", 1);
   ASSERT_TRUE(stranded.has_value());
   EXPECT_EQ(stranded->getSaveRamData(), other);

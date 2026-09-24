@@ -22,8 +22,6 @@ int64_t nowMs() {
 }
 
 // Last-modified time of a file as int64 milliseconds since the Unix epoch
-// Portable conversion from filesystem clock to system clock (C++20 clock_cast
-// support is uneven across the toolchains we build on)
 int64_t fileMtimeMs(const fs::path &p) {
   std::error_code ec;
   const auto ftime = fs::last_write_time(p, ec);
@@ -36,9 +34,9 @@ int64_t fileMtimeMs(const fs::path &p) {
   return duration_cast<milliseconds>(sctp.time_since_epoch()).count();
 }
 
-// Atomically replace `path` with `data` via a temp file + rename, so a failed
-// or partial write can never corrupt a prior good file. Returns false on error
-bool writeAtomic(const fs::path &path, const void *data, size_t size) {
+// Atomically replace the contents of path with data via a temp file + rename, so a failed
+// or partial write can never corrupt a good file. Returns false on error
+bool writeAtomic(const fs::path &path, const void *data, const size_t size) {
   const fs::path tmp = path.string() + ".tmp";
   {
     std::ofstream out(tmp, std::ios::binary);
@@ -60,10 +58,7 @@ bool writeAtomic(const fs::path &path, const void *data, size_t size) {
   return true;
 }
 
-// Convert a possibly-file:// URL into a filesystem path. Strips the scheme but,
-// unlike the old code, does NOT strip the leading '/' of a POSIX absolute path
-// (that turned /Users/x into Users/x). Only a Windows drive path (/C:/...) has
-// its leading slash removed
+// Convert a possibly-file:// URL into a filesystem path
 std::string stripFileUrl(std::string s) {
   constexpr std::string_view SCHEME = "file://";
   if (s.rfind(SCHEME, 0) == 0) {
@@ -213,11 +208,9 @@ bool SaveManager::transferSaves(const std::string &fromContentHash, const std::s
 
   const fs::path destination = fs::path(m_saveDirectory) / toContentHash;
   std::error_code ec;
-  fs::create_directories(destination, ec);
+  create_directories(destination, ec);
 
-  // Slot by slot rather than a whole-directory move, so a slot that already exists at the
-  // destination is kept. Overwriting somebody's save to tidy up a merge is not a trade worth
-  // making
+  // Only move files that don't already exist at the destination, to avoid overwriting a save that was already there
   auto movedAnything = false;
 
   for (const auto &entry : fs::directory_iterator(source, ec)) {
@@ -239,7 +232,7 @@ bool SaveManager::transferSaves(const std::string &fromContentHash, const std::s
     movedAnything = true;
   }
 
-  if (fs::is_empty(source, ec)) {
+  if (is_empty(source, ec)) {
     fs::remove(source, ec);
   }
 

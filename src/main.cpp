@@ -117,7 +117,6 @@
 #include <firelight/mods/sqlite_mod_repository.hpp>
 #include <firelight/netplay/rtc_transport.hpp>
 #include <firelight/platforms/platform_service.hpp>
-#include <firelight/saves/save_manager.hpp>
 #include <firelight/saves/save_manager_impl.hpp>
 #include <firelight/saves/sqlite_save_database.hpp>
 #include <firelight/settings/settings_catalog.hpp>
