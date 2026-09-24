@@ -28,7 +28,10 @@
       "icon": "controller",
       "route": "/settings/controllers",
       "keywords": [],
-      "groups": []
+      "groups": [
+        "controllers-configure-all",
+        "controllers-general"
+      ]
     },
     {
       "id": "video",
@@ -228,6 +231,20 @@
       "settings": [
         "theme-intensity",
         "glass-opacity"
+      ]
+    },
+    {
+      "id": "controllers-general",
+      "label": "",
+      "settings": [
+        "prioritize-controller-over-keyboard"
+      ]
+    },
+    {
+      "id": "controllers-configure-all",
+      "label": "",
+      "settings": [
+        "configure-controllers"
       ]
     },
     {

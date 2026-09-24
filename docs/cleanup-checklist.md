@@ -643,7 +643,7 @@ normalization), so files that only changed line endings are excluded. Vendored t
 - [ ] `qml/components/settings/SliderSettingItem.qml` — 54 L / 2 C
 - [ ] `qml/components/settings/StepperSettingItem.qml` — 81 L / 3 C
 - [ ] `qml/components/settings/TextSettingItem.qml` — 37 L / 3 C
-- [ ] `qml/components/settings/ToggleSettingItem.qml` — 47 L / 0 C
+- [ ] `qml/components/settings/CheckboxSettingItem.qml` — 47 L / 0 C
 
 ## 24 qml - components
 

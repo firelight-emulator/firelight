@@ -117,6 +117,7 @@
         "title",
         "library"
       ],
+      "widget": "checkbox",
       "type": "boolean",
       "default": "true"
     },
@@ -138,6 +139,7 @@
         "library",
         "favorite"
       ],
+      "widget": "checkbox",
       "type": "boolean",
       "default": "true"
     },

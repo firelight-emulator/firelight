@@ -1,11 +1,10 @@
-// TODO: NEEDS REVIEW
 import QtQuick
 
 Item {
     id: control
 
     property bool checked: false
-    property color activeColor: Theme.switch2Color
+    property color activeColor: Theme.switch2Color // TODO
     property color inactiveColor: Theme.border
 
     implicitWidth: AppStyle.iconSizeMd
@@ -16,7 +15,7 @@ Item {
         radius: AppStyle.radiusSm
         color: "transparent"
         border.width: Math.max(1, Math.round(1 * AppStyle.scale))
-        border.color: control.selected ? control.activeColor : control.inactiveColor
+        border.color: control.checked ? control.activeColor : control.inactiveColor
     }
 
     Rectangle {

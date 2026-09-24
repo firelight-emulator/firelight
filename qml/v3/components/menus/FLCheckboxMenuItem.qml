@@ -3,7 +3,7 @@ import Firelight 1.0
 
 FLMenuItem {
     id: control
-    objectName: "FLToggleMenuItem|" + label
+    objectName: "FLCheckboxMenuItem|" + label
 
     signal selected(bool selected)
 
@@ -25,7 +25,7 @@ FLMenuItem {
         control.selected(!control.checked);
     }
 
-    FLToggle {
+    FLCheckbox {
         checked: control.checked
     }
 }

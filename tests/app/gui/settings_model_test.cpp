@@ -140,6 +140,35 @@ TEST_F(SettingsModelTest, ExposesWidgetAndSliderBounds) {
   EXPECT_DOUBLE_EQ(value(model, level, "stepValue").toDouble(), 1.0);
 }
 
+const char *CHECKBOX_CATALOG = R"JSON(
+{
+  "groups": [{"id": "emulation", "label": "Emulation", "settings": ["show-box"]}],
+  "common": [
+    {"key": "show-box", "label": "Show box",
+     "type": "boolean", "widget": "checkbox", "default": "true"}
+  ]
+}
+)JSON";
+
+TEST_F(SettingsModelTest, ABooleanDrawnAsACheckboxStillHoldsABool) {
+  ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(CHECKBOX_CATALOG));
+
+  SettingsModel model;
+  model.setGroup("emulation");
+  model.setLevel(Global);
+
+  const int row = findRow(model, "show-box");
+  ASSERT_NE(row, -1);
+  EXPECT_EQ(value(model, row, "widget").toString(), "checkbox");
+  EXPECT_EQ(value(model, row, "value").typeId(), QMetaType::Bool);
+  EXPECT_TRUE(value(model, row, "value").toBool());
+
+  ASSERT_TRUE(model.setData(model.index(row), false, roleFor(model, "value")));
+  EXPECT_EQ(value(model, row, "value").typeId(), QMetaType::Bool);
+  EXPECT_FALSE(value(model, row, "value").toBool());
+  EXPECT_EQ(m_service.getGlobalValue("show-box").value_or(""), "false");
+}
+
 TEST_F(SettingsModelTest, ShowsInheritedValueThenGameOverride) {
   m_service.setPlatformValue(GBA_PLATFORM_ID, "aspect-ratio", "pixel");
 

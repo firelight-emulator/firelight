@@ -147,7 +147,7 @@ FLMenuItem {
         Repeater {
             model: control.model
 
-            delegate: FLToggleMenuItem {
+            delegate: FLCheckboxMenuItem {
                 id: option
 
                 required property var modelData

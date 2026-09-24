@@ -85,7 +85,7 @@ FLIconButton {
             }
         }
 
-        FLToggleMenuItem {
+        FLCheckboxMenuItem {
             label: "Favorites"
             checked: control.entryModel.filter.favorite === LibraryFilter.Yes
             onSelected: function (selected) {
@@ -142,7 +142,7 @@ FLIconButton {
             }
         }
 
-        FLToggleMenuItem {
+        FLCheckboxMenuItem {
             label: "Never played"
             checked: control.entryModel.filter.unplayed === LibraryFilter.Yes
             onSelected: function (selected) {
@@ -170,7 +170,7 @@ FLIconButton {
             model: []
         }
 
-        FLToggleMenuItem {
+        FLCheckboxMenuItem {
             label: "Hide unplayable"
             checked: control.entryModel.filter.playable === LibraryFilter.Yes
             onSelected: function (selected) {

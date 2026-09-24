@@ -4,8 +4,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Firelight 1.0
 
-//   FLMenuItem { iconName: "settings"; label: "Appearance" }
-//   FLMenuItem { label: "Volume"; description: "How loud everything is"; controlItem: FLSlider {} }
 ItemDelegate {
     id: root
 
@@ -112,8 +110,6 @@ ItemDelegate {
                 return;
             }
 
-            // TODO
-            // Only an action opts into repeating: a held key never presses the item itself
             if (event.isAutoRepeat) {
                 return;
             }
@@ -148,7 +144,7 @@ ItemDelegate {
 
     contentItem: ColumnLayout {
         id: contentColumn
-        spacing: 0
+        spacing: AppStyle.spacingSm
 
         RowLayout {
             Layout.fillWidth: true

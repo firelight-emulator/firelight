@@ -1,0 +1,30 @@
+{
+  "app": [
+    {
+      "key": "prioritize-controller-over-keyboard",
+      "label": "Prioritize controllers over keyboard",
+      "description": "When enabled, a connected gamepad will take the player 1 slot from the keyboard, and the keyboard will move to the next available space.",
+      "keywords": [
+        "priority",
+        "keyboard"
+      ],
+      "type": "boolean",
+      "default": "false"
+    },
+    {
+      "key": "only-allow-player-one-navigate-menus",
+      "label": "Only allow player 1 to navigate menus",
+      "description": "Note that the keyboard can always navigate menus.",
+      "keywords": [],
+      "type": "boolean",
+      "default": "false"
+    },
+    {
+      "key": "configure-controllers",
+      "label": "Configure controllers",
+      "keywords": [],
+      "type": "link",
+      "route": "/example/TODO"
+    }
+  ]
+}

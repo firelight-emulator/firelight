@@ -20,7 +20,7 @@ FLTwoColumnPage {
             "key": "controllers",
             "label": "Controllers",
             "iconName": "controller",
-            "page": controllerSettings
+            "page": controllerSettingsPage
         },
         {
             "type": "divider"
@@ -238,6 +238,12 @@ FLTwoColumnPage {
         id: controllerSettings
 
         ControllerSettings {}
+    }
+
+    Component {
+        id: controllerSettingsPage
+
+        ControllersSettingsPage {}
     }
 
     Component {

@@ -76,34 +76,34 @@ FocusScope {
         anchors.fill: parent
         spacing: AppStyle.spacingMd
 
-        ToggleSettingItem {
-            Layout.fillWidth: true
-            label: "Prioritize controllers over keyboard"
-            description: "Connecting a controller pushes the keyboard down a player slot, so the controller becomes player one."
-            checked: InputService.prioritizeControllerOverKeyboard
-            onCheckedChanged: InputService.prioritizeControllerOverKeyboard = checked
-        }
-
-        ToggleSettingItem {
-            Layout.fillWidth: true
-            label: "Only allow player one to navigate menus"
-            description: "The keyboard can always navigate menus, whatever this is set to."
-            checked: InputService.onlyPlayerOneCanNavigateMenus
-            onCheckedChanged: InputService.onlyPlayerOneCanNavigateMenus = checked
-        }
+        // ToggleSettingItem {
+        //     Layout.fillWidth: true
+        //     label: "Prioritize controllers over keyboard"
+        //     description: "Connecting a controller pushes the keyboard down a player slot, so the controller becomes player one."
+        //     checked: InputService.prioritizeControllerOverKeyboard
+        //     onCheckedChanged: InputService.prioritizeControllerOverKeyboard = checked
+        // }
+        //
+        // ToggleSettingItem {
+        //     Layout.fillWidth: true
+        //     label: "Only allow player one to navigate menus"
+        //     description: "The keyboard can always navigate menus, whatever this is set to."
+        //     checked: InputService.onlyPlayerOneCanNavigateMenus
+        //     onCheckedChanged: InputService.onlyPlayerOneCanNavigateMenus = checked
+        // }
 
         SettingBinding {
             id: playerOneHotkeysBinding
             key: "only-player-one-hotkeys"
         }
 
-        ToggleSettingItem {
-            Layout.fillWidth: true
-            label: playerOneHotkeysBinding.label
-            description: playerOneHotkeysBinding.description
-            checked: playerOneHotkeysBinding.value === "true"
-            onCheckedChanged: playerOneHotkeysBinding.value = checked ? "true" : "false"
-        }
+        // ToggleSettingItem {
+        //     Layout.fillWidth: true
+        //     label: playerOneHotkeysBinding.label
+        //     description: playerOneHotkeysBinding.description
+        //     checked: playerOneHotkeysBinding.value === "true"
+        //     onCheckedChanged: playerOneHotkeysBinding.value = checked ? "true" : "false"
+        // }
 
         Text {
             text: "Preferred controller per platform"

@@ -25,7 +25,6 @@ SettingsSection {
 
     title: settingsModel.groupLabel
 
-    // The card would otherwise sit at its implicit width inside a ColumnLayout
     Layout.fillWidth: true
 
     property alias model: settingsModel
@@ -56,7 +55,7 @@ SettingsSection {
             }
             DelegateChoice {
                 roleValue: "checkbox"
-                delegate: toggleDelegate
+                delegate: checkboxDelegate
             }
             DelegateChoice {
                 roleValue: "slider"
@@ -165,7 +164,7 @@ SettingsSection {
 
     Component {
         id: toggleDelegate
-        ToggleSettingItem {
+        FLToggleMenuItem {
             required property var model
             required property var index
             shown: model.visible
@@ -178,8 +177,29 @@ SettingsSection {
             resettable: model.resettable
 
             onReset: settingsModel.resetValue(index)
-            onClicked: function () {
-                model.value = !checked;
+            onSelected: function (val) {
+                model.value = val;
+            }
+        }
+    }
+
+    Component {
+        id: checkboxDelegate
+        FLCheckboxMenuItem {
+            required property var model
+            required property var index
+            shown: model.visible
+            subItem: model.subItem
+            enabled: model.enabled
+            label: model.label
+            description: model.description
+            longDescription: model.longDescription
+            checked: model.value
+            resettable: model.resettable
+
+            onReset: settingsModel.resetValue(index)
+            onSelected: function (val) {
+                model.value = val;
             }
         }
     }

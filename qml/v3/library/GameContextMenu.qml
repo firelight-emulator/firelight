@@ -24,7 +24,7 @@ FLMenu {
         }
     }
 
-    FLToggleMenuItem {
+    FLCheckboxMenuItem {
         label: "Hidden"
         checked: control.entry.hidden
         onSelected: function (selected) {

@@ -1,8 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 
-// On/off switch. Track and thumb scale with the UI; the touch target is the
-// whole control, floored at minTarget
+// TODO: clean this the heck up
 Switch {
     id: control
 
@@ -11,8 +10,6 @@ Switch {
     readonly property int _thumb: Math.round(_h * 18 / 24)
     readonly property int _inset: Math.round(_h * 3 / 24)
 
-    // Gamepad and keyboard focus has to be visible; a mouse user already knows
-    // where they are, so the ring is suppressed for them
     readonly property bool _focusRing: activeFocus && !InputMethodManager.usingMouse
 
     implicitWidth: _w
@@ -30,9 +27,9 @@ Switch {
         implicitHeight: control._h
         anchors.verticalCenter: parent.verticalCenter
         radius: height / 2
-        color: control.checked ? Theme.accent : toggleHover.hovered ? Theme.surfaceElevated : Theme.surfaceHover
+        color: control.checked ? Theme.switch2Color : toggleHover.hovered ? Theme.surfaceElevated : Theme.surfaceHover
         border.width: control._focusRing ? 2 : 1
-        border.color: control._focusRing ? Theme.accent : control.checked ? Theme.accent : Theme.border
+        border.color: control._focusRing ? Theme.switch2Color : control.checked ? Theme.switch2Color : Theme.border
         Behavior on color {
             ColorAnimation {
                 duration: AppStyle.durationFast

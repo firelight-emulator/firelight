@@ -101,6 +101,7 @@ void SettingsModel::rebuildItems() {
     item.description = QString::fromStdString(setting.description);
     item.longDescription = QString::fromStdString(setting.longDescription);
     item.widget = widgetFor(setting);
+    item.isBoolean = setting.type == SettingType::BOOLEAN;
     item.defaultValue = QString::fromStdString(setting.defaultValue);
     item.trueValue = QString::fromStdString(setting.trueStringValue);
     item.falseValue = QString::fromStdString(setting.falseStringValue);
@@ -279,7 +280,7 @@ std::optional<std::string> SettingsModel::resolveValue(const std::string &key, c
 std::string SettingsModel::currentValueOf(const std::string &key) const {
   for (const auto &item : m_items) {
     if (item.key.toStdString() == key) {
-      if (item.widget == "toggle") {
+      if (item.isBoolean) {
         return (item.boolValue ? item.trueValue : item.falseValue).toStdString();
       }
       return item.stringValue.toStdString();
@@ -399,7 +400,7 @@ QVariant SettingsModel::data(const QModelIndex &index, int role) const {
   case WidgetRole:
     return item.widget;
   case ValueRole:
-    if (item.widget == "toggle") {
+    if (item.isBoolean) {
       return item.boolValue;
     }
     return item.stringValue;
@@ -483,7 +484,7 @@ bool SettingsModel::setData(const QModelIndex &index, const QVariant &value, con
   }
 
   QString stringValue;
-  if (item.widget == "toggle") {
+  if (item.isBoolean) {
     item.boolValue = value.toBool();
     stringValue = item.boolValue ? item.trueValue : item.falseValue;
   } else {
@@ -537,7 +538,7 @@ void SettingsModel::refreshValues() {
 }
 
 void SettingsModel::setItemValue(int itemIndex, Item &item, const std::string &value) {
-  if (item.widget == "toggle") {
+  if (item.isBoolean) {
     item.boolValue = value == item.trueValue.toStdString();
   } else {
     item.stringValue = QString::fromStdString(value);
