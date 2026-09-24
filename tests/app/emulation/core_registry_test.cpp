@@ -11,7 +11,7 @@
 namespace firelight {
 namespace {
 bool contains(const std::vector<PlatformCore> &cores, const std::string &id) {
-  return std::any_of(cores.begin(), cores.end(), [&](const auto &c) { return c.id == id; });
+  return std::ranges::any_of(cores, [&](const auto &c) { return c.id == id; });
 }
 } // namespace
 
@@ -31,14 +31,14 @@ TEST(CoreRegistryTest, DefaultCoreMatchesLegacyMapping) {
 TEST(CoreRegistryTest, CoresForPlatformListsDefaultFirstPlusAlternates) {
   const auto &registry = CoreRegistry::instance();
 
-  const auto gb = registry.coresForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY);
+  const auto gb = registry.coresForPlatform(platforms::PlatformService::PLATFORM_ID_GAMEBOY);
   ASSERT_FALSE(gb.empty());
   EXPECT_EQ(gb.front().id, "gambatte_libretro");
   EXPECT_TRUE(gb.front().isDefault);
-  // mGBA is offered as an alternate for the Game Boy
+
   EXPECT_TRUE(contains(gb, "mgba_libretro"));
 
-  const auto gba = registry.coresForPlatform(firelight::platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE);
+  const auto gba = registry.coresForPlatform(platforms::PlatformService::PLATFORM_ID_GAMEBOY_ADVANCE);
   ASSERT_EQ(gba.size(), 1u);
   EXPECT_EQ(gba.front().id, "mgba_libretro");
   EXPECT_TRUE(gba.front().isDefault);

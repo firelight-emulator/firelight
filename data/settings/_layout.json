@@ -235,14 +235,14 @@
     },
     {
       "id": "controllers-general",
-      "label": "",
+      "label": "General",
       "settings": [
         "prioritize-controller-over-keyboard"
       ]
     },
     {
       "id": "controllers-configure-all",
-      "label": "",
+      "label": "All controllers",
       "settings": [
         "configure-controllers"
       ]
@@ -296,11 +296,11 @@
       "id": "emulation-video",
       "label": "Video",
       "settings": [
-        "emulation-picture-mode",
-        "emulation-aspect-ratio",
+        "picture-mode",
+        "aspect-ratio",
         "vsync",
-        "emulation-sync-method",
-        "emulation-target-framerate",
+        "sync-method",
+        "target-framerate",
         "gambatte_mix_frames",
         "gambatte_gbc_color_correction",
         "gambatte_gbc_frontlight_position",
@@ -313,7 +313,7 @@
       "id": "emulation-audio",
       "label": "Audio",
       "settings": [
-        "emulation-audio-latency",
+        "audio-latency",
         "mute-on-fast-forward",
         "mute-on-slow-motion",
         "dynamic-rate-control"

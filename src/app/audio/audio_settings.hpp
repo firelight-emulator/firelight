@@ -17,7 +17,7 @@ inline constexpr auto MUTED_KEY = "audio-muted";
 
 // TODO
 /** How much sound is buffered ahead, in milliseconds */
-inline constexpr auto LATENCY_KEY = "emulation-audio-latency";
+inline constexpr auto LATENCY_KEY = "audio-latency";
 
 // TODO
 /** What to buffer when the setting is missing or unreadable. RetroArch ships the same figure */
@@ -54,11 +54,11 @@ inline constexpr double PRIMING_FILL_FRACTION = 0.75;
 
 // Playback loudness, 0-100. Separate from mute so that unmuting returns you to
 // the volume you had rather than to full
-inline constexpr auto VOLUME_KEY = "volume";
+inline constexpr auto VOLUME_KEY = "master-volume";
 
 // TODO
 // Loudness of the interface's own sounds, 0-100. Deliberately its own key so
 // muting or quietening a game leaves menu feedback alone
-inline constexpr auto UI_SOUND_VOLUME_KEY = "ui-sound-volume";
+inline constexpr auto UI_SOUND_VOLUME_KEY = "ui-sfx-master-volume";
 
 } // namespace firelight::audio

@@ -40,7 +40,7 @@ TEST_F(PlatformServiceTest, AllPlatformsPresent) {
   using PS = firelight::platforms::PlatformService;
   const PS service;
   // Exact, so adding a platform is a deliberate act rather than something that slips in
-  EXPECT_EQ(service.listPlatforms().size(), 25u);
+  EXPECT_EQ(service.listPlatforms().size(), 26u);
   for (const int id : {PS::PLATFORM_ID_GAMEBOY, PS::PLATFORM_ID_N64, PS::PLATFORM_ID_SNES, PS::PLATFORM_ID_PS1,
                        PS::PLATFORM_ID_VIRTUAL_BOY}) {
     EXPECT_TRUE(service.getPlatform(id).has_value()) << "missing platform id " << id;

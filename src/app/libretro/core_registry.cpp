@@ -91,6 +91,7 @@ CoreRegistry::CoreRegistry() {
       // Bundled but not yet the default for a modeled platform
       {"geolith_libretro", "Geolith", {}, {"neo"}},
       // Not shipped, so nothing has been read off it
+      {"dolphin_libretro", "Dolphin", {PM::PLATFORM_ID_GAMECUBE}, {"gcn"}},
       {"mednafen_psx_hw_libretro", "Beetle PSX HW", {PM::PLATFORM_ID_PS1}, {}},
       {"mednafen_vb_libretro", "Beetle VB", {PM::PLATFORM_ID_VIRTUAL_BOY}, {"vb", "vboy"}}};
 
@@ -115,7 +116,8 @@ CoreRegistry::CoreRegistry() {
                         {PM::PLATFORM_ID_WONDERSWAN, "mednafen_wswan_libretro"},
                         {PM::PLATFORM_ID_NEOGEO_POCKET, "mednafen_ngp_libretro"},
                         {PM::PLATFORM_ID_PS1, "mednafen_psx_hw_libretro"},
-                        {PM::PLATFORM_ID_VIRTUAL_BOY, "mednafen_vb_libretro"}};
+                        {PM::PLATFORM_ID_VIRTUAL_BOY, "mednafen_vb_libretro"},
+                        {PM::PLATFORM_ID_GAMECUBE, "dolphin_libretro"}};
 
   // Filenames and core-option keys read out of each shipped core's own binary; which of them a
   // system actually needs read from that core's documentation. A core/platform pair absent here

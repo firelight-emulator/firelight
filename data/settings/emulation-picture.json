@@ -1,7 +1,7 @@
 {
   "common": [
     {
-      "key": "emulation-picture-mode",
+      "key": "picture-mode",
       "label": "Picture mode",
       "keywords": [
         "scaling",
@@ -27,7 +27,23 @@
       ]
     },
     {
-      "key": "emulation-aspect-ratio",
+      "key": "integer-scale",
+      "label": "Integer scale",
+      "description": "Scales the image by a whole number multiplier of the original resolution. For example, a 320x240 game scaled by 2x will be displayed at 640x480.\n\nValues above the highest one that fits on your screen will be ignored, and the highest one that fits will be used instead.",
+      "keywords": [
+        "scaling",
+        "stretch",
+        "fill",
+        "integer"
+      ],
+      "type": "slider",
+      "default": "1",
+      "min": 1,
+      "max": 10,
+      "step": 1
+    },
+    {
+      "key": "aspect-ratio",
       "label": "Aspect ratio",
       "keywords": [
         "widescreen",
@@ -49,7 +65,7 @@
       ]
     },
     {
-      "key": "emulation-sync-method",
+      "key": "sync-method",
       "label": "Sync method",
       "description": "How gameplay is paced. Automatic (recommended) matches your display's refresh rate when your display can show the game's rate, and uses the game's own rate when it can't. Sync to monitor does the same thing explicitly: matching the display removes repeated and skipped frames entirely, and the pitch change it needs to do so is far too small to hear. Native timer runs at exactly the rate the game asks for and leaves audio completely untouched, at the cost of a repeated or skipped frame every few seconds on most displays. Fixed framerate runs at a rate you choose. Audio paces off your sound device instead of a clock, which keeps audio untouched but is usually less smooth, because sound devices report their progress in coarse steps.",
       "keywords": [
@@ -88,7 +104,7 @@
       ]
     },
     {
-      "key": "emulation-target-framerate",
+      "key": "target-framerate",
       "label": "Target framerate",
       "description": "Frames per second to target when using Fixed framerate sync.",
       "keywords": [

@@ -634,8 +634,8 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheUiSoundVolumeKey) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
-  const auto *setting = c.findByKey(firelight::audio::UI_SOUND_VOLUME_KEY);
-  ASSERT_NE(setting, nullptr) << "UiSoundPlayer reads '" << firelight::audio::UI_SOUND_VOLUME_KEY
+  const auto *setting = c.findByKey(audio::UI_SOUND_VOLUME_KEY);
+  ASSERT_NE(setting, nullptr) << "UiSoundPlayer reads '" << audio::UI_SOUND_VOLUME_KEY
                               << "', which the catalog doesn't declare";
   EXPECT_TRUE(c.isAppSetting(firelight::audio::UI_SOUND_VOLUME_KEY)) << "interface volume is read from the global tier";
   EXPECT_EQ(setting->type, SettingType::INTEGER);
@@ -714,7 +714,7 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
   const std::vector<std::string> facadeKeys = {"accent-color",       "background-mode", "background-color",
                                                "background-color-2", "background-file", "background-blur",
                                                "background-dim",     "theme-intensity", "glass-opacity",
-                                               "library-tile-size",  "interface-scale", "interface-density"};
+                                               "library-icon-grid-tile-size",  "interface-scale", "interface-density"};
 
   for (const auto &key : facadeKeys) {
     const auto *setting = c.findByKey(key);

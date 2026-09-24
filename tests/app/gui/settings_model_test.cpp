@@ -425,13 +425,13 @@ TEST_F(SettingsModelTest, GamePickerOptionsFromLibraryFilteredByPlatform) {
   ASSERT_NE(row, -1);
   EXPECT_EQ(value(model, row, "widget").toString(), "dropdown");
 
-  const auto options = value(model, row, "options").value<QVector<QVariantHash>>();
+  const auto options = value(model, row, "options").toList();
   // "None" plus only the eligible Game Boy game (SNES filtered out)
   ASSERT_EQ(options.size(), 2);
-  EXPECT_EQ(options[0].value("label").toString(), "None");
-  EXPECT_EQ(options[0].value("value").toString(), "");
-  EXPECT_EQ(options[1].value("label").toString(), "Tetris");
-  EXPECT_EQ(options[1].value("value").toString(), "gbhash"); // content hash
+  EXPECT_EQ(options[0].toHash().value("label").toString(), "None");
+  EXPECT_EQ(options[0].toHash().value("value").toString(), "");
+  EXPECT_EQ(options[1].toHash().value("label").toString(), "Tetris");
+  EXPECT_EQ(options[1].toHash().value("value").toString(), "gbhash"); // content hash
 }
 
 const char *NEW_WIDGETS_CATALOG = R"JSON(
@@ -646,9 +646,9 @@ TEST_F(SettingsModelTest, GamePickerWithoutLibraryHasOnlyNone) {
 
   const int row = findRow(model, "tpak");
   ASSERT_NE(row, -1);
-  const auto options = value(model, row, "options").value<QVector<QVariantHash>>();
+  const auto options = value(model, row, "options").toList();
   ASSERT_EQ(options.size(), 1);
-  EXPECT_EQ(options[0].value("label").toString(), "None");
+  EXPECT_EQ(options[0].toHash().value("label").toString(), "None");
 }
 
 } // namespace firelight::settings

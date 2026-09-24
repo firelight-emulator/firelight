@@ -118,7 +118,7 @@
       "default": "false"
     },
     {
-      "key": "emulation-audio-latency",
+      "key": "audio-latency",
       "label": "Audio latency",
       "longDescription": "How much sound is buffered ahead, in milliseconds. Lower means the sound you hear tracks the game more closely; too low and the buffer can run dry between refills, which crackles. 64 suits most machines. Only takes effect when audio is next started.",
       "keywords": [
