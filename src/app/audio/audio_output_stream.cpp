@@ -100,7 +100,7 @@ void AudioOutputStream::reopen() {
   }
 
   QAudioFormat format;
-  format.setChannelCount(static_cast<int>(PlaybackBuffer::CHANNELS));
+  format.setChannelCount(PlaybackBuffer::CHANNELS);
   format.setSampleFormat(QAudioFormat::Int16);
   format.setSampleRate(device.preferredFormat().sampleRate() > 0 ? device.preferredFormat().sampleRate()
                                                                  : m_coreSampleRate);
@@ -151,7 +151,7 @@ void AudioOutputStream::refreshVolume() {
     percent = 100;
   }
 
-  m_volume = QtAudio::convertVolume(std::clamp(percent, 0, 100) / 100.0F, QtAudio::LogarithmicVolumeScale,
+  m_volume = convertVolume(std::clamp(percent, 0, 100) / 100.0F, QtAudio::LogarithmicVolumeScale,
                                     QtAudio::LinearVolumeScale);
 
   if (m_sink) {

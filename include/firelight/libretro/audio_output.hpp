@@ -9,7 +9,7 @@ public:
   virtual ~IAudioOutput() = default;
 
   virtual size_t receive(const int16_t *data, size_t numFrames) = 0;
-  virtual void initialize(double new_freq) = 0;
+  virtual void initialize(double newFreq) = 0;
 
   virtual void setMuted(bool muted) = 0;
   [[nodiscard]] virtual bool isMuted() const = 0;

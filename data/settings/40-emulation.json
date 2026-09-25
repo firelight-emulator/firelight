@@ -40,7 +40,6 @@
       "default": "false",
       "advanced": true
     },
-
     {
       "key": "dynamic-rate-control",
       "label": "Dynamic rate control",

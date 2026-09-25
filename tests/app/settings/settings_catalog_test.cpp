@@ -1,5 +1,4 @@
-// TODO: NEEDS REVIEW
-#include "audio/audio_manager.hpp"
+#include "audio/audio_settings.hpp"
 
 #include <firelight/settings/settings_catalog.hpp>
 
@@ -15,7 +14,7 @@
 namespace firelight::settings {
 
 namespace {
-const char *SAMPLE_JSON = R"JSON(
+auto SAMPLE_JSON = R"JSON(
 {
   "common": [
     {"key": "rewind-enabled", "label": "Rewind", "type": "boolean",
@@ -51,7 +50,7 @@ const char *SAMPLE_JSON = R"JSON(
 )JSON";
 
 const SettingDefinition *find(const std::vector<SettingDefinition> &v, const std::string &key) {
-  const auto it = std::find_if(v.begin(), v.end(), [&](const auto &s) { return s.key == key; });
+  const auto it = std::ranges::find_if(v, [&](const auto &s) { return s.key == key; });
   return it != v.end() ? &*it : nullptr;
 }
 } // namespace
@@ -67,7 +66,6 @@ TEST_F(SettingsCatalogTest, ParsesCommonAndPerCore) {
   EXPECT_EQ(catalog.commonSettings().size(), 2u);
   EXPECT_EQ(catalog.coreSpecificSettings("mgba_libretro").size(), 2u);
   EXPECT_TRUE(catalog.coreSpecificSettings("unknown_core").empty());
-  // common followed by the core-specific settings
   EXPECT_EQ(catalog.settingsForCore("mgba_libretro").size(), 4u);
 }
 
@@ -148,7 +146,7 @@ TEST(SettingsCatalogSyncTest, ParsesSyncMethodAndTargetFramerate) {
   EXPECT_TRUE(fps->advanced); // "advanced": true parsed
   EXPECT_DOUBLE_EQ(fps->minValue, 30.0);
   EXPECT_DOUBLE_EQ(fps->maxValue, 240.0);
-  // Only editable when sync-method is "fixed"
+
   ASSERT_EQ(fps->enabledWhen.size(), 1u);
   EXPECT_EQ(fps->enabledWhen[0].key, "sync-method");
   ASSERT_EQ(fps->enabledWhen[0].values.size(), 1u);
@@ -197,19 +195,17 @@ TEST(SettingsCatalogTypesTest, ParsesSliderAndCustomWidgets) {
   EXPECT_DOUBLE_EQ(settings[0].maxValue, 10.0);
   EXPECT_DOUBLE_EQ(settings[0].stepValue, 2.0);
 
-  // "number" is INTEGER value semantics with a spinbox widget
   EXPECT_EQ(settings[1].type, SettingType::INTEGER);
   EXPECT_EQ(settings[1].widget, "spinbox");
 
   EXPECT_EQ(settings[2].type, SettingType::CUSTOM);
   EXPECT_EQ(settings[2].widget, "gbc-palette");
 
-  // Fractional step -> float-valued slider
   EXPECT_DOUBLE_EQ(settings[3].minValue, 0.0);
   EXPECT_DOUBLE_EQ(settings[3].maxValue, 2.0);
   EXPECT_DOUBLE_EQ(settings[3].stepValue, 0.25);
 
-  // Integer step other than 1 (e.g. increments of 5)
+  // Integer step other than 1
   EXPECT_DOUBLE_EQ(settings[4].stepValue, 5.0);
 
   // Omitted step defaults to 1
@@ -231,10 +227,11 @@ TEST(SettingsCatalogGamePickerTest, ParsesLibraryGamePicker) {
 
   const auto *picker = find(c.coreSpecificSettings("mupen64plus_next_libretro"), "transfer-pak-game");
   ASSERT_NE(picker, nullptr);
-  // Value semantics are OPTIONS, rendered by the dropdown widget
+
   EXPECT_EQ(picker->type, SettingType::OPTIONS);
   EXPECT_EQ(picker->widget, "dropdown");
   EXPECT_TRUE(picker->libraryGameSource);
+
   // Options are NOT authored in the catalog (the app fills them at runtime)
   EXPECT_TRUE(picker->options.empty());
   ASSERT_EQ(picker->gamePickerPlatformIds.size(), 2u);
@@ -337,8 +334,6 @@ TEST(SettingsCatalogLayoutTest, ParsesPagesAndGroupsInOrder) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(LAYOUT_JSON));
 
-  // TODO
-  // Both keep declaration order
   ASSERT_EQ(c.pages().size(), 2u);
   EXPECT_EQ(c.pages()[0].id, "emulation");
   EXPECT_EQ(c.pages()[1].id, "appearance");
@@ -382,35 +377,26 @@ TEST(SettingsCatalogLayoutTest, GroupCollectsFromEveryArrayInOrder) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(LAYOUT_JSON));
 
-  // TODO
-  // In the group's list order, so the later-declared background-mode comes first
   const auto theme = c.settingsForGroup("theme");
   ASSERT_EQ(theme.size(), 2u);
   EXPECT_EQ(theme[0].key, "background-mode");
   EXPECT_EQ(theme[1].key, "accent-color");
 
-  // TODO
-  // A group spanning `common` and the named core's settings gathers both, core first because the list says so
   const auto video = c.settingsForGroup("video", "mgba_libretro");
   ASSERT_EQ(video.size(), 2u);
   EXPECT_EQ(video[0].key, "gba-blend");
   EXPECT_EQ(video[1].key, "aspect-ratio");
 
-  // No core in scope (the global tier) means the frontend settings only — not
-  // every core's settings piled together
   const auto globalVideo = c.settingsForGroup("video");
   ASSERT_EQ(globalVideo.size(), 1u);
   EXPECT_EQ(globalVideo[0].key, "aspect-ratio");
 
-  // A core that declares nothing in the group contributes nothing
   EXPECT_EQ(c.settingsForGroup("video", "gambatte_libretro").size(), 1u);
 
   EXPECT_TRUE(c.settingsForGroup("nope").empty());
   EXPECT_TRUE(c.settingsForGroup("").empty());
 }
 
-// TODO
-// A group no page lists and a setting no group lists still load, with nothing above them
 TEST(SettingsCatalogLayoutTest, UnlistedGroupsAndSettingsHaveNoParent) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(R"JSON(
@@ -435,7 +421,6 @@ TEST(SettingsCatalogLayoutTest, FindsAndEnumeratesEverySetting) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(LAYOUT_JSON));
 
-  // app + common + every core's settings — what the search index is built from
   EXPECT_EQ(c.allSettings().size(), 4u);
 
   const auto *fromCore = c.findByKey("gba-blend");
@@ -459,8 +444,6 @@ TEST(SettingsCatalogLayoutTest, AppSettingsDropCoreOnlyFields) {
   }
   )JSON"));
 
-  // An app setting never reaches a core, so these are stripped rather than
-  // left looking load-bearing
   const auto *s = find(c.appSettings(), "fullscreen");
   ASSERT_NE(s, nullptr);
   EXPECT_TRUE(s->mapping.empty());
@@ -489,7 +472,6 @@ TEST(SettingsCatalogValidationTest, ReportsAuthoringMistakes) {
   })JSON")
                    .empty());
 
-  // TODO
   // A group listing a setting nobody declared
   EXPECT_FALSE(problemsFor(R"JSON(
   {
@@ -497,7 +479,6 @@ TEST(SettingsCatalogValidationTest, ReportsAuthoringMistakes) {
   })JSON")
                    .empty());
 
-  // TODO
   // A page listing a group nobody declared
   EXPECT_FALSE(problemsFor(R"JSON(
   {
@@ -505,7 +486,6 @@ TEST(SettingsCatalogValidationTest, ReportsAuthoringMistakes) {
   })JSON")
                    .empty());
 
-  // TODO
   // One group listed by two pages
   EXPECT_FALSE(problemsFor(R"JSON(
   {
@@ -515,7 +495,6 @@ TEST(SettingsCatalogValidationTest, ReportsAuthoringMistakes) {
   })JSON")
                    .empty());
 
-  // TODO
   // One setting listed twice in the same group
   EXPECT_FALSE(problemsFor(R"JSON(
   {
@@ -531,7 +510,7 @@ TEST(SettingsCatalogValidationTest, ReportsAuthoringMistakes) {
   })JSON")
                    .empty());
 
-  // An unknown type silently became a dropdown before validate() existed
+  // misspelled type
   EXPECT_FALSE(problemsFor(R"JSON(
   {
     "common": [{"key": "a", "label": "A", "type": "sldier"}]
@@ -560,8 +539,7 @@ TEST(SettingsCatalogValidationTest, ReportsAuthoringMistakes) {
                   .empty());
 }
 
-// TODO
-// A setting can sit in more than one group: it renders in each, and the first group is the one it reports
+// A setting can sit in more than one group, it renders in each, and the first group is the one it reports
 TEST(SettingsCatalogValidationTest, ASettingCanBeListedByMoreThanOneGroup) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromJson(R"JSON(
@@ -603,9 +581,7 @@ TEST(SettingsCatalogValidationTest, ParsesTypeAliasesForEveryDelegate) {
   EXPECT_EQ(find(s, "bind")->widget, "key-binding");
 }
 
-// The catalog we actually ship. Every other test here feeds the parser inline
-// JSON, so nothing caught a typo in the real file — and page/group ids are
-// load-bearing, so a typo silently orphans a setting rather than erroring
+// Validate the catalog we actually ship
 TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR)) << "could not read " << FL_SETTINGS_CATALOG_DIR;
@@ -628,8 +604,6 @@ TEST(ShippedSettingsCatalogTest, ParsesAndValidatesCleanly) {
   }
 }
 
-// UiSoundPlayer reads this key for interface loudness. It is deliberately not
-// the game volume, so the two are pinned separately
 TEST(ShippedSettingsCatalogTest, DeclaresTheUiSoundVolumeKey) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
@@ -643,70 +617,55 @@ TEST(ShippedSettingsCatalogTest, DeclaresTheUiSoundVolumeKey) {
   EXPECT_EQ(setting->minValue, 0);
   EXPECT_EQ(setting->maxValue, 100);
   EXPECT_EQ(setting->defaultValue, "100");
-  // Sharing the game volume's key would mean quietening a game also silenced
-  // menu feedback, which is the thing this key exists to avoid
+
   EXPECT_STRNE(firelight::audio::UI_SOUND_VOLUME_KEY, firelight::audio::VOLUME_KEY);
 }
 
-// AudioManager reads this key to pick an output. If it stopped existing, audio
-// would quietly fall back to the system default with no error anywhere — so the
-// key and its declaration are pinned together
 TEST(ShippedSettingsCatalogTest, DeclaresTheAudioOutputKeyAudioManagerReads) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
-  const auto *setting = c.findByKey(AudioManager::OUTPUT_DEVICE_KEY);
-  ASSERT_NE(setting, nullptr) << "AudioManager reads '" << AudioManager::OUTPUT_DEVICE_KEY
+  const auto *setting = c.findByKey(audio::OUTPUT_DEVICE_KEY);
+  ASSERT_NE(setting, nullptr) << "AudioManager reads '" << audio::OUTPUT_DEVICE_KEY
                               << "', which the catalog doesn't declare";
-  EXPECT_TRUE(c.isAppSetting(AudioManager::OUTPUT_DEVICE_KEY)) << "the output device is read from the global tier";
-  // Its options come from the machine, so authoring any here would be a lie —
-  // and the runtime flag is what tells the model to go and find them
+  EXPECT_TRUE(c.isAppSetting(audio::OUTPUT_DEVICE_KEY)) << "the output device is read from the global tier";
+
   EXPECT_TRUE(setting->audioDeviceSource);
   EXPECT_TRUE(setting->options.empty());
+
   // "" is the system default; anything else names a device
   EXPECT_TRUE(setting->defaultValue.empty());
 }
 
-// Mute lives in the catalog rather than on the emulator so it outlives a game:
-// AudioManager is rebuilt on every load and re-reads this key, which is the only
-// reason muting one game leaves the next one muted too
 TEST(ShippedSettingsCatalogTest, DeclaresTheMuteKeyAudioManagerReads) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
-  const auto *setting = c.findByKey(AudioManager::MUTED_KEY);
-  ASSERT_NE(setting, nullptr) << "AudioManager reads '" << AudioManager::MUTED_KEY
-                              << "', which the catalog doesn't declare";
-  EXPECT_TRUE(c.isAppSetting(AudioManager::MUTED_KEY)) << "mute is read from the global tier";
+  const auto *setting = c.findByKey(audio::MUTED_KEY);
+  ASSERT_NE(setting, nullptr) << "AudioManager reads '" << audio::MUTED_KEY << "', which the catalog doesn't declare";
+  EXPECT_TRUE(c.isAppSetting(audio::MUTED_KEY)) << "mute is read from the global tier";
   EXPECT_EQ(setting->type, SettingType::BOOLEAN);
-  // AudioManager compares against "true"/"false", so the declared default has to
-  // be one of them
+
   EXPECT_EQ(setting->defaultValue, "false");
 }
 
-// The volume hotkeys and AudioManager both read this key, and neither would say
-// anything if it went missing — the slider would just stop doing anything
+// The volume hotkeys and AudioManager both read this key, and if it were missing the slider would just stop doing
+// anything
 TEST(ShippedSettingsCatalogTest, DeclaresTheVolumeKeyAudioManagerReads) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
-  const auto *setting = c.findByKey(AudioManager::VOLUME_KEY);
-  ASSERT_NE(setting, nullptr) << "AudioManager reads '" << AudioManager::VOLUME_KEY
-                              << "', which the catalog doesn't declare";
-  EXPECT_TRUE(c.isAppSetting(AudioManager::VOLUME_KEY)) << "volume is read from the global tier";
+  const auto *setting = c.findByKey(audio::VOLUME_KEY);
+  ASSERT_NE(setting, nullptr) << "AudioManager reads '" << audio::VOLUME_KEY << "', which the catalog doesn't declare";
+  EXPECT_TRUE(c.isAppSetting(audio::VOLUME_KEY)) << "volume is read from the global tier";
   EXPECT_EQ(setting->type, SettingType::INTEGER);
   EXPECT_EQ(setting->widget, "slider");
-  // The hotkeys step within 0-100 and parse the default as a number; a range
-  // that disagreed would let the slider and the hotkey mean different things
+
   EXPECT_EQ(setting->minValue, 0);
   EXPECT_EQ(setting->maxValue, 100);
   EXPECT_EQ(setting->defaultValue, "100");
 }
 
-// AppearanceSettings.qml is a typed facade: one SettingBinding per key, so the
-// rest of the app can bind to names instead of strings. Nothing in QML fails
-// loudly when a key stops existing — the binding just reports "" forever — so
-// pin the keys here
 TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
@@ -731,16 +690,10 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
   }
 }
 
-// GeneralSettings.qml binds these by key, and a binding to a key the catalog stopped
-// declaring reads as empty rather than as an error
 TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheGeneralFacadeBinds) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
-  // TODO
-  // library-sort-method is left out: the facade still binds it but the catalog has never
-  // declared it and nothing reads the property, so listing it here would assert a fix
-  // rather than guard a contract
   const std::vector<std::string> facadeKeys = {"fullscreen", "show-advanced-settings", "show-new-user-flow"};
 
   for (const auto &key : facadeKeys) {
@@ -755,10 +708,6 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheGeneralFacadeBinds) {
   }
 }
 
-// TODO
-// The ordering settings decide which release stands for a group. Grouping is unwired, so nothing
-// reads them today, but VariantGroupService still resolves them and would start empty without a
-// declared default
 TEST(ShippedSettingsCatalogTest, DeclaresTheVariantOrderingKeys) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
@@ -777,12 +726,12 @@ namespace {
 class TempCatalog {
 public:
   TempCatalog() : m_root(std::filesystem::temp_directory_path() / uniqueName()) {
-    std::filesystem::create_directories(m_root);
+    create_directories(m_root);
   }
 
   ~TempCatalog() {
     std::error_code ec;
-    std::filesystem::remove_all(m_root, ec);
+    remove_all(m_root, ec);
   }
 
   TempCatalog(const TempCatalog &) = delete;
@@ -790,7 +739,7 @@ public:
 
   void write(const std::string &relative, const std::string &contents) const {
     const auto path = m_root / relative;
-    std::filesystem::create_directories(path.parent_path());
+    create_directories(path.parent_path());
     std::ofstream out(path, std::ios::binary | std::ios::trunc);
     out << contents;
   }
@@ -799,7 +748,7 @@ public:
 
 private:
   static std::string uniqueName() {
-    static std::atomic<int> counter{0};
+    static std::atomic counter{0};
     return "fl-catalog-test-" + std::to_string(counter++);
   }
 
@@ -811,19 +760,19 @@ class LogCapture {
 public:
   LogCapture() : m_sink(std::make_shared<spdlog::sinks::ostream_sink_mt>(m_stream)) {
     m_previous = spdlog::default_logger();
-    auto logger = std::make_shared<spdlog::logger>("catalog-test", m_sink);
+    const auto logger = std::make_shared<spdlog::logger>("catalog-test", m_sink);
     logger->set_level(spdlog::level::trace);
-    spdlog::set_default_logger(logger);
+    set_default_logger(logger);
   }
 
-  ~LogCapture() { spdlog::set_default_logger(m_previous); }
+  ~LogCapture() { set_default_logger(m_previous); }
 
   LogCapture(const LogCapture &) = delete;
   LogCapture &operator=(const LogCapture &) = delete;
 
-  [[nodiscard]] bool contains(const std::string &needle) { return m_stream.str().find(needle) != std::string::npos; }
+  [[nodiscard]] bool contains(const std::string &needle) const { return m_stream.str().find(needle) != std::string::npos; }
 
-  [[nodiscard]] std::string text() { return m_stream.str(); }
+  [[nodiscard]] std::string text() const { return m_stream.str(); }
 
 private:
   std::ostringstream m_stream;
@@ -832,7 +781,6 @@ private:
 };
 } // namespace
 
-// The point of the folder: a page's settings can live beside that page's other settings
 TEST(CatalogDirectoryTest, SettingsFromEveryFileAreLoaded) {
   const TempCatalog dir;
   dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
@@ -855,7 +803,6 @@ TEST(CatalogDirectoryTest, SettingsFromEveryFileAreLoaded) {
   EXPECT_EQ(c.coreDefaults("some_core").at("raw"), "1");
 }
 
-// TODO
 // A group's list decides the row order, whichever file declared each setting
 TEST(CatalogDirectoryTest, AGroupListDecidesOrderAcrossFiles) {
   const TempCatalog dir;
@@ -873,7 +820,6 @@ TEST(CatalogDirectoryTest, AGroupListDecidesOrderAcrossFiles) {
   EXPECT_EQ(inGroup[1].key, "first");
 }
 
-// One key declared in two files is the mistake the split makes possible, and nothing else catches it
 TEST(CatalogDirectoryTest, AKeyDeclaredTwiceAcrossFilesIsReported) {
   const TempCatalog dir;
   dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
@@ -890,8 +836,6 @@ TEST(CatalogDirectoryTest, AKeyDeclaredTwiceAcrossFilesIsReported) {
   })) << "a key declared in two files loaded silently";
 }
 
-// A half-loaded catalog gives every missing key an empty default, which reads exactly like a
-// setting the user never touched — so one bad file must cost nothing rather than most things
 TEST(CatalogDirectoryTest, AMalformedFileFailsTheLoadAndKeepsThePreviousCatalog) {
   const TempCatalog good;
   good.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
@@ -919,8 +863,7 @@ TEST(CatalogDirectoryTest, AMissingOrEmptyDirectoryFails) {
   EXPECT_FALSE(c.loadFromDirectory(empty.path())) << "an empty folder loaded as an empty catalog";
 }
 
-// A row that opens somewhere instead of holding a value, so a page reached by drilling in can be
-// declared beside the settings it sits among
+// A row that opens somewhere instead of holding a value
 TEST(CatalogLinkTest, ALinkKeepsItsRouteAndReportsTheLinkWidget) {
   const TempCatalog dir;
   dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
@@ -939,7 +882,7 @@ TEST(CatalogLinkTest, ALinkKeepsItsRouteAndReportsTheLinkWidget) {
   EXPECT_TRUE(c.validate().empty()) << "a well-formed link was reported as a problem";
 }
 
-// A link with nowhere to go renders as a row that swallows the press
+// A link with nowhere to go would render as a row that swallows the press
 TEST(CatalogLinkTest, ALinkWithNoRouteIsReported) {
   const TempCatalog dir;
   dir.write("_layout.json", R"({"pages":[{"id":"p","label":"P","groups":["g"]}],
@@ -955,14 +898,14 @@ TEST(CatalogLinkTest, ALinkWithNoRouteIsReported) {
   })) << "a link with no destination loaded silently";
 }
 
-// Two files setting the same core option to different values: the second silently wins, and the
-// core runs with an option nobody chose
+// If two files set the same core option to different values then the second silently wins, and the core runs with an
+// option nobody chose
 TEST(CatalogDirectoryTest, ACollidingCoreDefaultWarns) {
   const TempCatalog dir;
   dir.write("cores/a.json", R"({"cores":{"core_x":{"defaults":{"opt":"1"}}}})");
   dir.write("cores/b.json", R"({"cores":{"core_x":{"defaults":{"opt":"2"}}}})");
 
-  LogCapture log;
+  const LogCapture log;
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(dir.path()));
 

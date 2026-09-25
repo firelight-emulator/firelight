@@ -1,4 +1,3 @@
-// TODO: NEEDS REVIEW
 #pragma once
 
 #include "audio_settings.hpp"
@@ -22,22 +21,11 @@ class AudioOutputStream;
 
 /**
  * Takes the core's sound, resamples it to the output's rate with drift correction, and pushes it
- * into the buffer the output stream plays from.
- *
- * Threading: receive() and initialize() run on whichever thread runs frames; the setters and
- * getBufferLevel() may be called from any thread. Nothing here touches Qt Multimedia, which lives
- * in the AudioOutputStream on the GUI thread
+ * into the buffer the output stream plays from
  */
-class AudioManager : public IAudioOutput {
+class AudioManager final : public IAudioOutput {
 public:
-  // Both live in audio_settings.hpp so a caller can name a key without pulling
-  // Qt Multimedia in through this header. Read here rather than pushed in, which
-  // is what makes mute outlive a game: this class is rebuilt on every load, so
-  // it picks up the current value each time instead of starting unmuted
-  static constexpr auto OUTPUT_DEVICE_KEY = firelight::audio::OUTPUT_DEVICE_KEY;
   static constexpr auto MUTED_KEY = firelight::audio::MUTED_KEY;
-  static constexpr auto VOLUME_KEY = firelight::audio::VOLUME_KEY;
-  static constexpr auto LATENCY_KEY = firelight::audio::LATENCY_KEY;
 
   /**
    * @param contentHash The game being buffered for, so a per-game latency override resolves. Empty
@@ -50,37 +38,31 @@ public:
 
   size_t receive(const int16_t *data, size_t numFrames) override;
 
-  void initialize(double new_freq) override;
+  void initialize(double newFreq) override;
 
-  // Transient silencing driven by the running emulator (pause, fast-forward) —
-  // not the user's mute, which this class reads from MUTED_KEY itself. Output is
-  // silent when either is set
+  /**
+   * For programmatic muting like when the emulator is paused or fast-forwarding, not the user's mute setting
+   */
   void setMuted(bool muted) override;
 
-  bool isMuted() const override;
+  [[nodiscard]] bool isMuted() const override;
 
-  // TODO
   /**
-   * Holds playback where it is; what is buffered plays on when unpaused
+   * Holds playback where it is, what is buffered plays on when unpaused
    */
   void setPaused(bool paused) override;
 
-  // TODO
   /**
    * How full the playback buffer is, 0 to 1, or -1 while nothing is playing
    */
-  float getBufferLevel() const override;
+  [[nodiscard]] float getBufferLevel() const override;
 
-  // Biases the resampler so audio plays back `ratio`x faster/slower than the
-  // core's native rate (1.0 = native). Used by sync-to-monitor to resample audio
-  // to the display's refresh rate (ratio = refreshHz / coreFps) so it stays
-  // matched to the paced video. Dynamic rate control still corrects residual drift
+  /**
+   * The cores expect to be able to produce sound at their native rate, so this lets you correct for running it faster
+   * or slower than that.
+   */
   void setPlaybackRateRatio(double ratio) override;
 
-  // Enables/disables Dynamic Rate Control: the drift compensation that nudges the
-  // resample rate to keep the sink buffer near 50% full. On by default; exposed
-  // as an advanced setting so users can let the emulation pacer manage the buffer
-  // alone. Thread-safe (read from the audio thread)
   void setDynamicRateControlEnabled(bool enabled) override;
 
 private:
@@ -94,37 +76,40 @@ private:
 
   std::shared_ptr<firelight::audio::PlaybackBuffer> m_buffer;
 
-  // TODO
   // On the GUI thread, so deleted through the event loop rather than here
   firelight::audio::AudioOutputStream *m_stream = nullptr;
 
-  // Converts core audio to the device rate; owns the feed-forward playback-rate
-  // bias and applies the drift-compensation delta
+  // Converts core audio to the device rate and applies DRC
   AudioResampler m_resampler;
-  // Decides that delta from the output buffer's occupancy (dynamic rate control)
+
+  // Decides the amount to correct the resampler's rate for DRC, and smooths the correction over time to avoid audible
+  // artifacts
   AudioRateController m_rateController;
 
-  // Transient, set by the emulator (pause / fast-forward). Written on the GUI
-  // thread, read by receive() on the frame thread
+  // Set by the emulator, not the user
   std::atomic<bool> m_isMuted{false};
-  // The user's MUTED_KEY setting, refreshed when it changes
+
+  // Set by the user's setting, not the emulator
   std::atomic<bool> m_userMuted{false};
 
   int m_sampleRate = 0;       // the core's audio rate
   int m_deviceSampleRate = 0; // the rate the resampler was last built for
 
-  // Dynamic Rate Control on by default; toggled by the "dynamic-rate-control"
-  // advanced setting
+  // Dynamic Rate Control, on by default
   std::atomic<bool> m_drcEnabled{true};
 
   firelight::monitoring::Span m_audioBatchSpan = firelight::monitoring::Monitor::instance().span(
       "audio_batch", "Taking one batch of samples from the core through to the playback buffer");
+
   firelight::monitoring::Span m_resampleSpan =
       firelight::monitoring::Monitor::instance().span("resample", "Resampling one batch to the output's rate");
+
   firelight::monitoring::Series m_audioBufferSeries =
       firelight::monitoring::Monitor::instance().series("audio_buffer", "How full the playback buffer is, 0 to 1");
+
   firelight::monitoring::Series m_audioCorrectionSeries = firelight::monitoring::Monitor::instance().series(
       "audio_correction", "The rate correction applied to keep the playback buffer half full");
+
   firelight::monitoring::Series m_audioSamplesSeries = firelight::monitoring::Monitor::instance().series(
       "audio_samples", "How many sample frames one batch put into the playback buffer");
 };

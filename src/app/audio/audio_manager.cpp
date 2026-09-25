@@ -1,4 +1,3 @@
-// TODO: NEEDS REVIEW
 #include "audio_manager.hpp"
 
 #include "audio_output_stream.hpp"
@@ -19,7 +18,6 @@ AudioManager::AudioManager(firelight::settings::SettingsService &settingsService
       m_buffer(std::make_shared<PlaybackBuffer>()) {
   m_stream = new firelight::audio::AudioOutputStream(settingsService, std::move(contentHash), platformId, m_buffer);
 
-  // TODO
   // Built on whichever thread loads the game, pushed to the GUI thread from there
   if (const auto *app = QCoreApplication::instance(); app && app->thread() != QThread::currentThread()) {
     m_stream->moveToThread(app->thread());
@@ -74,9 +72,7 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
   const auto usedFrames = m_buffer->getSizeFrames();
   const auto occupancy = m_buffer->getOccupancy();
 
-  // TODO
-  // Negative while the buffer is filling before playback starts, when its level says nothing
-  // about drift
+  // Negative while the buffer is filling before playback starts, when its level says nothing about drift
   const auto measurable = occupancy >= 0.0;
 
   if (measurable) {
@@ -87,11 +83,11 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
     }
   }
 
-  // TODO
-  // Converted to the output's rate so the controller's smoothing spans a fixed amount of sound rather
-  // than a fixed number of calls, which is whatever the core felt like
+  // Converted to the output's rate so the controller's smoothing spans a fixed amount of sound rather than a fixed
+  // number of calls
   const auto framesAtOutputRate =
       static_cast<int>(numFrames * static_cast<size_t>(m_deviceSampleRate) / static_cast<size_t>(m_sampleRate));
+
   constexpr auto BYTES_PER_FRAME = static_cast<int>(PlaybackBuffer::CHANNELS * sizeof(int16_t));
   const double compensation =
       m_drcEnabled.load() && measurable
@@ -126,13 +122,13 @@ size_t AudioManager::receive(const int16_t *data, const size_t numFrames) {
   return numFrames;
 }
 
-void AudioManager::initialize(const double new_freq) {
-  m_sampleRate = static_cast<int>(new_freq);
+void AudioManager::initialize(const double newFreq) {
+  m_sampleRate = static_cast<int>(newFreq);
   m_deviceSampleRate = 0;
   m_stream->open(m_sampleRate);
 }
 
-void AudioManager::setMuted(bool muted) { m_isMuted = muted; }
+void AudioManager::setMuted(const bool muted) { m_isMuted = muted; }
 
 bool AudioManager::isMuted() const { return m_isMuted; }
 
@@ -140,6 +136,6 @@ void AudioManager::setPaused(const bool paused) { m_buffer->setPaused(paused); }
 
 float AudioManager::getBufferLevel() const { return static_cast<float>(m_buffer->getOccupancy()); }
 
-void AudioManager::setPlaybackRateRatio(double ratio) { m_resampler.setPlaybackRateRatio(ratio); }
+void AudioManager::setPlaybackRateRatio(const double ratio) { m_resampler.setPlaybackRateRatio(ratio); }
 
 void AudioManager::setDynamicRateControlEnabled(const bool enabled) { m_drcEnabled.store(enabled); }

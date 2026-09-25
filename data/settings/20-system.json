@@ -72,23 +72,6 @@
       ]
     },
     {
-      "key": "volume",
-      "label": "Game Volume",
-      "description": "Loudness of game audio.",
-      "keywords": [
-        "volume",
-        "loud",
-        "audio",
-        "sound",
-        "game"
-      ],
-      "type": "slider",
-      "default": "100",
-      "min": 0,
-      "max": 100,
-      "step": 1
-    },
-    {
       "key": "show-advanced-settings",
       "label": "Show advanced settings",
       "description": "Reveals settings most people won't need, including raw core options.",

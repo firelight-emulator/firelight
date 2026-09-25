@@ -1,4 +1,3 @@
-// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/audio/playback_buffer.hpp>
@@ -17,9 +16,7 @@ namespace firelight::audio {
 
 /**
  * One stereo output stream, played from a PlaybackBuffer by Qt's audio thread. Follows the output
- * device, latency and volume settings, and reopens when the output it runs on changes or fails.
- *
- * Threading: lives on the GUI thread. open() and getSampleRate() may be called from any thread
+ * device, latency and volume settings, and reopens when the output it runs on changes or fails
  */
 class AudioOutputStream : public QObject {
   Q_OBJECT
@@ -83,21 +80,19 @@ private:
   QMediaDevices *m_mediaDevices = nullptr;
   QTimer *m_reopenTimer = nullptr;
 
-  // Grows each time a reopen fails so an output that is simply gone is not retried on a loop, and
-  // resets as soon as a stream starts
+  // Grows each time a reopen fails so an output that is simply gone is not retried on a loop, and resets as soon as
+  // a stream starts
   int m_reopenBackoffMs = 0;
 
   ScopedConnection m_settingChangedConnection;
   ScopedConnection m_settingResetConnection;
 
-  // 0-1, perceptually mapped from the volume setting
+  // 0-1, set by the user's master-volume setting
   float m_volume = 1.0F;
 
   int m_coreSampleRate = 0;
   std::atomic<int> m_sampleRate{0};
 
-  // Declared last so it is destroyed first, which stops the audio callback before anything the
-  // callback reads goes away
   std::unique_ptr<QAudioSink> m_sink;
 };
 
