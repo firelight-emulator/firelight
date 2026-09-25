@@ -461,6 +461,7 @@ MainWindow {
                         Layout.preferredHeight: 240
                         Layout.margins: AppStyle.spacingSm
                         checked: Router.isActive("/quick-menu")
+                        focus: checked
 
                         background: Rectangle {
                             radius: AppStyle.radiusMd
@@ -490,58 +491,29 @@ MainWindow {
                         Layout.fillWidth: true
                     }
 
-                    NavDrawerButton {
-                        Layout.fillWidth: true
-                        text: "Home"
-                        checked: Router.isActive("/home")
-                        focus: true
-
-                        onClicked: {
-                            if (!checked) {
-                                Qt.callLater(() => Router.navigate("/home"));
-                                navigationPopup.close();
+                    Repeater {
+                        model: [
+                            {
+                                "label": "Library",
+                                "route": "/library"
+                            },
+                            {
+                                "label": "Settings",
+                                "route": "/settings"
                             }
-                        }
-                    }
+                        ]
 
-                    NavDrawerButton {
-                        Layout.fillWidth: true
-                        text: "Library"
-                        checked: Router.isActive("/library")
-                        focus: true
+                        delegate: MenuNavigationItem {
+                            required property var modelData
+                            label: modelData.label
+                            checked: Router.isActive(modelData.route)
+                            focus: checked
 
-                        onClicked: {
-                            if (!checked) {
-                                Qt.callLater(() => Router.navigate("/library"));
-                                navigationPopup.close();
-                            }
-                        }
-                    }
-
-                    NavDrawerButton {
-                        Layout.fillWidth: true
-                        text: "Gallery"
-                        checked: Router.isActive("/gallery")
-                        focus: true
-
-                        onClicked: {
-                            if (!checked) {
-                                Qt.callLater(() => Router.navigate("/gallery"));
-                                navigationPopup.close();
-                            }
-                        }
-                    }
-
-                    NavDrawerButton {
-                        Layout.fillWidth: true
-                        text: "Settings"
-                        checked: Router.isActive("/settings")
-                        focus: checked
-
-                        onClicked: {
-                            if (!checked) {
-                                Qt.callLater(() => Router.navigate("/settings"));
-                                navigationPopup.close();
+                            onClicked: {
+                                if (!checked) {
+                                    Qt.callLater(() => Router.navigate(modelData.route));
+                                    navigationPopup.close();
+                                }
                             }
                         }
                     }
@@ -551,9 +523,9 @@ MainWindow {
                         Layout.fillHeight: true
                     }
 
-                    NavDrawerButton {
-                        Layout.fillWidth: true
-                        text: "Power"
+                    MenuNavigationItem {
+                        label: "Power"
+                        checkable: false
                     }
                 }
             }
@@ -780,6 +752,234 @@ MainWindow {
             window.maybeAutoLaunch();
         }
     }
+
+    // FLPROBE-BEGIN
+    readonly property bool probeOn: Qt.application.arguments.join(" ").indexOf("fl-probe") >= 0
+    property real probeT0: Date.now()
+    property string probeLast: ""
+    property int probeStep: 0
+    property real probeStepAt: 0
+
+    function probeLog(tag, msg) {
+        console.warn("FLPROBE " + (Date.now() - window.probeT0) + " " + tag + " " + msg);
+    }
+
+    function probeIsAncestor(anc, it) {
+        for (let p = it; p; p = p.parent) {
+            if (p === anc) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function probePageOf(it) {
+        if (!it) {
+            return "-";
+        }
+        const cache = contentStack._cache;
+        for (let i = 0; i < cache.length; i++) {
+            if (window.probeIsAncestor(cache[i].item, it)) {
+                return cache[i].key;
+            }
+        }
+        if (window.probeIsAncestor(navigationPopup.contentItem, it)) {
+            return "drawer";
+        }
+        if (window.probeIsAncestor(contentStack, it)) {
+            return "stack";
+        }
+        return "other";
+    }
+
+    function probeDesc(it) {
+        if (!it) {
+            return "null";
+        }
+        return String(it).split("(")[0] + "[" + it.objectName + "]@" + window.probePageOf(it);
+    }
+
+    function probeRings() {
+        const out = [];
+        for (let i = 0; i < focusHighlight.children.length; i++) {
+            const c = focusHighlight.children[i];
+            if (String(c).indexOf("FLFocusRing") === 0) {
+                out.push(c.opacity.toFixed(2));
+            }
+        }
+        return out.join("/");
+    }
+
+    function probeFind(node, name) {
+        if (!node) {
+            return null;
+        }
+        if (node.objectName === name) {
+            return node;
+        }
+        for (let i = 0; i < node.children.length; i++) {
+            const f = window.probeFind(node.children[i], name);
+            if (f) {
+                return f;
+            }
+        }
+        return null;
+    }
+
+    function probeSettled(path) {
+        return Router.path.indexOf(path) === 0 && !contentStack.loading && !contentStack.busy && !navigationPopup.visible;
+    }
+
+    readonly property var probeSteps: [
+        {
+            name: "ready",
+            wait: 2500,
+            when: () => window.probeSettled("/library"),
+            act: () => {}
+        },
+        {
+            name: "open drawer",
+            wait: 300,
+            when: () => true,
+            act: () => navigationPopup.open()
+        },
+        {
+            name: "focus Settings",
+            wait: 600,
+            when: () => navigationPopup.opened,
+            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Settings").forceActiveFocus()
+        },
+        {
+            name: "click Settings (miss)",
+            wait: 400,
+            when: () => true,
+            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Settings").clicked()
+        },
+        {
+            name: "open drawer",
+            wait: 1500,
+            when: () => window.probeSettled("/settings"),
+            act: () => navigationPopup.open()
+        },
+        {
+            name: "focus Library",
+            wait: 600,
+            when: () => navigationPopup.opened,
+            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Library").forceActiveFocus()
+        },
+        {
+            name: "click Library (hit)",
+            wait: 400,
+            when: () => true,
+            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Library").clicked()
+        },
+        {
+            name: "open drawer",
+            wait: 1500,
+            when: () => window.probeSettled("/library"),
+            act: () => navigationPopup.open()
+        },
+        {
+            name: "focus Settings",
+            wait: 600,
+            when: () => navigationPopup.opened,
+            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Settings").forceActiveFocus()
+        },
+        {
+            name: "click Settings (hit)",
+            wait: 400,
+            when: () => true,
+            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Settings").clicked()
+        },
+        {
+            name: "quit",
+            wait: 1500,
+            when: () => window.probeSettled("/settings"),
+            act: () => Qt.quit()
+        }
+    ]
+
+    Timer {
+        running: window.probeOn && window.probeStep < window.probeSteps.length
+        repeat: true
+        interval: 10
+        onTriggered: {
+            const step = window.probeSteps[window.probeStep];
+            if (Date.now() - window.probeStepAt < step.wait || !step.when()) {
+                return;
+            }
+            window.probeLog("STEP", step.name);
+            window.probeStep += 1;
+            window.probeStepAt = Date.now();
+            step.act();
+        }
+    }
+
+    FrameAnimation {
+        running: window.probeOn
+        onTriggered: {
+            const cursor = focusHighlight.cursorItem;
+            const s = "path=" + Router.path + " popup=" + navigationPopup.visible + "/" + navigationPopup.opened + " loading=" + contentStack.loading + " busy=" + contentStack.busy + " blink=" + focusHighlight.blinking + " rings=" + window.probeRings() + " cursor=" + window.probeDesc(cursor) + " afi=" + window.probeDesc(window.activeFocusItem) + " mouse=" + InputMethodManager.usingMouse;
+            if (s !== window.probeLast) {
+                window.probeLast = s;
+                window.probeLog("FRAME", s);
+            }
+        }
+    }
+
+    Connections {
+        target: window.probeOn ? Router : null
+        function onNavigated(transition) {
+            window.probeLog("EVENT", "navigated " + Router.path + " transition=" + transition);
+        }
+    }
+
+    Connections {
+        target: window.probeOn ? navigationPopup : null
+        function onAboutToShow() {
+            window.probeLog("EVENT", "popup aboutToShow");
+        }
+        function onOpened() {
+            window.probeLog("EVENT", "popup opened");
+        }
+        function onAboutToHide() {
+            window.probeLog("EVENT", "popup aboutToHide afi=" + window.probeDesc(window.activeFocusItem));
+        }
+        function onClosed() {
+            window.probeLog("EVENT", "popup closed afi=" + window.probeDesc(window.activeFocusItem));
+        }
+    }
+
+    Connections {
+        target: window.probeOn ? contentStack : null
+        function onLoadingChanged() {
+            window.probeLog("EVENT", "loading=" + contentStack.loading);
+        }
+        function onBusyChanged() {
+            window.probeLog("EVENT", "busy=" + contentStack.busy);
+        }
+        function onCurrentItemChanged() {
+            window.probeLog("EVENT", "currentItem=" + window.probeDesc(contentStack.currentItem));
+        }
+    }
+
+    Connections {
+        target: window.probeOn ? focusHighlight : null
+        function onBlinkingChanged() {
+            window.probeLog("EVENT", "blinking=" + focusHighlight.blinking);
+        }
+        function onCursorItemChanged() {
+            window.probeLog("EVENT", "cursorItem=" + window.probeDesc(focusHighlight.cursorItem));
+        }
+    }
+
+    Connections {
+        target: window.probeOn ? window : null
+        function onActiveFocusItemChanged() {
+            window.probeLog("EVENT", "activeFocusItem=" + window.probeDesc(window.activeFocusItem));
+        }
+    }
+    // FLPROBE-END
 
     component RoleData: QtObject {
         property string displayName
