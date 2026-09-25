@@ -12,6 +12,7 @@ Button {
 
     signal deleteClicked
     signal overwriteClicked
+    signal loadClicked
 
     padding: 8
 
@@ -27,7 +28,7 @@ Button {
         Rectangle {
             color: "black"
             Layout.fillWidth: true
-            Layout.preferredHeight: width * 9 / 16
+            Layout.preferredHeight: Math.round((root.width - root.leftPadding - root.rightPadding) * 9 / 16)
 
             Image {
                 anchors.fill: parent
@@ -91,9 +92,7 @@ Button {
                 visible: parent.enabled
             }
 
-            onClicked: function (event) {
-                emulatorLoader.item.loadSuspendPoint(theThing.index);
-            }
+            onClicked: root.loadClicked()
 
             HoverHandler {
                 id: theHoverHandler3

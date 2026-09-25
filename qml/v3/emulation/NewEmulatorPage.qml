@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Controls
-// import QtQuick.Controls.Material
 import Firelight 1.0
 
 FocusScope {
@@ -8,22 +7,37 @@ FocusScope {
 
     objectName: "emulatorPage"
 
-    // Only the shortcuts that need the UI arrive here; ShortcutActions does the
-    // rest in C++, including deciding what's allowed in hardcore mode
+    // Only the shortcuts that need the UI arrive here; ShortcutActions does the rest in C++, including deciding what's
+    // allowed in hardcore mode
     Connections {
         target: ShortcutDispatcher
 
+        // TODO
         function onOpenRewindMenuRequested() {
-            root.createRewindPoints();
+            // root.createRewindPoints();
         }
     }
 
     property alias audioBufferLevel: emulator.audioBufferLevel
 
-    property bool paused
+    // The CLI --paused knob
+    property bool startPaused: false
 
-    // Start muted for this session only (CLI `--mute`); OR-ed into the emulator's
-    // muted state so it doesn't fight the derived pause/fast-forward muting
+    property bool suspended: false
+    property bool paused: root.suspended || overlayStack.depth > 0 || root.startPaused
+
+    signal overlayClosed
+
+    function closeOverlay() {
+        if (overlayStack.depth === 0) {
+            return;
+        }
+
+        overlayStack.popCurrentItem(StackView.Immediate);
+        root.overlayClosed();
+    }
+
+    // Start muted for this session only (CLI `--mute`)
     property bool startMuted: false
 
     signal closing
@@ -31,24 +45,17 @@ FocusScope {
 
     focus: true
 
-    // In-game shortcut scope while this page is the active stack item; an
-    // overlay pushed on top (or leaving) drops back to menu scope. Without this
-    // the engine stays in menu scope and only ScopeAlways shortcuts (e.g.
-    // screenshot) fire — in-game ones like capture_clip never trigger
-    // In-game shortcut scope: only while the game is actually the live, focused
-    // thing — not while paused (quick menu / backgrounded) or under an in-game
-    // overlay (e.g. the rewind menu on overlayStack)
+    // Tell the shortcut engine whether we're in game or not
     property bool shortcutsInGame: !root.paused && overlayStack.depth === 0
     onShortcutsInGameChanged: InputService.setShortcutsInGame(shortcutsInGame)
     Component.onDestruction: InputService.setShortcutsInGame(false)
 
-    // Consume any per-launch start knobs (CLI --mute / --pause). These are
-    // one-shot on StartupOptions, so only the CLI-launched game is affected
+    // Consume any per-launch start knobs (CLI --mute / --pause)
     Component.onCompleted: {
         InputService.setShortcutsInGame(shortcutsInGame);
         root.startMuted = StartupOptions.consumeStartMuted();
         if (StartupOptions.consumeStartPaused()) {
-            root.paused = true;
+            root.startPaused = true;
         }
     }
 
@@ -87,6 +94,7 @@ FocusScope {
     //         ctrlTimer.stop()
     //     }
     // }
+
     property bool windowResizing
     Connections {
         target: window_resize_handler
@@ -186,6 +194,7 @@ FocusScope {
             if (!sourceWidth || !sourceHeight) {
                 return 1; // Avoid division by zero
             }
+
             // Find how many times our correct shape fits into the container
             const widthScale = root.width / sourceWidth;
             const heightScale = root.height / sourceHeight;
@@ -362,8 +371,6 @@ FocusScope {
                     return;
                 }
 
-                // This component ID should point to a Component object
-                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
                 const popup = achievementUnlockIndicatorComponent.createObject(root, {
                     url: imageUrl,
                     title: name,
@@ -378,8 +385,6 @@ FocusScope {
                     return;
                 }
 
-                // This component ID should point to a Component object
-                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
                 const popup = achievementUnlockIndicatorComponent.createObject(root, {
                     url: imageUrl,
                     title: name,
@@ -395,8 +400,6 @@ FocusScope {
                     return;
                 }
 
-                // This component ID should point to a Component object
-                // For example: Component { id: achievementComponentDefinition; Source: "AchievementUnlockIndicator.qml" }
                 const popup = achievementUnlockIndicatorComponent.createObject(root, {
                     url: imageUrl,
                     title: name,
@@ -436,6 +439,7 @@ FocusScope {
         anchors.rightMargin: 12
     }
 
+    // TODO: prob do this differently?
     // Transient in-game overlays (e.g. the rewind menu) live here, so the page is
     // self-contained and needs no external stack. Empty (depth 0) while playing
     StackView {
@@ -449,9 +453,10 @@ FocusScope {
         RewindMenu {
             onRewindPointSelected: function (index) {
                 emulator.loadRewindPoint(index);
-                overlayStack.popCurrentItem();
-                root.forceActiveFocus();
+                root.closeOverlay();
             }
+
+            onClosed: root.closeOverlay()
         }
     }
 }

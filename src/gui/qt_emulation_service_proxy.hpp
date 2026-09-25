@@ -22,6 +22,8 @@ class QtEmulationServiceProxy final : public QObject {
   Q_PROPERTY(QString pictureMode READ getPictureMode NOTIFY pictureModeChanged)
   Q_PROPERTY(QString aspectRatioMode READ getAspectRatioMode NOTIFY aspectRatioModeChanged)
   Q_PROPERTY(int integerScale READ getIntegerScale NOTIFY integerScaleChanged)
+  Q_PROPERTY(bool suspended READ isSuspended NOTIFY suspendedChanged)
+  Q_PROPERTY(bool canUndoLoadSuspendPoint READ canUndoLoadSuspendPoint NOTIFY canUndoLoadSuspendPointChanged)
 
 public:
   explicit QtEmulationServiceProxy(QObject *parent = nullptr);
@@ -40,26 +42,66 @@ public:
   QString getAspectRatioMode() const;
   int getIntegerScale() const;
 
+  /**
+   * @return Whether the running game is off the foreground
+   */
+  bool isSuspended() const;
+
+  /**
+   * @return Whether the last suspend-point load can be undone
+   */
+  bool canUndoLoadSuspendPoint() const;
+
   Q_INVOKABLE void loadEntry(int entryId);
   Q_INVOKABLE void stopEmulation();
   Q_INVOKABLE void resetGame();
 
-  // --- per-game controller device selection (Mouse / Light Gun / Gamepad) ---
-  // Number of controller ports the running game's core exposes
+  /**
+   * Takes the running game off the foreground
+   */
+  Q_INVOKABLE void suspend();
+
+  /**
+   * Hands the running game back to the foreground
+   */
+  Q_INVOKABLE void resume();
+
+  /**
+   * Queues a suspend-point write into the given slot on the running game
+   */
+  Q_INVOKABLE void writeSuspendPoint(int index);
+
+  /**
+   * Queues a suspend-point load from the given slot on the running game
+   */
+  Q_INVOKABLE void loadSuspendPoint(int index);
+
+  /**
+   * Queues an undo of the last suspend-point load on the running game
+   */
+  Q_INVOKABLE void undoLoadSuspendPoint();
+
+  /**
+   * Asks the running game for its rewind points, which the emulator page shows as the rewind menu
+   */
+  Q_INVOKABLE void openRewindMenu();
+
+  // TODO: same as below. maybe a model
   Q_INVOKABLE int controllerPortCount() const;
+
+  // TODO: Probably go through emulation service
   // For `port`, the selectable device variants as a list of maps:
   // { coreDeviceId:int, name:string, deviceClass:int (1=Joypad,2=Mouse,
   // 3=LightGun), isCurrent:bool }. Empty (or a single entry) means no real
   // choice — the UI hides ports with nothing to pick
   Q_INVOKABLE QVariantList controllerVariantsForPort(int port) const;
-  // Selects a variant for `port` (applies live + persists for this game)
+
+  // TODO: probably go straight to EmulationService for this
   Q_INVOKABLE void setControllerVariant(int port, int coreDeviceId);
 
 signals:
   void gameLoadStarted();
   void gameLoaded();
-  // TODO
-  // Carries what stopped the launch, in words meant to be shown
   void gameLoadFailed(QString reason);
   void emulationStopped();
   void gameRunningChanged(bool isGameRunning);
@@ -70,6 +112,8 @@ signals:
   void aspectRatioModeChanged();
   void integerScaleChanged();
   void controllerDevicesChanged();
+  void suspendedChanged();
+  void canUndoLoadSuspendPointChanged();
 
 private:
   emulation::EmulationService *m_emulationService;
@@ -81,6 +125,8 @@ private:
 
   ScopedConnection m_emulationSettingChangedConnection;
   ScopedConnection m_controllerDevicesConnection;
+  ScopedConnection m_suspendedConnection;
+  ScopedConnection m_undoLoadSuspendPointConnection;
 };
 
 } // namespace firelight::gui

@@ -1,4 +1,3 @@
-// TODO: NEEDS REVIEW
 #pragma once
 #include "emulation_context.hpp"
 #include "emulator_instance.hpp"
@@ -22,17 +21,17 @@ namespace firelight::settings {
 class SettingsService;
 }
 
-// Resolves core-option values for a loaded entry (global namespace)
+// TODO: Move out of global namespace
+// Resolves core-option values for a loaded entry
 class CoreConfiguration;
 
 namespace firelight::emulation {
 
 class GameLoader;
 
-// Builds the ICore for a loaded entry. Injectable so tests can supply a fake
-// core instead of dlopen'ing a real libretro DLL. A null factory uses the
-// default (real Core)
-using CoreFactory = std::function<std::unique_ptr<::libretro::ICore>(const firelight::libretro::CoreRunConfig &config)>;
+// Builds the ICore for a loaded entry. Injectable so tests can supply a fake core instead of using a real libretro
+// DLL. A null factory uses the default (real Core)
+using CoreFactory = std::function<std::unique_ptr<::libretro::ICore>(const libretro::CoreRunConfig &config)>;
 
 struct GameLoadStarted {};
 
@@ -42,8 +41,14 @@ struct GameLoadFailedEvent {
   std::string reason;
 };
 
-struct GamePausedChangedEvent {
-  bool paused;
+/** Published when the game is taken off the foreground or hands it back */
+struct GameSuspendedChangedEvent {
+  bool suspended;
+};
+
+/** Published from the render thread whenever undoing the last suspend-point load becomes possible or not */
+struct UndoLoadSuspendPointChangedEvent {
+  bool available;
 };
 
 struct EmulationStartedEvent {
@@ -59,6 +64,7 @@ struct DiscChangedEvent {
   unsigned count;
 };
 
+// TODO: I don't like this
 // Published once on load when the core advertises selectable port devices, so
 // the input UI can offer a per-port device choice. Query the current instance's
 // getControllerDevices() for the details
@@ -66,10 +72,7 @@ struct ControllerDevicesEvent {
   std::string contentHash;
 };
 
-// One-shot, per-launch knobs applied to the next loadEntry and then consumed
-// (so later launches use their own defaults). These are transient launch
-// parameters, distinct from the stable service dependencies in EmulationContext
-// Populated by main.cpp from the CLI; not persisted
+// One-shot, per-launch knobs applied to the next loadEntry and then consumed (so later launches use their own defaults)
 struct LaunchOverrides {
   int saveSlot = -1;  // >= 0 replaces the entry's stored active slot
   bool muted = false; // start the instance muted (born muted in initialize())
@@ -88,18 +91,30 @@ public:
 
   std::future<EmulatorInstance *> loadEntry(int entryId);
   void stopEmulation();
-  // TODO
+
   /**
    * Queues a reboot of the running game, if there is one
    */
   void resetGame();
-  EmulatorInstance *getCurrentEmulatorInstance();
 
-  // TODO
   /**
-   * A handle for whoever draws the game: locked for the length of a pass so the instance cannot be
-   * destroyed under it, and empty once the game has been stopped
+   * Sends the running game to the background so no frames or audio until resume(). Publishes GameSuspendedChangedEvent
+   * once
    */
+  void suspend();
+
+  /**
+   * Hands the game back to the foreground. Publishes GameSuspendedChangedEvent once
+   */
+  void resume();
+
+  /**
+   * @return Whether the running game is suspended in the background
+   */
+  [[nodiscard]] bool isSuspended() const;
+
+  // TODO: Clean these up
+  EmulatorInstance *getCurrentEmulatorInstance() const;
   std::weak_ptr<EmulatorInstance> getCurrentEmulatorInstanceHandle();
 
   float currentAudioBufferLevel();
@@ -107,7 +122,6 @@ public:
   void setCurrentAudioMuted(bool muted);
   bool currentAudioMuted();
 
-  // TODO
   /**
    * Queues work on the running instance, if there is one that has come up.
    *
@@ -117,8 +131,7 @@ public:
 
   bool isCurrentEmulatorReady();
 
-  // Sets the one-shot launch knobs applied to (and consumed by) the next
-  // loadEntry. See LaunchOverrides. Not persisted
+  // Sets the one-shot launch knobs applied to (and consumed by) the next loadEntry
   void setPendingLaunchOverrides(LaunchOverrides overrides);
 
   [[nodiscard]] bool isGameRunning() const;
@@ -137,21 +150,21 @@ private:
   std::unique_ptr<GameLoader> m_loader;
 
   std::shared_ptr<EmulatorInstance> m_emulatorInstance;
-  // Guards m_emulatorInstance's lifetime against the frame-pacing thread, which
-  // reads it (currentAudioBufferLevel) while loadEntry/stopEmulation may reset it
+
   std::mutex m_instanceMutex;
 
-  // One-shot per-launch knobs (save slot, muted, ...), applied and cleared in
-  // loadEntry. Distinct from m_context's stable service dependencies
+  // One-shot per-launch knobs (save slot, muted, etc), applied and cleared in loadEntry
   LaunchOverrides m_pendingLaunch;
 
   library::Entry m_currentEntry;
   std::string m_currentContentHash;
   platforms::Platform m_currentPlatform;
   bool m_gameRunning = false;
+  bool m_suspended = false;
 
-  // Retained so its declared options can be cached once the core has declared
-  // them (on EmulationStartedEvent, i.e. after the render thread inits the core)
+  void setSuspended(bool suspended);
+
+  // Hold onto the core config to cache it
   std::shared_ptr<CoreConfiguration> m_currentCoreConfig;
   ScopedConnection m_emulationStartedConnection;
   void persistCoreOptions();

@@ -173,6 +173,20 @@ StackView {
         height: stack.height
     }
 
+    // TODO
+    // Holds focus while a move is in flight, so nothing on either page can be reached until the incoming
+    // one has arrived. Kept outside the stack, which hands focus to an incoming page as soon as its
+    // transition starts whenever the stack itself holds it
+    Item {
+        id: focusHolder
+        objectName: "RouteView|focusHolder"
+        parent: stack.parent
+    }
+
+    // TODO
+    // The page to hand focus to once the running transition finishes
+    property Item _arriving: null
+
     // LRU cache of { key, item }, most-recently-used last
     property var _cache: []
     // Builds currently in flight, keyed by mount key, so a route isn't built twice
@@ -248,6 +262,15 @@ StackView {
         }
     }
 
+    // TODO
+    // Focus only lands on a page while the view can take it. A disabled view (the game has the window)
+    // would lose the focus it holds without the page gaining it
+    function _focusPage(item) {
+        if (item !== null && item !== undefined && stack.enabled) {
+            item.forceActiveFocus();
+        }
+    }
+
     function _show(item, preset) {
         stack.loading = false;
         // Keep the depth-1 invariant: if a screen ever pushes onto our stack
@@ -258,18 +281,34 @@ StackView {
         }
         if (stack.currentItem === item) {
             _setActive(item, true);
-            item.forceActiveFocus();
+            stack._focusPage(item);
             return;
         }
         var previous = stack.currentItem;
+        stack._arriving = null;
         stack.replaceCurrentItem(item, {}, stack.transitions.apply(preset, item));
         _setActive(previous, false);
         _setActive(item, true);
 
+        if (stack.busy) {
+            stack._arriving = item;
+            return;
+        }
+
         // TODO
         // The cursor follows the route. A page that is a focus scope hands this on to whatever it
         // last had focused, or to its own entry point
-        item.forceActiveFocus();
+        stack._focusPage(item);
+    }
+
+    onBusyChanged: {
+        if (stack.busy || stack._arriving === null) {
+            return;
+        }
+
+        const item = stack._arriving;
+        stack._arriving = null;
+        stack._focusPage(item);
     }
 
     Connections {
@@ -285,6 +324,10 @@ StackView {
             // A rule for this exact move wins; otherwise the structural inference stands. Captured
             // here so an asynchronous build still animates the move that asked for it
             var preset = Router.transitionFor(Router.previousPath, Router.path) || transition;
+
+            if (stack.enabled) {
+                focusHolder.forceActiveFocus();
+            }
 
             var key = stack._mountKey();
             var idx = stack._cacheIndex(key);
@@ -318,6 +361,11 @@ StackView {
                 } else if (incubator.status === Component.Error) {
                     delete stack._incubators[key];
                     stack.loading = false;
+
+                    if (stack._mountKey() === key) {
+                        stack._focusPage(stack.currentItem);
+                    }
+
                     var reason = component.errorString();
                     console.error("Route failed to build:", Router.path, reason);
                     stack.routeError(Router.path, reason);

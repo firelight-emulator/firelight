@@ -6,28 +6,64 @@ import Firelight 1.0
 FLPage {
     id: root
 
-    // property Component tabsHeader: Component {
-    //     NavigationTabBar {
-    //         tabs: ["Games", "Collections"]
-    //
-    //         currentIndex: root.libraryTab
-    //
-    //         clickAction: function () {
-    //             root.enterFocus();
-    //         }
-    //
-    //         Keys.onPressed: (event) => {
-    //             if (event.key !== Qt.Key_Down || !libraryContentStack.currentItem || !libraryContentStack.currentItem.focusFirstItem) {
-    //                 return;
-    //             }
-    //
-    //             libraryContentStack.currentItem.focusFirstItem();
-    //             event.accepted = true;
-    //         }
-    //
-    //         onTabSelected: index => root.showTab(index)
-    //     }
-    // }
+    objectName: "QuickMenu"
+
+    headerText: EmulationService.currentGameName
+
+    FLFocus.actions: [
+        FLAction {
+            keys: [Qt.Key_Back, Qt.Key_Escape]
+            label: qsTr("Resume")
+            sound: SoundEffects.back
+            onTriggered: EmulationService.resume()
+        }
+    ]
+
+    FLDialog {
+        id: resetDialog
+
+        showCancel: true
+        acceptText: qsTr("Reset")
+
+        onAccepted: {
+            EmulationService.resetGame();
+            EmulationService.resume();
+        }
+
+        Text {
+            Layout.fillWidth: true
+            text: qsTr("Reset the game? Unsaved progress will be lost.")
+            color: Theme.textMuted
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
+            font.family: AppStyle.fontFamily
+            font.pixelSize: AppStyle.fontSizeMedium
+        }
+    }
+
+    FLDialog {
+        id: closeDialog
+
+        showCancel: true
+        acceptText: qsTr("Close game")
+
+        onAccepted: EmulationService.stopEmulation()
+
+        Text {
+            Layout.fillWidth: true
+            text: qsTr("Close the game? Unsaved progress will be lost.")
+            color: Theme.textMuted
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
+            font.family: AppStyle.fontFamily
+            font.pixelSize: AppStyle.fontSizeMedium
+        }
+    }
+
+    Component {
+        id: suspendPointsPage
+        SuspendPointsPage {}
+    }
 
     FLTwoColumnPage {
         id: content
@@ -36,112 +72,52 @@ FLPage {
         model: [
             {
                 "type": "action",
-                "label": "Resume game"
+                "key": "resume",
+                "label": qsTr("Resume game")
             },
             {
                 "type": "action",
-                "label": "Reset game"
+                "key": "reset",
+                "label": qsTr("Reset game")
             },
             {
                 "type": "divider"
             },
             {
-                "type": "action",
+                "type": "page",
                 "key": "suspend-points",
-                "label": "Suspend points"
+                "label": qsTr("Suspend points"),
+                "page": suspendPointsPage
             },
             {
                 "type": "action",
                 "key": "rewind",
-                "label": "Rewind"
+                "label": qsTr("Rewind"),
+                "enabled": function () {
+                    return EmulationService.rewindEnabled;
+                }
             },
             {
                 "type": "divider"
             },
             {
                 "type": "action",
-                "label": "Close game"
+                "key": "close",
+                "label": qsTr("Close game")
             }
-            // {
-            //     "type": "page",
-            //     "key": "controllers",
-            //     "label": "Controllers",
-            //     "iconName": "controller",
-            //     "page": controllerSettings
-            // },
-            // {
-            //     "type": "divider"
-            // },
-            // {
-            //     "type": "page",
-            //     "key": "video",
-            //     "label": "Video",
-            //     "iconName": "display",
-            //     "page": systemVideoSettings
-            // },
-            // {
-            //     "type": "page",
-            //     "key": "audio",
-            //     "label": "Audio",
-            //     "iconName": "display",
-            //     "page": systemAudioSettings
-            // },
-            // {
-            //     "type": "divider"
-            // },
-            // {
-            //     "type": "header",
-            //     "label": "Gameplay"
-            // },
-            // {
-            //     "type": "page",
-            //     "key": "emulation-general",
-            //     "label": "General",
-            //     "iconName": "display",
-            //     "page": placeholderSettings
-            // },
-            // {
-            //     "type": "page",
-            //     "key": "emulation-picture",
-            //     "label": "Picture",
-            //     "iconName": "display",
-            //     "page": emulationPictureSettings
-            // },
-            // {
-            //     "type": "page",
-            //     "key": "emulation-sound",
-            //     "label": "Sound",
-            //     "iconName": "display",
-            //     "page": emulationSoundSettings
-            // },
-            // {
-            //     "type": "page",
-            //     "key": "emulation-input",
-            //     "label": "Input",
-            //     "iconName": "controller",
-            //     "page": emulationInputSettings
-            // },
-            // {
-            //     "type": "divider"
-            // },
-            // {
-            //     "type": "header",
-            //     "label": "Main stuff"
-            // },
-            // {
-            //     "type": "page",
-            //     "key": "retroachievements",
-            //     "label": "Achievements",
-            //     "iconName": "trophy",
-            //     "page": retroAchievementSettings
-            // },
-            // {
-            //     "type": "page",
-            //     "key": "about",
-            //     "label": "About",
-            //     "iconName": "info",
-            //     "page": about
-            // }
         ]
+
+        onActionTriggered: function (key) {
+            if (key === "resume") {
+                EmulationService.resume();
+            } else if (key === "reset") {
+                resetDialog.open();
+            } else if (key === "rewind") {
+                EmulationService.resume();
+                EmulationService.openRewindMenu();
+            } else if (key === "close") {
+                closeDialog.open();
+            }
+        }
     }
 }

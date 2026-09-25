@@ -26,23 +26,19 @@ EmulationService::EmulationService(library::UserLibraryService &library, library
                                    settings::SettingsService &settingsService, EmulationContext context,
                                    CoreFactory coreFactory)
     : m_settingsService(settingsService), m_context(std::move(context)), m_coreFactory(std::move(coreFactory)) {
-  // The EmulatorInstance created below inherits this context; make sure it
-  // carries the same settings service the service was constructed with,
-  // regardless of whether the caller pre-populated the field
+
+  // Use same settings service for the context as the service itself
   m_context.settingsService = &m_settingsService;
-  // Default factory builds the real dlopen'd Core; tests inject a fake
+
+  // Default factory builds the real Core; tests inject a fake
   if (!m_coreFactory) {
-    m_coreFactory = [](const firelight::libretro::CoreRunConfig &config) -> std::unique_ptr<::libretro::ICore> {
+    m_coreFactory = [](const libretro::CoreRunConfig &config) -> std::unique_ptr<::libretro::ICore> {
       return std::make_unique<::libretro::Core>(config);
     };
   }
 
   m_loader = std::make_unique<GameLoader>(library, entryResolver, m_settingsService, m_context);
 
-  // Core options are only known once the core declares them during
-  // EmulatorInstance::initialize (render thread). That publishes
-  // EmulationStartedEvent, at which point we cache the declared options so the
-  // advanced editor can list them before the next launch
   m_emulationStartedConnection = EventDispatcher::instance().subscribe<EmulationStartedEvent>(
       [this](const EmulationStartedEvent &) { persistCoreOptions(); });
 }
@@ -52,8 +48,7 @@ void EmulationService::persistCoreOptions() {
   if (!repository || !m_currentCoreConfig) {
     return;
   }
-  // Persist under the core actually resolved for this entry (honors any
-  // per-platform / per-game core override), so the cache matches what ran
+
   const auto coreName =
       CoreRegistry::instance().resolveCoreName(m_currentEntry.platformId, m_currentContentHash, &m_settingsService);
   if (coreName.empty()) {
@@ -69,9 +64,11 @@ void EmulationService::persistCoreOptions() {
     def.defaultValue = option.defaultValueKey;
     def.category = option.category;
     def.categoryLabel = option.categoryLabel;
+
     for (const auto &value : option.possibleValues) {
       def.values.push_back({value.key, value.label});
     }
+
     definitions.push_back(std::move(def));
   }
 
@@ -82,10 +79,8 @@ void EmulationService::persistCoreOptions() {
 
 EmulationService::~EmulationService() { spdlog::info("[EmulationService] Stopping EmulationService"); }
 
-std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
-  // Every failure path returns a *ready* future holding nullptr (never a
-  // default-constructed, invalid future that would be UB to .get()) and
-  // announces the failure so the UI can react
+std::future<EmulatorInstance *> EmulationService::loadEntry(const int entryId) {
+
   const auto failed = [](std::string reason = {}) {
     std::promise<EmulatorInstance *> promise;
     promise.set_value(nullptr);
@@ -97,8 +92,8 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
     stopEmulation();
   }
 
-  // The one-shot CLI launch overrides apply to this launch only, then are
-  // consumed so later launches use the entry's own defaults
+  // The one-shot CLI launch overrides apply to this launch only, then are consumed so later launches use the entry's
+  // own defaults
   const LaunchOverrides launch = m_pendingLaunch;
   m_pendingLaunch = {};
 
@@ -109,10 +104,13 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
 
   m_currentEntry = result.entry;
   m_currentContentHash = result.contentHash;
+
   if (result.platform) {
     m_currentPlatform = *result.platform;
   }
+
   m_currentCoreConfig = result.coreConfig;
+
   {
     std::lock_guard lock(m_instanceMutex);
     m_emulatorInstance = std::move(result.instance);
@@ -126,11 +124,39 @@ std::future<EmulatorInstance *> EmulationService::loadEntry(int entryId) {
 }
 
 void EmulationService::stopEmulation() {
+  setSuspended(false);
   {
     std::lock_guard lock(m_instanceMutex);
     m_emulatorInstance.reset();
   }
   EventDispatcher::instance().publish(EmulationStoppedEvent{});
+}
+
+void EmulationService::suspend() {
+  if (!isGameRunning()) {
+    return;
+  }
+
+  setSuspended(true);
+}
+
+void EmulationService::resume() {
+  if (!isGameRunning()) {
+    return;
+  }
+
+  setSuspended(false);
+}
+
+bool EmulationService::isSuspended() const { return m_suspended; }
+
+void EmulationService::setSuspended(const bool suspended) {
+  if (m_suspended == suspended) {
+    return;
+  }
+
+  m_suspended = suspended;
+  EventDispatcher::instance().publish(GameSuspendedChangedEvent{.suspended = suspended});
 }
 
 float EmulationService::currentAudioBufferLevel() {
@@ -169,9 +195,9 @@ bool EmulationService::isCurrentEmulatorReady() {
   return m_emulatorInstance && m_emulatorInstance->isInitialized();
 }
 
-void EmulationService::setPendingLaunchOverrides(LaunchOverrides overrides) { m_pendingLaunch = overrides; }
+void EmulationService::setPendingLaunchOverrides(const LaunchOverrides overrides) { m_pendingLaunch = overrides; }
 
-EmulatorInstance *EmulationService::getCurrentEmulatorInstance() { return m_emulatorInstance.get(); }
+EmulatorInstance *EmulationService::getCurrentEmulatorInstance() const { return m_emulatorInstance.get(); }
 
 std::weak_ptr<EmulatorInstance> EmulationService::getCurrentEmulatorInstanceHandle() {
   std::lock_guard lock(m_instanceMutex);

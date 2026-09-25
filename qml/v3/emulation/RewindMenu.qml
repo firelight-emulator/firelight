@@ -16,6 +16,8 @@ FocusScope {
 
     signal rewindPointSelected(var index)
 
+    signal closed
+
     function close() {
         exitAnimationWithoutBackToZero.start();
     }
@@ -93,9 +95,7 @@ FocusScope {
             }
         }
         ScriptAction {
-            script: {
-                root.StackView.view.popCurrentItem(StackView.Immediate);
-            }
+            script: root.closed()
         }
     }
 
@@ -130,9 +130,7 @@ FocusScope {
             }
         }
         ScriptAction {
-            script: {
-                root.StackView.view.popCurrentItem(StackView.Immediate);
-            }
+            script: root.closed()
         }
     }
 

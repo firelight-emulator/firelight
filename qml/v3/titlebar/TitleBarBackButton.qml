@@ -7,6 +7,8 @@ FLIconButton {
 
     required property bool showButton
 
+    signal backRequested
+
     property real _initialX: 0
 
     Component.onCompleted: {
@@ -46,5 +48,5 @@ FLIconButton {
     tooltipText: "Back"
     filled: false
     compact: false
-    onClicked: Router.back()
+    onClicked: control.backRequested()
 }

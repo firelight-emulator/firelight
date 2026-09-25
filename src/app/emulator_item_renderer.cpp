@@ -22,6 +22,7 @@
 #ifdef _WIN32
 #include <vulkan/vulkan_win32.h>
 #endif
+#include "emulation/emulation_service.hpp"
 #include "emulation/pace_probe.hpp"
 #include "emulator_item.hpp"
 
@@ -590,6 +591,7 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
         canUndo != emulatorItem->m_canUndoLoadSuspendPoint) {
       emulatorItem->m_canUndoLoadSuspendPoint = canUndo;
       emit emulatorItem->canUndoLoadSuspendPointChanged();
+      EventDispatcher::instance().publish(firelight::emulation::UndoLoadSuspendPointChangedEvent{.available = canUndo});
     }
   }
 }

@@ -9,7 +9,6 @@ namespace firelight::gui {
 QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
     : QObject(parent), m_emulationService(emulation::EmulationService::getInstance()) {
 
-  // A load that fails has always been silent, so a tile that does nothing was the only sign
   m_gameLoadFailedConnection = EventDispatcher::instance().subscribe<emulation::GameLoadFailedEvent>(
       [this](const emulation::GameLoadFailedEvent &event) {
         const auto reason = QString::fromStdString(event.reason);
@@ -52,6 +51,16 @@ QtEmulationServiceProxy::QtEmulationServiceProxy(QObject *parent)
 
   m_controllerDevicesConnection = EventDispatcher::instance().subscribe<emulation::ControllerDevicesEvent>(
       [this](const emulation::ControllerDevicesEvent &) { emit controllerDevicesChanged(); });
+
+  m_suspendedConnection = EventDispatcher::instance().subscribe<emulation::GameSuspendedChangedEvent>(
+      [this](const emulation::GameSuspendedChangedEvent &) {
+        QMetaObject::invokeMethod(this, [this] { emit suspendedChanged(); });
+      });
+
+  m_undoLoadSuspendPointConnection = EventDispatcher::instance().subscribe<emulation::UndoLoadSuspendPointChangedEvent>(
+      [this](const emulation::UndoLoadSuspendPointChangedEvent &) {
+        QMetaObject::invokeMethod(this, [this] { emit canUndoLoadSuspendPointChanged(); }, Qt::QueuedConnection);
+      });
 }
 
 QtEmulationServiceProxy::~QtEmulationServiceProxy() = default;
@@ -99,7 +108,7 @@ QString QtEmulationServiceProxy::getCurrentPlatformName() const {
 }
 
 int QtEmulationServiceProxy::getCurrentSaveSlotNumber() const {
-  auto instance = m_emulationService->getCurrentEmulatorInstance();
+  const auto instance = m_emulationService->getCurrentEmulatorInstance();
   if (!instance) {
     return -1;
   }
@@ -108,7 +117,7 @@ int QtEmulationServiceProxy::getCurrentSaveSlotNumber() const {
 }
 
 bool QtEmulationServiceProxy::isRewindEnabled() const {
-  auto instance = m_emulationService->getCurrentEmulatorInstance();
+  const auto instance = m_emulationService->getCurrentEmulatorInstance();
   if (!instance) {
     return false;
   }
@@ -152,6 +161,35 @@ void QtEmulationServiceProxy::loadEntry(const int entryId) {
 void QtEmulationServiceProxy::stopEmulation() { m_emulationService->stopEmulation(); }
 
 void QtEmulationServiceProxy::resetGame() { m_emulationService->resetGame(); }
+
+bool QtEmulationServiceProxy::isSuspended() const { return m_emulationService->isSuspended(); }
+
+bool QtEmulationServiceProxy::canUndoLoadSuspendPoint() const {
+  const auto instance = m_emulationService->getCurrentEmulatorInstance();
+  return instance != nullptr && instance->canUndoLoadSuspendPoint();
+}
+
+void QtEmulationServiceProxy::suspend() { m_emulationService->suspend(); }
+
+void QtEmulationServiceProxy::resume() { m_emulationService->resume(); }
+
+void QtEmulationServiceProxy::writeSuspendPoint(const int index) {
+  m_emulationService->submitToCurrentEmulator(
+      {.type = emulation::EmulatorCommandType::WriteSuspendPoint, .suspendPointIndex = index});
+}
+
+void QtEmulationServiceProxy::loadSuspendPoint(const int index) {
+  m_emulationService->submitToCurrentEmulator(
+      {.type = emulation::EmulatorCommandType::LoadSuspendPoint, .suspendPointIndex = index});
+}
+
+void QtEmulationServiceProxy::undoLoadSuspendPoint() {
+  m_emulationService->submitToCurrentEmulator({.type = emulation::EmulatorCommandType::UndoLoadSuspendPoint});
+}
+
+void QtEmulationServiceProxy::openRewindMenu() {
+  m_emulationService->submitToCurrentEmulator({.type = emulation::EmulatorCommandType::EmitRewindPoints});
+}
 
 int QtEmulationServiceProxy::controllerPortCount() const {
   const auto instance = m_emulationService->getCurrentEmulatorInstance();

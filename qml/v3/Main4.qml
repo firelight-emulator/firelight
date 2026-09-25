@@ -283,14 +283,34 @@ MainWindow {
     GameplayPage {
         id: gameplayPage
         anchors.fill: parent
-        // visible: Router.isActive("/quick-menu")
     }
 
     Item {
         id: contentContainer
         anchors.fill: parent
 
+        // TODO
+        // The chrome leaves the window to the game while it plays and comes back over it when suspended
+        opacity: gameplayPage.playing ? 0 : 1
+        visible: contentContainer.opacity > 0
+        enabled: !gameplayPage.playing
+
+        Behavior on opacity {
+            enabled: !launchCinematic.active
+
+            NumberAnimation {
+                duration: AppStyle.durationBase
+                easing.type: AppStyle.easingStandard
+            }
+        }
+
         FLFocus.actions: [
+            FLAction {
+                keys: [Qt.Key_Home]
+                label: qsTr("Menu")
+                hidden: true
+                onTriggered: navigationPopup.open()
+            },
             FLAction {
                 keys: [Qt.Key_Back, Qt.Key_Escape]
                 label: qsTr("Back")
@@ -453,33 +473,61 @@ MainWindow {
                 // The popup item above this is a focus scope of its own and keeps what it is given, so the
                 // surface has to claim it for anything inside to be reached
                 focus: true
+
+                LibraryEntry {
+                    id: nowPlayingEntry
+                    visible: false
+                    entryId: EmulationService.currentEntryId
+                }
+
                 FLColumnLayout {
                     anchors.fill: parent
 
                     FLButton {
+                        id: nowPlayingTile
+                        objectName: "NowPlayingTile|" + nowPlayingEntry.name
                         Layout.fillWidth: true
                         Layout.preferredHeight: 240
                         Layout.margins: AppStyle.spacingSm
                         checked: Router.isActive("/quick-menu")
                         focus: checked
+                        canInteract: EmulationService.isGameRunning
 
                         background: Rectangle {
                             radius: AppStyle.radiusMd
                             color: Theme.surfaceElevated
                         }
 
+                        Image {
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: nowPlayingLabel.top
+                            anchors.margins: AppStyle.spacingMd
+                            fillMode: Image.PreserveAspectFit
+                            asynchronous: true
+                            visible: EmulationService.isGameRunning
+                            source: EmulationService.isGameRunning ? nowPlayingEntry.icon1x1SourceUrl : ""
+                        }
+
                         Text {
-                            anchors.centerIn: parent
-                            text: "You're not currently playing anything"
+                            id: nowPlayingLabel
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: EmulationService.isGameRunning ? parent.bottom : undefined
+                            anchors.verticalCenter: EmulationService.isGameRunning ? undefined : parent.verticalCenter
+                            anchors.margins: AppStyle.spacingMd
+                            text: EmulationService.isGameRunning ? nowPlayingEntry.name : qsTr("You're not currently playing anything")
                             color: Theme.textPrimary
                             font.family: AppStyle.fontFamily
                             font.pixelSize: AppStyle.fontSizeSmall
                             horizontalAlignment: Text.AlignHCenter
+                            elide: Text.ElideRight
                         }
 
                         onClicked: {
                             if (!checked) {
-                                Qt.callLater(() => Router.navigate("/quick-menu"));
+                                Router.navigate("/quick-menu");
                                 navigationPopup.close();
                             }
                         }
@@ -511,7 +559,7 @@ MainWindow {
 
                             onClicked: {
                                 if (!checked) {
-                                    Qt.callLater(() => Router.navigate(modelData.route));
+                                    Router.navigate(modelData.route);
                                     navigationPopup.close();
                                 }
                             }
@@ -533,6 +581,7 @@ MainWindow {
 
         FLGuideBar {
             id: guideBar
+            visible: !gameplayPage.playing
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
@@ -570,28 +619,28 @@ MainWindow {
 
                 page: contentStack.currentItem
 
+                // TODO
+                // The arrow is the mouse's Back key: whatever Back the focused page declares wins
+                onBackRequested: {
+                    if (!contentContainer.FLFocus.dispatch(window.activeFocusItem, Qt.Key_Back, 0, false)) {
+                        Router.back();
+                    }
+
+                    guideBar.refresh();
+                }
+
                 onMaximizeClicked: window.maximize()
                 onMinimizeClicked: window.showMinimized()
                 onCloseClicked: window.close()
             }
         }
 
-        // GameplayLayer {
-        //     id: gameplay
-        //     z: 90
-        // }
-
-        // TODO
-        // Lives outside the content it samples: a blur source drawn inside its own source item
-        // renders into the texture it is reading from
         Item {
             id: dimmer
 
             parent: Overlay.overlay
             anchors.fill: parent
 
-            // TODO
-            // Under every popup, which take the overlay's default
             z: -1
 
             Component.onCompleted: {
@@ -617,11 +666,9 @@ MainWindow {
     LaunchCinematic {
         id: launchCinematic
         parent: Overlay.overlay
-        z: 200000
+        z: 200000000000000
     }
 
-    // TODO
-    // Mounted once and raised through the FLKeyboard singleton, which has no scene graph of its own
     FLKeyboardOverlay {
         id: onScreenKeyboard
         z: guideBar.z - 1
@@ -645,18 +692,31 @@ MainWindow {
 
     Connections {
         target: launchCinematic
+
         function onBlackFull() {
-            gameplayPage.startGame();
-            launchCinematic.reveal();
+            gameplayPage.markBlackFull();
         }
     }
 
-    // Connections {
-    //     target: gameplay
-    //     function onReadyToReveal() {
-    //         launchCinematic.reveal();
-    //     }
-    // }
+    Connections {
+        target: gameplayPage
+
+        function onReadyToReveal() {
+            launchCinematic.reveal();
+        }
+
+        function onPlayingChanged() {
+            if (gameplayPage.playing) {
+                return;
+            }
+
+            Qt.callLater(function () {
+                if (!gameplayPage.playing && contentStack.currentItem !== null) {
+                    contentStack.currentItem.forceActiveFocus();
+                }
+            });
+        }
+    }
 
     // Netplay status has to outlive the /netplay page: both of these sit above
     // the gameplay layer so they stay visible wherever the user has navigated
@@ -752,234 +812,6 @@ MainWindow {
             window.maybeAutoLaunch();
         }
     }
-
-    // FLPROBE-BEGIN
-    readonly property bool probeOn: Qt.application.arguments.join(" ").indexOf("fl-probe") >= 0
-    property real probeT0: Date.now()
-    property string probeLast: ""
-    property int probeStep: 0
-    property real probeStepAt: 0
-
-    function probeLog(tag, msg) {
-        console.warn("FLPROBE " + (Date.now() - window.probeT0) + " " + tag + " " + msg);
-    }
-
-    function probeIsAncestor(anc, it) {
-        for (let p = it; p; p = p.parent) {
-            if (p === anc) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function probePageOf(it) {
-        if (!it) {
-            return "-";
-        }
-        const cache = contentStack._cache;
-        for (let i = 0; i < cache.length; i++) {
-            if (window.probeIsAncestor(cache[i].item, it)) {
-                return cache[i].key;
-            }
-        }
-        if (window.probeIsAncestor(navigationPopup.contentItem, it)) {
-            return "drawer";
-        }
-        if (window.probeIsAncestor(contentStack, it)) {
-            return "stack";
-        }
-        return "other";
-    }
-
-    function probeDesc(it) {
-        if (!it) {
-            return "null";
-        }
-        return String(it).split("(")[0] + "[" + it.objectName + "]@" + window.probePageOf(it);
-    }
-
-    function probeRings() {
-        const out = [];
-        for (let i = 0; i < focusHighlight.children.length; i++) {
-            const c = focusHighlight.children[i];
-            if (String(c).indexOf("FLFocusRing") === 0) {
-                out.push(c.opacity.toFixed(2));
-            }
-        }
-        return out.join("/");
-    }
-
-    function probeFind(node, name) {
-        if (!node) {
-            return null;
-        }
-        if (node.objectName === name) {
-            return node;
-        }
-        for (let i = 0; i < node.children.length; i++) {
-            const f = window.probeFind(node.children[i], name);
-            if (f) {
-                return f;
-            }
-        }
-        return null;
-    }
-
-    function probeSettled(path) {
-        return Router.path.indexOf(path) === 0 && !contentStack.loading && !contentStack.busy && !navigationPopup.visible;
-    }
-
-    readonly property var probeSteps: [
-        {
-            name: "ready",
-            wait: 2500,
-            when: () => window.probeSettled("/library"),
-            act: () => {}
-        },
-        {
-            name: "open drawer",
-            wait: 300,
-            when: () => true,
-            act: () => navigationPopup.open()
-        },
-        {
-            name: "focus Settings",
-            wait: 600,
-            when: () => navigationPopup.opened,
-            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Settings").forceActiveFocus()
-        },
-        {
-            name: "click Settings (miss)",
-            wait: 400,
-            when: () => true,
-            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Settings").clicked()
-        },
-        {
-            name: "open drawer",
-            wait: 1500,
-            when: () => window.probeSettled("/settings"),
-            act: () => navigationPopup.open()
-        },
-        {
-            name: "focus Library",
-            wait: 600,
-            when: () => navigationPopup.opened,
-            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Library").forceActiveFocus()
-        },
-        {
-            name: "click Library (hit)",
-            wait: 400,
-            when: () => true,
-            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Library").clicked()
-        },
-        {
-            name: "open drawer",
-            wait: 1500,
-            when: () => window.probeSettled("/library"),
-            act: () => navigationPopup.open()
-        },
-        {
-            name: "focus Settings",
-            wait: 600,
-            when: () => navigationPopup.opened,
-            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Settings").forceActiveFocus()
-        },
-        {
-            name: "click Settings (hit)",
-            wait: 400,
-            when: () => true,
-            act: () => window.probeFind(navigationPopup.contentItem, "MenuNavigationItem|Settings").clicked()
-        },
-        {
-            name: "quit",
-            wait: 1500,
-            when: () => window.probeSettled("/settings"),
-            act: () => Qt.quit()
-        }
-    ]
-
-    Timer {
-        running: window.probeOn && window.probeStep < window.probeSteps.length
-        repeat: true
-        interval: 10
-        onTriggered: {
-            const step = window.probeSteps[window.probeStep];
-            if (Date.now() - window.probeStepAt < step.wait || !step.when()) {
-                return;
-            }
-            window.probeLog("STEP", step.name);
-            window.probeStep += 1;
-            window.probeStepAt = Date.now();
-            step.act();
-        }
-    }
-
-    FrameAnimation {
-        running: window.probeOn
-        onTriggered: {
-            const cursor = focusHighlight.cursorItem;
-            const s = "path=" + Router.path + " popup=" + navigationPopup.visible + "/" + navigationPopup.opened + " loading=" + contentStack.loading + " busy=" + contentStack.busy + " blink=" + focusHighlight.blinking + " rings=" + window.probeRings() + " cursor=" + window.probeDesc(cursor) + " afi=" + window.probeDesc(window.activeFocusItem) + " mouse=" + InputMethodManager.usingMouse;
-            if (s !== window.probeLast) {
-                window.probeLast = s;
-                window.probeLog("FRAME", s);
-            }
-        }
-    }
-
-    Connections {
-        target: window.probeOn ? Router : null
-        function onNavigated(transition) {
-            window.probeLog("EVENT", "navigated " + Router.path + " transition=" + transition);
-        }
-    }
-
-    Connections {
-        target: window.probeOn ? navigationPopup : null
-        function onAboutToShow() {
-            window.probeLog("EVENT", "popup aboutToShow");
-        }
-        function onOpened() {
-            window.probeLog("EVENT", "popup opened");
-        }
-        function onAboutToHide() {
-            window.probeLog("EVENT", "popup aboutToHide afi=" + window.probeDesc(window.activeFocusItem));
-        }
-        function onClosed() {
-            window.probeLog("EVENT", "popup closed afi=" + window.probeDesc(window.activeFocusItem));
-        }
-    }
-
-    Connections {
-        target: window.probeOn ? contentStack : null
-        function onLoadingChanged() {
-            window.probeLog("EVENT", "loading=" + contentStack.loading);
-        }
-        function onBusyChanged() {
-            window.probeLog("EVENT", "busy=" + contentStack.busy);
-        }
-        function onCurrentItemChanged() {
-            window.probeLog("EVENT", "currentItem=" + window.probeDesc(contentStack.currentItem));
-        }
-    }
-
-    Connections {
-        target: window.probeOn ? focusHighlight : null
-        function onBlinkingChanged() {
-            window.probeLog("EVENT", "blinking=" + focusHighlight.blinking);
-        }
-        function onCursorItemChanged() {
-            window.probeLog("EVENT", "cursorItem=" + window.probeDesc(focusHighlight.cursorItem));
-        }
-    }
-
-    Connections {
-        target: window.probeOn ? window : null
-        function onActiveFocusItemChanged() {
-            window.probeLog("EVENT", "activeFocusItem=" + window.probeDesc(window.activeFocusItem));
-        }
-    }
-    // FLPROBE-END
 
     component RoleData: QtObject {
         property string displayName

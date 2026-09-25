@@ -47,7 +47,7 @@ FLPage {
         }
 
         root._clearExtraPage();
-        root._syncContent();
+        root._syncContent(false);
     }
 
     function focusContent() {
@@ -135,11 +135,14 @@ FLPage {
     function _syncAll() {
         root._isSwapImmediate = true;
         root._syncFromRouter();
-        root._syncContent();
+        root._syncContent(true);
         root._isSwapImmediate = false;
     }
 
-    function _syncContent() {
+    // TODO
+    // The content pane shows the page whose row is selected and nothing otherwise. On a fresh sync a
+    // menu whose first row is a page opens on that page; one that starts with an action opens empty
+    function _syncContent(canFallBack: bool) {
         if (!root._isReady || root._extraPage !== null) {
             return;
         }
@@ -147,12 +150,16 @@ FLPage {
         const index = root._findPage(entry => entry.key === root.currentKey);
 
         if (index < 0) {
-            const first = root._findPage(() => true);
+            if (canFallBack) {
+                const first = root._findPage(entry => entry.key === root._firstRowKey);
 
-            if (first >= 0 && (root.activateOnFocus || root.routeBase !== "")) {
-                root.currentKey = root.model[first].key;
+                if (first >= 0 && (root.activateOnFocus || root.routeBase !== "")) {
+                    root.currentKey = root.model[first].key;
+                    return;
+                }
             }
 
+            root._clearContent();
             return;
         }
 
@@ -163,6 +170,21 @@ FLPage {
         const shownIndex = root._findPage(entry => entry.key === root._shownKey);
         root._shownKey = root.currentKey;
         root._swap(root.model[index].page, shownIndex < 0 ? 0 : index - shownIndex);
+    }
+
+    function _clearContent() {
+        root._shownKey = "";
+
+        if (stack.currentItem !== null) {
+            stack.clear(StackView.Immediate);
+        }
+    }
+
+    // TODO
+    // An action row owns no page, so the cursor resting on one empties the content pane
+    function _deselect() {
+        root._clearExtraPage();
+        root.currentKey = "";
     }
 
     function _swap(page: Component, direction: int) {
@@ -255,7 +277,7 @@ FLPage {
 
     onCurrentKeyChanged: {
         root._clearExtraPage();
-        root._syncContent();
+        root._syncContent(false);
         root._syncToRouter();
     }
 
@@ -363,7 +385,19 @@ FLPage {
                                     label: root._readEntry(actionRow.modelData, "label", "")
                                     visible: root._readEntry(actionRow.modelData, "visible", true)
                                     canInteract: root._readEntry(actionRow.modelData, "enabled", true)
-                                    focus: root.currentKey === "" && actionRow.modelData.key === root._firstRowKey
+                                    // TODO
+                                    // Claimed once when the menu opens with no page selected; later deselections
+                                    // leave the cursor where it is
+                                    Component.onCompleted: {
+                                        if (root.currentKey === "" && actionRow.modelData.key === root._firstRowKey) {
+                                            actionRow.focus = true;
+                                        }
+                                    }
+                                    onActiveFocusChanged: {
+                                        if (actionRow.activeFocus && root.activateOnFocus) {
+                                            root._deselect();
+                                        }
+                                    }
                                     onClicked: {
                                         if (actionRow.canInteract) {
                                             root.actionTriggered(actionRow.modelData.key);

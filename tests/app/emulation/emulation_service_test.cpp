@@ -17,8 +17,7 @@ namespace firelight::emulation {
 /**
  * @brief Test fixture for EmulationService functionality
  *
- * Tests the core emulation service operations including ROM loading,
- * archive extraction, and emulator instance management
+ * Tests the core emulation service operations including ROM loading, archive extraction, and emulator instance management
  */
 class EmulationServiceTest : public testing::Test {
 protected:
@@ -56,13 +55,46 @@ protected:
     m_ingest.reset();
     m_library.reset();
   }
+
+  /**
+   * Adds the GBA test ROM to the library
+   *
+   * @return Its entry id, or -1
+   */
+  int createTestEntry() {
+    library::ContentFile info{.m_fileSizeBytes = 16777216,
+                              .m_filePath = "test_resources/testrom.gba",
+                              .m_fileMd5 = m_testContentHash,
+                              .m_inArchive = false,
+                              .m_platformId = 3,
+                              .m_contentHash = m_testContentHash};
+    m_library->create(info);
+
+    const auto entry = m_library->getEntryWithContentHash(m_testContentHash);
+    return entry.has_value() ? entry->id : -1;
+  }
+
+  /**
+   * Loads the GBA test ROM
+   *
+   * @return Its entry id, or -1 when the load produced no instance
+   */
+  int loadTestRom() {
+    const auto entryId = createTestEntry();
+
+    if (entryId < 0 || m_emulationService->loadEntry(entryId).get() == nullptr) {
+      return -1;
+    }
+
+    return entryId;
+  }
 };
 
 /**
  * @brief Test that loading a non-existent entry fails gracefully
  *
- * Verifies that attempting to load an entry that doesn't exist in the library
- * returns nullptr and triggers a GameLoadFailedEvent
+ * Verifies that attempting to load an entry that doesn't exist in the library returns nullptr and triggers a
+ * GameLoadFailedEvent
  */
 TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
   bool gameLoadFailedEventReceived = false;
@@ -81,9 +113,8 @@ TEST_F(EmulationServiceTest, LoadWithNoEntryFails) {
 /**
  * @brief Test that an entry whose content file is missing fails gracefully
  *
- * The entry resolves from the library, but its on-disk content path does not
- * exist. loadEntry must return a ready future holding nullptr (never an invalid
- * future) and publish a GameLoadFailedEvent, without attempting to load a core
+ * The entry resolves from the library, but its on-disk content path does not exist. loadEntry must return a ready
+ * future holding nullptr (never an invalid future) and publish a GameLoadFailedEvent, without attempting to load a core
  */
 TEST_F(EmulationServiceTest, LoadWithMissingContentPathFails) {
   bool gameLoadFailedEventReceived = false;
@@ -109,9 +140,7 @@ TEST_F(EmulationServiceTest, LoadWithMissingContentPathFails) {
 /**
  * @brief Test successful loading of a valid ROM file
  *
- * Verifies that a valid ROM file can be loaded, creates an EmulatorInstance,
- * and triggers a GameLoadedEvent. Tests that the instance has correct metadata
- * including content hash and platform ID
+ * Verifies that a valid ROM file can be loaded, creates an EmulatorInstance, and triggers a GameLoadedEvent
  */
 TEST_F(EmulationServiceTest, LoadValidRomSucceeds) {
   bool gameLoadedEventReceived = false;
@@ -143,9 +172,7 @@ TEST_F(EmulationServiceTest, LoadValidRomSucceeds) {
 /**
  * @brief Test successful loading of a ROM file from a ZIP archive
  *
- * Verifies that ROM files stored in ZIP archives can be properly extracted
- * and loaded. Tests archive extraction functionality and ensures the
- * EmulatorInstance is created with correct metadata
+ * Verifies that ROM files stored in ZIP archives can be properly extracted and loaded
  */
 TEST_F(EmulationServiceTest, LoadValidRomInZipSucceeds) {
   bool gameLoadedEventReceived = false;
@@ -176,11 +203,9 @@ TEST_F(EmulationServiceTest, LoadValidRomInZipSucceeds) {
 }
 
 /**
- * @brief Test successful loading of a ROM file from a 7Z archive
+ * @brief Test successful loading of a ROM file from a 7z archive
  *
- * Verifies that ROM files stored in 7Z archives can be properly extracted
- * and loaded. Tests 7-Zip archive format support and ensures proper
- * EmulatorInstance creation
+* Verifies that ROM files stored in 7z archives can be properly extracted and loaded
  */
 TEST_F(EmulationServiceTest, LoadValidRomIn7ZSucceeds) {
   bool gameLoadedEventReceived = false;
@@ -213,9 +238,7 @@ TEST_F(EmulationServiceTest, LoadValidRomIn7ZSucceeds) {
 /**
  * @brief Test successful loading of a ROM file from a TAR archive
  *
- * Verifies that ROM files stored in TAR archives can be properly extracted
- * and loaded. Tests TAR archive format support and validates that the
- * resulting EmulatorInstance has correct properties
+* Verifies that ROM files stored in TAR archives can be properly extracted and loaded
  */
 TEST_F(EmulationServiceTest, LoadValidRomInTarSucceeds) {
   bool gameLoadedEventReceived = false;
@@ -243,6 +266,91 @@ TEST_F(EmulationServiceTest, LoadValidRomInTarSucceeds) {
   ASSERT_FALSE(currentEmulatorInstance->isInitialized());
   ASSERT_EQ("e26ee0d44e809351c8ce2d73c7400cdd", currentEmulatorInstance->getContentHash());
   ASSERT_EQ(3, currentEmulatorInstance->getPlatformId());
+}
+
+/**
+ * @brief Suspending with no game loaded changes nothing and publishes nothing
+ */
+TEST_F(EmulationServiceTest, SuspendWithNoGameIsIgnored) {
+  int suspendedEvents = 0;
+  ScopedConnection connection = EventDispatcher::instance().subscribe<GameSuspendedChangedEvent>(
+      [&suspendedEvents](const GameSuspendedChangedEvent &) { ++suspendedEvents; });
+
+  m_emulationService->suspend();
+
+  ASSERT_FALSE(m_emulationService->isSuspended());
+  ASSERT_EQ(0, suspendedEvents);
+}
+
+/**
+ * @brief A loaded game suspends once, and a repeated suspend publishes nothing more
+ */
+TEST_F(EmulationServiceTest, SuspendPublishesOnce) {
+  std::vector<bool> published;
+  ScopedConnection connection = EventDispatcher::instance().subscribe<GameSuspendedChangedEvent>(
+      [&published](const GameSuspendedChangedEvent &event) { published.push_back(event.suspended); });
+
+  ASSERT_GE(loadTestRom(), 0);
+  ASSERT_FALSE(m_emulationService->isSuspended());
+
+  m_emulationService->suspend();
+  m_emulationService->suspend();
+
+  ASSERT_TRUE(m_emulationService->isSuspended());
+  ASSERT_EQ(std::vector<bool>{true}, published);
+}
+
+/**
+ * @brief Resuming a suspended game publishes false once
+ */
+TEST_F(EmulationServiceTest, ResumePublishesFalse) {
+  std::vector<bool> published;
+  ScopedConnection connection = EventDispatcher::instance().subscribe<GameSuspendedChangedEvent>(
+      [&published](const GameSuspendedChangedEvent &event) { published.push_back(event.suspended); });
+
+  ASSERT_GE(loadTestRom(), 0);
+  m_emulationService->suspend();
+  m_emulationService->resume();
+  m_emulationService->resume();
+
+  ASSERT_FALSE(m_emulationService->isSuspended());
+  ASSERT_EQ((std::vector{true, false}), published);
+}
+
+/**
+ * @brief Stopping a suspended game clears the suspension, and says so before it says the game stopped
+ */
+TEST_F(EmulationServiceTest, StopClearsSuspension) {
+  std::vector<std::string> order;
+  ScopedConnection suspendedConnection = EventDispatcher::instance().subscribe<GameSuspendedChangedEvent>(
+      [&order](const GameSuspendedChangedEvent &event) { order.push_back(event.suspended ? "suspended" : "resumed"); });
+  ScopedConnection stoppedConnection = EventDispatcher::instance().subscribe<EmulationStoppedEvent>(
+      [&order](const EmulationStoppedEvent &) { order.push_back("stopped"); });
+
+  ASSERT_GE(loadTestRom(), 0);
+  m_emulationService->suspend();
+  m_emulationService->stopEmulation();
+
+  ASSERT_FALSE(m_emulationService->isSuspended());
+  ASSERT_EQ((std::vector<std::string>{"suspended", "resumed", "stopped"}), order);
+}
+
+/**
+ * @brief Loading another game while one is suspended starts the new one unsuspended
+ */
+TEST_F(EmulationServiceTest, RelaunchStartsUnsuspended) {
+  std::vector<bool> published;
+  ScopedConnection connection = EventDispatcher::instance().subscribe<GameSuspendedChangedEvent>(
+      [&published](const GameSuspendedChangedEvent &event) { published.push_back(event.suspended); });
+
+  const auto entryId = loadTestRom();
+  ASSERT_GE(entryId, 0);
+  m_emulationService->suspend();
+
+  ASSERT_NE(nullptr, m_emulationService->loadEntry(entryId).get());
+
+  ASSERT_FALSE(m_emulationService->isSuspended());
+  ASSERT_EQ((std::vector{true, false}), published);
 }
 
 } // namespace firelight::emulation

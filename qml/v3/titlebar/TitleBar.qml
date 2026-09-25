@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Layouts 1.0
 
@@ -6,6 +7,7 @@ FocusScope {
     signal closeClicked
     signal maximizeClicked
     signal minimizeClicked
+    signal backRequested
 
     property Item page
     implicitHeight: 60
@@ -42,6 +44,7 @@ FocusScope {
             x: AppStyle.spacingXl
             anchors.verticalCenter: parent.verticalCenter
             showButton: true
+            onBackRequested: root.backRequested()
         }
 
         Loader {
