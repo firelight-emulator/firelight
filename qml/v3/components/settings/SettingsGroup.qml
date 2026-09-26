@@ -441,7 +441,6 @@ SettingsSection {
             onReset: settingsModel.resetValue(index)
             onClicked: function () {
                 comboItem.popup.open();
-                comboItem.popup.forceActiveFocus();
             }
             onCurrentValueChanged: {
                 if (model.value !== currentValue) {

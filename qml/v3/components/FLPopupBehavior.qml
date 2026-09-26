@@ -15,6 +15,15 @@ QtObject {
 
     property FLSoundEffect openSound: null
 
+    // True from just before Qt focuses the popup item until just after it parks that focus again,
+    // which is when the popup is the surface owning the window's focus
+    property bool active: false
+
+    property int layer: 30
+
+    // Where focus lands when the popup takes ownership; the surface itself when unset
+    property Item entry: null
+
     // What the popup was opened from, which is what the dim reads to leave a hole for it
     property Item caller: null
 
@@ -39,6 +48,8 @@ QtObject {
             target: behavior.popup
 
             function onAboutToShow() {
+                behavior.active = true;
+
                 // TODO
                 behavior.isDimming = behavior.popup.modal;
 
@@ -55,12 +66,12 @@ QtObject {
 
             function onOpened() {
                 behavior.surface.FLFocus.barrier = true;
-                behavior.surface.forceActiveFocus();
 
                 Qt.callLater(() => FocusCursor.endBlink());
             }
 
             function onAboutToHide() {
+                behavior.active = false;
                 FocusCursor.startBlink();
             }
 
@@ -122,6 +133,10 @@ QtObject {
     onSurfaceChanged: {
         if (behavior.surface) {
             behavior.surface.FLFocus.actions = [behavior.backAction];
+            behavior.surface.FLFocus.surface = true;
+            behavior.surface.FLFocus.layer = Qt.binding(() => behavior.layer);
+            behavior.surface.FLFocus.surfaceActive = Qt.binding(() => behavior.active);
+            behavior.surface.FLFocus.entry = Qt.binding(() => behavior.entry);
         }
     }
 }

@@ -27,7 +27,6 @@ ComboBoxSettingItem {
 
     onClicked: function () {
         root.popup.open();
-        root.popup.forceActiveFocus();
     }
     onCurrentValueChanged: {
         if (root.value !== currentValue && currentValue) {

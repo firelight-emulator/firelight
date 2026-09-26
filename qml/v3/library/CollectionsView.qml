@@ -26,8 +26,8 @@ FocusScope {
         acceptText: qsTr("Cancel")
 
         function choose(kind: string) {
-            kindDialog.close();
             Router.navigate("/library/create-collection/" + kind);
+            kindDialog.close();
         }
 
         onAboutToShow: manualChoice.forceActiveFocus()

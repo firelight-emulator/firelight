@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "gui/focus_info.hpp"
 
 #include <QObject>
@@ -412,6 +413,24 @@ TEST(FocusInfoTest, MetadataDiesWithTheObjectItIsAttachedTo) {
   }
 
   EXPECT_TRUE(info.isNull());
+}
+
+TEST(FocusInfoTest, SurfaceDeclarationsDefaultToNothing) {
+  QObject object;
+  auto *declared = qobject_cast<FocusInfo *>(qmlAttachedPropertiesObject<FocusInfo>(&object, true));
+  ASSERT_NE(declared, nullptr);
+
+  EXPECT_FALSE(declared->isSurface());
+  EXPECT_TRUE(declared->isSurfaceActive());
+  EXPECT_EQ(declared->getEntry(), nullptr);
+  EXPECT_EQ(declared->getLayer(), 0);
+  EXPECT_TRUE(declared->getExclusiveItems().isEmpty());
+
+  int layerChanges = 0;
+  QObject::connect(declared, &FocusInfo::layerChanged, declared, [&layerChanges] { ++layerChanges; });
+  declared->setLayer(10);
+  declared->setLayer(10);
+  EXPECT_EQ(layerChanges, 1);
 }
 
 } // namespace firelight::gui

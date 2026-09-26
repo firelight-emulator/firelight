@@ -23,22 +23,17 @@ FocusScope {
     visible: root.opacity > 0
     enabled: root.shown
 
+    FLFocus.surface: true
+    FLFocus.layer: 10
+    FLFocus.surfaceActive: root.playing
+    FLFocus.entry: emulatorLoader.item ? emulatorLoader.item.emulatorItem : emulatorLoader
+
     Behavior on opacity {
         enabled: !root.launching
 
         NumberAnimation {
             duration: AppStyle.durationBase
             easing.type: AppStyle.easingStandard
-        }
-    }
-
-    onPlayingChanged: {
-        if (root.playing) {
-            Qt.callLater(function () {
-                if (root.playing) {
-                    emulatorLoader.forceActiveFocus();
-                }
-            });
         }
     }
 
@@ -122,16 +117,6 @@ FocusScope {
         property: "suspended"
         value: EmulationService.suspended || emulatorLoader.blurAmount > 0
         when: emulatorLoader.status === Loader.Ready
-    }
-
-    Connections {
-        target: emulatorLoader.item
-
-        function onOverlayClosed() {
-            if (root.playing) {
-                emulatorLoader.forceActiveFocus();
-            }
-        }
     }
 
     Connections {

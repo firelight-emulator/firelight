@@ -1,6 +1,7 @@
 // TODO: NEEDS REVIEW
 #pragma once
 
+#include "focus/focus_arbiter.hpp"
 #include "focus_action.hpp"
 
 #include <QColor>
@@ -9,6 +10,7 @@
 #include <QList>
 #include <QObject>
 #include <QPair>
+#include <QPointer>
 #include <QQmlListProperty>
 #include <QQuickItem>
 #include <QVariant>
@@ -43,6 +45,11 @@ class FocusInfo : public QObject {
   Q_PROPERTY(bool barrier READ isBarrier WRITE setBarrier NOTIFY barrierChanged)
   Q_PROPERTY(bool container READ isContainer WRITE setContainer NOTIFY containerChanged)
   Q_PROPERTY(Edges holdEdges READ getHoldEdges WRITE setHoldEdges NOTIFY holdEdgesChanged)
+  Q_PROPERTY(bool surface READ isSurface WRITE setSurface NOTIFY surfaceChanged)
+  Q_PROPERTY(bool surfaceActive READ isSurfaceActive WRITE setSurfaceActive NOTIFY surfaceActiveChanged)
+  Q_PROPERTY(QQuickItem *entry READ getEntry WRITE setEntry NOTIFY entryChanged)
+  Q_PROPERTY(QQmlListProperty<QQuickItem> exclusive READ getExclusive)
+  Q_PROPERTY(int layer READ getLayer WRITE setLayer NOTIFY layerChanged)
   QML_ELEMENT
   QML_ATTACHED(FocusInfo)
 
@@ -85,6 +92,12 @@ public:
   static FocusInfo *qmlAttachedProperties(QObject *object) { return new FocusInfo(object); }
 
   explicit FocusInfo(QObject *parent = nullptr) : QObject(parent) {}
+
+  ~FocusInfo() override {
+    if (m_surface) {
+      FocusSurfaces::instance().remove(this);
+    }
+  }
 
   /**
    * The metadata an object already carries, without creating any. Null means the object never
@@ -313,6 +326,53 @@ public:
   [[nodiscard]] Edges getHoldEdges() const { return m_holdEdges; }
 
   /**
+   * @return Whether the attached item's subtree is a surface the arbiter may give focus to
+   */
+  [[nodiscard]] bool isSurface() const { return m_surface; }
+
+  /**
+   * @return Whether the surface may own focus right now
+   */
+  [[nodiscard]] bool isSurfaceActive() const { return m_surfaceActive; }
+
+  /**
+   * @return Where focus lands when the surface takes ownership, or null for the attached item itself
+   */
+  [[nodiscard]] QQuickItem *getEntry() const { return m_entry; }
+
+  /**
+   * @return Which surface wins over another that is active at the same time
+   */
+  [[nodiscard]] int getLayer() const { return m_layer; }
+
+  /**
+   * The regions of the surface in which only the entry may hold focus
+   */
+  [[nodiscard]] QQmlListProperty<QQuickItem> getExclusive() {
+    return {this,
+            this,
+            &FocusInfo::appendExclusive,
+            &FocusInfo::countExclusive,
+            &FocusInfo::exclusiveAt,
+            &FocusInfo::clearExclusive};
+  }
+
+  /**
+   * @return The same regions, for callers on this side
+   */
+  [[nodiscard]] QList<QQuickItem *> getExclusiveItems() const {
+    QList<QQuickItem *> items;
+
+    for (const auto &region : m_exclusive) {
+      if (!region.isNull()) {
+        items.append(region);
+      }
+    }
+
+    return items;
+  }
+
+  /**
    * The actions the attached item offers, in the order they were declared
    */
   [[nodiscard]] QQmlListProperty<FocusAction> getActions() {
@@ -524,6 +584,43 @@ public:
     }
   }
 
+  void setSurface(const bool surface) {
+    if (m_surface == surface) {
+      return;
+    }
+
+    m_surface = surface;
+
+    if (surface) {
+      FocusSurfaces::instance().add(this);
+    } else {
+      FocusSurfaces::instance().remove(this);
+    }
+
+    emit surfaceChanged();
+  }
+
+  void setSurfaceActive(const bool surfaceActive) {
+    if (m_surfaceActive != surfaceActive) {
+      m_surfaceActive = surfaceActive;
+      emit surfaceActiveChanged();
+    }
+  }
+
+  void setEntry(QQuickItem *entry) {
+    if (m_entry != entry) {
+      m_entry = entry;
+      emit entryChanged();
+    }
+  }
+
+  void setLayer(const int layer) {
+    if (m_layer != layer) {
+      m_layer = layer;
+      emit layerChanged();
+    }
+  }
+
 signals:
   void showCursorChanged();
 
@@ -554,6 +651,16 @@ signals:
   void containerChanged();
 
   void holdEdgesChanged();
+
+  void surfaceChanged();
+
+  void surfaceActiveChanged();
+
+  void entryChanged();
+
+  void exclusiveChanged();
+
+  void layerChanged();
 
 private:
   // TODO
@@ -587,6 +694,26 @@ private:
     static_cast<FocusInfo *>(list->data)->m_actions.clear();
   }
 
+  static void appendExclusive(QQmlListProperty<QQuickItem> *list, QQuickItem *region) {
+    auto *info = static_cast<FocusInfo *>(list->data);
+    info->m_exclusive.append(region);
+    emit info->exclusiveChanged();
+  }
+
+  static qsizetype countExclusive(QQmlListProperty<QQuickItem> *list) {
+    return static_cast<FocusInfo *>(list->data)->m_exclusive.size();
+  }
+
+  static QQuickItem *exclusiveAt(QQmlListProperty<QQuickItem> *list, const qsizetype index) {
+    return static_cast<FocusInfo *>(list->data)->m_exclusive.at(index);
+  }
+
+  static void clearExclusive(QQmlListProperty<QQuickItem> *list) {
+    auto *info = static_cast<FocusInfo *>(list->data);
+    info->m_exclusive.clear();
+    emit info->exclusiveChanged();
+  }
+
   bool m_showCursor = false;
   QQuickItem *m_proxy = nullptr;
   qreal m_spacing = qQNaN();
@@ -603,6 +730,11 @@ private:
   bool m_barrier = false;
   bool m_container = false;
   Edges m_holdEdges = NoEdges;
+  bool m_surface = false;
+  bool m_surfaceActive = true;
+  QPointer<QQuickItem> m_entry;
+  QList<QPointer<QQuickItem>> m_exclusive;
+  int m_layer = 0;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(FocusInfo::Edges)

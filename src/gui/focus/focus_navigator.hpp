@@ -2,6 +2,7 @@
 #pragma once
 
 #include "candidate_collector.hpp"
+#include "focus_arbiter.hpp"
 #include "spatial_resolver.hpp"
 
 #include <QObject>
@@ -50,6 +51,7 @@ private:
  */
 class FocusNavigator : public QObject {
   Q_OBJECT
+  Q_PROPERTY(QQuickItem *owner READ getOwner NOTIFY ownerChanged)
 
 public:
   /**
@@ -65,7 +67,18 @@ public:
   };
   Q_ENUM(MoveResult)
 
-  explicit FocusNavigator(QObject *parent = nullptr) : QObject(parent) {}
+  explicit FocusNavigator(QObject *parent = nullptr);
+
+  // TODO
+  /**
+   * @return The item owning focus in the watched window, or null
+   */
+  [[nodiscard]] QQuickItem *getOwner() const;
+
+  /**
+   * The arbiter that keeps focus inside the owning surface, reachable for tests
+   */
+  [[nodiscard]] FocusArbiter &getArbiter() { return m_arbiter; }
 
   /**
    * Moves the cursor from wherever it is in the direction key asks for
@@ -106,6 +119,9 @@ public:
    * drops the way back, and a cursor parked somewhere it cannot sit is landed
    */
   Q_INVOKABLE void watch(QQuickItem *item);
+
+signals:
+  void ownerChanged();
 
 private:
   /**
@@ -165,7 +181,10 @@ private:
   QPointer<QQuickItem> m_steppedTo;
   Direction m_steppedDirection = Direction::Down;
   QPointer<QQuickWindow> m_window;
-  bool m_landing = false;
+  // TODO
+  // How many landings are in progress, so a landing nested in another does not end it early
+  int m_landingDepth = 0;
+  FocusArbiter m_arbiter;
 };
 
 } // namespace firelight::gui

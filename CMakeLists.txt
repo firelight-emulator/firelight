@@ -377,6 +377,7 @@ add_library(firelight_lib STATIC
         src/gui/focus_info.hpp
         src/gui/focus/candidate_collector.cpp
         src/gui/focus/candidate_collector.hpp
+        src/gui/focus/focus_arbiter.cpp
         src/gui/focus/focus_navigator.cpp
         src/gui/focus/focus_navigator.hpp
         src/gui/focus/spatial_resolver.cpp
@@ -637,6 +638,7 @@ add_executable(fl_test
         tests/app/gui/selection_group_test.cpp
         tests/app/gui/span_chart_item_test.cpp
         tests/app/gui/focus/candidate_collector_test.cpp
+        tests/app/gui/focus/focus_arbiter_test.cpp
         tests/app/gui/focus/focus_navigator_test.cpp
         tests/app/gui/focus/root_key_filter_test.cpp
         tests/app/gui/focus/spatial_resolver_test.cpp

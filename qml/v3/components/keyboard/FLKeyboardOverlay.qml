@@ -1,13 +1,11 @@
-// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
 import QtQuick.Layouts
 import Firelight 1.0
 
-// TODO
-// Full-screen text entry: what has been typed sits above, the key grid below. Opened through
-// the FLKeyboard singleton rather than directly
+// Full-screen text entry: what has been typed sits above, the key grid below. Opened through the FLKeyboard singleton
+// rather than directly
 FLPanel {
     id: control
 
@@ -23,15 +21,11 @@ FLPanel {
 
     property real bottomReservedHeight: 0
 
-    // TODO
-    // Popup understands anchors.centerIn and nothing else, so filling is done by hand
     x: 0
     y: 0
     width: control.parent ? control.parent.width : 0
     height: control.parent ? control.parent.height : 0
 
-    // TODO
-    // FLDimmer already holds the dim; without this the style lays its own scrim over it
     Overlay.modal: Item {}
 
     openSound: SoundEffects.openPopup
@@ -42,13 +36,7 @@ FLPanel {
     property bool multiline: false
     property string acceptLabel: qsTr("OK")
 
-    // TODO
-    // How long a freshly typed character stays legible before it becomes a dot. Zero masks it
-    // straight away
     property int revealMs: 0
-
-    // TODO
-    // Only meaningful while sensitive, and always starts off
     property bool revealed: false
 
     readonly property string text: field.text
@@ -106,7 +94,6 @@ FLPanel {
             duration: AppStyle.durationSlow
             easing.type: AppStyle.easingStandard
         }
-
     }
 
     function reset(options) {
@@ -133,9 +120,7 @@ FLPanel {
             return;
         }
 
-        // TODO
-        // insert() drops text at a position rather than replacing what is selected, so the
-        // selection is cleared first
+        // insert() drops text at a position rather than replacing what is selected, so the  selection is cleared first
         if (selected > 0) {
             const at = field.selectionStart;
             field.remove(field.selectionStart, field.selectionEnd);
@@ -171,8 +156,6 @@ FLPanel {
 
         control._accepting = false;
 
-        // TODO
-        // A password must not sit in the scene graph waiting for the next request
         field.text = "";
         control.revealed = false;
 
@@ -181,20 +164,17 @@ FLPanel {
         }
     }
 
-    onOpened: Qt.callLater(() => panel.focusKeyboard())
+    behavior.layer: 40
+    behavior.entry: panel.entryKey
 
     background: Item {}
 
     contentItem: FocusScope {
         id: surface
-        // TODO
-        // The popup item above this is a focus scope of its own and keeps what it is given, so the
-        // surface has to claim it for anything inside to be reached
         focus: true
 
-        // TODO
-        // Actions live one level in: FLPopupBehavior assigns the surface's action list wholesale
-        // when it attaches, which would drop anything declared on the surface itself
+        // Actions live one level in: FLPopupBehavior overwrites the surface's action list when it attaches, which
+        // would drop anything declared on the surface itself
         Item {
             id: body
             opacity: 0
@@ -224,11 +204,9 @@ FLPanel {
 
             Keys.priority: Keys.BeforeItem
 
-            // TODO
-            // Physical typing reaches the grid rather than the field, so printable characters are
-            // routed to the same entry point the on-screen keys use
+            // Physical typing reaches the grid rather than the field, so printable characters are routed to the same
+            // entry point the on-screen keys use
             Keys.onPressed: event => {
-                console.log("key pressed: " + event.key + " text: " + event.text + " modifiers: " + event.modifiers);
                 if (event.accepted) {
                     return;
                 }
@@ -260,9 +238,8 @@ FLPanel {
                     return;
                 }
 
-                // TODO
-                // A gamepad button arrives as a key event with no text at all, so nothing below
-                // can fire for one. Control characters carry a text too and are not typed
+                // A gamepad button arrives as a key event with no text at all, so nothing below can fire for one.
+                // Control characters carry a text too and are not typed
                 const typed = event.text;
 
                 if (typed.length !== 1 || typed.charCodeAt(0) < 0x20 || typed.charCodeAt(0) === 0x7f) {
@@ -271,15 +248,6 @@ FLPanel {
 
                 control.insert(typed);
                 event.accepted = true;
-            }
-
-            // TODO
-            // The window installs a tap handler that pulls focus back to its content item, so the
-            // keyboard must leave no gap for a click to fall through
-            MouseArea {
-                anchors.fill: parent
-                anchors.topMargin: AppStyle.titleBarHeight
-                acceptedButtons: Qt.AllButtons
             }
 
             Item {
@@ -311,9 +279,9 @@ FLPanel {
                         anchors.fill: parent
                         anchors.margins: AppStyle.spacingLg
 
-                        // TODO
-                        // The grid holds the cursor, so this is pruned from directional navigation
-                        // while still being clickable for selection and clipboard
+
+                        // The grid holds the cursor, so this is excluded from directional navigation while still being
+                        // clickable for selection and clipboard
                         focusPolicy: Qt.ClickFocus
                         FLFocus.mode: FLFocus.Skip
 
@@ -324,9 +292,6 @@ FLPanel {
                         wrapMode: control.multiline ? TextInput.Wrap : TextInput.NoWrap
                         selectByMouse: true
 
-                        // TODO
-                        // The caret spends most of its life without active focus, since the cursor
-                        // is out on the grid, and both of these are otherwise reset when focus moves
                         persistentSelection: true
                         cursorVisible: true
 
@@ -408,14 +373,6 @@ FLPanel {
                             onActivated: control.revealed = !control.revealed
                         }
 
-                        // Rectangle {
-                        //     color: Theme.surfaceElevated
-                        //     radius: height / 2
-                        //     Layout.fillWidth: true
-                        //     Layout.preferredHeight: 48
-                        //     Layout.alignment: Qt.AlignHCenter
-                        // }
-
                         FLKeyboardPanel {
                             id: panel
 
@@ -433,8 +390,6 @@ FLPanel {
                         }
                     }
                 }
-
-
             }
         }
     }

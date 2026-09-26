@@ -1,6 +1,8 @@
+// TODO: NEEDS REVIEW
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
+import Firelight 1.0
 
 // Hosts routes that present as a popup over the current view (e.g. /settings)
 // Driven entirely by Router: opens when the current route is an overlay, closes
@@ -22,7 +24,7 @@ Popup {
 
     // Overlay route pattern -> screen Component
     readonly property var routes: ({
-            // "/settings": settingsComponent
+        // "/settings": settingsComponent
         })
 
     Component {
@@ -86,11 +88,16 @@ Popup {
         }
     }
 
-    onOpened: {
-        _setActive(true);
-        if (contentLoader.item) {
-            contentLoader.item.forceActiveFocus();
-        }
+    onOpened: _setActive(true)
+
+    // TODO
+    // Declared like any popup surface: owns focus while shown, entering at the loaded screen
+    Component.onCompleted: {
+        overlay.contentItem.FLFocus.surface = true;
+        overlay.contentItem.FLFocus.layer = 30;
+        overlay.contentItem.FLFocus.surfaceActive = Qt.binding(() => overlay.visible);
+        overlay.contentItem.FLFocus.entry = Qt.binding(() => contentLoader.item);
+        _sync();
     }
 
     Connections {
@@ -99,8 +106,6 @@ Popup {
             overlay._sync();
         }
     }
-
-    Component.onCompleted: _sync()
 
     onClosed: {
         _setActive(false);

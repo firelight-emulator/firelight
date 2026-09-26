@@ -24,6 +24,9 @@ FocusScope {
     // Whether the committing key is available
     property bool canAccept: true
 
+    // The key focus enters the panel on: the first character key, once it exists
+    property Item entryKey: null
+
     signal characterEntered(string character)
     signal backspacePressed
     signal returnPressed
@@ -110,12 +113,25 @@ FocusScope {
 
                     FLKeyboardKey {
                         required property var modelData
+                        required property int index
 
                         label: root.characterAt(modelData.row, modelData.column)
                         Layout.row: modelData.row
                         Layout.column: modelData.column
 
                         onActivated: root.enterCharacter(label)
+
+                        Component.onCompleted: {
+                            if (index === 0) {
+                                root.entryKey = this;
+                            }
+                        }
+
+                        Component.onDestruction: {
+                            if (root.entryKey === this) {
+                                root.entryKey = null;
+                            }
+                        }
                     }
                 }
 

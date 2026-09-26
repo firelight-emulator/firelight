@@ -7,6 +7,7 @@
 #include <QDateTime>
 #include <QQuickWindow>
 #include <algorithm>
+#include <spdlog/spdlog.h>
 
 namespace firelight::gui {
 
@@ -99,6 +100,18 @@ bool RepeatGovernor::allows(const Direction direction, const bool isAutoRepeat, 
 }
 
 void RepeatGovernor::reset() { m_hasMoved = false; }
+
+FocusNavigator::FocusNavigator(QObject *parent) : QObject(parent) {
+  m_arbiter.setLander([this](QQuickItem *to) { land(nullptr, to, Direction::Down); });
+  m_arbiter.setParker([this](QQuickItem *at) { settle(at); });
+  connect(&m_arbiter, &FocusArbiter::ownerChanged, this, [this](QQuickWindow *window) {
+    if (window == m_window) {
+      emit ownerChanged();
+    }
+  });
+}
+
+QQuickItem *FocusNavigator::getOwner() const { return m_arbiter.getOwner(m_window); }
 
 std::pair<Direction, bool> FocusNavigator::directionFor(const int key) {
   switch (key) {
@@ -196,6 +209,10 @@ bool FocusNavigator::settle(QQuickItem *item) {
     return false;
   }
 
+  spdlog::debug("[focus] settle: {}({}) -> {}({})", item->metaObject()->className(), item->objectName().toStdString(),
+                candidates.front().item->metaObject()->className(),
+                candidates.front().item->objectName().toStdString());
+
   m_settling = true;
   land(nullptr, candidates.front().item, Direction::Down);
   m_settling = false;
@@ -221,11 +238,18 @@ QQuickItem *FocusNavigator::wayBack(QQuickItem *origin, const Direction directio
 }
 
 void FocusNavigator::land(QQuickItem *from, QQuickItem *to, const Direction direction) {
-  m_landing = true;
+  ++m_landingDepth;
   to->forceActiveFocus(Qt::OtherFocusReason);
-  m_landing = false;
+  --m_landingDepth;
 
   const auto *window = to->window();
+
+  // TODO
+  // A landing of our own is settled at once, so a scope entered here hands on to what is inside it
+  if (window != nullptr) {
+    settle(window->activeFocusItem());
+  }
+
   auto *landed = window != nullptr ? CandidateCollector::candidateFor(window->activeFocusItem()) : nullptr;
 
   m_steppedFrom = from;
@@ -247,11 +271,15 @@ void FocusNavigator::watch(QQuickItem *item) {
   m_window = window;
 
   connect(window, &QQuickWindow::activeFocusItemChanged, this, [this] {
-    if (!m_landing) {
+    if (m_landingDepth == 0) {
       forget();
     }
 
-    settle(m_window.isNull() ? nullptr : m_window->activeFocusItem());
+    // TODO
+    // Nothing is settled from in here: this can fire in the middle of Qt detaching the item that
+    // holds focus, and landing inside that subtree leaves the window with no focus item at all.
+    // The arbiter's pass parks once the operation has finished
+    m_arbiter.request(m_window);
   });
 }
 

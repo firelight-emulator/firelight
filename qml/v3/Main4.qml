@@ -9,10 +9,6 @@ import Firelight 1.0
 MainWindow {
     id: window
 
-    TapHandler {
-        onTapped: window.contentItem.forceActiveFocus(Qt.MouseFocusReason)
-    }
-
     background: FLUserBackground {
         // mode: AppearanceSettings.backgroundMode
         // color1: AppearanceSettings.backgroundColor
@@ -288,6 +284,10 @@ MainWindow {
     Item {
         id: contentContainer
         anchors.fill: parent
+
+        FLFocus.surface: true
+        FLFocus.entry: contentStack.moving ? contentStack.holder : contentStack.currentItem
+        FLFocus.exclusive: [contentStack, contentStack.holder]
 
         // TODO
         // The chrome leaves the window to the game while it plays and comes back over it when suspended
@@ -703,18 +703,6 @@ MainWindow {
 
         function onReadyToReveal() {
             launchCinematic.reveal();
-        }
-
-        function onPlayingChanged() {
-            if (gameplayPage.playing) {
-                return;
-            }
-
-            Qt.callLater(function () {
-                if (!gameplayPage.playing && contentStack.currentItem !== null) {
-                    contentStack.currentItem.forceActiveFocus();
-                }
-            });
         }
     }
 

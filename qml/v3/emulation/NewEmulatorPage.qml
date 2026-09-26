@@ -19,6 +19,7 @@ FocusScope {
     }
 
     property alias audioBufferLevel: emulator.audioBufferLevel
+    property alias emulatorItem: emulator
 
     // The CLI --paused knob
     property bool startPaused: false
@@ -244,7 +245,6 @@ FocusScope {
                 model: points,
                 aspectRatio: emulator.aspectRatio
             }, StackView.Immediate);
-            overlayStack.forceActiveFocus();
         }
 
         onPlaybackMultiplierChanged: function () {
@@ -446,6 +446,11 @@ FocusScope {
         id: overlayStack
         anchors.fill: parent
         visible: depth > 0
+
+        FLFocus.surface: true
+        FLFocus.layer: 20
+        FLFocus.surfaceActive: overlayStack.depth > 0
+        FLFocus.entry: overlayStack.currentItem
     }
 
     Component {

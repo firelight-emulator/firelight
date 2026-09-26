@@ -179,7 +179,6 @@ FocusScope {
                         onReset: coreOptionsModel.resetValue(index)
                         onClicked: function () {
                             advancedItem.popup.open();
-                            advancedItem.popup.forceActiveFocus();
                         }
                         onCurrentValueChanged: {
                             if (model.value !== currentValue) {

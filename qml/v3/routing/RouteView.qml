@@ -184,8 +184,9 @@ StackView {
     }
 
     // TODO
-    // The page to hand focus to once the running transition finishes
-    property Item _arriving: null
+    property bool moving: false
+
+    readonly property Item holder: focusHolder
 
     // LRU cache of { key, item }, most-recently-used last
     property var _cache: []
@@ -262,15 +263,6 @@ StackView {
         }
     }
 
-    // TODO
-    // Focus only lands on a page while the view can take it. A disabled view (the game has the window)
-    // would lose the focus it holds without the page gaining it
-    function _focusPage(item) {
-        if (item !== null && item !== undefined && stack.enabled) {
-            item.forceActiveFocus();
-        }
-    }
-
     function _show(item, preset) {
         stack.loading = false;
         // Keep the depth-1 invariant: if a screen ever pushes onto our stack
@@ -281,34 +273,25 @@ StackView {
         }
         if (stack.currentItem === item) {
             _setActive(item, true);
-            stack._focusPage(item);
+            stack.moving = false;
             return;
         }
         var previous = stack.currentItem;
-        stack._arriving = null;
         stack.replaceCurrentItem(item, {}, stack.transitions.apply(preset, item));
         _setActive(previous, false);
         _setActive(item, true);
 
-        if (stack.busy) {
-            stack._arriving = item;
-            return;
-        }
-
         // TODO
-        // The cursor follows the route. A page that is a focus scope hands this on to whatever it
-        // last had focused, or to its own entry point
-        stack._focusPage(item);
+        // A move with a transition arrives when the transition ends; one without has arrived now
+        if (!stack.busy) {
+            stack.moving = false;
+        }
     }
 
     onBusyChanged: {
-        if (stack.busy || stack._arriving === null) {
-            return;
+        if (!stack.busy) {
+            stack.moving = false;
         }
-
-        const item = stack._arriving;
-        stack._arriving = null;
-        stack._focusPage(item);
     }
 
     Connections {
@@ -324,6 +307,9 @@ StackView {
             // A rule for this exact move wins; otherwise the structural inference stands. Captured
             // here so an asynchronous build still animates the move that asked for it
             var preset = Router.transitionFor(Router.previousPath, Router.path) || transition;
+
+            // Set before the park, so the park itself is not taken for the arrival
+            stack.moving = true;
 
             if (stack.enabled) {
                 focusHolder.forceActiveFocus();
@@ -363,7 +349,7 @@ StackView {
                     stack.loading = false;
 
                     if (stack._mountKey() === key) {
-                        stack._focusPage(stack.currentItem);
+                        stack.moving = false;
                     }
 
                     var reason = component.errorString();
