@@ -240,6 +240,21 @@ TEST(FocusArbiterTest, AnEntryChangeLandsOnTheNewEntryEvenFromInsideTheOwner) {
   EXPECT_EQ(harness.window.activeFocusItem(), inside);
 }
 
+TEST(FocusArbiterTest, AnEntryChangeOnAnotherSurfaceLeavesTheOwnerAlone) {
+  Harness harness;
+  const auto lower = surface(harness.root(), 0);
+  const auto upper = surface(harness.root(), 40);
+  auto *elsewhere = item(upper.root);
+  elsewhere->forceActiveFocus();
+
+  auto *newEntry = item(lower.root);
+  lower.declaration->setEntry(newEntry);
+  QCoreApplication::processEvents();
+
+  EXPECT_EQ(harness.window.activeFocusItem(), elsewhere);
+  EXPECT_EQ(harness.landings, 0);
+}
+
 TEST(FocusArbiterTest, ABurstOfChangesLandsOnce) {
   Harness harness;
   const auto owner = surface(harness.root(), 10);

@@ -591,7 +591,7 @@ TEST(FocusNavigatorTest, FocusOnSomethingReachableIsLeftAlone) {
 }
 
 // Closing a popup parks the focus on the root on its way to restoring what opened it, and
-// correcting that would land somewhere arbitrary before the restore arrives
+// the arbiter's pass then moves it on to the owner's entry, so nothing is settled from the root
 TEST(FocusNavigatorTest, FocusPassingThroughTheRootIsLeftForWhateverIsRestoringIt) {
   FocusNavigator navigator;
   QQuickWindow window;

@@ -104,14 +104,7 @@ void RepeatGovernor::reset() { m_hasMoved = false; }
 FocusNavigator::FocusNavigator(QObject *parent) : QObject(parent) {
   m_arbiter.setLander([this](QQuickItem *to) { land(nullptr, to, Direction::Down); });
   m_arbiter.setParker([this](QQuickItem *at) { settle(at); });
-  connect(&m_arbiter, &FocusArbiter::ownerChanged, this, [this](QQuickWindow *window) {
-    if (window == m_window) {
-      emit ownerChanged();
-    }
-  });
 }
-
-QQuickItem *FocusNavigator::getOwner() const { return m_arbiter.getOwner(m_window); }
 
 std::pair<Direction, bool> FocusNavigator::directionFor(const int key) {
   switch (key) {
@@ -193,8 +186,8 @@ bool FocusNavigator::settle(QQuickItem *item) {
   const auto *window = item->window();
 
   // TODO
-  // Closing a popup parks the focus on the root on its way to restoring the caller, and correcting
-  // that would land somewhere arbitrary before the restore arrives
+  // The root is never a resting place: the arbiter's pass moves focus off it to the owner's entry,
+  // so this guard only matters while no owner or entry is usable
   if (window == nullptr || item == window->contentItem()) {
     return false;
   }

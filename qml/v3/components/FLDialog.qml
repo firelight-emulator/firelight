@@ -68,8 +68,8 @@ FLPopup {
 
     contentItem: FocusScope {
         // TODO
-        // The popup item above this is a focus scope of its own and keeps what it is given, so the
-        // surface has to claim it for anything inside to be reached
+        // The dialog's surface: the arbiter lands here when it opens, and this hands focus on to
+        // what is inside
         focus: true
         implicitWidth: Math.max(column.implicitWidth, buttonRow.implicitWidth)
         implicitHeight: contentFlickable.implicitHeight + control.contentButtonSpacing + buttonRow.implicitHeight

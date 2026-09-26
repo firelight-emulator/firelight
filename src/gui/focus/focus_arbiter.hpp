@@ -87,10 +87,10 @@ public:
   void request(QQuickWindow *window);
 
   /**
-   * Records that an entry moved, so the next pass over window lands on the owner's entry unless
-   * focus is already inside it, and asks for that pass
+   * Records that surface's entry moved, so the next pass over its window lands on that entry if the
+   * surface owns focus and focus is not already inside it, and asks for that pass
    */
-  void requestForEntry(QQuickWindow *window);
+  void requestForEntry(FocusInfo *surface);
 
   /**
    * The pass itself, reachable for tests
@@ -155,7 +155,7 @@ private:
   QSet<FocusInfo *> m_observed;
   quint64 m_activationCounter = 0;
   QSet<QQuickWindow *> m_pending;
-  QSet<QQuickWindow *> m_entryMoved;
+  QHash<QQuickWindow *, QSet<FocusInfo *>> m_entryMoved;
   QHash<QQuickWindow *, Watch> m_watches;
   bool m_isEnforcing = false;
 };

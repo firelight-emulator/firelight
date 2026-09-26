@@ -78,10 +78,6 @@ FocusScope {
         root.shiftState = KeyLayout.shiftAfterCharacter(root.shiftState);
     }
 
-    function focusKeyboard() {
-        characterRepeater.itemAt(0).forceActiveFocus();
-    }
-
     implicitHeight: keyboard.implicitHeight
 
     FLRowLayout {

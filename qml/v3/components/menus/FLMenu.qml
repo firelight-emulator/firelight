@@ -63,8 +63,7 @@ FLPopup {
     // adoptRows named rather than stopping on something that only scrolls
     contentItem: FocusScope {
         // TODO
-        // The popup item above this is a focus scope of its own and keeps what it is given, so the
-        // surface has to claim it for anything inside to be reached
+        // The menu's surface: the arbiter lands here when it opens
         implicitWidth: contentFlickable.implicitWidth
         implicitHeight: contentFlickable.implicitHeight
 

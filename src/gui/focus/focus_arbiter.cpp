@@ -166,12 +166,14 @@ void FocusArbiter::request(QQuickWindow *window) {
       Qt::QueuedConnection);
 }
 
-void FocusArbiter::requestForEntry(QQuickWindow *window) {
+void FocusArbiter::requestForEntry(FocusInfo *surface) {
+  auto *window = getWindowOf(surface);
+
   if (window == nullptr) {
     return;
   }
 
-  m_entryMoved.insert(window);
+  m_entryMoved[window].insert(surface);
   request(window);
 }
 
@@ -185,7 +187,7 @@ void FocusArbiter::enforceNow(QQuickWindow *window) {
   auto *owner = getItemOf(info);
   auto *entry = getEntryOf(info);
   auto *focused = window->activeFocusItem();
-  const auto isEntryMoved = m_entryMoved.remove(window);
+  const auto isEntryMoved = m_entryMoved.take(window).contains(info);
 
   follow(window, watch, owner, entry, focused);
 
@@ -303,7 +305,7 @@ void FocusArbiter::observeSurface(FocusInfo *info) {
     request(getWindowOf(info));
   });
 
-  connect(info, &FocusInfo::entryChanged, this, [this, info] { requestForEntry(getWindowOf(info)); });
+  connect(info, &FocusInfo::entryChanged, this, [this, info] { requestForEntry(info); });
   connect(info, &FocusInfo::layerChanged, this, [this, info] { request(getWindowOf(info)); });
   connect(info, &FocusInfo::exclusiveChanged, this, [this, info] { request(getWindowOf(info)); });
   connect(info, &QObject::destroyed, this, [this, info] {

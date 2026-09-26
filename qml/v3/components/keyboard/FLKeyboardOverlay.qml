@@ -279,7 +279,6 @@ FLPanel {
                         anchors.fill: parent
                         anchors.margins: AppStyle.spacingLg
 
-
                         // The grid holds the cursor, so this is excluded from directional navigation while still being
                         // clickable for selection and clipboard
                         focusPolicy: Qt.ClickFocus

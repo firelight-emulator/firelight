@@ -142,7 +142,7 @@ public:
         }
       }
 
-      if (info->isBarrier()) {
+      if (info->boundsNavigation()) {
         break;
       }
     }
@@ -196,7 +196,7 @@ public:
         actions.append(action);
       }
 
-      if (info->isBarrier()) {
+      if (info->boundsNavigation()) {
         break;
       }
     }
@@ -318,6 +318,13 @@ public:
    */
   [[nodiscard]] bool isBarrier() const { return m_barrier; }
 
+  // TODO
+  /**
+   * @return Whether navigation and action lookup stop at the attached item: a declared barrier, or
+   *         a surface, which bounds what is inside it by being one
+   */
+  [[nodiscard]] bool boundsNavigation() const { return m_barrier || m_surface; }
+
   /**
    * @return Whether the attached item answers for its children when a press asks what it can reach
    */
@@ -411,7 +418,7 @@ public:
         return action;
       }
 
-      if (info->isBarrier()) {
+      if (info->boundsNavigation()) {
         return nullptr;
       }
     }

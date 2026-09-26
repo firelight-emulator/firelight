@@ -4,8 +4,8 @@ import QtQuick.Templates as T
 import Firelight 1.0
 
 /**
- * What a Firelight popup does besides being a popup: takes focus when it opens, answers Back,
- * dispatches the actions its contents declare, and holds the dim while it is up
+ * What a Firelight popup does besides being a popup: declares itself the focus surface while it is
+ * up, answers Back, dispatches the actions its contents declare, and holds the dim
  */
 QtObject {
     id: behavior
@@ -65,8 +65,6 @@ QtObject {
             }
 
             function onOpened() {
-                behavior.surface.FLFocus.barrier = true;
-
                 Qt.callLater(() => FocusCursor.endBlink());
             }
 

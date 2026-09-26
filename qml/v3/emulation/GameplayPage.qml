@@ -38,6 +38,7 @@ FocusScope {
     }
 
     // TODO: why
+    // Tab and Backtab go nowhere while the game has the window
     Keys.onPressed: event => {
         if (root.playing && (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab)) {
             event.accepted = true;
@@ -47,10 +48,6 @@ FocusScope {
         if (root.playing) {
             EmulationService.suspend();
         }
-    }
-
-    function resumeGame() {
-        EmulationService.resume();
     }
 
     function markBlackFull() {

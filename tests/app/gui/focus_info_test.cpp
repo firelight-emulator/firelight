@@ -433,4 +433,18 @@ TEST(FocusInfoTest, SurfaceDeclarationsDefaultToNothing) {
   EXPECT_EQ(layerChanges, 1);
 }
 
+TEST(FocusInfoTest, CollectActionsStopsAtASurface) {
+  QQuickItem outer;
+  auto *surface = new QQuickItem(&outer);
+  auto *leaf = new QQuickItem(surface);
+  addAction(attach(&outer), {Qt::Key_Back});
+  attach(surface)->setSurface(true);
+  addAction(attach(leaf), {Qt::Key_Return});
+
+  const auto actions = FocusInfo::collectActions(leaf);
+
+  ASSERT_EQ(actions.size(), 1);
+  EXPECT_EQ(actions.first()->getKeys().first(), Qt::Key_Return);
+}
+
 } // namespace firelight::gui

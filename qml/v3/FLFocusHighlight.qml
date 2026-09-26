@@ -45,7 +45,6 @@ Item {
     // TODO
     // Hides the ring until endBlink()
     function startBlink() {
-        blinkTimer.stop();
         root._blinking = true;
         ringA.opacity = 0;
         ringB.opacity = 0;
@@ -55,8 +54,6 @@ Item {
     // Brings the ring back on whatever holds focus now, with no travel from
     // where it used to be
     function endBlink() {
-        blinkTimer.stop();
-
         if (!root._blinking) {
             return;
         }
@@ -70,19 +67,6 @@ Item {
         root.applyScrollNow();
         root.snapNow();
         root.activeRing.opacity = 1;
-    }
-
-    // TODO
-    // Hides the ring for `duration` ms, or durationBase when none is given
-    function blink(duration: int) {
-        root.startBlink();
-        blinkTimer.interval = duration > 0 ? duration : AppStyle.durationBase;
-        blinkTimer.start();
-    }
-
-    Timer {
-        id: blinkTimer
-        onTriggered: root.endBlink()
     }
 
     // TODO
@@ -475,7 +459,7 @@ Item {
         }
 
         // TODO
-        // Focus may move while blinked (a popup closing hands it back); the
+        // Focus may move while blinked (the arbiter lands it, or Qt restores it); the
         // scroll bookkeeping above still applies, but the ring stays hidden
         // until endBlink() shows it in its new place
         if (_blinking) {

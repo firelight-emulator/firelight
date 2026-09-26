@@ -349,7 +349,6 @@ MainWindow {
             }
 
             if (FocusNavigator.move(window.activeFocusItem, event.key, event.isAutoRepeat) !== FocusNavigator.NoTarget) {
-                console.log("Input method detection handler key repeat: " + InputMethodManager.keyRepeating);
                 event.accepted = true;
                 return;
             }
@@ -470,8 +469,8 @@ MainWindow {
             // declares it rather than stopping on something that only lays out
             contentItem: FocusScope {
                 // TODO
-                // The popup item above this is a focus scope of its own and keeps what it is given, so the
-                // surface has to claim it for anything inside to be reached
+                // The drawer's surface: the arbiter lands here when it opens, and this hands focus on
+                // to the row inside that claims it
                 focus: true
 
                 LibraryEntry {

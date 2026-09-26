@@ -1,4 +1,6 @@
+// TODO: NEEDS REVIEW
 import QtQuick
+import Firelight 1.0
 import QtQuick.Controls
 
 // Themed dropdown. Respects textRole via textAt(); metrics from AppStyle,
@@ -69,6 +71,13 @@ ComboBox {
         padding: 1
 
         contentItem: ListView {
+            // TODO
+            // The open list is a focus surface of its own: the cursor lands here when it opens and
+            // the list hands it on to the current row
+            FLFocus.surface: true
+            FLFocus.layer: 30
+            FLFocus.surfaceActive: control.popup.visible
+
             clip: true
             implicitHeight: contentHeight
             model: control.popup.visible ? control.delegateModel : null

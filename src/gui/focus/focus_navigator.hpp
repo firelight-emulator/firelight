@@ -51,7 +51,6 @@ private:
  */
 class FocusNavigator : public QObject {
   Q_OBJECT
-  Q_PROPERTY(QQuickItem *owner READ getOwner NOTIFY ownerChanged)
 
 public:
   /**
@@ -68,12 +67,6 @@ public:
   Q_ENUM(MoveResult)
 
   explicit FocusNavigator(QObject *parent = nullptr);
-
-  // TODO
-  /**
-   * @return The item owning focus in the watched window, or null
-   */
-  [[nodiscard]] QQuickItem *getOwner() const;
 
   /**
    * The arbiter that keeps focus inside the owning surface, reachable for tests
@@ -114,14 +107,13 @@ public:
    */
   void forget();
 
+  // TODO
   /**
-   * Watches the window item sits in, so that anything else moving the cursor — a container, a tap —
-   * drops the way back, and a cursor parked somewhere it cannot sit is landed
+   * Watches the window item sits in: every focus change that is not a landing of our own drops the
+   * way back, and every one asks the arbiter for a pass, which is what lands a cursor parked
+   * somewhere it cannot sit
    */
   Q_INVOKABLE void watch(QQuickItem *item);
-
-signals:
-  void ownerChanged();
 
 private:
   /**

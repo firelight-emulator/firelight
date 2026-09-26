@@ -27,15 +27,12 @@ FocusScope {
     property bool suspended: false
     property bool paused: root.suspended || overlayStack.depth > 0 || root.startPaused
 
-    signal overlayClosed
-
     function closeOverlay() {
         if (overlayStack.depth === 0) {
             return;
         }
 
         overlayStack.popCurrentItem(StackView.Immediate);
-        root.overlayClosed();
     }
 
     // Start muted for this session only (CLI `--mute`)

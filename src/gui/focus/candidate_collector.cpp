@@ -186,7 +186,7 @@ QQuickItem *CandidateCollector::scopeFor(QQuickItem *origin, QQuickItem *fallbac
   for (auto *item = origin; item != nullptr; item = item->parentItem()) {
     const auto *info = FocusInfo::find(item);
 
-    if (info != nullptr && info->isBarrier()) {
+    if (info != nullptr && info->boundsNavigation()) {
       return item;
     }
   }

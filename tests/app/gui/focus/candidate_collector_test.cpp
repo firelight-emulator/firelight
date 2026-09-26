@@ -414,6 +414,17 @@ TEST(CandidateCollectorTest, TheSearchStopsAtTheNearestBarrier) {
   EXPECT_EQ(CandidateCollector::scopeFor(button, &fallback), inner);
 }
 
+TEST(CandidateCollectorTest, ASurfaceBoundsTheSearchLikeABarrier) {
+  QQuickItem fallback;
+  QQuickItem root;
+  auto *popup = container(&root);
+  auto *button = item(popup, 0.0, 0.0, 72.0, 36.0);
+
+  info(popup)->setSurface(true);
+
+  EXPECT_EQ(CandidateCollector::scopeFor(button, &fallback), popup);
+}
+
 TEST(CandidateCollectorTest, SomethingIsItsOwnBarrier) {
   QQuickItem fallback;
   QQuickItem root;

@@ -5,7 +5,6 @@ import QtQuick
 // App-wide handle on the focus ring, so anything can drive the cursor without
 // reaching for the FLFocusHighlight instance. Main4 registers the instance once
 //
-//   FocusCursor.blink(AppStyle.durationBase)   // hide, restore after a beat
 //   FocusCursor.startBlink() ... endBlink()    // hide across an unknown span
 QtObject {
     id: root
@@ -29,15 +28,6 @@ QtObject {
     // Called once by the window that owns the ring
     function register(instance: Item) {
         root._highlight = instance;
-    }
-
-    // TODO
-    // Hides the ring for `duration` ms, or durationBase when none is given; it
-    // returns on whatever holds focus by then
-    function blink(duration: int) {
-        if (root._highlight !== null) {
-            root._highlight.blink(duration);
-        }
     }
 
     // TODO

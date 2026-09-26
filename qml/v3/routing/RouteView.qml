@@ -20,9 +20,7 @@ StackView {
     id: stack
 
     // TODO
-    // Puts the route subtree in the window's focus chain. Without it the pages below are a
-    // focus branch nothing ever activates: the cursor has nowhere to land and directional keys
-    // never reach the containers that answer them
+    // The stack is the chrome's focus branch, so a landing on the chrome reaches the current page
     focus: true
 
     padding: 0
@@ -308,7 +306,7 @@ StackView {
             // here so an asynchronous build still animates the move that asked for it
             var preset = Router.transitionFor(Router.previousPath, Router.path) || transition;
 
-            // Set before the park, so the park itself is not taken for the arrival
+            // True until the incoming page has arrived; the chrome's entry is the holder meanwhile
             stack.moving = true;
 
             if (stack.enabled) {
