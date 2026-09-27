@@ -146,6 +146,7 @@
 #include <set>
 #include <spdlog/spdlog.h>
 #include <sqlite_achievement_repository.hpp>
+#include <stdexcept>
 #include <unistd.h>
 
 // TODO
@@ -419,9 +420,8 @@ int main(int argc, char *argv[]) {
   // terminal in any directory)
   const auto catalogPath = (QCoreApplication::applicationDirPath() + "/system/settings").toStdString();
   if (!firelight::settings::SettingsCatalog::instance().loadFromDirectory(catalogPath)) {
-    spdlog::warn("Could not load settings catalog from {}; using core "
-                 "defaults only",
-                 catalogPath);
+    spdlog::critical("Could not load the settings catalog from {}", catalogPath);
+    throw std::runtime_error("Could not load the settings catalog from " + catalogPath);
   }
 
   firelight::input::InputSettingsApplier inputSettingsApplier(inputService, settingsService);

@@ -1,5 +1,6 @@
-#include "../emulation/fake_input_service.hpp"
 #include "gui/qt_input_service_proxy.hpp"
+
+#include "../emulation/fake_input_service.hpp"
 
 #include <firelight/settings/settings_catalog.hpp>
 #include <firelight/settings/settings_service.hpp>

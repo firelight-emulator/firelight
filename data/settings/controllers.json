@@ -9,7 +9,7 @@
         "keyboard"
       ],
       "type": "boolean",
-      "default": "false"
+      "default": "true"
     },
     {
       "key": "only-allow-player-one-navigate-menus",

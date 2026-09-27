@@ -199,14 +199,14 @@ QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService, sett
           }
         }
 
-        if (!isAllowedToNavigateMenus(event.playerIndex)) {
-          return;
-        }
-
         if (event.pressed && !event.autoRepeat) {
           startAutoRepeat(event.playerIndex, event.input);
         } else if (!event.pressed) {
           stopAutoRepeat(event.playerIndex, event.input);
+        }
+
+        if (!isAllowedToNavigateMenus(event.playerIndex)) {
+          return;
         }
 
         if (QApplication::focusWindow()) {

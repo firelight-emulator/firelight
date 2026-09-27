@@ -1,5 +1,6 @@
-#include "../emulation/fake_input_service.hpp"
 #include "app/input/input_settings_applier.hpp"
+
+#include "../emulation/fake_input_service.hpp"
 
 #include <firelight/settings/settings_catalog.hpp>
 #include <firelight/settings/settings_service.hpp>
@@ -97,7 +98,9 @@ TEST_F(InputSettingsApplierTest, FollowsAResetBackToTheDefault) {
 }
 
 TEST_F(InputSettingsApplierTest, StopsFollowingWhenDestroyed) {
-  { const InputSettingsApplier applier(inputService, *service); }
+  {
+    const InputSettingsApplier applier(inputService, *service);
+  }
 
   ASSERT_TRUE(service->setGlobalValue(KEY, "true"));
 

@@ -10,9 +10,8 @@ constexpr auto PRIORITIZE_CONTROLLER_OVER_KEYBOARD_KEY = "prioritize-controller-
 
 InputSettingsApplier::InputSettingsApplier(InputService &inputService, settings::SettingsService &settingsService)
     : m_inputService(inputService),
-      m_prioritizeControllerOverKeyboard(settingsService, PRIORITIZE_CONTROLLER_OVER_KEYBOARD_KEY,
-                                         [this](const std::string &value) {
-                                           m_inputService.setPreferGamepadOverKeyboard(value == "true");
-                                         }) {}
+      m_prioritizeControllerOverKeyboard(
+          settingsService, PRIORITIZE_CONTROLLER_OVER_KEYBOARD_KEY,
+          [this](const std::string &value) { m_inputService.setPreferGamepadOverKeyboard(value == "true"); }) {}
 
 } // namespace firelight::input

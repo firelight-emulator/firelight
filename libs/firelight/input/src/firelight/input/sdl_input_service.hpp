@@ -143,7 +143,7 @@ private:
   int m_sdlServices = SDL_INIT_GAMECONTROLLER | SDL_INIT_HAPTIC;
   std::atomic<bool> m_running{true};
 
-  bool m_preferGamepadOverKeyboard = true;
+  std::atomic<bool> m_preferGamepadOverKeyboard{true};
 
   // Cursor position (±32767). Written absolutely by the UI thread on mouse
   // events and incrementally by the emulation thread's analog-stick glide
