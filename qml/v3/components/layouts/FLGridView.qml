@@ -147,10 +147,6 @@ GridView {
     }
 
     FLFocus.holdEdges: FLFocus.Vertical
-
-    // TODO
-    // How long a held direction waits between moves. Declared where every other region declares
-    // it, though this view paces itself rather than going through the navigator
     FLFocus.repeatInterval: 45
 
     readonly property int columns: Math.max(1, Math.floor(width / Math.max(1, cellWidth)))

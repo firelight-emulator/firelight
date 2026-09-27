@@ -66,6 +66,40 @@ Direction opposite(const Direction direction) {
  */
 bool holds(const QQuickItem *outer, QQuickItem *inner) { return outer == inner || outer->isAncestorOf(inner); }
 
+// TODO
+/**
+ * The entry a container declares for a press arriving in `direction` from outside it, or null when
+ * the press started inside it, nothing is declared for that side, or the declared item cannot take
+ * focus right now. A Stop scope holding the target counts as the container when nothing else does
+ */
+QQuickItem *declaredEntry(const FocusCandidate &target, QQuickItem *from, const Direction direction) {
+  auto *container = target.container;
+
+  if (container == nullptr) {
+    for (auto *at = target.item; at != nullptr; at = at->parentItem()) {
+      const auto *info = FocusInfo::find(at);
+
+      if (info != nullptr && info->getMode() == FocusInfo::Stop && info->getEntryFor(direction) != nullptr) {
+        container = at;
+        break;
+      }
+    }
+  }
+
+  if (container == nullptr || holds(container, from)) {
+    return nullptr;
+  }
+
+  const auto *info = FocusInfo::find(container);
+  auto *entry = info != nullptr ? info->getEntryFor(direction) : nullptr;
+
+  if (entry == nullptr || !entry->isVisible() || !entry->isEnabled()) {
+    return nullptr;
+  }
+
+  return entry;
+}
+
 /**
  * The whole of what is on screen, which is as far as a search can reach when nothing narrows it
  */
@@ -345,6 +379,10 @@ QQuickItem *FocusNavigator::resolveTarget(QQuickItem *from, const Direction dire
   }
 
   auto *to = candidates[picked].item;
+
+  if (auto *entry = declaredEntry(candidates[picked], from, direction); entry != nullptr) {
+    to = entry;
+  }
 
   return isHeldBack(from, to, direction, isAutoRepeat) ? nullptr : to;
 }

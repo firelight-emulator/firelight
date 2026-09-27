@@ -211,6 +211,110 @@ TEST(FocusNavigatorTest, AKeyThatIsNotADirectionDoesNothing) {
   EXPECT_EQ(navigator.move(nullptr, Qt::Key_Down, false), FocusNavigator::NoTarget);
 }
 
+//****************
+// declared entries
+//****************
+
+namespace {
+/**
+ * A row of four tiles declared as a container, with something focusable below it and to each side
+ */
+struct DeclaredRow {
+  QQuickItem root;
+  QQuickItem *row = nullptr;
+  QQuickItem *first = nullptr;
+  QQuickItem *second = nullptr;
+  QQuickItem *third = nullptr;
+  QQuickItem *fourth = nullptr;
+  QQuickItem *below = nullptr;
+  QQuickItem *left = nullptr;
+  QQuickItem *right = nullptr;
+
+  DeclaredRow() {
+    row = container(&root, 110.0, 0.0, 400.0, 100.0);
+    info(row)->setContainer(true);
+    first = item(row, 0.0, 0.0, 100.0, 100.0);
+    second = item(row, 100.0, 0.0, 100.0, 100.0);
+    third = item(row, 200.0, 0.0, 100.0, 100.0);
+    fourth = item(row, 300.0, 0.0, 100.0, 100.0);
+    below = item(&root, 110.0, 110.0, 400.0, 100.0);
+    left = item(&root, 0.0, 0.0, 100.0, 100.0);
+    right = item(&root, 520.0, 0.0, 100.0, 100.0);
+  }
+};
+} // namespace
+
+TEST(FocusNavigatorTest, EnteringAContainerLandsOnTheEntryDeclaredForThatSide) {
+  FocusNavigator navigator;
+  DeclaredRow scene;
+  info(scene.row)->setEnterFromBelow(scene.first);
+
+  ASSERT_EQ(navigator.move(scene.below, Qt::Key_Up, false), FocusNavigator::Moved);
+  EXPECT_TRUE(scene.first->hasFocus());
+}
+
+TEST(FocusNavigatorTest, EachSideOfAContainerCanDeclareItsOwnEntry) {
+  FocusNavigator navigator;
+  DeclaredRow scene;
+  info(scene.row)->setEnterFromLeft(scene.fourth);
+  info(scene.row)->setEnterFromRight(scene.first);
+
+  ASSERT_EQ(navigator.move(scene.left, Qt::Key_Right, false), FocusNavigator::Moved);
+  EXPECT_TRUE(scene.fourth->hasFocus());
+
+  ASSERT_EQ(navigator.move(scene.right, Qt::Key_Left, false), FocusNavigator::Moved);
+  EXPECT_TRUE(scene.first->hasFocus());
+}
+
+TEST(FocusNavigatorTest, ASideWithoutItsOwnEntryFallsBackToTheEntry) {
+  FocusNavigator navigator;
+  DeclaredRow scene;
+  info(scene.row)->setEntry(scene.third);
+
+  ASSERT_EQ(navigator.move(scene.below, Qt::Key_Up, false), FocusNavigator::Moved);
+  EXPECT_TRUE(scene.third->hasFocus());
+}
+
+TEST(FocusNavigatorTest, TheWayBackFromADeclaredEntryReturnsToTheOrigin) {
+  FocusNavigator navigator;
+  DeclaredRow scene;
+  info(scene.row)->setEnterFromBelow(scene.first);
+
+  ASSERT_EQ(navigator.move(scene.below, Qt::Key_Up, false), FocusNavigator::Moved);
+  ASSERT_TRUE(scene.first->hasFocus());
+
+  EXPECT_EQ(navigator.move(scene.first, Qt::Key_Down, false), FocusNavigator::Moved);
+  EXPECT_TRUE(scene.below->hasFocus());
+}
+
+TEST(FocusNavigatorTest, AMoveInsideTheContainerIgnoresItsEntries) {
+  FocusNavigator navigator;
+  DeclaredRow scene;
+  info(scene.row)->setEnterFromLeft(scene.fourth);
+
+  ASSERT_EQ(navigator.move(scene.first, Qt::Key_Right, false), FocusNavigator::Moved);
+  EXPECT_TRUE(scene.second->hasFocus());
+}
+
+TEST(FocusNavigatorTest, AHiddenEntryFallsBackToGeometry) {
+  FocusNavigator navigator;
+  DeclaredRow scene;
+  info(scene.row)->setEnterFromBelow(scene.first);
+  scene.first->setVisible(false);
+
+  ASSERT_EQ(navigator.move(scene.below, Qt::Key_Up, false), FocusNavigator::Moved);
+  EXPECT_FALSE(scene.first->hasFocus());
+  EXPECT_TRUE(scene.second->hasFocus() || scene.third->hasFocus() || scene.fourth->hasFocus());
+}
+
+TEST(FocusNavigatorTest, AContainerDeclaringNothingIsEnteredByGeometry) {
+  FocusNavigator navigator;
+  DeclaredRow scene;
+
+  ASSERT_EQ(navigator.move(scene.left, Qt::Key_Right, false), FocusNavigator::Moved);
+  EXPECT_TRUE(scene.first->hasFocus());
+}
+
 TEST(FocusNavigatorTest, MovesToWhatLiesThatWay) {
   FocusNavigator navigator;
   QQuickItem root;

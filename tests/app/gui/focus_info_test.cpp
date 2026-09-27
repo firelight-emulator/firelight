@@ -447,4 +447,20 @@ TEST(FocusInfoTest, CollectActionsStopsAtASurface) {
   EXPECT_EQ(actions.first()->getKeys().first(), Qt::Key_Return);
 }
 
+TEST(FocusInfoTest, EntryForASideFallsBackToTheEntry) {
+  QObject object;
+  auto *declared = attach(&object);
+  QQuickItem side;
+  QQuickItem plain;
+
+  EXPECT_EQ(declared->getEntryFor(Direction::Up), nullptr);
+
+  declared->setEntry(&plain);
+  EXPECT_EQ(declared->getEntryFor(Direction::Up), &plain);
+
+  declared->setEnterFromBelow(&side);
+  EXPECT_EQ(declared->getEntryFor(Direction::Up), &side);
+  EXPECT_EQ(declared->getEntryFor(Direction::Left), &plain);
+}
+
 } // namespace firelight::gui

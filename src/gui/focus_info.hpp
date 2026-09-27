@@ -2,6 +2,7 @@
 #pragma once
 
 #include "focus/focus_arbiter.hpp"
+#include "focus/spatial_resolver.hpp"
 #include "focus_action.hpp"
 
 #include <QColor>
@@ -48,6 +49,10 @@ class FocusInfo : public QObject {
   Q_PROPERTY(bool surface READ isSurface WRITE setSurface NOTIFY surfaceChanged)
   Q_PROPERTY(bool surfaceActive READ isSurfaceActive WRITE setSurfaceActive NOTIFY surfaceActiveChanged)
   Q_PROPERTY(QQuickItem *entry READ getEntry WRITE setEntry NOTIFY entryChanged)
+  Q_PROPERTY(QQuickItem *enterFromBelow READ getEnterFromBelow WRITE setEnterFromBelow NOTIFY enterFromBelowChanged)
+  Q_PROPERTY(QQuickItem *enterFromAbove READ getEnterFromAbove WRITE setEnterFromAbove NOTIFY enterFromAboveChanged)
+  Q_PROPERTY(QQuickItem *enterFromLeft READ getEnterFromLeft WRITE setEnterFromLeft NOTIFY enterFromLeftChanged)
+  Q_PROPERTY(QQuickItem *enterFromRight READ getEnterFromRight WRITE setEnterFromRight NOTIFY enterFromRightChanged)
   Q_PROPERTY(QQmlListProperty<QQuickItem> exclusive READ getExclusive)
   Q_PROPERTY(int layer READ getLayer WRITE setLayer NOTIFY layerChanged)
   QML_ELEMENT
@@ -347,6 +352,56 @@ public:
    */
   [[nodiscard]] QQuickItem *getEntry() const { return m_entry; }
 
+  // TODO
+  /**
+   * @return Where a press coming up from below the attached item lands, or null for the plain entry
+   */
+  [[nodiscard]] QQuickItem *getEnterFromBelow() const { return m_enterFromBelow; }
+
+  // TODO
+  /**
+   * @return Where a press coming down from above the attached item lands, or null for the plain entry
+   */
+  [[nodiscard]] QQuickItem *getEnterFromAbove() const { return m_enterFromAbove; }
+
+  // TODO
+  /**
+   * @return Where a press coming in from the left of the attached item lands, or null for the plain entry
+   */
+  [[nodiscard]] QQuickItem *getEnterFromLeft() const { return m_enterFromLeft; }
+
+  // TODO
+  /**
+   * @return Where a press coming in from the right of the attached item lands, or null for the plain entry
+   */
+  [[nodiscard]] QQuickItem *getEnterFromRight() const { return m_enterFromRight; }
+
+  // TODO
+  /**
+   * @return Where a press moving in `direction` lands when it enters the attached item: the entry
+   *         declared for the side it comes from, else the plain entry, else null
+   */
+  [[nodiscard]] QQuickItem *getEntryFor(const Direction direction) const {
+    QQuickItem *declared = nullptr;
+
+    switch (direction) {
+    case Direction::Up:
+      declared = m_enterFromBelow;
+      break;
+    case Direction::Down:
+      declared = m_enterFromAbove;
+      break;
+    case Direction::Left:
+      declared = m_enterFromRight;
+      break;
+    case Direction::Right:
+      declared = m_enterFromLeft;
+      break;
+    }
+
+    return declared != nullptr ? declared : m_entry.data();
+  }
+
   /**
    * @return Which surface wins over another that is active at the same time
    */
@@ -621,6 +676,34 @@ public:
     }
   }
 
+  void setEnterFromBelow(QQuickItem *entry) {
+    if (m_enterFromBelow != entry) {
+      m_enterFromBelow = entry;
+      emit enterFromBelowChanged();
+    }
+  }
+
+  void setEnterFromAbove(QQuickItem *entry) {
+    if (m_enterFromAbove != entry) {
+      m_enterFromAbove = entry;
+      emit enterFromAboveChanged();
+    }
+  }
+
+  void setEnterFromLeft(QQuickItem *entry) {
+    if (m_enterFromLeft != entry) {
+      m_enterFromLeft = entry;
+      emit enterFromLeftChanged();
+    }
+  }
+
+  void setEnterFromRight(QQuickItem *entry) {
+    if (m_enterFromRight != entry) {
+      m_enterFromRight = entry;
+      emit enterFromRightChanged();
+    }
+  }
+
   void setLayer(const int layer) {
     if (m_layer != layer) {
       m_layer = layer;
@@ -664,6 +747,14 @@ signals:
   void surfaceActiveChanged();
 
   void entryChanged();
+
+  void enterFromBelowChanged();
+
+  void enterFromAboveChanged();
+
+  void enterFromLeftChanged();
+
+  void enterFromRightChanged();
 
   void exclusiveChanged();
 
@@ -740,6 +831,10 @@ private:
   bool m_surface = false;
   bool m_surfaceActive = true;
   QPointer<QQuickItem> m_entry;
+  QPointer<QQuickItem> m_enterFromBelow;
+  QPointer<QQuickItem> m_enterFromAbove;
+  QPointer<QQuickItem> m_enterFromLeft;
+  QPointer<QQuickItem> m_enterFromRight;
   QList<QPointer<QQuickItem>> m_exclusive;
   int m_layer = 0;
 };
