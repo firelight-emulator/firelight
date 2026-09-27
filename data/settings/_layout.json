@@ -237,7 +237,8 @@
       "id": "controllers-general",
       "label": "General",
       "settings": [
-        "prioritize-controller-over-keyboard"
+        "prioritize-controller-over-keyboard",
+        "only-allow-player-one-navigate-menus"
       ]
     },
     {

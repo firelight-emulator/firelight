@@ -25,6 +25,8 @@
 namespace firelight::gui {
 
 namespace {
+constexpr auto ONLY_PLAYER_ONE_NAVIGATES_MENUS_KEY = "only-allow-player-one-navigate-menus";
+
 // Looks for the Steam client by process name. Deliberately not the registry's
 // ActiveProcess/pid: that keeps a stale pid after a crash, and this warning is
 // only worth showing when Steam is actually there to interfere
@@ -175,13 +177,13 @@ static QMap<GamepadType, QMap<int, QString>> gamepadButtonIcons = {
       {Qt::Key_Right, "qrc:/images/gamepad-buttons/xbox-series/dpad_right"},
       {Qt::Key_Home, "qrc:/images/gamepad-buttons/xbox-series/guide"}}}};
 
-QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService) {
+QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService, settings::SettingsService &settingsService)
+    : m_onlyPlayerOneCanNavigateMenusWatcher(settingsService, ONLY_PLAYER_ONE_NAVIGATES_MENUS_KEY,
+                                             [this](const std::string &value) {
+                                               m_onlyPlayerOneCanNavigateMenus = value == "true";
+                                               emit onlyPlayerOneCanNavigateMenusChanged();
+                                             }) {
   m_inputService = &inputService;
-
-  m_inputService->setPreferGamepadOverKeyboard(
-      m_settings.value("controllers/prioritizeControllerOverKeyboard", true).toBool());
-
-  m_onlyPlayerOneCanNavigateMenus = m_settings.value("controllers/onlyPlayerOneCanNavigateMenus", true).toBool();
 
   // Initialize auto-repeat timer
   m_autoRepeatTimer = new QTimer(this);
@@ -195,6 +197,10 @@ QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService) {
             m_currentGamepadType = type;
             markGamepadTypeChanged();
           }
+        }
+
+        if (!isAllowedToNavigateMenus(event.playerIndex)) {
+          return;
         }
 
         if (event.pressed && !event.autoRepeat) {
@@ -223,31 +229,11 @@ QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService) {
       });
 }
 
-void QtInputServiceProxy::setPrioritizeControllerOverKeyboard(bool prioritizeControllerOverKeyboard) {
-  if (m_inputService->preferGamepadOverKeyboard() == prioritizeControllerOverKeyboard) {
-    return;
-  }
-
-  m_inputService->setPreferGamepadOverKeyboard(prioritizeControllerOverKeyboard);
-  m_settings.setValue("controllers/prioritizeControllerOverKeyboard", prioritizeControllerOverKeyboard);
-  emit prioritizeControllerOverKeyboardChanged();
-}
-
-bool QtInputServiceProxy::prioritizeControllerOverKeyboard() const {
-  return m_inputService->preferGamepadOverKeyboard();
-}
-
-void QtInputServiceProxy::setOnlyPlayerOneCanNavigateMenus(bool onlyPlayerOneCanNavigateMenus) {
-  if (m_onlyPlayerOneCanNavigateMenus == onlyPlayerOneCanNavigateMenus) {
-    return;
-  }
-
-  m_onlyPlayerOneCanNavigateMenus = onlyPlayerOneCanNavigateMenus;
-  m_settings.setValue("controllers/onlyPlayerOneCanNavigateMenus", onlyPlayerOneCanNavigateMenus);
-  emit onlyPlayerOneCanNavigateMenusChanged();
-}
-
 bool QtInputServiceProxy::getOnlyPlayerOneCanNavigateMenus() const { return m_onlyPlayerOneCanNavigateMenus; }
+
+bool QtInputServiceProxy::isAllowedToNavigateMenus(const int playerIndex) const {
+  return !m_onlyPlayerOneCanNavigateMenus || playerIndex <= 0;
+}
 
 QVariantMap QtInputServiceProxy::getCurrentGamepadButtonIcons() const { return m_currentGamepadButtonIcons; }
 

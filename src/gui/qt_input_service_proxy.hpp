@@ -2,32 +2,34 @@
 #include "firelight/event_dispatcher.hpp"
 
 #include <firelight/input/input_service.hpp>
+#include <firelight/settings/setting_watcher.hpp>
+#include <firelight/settings/settings_service.hpp>
 
 #include <QObject>
 #include <QTimer>
+#include <QVariant>
+#include <atomic>
 #include <chrono>
-#include <qsettings.h>
 
 namespace firelight::gui {
 
 class QtInputServiceProxy final : public QObject {
   Q_OBJECT
-  Q_PROPERTY(bool prioritizeControllerOverKeyboard READ prioritizeControllerOverKeyboard WRITE
-                 setPrioritizeControllerOverKeyboard NOTIFY prioritizeControllerOverKeyboardChanged)
-  Q_PROPERTY(bool onlyPlayerOneCanNavigateMenus READ getOnlyPlayerOneCanNavigateMenus WRITE
-                 setOnlyPlayerOneCanNavigateMenus NOTIFY onlyPlayerOneCanNavigateMenusChanged)
+  Q_PROPERTY(bool onlyPlayerOneCanNavigateMenus READ getOnlyPlayerOneCanNavigateMenus NOTIFY
+                 onlyPlayerOneCanNavigateMenusChanged)
   Q_PROPERTY(QVariantMap currentGamepadButtonIcons READ getCurrentGamepadButtonIcons NOTIFY currentGamepadTypeChanged)
   Q_PROPERTY(int currentGamepadType READ getCurrentGamepadType NOTIFY currentGamepadTypeChanged)
 public:
-  explicit QtInputServiceProxy(input::InputService &inputService);
-
-  void setPrioritizeControllerOverKeyboard(bool prioritizeControllerOverKeyboard);
-
-  [[nodiscard]] bool prioritizeControllerOverKeyboard() const;
-
-  void setOnlyPlayerOneCanNavigateMenus(bool onlyPlayerOneCanNavigateMenus);
+  QtInputServiceProxy(input::InputService &inputService, settings::SettingsService &settingsService);
 
   [[nodiscard]] bool getOnlyPlayerOneCanNavigateMenus() const;
+
+  // TODO
+  /**
+   * Whether gamepad input from the given player slot is forwarded to the window as navigation keys. Player 1 and
+   * input with no slot behind it always are
+   */
+  [[nodiscard]] bool isAllowedToNavigateMenus(int playerIndex) const;
 
   QVariantMap getCurrentGamepadButtonIcons() const;
 
@@ -43,7 +45,6 @@ public:
   // as a property: Steam can come and go, and a cached answer would be a lie
   [[nodiscard]] Q_INVOKABLE bool isSteamRunning() const;
 signals:
-  void prioritizeControllerOverKeyboardChanged();
   void onlyPlayerOneCanNavigateMenusChanged();
   void currentGamepadTypeChanged();
 
@@ -55,9 +56,9 @@ private:
 
   input::InputService *m_inputService;
 
-  QSettings m_settings;
+  std::atomic<bool> m_onlyPlayerOneCanNavigateMenus{false};
 
-  bool m_onlyPlayerOneCanNavigateMenus = true;
+  settings::SettingWatcher m_onlyPlayerOneCanNavigateMenusWatcher;
 
   ScopedConnection gamepadInputConnection;
 

@@ -292,4 +292,4 @@ avoid Qt/sqlite where possible and are linked into `firelight_lib`.
 | `discord` | Static | Discord Social SDK wrapper |
 | `fl_test` | Executable | GTest unit tests (app-level) |
 | `fl_qml_test` | Executable | QML unit tests |
-| `firelight_input_test` / `firelight_cheats_test` / `firelight_audio_test` / `firelight_media_test` | Executable | Per-module GTest unit tests |
+| `firelight_input_test` / `firelight_cheats_test` / `firelight_audio_test` / `firelight_media_test` / `firelight_settings_test` | Executable | Per-module GTest unit tests |

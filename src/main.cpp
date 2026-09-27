@@ -21,6 +21,7 @@
 #include "app/input/gui/gamepad_status_item.hpp"
 #include "app/input/gui/platform_input_preferences.hpp"
 #include "app/input/gui/profile_list_model.hpp"
+#include "app/input/input_settings_applier.hpp"
 #include "app/library/gui/content_directory_model.hpp"
 #include "app/library/gui/disc_set_list_model.hpp"
 #include "app/library/gui/entry_list_model.hpp"
@@ -411,6 +412,20 @@ int main(int argc, char *argv[]) {
   firelight::settings::SettingsService settingsService(settingsRepository);
   firelight::settings::SettingsService::setInstance(&settingsService);
 
+  // Friendly emulation settings + per-core option defaults. Loaded once into
+  // the shared catalog; the emulation path and settings UI read from it
+  // Resolve relative to the executable, not the working directory, so it loads
+  // regardless of where the app is launched from (e.g. `firelight <rom>` from a
+  // terminal in any directory)
+  const auto catalogPath = (QCoreApplication::applicationDirPath() + "/system/settings").toStdString();
+  if (!firelight::settings::SettingsCatalog::instance().loadFromDirectory(catalogPath)) {
+    spdlog::warn("Could not load settings catalog from {}; using core "
+                 "defaults only",
+                 catalogPath);
+  }
+
+  firelight::input::InputSettingsApplier inputSettingsApplier(inputService, settingsService);
+
   // TODO
   // Applied here rather than with the rest of the format, because the settings are not open that
   // early. Any window is made later, during engine.load(), so this is still in time for the one
@@ -458,7 +473,7 @@ int main(int argc, char *argv[]) {
 
   // ===== Create Qt proxy (glue) services =====================================================
   firelight::gui::QtSaveManagerProxy saveManagerProxy(saveManager);
-  firelight::gui::QtInputServiceProxy inputServiceProxy(inputService);
+  firelight::gui::QtInputServiceProxy inputServiceProxy(inputService, settingsService);
   firelight::gui::QtAchievementServiceProxy achievementServiceProxy(achievementService);
   firelight::gui::QtGameArtProxy gameArtProxy(metadataService, steamGridDbArtProvider, mediaAssetRepository);
 
@@ -571,18 +586,6 @@ int main(int argc, char *argv[]) {
   // SettingsService, not this repository
 
   //   qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
-
-  // Friendly emulation settings + per-core option defaults. Loaded once into
-  // the shared catalog; the emulation path and settings UI read from it
-  // Resolve relative to the executable, not the working directory, so it loads
-  // regardless of where the app is launched from (e.g. `firelight <rom>` from a
-  // terminal in any directory)
-  const auto catalogPath = (QCoreApplication::applicationDirPath() + "/system/settings").toStdString();
-  if (!firelight::settings::SettingsCatalog::instance().loadFromDirectory(catalogPath)) {
-    spdlog::warn("Could not load settings catalog from {}; using core "
-                 "defaults only",
-                 catalogPath);
-  }
 
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
   qmlRegisterType<firelight::gui::NetplayStreamItem>("Firelight", 1, 0, "NetplayStreamItem");

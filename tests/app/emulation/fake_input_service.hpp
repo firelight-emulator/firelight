@@ -15,6 +15,9 @@ public:
 
   std::vector<HotkeyCall> hotkeyCalls;
 
+  // Every value handed to setPreferGamepadOverKeyboard, in order
+  std::vector<bool> preferGamepadOverKeyboardCalls;
+
   void setHotkeysEnabled(const bool enabled, const std::optional<DeviceType> only = {}) override {
     hotkeyCalls.push_back({enabled, only});
   }
@@ -58,9 +61,11 @@ public:
 
   void changeGamepadOrder(const std::map<int, int> &) override {}
 
-  bool preferGamepadOverKeyboard() const override { return false; }
+  bool preferGamepadOverKeyboard() const override {
+    return !preferGamepadOverKeyboardCalls.empty() && preferGamepadOverKeyboardCalls.back();
+  }
 
-  void setPreferGamepadOverKeyboard(bool) override {}
+  void setPreferGamepadOverKeyboard(const bool prefer) override { preferGamepadOverKeyboardCalls.push_back(prefer); }
 
   void updateMouseState(double, double, bool) override {}
 

@@ -214,6 +214,7 @@ add_library(firelight_emulation_lib STATIC
         src/app/emulation/emulation_service.cpp
         src/app/emulation/game_loader.cpp
         src/app/emulation/core_settings_applier.cpp
+        src/app/input/input_settings_applier.cpp
         src/app/emulation/emulator_instance.cpp
         src/app/emulation/emulation_rate_controller.cpp
         src/app/emulation/frame_pacer.cpp
@@ -649,12 +650,7 @@ add_executable(fl_test
         tests/app/db/daos/play_session_test.cpp
         tests/app/db/database_inspector_test.cpp
         tests/app/rcheevos/rcheevos_offline_client_test.cpp
-        tests/app/settings/sqlite_settings_repository_test.cpp
-        tests/app/settings/settings_service_test.cpp
-        tests/app/settings/setting_definition_test.cpp
-        tests/app/settings/settings_catalog_test.cpp
-        tests/app/settings/settings_index_test.cpp
-        tests/app/settings/sqlite_settings_repository_core_options_test.cpp
+        tests/app/settings/shipped_settings_catalog_test.cpp
         tests/app/gui/core_options_model_test.cpp
         tests/app/gui/settings_model_test.cpp
         tests/app/gui/shortcuts_model_test.cpp
@@ -691,6 +687,8 @@ add_executable(fl_test
         tests/app/achievements/sqlite_achievement_repository_test.cpp
         tests/app/achievements/achievement_service_test.cpp
         tests/app/activity/sqlite_activity_log_test.cpp
+        tests/app/input/input_settings_applier_test.cpp
+        tests/app/gui/qt_input_service_proxy_test.cpp
 )
 
 # tst_FLFocusHighlight is excluded until its 9 failures are triaged — they assert
