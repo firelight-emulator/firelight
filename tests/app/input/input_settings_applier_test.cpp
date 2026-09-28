@@ -27,8 +27,8 @@ auto CATALOG = R"JSON(
 } // namespace
 
 /**
- * A service on an in-memory repository, the shared catalog loaded with the one input key, and a fake input service
- * that records what it is handed
+ * A service on an in-memory repository, the shared catalog loaded with the one input key, and a fake input service that
+ * records what it is handed
  */
 class InputSettingsApplierTest : public testing::Test {
 protected:

@@ -688,6 +688,8 @@ add_executable(fl_test
         tests/app/achievements/achievement_service_test.cpp
         tests/app/activity/sqlite_activity_log_test.cpp
         tests/app/input/input_settings_applier_test.cpp
+        tests/app/input/controller_list_model_test.cpp
+        libs/firelight/input/tests/test_gamepad.cpp
         tests/app/gui/qt_input_service_proxy_test.cpp
 )
 

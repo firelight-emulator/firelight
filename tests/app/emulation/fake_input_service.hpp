@@ -18,6 +18,12 @@ public:
   // Every value handed to setPreferGamepadOverKeyboard, in order
   std::vector<bool> preferGamepadOverKeyboardCalls;
 
+  // What getPlayerGamepad answers, by slot
+  std::map<int, std::shared_ptr<input::IGamepad>> playerSlots;
+
+  // Every (from, to) handed to moveGamepad, in order
+  std::vector<std::pair<int, int>> moveCalls;
+
   void setHotkeysEnabled(const bool enabled, const std::optional<DeviceType> only = {}) override {
     hotkeyCalls.push_back({enabled, only});
   }
@@ -57,9 +63,16 @@ public:
 
   std::vector<std::shared_ptr<input::IGamepad>> listGamepads() override { return {}; }
 
-  std::shared_ptr<input::IGamepad> getPlayerGamepad(int) override { return nullptr; }
+  std::shared_ptr<input::IGamepad> getPlayerGamepad(const int playerIndex) override {
+    const auto it = playerSlots.find(playerIndex);
+    return it == playerSlots.end() ? nullptr : it->second;
+  }
 
   void changeGamepadOrder(const std::map<int, int> &) override {}
+
+  void swapGamepads(int, int) override {}
+
+  void moveGamepad(const int from, const int to) override { moveCalls.emplace_back(from, to); }
 
   bool preferGamepadOverKeyboard() const override {
     return !preferGamepadOverKeyboardCalls.empty() && preferGamepadOverKeyboardCalls.back();

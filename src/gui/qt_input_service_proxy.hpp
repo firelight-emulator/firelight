@@ -26,8 +26,8 @@ public:
 
   // TODO
   /**
-   * Whether gamepad input from the given player slot is forwarded to the window as navigation keys. Player 1 and
-   * input with no slot behind it always are
+   * Whether gamepad input from the given player slot is forwarded to the window as navigation keys. Player 1 and input
+   * with no slot behind it always are
    */
   [[nodiscard]] bool isAllowedToNavigateMenus(int playerIndex) const;
 
@@ -37,6 +37,10 @@ public:
 
   // Switches shortcut scope between in-game and menu contexts (driven by the UI)
   Q_INVOKABLE void setShortcutsInGame(bool inGame);
+
+  Q_INVOKABLE void swapGamepads(int firstIndex, int secondIndex);
+
+  Q_INVOKABLE void moveGamepad(int from, int to);
 
   // Whether the Steam client is running. Steam reads gamepads globally through
   // its own filter driver, and its "Guide button focuses Steam" option fires
@@ -74,6 +78,7 @@ private:
   GamepadType m_currentGamepadType = KEYBOARD;
   QVariantMap m_currentGamepadButtonIcons;
 
+  // Keyed by device instance id and input
   std::map<std::pair<int, input::GamepadInput>, AutoRepeatState> m_autoRepeatStates;
 
   QTimer *m_autoRepeatTimer;
@@ -83,8 +88,8 @@ private:
   static constexpr std::chrono::milliseconds AUTO_REPEAT_INTERVAL{30};
 
   // Auto-repeat helper methods
-  void startAutoRepeat(int playerIndex, input::GamepadInput input);
-  void stopAutoRepeat(int playerIndex, input::GamepadInput input);
+  void startAutoRepeat(int instanceId, int playerIndex, input::GamepadInput input);
+  void stopAutoRepeat(int instanceId, input::GamepadInput input);
   void processAutoRepeat();
 };
 

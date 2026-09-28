@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "firelight/event_dispatcher.hpp"
 
 #include <firelight/input/sdl_input_service.hpp>
@@ -406,10 +407,14 @@ void SDLInputService::handleAxisMotion(const int instanceId, const int sdlAxis, 
 
 void SDLInputService::setGamepadInputState(const int playerIndex, IGamepad *gamepad, const GamepadInput input,
                                            const bool pressed) {
-  if (m_gamepadLastStates[playerIndex][input] == pressed) {
-    return;
+  {
+    std::unique_lock lock(m_devicesMutex);
+    if (m_gamepadLastStates[playerIndex][input] == pressed) {
+      return;
+    }
+
+    m_gamepadLastStates[playerIndex][input] = pressed;
   }
-  m_gamepadLastStates[playerIndex][input] = pressed;
 
   m_shortcutEngine.onInput(playerIndex, gamepad, input, pressed);
 
@@ -517,27 +522,104 @@ void SDLInputService::stop() {
 void SDLInputService::changeGamepadOrder(const std::map<int, int> &oldToNewIndex) {
   {
     std::unique_lock lock(m_devicesMutex);
-    std::map<int, std::shared_ptr<IGamepad>> newPlayerSlots;
+    applyPlayerOrder(oldToNewIndex);
+  }
 
-    for (const auto &[oldIndex, newIndex] : oldToNewIndex) {
-      if (m_playerSlots.contains(oldIndex)) {
-        const auto gamepad = m_playerSlots[oldIndex];
-        m_playerSlots.erase(oldIndex);
-        newPlayerSlots[newIndex] = gamepad;
-        if (gamepad) {
-          gamepad->setPlayerIndex(newIndex);
-          spdlog::info("Changed player slot for {} to {}", gamepad->getName(), newIndex + 1);
-        }
+  EventDispatcher::instance().publish(GamepadOrderChangedEvent{});
+}
+
+void SDLInputService::applyPlayerOrder(const std::map<int, int> &oldToNewIndex) {
+  std::map<int, std::shared_ptr<IGamepad>> newPlayerSlots;
+
+  for (const auto &[oldIndex, newIndex] : oldToNewIndex) {
+    if (m_playerSlots.contains(oldIndex)) {
+      const auto gamepad = m_playerSlots[oldIndex];
+      m_playerSlots.erase(oldIndex);
+      newPlayerSlots[newIndex] = gamepad;
+      if (gamepad) {
+        gamepad->setPlayerIndex(newIndex);
+        spdlog::info("Changed player slot for {} to {}", gamepad->getName(), newIndex + 1);
+      }
+    }
+  }
+
+  for (auto i = 0; i < MAX_PLAYERS; ++i) {
+    auto gamepad = newPlayerSlots.contains(i) ? newPlayerSlots[i] : nullptr;
+    if (gamepad) {
+      m_playerSlots[i] = gamepad;
+    } else {
+      m_playerSlots.erase(i);
+    }
+  }
+
+  std::map<int, std::map<GamepadInput, bool>> newLastStates;
+  for (const auto &[oldIndex, newIndex] : oldToNewIndex) {
+    if (const auto states = m_gamepadLastStates.find(oldIndex); states != m_gamepadLastStates.end()) {
+      newLastStates[newIndex] = std::move(states->second);
+    }
+  }
+
+  m_gamepadLastStates = std::move(newLastStates);
+}
+
+void SDLInputService::moveGamepad(const int from, const int to) {
+  if (from == to || from < 0 || to < 0 || from >= MAX_PLAYERS || to >= MAX_PLAYERS) {
+    return;
+  }
+
+  {
+    std::unique_lock lock(m_devicesMutex);
+    const auto moving = m_playerSlots.find(from);
+    if (moving == m_playerSlots.end() || moving->second == nullptr) {
+      return;
+    }
+
+    std::map<int, int> oldToNewIndex;
+    for (int i = 0; i < MAX_PLAYERS; ++i) {
+      oldToNewIndex[i] = i;
+    }
+
+    oldToNewIndex[from] = to;
+    if (from < to) {
+      for (int i = from + 1; i <= to; ++i) {
+        oldToNewIndex[i] = i - 1;
+      }
+    } else {
+      for (int i = to; i < from; ++i) {
+        oldToNewIndex[i] = i + 1;
       }
     }
 
-    for (auto i = 0; i < MAX_PLAYERS; ++i) {
-      auto gamepad = newPlayerSlots.contains(i) ? newPlayerSlots[i] : nullptr;
-      if (gamepad) {
-        m_playerSlots[i] = gamepad;
-      } else {
-        m_playerSlots.erase(i);
-      }
+    applyPlayerOrder(oldToNewIndex);
+  }
+
+  EventDispatcher::instance().publish(GamepadOrderChangedEvent{.from = from, .to = to});
+}
+
+void SDLInputService::swapGamepads(const int firstIndex, const int secondIndex) {
+  if (firstIndex == secondIndex || firstIndex < 0 || secondIndex < 0 || firstIndex >= MAX_PLAYERS ||
+      secondIndex >= MAX_PLAYERS) {
+    return;
+  }
+
+  {
+    std::unique_lock lock(m_devicesMutex);
+    const auto firstGamepad = m_playerSlots.contains(firstIndex) ? m_playerSlots[firstIndex] : nullptr;
+    const auto secondGamepad = m_playerSlots.contains(secondIndex) ? m_playerSlots[secondIndex] : nullptr;
+
+    if (!firstGamepad && !secondGamepad) {
+      return;
+    }
+
+    m_playerSlots.erase(firstIndex);
+    m_playerSlots.erase(secondIndex);
+
+    if (secondGamepad) {
+      assignToSlot(firstIndex, secondGamepad);
+    }
+
+    if (firstGamepad) {
+      assignToSlot(secondIndex, firstGamepad);
     }
   }
 

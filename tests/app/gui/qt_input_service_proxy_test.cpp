@@ -1,12 +1,16 @@
 #include "gui/qt_input_service_proxy.hpp"
 
+#include "../../../libs/firelight/input/tests/test_gamepad.hpp"
 #include "../emulation/fake_input_service.hpp"
 
+#include <firelight/event_dispatcher.hpp>
+#include <firelight/input/input_service.hpp>
 #include <firelight/settings/settings_catalog.hpp>
 #include <firelight/settings/settings_service.hpp>
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <QCoreApplication>
+#include <QTest>
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdexcept>
@@ -113,6 +117,59 @@ TEST_F(QtInputServiceProxyTest, OnlyPlayerOneNavigatesWhenTheSettingIsOn) {
   EXPECT_FALSE(proxy->isAllowedToNavigateMenus(1));
   EXPECT_FALSE(proxy->isAllowedToNavigateMenus(3));
   EXPECT_TRUE(proxy->isAllowedToNavigateMenus(-1));
+}
+
+//****************
+// auto-repeat
+//****************
+
+namespace {
+constexpr int PAST_THE_INITIAL_REPEAT_DELAY_MS = 650;
+
+/**
+ * Counts the auto-repeat presses the proxy republishes
+ */
+class RepeatCounter {
+public:
+  RepeatCounter()
+      : m_connection(EventDispatcher::instance().subscribe<input::GamepadInputEvent>(
+            [this](const input::GamepadInputEvent &event) { m_count += event.autoRepeat ? 1 : 0; })) {}
+
+  [[nodiscard]] int getCount() const { return m_count; }
+
+private:
+  int m_count = 0;
+  ScopedConnection m_connection;
+};
+} // namespace
+
+TEST_F(QtInputServiceProxyTest, AHeldButtonRepeatsAfterTheInitialDelay) {
+  const auto proxy = makeProxy();
+  input::TestGamepad pad(7);
+  RepeatCounter repeats;
+
+  EventDispatcher::instance().publish(
+      input::GamepadInputEvent{.gamepad = &pad, .playerIndex = 0, .input = input::DpadRight, .pressed = true});
+  QTest::qWait(PAST_THE_INITIAL_REPEAT_DELAY_MS);
+
+  EXPECT_GT(repeats.getCount(), 0);
+
+  EventDispatcher::instance().publish(
+      input::GamepadInputEvent{.gamepad = &pad, .playerIndex = 0, .input = input::DpadRight, .pressed = false});
+}
+
+TEST_F(QtInputServiceProxyTest, AReleaseFromAnotherSlotStillStopsTheRepeat) {
+  const auto proxy = makeProxy();
+  input::TestGamepad pad(7);
+  RepeatCounter repeats;
+
+  EventDispatcher::instance().publish(
+      input::GamepadInputEvent{.gamepad = &pad, .playerIndex = 0, .input = input::DpadRight, .pressed = true});
+  EventDispatcher::instance().publish(
+      input::GamepadInputEvent{.gamepad = &pad, .playerIndex = 1, .input = input::DpadRight, .pressed = false});
+  QTest::qWait(PAST_THE_INITIAL_REPEAT_DELAY_MS);
+
+  EXPECT_EQ(repeats.getCount(), 0);
 }
 
 } // namespace firelight::gui

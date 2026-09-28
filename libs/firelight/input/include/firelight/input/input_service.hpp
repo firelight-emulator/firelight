@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/input/igamepad.hpp>
@@ -18,7 +19,13 @@ struct GamepadDisconnectedEvent {
   int playerIndex;
 };
 
-struct GamepadOrderChangedEvent {};
+// TODO
+// A device moved from slot "from" to slot "to" with the slots between shifting one place; both -1 when the order
+// changed in some other way
+struct GamepadOrderChangedEvent {
+  int from = -1;
+  int to = -1;
+};
 
 struct GamepadInputEvent {
   IGamepad *gamepad;
@@ -48,6 +55,9 @@ public:
   virtual std::shared_ptr<IGamepad> getPlayerGamepad(int playerIndex) = 0;
 
   virtual void changeGamepadOrder(const std::map<int, int> &oldToNewIndex) = 0;
+  virtual void swapGamepads(int firstIndex, int secondIndex) = 0;
+  // Moves the device in slot "from" to slot "to", shifting the slots between by one place
+  virtual void moveGamepad(int from, int to) = 0;
 
   virtual bool preferGamepadOverKeyboard() const = 0;
   virtual void setPreferGamepadOverKeyboard(bool prefer) = 0;

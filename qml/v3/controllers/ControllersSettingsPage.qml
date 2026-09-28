@@ -10,19 +10,37 @@ FLPage {
         anchors.fill: parent
         spacing: AppStyle.spacingMd
 
-        FLGridView {
+        FLReorderGridView {
             id: slotGrid
 
             Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
             Layout.fillWidth: true
-            Layout.preferredHeight: 160
+            Layout.leftMargin: -AppStyle.spacingSm
+            Layout.rightMargin: -AppStyle.spacingSm
+            Layout.preferredHeight: cellHeight
 
             FLFocus.enterFromBelow: slotGrid.currentItem
 
-            cellWidth: 160
-            cellHeight: 160
+            cellWidth: slotGrid.width / 4
+            cellHeight: slotGrid.cellWidth
+
+            onMoveRequested: (fromIndex, toIndex) => {
+                InputService.moveGamepad(fromIndex, toIndex);
+            }
 
             model: GamepadListModel {}
+
+            // A reload under a lifted tile ends the reorder where it stands
+            Connections {
+                target: slotGrid.model
+
+                function onModelReset() {
+                    if (slotGrid.lifted) {
+                        slotGrid.place();
+                    }
+                }
+            }
+
             delegate: FocusScope {
                 id: controllerButton
                 required property var model
@@ -31,41 +49,53 @@ FLPage {
                 width: GridView.view.cellWidth
                 height: GridView.view.cellHeight
 
-                FLButtonBase {
+                Rectangle {
+                    visible: !controllerButton.model.connected
+                    border.color: Theme.border
+                    color: "transparent"
+                    radius: AppStyle.radiusSm
+
                     anchors.fill: parent
-                    anchors.margins: AppStyle.spacingMd
+                    anchors.margins: AppStyle.spacingSm
 
-                    focus: true
+                    Text {
+                        anchors.centerIn: parent
+                        text: controllerButton.index + 1
+                        font.pixelSize: AppStyle.fontSizeMedium
+                        font.family: AppStyle.fontFamily
+                        color: Theme.borderStrong
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
 
-                    contentItem: Item {
-                        anchors.fill: parent
-                        anchors.margins: AppStyle.spacingMd
-                        Image {
-                            id: controllerIcon
-                            source: controllerButton.model.image_url
-                            visible: controllerButton.model.connected
-                            fillMode: Image.PreserveAspectFit
-                            sourceSize.width: 256
-                            anchors.fill: parent
-                        }
+                ControllerGridItem {
+                    id: controllerGridItem
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: controllerButton.index + 1
-                            font.pixelSize: AppStyle.fontSizeMedium
-                            font.family: AppStyle.fontFamily
-                            color: "white"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            visible: !controllerButton.model.connected
-                        }
+                    index: controllerButton.index
+                    connected: controllerButton.model.connected
+                    imageUrl: controllerButton.model.image_url
+                    isLifted: slotGrid.lifted && slotGrid.liftedIndex === controllerButton.index
+
+                    anchors.fill: parent
+                    anchors.margins: AppStyle.spacingSm
+                    visible: controllerButton.model.connected
+
+                    onReorderingRequested: {
+                        slotGrid.beginReorder(controllerButton.index)
                     }
 
-                    variant: "default"
-                    rounded: false
+                    onConfigureRequested: {
+
+                    }
 
                     onClicked: {
-                        console.log("Controller " + (index + 1) + " clicked");
+                        if (slotGrid.lifted) {
+                            slotGrid.place();
+                            return;
+                        }
+
+                        controllerGridItem.configureRequested();
                     }
                 }
             }
@@ -73,6 +103,7 @@ FLPage {
 
         SettingsGroup {
             group: "controllers-configure-all"
+            showHeader: false
             Layout.fillWidth: true
         }
 
@@ -82,6 +113,7 @@ FLPage {
 
         SettingsGroup {
             group: "controllers-general"
+            showHeader: false
             Layout.fillWidth: true
         }
 

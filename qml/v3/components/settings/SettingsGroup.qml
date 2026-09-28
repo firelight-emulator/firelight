@@ -133,7 +133,7 @@ SettingsSection {
             controlItem: Icon {
                 name: "chevron-forward"
                 size: AppStyle.iconSizeSm
-                color: Theme.textSecondary
+                color: Theme.borderStrong
             }
 
             onClicked: function () {

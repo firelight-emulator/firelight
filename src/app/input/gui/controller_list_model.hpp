@@ -43,5 +43,11 @@ private:
   std::vector<Item> m_items;
 
   void refreshControllerList();
+
+  /**
+   * Moves one shown row to another position and renumbers the rows between, reloading instead when either position is
+   * outside the shown rows
+   */
+  void moveSlotRow(int from, int to);
 };
 } // namespace firelight::gui

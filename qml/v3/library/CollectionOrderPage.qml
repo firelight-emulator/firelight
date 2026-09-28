@@ -37,8 +37,6 @@ FLTwoColumnPage {
 
     property var originalIds: []
 
-    property int liftOriginIndex: -1
-
     function load() {
         const folders = LibraryFolderModel.foldersInParent(root.parentId);
         const ids = [];
@@ -52,7 +50,6 @@ FLTwoColumnPage {
         }
 
         root.originalIds = ids;
-        root.liftOriginIndex = -1;
 
         if (stagedOrder.count === 0) {
             root.showPage(noCollectionsView);
@@ -165,7 +162,7 @@ FLTwoColumnPage {
         id: orderGrid
 
         FocusScope {
-            FLGridView {
+            FLReorderGridView {
                 id: grid
                 anchors.fill: parent
                 focus: true
@@ -179,39 +176,8 @@ FLTwoColumnPage {
                     stagedOrder.move(from, to, 1);
                 }
 
-                FLFocus.actions: [
-                    FLAction {
-                        keys: [Qt.Key_Back, Qt.Key_Escape]
-                        label: qsTr("Cancel")
-                        sound: SoundEffects.back
-                        enabled: grid.lifted
-                        hidden: !grid.lifted
-                        onTriggered: {
-                            stagedOrder.move(grid.liftedIndex, root.liftOriginIndex, 1);
-                            grid.currentIndex = root.liftOriginIndex;
-                            grid.drop();
-                            root.liftOriginIndex = -1;
-                            grid.focusCurrentItem();
-                            root._dirty = root.isDirty();
-                        }
-                    }
-                ]
-
-                move: Transition {
-                    NumberAnimation {
-                        properties: "x,y"
-                        duration: AppStyle.durationBase
-                        easing.type: AppStyle.easingStandard
-                    }
-                }
-
-                displaced: Transition {
-                    NumberAnimation {
-                        properties: "x,y"
-                        duration: AppStyle.durationBase
-                        easing.type: AppStyle.easingStandard
-                    }
-                }
+                onPlaced: root._dirty = root.isDirty()
+                onCancelled: root._dirty = root.isDirty()
 
                 delegate: CollectionTile {
                     id: tile
@@ -228,14 +194,11 @@ FLTwoColumnPage {
 
                     onClicked: {
                         if (grid.lifted) {
-                            grid.drop();
-                            root.liftOriginIndex = -1;
-                            root._dirty = root.isDirty();
+                            grid.place();
                             return;
                         }
 
-                        root.liftOriginIndex = tile.index;
-                        grid.lift(tile.index);
+                        grid.beginReorder(tile.index);
                     }
 
                     layer.enabled: _beingReordered

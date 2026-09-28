@@ -21,7 +21,7 @@
     },
     {
       "key": "configure-controllers",
-      "label": "Configure controllers",
+      "label": "All controllers",
       "keywords": [],
       "type": "link",
       "route": "/example/TODO"

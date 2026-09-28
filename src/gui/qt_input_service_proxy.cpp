@@ -199,10 +199,12 @@ QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService, sett
           }
         }
 
-        if (event.pressed && !event.autoRepeat) {
-          startAutoRepeat(event.playerIndex, event.input);
-        } else if (!event.pressed) {
-          stopAutoRepeat(event.playerIndex, event.input);
+        if (event.gamepad != nullptr) {
+          if (event.pressed && !event.autoRepeat) {
+            startAutoRepeat(event.gamepad->getInstanceId(), event.playerIndex, event.input);
+          } else if (!event.pressed) {
+            stopAutoRepeat(event.gamepad->getInstanceId(), event.input);
+          }
         }
 
         if (!isAllowedToNavigateMenus(event.playerIndex)) {
@@ -243,6 +245,12 @@ void QtInputServiceProxy::setShortcutsInGame(const bool inGame) {
   m_inputService->setShortcutContext(inGame ? input::ScopeInGame : input::ScopeInMenu);
 }
 
+void QtInputServiceProxy::swapGamepads(const int firstIndex, const int secondIndex) {
+  m_inputService->swapGamepads(firstIndex, secondIndex);
+}
+
+void QtInputServiceProxy::moveGamepad(const int from, const int to) { m_inputService->moveGamepad(from, to); }
+
 bool QtInputServiceProxy::isSteamRunning() const { return steamClientRunning(); }
 
 bool QtInputServiceProxy::eventFilter(QObject *obj, QEvent *event) {
@@ -268,23 +276,24 @@ void QtInputServiceProxy::markGamepadTypeChanged() {
   emit currentGamepadTypeChanged();
 }
 
-void QtInputServiceProxy::startAutoRepeat(int playerIndex, input::GamepadInput input) {
+void QtInputServiceProxy::startAutoRepeat(const int instanceId, const int playerIndex,
+                                          const input::GamepadInput input) {
   if (input == input::None) {
     return;
   }
 
-  const auto key = std::make_pair(playerIndex, input);
+  const auto key = std::make_pair(instanceId, input);
   const auto now = std::chrono::steady_clock::now();
   m_autoRepeatStates[key] = AutoRepeatState{
       .pressTime = now, .lastRepeatTime = now, .isRepeating = false, .playerIndex = playerIndex, .input = input};
 }
 
-void QtInputServiceProxy::stopAutoRepeat(int playerIndex, input::GamepadInput input) {
+void QtInputServiceProxy::stopAutoRepeat(const int instanceId, const input::GamepadInput input) {
   if (input == input::None) {
     return;
   }
 
-  const auto key = std::make_pair(playerIndex, input);
+  const auto key = std::make_pair(instanceId, input);
   m_autoRepeatStates.erase(key);
 }
 

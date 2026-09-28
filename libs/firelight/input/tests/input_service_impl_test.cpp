@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "test_gamepad.hpp"
 
 #include <firelight/event_dispatcher.hpp>
@@ -334,6 +335,138 @@ TEST_F(InputServiceImplTest, ChangeOrderPublishesOrderChangedEvent) {
   inputService.changeGamepadOrder({{0, 1}, {1, 0}});
 
   EXPECT_FALSE(m_orderChangedEvents.empty());
+}
+
+//****************
+// swapping and moving slots
+//****************
+
+TEST_F(InputServiceImplTest, SwapGamepadsExchangesSlotsAndPlayerIndices) {
+  input::SDLInputService inputService(m_repo);
+  auto padA = std::make_shared<input::TestGamepad>(1);
+  auto padB = std::make_shared<input::TestGamepad>(2);
+  inputService.addGamepad(padA);
+  inputService.addGamepad(padB);
+
+  inputService.swapGamepads(0, 1);
+
+  EXPECT_EQ(inputService.getPlayerGamepad(0), padB);
+  EXPECT_EQ(inputService.getPlayerGamepad(1), padA);
+  EXPECT_EQ(padA->getPlayerIndex(), 1);
+  EXPECT_EQ(padB->getPlayerIndex(), 0);
+}
+
+TEST_F(InputServiceImplTest, SwapGamepadsWithAnEmptySlotMovesThePadThere) {
+  input::SDLInputService inputService(m_repo);
+  auto padA = std::make_shared<input::TestGamepad>(1);
+  inputService.addGamepad(padA);
+
+  inputService.swapGamepads(0, 2);
+
+  EXPECT_EQ(inputService.getPlayerGamepad(0), nullptr);
+  EXPECT_EQ(inputService.getPlayerGamepad(2), padA);
+  EXPECT_EQ(padA->getPlayerIndex(), 2);
+
+  auto padB = std::make_shared<input::TestGamepad>(2);
+  inputService.addGamepad(padB);
+  EXPECT_EQ(padB->getPlayerIndex(), 0);
+}
+
+TEST_F(InputServiceImplTest, MoveGamepadForwardShiftsTheSlotsBetweenBack) {
+  input::SDLInputService inputService(m_repo);
+  auto padA = std::make_shared<input::TestGamepad>(1);
+  auto padB = std::make_shared<input::TestGamepad>(2);
+  auto padC = std::make_shared<input::TestGamepad>(3);
+  inputService.addGamepad(padA);
+  inputService.addGamepad(padB);
+  inputService.addGamepad(padC);
+
+  inputService.moveGamepad(0, 2);
+
+  EXPECT_EQ(inputService.getPlayerGamepad(0), padB);
+  EXPECT_EQ(inputService.getPlayerGamepad(1), padC);
+  EXPECT_EQ(inputService.getPlayerGamepad(2), padA);
+  EXPECT_EQ(padB->getPlayerIndex(), 0);
+  EXPECT_EQ(padC->getPlayerIndex(), 1);
+  EXPECT_EQ(padA->getPlayerIndex(), 2);
+}
+
+TEST_F(InputServiceImplTest, MoveGamepadBackwardShiftsTheSlotsBetweenForward) {
+  input::SDLInputService inputService(m_repo);
+  auto padA = std::make_shared<input::TestGamepad>(1);
+  auto padB = std::make_shared<input::TestGamepad>(2);
+  auto padC = std::make_shared<input::TestGamepad>(3);
+  inputService.addGamepad(padA);
+  inputService.addGamepad(padB);
+  inputService.addGamepad(padC);
+
+  inputService.moveGamepad(2, 0);
+
+  EXPECT_EQ(inputService.getPlayerGamepad(0), padC);
+  EXPECT_EQ(inputService.getPlayerGamepad(1), padA);
+  EXPECT_EQ(inputService.getPlayerGamepad(2), padB);
+  EXPECT_EQ(padC->getPlayerIndex(), 0);
+  EXPECT_EQ(padA->getPlayerIndex(), 1);
+  EXPECT_EQ(padB->getPlayerIndex(), 2);
+}
+
+TEST_F(InputServiceImplTest, MoveGamepadCarriesAnEmptySlotAlong) {
+  input::SDLInputService inputService(m_repo);
+  auto padA = std::make_shared<input::TestGamepad>(1);
+  auto padB = std::make_shared<input::TestGamepad>(2);
+  auto padC = std::make_shared<input::TestGamepad>(3);
+  inputService.addGamepad(padA);
+  inputService.addGamepad(padB);
+  inputService.addGamepad(padC);
+  inputService.removeGamepadByInstanceId(2);
+  ASSERT_EQ(inputService.getPlayerGamepad(1), nullptr);
+
+  inputService.moveGamepad(0, 2);
+
+  EXPECT_EQ(inputService.getPlayerGamepad(0), nullptr);
+  EXPECT_EQ(inputService.getPlayerGamepad(1), padC);
+  EXPECT_EQ(inputService.getPlayerGamepad(2), padA);
+  EXPECT_EQ(padC->getPlayerIndex(), 1);
+  EXPECT_EQ(padA->getPlayerIndex(), 2);
+}
+
+TEST_F(InputServiceImplTest, MoveGamepadPublishesWhereItMovedFromAndTo) {
+  input::SDLInputService inputService(m_repo);
+  inputService.addGamepad(std::make_shared<input::TestGamepad>(1));
+  inputService.addGamepad(std::make_shared<input::TestGamepad>(2));
+  m_orderChangedEvents.clear();
+
+  inputService.moveGamepad(0, 1);
+
+  ASSERT_EQ(m_orderChangedEvents.size(), 1u);
+  EXPECT_EQ(m_orderChangedEvents.front().from, 0);
+  EXPECT_EQ(m_orderChangedEvents.front().to, 1);
+}
+
+TEST_F(InputServiceImplTest, ChangeGamepadOrderPublishesWithoutAMove) {
+  input::SDLInputService inputService(m_repo);
+  inputService.addGamepad(std::make_shared<input::TestGamepad>(1));
+  inputService.addGamepad(std::make_shared<input::TestGamepad>(2));
+  m_orderChangedEvents.clear();
+
+  inputService.changeGamepadOrder({{0, 1}, {1, 0}});
+
+  ASSERT_EQ(m_orderChangedEvents.size(), 1u);
+  EXPECT_EQ(m_orderChangedEvents.front().from, -1);
+  EXPECT_EQ(m_orderChangedEvents.front().to, -1);
+}
+
+TEST_F(InputServiceImplTest, MoveGamepadFromAnEmptySlotDoesNothing) {
+  input::SDLInputService inputService(m_repo);
+  auto padA = std::make_shared<input::TestGamepad>(1);
+  inputService.addGamepad(padA);
+  m_orderChangedEvents.clear();
+
+  inputService.moveGamepad(2, 0);
+
+  EXPECT_EQ(inputService.getPlayerGamepad(0), padA);
+  EXPECT_EQ(padA->getPlayerIndex(), 0);
+  EXPECT_TRUE(m_orderChangedEvents.empty());
 }
 
 TEST_F(InputServiceImplTest, ListGamepadsTracksConnectAndDisconnect) {

@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include <firelight/event_dispatcher.hpp>
@@ -74,6 +75,8 @@ public:
   static std::vector<std::pair<GamepadInput, bool>> decodeAxisMotion(int sdlAxis, int value);
 
   void changeGamepadOrder(const std::map<int, int> &oldToNewIndex) override;
+  void swapGamepads(int firstIndex, int secondIndex) override;
+  void moveGamepad(int from, int to) override;
 
   bool preferGamepadOverKeyboard() const override;
   void setPreferGamepadOverKeyboard(bool prefer) override;
@@ -100,6 +103,10 @@ private:
   std::shared_ptr<IGamepad> findGamepadByInstanceId(int instanceId);
   int getNextAvailablePlayerIndex() const;
   bool moveGamepadToPlayerIndex(int oldIndex, int newIndex);
+  // TODO
+  // Rebuilds the player slots from an old-to-new index map; a slot the map does not name ends up empty. Precondition:
+  // m_devicesMutex is held by the caller
+  void applyPlayerOrder(const std::map<int, int> &oldToNewIndex);
   // Resolves the profile a gamepad should use: the active per-game override if
   // any, otherwise the device's stored default (creating one if needed)
   std::shared_ptr<GamepadProfile> resolveProfileForGamepad(const std::shared_ptr<IGamepad> &gamepad);

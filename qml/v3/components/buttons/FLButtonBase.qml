@@ -16,14 +16,17 @@ Button {
     // Allows the button to be disabled but still allow it to receive focus
     property bool canInteract: true
 
+    property string actionLabel: "OK"
+    property var actionSound: control.canInteract ? SoundEffects.openPopup : SoundEffects.cursorBump
+
     property color checkedColor: Theme.textPrimary
     FLFocus.showCursor: true
 
     FLFocus.actions: [
         FLAction {
-            label: "OK"
+            label: control.actionLabel
             keys: [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Space, Qt.Key_Select]
-            sound: control.canInteract ? SoundEffects.openPopup : SoundEffects.cursorBump
+            sound: control.actionSound
             onTriggered: {
                 if (!control.canInteract) {
                     return;
