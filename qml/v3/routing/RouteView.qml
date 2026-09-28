@@ -50,6 +50,8 @@ StackView {
             "/library": libraryComponent,
             "/library/reorder-collections": collectionOrderComponent,
             "/library/create-collection/:kind": createCollectionComponent,
+            "/controllers/configure": controllerProfileComponent,
+            "/controllers/configure/:playerNumber": controllerProfileComponent,
             "/settings": settingsComponent,
             "/dev/monitor": monitorComponent,
             "/quick-menu": quickMenuComponent
@@ -84,6 +86,13 @@ StackView {
     }
 
     Component {
+        id: controllerProfileComponent
+        ControllerProfilePage {
+            playerNumber: Router.params.playerNumber !== undefined ? parseInt(Router.params.playerNumber) : 1
+        }
+    }
+
+    Component {
         id: settingsComponent
         SettingsScreen {}
     }
@@ -112,10 +121,6 @@ StackView {
     // Component {
     //     id: controllersComponent
     //     ControllersPage {}
-    // }
-    // Component {
-    //     id: controllerProfileComponent
-    //     ControllerProfilePage {}
     // }
     // Component {
     //     id: profileManagementComponent

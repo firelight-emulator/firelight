@@ -12,12 +12,12 @@ var ROUTES = [
     { pattern: "/library/entries/:entryId", stacksOn: "/library" },
     { pattern: "/library/reorder-collections", stacksOn: "/library" },
     { pattern: "/library/create-collection/:kind", stacksOn: "/library" },
+    { pattern: "/controllers" },
+    { pattern: "/controllers/configure", stacksOn: "/controllers" },
+    { pattern: "/controllers/configure/:playerNumber", stacksOn: "/controllers" },
     { pattern: "/shop" },
     { pattern: "/shop/mods/:modId", stacksOn: "/shop" },
     { pattern: "/settings", ownsSubtree: true },
-    { pattern: "/controllers" },
-    { pattern: "/controllers/profiles/:playerNumber", stacksOn: "/controllers" },
-    { pattern: "/controllers/manage", stacksOn: "/controllers" },
     { pattern: "/gallery" },
     { pattern: "/gallery/games/:gameContentHash", stacksOn: "/gallery" },
     { pattern: "/activity" },
@@ -39,7 +39,9 @@ var TRANSITIONS = [
     { from: "/library/collections", to: "/library/collections/:collectionId", preset: "panelForward" },
     { from: "/library/collections/:collectionId", to: "/library/collections", preset: "panelBack" },
     { from: "/library", to: "/library/collections/:collectionId", preset: "panelForward" },
-    { from: "/library/collections/:collectionId", to: "/library", preset: "panelBack" }
+    { from: "/library/collections/:collectionId", to: "/library", preset: "panelBack" },
+    { from: "*", to: "/controllers/configure", preset: "panelForward" },
+    { from: "/controllers/configure", to: "*", preset: "panelBack" }
 ];
 
 // TODO

@@ -219,11 +219,11 @@ Pane {
                             }
                         }
                     }
-                    ContextMenu.menu: RightClickMenu {
-                        RightClickMenuItem {
+                    ContextMenu.menu: FLMenu {
+                        FLMenuItem {
                             text: "Assign"
 
-                            onTriggered: {
+                            onClicked: {
                                 shortcutDialog.shortcut = model.shortcutId;
                                 shortcutDialog.shortcutName = model.name;
                                 shortcutDialog.open();
@@ -236,9 +236,9 @@ Pane {
                             }
                         }
 
-                        RightClickMenuItem {
+                        FLMenuItem {
                             text: "Clear mapping"
-                            onTriggered: {
+                            onClicked: {
                                 shortcutsListView.model.clearBindings(model.shortcutId);
                             }
                         }

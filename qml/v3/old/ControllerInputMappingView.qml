@@ -247,11 +247,11 @@ FocusScope {
                     }
                 }
             }
-            ContextMenu.menu: RightClickMenu {
-                RightClickMenuItem {
+            ContextMenu.menu: FLMenu {
+                FLMenuItem {
                     text: "Assign"
 
-                    onTriggered: {
+                    onClicked: {
                         dialog.buttons = [];
                         dialog.buttons = [
                             {
@@ -263,25 +263,25 @@ FocusScope {
                     }
                 }
 
-                RightClickMenuItem {
+                FLMenuItem {
                     text: "Reset to default"
 
-                    onTriggered: {
+                    onClicked: {
                         inputMappingsModel.resetToDefault(model.originalInput);
                     }
                 }
 
-                RightClickMenuItem {
+                FLMenuItem {
                     text: "Clear mapping"
-                    onTriggered: {
+                    onClicked: {
                         inputMappingsModel.clearMapping(model.originalInput);
                     }
                 }
 
-                RightClickMenuItem {
+                FLMenuItem {
                     text: "Turbo & alternate bindings…"
                     visible: !root.isKeyboard
-                    onTriggered: {
+                    onClicked: {
                         bindingOptionsPopup.targetInput = model.originalInput;
                         bindingOptionsPopup.targetLabel = model.originalInputName;
                         bindingOptionsPopup.open();

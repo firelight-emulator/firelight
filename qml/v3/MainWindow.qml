@@ -13,7 +13,8 @@ ApplicationWindow {
     property real previousHeight: height
 
     title: qsTr("Firelight")
-    visibility: Window.Hidden
+    // visibility: Window.Hidden
+    visibility: GeneralSettings.fullscreen ? Window.FullScreen : Window.Windowed
 
     width: WindowGeometry.mainWindowWidth
     height: WindowGeometry.mainWindowHeight
@@ -27,7 +28,7 @@ ApplicationWindow {
 
         const override = StartupOptions.fullscreenOverride;
         const startFullscreen = override === 1 || (override === -1 && GeneralSettings.fullscreen);
-        visibility = startFullscreen ? Window.FullScreen : Window.Windowed;
+        // visibility = startFullscreen ? Window.FullScreen : Window.Windowed;
         frameReady = true;
     }
 
