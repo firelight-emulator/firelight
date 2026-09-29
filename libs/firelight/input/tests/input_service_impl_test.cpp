@@ -705,4 +705,154 @@ TEST_F(InputServiceImplTest, TriggerAxisFiresShortcutBoundToIt) {
   input::ShortcutRegistry::instance().clear();
 }
 
+//****************
+// rumble scale and light colour
+//****************
+
+TEST_F(InputServiceImplTest, RumbleScaleReachesOnlyTheControllersUsingTheProfile) {
+  input::SDLInputService inputService(m_repo);
+  auto padA = std::make_shared<input::TestGamepad>(1, 10);
+  auto padASibling = std::make_shared<input::TestGamepad>(2, 10);
+  auto padB = std::make_shared<input::TestGamepad>(3, 20);
+  const auto profileB = m_repo.createProfile("Profile B");
+  ASSERT_TRUE(profileB);
+  m_repo.updateDeviceInfo(padB->getDeviceIdentifier(), input::DeviceInfo{"Pad B", profileB->getId()});
+  inputService.addGamepad(padA);
+  inputService.addGamepad(padASibling);
+  inputService.addGamepad(padB);
+  ASSERT_TRUE(padA->getProfile());
+  ASSERT_TRUE(padASibling->getProfile());
+  ASSERT_TRUE(padB->getProfile());
+  const auto profileA = padA->getProfile()->getId();
+  ASSERT_EQ(padASibling->getProfile()->getId(), profileA);
+  ASSERT_NE(padB->getProfile()->getId(), profileA);
+
+  inputService.setRumbleScale(profileA, 40);
+
+  EXPECT_EQ(padA->getLastRumbleScale(), 40);
+  EXPECT_EQ(padASibling->getLastRumbleScale(), 40);
+  EXPECT_FALSE(padB->getLastRumbleScale().has_value());
+}
+
+TEST_F(InputServiceImplTest, LightColorReachesOnlyTheControllersUsingTheProfile) {
+  input::SDLInputService inputService(m_repo);
+  auto padA = std::make_shared<input::TestGamepad>(1, 10);
+  auto padB = std::make_shared<input::TestGamepad>(2, 20);
+  const auto profileB = m_repo.createProfile("Profile B");
+  ASSERT_TRUE(profileB);
+  m_repo.updateDeviceInfo(padB->getDeviceIdentifier(), input::DeviceInfo{"Pad B", profileB->getId()});
+  inputService.addGamepad(padA);
+  inputService.addGamepad(padB);
+  ASSERT_TRUE(padA->getProfile());
+  ASSERT_TRUE(padB->getProfile());
+  const auto profileA = padA->getProfile()->getId();
+  ASSERT_NE(padB->getProfile()->getId(), profileA);
+
+  inputService.setLightColor(profileA, 0xFF8000);
+
+  EXPECT_TRUE(padA->hasReceivedLightColor());
+  EXPECT_EQ(padA->getLastLightColor(), 0xFF8000u);
+  EXPECT_FALSE(padB->hasReceivedLightColor());
+
+  inputService.setLightColor(profileA, std::nullopt);
+
+  EXPECT_FALSE(padA->getLastLightColor().has_value());
+  EXPECT_FALSE(padB->hasReceivedLightColor());
+}
+
+TEST_F(InputServiceImplTest, AProfileWithNoControllerTouchesNothing) {
+  input::SDLInputService inputService(m_repo);
+  auto pad = std::make_shared<input::TestGamepad>(1);
+  inputService.addGamepad(pad);
+  ASSERT_TRUE(pad->getProfile());
+
+  inputService.setRumbleScale(pad->getProfile()->getId() + 100, 10);
+  inputService.setLightColor(pad->getProfile()->getId() + 100, 0x00FF00);
+
+  EXPECT_FALSE(pad->getLastRumbleScale().has_value());
+  EXPECT_FALSE(pad->hasReceivedLightColor());
+}
+
+TEST_F(InputServiceImplTest, TheGameOverrideProfileIsTargetedWhileTheGameContextIsApplied) {
+  input::SDLInputService inputService(m_repo);
+  const auto overrideProfile = m_repo.createProfile("GameOverride");
+  ASSERT_TRUE(overrideProfile);
+  m_repo.setGameProfileOverride("hashX", overrideProfile->getId());
+
+  auto pad = std::make_shared<input::TestGamepad>(1);
+  inputService.addGamepad(pad);
+  ASSERT_TRUE(pad->getProfile());
+  const auto deviceDefaultId = pad->getProfile()->getId();
+  ASSERT_NE(deviceDefaultId, overrideProfile->getId());
+
+  inputService.applyGameContext("hashX", -1);
+  inputService.setRumbleScale(deviceDefaultId, 30);
+  inputService.setLightColor(deviceDefaultId, 0x00FF00);
+
+  EXPECT_FALSE(pad->getLastRumbleScale().has_value());
+  EXPECT_FALSE(pad->hasReceivedLightColor());
+
+  inputService.setRumbleScale(overrideProfile->getId(), 60);
+  inputService.setLightColor(overrideProfile->getId(), 0x0000FF);
+
+  EXPECT_EQ(pad->getLastRumbleScale(), 60);
+  EXPECT_EQ(pad->getLastLightColor(), 0x0000FFu);
+
+  inputService.clearGameContext();
+  inputService.setRumbleScale(overrideProfile->getId(), 10);
+
+  EXPECT_EQ(pad->getLastRumbleScale(), 60);
+
+  inputService.setRumbleScale(deviceDefaultId, 20);
+
+  EXPECT_EQ(pad->getLastRumbleScale(), 20);
+}
+
+TEST_F(InputServiceImplTest, TheKeyboardIsNotTargeted) {
+  input::SDLInputService inputService(m_repo);
+  auto keyboard = std::make_shared<input::TestGamepad>(-2);
+  inputService.setKeyboard(keyboard);
+  auto pad = std::make_shared<input::TestGamepad>(1);
+  inputService.addGamepad(pad);
+  ASSERT_TRUE(keyboard->getProfile());
+  ASSERT_TRUE(pad->getProfile());
+  const auto profileId = pad->getProfile()->getId();
+  ASSERT_EQ(keyboard->getProfile()->getId(), profileId);
+
+  inputService.setRumbleScale(profileId, 50);
+  inputService.setLightColor(profileId, 0xFF0000);
+
+  EXPECT_EQ(pad->getLastRumbleScale(), 50);
+  EXPECT_TRUE(pad->hasReceivedLightColor());
+  EXPECT_FALSE(keyboard->getLastRumbleScale().has_value());
+  EXPECT_FALSE(keyboard->hasReceivedLightColor());
+}
+
+TEST_F(InputServiceImplTest, ScaleRumbleScalesByAClampedPercent) {
+  using input::SdlController;
+
+  EXPECT_EQ(SdlController::scaleRumble(65535, 100), 65535);
+  EXPECT_EQ(SdlController::scaleRumble(65535, 50), 32767);
+  EXPECT_EQ(SdlController::scaleRumble(40000, 25), 10000);
+  EXPECT_EQ(SdlController::scaleRumble(40000, 0), 0);
+  EXPECT_EQ(SdlController::scaleRumble(0, 100), 0);
+  EXPECT_EQ(SdlController::scaleRumble(40000, 150), 40000);
+  EXPECT_EQ(SdlController::scaleRumble(40000, -20), 0);
+}
+
+TEST_F(InputServiceImplTest, PlayerLightColorFollowsSdlsPlayerTable) {
+  using input::SdlController;
+
+  EXPECT_EQ(SdlController::playerLightColor(0), 0x000040u);
+  EXPECT_EQ(SdlController::playerLightColor(1), 0x400000u);
+  EXPECT_EQ(SdlController::playerLightColor(2), 0x004000u);
+  EXPECT_EQ(SdlController::playerLightColor(3), 0x200020u);
+  EXPECT_EQ(SdlController::playerLightColor(4), 0x201000u);
+  EXPECT_EQ(SdlController::playerLightColor(5), 0x001010u);
+  EXPECT_EQ(SdlController::playerLightColor(6), 0x101010u);
+  EXPECT_EQ(SdlController::playerLightColor(7), 0x000040u);
+  EXPECT_EQ(SdlController::playerLightColor(8), 0x400000u);
+  EXPECT_EQ(SdlController::playerLightColor(-1), 0x000040u);
+}
+
 } // namespace firelight::db

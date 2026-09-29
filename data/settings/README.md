@@ -1,3 +1,4 @@
+<!-- TODO: NEEDS REVIEW -->
 # The settings catalog
 
 Every setting Firelight has, declared once. The catalog is read at startup from this folder — every
@@ -29,6 +30,12 @@ field. A friendly setting with a 'mapping' drives one or more core options ('val
 friendly value -> core value; omit for identity, and omit 'mapping' entirely when the setting's
 own key IS the core option key). 'visibleWhen'/'enabledWhen' gate a setting on other settings'
 values (clauses AND-ed; a clause holds when the named setting is one of 'values').
+
+'controller' settings belong to a controller's input profile: every controller using that profile
+shares the value, and each profile can have a per-game value that wins while that game runs. Like
+'app' settings they take no 'mapping'. Search leaves them out, because they need a controller to
+edit. Render their group with `SettingsGroup { group: "..."; profileId: ... }`, adding
+`level: SettingsLevel.Game` and a `contentHash` to edit the per-game value.
 
 ## Pages, groups and ordering
 

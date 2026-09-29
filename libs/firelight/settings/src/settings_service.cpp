@@ -69,6 +69,33 @@ bool SettingsService::resetGameValue(const std::string &contentHash, const std::
   return result;
 }
 
+std::optional<std::string> SettingsService::getControllerValue(const std::string &contentHash, const int profileId,
+                                                               const std::string &key) {
+  return m_settingsRepo.getControllerValue(contentHash, profileId, key);
+}
+
+bool SettingsService::setControllerValue(const std::string &contentHash, const int profileId, const std::string &key,
+                                         const std::string &value) {
+  const auto result = m_settingsRepo.setControllerValue(contentHash, profileId, key, value);
+  if (result) {
+    EventDispatcher::instance().publish(
+        ControllerSettingChangedEvent{.profileId = profileId, .contentHash = contentHash, .key = key, .value = value});
+  }
+
+  return result;
+}
+
+bool SettingsService::resetControllerValue(const std::string &contentHash, const int profileId,
+                                           const std::string &key) {
+  const auto result = m_settingsRepo.resetControllerValue(contentHash, profileId, key);
+  if (result) {
+    EventDispatcher::instance().publish(
+        ControllerSettingResetEvent{.profileId = profileId, .contentHash = contentHash, .key = key});
+  }
+
+  return result;
+}
+
 bool SettingsService::setValueAtLevel(SettingsLevel level, const std::string &contentHash, int platformId,
                                       const std::string &key, const std::string &value) {
   switch (level) {
@@ -125,6 +152,21 @@ std::optional<std::string> SettingsService::getGlobalEffectiveValue(const std::s
   }
 
   return getGlobalValue(key);
+}
+
+std::optional<std::string> SettingsService::getControllerEffectiveValue(const std::string &contentHash,
+                                                                        const int profileId, const std::string &key) {
+  if (const auto it = m_sessionOverrides.find(key); it != m_sessionOverrides.end()) {
+    return it->second;
+  }
+
+  if (!contentHash.empty()) {
+    if (auto v = getControllerValue(contentHash, profileId, key)) {
+      return v;
+    }
+  }
+
+  return getControllerValue({}, profileId, key);
 }
 
 void SettingsService::setSessionOverride(const std::string &key, const std::string &value) {

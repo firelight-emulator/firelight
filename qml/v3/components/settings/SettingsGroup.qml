@@ -12,8 +12,11 @@ import Firelight 1.0
 // falls through to a dropdown. That invariant is the whole reason this is the
 // only place settings are rendered
 //
-// `level`/`platformId`/`contentHash` only matter for emulation settings; app
-// settings in the group ignore them and always use the global tier
+// TODO
+// `level`/`platformId`/`contentHash` pick the tier for emulation settings; app
+// settings in the group ignore them and always use the global tier. Controller
+// settings follow `profileId`, and `level: SettingsLevel.Game` with a
+// `contentHash` edits that game's value
 SettingsSection {
     id: root
 
@@ -22,6 +25,7 @@ SettingsSection {
     property int level: SettingsLevel.Global
     property var platformId: -1
     property var contentHash: ""
+    property int profileId: -1
 
     title: settingsModel.groupLabel
 
@@ -41,6 +45,7 @@ SettingsSection {
         level: root.level
         platformId: root.platformId
         contentHash: root.contentHash
+        profileId: root.profileId
         showAdvanced: GeneralSettings.showAdvancedSettings
     }
 

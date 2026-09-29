@@ -15,6 +15,7 @@
 #include "app/emulation/shortcut_dispatcher.hpp"
 #include "app/emulator_item.hpp"
 #include "app/firelight_application.hpp"
+#include "app/input/controller_settings_applier.hpp"
 #include "app/input/gui/analog_settings_model.hpp"
 #include "app/input/gui/binding_list_model.hpp"
 #include "app/input/gui/controller_list_model.hpp"
@@ -132,7 +133,6 @@
 #include <QQmlNetworkAccessManagerFactory>
 #include <QQuickGraphicsConfiguration>
 #include <QQuickWindow>
-#include <rhi/qrhi.h>
 #include <QTimer>
 #include <QWindow>
 #include <QtConcurrent>
@@ -142,6 +142,7 @@
 #include <input/gui/input_mappings_model.hpp>
 #include <qstandardpaths.h>
 #include <rcheevos/ra_client.hpp>
+#include <rhi/qrhi.h>
 #include <saves/gui/save_files_item.hpp>
 #include <set>
 #include <spdlog/spdlog.h>
@@ -425,6 +426,7 @@ int main(int argc, char *argv[]) {
   }
 
   firelight::input::InputSettingsApplier inputSettingsApplier(inputService, settingsService);
+  firelight::input::ControllerSettingsApplier controllerSettingsApplier(inputService, settingsService);
 
   // TODO
   // Applied here rather than with the rest of the format, because the settings are not open that
@@ -718,13 +720,18 @@ int main(int argc, char *argv[]) {
     overrides.insert(overrides.end(), cliOptions.sets.begin(), cliOptions.sets.end());
 
     if (!overrides.empty()) {
-      // Known friendly keys (common + every core's friendly settings) for a
+      // Known friendly keys (common + controller + every core's friendly settings) for a
       // typo warning. Raw core option keys can't be listed here, so unknown
       // keys are still applied (they may be valid advanced core options)
       std::set<std::string> knownKeys;
       for (const auto &s : SettingsCatalog::instance().commonSettings()) {
         knownKeys.insert(s.key);
       }
+
+      for (const auto &s : SettingsCatalog::instance().controllerSettings()) {
+        knownKeys.insert(s.key);
+      }
+
       for (const auto &core : firelight::CoreRegistry::instance().cores()) {
         for (const auto &s : SettingsCatalog::instance().coreSpecificSettings(core.id)) {
           knownKeys.insert(s.key);

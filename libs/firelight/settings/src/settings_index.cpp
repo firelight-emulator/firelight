@@ -43,6 +43,10 @@ void SettingsIndex::rebuild(const SettingsCatalog &catalog) {
   }
 
   for (const auto *setting : catalog.allSettings()) {
+    if (catalog.isControllerSetting(setting->key)) {
+      continue;
+    }
+
     const auto *group = catalog.findGroupForSetting(setting->key);
     const auto *page = group ? catalog.findPageForGroup(group->id) : nullptr;
 

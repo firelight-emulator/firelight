@@ -72,6 +72,12 @@ SettingsModel::SettingsModel(QObject *parent) : QAbstractListModel(parent) {
         onMatch(e.contentHash == m_contentHash.toStdString(), e.key);
       });
 
+  m_controllerSettingChangedConnection = EventDispatcher::instance().subscribe<ControllerSettingChangedEvent>(
+      [this, onMatch](const ControllerSettingChangedEvent &e) { onMatch(e.profileId == m_profileId, e.key); });
+
+  m_controllerSettingResetConnection = EventDispatcher::instance().subscribe<ControllerSettingResetEvent>(
+      [this, onMatch](const ControllerSettingResetEvent &e) { onMatch(e.profileId == m_profileId, e.key); });
+
   // An audio-device row's options are the machine's outputs, so plugging in
   // headphones has to rebuild them
   m_mediaDevices = new QMediaDevices(this);
@@ -111,6 +117,7 @@ void SettingsModel::rebuildItems() {
     item.requiresRestart = setting.requiresRestart;
     item.advanced = setting.advanced;
     item.appScope = catalog.isAppSetting(setting.key);
+    item.controllerScope = catalog.isControllerSetting(setting.key);
     item.visibleWhen = setting.visibleWhen;
     item.enabledWhen = setting.enabledWhen;
     item.subItemOverride = setting.subItem;
@@ -195,6 +202,28 @@ QVector<QVariantHash> SettingsModel::buildGameOptions(const SettingDefinition &s
 }
 
 bool SettingsModel::overridesInheritedValue(const Item &item) const {
+  if (item.controllerScope) {
+    if (!m_settingsService || m_profileId <= 0) {
+      return false;
+    }
+
+    const auto key = item.key.toStdString();
+    const auto hash = controllerTierHash();
+    const auto stored = m_settingsService->getControllerValue(hash, m_profileId, key);
+    if (!stored) {
+      return false;
+    }
+
+    // TODO
+    // The game tier inherits the profile's own value; the profile's own value inherits the default
+    std::optional<std::string> inherited;
+    if (!hash.empty()) {
+      inherited = m_settingsService->getControllerValue({}, m_profileId, key);
+    }
+
+    return stored != inherited.value_or(item.defaultValue.toStdString());
+  }
+
   // Reset means "clear this tier's override and go back to what I inherit", so
   // it only means something at a tier with one beneath it. The global tier and
   // app settings are the base: there's nothing below to fall back to, so no
@@ -234,6 +263,10 @@ SettingsLevel SettingsModel::levelFor(const Item &item) const {
 }
 
 bool SettingsModel::canResolve(const Item &item) const {
+  if (item.controllerScope) {
+    return m_settingsService != nullptr && m_profileId > 0;
+  }
+
   if (item.appScope) {
     return m_settingsService != nullptr;
   }
@@ -260,6 +293,11 @@ std::optional<std::string> SettingsModel::resolveValue(const std::string &key, c
   if (!m_settingsService) {
     return std::nullopt;
   }
+
+  if (SettingsCatalog::instance().isControllerSetting(key)) {
+    return resolveControllerValue(key);
+  }
+
   const auto hash = m_contentHash.toStdString();
   if (level <= Game) {
     if (auto v = m_settingsService->getValueAtLevel(Game, hash, m_platformId, key)) {
@@ -275,6 +313,25 @@ std::optional<std::string> SettingsModel::resolveValue(const std::string &key, c
     return v;
   }
   return std::nullopt;
+}
+
+std::string SettingsModel::controllerTierHash() const {
+  return m_level == Game ? m_contentHash.toStdString() : std::string{};
+}
+
+std::optional<std::string> SettingsModel::resolveControllerValue(const std::string &key) const {
+  if (!m_settingsService || m_profileId <= 0) {
+    return std::nullopt;
+  }
+
+  const auto hash = controllerTierHash();
+  if (!hash.empty()) {
+    if (auto v = m_settingsService->getControllerValue(hash, m_profileId, key)) {
+      return v;
+    }
+  }
+
+  return m_settingsService->getControllerValue({}, m_profileId, key);
 }
 
 std::string SettingsModel::currentValueOf(const std::string &key) const {
@@ -353,6 +410,18 @@ void SettingsModel::setPlatformId(const int platformId) {
   m_platformId = platformId;
   emit platformIdChanged();
   rebuildItems();
+}
+
+int SettingsModel::getProfileId() const { return m_profileId; }
+
+void SettingsModel::setProfileId(const int profileId) {
+  if (profileId == m_profileId) {
+    return;
+  }
+
+  m_profileId = profileId;
+  emit profileIdChanged();
+  refreshValues();
 }
 
 int SettingsModel::getLevel() const { return m_level; }
@@ -492,8 +561,14 @@ bool SettingsModel::setData(const QModelIndex &index, const QVariant &value, con
     item.stringValue = stringValue;
   }
 
-  m_settingsService->setValueAtLevel(levelFor(item), m_contentHash.toStdString(), m_platformId, item.key.toStdString(),
-                                     stringValue.toStdString());
+  if (item.controllerScope) {
+    m_settingsService->setControllerValue(controllerTierHash(), m_profileId, item.key.toStdString(),
+                                          stringValue.toStdString());
+  } else {
+    m_settingsService->setValueAtLevel(levelFor(item), m_contentHash.toStdString(), m_platformId,
+                                       item.key.toStdString(), stringValue.toStdString());
+  }
+
   item.resettable = overridesInheritedValue(item);
   emit dataChanged(index, index, {ValueRole, ResettableRole});
   // A change here can flip the visibility/enablement of dependent settings
@@ -512,7 +587,12 @@ void SettingsModel::resetValue(int row) {
   }
 
   const auto level = levelFor(item);
-  m_settingsService->resetValueAtLevel(level, m_contentHash.toStdString(), m_platformId, item.key.toStdString());
+  if (item.controllerScope) {
+    m_settingsService->resetControllerValue(controllerTierHash(), m_profileId, item.key.toStdString());
+  } else {
+    m_settingsService->resetValueAtLevel(level, m_contentHash.toStdString(), m_platformId, item.key.toStdString());
+  }
+
   const auto resolved = resolveValue(item.key.toStdString(), level);
   setItemValue(row, item, resolved.value_or(item.defaultValue.toStdString()));
   item.resettable = false;
@@ -524,6 +604,12 @@ void SettingsModel::refreshValues() {
   for (int i = 0; i < m_items.size(); ++i) {
     auto &item = m_items[i];
     if (!canResolve(item)) {
+      // A controller row with no controller shows its default
+      if (item.controllerScope) {
+        setItemValue(i, item, item.defaultValue.toStdString());
+        item.resettable = false;
+      }
+
       continue;
     }
     const auto level = levelFor(item);

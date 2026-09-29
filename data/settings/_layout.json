@@ -249,6 +249,14 @@
       ]
     },
     {
+      "id": "controller-rumble-lights",
+      "label": "Rumble & lights",
+      "settings": [
+        "rumble-strength",
+        "light-bar-color"
+      ]
+    },
+    {
       "id": "system-general",
       "label": "General",
       "settings": [

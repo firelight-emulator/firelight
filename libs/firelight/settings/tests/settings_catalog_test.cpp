@@ -586,9 +586,7 @@ namespace {
 // A folder of catalog files that cleans up after itself, so each case gets its own
 class TempCatalog {
 public:
-  TempCatalog() : m_root(std::filesystem::temp_directory_path() / uniqueName()) {
-    create_directories(m_root);
-  }
+  TempCatalog() : m_root(std::filesystem::temp_directory_path() / uniqueName()) { create_directories(m_root); }
 
   ~TempCatalog() {
     std::error_code ec;
@@ -631,7 +629,9 @@ public:
   LogCapture(const LogCapture &) = delete;
   LogCapture &operator=(const LogCapture &) = delete;
 
-  [[nodiscard]] bool contains(const std::string &needle) const { return m_stream.str().find(needle) != std::string::npos; }
+  [[nodiscard]] bool contains(const std::string &needle) const {
+    return m_stream.str().find(needle) != std::string::npos;
+  }
 
   [[nodiscard]] std::string text() const { return m_stream.str(); }
 
@@ -771,6 +771,166 @@ TEST(CatalogDirectoryTest, ACollidingCoreDefaultWarns) {
   ASSERT_TRUE(c.loadFromDirectory(dir.path()));
 
   EXPECT_TRUE(log.contains("is declared twice")) << "a conflicting core default loaded silently: " << log.text();
+}
+
+namespace {
+const char *CONTROLLER_JSON = R"JSON(
+{
+  "groups": [
+    {"id": "rumble-lights", "label": "Rumble & lights", "settings": ["rumble-strength", "light-bar-color"]}
+  ],
+  "app": [
+    {"key": "prioritize-controller", "label": "Prioritize controller", "type": "boolean", "default": "true"}
+  ],
+  "common": [
+    {"key": "rewind-enabled", "label": "Rewind", "type": "boolean", "default": "true"}
+  ],
+  "controller": [
+    {"key": "rumble-strength", "label": "Rumble strength",
+     "type": "slider", "min": 0, "max": 100, "step": 5, "default": "100"},
+    {"key": "light-bar-color", "label": "Light bar colour", "type": "color", "default": ""}
+  ]
+}
+)JSON";
+} // namespace
+
+TEST(SettingsCatalogControllerTest, ParsesTheControllerArray) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromJson(CONTROLLER_JSON));
+
+  ASSERT_EQ(c.controllerSettings().size(), 2u);
+
+  const auto *rumble = find(c.controllerSettings(), "rumble-strength");
+  ASSERT_NE(rumble, nullptr);
+  EXPECT_EQ(rumble->type, SettingType::INTEGER);
+  EXPECT_EQ(rumble->widget, "slider");
+  EXPECT_EQ(rumble->minValue, 0.0);
+  EXPECT_EQ(rumble->maxValue, 100.0);
+  EXPECT_EQ(rumble->stepValue, 5.0);
+  EXPECT_EQ(rumble->defaultValue, "100");
+
+  const auto *lightBar = find(c.controllerSettings(), "light-bar-color");
+  ASSERT_NE(lightBar, nullptr);
+  EXPECT_EQ(lightBar->type, SettingType::STRING);
+  EXPECT_EQ(lightBar->widget, "color");
+  EXPECT_EQ(lightBar->defaultValue, "");
+
+  EXPECT_EQ(c.findByKey("rumble-strength"), rumble);
+  EXPECT_EQ(c.appSettings().size(), 1u);
+  EXPECT_EQ(c.commonSettings().size(), 1u);
+}
+
+TEST(SettingsCatalogControllerTest, OnlyControllerKeysAreControllerSettings) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromJson(CONTROLLER_JSON));
+
+  EXPECT_TRUE(c.isControllerSetting("rumble-strength"));
+  EXPECT_TRUE(c.isControllerSetting("light-bar-color"));
+  EXPECT_FALSE(c.isAppSetting("rumble-strength")) << "a controller setting was read as a global app setting";
+
+  EXPECT_FALSE(c.isControllerSetting("prioritize-controller"));
+  EXPECT_FALSE(c.isControllerSetting("rewind-enabled"));
+  EXPECT_FALSE(c.isControllerSetting("nope"));
+}
+
+TEST(SettingsCatalogControllerTest, AGroupListingControllerKeysValidatesAndRendersThemInOrder) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromJson(CONTROLLER_JSON));
+
+  EXPECT_TRUE(c.validate().empty()) << "a group listing controller keys was reported as a problem";
+
+  const auto rows = c.settingsForGroup("rumble-lights");
+  ASSERT_EQ(rows.size(), 2u);
+  EXPECT_EQ(rows[0].key, "rumble-strength");
+  EXPECT_EQ(rows[1].key, "light-bar-color");
+  ASSERT_NE(c.findGroupForSetting("light-bar-color"), nullptr);
+  EXPECT_EQ(c.findGroupForSetting("light-bar-color")->id, "rumble-lights");
+}
+
+TEST(SettingsCatalogControllerTest, AllSettingsCountsControllerSettings) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromJson(CONTROLLER_JSON));
+
+  const auto all = c.allSettings();
+  EXPECT_EQ(all.size(), 4u);
+  EXPECT_TRUE(std::ranges::any_of(all, [](const SettingDefinition *s) { return s->key == "light-bar-color"; }));
+}
+
+TEST(SettingsCatalogControllerTest, ControllerSettingsDropCoreOnlyFieldsAndSayWhy) {
+  const LogCapture log;
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromJson(R"JSON(
+  {
+    "controller": [
+      {"key": "swap-sticks", "label": "Swap sticks",
+       "type": "boolean", "default": "false",
+       "trueValue": "on", "falseValue": "off",
+       "mapping": [{"coreKey": "some_core_key"}]}
+    ]
+  }
+  )JSON"));
+
+  const auto *s = find(c.controllerSettings(), "swap-sticks");
+  ASSERT_NE(s, nullptr);
+  EXPECT_TRUE(s->mapping.empty());
+  EXPECT_EQ(s->trueStringValue, "true");
+  EXPECT_EQ(s->falseStringValue, "false");
+
+  EXPECT_TRUE(log.contains("controller setting 'swap-sticks': 'mapping'")) << log.text();
+  EXPECT_TRUE(log.contains("controller setting 'swap-sticks': 'trueValue'")) << log.text();
+  EXPECT_TRUE(log.contains("controller setting 'swap-sticks': 'falseValue'")) << log.text();
+}
+
+TEST(SettingsCatalogControllerTest, AKeyDeclaredInAnotherArrayTooIsReported) {
+  const auto isReported = [](const char *json) {
+    SettingsCatalog c;
+    EXPECT_TRUE(c.loadFromJson(json));
+    return std::ranges::any_of(
+        c.validate(), [](const std::string &p) { return p.find("duplicate setting key 'dupe'") != std::string::npos; });
+  };
+
+  EXPECT_TRUE(isReported(R"JSON(
+  {
+    "app": [{"key": "dupe", "label": "A", "type": "boolean"}],
+    "controller": [{"key": "dupe", "label": "B", "type": "boolean"}]
+  })JSON"))
+      << "a key in both app and controller loaded silently";
+
+  EXPECT_TRUE(isReported(R"JSON(
+  {
+    "common": [{"key": "dupe", "label": "A", "type": "boolean"}],
+    "controller": [{"key": "dupe", "label": "B", "type": "boolean"}]
+  })JSON"))
+      << "a key in both common and controller loaded silently";
+
+  EXPECT_TRUE(isReported(R"JSON(
+  {
+    "controller": [{"key": "dupe", "label": "A", "type": "boolean"},
+                   {"key": "dupe", "label": "B", "type": "boolean"}]
+  })JSON"))
+      << "a key declared twice in controller loaded silently";
+}
+
+TEST(SettingsCatalogControllerTest, DefaultForCommonKeyIgnoresControllerSettings) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromJson(CONTROLLER_JSON));
+
+  EXPECT_EQ(c.defaultForCommonKey("rumble-strength"), "");
+  EXPECT_EQ(c.defaultForCommonKey("rewind-enabled"), "true");
+}
+
+TEST(CatalogDirectoryTest, ControllerSettingsFromAnyFileAreLoaded) {
+  const TempCatalog dir;
+  dir.write("_layout.json", R"({"groups":[{"id":"g","label":"G","settings":["a","b"]}]})");
+  dir.write("10-app.json", R"({"app":[{"key":"a","label":"A","type":"boolean","default":"true"}]})");
+  dir.write("20-controllers.json", R"({"controller":[{"key":"b","label":"B","type":"slider","default":"50"}]})");
+
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromDirectory(dir.path()));
+
+  EXPECT_EQ(c.controllerSettings().size(), 1u);
+  EXPECT_TRUE(c.isControllerSetting("b"));
+  EXPECT_TRUE(c.validate().empty());
 }
 
 } // namespace firelight::settings

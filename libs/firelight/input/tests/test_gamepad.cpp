@@ -52,4 +52,17 @@ DeviceIdentifier TestGamepad::getDeviceIdentifier() const {
   };
 }
 
+void TestGamepad::setRumbleScale(const int percent) { m_lastRumbleScale = percent; }
+
+void TestGamepad::setLightColor(const std::optional<uint32_t> rgb) {
+  m_hasReceivedLightColor = true;
+  m_lastLightColor = rgb;
+}
+
+std::optional<int> TestGamepad::getLastRumbleScale() const { return m_lastRumbleScale; }
+
+bool TestGamepad::hasReceivedLightColor() const { return m_hasReceivedLightColor; }
+
+std::optional<uint32_t> TestGamepad::getLastLightColor() const { return m_lastLightColor; }
+
 } // namespace firelight::input

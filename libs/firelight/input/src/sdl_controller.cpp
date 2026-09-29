@@ -1,6 +1,7 @@
 #include <firelight/input/sdl_controller.hpp>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 
@@ -13,6 +14,7 @@ std::shared_ptr<GamepadProfile> SdlController::getProfile() const { return m_pro
 
 void SdlController::setProfile(const std::shared_ptr<GamepadProfile> &profile) {
   m_profile = profile;
+
   // Drop any latched toggle/turbo state from the previous profile
   m_togglePrevRaw.clear();
   m_toggleLatch.clear();
@@ -29,7 +31,6 @@ SdlController::SdlController(SDL_GameController *t_controller) : m_SDLController
 }
 
 bool SdlController::evaluateBindingDigital(const Binding &binding) const {
-  // All combo modifiers must be held for the binding to be active
   for (const auto mod : binding.source.modifiers) {
     if (std::abs(evaluateMapping(static_cast<GamepadInput>(mod))) <= 16383) {
       return false;
@@ -232,16 +233,49 @@ std::string SdlController::getName() const { return {SDL_GameControllerName(m_SD
 void SdlController::setPlayerIndex(const int t_newPlayerIndex) {
   m_playerIndex = t_newPlayerIndex;
   SDL_GameControllerSetPlayerIndex(m_SDLController, t_newPlayerIndex);
+  applyLightColor();
 }
 
 int SdlController::getPlayerIndex() const { return m_playerIndex; }
 
 void SdlController::setStrongRumble(int platformId, const uint16_t t_strength) {
-  SDL_JoystickRumble(m_SDLJoystick, 0, t_strength, 2000);
+  SDL_JoystickRumble(m_SDLJoystick, 0, scaleRumble(t_strength, m_rumblePercent), 2000);
 }
 
 void SdlController::setWeakRumble(int platformId, const uint16_t t_strength) {
-  SDL_JoystickRumble(m_SDLJoystick, t_strength, 0, 2000);
+  SDL_JoystickRumble(m_SDLJoystick, scaleRumble(t_strength, m_rumblePercent), 0, 2000);
+}
+
+void SdlController::setRumbleScale(const int percent) { m_rumblePercent = percent; }
+
+void SdlController::setLightColor(const std::optional<uint32_t> rgb) {
+  m_lightColor = rgb.has_value() ? static_cast<int64_t>(*rgb & 0xFFFFFF) : PLAYER_LIGHT_COLOR;
+  applyLightColor();
+}
+
+uint16_t SdlController::scaleRumble(const uint16_t strength, const int percent) {
+  return static_cast<uint16_t>(static_cast<uint32_t>(strength) * std::clamp(percent, 0, 100) / 100);
+}
+
+uint32_t SdlController::playerLightColor(const int playerIndex) {
+  // Blue, red, green, pink, orange, teal, white
+  static constexpr std::array<uint32_t, 7> PLAYER_COLORS = {0x000040, 0x400000, 0x004000, 0x200020,
+                                                            0x201000, 0x001010, 0x101010};
+  if (playerIndex < 0) {
+    return PLAYER_COLORS[0];
+  }
+
+  return PLAYER_COLORS[playerIndex % PLAYER_COLORS.size()];
+}
+
+void SdlController::applyLightColor() {
+  if (m_SDLController == nullptr || !SDL_GameControllerHasLED(m_SDLController)) {
+    return;
+  }
+
+  const auto stored = m_lightColor.load();
+  const auto rgb = stored == PLAYER_LIGHT_COLOR ? playerLightColor(m_playerIndex) : static_cast<uint32_t>(stored);
+  SDL_GameControllerSetLED(m_SDLController, (rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
 }
 
 bool SdlController::isWired() const { return SDL_JoystickCurrentPowerLevel(m_SDLJoystick) == SDL_JOYSTICK_POWER_WIRED; }

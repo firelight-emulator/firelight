@@ -16,6 +16,7 @@ namespace firelight::settings {
 class SettingsModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
   Q_PROPERTY(int platformId READ getPlatformId WRITE setPlatformId NOTIFY platformIdChanged)
+  Q_PROPERTY(int profileId READ getProfileId WRITE setProfileId NOTIFY profileIdChanged)
   Q_PROPERTY(int level READ getLevel WRITE setLevel NOTIFY levelChanged)
   Q_PROPERTY(QString contentHash READ getContentHash WRITE setContentHash NOTIFY contentHashChanged)
   Q_PROPERTY(QString group READ getGroup WRITE setGroup NOTIFY groupChanged)
@@ -27,6 +28,12 @@ public:
 
   [[nodiscard]] int getPlatformId() const;
   void setPlatformId(int platformId);
+
+  /** The controller profile whose controller settings this model edits, or -1 for none */
+  [[nodiscard]] int getProfileId() const;
+
+  /** Sets the controller profile and re-reads the values */
+  void setProfileId(int profileId);
 
   [[nodiscard]] QString getGroup() const;
   void setGroup(const QString &group);
@@ -48,11 +55,15 @@ public:
   [[nodiscard]] Qt::ItemFlags flags(const QModelIndex &index) const override;
   bool setData(const QModelIndex &index, const QVariant &value, int role) override;
 
-  // Resets the value of the row so it inherits the value from platform or global
+  // Resets the value of the row so it inherits the value from the tier beneath it
   Q_INVOKABLE void resetValue(int row);
 
 signals:
   void platformIdChanged();
+
+  /** The controller profile changed */
+  void profileIdChanged();
+
   void levelChanged();
   void contentHashChanged();
   void groupChanged();
@@ -90,7 +101,7 @@ private:
     QString widget; // UI control id: toggle / dropdown / slider / spinbox / ...
 
     bool isBoolean = false;
-    QString stringValue; // effective value (string form)
+    QString stringValue;   // effective value (string form)
     bool boolValue = true; // effective value (for boolean settings)
     QString trueValue = "true";
     QString falseValue = "false";
@@ -108,13 +119,14 @@ private:
     QString route;              // link widget: where the row goes
 
     // Reset clears this tier's override so the row falls back to what it
-    // inherits. Only matters for game and platform settings
+    // inherits. Only matters for game, platform and controller settings
     bool resettable = false;
     bool subItem = false;
     bool visible = true;
     bool enabled = true;
     bool advanced = false; // hidden unless "Show advanced settings" is on
     bool appScope = false;
+    bool controllerScope = false;
     std::vector<SettingCondition> visibleWhen;
     std::vector<SettingCondition> enabledWhen;
     std::optional<bool> subItemOverride;
@@ -145,6 +157,12 @@ private:
 
   [[nodiscard]] std::optional<std::string> resolveValue(const std::string &key, SettingsLevel level) const;
 
+  /** The content hash of the controller tier this model edits, empty for the profile's own tier */
+  [[nodiscard]] std::string controllerTierHash() const;
+
+  /** A controller setting's value at the tier this model edits, falling back to the profile's own value */
+  [[nodiscard]] std::optional<std::string> resolveControllerValue(const std::string &key) const;
+
   [[nodiscard]] std::string currentValueOf(const std::string &key) const;
 
   SettingsService *m_settingsService = SettingsService::instance();
@@ -155,10 +173,13 @@ private:
   ScopedConnection m_globalSettingResetConnection;
   ScopedConnection m_platformSettingResetConnection;
   ScopedConnection m_gameSettingResetConnection;
+  ScopedConnection m_controllerSettingChangedConnection;
+  ScopedConnection m_controllerSettingResetConnection;
 
   QString m_contentHash;
   QString m_group;
   int m_platformId = -1;
+  int m_profileId = -1;
   SettingsLevel m_level = Unknown;
   bool m_showAdvanced = false;
 

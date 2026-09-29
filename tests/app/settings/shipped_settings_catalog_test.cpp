@@ -96,10 +96,10 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheAppearanceFacadeBinds) {
   SettingsCatalog c;
   ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
 
-  const std::vector<std::string> facadeKeys = {"accent-color",       "background-mode", "background-color",
-                                               "background-color-2", "background-file", "background-blur",
-                                               "background-dim",     "theme-intensity", "glass-opacity",
-                                               "library-icon-grid-tile-size",  "interface-scale", "interface-density"};
+  const std::vector<std::string> facadeKeys = {
+      "accent-color",    "background-mode",  "background-color", "background-color-2", "background-file",
+      "background-blur", "background-dim",   "theme-intensity",  "glass-opacity",      "library-icon-grid-tile-size",
+      "interface-scale", "interface-density"};
 
   for (const auto &key : facadeKeys) {
     const auto *setting = c.findByKey(key);
@@ -132,6 +132,33 @@ TEST(ShippedSettingsCatalogTest, DeclaresEveryKeyTheGeneralFacadeBinds) {
     EXPECT_TRUE(c.isAppSetting(key)) << "'" << key << "' must be an app setting: the facade reads the global tier only";
     EXPECT_FALSE(setting->defaultValue.empty()) << "'" << key << "' has no default, so the facade would start empty";
   }
+}
+
+TEST(ShippedSettingsCatalogTest, DeclaresTheControllerKeys) {
+  SettingsCatalog c;
+  ASSERT_TRUE(c.loadFromDirectory(FL_SETTINGS_CATALOG_DIR));
+
+  const auto *rumble = c.findByKey("rumble-strength");
+  ASSERT_NE(rumble, nullptr);
+  EXPECT_TRUE(c.isControllerSetting("rumble-strength"));
+  EXPECT_EQ(rumble->type, SettingType::INTEGER);
+  EXPECT_EQ(rumble->widget, "slider");
+  EXPECT_EQ(rumble->minValue, 0);
+  EXPECT_EQ(rumble->maxValue, 100);
+  EXPECT_EQ(rumble->stepValue, 5);
+  EXPECT_EQ(rumble->defaultValue, "100");
+
+  const auto *light = c.findByKey("light-bar-color");
+  ASSERT_NE(light, nullptr);
+  EXPECT_TRUE(c.isControllerSetting("light-bar-color"));
+  EXPECT_EQ(light->type, SettingType::STRING);
+  EXPECT_EQ(light->widget, "color");
+  EXPECT_TRUE(light->defaultValue.empty());
+  EXPECT_FALSE(light->options.empty());
+
+  const auto *group = c.findGroup("controller-rumble-lights");
+  ASSERT_NE(group, nullptr);
+  EXPECT_EQ(group->settingKeys, (std::vector<std::string>{"rumble-strength", "light-bar-color"}));
 }
 
 TEST(ShippedSettingsCatalogTest, DeclaresTheVariantOrderingKeys) {

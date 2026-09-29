@@ -26,5 +26,60 @@
       "type": "link",
       "route": "/controllers/configure"
     }
+  ],
+  "controller": [
+    {
+      "key": "rumble-strength",
+      "label": "Rumble strength",
+      "description": "How strongly the controller vibrates, as a percentage of what the game asks for.",
+      "keywords": [
+        "vibration",
+        "haptics",
+        "force feedback"
+      ],
+      "type": "slider",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": "100"
+    },
+    {
+      "key": "light-bar-color",
+      "label": "Light bar colour",
+      "description": "The colour of the light bar on controllers that have one. When unset, it shows the player colour.",
+      "keywords": [
+        "led",
+        "light",
+        "color"
+      ],
+      "type": "color",
+      "default": "",
+      "options": [
+        {
+          "label": "Red",
+          "value": "#ff0000"
+        },
+        {
+          "label": "Orange",
+          "value": "#ff8000"
+        },
+        {
+          "label": "Green",
+          "value": "#00ff00"
+        },
+        {
+          "label": "Blue",
+          "value": "#0000ff"
+        },
+        {
+          "label": "Purple",
+          "value": "#8000ff"
+        },
+        {
+          "label": "White",
+          "value": "#ffffff"
+        }
+      ]
+    }
   ]
 }

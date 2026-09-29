@@ -59,6 +59,28 @@ void SDLInputService::setHotkeysEnabled(const bool enabled, const std::optional<
 
 void SDLInputService::setShortcutContext(const int scope) { m_shortcutEngine.setContext(scope); }
 
+void SDLInputService::setRumbleScale(const int profileId, const int percent) {
+  forEachGamepadUsingProfile(profileId, [percent](IGamepad &gamepad) { gamepad.setRumbleScale(percent); });
+}
+
+void SDLInputService::setLightColor(const int profileId, const std::optional<uint32_t> rgb) {
+  forEachGamepadUsingProfile(profileId, [rgb](IGamepad &gamepad) { gamepad.setLightColor(rgb); });
+}
+
+void SDLInputService::forEachGamepadUsingProfile(const int profileId, const std::function<void(IGamepad &)> &apply) {
+  std::shared_lock lock(m_devicesMutex);
+  for (const auto &gamepad : m_gamepads) {
+    if (!gamepad) {
+      continue;
+    }
+
+    const auto profile = gamepad->getProfile();
+    if (profile && profile->getId() == profileId) {
+      apply(*gamepad);
+    }
+  }
+}
+
 SDLInputService::~SDLInputService() {
   if (m_running) {
     stop();

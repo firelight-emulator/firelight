@@ -651,4 +651,253 @@ TEST_F(SettingsModelTest, GamePickerWithoutLibraryHasOnlyNone) {
   EXPECT_EQ(options[0].toHash().value("label").toString(), "None");
 }
 
+namespace {
+// Two controller settings and an app setting sharing one group
+const char *CONTROLLER_CATALOG = R"JSON(
+{
+  "groups": [
+    {"id": "pad", "label": "Rumble & lights",
+     "settings": ["rumble-strength", "light-bar-color", "pad-app"]}
+  ],
+  "app": [
+    {"key": "pad-app", "label": "App setting", "type": "boolean", "default": "false"}
+  ],
+  "controller": [
+    {"key": "rumble-strength", "label": "Rumble strength",
+     "type": "slider", "min": 0, "max": 100, "step": 5, "default": "100"},
+    {"key": "light-bar-color", "label": "Light bar colour", "type": "color", "default": ""}
+  ]
+}
+)JSON";
+
+constexpr int PROFILE_ID = 7;
+constexpr int OTHER_PROFILE_ID = 8;
+} // namespace
+
+/** SettingsModel rows declared in the catalog's controller array */
+class SettingsModelControllerTest : public SettingsModelTest {
+protected:
+  void SetUp() override {
+    SettingsService::setInstance(&m_service);
+    ASSERT_TRUE(SettingsCatalog::instance().loadFromJson(CONTROLLER_CATALOG));
+  }
+
+  /** Points a model at the controller group for one profile, at the profile's own tier */
+  static void showProfile(SettingsModel &model, const int profileId) {
+    model.setGroup("pad");
+    model.setLevel(Global);
+    model.setProfileId(profileId);
+  }
+
+  /** Points a model at the controller group for one profile and one game */
+  static void showGame(SettingsModel &model, const int profileId, const QString &contentHash) {
+    model.setGroup("pad");
+    model.setContentHash(contentHash);
+    model.setLevel(Game);
+    model.setProfileId(profileId);
+  }
+};
+
+TEST_F(SettingsModelControllerTest, ExposesTheSliderAndColorWidgets) {
+  SettingsModel model;
+  showProfile(model, PROFILE_ID);
+  ASSERT_EQ(model.rowCount({}), 3);
+
+  const int rumble = findRow(model, "rumble-strength");
+  ASSERT_NE(rumble, -1);
+  EXPECT_EQ(value(model, rumble, "widget").toString(), "slider");
+  EXPECT_DOUBLE_EQ(value(model, rumble, "minimumValue").toDouble(), 0.0);
+  EXPECT_DOUBLE_EQ(value(model, rumble, "maximumValue").toDouble(), 100.0);
+  EXPECT_DOUBLE_EQ(value(model, rumble, "stepValue").toDouble(), 5.0);
+  EXPECT_EQ(value(model, rumble, "defaultValue").toString(), "100");
+
+  const int light = findRow(model, "light-bar-color");
+  ASSERT_NE(light, -1);
+  EXPECT_EQ(value(model, light, "widget").toString(), "color");
+  EXPECT_EQ(value(model, light, "defaultValue").toString(), "");
+  EXPECT_EQ(value(model, light, "value").toString(), "");
+}
+
+TEST_F(SettingsModelControllerTest, ShowsTheDefaultThenTheStoredValue) {
+  SettingsModel model;
+  showProfile(model, PROFILE_ID);
+
+  const int row = findRow(model, "rumble-strength");
+  ASSERT_NE(row, -1);
+  EXPECT_EQ(value(model, row, "value").toString(), "100");
+  EXPECT_FALSE(value(model, row, "resettable").toBool());
+
+  ASSERT_TRUE(m_service.setControllerValue("", PROFILE_ID, "rumble-strength", "40"));
+  EXPECT_EQ(value(model, row, "value").toString(), "40");
+  EXPECT_TRUE(value(model, row, "resettable").toBool());
+
+  SettingsModel fresh;
+  showProfile(fresh, PROFILE_ID);
+  EXPECT_EQ(value(fresh, findRow(fresh, "rumble-strength"), "value").toString(), "40");
+}
+
+TEST_F(SettingsModelControllerTest, WritesTheProfileTierAtTheGlobalLevel) {
+  SettingsModel model;
+  showProfile(model, PROFILE_ID);
+
+  const int row = findRow(model, "rumble-strength");
+  ASSERT_NE(row, -1);
+  ASSERT_TRUE(model.setData(model.index(row), "50", roleFor(model, "value")));
+
+  EXPECT_EQ(m_service.getControllerValue("", PROFILE_ID, "rumble-strength").value_or(""), "50");
+  EXPECT_FALSE(m_service.getControllerValue("", OTHER_PROFILE_ID, "rumble-strength").has_value());
+  EXPECT_FALSE(m_service.getGlobalValue("rumble-strength").has_value());
+  EXPECT_EQ(value(model, row, "value").toString(), "50");
+  EXPECT_TRUE(value(model, row, "resettable").toBool());
+}
+
+TEST_F(SettingsModelControllerTest, WritesTheGameTierAtTheGameLevel) {
+  SettingsModel model;
+  showGame(model, PROFILE_ID, "abc");
+
+  const int row = findRow(model, "light-bar-color");
+  ASSERT_NE(row, -1);
+  ASSERT_TRUE(model.setData(model.index(row), "#ff0000", roleFor(model, "value")));
+
+  EXPECT_EQ(m_service.getControllerValue("abc", PROFILE_ID, "light-bar-color").value_or(""), "#ff0000");
+  EXPECT_FALSE(m_service.getControllerValue("", PROFILE_ID, "light-bar-color").has_value());
+  EXPECT_FALSE(m_service.getGameValue("abc", "light-bar-color").has_value());
+  EXPECT_EQ(value(model, row, "value").toString(), "#ff0000");
+  EXPECT_TRUE(value(model, row, "resettable").toBool());
+}
+
+TEST_F(SettingsModelControllerTest, AGameLevelWithoutAContentHashWritesTheProfileTier) {
+  SettingsModel model;
+  showGame(model, PROFILE_ID, "");
+
+  const int row = findRow(model, "rumble-strength");
+  ASSERT_NE(row, -1);
+  ASSERT_TRUE(model.setData(model.index(row), "25", roleFor(model, "value")));
+  EXPECT_EQ(m_service.getControllerValue("", PROFILE_ID, "rumble-strength").value_or(""), "25");
+}
+
+TEST_F(SettingsModelControllerTest, TheGameTierFallsBackToTheProfileValue) {
+  ASSERT_TRUE(m_service.setControllerValue("", PROFILE_ID, "rumble-strength", "60"));
+
+  SettingsModel model;
+  showGame(model, PROFILE_ID, "abc");
+  const int row = findRow(model, "rumble-strength");
+  ASSERT_NE(row, -1);
+  EXPECT_EQ(value(model, row, "value").toString(), "60");
+  EXPECT_FALSE(value(model, row, "resettable").toBool());
+
+  // TODO
+  // A game value matching the profile value is not resettable
+  ASSERT_TRUE(model.setData(model.index(row), "60", roleFor(model, "value")));
+  EXPECT_FALSE(value(model, row, "resettable").toBool());
+
+  ASSERT_TRUE(model.setData(model.index(row), "20", roleFor(model, "value")));
+  EXPECT_EQ(value(model, row, "value").toString(), "20");
+  EXPECT_TRUE(value(model, row, "resettable").toBool());
+}
+
+TEST_F(SettingsModelControllerTest, NothingIsWrittenWithoutAProfile) {
+  for (const int profileId : {-1, 0}) {
+    SettingsModel model;
+    showProfile(model, profileId);
+
+    const int row = findRow(model, "rumble-strength");
+    ASSERT_NE(row, -1);
+    EXPECT_EQ(value(model, row, "value").toString(), "100");
+    EXPECT_FALSE(model.setData(model.index(row), "10", roleFor(model, "value")));
+    EXPECT_FALSE(m_service.getControllerValue("", profileId, "rumble-strength").has_value());
+    EXPECT_FALSE(value(model, row, "resettable").toBool());
+  }
+}
+
+TEST_F(SettingsModelControllerTest, TheAppSettingAlongsideIgnoresTheProfile) {
+  SettingsModel model;
+  showProfile(model, PROFILE_ID);
+
+  const int row = findRow(model, "pad-app");
+  ASSERT_NE(row, -1);
+  ASSERT_TRUE(model.setData(model.index(row), true, roleFor(model, "value")));
+  EXPECT_EQ(m_service.getGlobalValue("pad-app").value_or(""), "true");
+  EXPECT_FALSE(m_service.getControllerValue("", PROFILE_ID, "pad-app").has_value());
+}
+
+TEST_F(SettingsModelControllerTest, ResetFallsBackToTheDefaultAtTheProfileTier) {
+  SettingsModel model;
+  showProfile(model, PROFILE_ID);
+
+  const int row = findRow(model, "light-bar-color");
+  ASSERT_NE(row, -1);
+  ASSERT_TRUE(model.setData(model.index(row), "#00ff00", roleFor(model, "value")));
+  ASSERT_TRUE(value(model, row, "resettable").toBool());
+
+  model.resetValue(row);
+  EXPECT_EQ(value(model, row, "value").toString(), "");
+  EXPECT_FALSE(value(model, row, "resettable").toBool());
+  EXPECT_FALSE(m_service.getControllerValue("", PROFILE_ID, "light-bar-color").has_value());
+}
+
+TEST_F(SettingsModelControllerTest, ResetFallsBackToTheProfileValueAtTheGameTier) {
+  ASSERT_TRUE(m_service.setControllerValue("", PROFILE_ID, "rumble-strength", "60"));
+
+  SettingsModel model;
+  showGame(model, PROFILE_ID, "abc");
+  const int row = findRow(model, "rumble-strength");
+  ASSERT_NE(row, -1);
+  ASSERT_TRUE(model.setData(model.index(row), "20", roleFor(model, "value")));
+
+  model.resetValue(row);
+  EXPECT_EQ(value(model, row, "value").toString(), "60");
+  EXPECT_FALSE(value(model, row, "resettable").toBool());
+  EXPECT_FALSE(m_service.getControllerValue("abc", PROFILE_ID, "rumble-strength").has_value());
+  EXPECT_EQ(m_service.getControllerValue("", PROFILE_ID, "rumble-strength").value_or(""), "60");
+}
+
+TEST_F(SettingsModelControllerTest, ChangingTheProfileRefreshesTheValues) {
+  ASSERT_TRUE(m_service.setControllerValue("", PROFILE_ID, "rumble-strength", "40"));
+
+  SettingsModel model;
+  showProfile(model, PROFILE_ID);
+  const int row = findRow(model, "rumble-strength");
+  ASSERT_NE(row, -1);
+  EXPECT_EQ(value(model, row, "value").toString(), "40");
+  EXPECT_TRUE(value(model, row, "resettable").toBool());
+
+  model.setProfileId(OTHER_PROFILE_ID);
+  EXPECT_EQ(model.getProfileId(), OTHER_PROFILE_ID);
+  EXPECT_EQ(findRow(model, "rumble-strength"), row);
+  EXPECT_EQ(value(model, row, "value").toString(), "100");
+  EXPECT_FALSE(value(model, row, "resettable").toBool());
+
+  model.setProfileId(PROFILE_ID);
+  EXPECT_EQ(value(model, row, "value").toString(), "40");
+
+  model.setProfileId(-1);
+  EXPECT_EQ(value(model, row, "value").toString(), "100");
+  EXPECT_FALSE(value(model, row, "resettable").toBool());
+}
+
+TEST_F(SettingsModelControllerTest, AChangeInAnotherModelRefreshesThisOne) {
+  SettingsModel editing;
+  SettingsModel watching;
+  SettingsModel inGame;
+  SettingsModel otherProfile;
+  showProfile(editing, PROFILE_ID);
+  showProfile(watching, PROFILE_ID);
+  showGame(inGame, PROFILE_ID, "abc");
+  showProfile(otherProfile, OTHER_PROFILE_ID);
+
+  const int editingRow = findRow(editing, "rumble-strength");
+  ASSERT_NE(editingRow, -1);
+  ASSERT_TRUE(editing.setData(editing.index(editingRow), "25", roleFor(editing, "value")));
+
+  EXPECT_EQ(value(watching, findRow(watching, "rumble-strength"), "value").toString(), "25");
+  EXPECT_EQ(value(inGame, findRow(inGame, "rumble-strength"), "value").toString(), "25");
+  EXPECT_EQ(value(otherProfile, findRow(otherProfile, "rumble-strength"), "value").toString(), "100");
+
+  editing.resetValue(editingRow);
+  EXPECT_EQ(value(watching, findRow(watching, "rumble-strength"), "value").toString(), "100");
+  EXPECT_FALSE(value(watching, findRow(watching, "rumble-strength"), "resettable").toBool());
+  EXPECT_EQ(value(inGame, findRow(inGame, "rumble-strength"), "value").toString(), "100");
+}
+
 } // namespace firelight::settings

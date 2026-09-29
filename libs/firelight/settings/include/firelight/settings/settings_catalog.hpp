@@ -48,6 +48,9 @@ public:
 
   [[nodiscard]] const std::vector<SettingDefinition> &commonSettings() const { return m_contents.common; }
 
+  /** Settings stored per controller profile, each with a per-game tier */
+  [[nodiscard]] const std::vector<SettingDefinition> &controllerSettings() const { return m_contents.controller; }
+
   [[nodiscard]] const std::vector<SettingDefinition> &coreSpecificSettings(const std::string &coreName) const;
 
   [[nodiscard]] const std::map<std::string, std::string> &coreDefaults(const std::string &coreName) const;
@@ -70,6 +73,9 @@ public:
   // Whether a key is an app setting (single-valued, global-tier-only)
   [[nodiscard]] bool isAppSetting(const std::string &key) const;
 
+  /** Whether a key is a controller setting */
+  [[nodiscard]] bool isControllerSetting(const std::string &key) const;
+
   // The declared default for a common (frontend) setting, or "" if the catalog doesn't define it
   [[nodiscard]] std::string defaultForCommonKey(const std::string &key) const;
 
@@ -79,6 +85,7 @@ private:
     std::vector<SettingsGroup> groups;
     std::vector<SettingDefinition> app;
     std::vector<SettingDefinition> common;
+    std::vector<SettingDefinition> controller;
     std::map<std::string, std::vector<SettingDefinition>> perCore;
     std::map<std::string, std::map<std::string, std::string>> coreDefaults;
   };
@@ -93,6 +100,7 @@ private:
     const SettingDefinition *definition = nullptr;
     std::string coreName;
     bool isApp = false;
+    bool isController = false;
   };
 
   // Appends one document to the accumulator
@@ -100,7 +108,6 @@ private:
 
   // Takes ownership, builds the lookups and logs whatever the parse and validation turned up
   bool commit(Accumulator &&accumulated);
-
 
   // Clears and rebuilds the lookup tables for pages, groups and settings by key
   void buildLookups();

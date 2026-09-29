@@ -48,15 +48,26 @@ SqliteSettingsRepository::SqliteSettingsRepository(std::string databaseFile) : m
            );
          )");
        }},
+      {2,
+       [this] {
+         m_database->exec(R"(
+           CREATE TABLE IF NOT EXISTS controller_settings (
+               profile_id INTEGER NOT NULL,
+               content_hash TEXT NOT NULL DEFAULT '',
+               key TEXT NOT NULL,
+               value TEXT,
+               PRIMARY KEY (profile_id, content_hash, key)
+           );
+         )");
+       }},
   };
 
   try {
     SQLite::Transaction transaction(*m_database);
     const int currentVersion = m_database->execAndGet("PRAGMA user_version").getInt();
 
-    applyMigrations(currentVersion, schema, [this](const int v) {
-      m_database->exec("PRAGMA user_version = " + std::to_string(v));
-    });
+    applyMigrations(currentVersion, schema,
+                    [this](const int v) { m_database->exec("PRAGMA user_version = " + std::to_string(v)); });
 
     transaction.commit();
   } catch (const std::exception &e) {
@@ -206,10 +217,66 @@ bool SqliteSettingsRepository::resetGameValue(const std::string &contentHash, co
     query.bind(":platformId", -1);
     query.bind(":key", key);
     query.exec();
-    
+
     return true;
   } catch (const std::exception &e) {
     spdlog::error("Failed to reset game value: {}", e.what());
+    return false;
+  }
+}
+
+std::optional<std::string> SqliteSettingsRepository::getControllerValue(const std::string &contentHash,
+                                                                        const int profileId, const std::string &key) {
+  try {
+    SQLite::Statement query(*m_database, "SELECT value FROM controller_settings WHERE profile_id = :profileId AND "
+                                         "content_hash = :contentHash AND key = :key");
+    query.bind(":profileId", profileId);
+    query.bind(":contentHash", contentHash);
+    query.bind(":key", key);
+
+    if (query.executeStep()) {
+      return std::string(query.getColumn(0));
+    }
+
+    return std::nullopt;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to get controller value: {}", e.what());
+    return std::nullopt;
+  }
+}
+
+bool SqliteSettingsRepository::setControllerValue(const std::string &contentHash, const int profileId,
+                                                  const std::string &key, const std::string &value) {
+  try {
+    SQLite::Statement query(*m_database, "INSERT OR REPLACE INTO controller_settings "
+                                         "(profile_id, content_hash, key, value) VALUES "
+                                         "(:profileId, :contentHash, :key, :value)");
+    query.bind(":profileId", profileId);
+    query.bind(":contentHash", contentHash);
+    query.bind(":key", key);
+    query.bind(":value", value);
+    query.exec();
+
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to set controller value: {}", e.what());
+    return false;
+  }
+}
+
+bool SqliteSettingsRepository::resetControllerValue(const std::string &contentHash, const int profileId,
+                                                    const std::string &key) {
+  try {
+    SQLite::Statement query(*m_database, "DELETE FROM controller_settings WHERE profile_id = :profileId AND "
+                                         "content_hash = :contentHash AND key = :key");
+    query.bind(":profileId", profileId);
+    query.bind(":contentHash", contentHash);
+    query.bind(":key", key);
+    query.exec();
+
+    return true;
+  } catch (const std::exception &e) {
+    spdlog::error("Failed to reset controller value: {}", e.what());
     return false;
   }
 }

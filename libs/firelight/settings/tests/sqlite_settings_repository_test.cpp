@@ -1,5 +1,6 @@
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
+#include <SQLiteCpp/Database.h>
 #include <filesystem>
 #include <gtest/gtest.h>
 
@@ -759,6 +760,140 @@ TEST_F(SqliteSettingsRepositoryTest, GetEffectiveValue_ResolutionOrder) {
   // Reset global -> falls back to default
   repository->resetGlobalValue(key);
   EXPECT_EQ(repository->getEffectiveValue(contentHash, platformId, key, def), def);
+}
+
+/**
+ * @brief Controller values: set / get / reset round trip on the profile's own tier and on a game's tier
+ */
+TEST_F(SqliteSettingsRepositoryTest, ControllerValue_SetGetReset) {
+  const int profileId = 4;
+  const std::string contentHash = "hash";
+  const std::string key = "rumble-strength";
+
+  EXPECT_FALSE(repository->getControllerValue("", profileId, key).has_value());
+
+  EXPECT_TRUE(repository->setControllerValue("", profileId, key, "75"));
+  EXPECT_EQ(repository->getControllerValue("", profileId, key), "75");
+
+  EXPECT_TRUE(repository->setControllerValue("", profileId, key, "50"));
+  EXPECT_EQ(repository->getControllerValue("", profileId, key), "50");
+
+  EXPECT_TRUE(repository->setControllerValue(contentHash, profileId, key, "20"));
+  EXPECT_EQ(repository->getControllerValue(contentHash, profileId, key), "20");
+
+  EXPECT_TRUE(repository->resetControllerValue(contentHash, profileId, key));
+  EXPECT_FALSE(repository->getControllerValue(contentHash, profileId, key).has_value());
+  EXPECT_EQ(repository->getControllerValue("", profileId, key), "50");
+
+  EXPECT_TRUE(repository->resetControllerValue("", profileId, key));
+  EXPECT_FALSE(repository->getControllerValue("", profileId, key).has_value());
+}
+
+/**
+ * @brief Controller values are isolated between profiles and between a profile's own tier and its game tiers
+ */
+TEST_F(SqliteSettingsRepositoryTest, ControllerValue_IsolatedBetweenProfilesAndTiers) {
+  const std::string key = "light-bar-color";
+
+  repository->setControllerValue("", 1, key, "#ff0000");
+  repository->setControllerValue("", 2, key, "#00ff00");
+  repository->setControllerValue("hash-a", 1, key, "#0000ff");
+
+  EXPECT_EQ(repository->getControllerValue("", 1, key), "#ff0000");
+  EXPECT_EQ(repository->getControllerValue("", 2, key), "#00ff00");
+  EXPECT_EQ(repository->getControllerValue("hash-a", 1, key), "#0000ff");
+  EXPECT_FALSE(repository->getControllerValue("hash-a", 2, key).has_value());
+  EXPECT_FALSE(repository->getControllerValue("hash-b", 1, key).has_value());
+
+  repository->resetControllerValue("", 1, key);
+  EXPECT_FALSE(repository->getControllerValue("", 1, key).has_value());
+  EXPECT_EQ(repository->getControllerValue("", 2, key), "#00ff00");
+  EXPECT_EQ(repository->getControllerValue("hash-a", 1, key), "#0000ff");
+}
+
+// TODO
+/**
+ * @brief Controller values are isolated from global, platform and game values with the same key and id
+ */
+TEST_F(SqliteSettingsRepositoryTest, ControllerValue_IsolatedFromOtherLevels) {
+  const std::string contentHash = "hash";
+  const int id = 3;
+  const std::string key = "rumble-strength";
+
+  repository->setGlobalValue(key, "global");
+  repository->setPlatformValue(id, key, "platform");
+  repository->setGameValue(contentHash, key, "game");
+
+  EXPECT_FALSE(repository->getControllerValue("", id, key).has_value());
+  EXPECT_FALSE(repository->getControllerValue(contentHash, id, key).has_value());
+
+  repository->setControllerValue("", id, key, "profile");
+  repository->setControllerValue(contentHash, id, key, "game-profile");
+
+  EXPECT_EQ(repository->getGlobalValue(key), "global");
+  EXPECT_EQ(repository->getPlatformValue(id, key), "platform");
+  EXPECT_EQ(repository->getGameValue(contentHash, key), "game");
+
+  repository->resetControllerValue("", id, key);
+  repository->resetControllerValue(contentHash, id, key);
+
+  EXPECT_EQ(repository->getGlobalValue(key), "global");
+  EXPECT_EQ(repository->getPlatformValue(id, key), "platform");
+  EXPECT_EQ(repository->getGameValue(contentHash, key), "game");
+}
+
+/**
+ * @brief Resetting a controller value that was never stored still succeeds
+ */
+TEST_F(SqliteSettingsRepositoryTest, ResetControllerValue_MissingRowReturnsTrue) {
+  EXPECT_TRUE(repository->resetControllerValue("", 9, "never-set"));
+  EXPECT_TRUE(repository->resetControllerValue("hash", 9, "never-set"));
+}
+
+/**
+ * @brief A version 1 settings file migrates to version 2 with the controller table and keeps its rows
+ */
+TEST(SqliteSettingsRepositoryMigrationTest, Version1FileMigratesToVersion2) {
+  const auto path = std::filesystem::temp_directory_path() / "fl-settings-migration-test.db";
+  std::filesystem::remove(path);
+
+  {
+    SQLite::Database database(path.string(), SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE);
+    database.exec(R"(
+      CREATE TABLE global_settings (key TEXT NOT NULL, value TEXT NOT NULL, PRIMARY KEY (key));
+      CREATE TABLE platform_settings (platform_id INTEGER NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL,
+                                      PRIMARY KEY (platform_id, key));
+      CREATE TABLE game_settings (content_hash TEXT NOT NULL, platform_id INTEGER NOT NULL, key TEXT NOT NULL,
+                                  value TEXT NOT NULL, PRIMARY KEY (content_hash, platform_id, key));
+      CREATE TABLE core_options (core_name TEXT NOT NULL, key TEXT NOT NULL, label TEXT NOT NULL,
+                                 description TEXT NOT NULL, default_value TEXT NOT NULL, values_json TEXT NOT NULL,
+                                 category_key TEXT NOT NULL DEFAULT '', category_label TEXT NOT NULL DEFAULT '',
+                                 position INTEGER NOT NULL, PRIMARY KEY (core_name, key));
+      INSERT INTO global_settings (key, value) VALUES ('rewind-enabled', 'false');
+      INSERT INTO game_settings (content_hash, platform_id, key, value) VALUES ('hash', -1, 'aspect-ratio', 'wide');
+      PRAGMA user_version = 1;
+    )");
+  }
+
+  {
+    SqliteSettingsRepository repository(path.string());
+    EXPECT_EQ(repository.getGlobalValue("rewind-enabled"), "false") << "the migration lost an existing row";
+    EXPECT_EQ(repository.getGameValue("hash", "aspect-ratio"), "wide") << "the migration lost an existing row";
+    EXPECT_TRUE(repository.setControllerValue("", 1, "rumble-strength", "40"));
+  }
+
+  {
+    SqliteSettingsRepository reopened(path.string());
+    EXPECT_EQ(reopened.getControllerValue("", 1, "rumble-strength"), "40") << "a controller value did not persist";
+  }
+
+  {
+    SQLite::Database database(path.string(), SQLite::OPEN_READONLY);
+    EXPECT_EQ(database.execAndGet("PRAGMA user_version").getInt(), 2);
+    EXPECT_TRUE(database.tableExists("controller_settings"));
+  }
+
+  std::filesystem::remove(path);
 }
 
 } // namespace firelight::settings

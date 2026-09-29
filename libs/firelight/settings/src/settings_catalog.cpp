@@ -171,12 +171,13 @@ SettingDefinition parseSetting(const nlohmann::json &j, std::vector<std::string>
   return s;
 }
 
-// Pulls out just the global app-level settings
-SettingDefinition parseAppSetting(const nlohmann::json &j, std::vector<std::string> &problems) {
+// Parses an app or controller setting, dropping the fields only emulation settings use
+SettingDefinition parseUnmappedSetting(const nlohmann::json &j, const std::string &scope,
+                                       std::vector<std::string> &problems) {
   auto s = parseSetting(j, problems);
   for (const char *field : {"mapping", "trueValue", "falseValue"}) {
     if (j.contains(field)) {
-      problems.push_back("app setting '" + s.key + "': '" + field +
+      problems.push_back(scope + " setting '" + s.key + "': '" + field +
                          "' is only meaningful for emulation settings (ignored)");
     }
   }
@@ -228,12 +229,17 @@ void SettingsCatalog::parseInto(const std::string &json, Accumulator &into, cons
   }
   if (root.contains("app")) {
     for (const auto &s : root["app"]) {
-      into.contents.app.push_back(parseAppSetting(s, into.problems));
+      into.contents.app.push_back(parseUnmappedSetting(s, "app", into.problems));
     }
   }
   if (root.contains("common")) {
     for (const auto &s : root["common"]) {
       into.contents.common.push_back(parseSetting(s, into.problems));
+    }
+  }
+  if (root.contains("controller")) {
+    for (const auto &s : root["controller"]) {
+      into.contents.controller.push_back(parseUnmappedSetting(s, "controller", into.problems));
     }
   }
   if (root.contains("cores")) {
@@ -290,6 +296,10 @@ void SettingsCatalog::buildLookups() {
 
   for (const auto &setting : m_contents.common) {
     m_settingsByKey.try_emplace(setting.key, IndexedSetting{.definition = &setting});
+  }
+
+  for (const auto &setting : m_contents.controller) {
+    m_settingsByKey.try_emplace(setting.key, IndexedSetting{.definition = &setting, .isController = true});
   }
 
   for (const auto &[coreName, settings] : m_contents.perCore) {
@@ -455,6 +465,9 @@ std::vector<std::string> SettingsCatalog::validate() const {
   for (const auto &s : m_contents.common) {
     checkSetting(s, "common");
   }
+  for (const auto &s : m_contents.controller) {
+    checkSetting(s, "controller");
+  }
   for (const auto &[coreName, settings] : m_contents.perCore) {
     for (const auto &s : settings) {
       checkSetting(s, "core " + coreName);
@@ -546,11 +559,14 @@ const SettingDefinition *SettingsCatalog::findByKey(const std::string &key) cons
 
 std::vector<const SettingDefinition *> SettingsCatalog::allSettings() const {
   std::vector<const SettingDefinition *> result;
-  result.reserve(m_contents.app.size() + m_contents.common.size());
+  result.reserve(m_contents.app.size() + m_contents.common.size() + m_contents.controller.size());
   for (const auto &s : m_contents.app) {
     result.push_back(&s);
   }
   for (const auto &s : m_contents.common) {
+    result.push_back(&s);
+  }
+  for (const auto &s : m_contents.controller) {
     result.push_back(&s);
   }
   for (const auto &[coreName, settings] : m_contents.perCore) {
@@ -566,10 +582,15 @@ bool SettingsCatalog::isAppSetting(const std::string &key) const {
   return it != m_settingsByKey.end() && it->second.isApp;
 }
 
+bool SettingsCatalog::isControllerSetting(const std::string &key) const {
+  const auto it = m_settingsByKey.find(key);
+  return it != m_settingsByKey.end() && it->second.isController;
+}
+
 std::string SettingsCatalog::defaultForCommonKey(const std::string &key) const {
   const auto it = m_settingsByKey.find(key);
 
-  if (it == m_settingsByKey.end() || it->second.isApp || !it->second.coreName.empty()) {
+  if (it == m_settingsByKey.end() || it->second.isApp || it->second.isController || !it->second.coreName.empty()) {
     return {};
   }
 

@@ -42,6 +42,21 @@ struct GlobalSettingResetEvent {
   std::string key;
 };
 
+/** A controller profile's value changed, for one game when contentHash is not empty */
+struct ControllerSettingChangedEvent {
+  int profileId;
+  std::string contentHash;
+  std::string key;
+  std::string value;
+};
+
+/** A controller profile's value was reset, for one game when contentHash is not empty */
+struct ControllerSettingResetEvent {
+  int profileId;
+  std::string contentHash;
+  std::string key;
+};
+
 struct EmulationSettingChangedEvent {
   std::string contentHash;
   std::string key;
@@ -68,6 +83,16 @@ public:
   bool setGameValue(const std::string &contentHash, const std::string &key, const std::string &value);
   bool resetGameValue(const std::string &contentHash, const std::string &key);
 
+  /** A controller profile's stored value, or its value for one game when contentHash is not empty */
+  std::optional<std::string> getControllerValue(const std::string &contentHash, int profileId, const std::string &key);
+
+  /** Stores a controller profile's value, or its value for one game when contentHash is not empty */
+  bool setControllerValue(const std::string &contentHash, int profileId, const std::string &key,
+                          const std::string &value);
+
+  /** Removes a controller profile's stored value, or its value for one game when contentHash is not empty */
+  bool resetControllerValue(const std::string &contentHash, int profileId, const std::string &key);
+
   bool setValueAtLevel(SettingsLevel level, const std::string &contentHash, int platformId, const std::string &key,
                        const std::string &value);
 
@@ -81,8 +106,11 @@ public:
   // session override -> global for app settings and stuff
   std::optional<std::string> getGlobalEffectiveValue(const std::string &key);
 
-  // Sets an in-memory, non-persisted override that wins over every stored tier
-  // in getEffectiveValue. Used by CLI
+  /** session override -> (game, profile) when contentHash is not empty -> profile */
+  std::optional<std::string> getControllerEffectiveValue(const std::string &contentHash, int profileId,
+                                                         const std::string &key);
+
+  // Sets an in-memory, non-persisted override that wins over every stored tier in getEffectiveValue. Used by CLI
   void setSessionOverride(const std::string &key, const std::string &value);
   void clearSessionOverrides();
 

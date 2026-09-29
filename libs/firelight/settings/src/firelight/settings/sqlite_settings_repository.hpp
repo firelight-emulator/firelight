@@ -24,6 +24,17 @@ public:
   bool setGameValue(const std::string &contentHash, const std::string &key, const std::string &value) override;
   bool resetGameValue(const std::string &contentHash, const std::string &key) override;
 
+  /** Reads controller_settings, where an empty contentHash is the profile's own row */
+  std::optional<std::string> getControllerValue(const std::string &contentHash, int profileId,
+                                                const std::string &key) override;
+
+  /** Writes controller_settings, where an empty contentHash is the profile's own row */
+  bool setControllerValue(const std::string &contentHash, int profileId, const std::string &key,
+                          const std::string &value) override;
+
+  /** Deletes from controller_settings, where an empty contentHash is the profile's own row */
+  bool resetControllerValue(const std::string &contentHash, int profileId, const std::string &key) override;
+
   std::string getEffectiveValue(const std::string &contentHash, const int platformId, const std::string &key,
                                 const std::string &defaultValue) {
     if (auto v = getGameValue(contentHash, key)) {

@@ -168,4 +168,19 @@ TEST(SettingsIndexTest, RebuildReplacesEntries) {
   EXPECT_TRUE(index.search("vsync").empty());
 }
 
+TEST(SettingsIndexTest, LeavesOutControllerSettings) {
+  const auto index = indexFor(R"JSON(
+  {
+    "groups": [{"id": "pad", "label": "Rumble", "settings": ["rumble-strength"]}],
+    "common": [{"key": "rumble-common", "label": "Rumble common", "type": "boolean", "default": "true"}],
+    "controller": [{"key": "rumble-strength", "label": "Rumble strength",
+                    "type": "slider", "min": 0, "max": 100, "step": 5, "default": "100"}]
+  })JSON");
+
+  EXPECT_EQ(index.size(), 1u);
+  const auto results = index.search("rumble");
+  EXPECT_EQ(find(results, "rumble-strength"), nullptr);
+  EXPECT_NE(find(results, "rumble-common"), nullptr);
+}
+
 } // namespace firelight::settings

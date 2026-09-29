@@ -24,12 +24,16 @@ protected:
   ScopedConnection platformSettingResetHandler;
   ScopedConnection gameSettingChangedHandler;
   ScopedConnection gameSettingResetHandler;
+  ScopedConnection controllerSettingChangedHandler;
+  ScopedConnection controllerSettingResetHandler;
 
   // Event storage
   std::vector<PlatformSettingChangedEvent> platformSettingChangedEvents;
   std::vector<PlatformSettingResetEvent> platformSettingResetEvents;
   std::vector<GameSettingChangedEvent> gameSettingChangedEvents;
   std::vector<GameSettingResetEvent> gameSettingResetEvents;
+  std::vector<ControllerSettingChangedEvent> controllerSettingChangedEvents;
+  std::vector<ControllerSettingResetEvent> controllerSettingResetEvents;
 
   void SetUp() override {
     repository = std::make_unique<SqliteSettingsRepository>(":memory:");
@@ -47,6 +51,12 @@ protected:
 
     gameSettingResetHandler = EventDispatcher::instance().subscribe<GameSettingResetEvent>(
         [this](const GameSettingResetEvent &event) { gameSettingResetEvents.push_back(event); });
+
+    controllerSettingChangedHandler = EventDispatcher::instance().subscribe<ControllerSettingChangedEvent>(
+        [this](const ControllerSettingChangedEvent &event) { controllerSettingChangedEvents.push_back(event); });
+
+    controllerSettingResetHandler = EventDispatcher::instance().subscribe<ControllerSettingResetEvent>(
+        [this](const ControllerSettingResetEvent &event) { controllerSettingResetEvents.push_back(event); });
   }
 
   void TearDown() override {
@@ -58,6 +68,8 @@ protected:
     platformSettingResetEvents.clear();
     gameSettingChangedEvents.clear();
     gameSettingResetEvents.clear();
+    controllerSettingChangedEvents.clear();
+    controllerSettingResetEvents.clear();
   }
 };
 
@@ -545,6 +557,116 @@ TEST_F(SettingsServiceTest, ClearSessionOverrides_RestoresStoredResolution) {
 
   service->clearSessionOverrides();
   EXPECT_EQ(service->getEffectiveValue("", 0, key), "stretch");
+}
+
+/**
+ * @brief Setting a controller value stores it and publishes an event carrying the profile and tier
+ */
+TEST_F(SettingsServiceTest, SetControllerValue_PublishesEvent) {
+  const int profileId = 2;
+  const std::string contentHash = "hash";
+  const std::string key = "rumble-strength";
+
+  EXPECT_TRUE(service->setControllerValue("", profileId, key, "60"));
+  EXPECT_TRUE(service->setControllerValue(contentHash, profileId, key, "30"));
+
+  EXPECT_EQ(service->getControllerValue("", profileId, key), "60");
+  EXPECT_EQ(service->getControllerValue(contentHash, profileId, key), "30");
+
+  ASSERT_EQ(controllerSettingChangedEvents.size(), 2);
+  EXPECT_EQ(controllerSettingChangedEvents[0].profileId, profileId);
+  EXPECT_EQ(controllerSettingChangedEvents[0].contentHash, "");
+  EXPECT_EQ(controllerSettingChangedEvents[0].key, key);
+  EXPECT_EQ(controllerSettingChangedEvents[0].value, "60");
+  EXPECT_EQ(controllerSettingChangedEvents[1].profileId, profileId);
+  EXPECT_EQ(controllerSettingChangedEvents[1].contentHash, contentHash);
+  EXPECT_EQ(controllerSettingChangedEvents[1].value, "30");
+
+  EXPECT_TRUE(controllerSettingResetEvents.empty());
+  EXPECT_TRUE(gameSettingChangedEvents.empty()) << "a controller write published a game event";
+  EXPECT_TRUE(platformSettingChangedEvents.empty()) << "a controller write published a platform event";
+}
+
+/**
+ * @brief Resetting a controller value removes it and publishes an event, even when nothing was stored
+ */
+TEST_F(SettingsServiceTest, ResetControllerValue_PublishesEvent) {
+  const int profileId = 2;
+  const std::string contentHash = "hash";
+  const std::string key = "light-bar-color";
+
+  service->setControllerValue(contentHash, profileId, key, "#123456");
+  EXPECT_TRUE(service->resetControllerValue(contentHash, profileId, key));
+  EXPECT_FALSE(service->getControllerValue(contentHash, profileId, key).has_value());
+
+  EXPECT_TRUE(service->resetControllerValue("", profileId, key));
+
+  ASSERT_EQ(controllerSettingResetEvents.size(), 2);
+  EXPECT_EQ(controllerSettingResetEvents[0].profileId, profileId);
+  EXPECT_EQ(controllerSettingResetEvents[0].contentHash, contentHash);
+  EXPECT_EQ(controllerSettingResetEvents[0].key, key);
+  EXPECT_EQ(controllerSettingResetEvents[1].profileId, profileId);
+  EXPECT_EQ(controllerSettingResetEvents[1].contentHash, "");
+  EXPECT_EQ(controllerSettingResetEvents[1].key, key);
+
+  EXPECT_TRUE(gameSettingResetEvents.empty()) << "a controller reset published a game event";
+}
+
+/**
+ * @brief Writing one profile's value publishes for that profile only and leaves the other profile's value alone
+ */
+TEST_F(SettingsServiceTest, ControllerEvents_NotPublishedForAnotherProfile) {
+  const std::string key = "rumble-strength";
+
+  service->setControllerValue("", 1, key, "80");
+  service->resetControllerValue("", 1, key);
+
+  ASSERT_EQ(controllerSettingChangedEvents.size(), 1);
+  ASSERT_EQ(controllerSettingResetEvents.size(), 1);
+  EXPECT_EQ(controllerSettingChangedEvents[0].profileId, 1);
+  EXPECT_EQ(controllerSettingResetEvents[0].profileId, 1);
+  EXPECT_FALSE(service->getControllerValue("", 2, key).has_value());
+}
+
+/**
+ * @brief getControllerEffectiveValue resolves session override -> (game, profile) -> profile -> nullopt
+ */
+TEST_F(SettingsServiceTest, ControllerEffectiveValue_ResolutionOrder) {
+  const int profileId = 1;
+  const std::string contentHash = "hash";
+  const std::string key = "rumble-strength";
+
+  EXPECT_FALSE(service->getControllerEffectiveValue(contentHash, profileId, key).has_value());
+
+  service->setGlobalValue(key, "global");
+  EXPECT_FALSE(service->getControllerEffectiveValue(contentHash, profileId, key).has_value())
+      << "a controller setting fell back to the global tier";
+
+  service->setControllerValue("", profileId, key, "profile");
+  EXPECT_EQ(service->getControllerEffectiveValue(contentHash, profileId, key), "profile");
+  EXPECT_EQ(service->getControllerEffectiveValue("", profileId, key), "profile");
+
+  service->setControllerValue(contentHash, profileId, key, "game");
+  EXPECT_EQ(service->getControllerEffectiveValue(contentHash, profileId, key), "game");
+  EXPECT_EQ(service->getControllerEffectiveValue("", profileId, key), "profile");
+  EXPECT_EQ(service->getControllerEffectiveValue("other-hash", profileId, key), "profile");
+  EXPECT_FALSE(service->getControllerEffectiveValue(contentHash, 2, key).has_value())
+      << "one profile's values leaked into another";
+
+  service->setSessionOverride(key, "session");
+  EXPECT_EQ(service->getControllerEffectiveValue(contentHash, profileId, key), "session");
+  EXPECT_EQ(service->getControllerEffectiveValue("", 2, key), "session");
+  EXPECT_EQ(service->getControllerValue(contentHash, profileId, key), "game")
+      << "a session override changed a stored value";
+
+  service->clearSessionOverrides();
+  EXPECT_EQ(service->getControllerEffectiveValue(contentHash, profileId, key), "game");
+
+  service->resetControllerValue(contentHash, profileId, key);
+  EXPECT_EQ(service->getControllerEffectiveValue(contentHash, profileId, key), "profile");
+
+  service->resetControllerValue("", profileId, key);
+  EXPECT_FALSE(service->getControllerEffectiveValue(contentHash, profileId, key).has_value());
 }
 
 } // namespace firelight::settings

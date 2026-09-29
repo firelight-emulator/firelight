@@ -5,6 +5,7 @@
 #include <firelight/libretro/pointer_input_provider.hpp>
 #include <firelight/libretro/retropad_provider.hpp>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -98,6 +99,12 @@ public:
   // keyboard needs; `only` limits it to the keyboard so a controller keeps its
   // hotkeys either way
   virtual void setHotkeysEnabled(bool enabled, std::optional<DeviceType> only = {}) = 0;
+
+  /** Scales rumble on every connected controller using this profile, by a percent from 0 to 100 */
+  virtual void setRumbleScale(int profileId, int percent) = 0;
+
+  /** Sets the 0xRRGGBB light color on every connected controller using this profile; empty means the player color */
+  virtual void setLightColor(int profileId, std::optional<uint32_t> rgb) = 0;
 };
 
 } // namespace firelight::input

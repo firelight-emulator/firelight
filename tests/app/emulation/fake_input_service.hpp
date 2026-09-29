@@ -24,6 +24,27 @@ public:
   // Every (from, to) handed to moveGamepad, in order
   std::vector<std::pair<int, int>> moveCalls;
 
+  /** One setRumbleScale call */
+  struct RumbleScaleCall {
+    int profileId;
+    int percent;
+  };
+
+  /** One setLightColor call */
+  struct LightColorCall {
+    int profileId;
+    std::optional<uint32_t> rgb;
+  };
+
+  // Every setRumbleScale call, in order
+  std::vector<RumbleScaleCall> rumbleScaleCalls;
+
+  // Every setLightColor call, in order
+  std::vector<LightColorCall> lightColorCalls;
+
+  // What listGamepads answers
+  std::vector<std::shared_ptr<input::IGamepad>> devices;
+
   void setHotkeysEnabled(const bool enabled, const std::optional<DeviceType> only = {}) override {
     hotkeyCalls.push_back({enabled, only});
   }
@@ -61,7 +82,7 @@ public:
 
   bool removeGamepadByPlayerIndex(int) override { return false; }
 
-  std::vector<std::shared_ptr<input::IGamepad>> listGamepads() override { return {}; }
+  std::vector<std::shared_ptr<input::IGamepad>> listGamepads() override { return devices; }
 
   std::shared_ptr<input::IGamepad> getPlayerGamepad(const int playerIndex) override {
     const auto it = playerSlots.find(playerIndex);
@@ -95,6 +116,16 @@ public:
   std::pair<int16_t, int16_t> getPointerPosition() const override { return {0, 0}; }
 
   bool isPressed() const override { return false; }
+
+  /** Records the call */
+  void setRumbleScale(const int profileId, const int percent) override {
+    rumbleScaleCalls.push_back({profileId, percent});
+  }
+
+  /** Records the call */
+  void setLightColor(const int profileId, const std::optional<uint32_t> rgb) override {
+    lightColorCalls.push_back({profileId, rgb});
+  }
 };
 
 } // namespace firelight::emulation

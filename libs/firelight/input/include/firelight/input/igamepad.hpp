@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 #include <firelight/input/device_identifier.hpp>
 #include <firelight/input/gamepad_profile.hpp>
@@ -6,6 +7,8 @@
 #include <firelight/input/input_suppressor.hpp>
 #include <firelight/libretro/retropad.hpp>
 
+#include <cstdint>
+#include <optional>
 #include <string>
 
 namespace firelight::input {
@@ -46,6 +49,12 @@ public:
   virtual bool disconnect() = 0;
 
   virtual DeviceIdentifier getDeviceIdentifier() const = 0;
+
+  /** Scales rumble on this device by a percent from 0 to 100 */
+  virtual void setRumbleScale(int percent) {}
+
+  /** Sets the light color as 0xRRGGBB, or the player color when empty */
+  virtual void setLightColor(std::optional<uint32_t> rgb) {}
 
 private:
   InputSuppressor m_suppressor;

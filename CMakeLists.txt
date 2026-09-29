@@ -215,6 +215,7 @@ add_library(firelight_emulation_lib STATIC
         src/app/emulation/game_loader.cpp
         src/app/emulation/core_settings_applier.cpp
         src/app/input/input_settings_applier.cpp
+        src/app/input/controller_settings_applier.cpp
         src/app/emulation/emulator_instance.cpp
         src/app/emulation/emulation_rate_controller.cpp
         src/app/emulation/frame_pacer.cpp
@@ -688,6 +689,7 @@ add_executable(fl_test
         tests/app/achievements/achievement_service_test.cpp
         tests/app/activity/sqlite_activity_log_test.cpp
         tests/app/input/input_settings_applier_test.cpp
+        tests/app/input/controller_settings_applier_test.cpp
         tests/app/input/controller_list_model_test.cpp
         libs/firelight/input/tests/test_gamepad.cpp
         tests/app/gui/qt_input_service_proxy_test.cpp
