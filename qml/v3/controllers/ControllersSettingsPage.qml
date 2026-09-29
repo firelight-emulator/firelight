@@ -86,7 +86,7 @@ FLPage {
                     }
 
                     onConfigureRequested: {
-
+                        Router.navigate("/controllers/configure/1")
                     }
 
                     onClicked: {

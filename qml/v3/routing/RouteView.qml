@@ -51,7 +51,7 @@ StackView {
             "/library/reorder-collections": collectionOrderComponent,
             "/library/create-collection/:kind": createCollectionComponent,
             "/controllers/configure": controllerProfileComponent,
-            "/controllers/configure/:playerNumber": controllerProfileComponent,
+            "/controllers/configure/:playerNumber": configureControllerComponent,
             "/settings": settingsComponent,
             "/dev/monitor": monitorComponent,
             "/quick-menu": quickMenuComponent
@@ -146,6 +146,11 @@ StackView {
     //     id: devGalleryComponent
     //     ComponentGallery {}
     // }
+
+    Component {
+        id: configureControllerComponent
+        ConfigureControllerPage {}
+    }
 
     Component {
         id: monitorComponent

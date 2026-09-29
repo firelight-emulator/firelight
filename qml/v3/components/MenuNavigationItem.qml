@@ -9,9 +9,10 @@ FLButtonBase {
     objectName: "MenuNavigationItem|" + control.label
 
     property string label: ""
+    property bool large: false
 
     Layout.fillWidth: true
-    implicitHeight: AppStyle.listRowHeight
+    implicitHeight: AppStyle.listRowHeight * (large ? 1.4 : 1.0)
     variant: "subtle"
     rounded: false
 
@@ -41,7 +42,7 @@ FLButtonBase {
             text: control.label
             font.pixelSize: AppStyle.fontSizeMedium
             font.family: AppStyle.fontFamily
-            font.weight: Font.DemiBold
+            font.weight: Font.Medium
             height: parent.height
             verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignLeft

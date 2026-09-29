@@ -17,6 +17,7 @@ FLPage {
     property alias header: headerColumn.data
     property alias footer: footerColumn.data
     property string currentKey: ""
+    property bool largeMenuRows: false
 
     signal actionTriggered(string key)
 
@@ -360,6 +361,7 @@ FLPage {
                                     visible: root._readEntry(pageRow.modelData, "visible", true)
                                     canInteract: root._readEntry(pageRow.modelData, "enabled", true)
                                     checked: pageRow.modelData.key === root.currentKey
+                                    large: root.largeMenuRows
                                     // TODO
                                     // Re-asserted whenever the claim counter changes
                                     focus: pageRow.checked && root._checkedRowFocusClaim >= 0
