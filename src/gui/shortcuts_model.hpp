@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #pragma once
 #include "service_accessor.hpp"
 
@@ -15,11 +16,20 @@ namespace firelight::gui {
 class ShortcutsModel : public QAbstractListModel, public ServiceAccessor {
   Q_OBJECT
 
+  Q_PROPERTY(int profileId READ getProfileId WRITE setProfileId NOTIFY profileIdChanged)
   Q_PROPERTY(QString presetId READ presetId NOTIFY presetIdChanged)
 
 public:
+  explicit ShortcutsModel(QObject *parent = nullptr);
+
   ShortcutsModel(int profileId, bool isKeyboard, std::shared_ptr<input::ShortcutMapping> shortcutMapping,
                  std::string presetId);
+
+  [[nodiscard]] int getProfileId() const;
+
+  // TODO
+  /** Loads the profile's shortcuts, kind and preset through the repository; -1 empties the model */
+  void setProfileId(int profileId);
 
   int rowCount(const QModelIndex &parent) const override;
   QVariant data(const QModelIndex &index, int role) const override;
@@ -52,6 +62,7 @@ public:
   Q_INVOKABLE QList<int> modifierCandidates() const;
 
 signals:
+  void profileIdChanged();
   void presetIdChanged();
 
 private:
@@ -85,9 +96,13 @@ private:
   [[nodiscard]] std::vector<input::InputSource> presetSourcesFor(const input::ShortcutId &id) const;
   [[nodiscard]] bool differsFromPreset(const input::ShortcutId &id) const;
 
+  // TODO
+  /** Takes the mapping, kind and preset from the stored profile, or clears them when there is none */
+  void loadProfile();
+
   int m_profileId = -1;
   std::shared_ptr<input::ShortcutMapping> m_shortcutMapping;
-  bool m_isKeyboard;
+  bool m_isKeyboard = false;
   std::string m_presetId;
   QList<Item> m_items;
 };

@@ -10,6 +10,78 @@ SdlController::~SdlController() = default;
 
 int16_t SdlController::evaluateRawInput(const GamepadInput input) const { return evaluateMapping(input); }
 
+int16_t SdlController::readPhysical(const GamepadInput input) const {
+  const auto button = [this](const SDL_GameControllerButton sdlButton) -> int16_t {
+    return SDL_GameControllerGetButton(m_SDLController, sdlButton) ? 32767 : 0;
+  };
+  const auto trigger = [this](const SDL_GameControllerAxis sdlAxis) -> int16_t {
+    return static_cast<int16_t>(std::max<int>(SDL_GameControllerGetAxis(m_SDLController, sdlAxis), 0));
+  };
+  const auto magnitude = [this](const SDL_GameControllerAxis sdlAxis, const bool positive) -> int16_t {
+    const int value = SDL_GameControllerGetAxis(m_SDLController, sdlAxis);
+    if (positive) {
+      return static_cast<int16_t>(std::max(value, 0));
+    }
+
+    return static_cast<int16_t>(std::clamp(-value, 0, 32767));
+  };
+
+  switch (input) {
+  case SouthFace:
+    return button(SDL_CONTROLLER_BUTTON_A);
+  case EastFace:
+    return button(SDL_CONTROLLER_BUTTON_B);
+  case WestFace:
+    return button(SDL_CONTROLLER_BUTTON_X);
+  case NorthFace:
+    return button(SDL_CONTROLLER_BUTTON_Y);
+  case DpadUp:
+    return button(SDL_CONTROLLER_BUTTON_DPAD_UP);
+  case DpadDown:
+    return button(SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+  case DpadLeft:
+    return button(SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+  case DpadRight:
+    return button(SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+  case Start:
+    return button(SDL_CONTROLLER_BUTTON_START);
+  case Select:
+    return button(SDL_CONTROLLER_BUTTON_BACK);
+  case LeftBumper:
+    return button(SDL_CONTROLLER_BUTTON_LEFTSHOULDER);
+  case RightBumper:
+    return button(SDL_CONTROLLER_BUTTON_RIGHTSHOULDER);
+  case L3:
+    return button(SDL_CONTROLLER_BUTTON_LEFTSTICK);
+  case R3:
+    return button(SDL_CONTROLLER_BUTTON_RIGHTSTICK);
+  case Home:
+    return button(SDL_CONTROLLER_BUTTON_GUIDE);
+  case LeftTrigger:
+    return trigger(SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+  case RightTrigger:
+    return trigger(SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+  case LeftStickLeft:
+    return magnitude(SDL_CONTROLLER_AXIS_LEFTX, false);
+  case LeftStickRight:
+    return magnitude(SDL_CONTROLLER_AXIS_LEFTX, true);
+  case LeftStickUp:
+    return magnitude(SDL_CONTROLLER_AXIS_LEFTY, false);
+  case LeftStickDown:
+    return magnitude(SDL_CONTROLLER_AXIS_LEFTY, true);
+  case RightStickLeft:
+    return magnitude(SDL_CONTROLLER_AXIS_RIGHTX, false);
+  case RightStickRight:
+    return magnitude(SDL_CONTROLLER_AXIS_RIGHTX, true);
+  case RightStickUp:
+    return magnitude(SDL_CONTROLLER_AXIS_RIGHTY, false);
+  case RightStickDown:
+    return magnitude(SDL_CONTROLLER_AXIS_RIGHTY, true);
+  default:
+    return 0;
+  }
+}
+
 std::shared_ptr<GamepadProfile> SdlController::getProfile() const { return m_profile; }
 
 void SdlController::setProfile(const std::shared_ptr<GamepadProfile> &profile) {
@@ -341,7 +413,7 @@ int16_t SdlController::evaluateMapping(const GamepadInput input) const {
   // A shortcut is using this input, so the game doesn't get to see it. Checked
   // here because every physical read goes through this one switch — including
   // the fall-through for inputs with no binding, and the light-gun/mouse path
-  if (isSuppressed(static_cast<int>(input))) {
+  if (isSuppressed(input)) {
     return 0;
   }
 

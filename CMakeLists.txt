@@ -266,6 +266,7 @@ add_library(firelight_lib STATIC
 
         src/app/input/gui/analog_settings_model.cpp
         src/app/input/gui/profile_list_model.cpp
+        src/app/input/gui/analog_fields.cpp
         src/app/input/gui/binding_list_model.cpp
         src/app/input/gui/platform_input_preferences.cpp
         src/app/input/gui/controller_list_model.cpp
@@ -691,6 +692,10 @@ add_executable(fl_test
         tests/app/input/input_settings_applier_test.cpp
         tests/app/input/controller_settings_applier_test.cpp
         tests/app/input/controller_list_model_test.cpp
+        tests/app/input/profile_list_model_test.cpp
+        tests/app/input/analog_settings_model_test.cpp
+        tests/app/input/gamepad_status_item_test.cpp
+        tests/app/gui/gamepad_profile_item_test.cpp
         libs/firelight/input/tests/test_gamepad.cpp
         tests/app/gui/qt_input_service_proxy_test.cpp
 )

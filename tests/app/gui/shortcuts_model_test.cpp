@@ -1,4 +1,8 @@
+// TODO: NEEDS REVIEW
 #include "gui/shortcuts_model.hpp"
+
+#include "../input/fake_controller_repository.hpp"
+#include "service_accessor.hpp"
 
 #include <firelight/input/shortcut_registry.hpp>
 
@@ -181,6 +185,30 @@ TEST_F(ShortcutsModelTest, ApplyingAnUnknownPresetDoesNothing) {
 
   EXPECT_EQ("firelight", model->presetId().toStdString());
   EXPECT_TRUE(valueAt(*model, "fast_forward", "hasBinding").toBool());
+}
+
+TEST_F(ShortcutsModelTest, LoadsAProfileThroughTheLocator) {
+  input::FakeControllerRepository repository;
+  const auto profile = repository.addProfile(7, "Pad");
+  profile->setPresetId("handheld");
+  ServiceAccessor::setControllerProfileRepository(&repository);
+
+  ShortcutsModel model;
+  EXPECT_EQ(model.rowCount({}), 3);
+  EXPECT_FALSE(valueAt(model, "fast_forward", "hasBinding").toBool());
+
+  model.setProfileId(7);
+  EXPECT_EQ(model.presetId().toStdString(), "handheld");
+  model.applyPreset("firelight");
+  EXPECT_EQ(profile->getPresetId(), "firelight");
+  EXPECT_TRUE(valueAt(model, "fast_forward", "hasBinding").toBool());
+  EXPECT_FALSE(profile->getShortcutMapping()->getBindings("fast_forward").empty());
+
+  model.setProfileId(-1);
+  EXPECT_TRUE(model.presetId().isEmpty());
+  EXPECT_FALSE(valueAt(model, "fast_forward", "hasBinding").toBool());
+
+  ServiceAccessor::setControllerProfileRepository(nullptr);
 }
 
 } // namespace firelight::gui

@@ -21,6 +21,7 @@ class SettingBinding : public QObject {
   Q_OBJECT
   Q_PROPERTY(QString key READ key WRITE setKey NOTIFY keyChanged)
   Q_PROPERTY(QString value READ value WRITE setValue NOTIFY valueChanged)
+  Q_PROPERTY(int controllerProfileId READ controllerProfileId WRITE setControllerProfileId NOTIFY controllerProfileIdChanged)
   Q_PROPERTY(QString label READ label NOTIFY keyChanged)
   Q_PROPERTY(QString description READ description NOTIFY keyChanged)
   Q_PROPERTY(QString longDescription READ longDescription NOTIFY keyChanged)
@@ -42,6 +43,9 @@ public:
   [[nodiscard]] QString value() const;
   void setValue(const QString &value);
 
+  int controllerProfileId() const;
+  void setControllerProfileId(int profileId);
+
   [[nodiscard]] QString label() const;
   [[nodiscard]] QString description() const;
   [[nodiscard]] QString longDescription() const;
@@ -57,15 +61,22 @@ public:
 signals:
   void keyChanged();
   void valueChanged();
+  void controllerProfileIdChanged();
 
 private:
   void refresh();
 
   QString m_key;
   QString m_value;
+
+  int m_controllerProfileId = -1;
+
   bool m_overridden = false;
   ScopedConnection m_changedConnection;
   ScopedConnection m_resetConnection;
+
+  ScopedConnection m_controllerSettingChangedConnection;
+  ScopedConnection m_controllerSettingResetConnection;
 };
 
 } // namespace firelight::settings

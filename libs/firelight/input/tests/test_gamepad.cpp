@@ -24,6 +24,13 @@ void TestGamepad::setProfile(const std::shared_ptr<GamepadProfile> &profile) { m
 
 int16_t TestGamepad::evaluateRawInput(const GamepadInput input) const { return 0; }
 
+int16_t TestGamepad::readPhysical(const GamepadInput input) const {
+  const auto it = m_physical.find(input);
+  return it == m_physical.end() ? 0 : it->second;
+}
+
+void TestGamepad::setPhysical(const GamepadInput input, const int16_t value) { m_physical[input] = value; }
+
 std::string TestGamepad::getName() const { return "TestGamepad"; }
 
 int TestGamepad::getPlayerIndex() const { return m_playerIndex; }

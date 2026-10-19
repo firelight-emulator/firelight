@@ -1,7 +1,9 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include "service_accessor.hpp"
 
+#include <firelight/event_dispatcher.hpp>
 #include <firelight/input/analog_settings.hpp>
 #include <firelight/input/gamepad_profile.hpp>
 
@@ -87,9 +89,15 @@ private:
   void load();
   void persist();
 
+  // TODO
+  /** Re-reads the stored tuning and signals when it differs */
+  void reload();
+
   int m_profileId = -1;
   std::shared_ptr<GamepadProfile> m_profile;
   AnalogSettings m_settings;
+
+  ScopedConnection m_settingsChangedHandler;
 };
 
 } // namespace firelight::input

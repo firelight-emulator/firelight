@@ -31,7 +31,6 @@
     {
       "key": "rumble-strength",
       "label": "Rumble strength",
-      "description": "How strongly the controller vibrates, as a percentage of what the game asks for.",
       "keywords": [
         "vibration",
         "haptics",
@@ -45,12 +44,12 @@
     },
     {
       "key": "light-bar-color",
-      "label": "Light bar colour",
-      "description": "The colour of the light bar on controllers that have one. When unset, it shows the player colour.",
+      "label": "Light bar color",
       "keywords": [
         "led",
         "light",
-        "color"
+        "color",
+        "colour"
       ],
       "type": "color",
       "default": "",
@@ -80,6 +79,84 @@
           "value": "#ffffff"
         }
       ]
+    },
+    {
+      "key": "left-stick-inner-deadzone",
+      "label": "Inner deadzone",
+      "description": "Affects how far the stick must be moved before it registers input. A higher value can help with drift issues. If unsure, leave this at the default value",
+      "keywords": [
+        "deadzone",
+        "joystick",
+        "analog stick",
+        "drift"
+      ],
+      "type": "slider",
+      "min": 0,
+      "max": 32768,
+      "step": 128,
+      "default": "8192"
+    },
+    {
+      "key": "left-stick-outer-deadzone",
+      "label": "Outer deadzone",
+      "description": "Affects the maximum range of the stick. A value above 0 will cause the stick to be read in games and menus as if it is fully pushed even when it is not. If unsure, leave this at the default value",
+      "keywords": [
+        "deadzone",
+        "joystick",
+        "analog stick",
+        "drift"
+      ],
+      "type": "slider",
+      "min": 0,
+      "max": 32768,
+      "step": 128,
+      "default": "0"
+    },
+    {
+      "key": "right-stick-inner-deadzone",
+      "label": "Inner deadzone",
+      "description": "Affects how far the stick must be moved before it registers input. A higher value can help with drift issues. If unsure, leave this at the default value",
+      "keywords": [
+        "deadzone",
+        "joystick",
+        "analog stick",
+        "drift"
+      ],
+      "type": "slider",
+      "min": 0,
+      "max": 32768,
+      "step": 128,
+      "default": "8192"
+    },
+    {
+      "key": "right-stick-outer-deadzone",
+      "label": "Outer deadzone",
+      "description": "Affects the maximum range of the stick. A value above 0 will cause the stick to be read in games and menus as if it is fully pushed even when it is not. If unsure, leave this at the default value",
+      "keywords": [
+        "deadzone",
+        "joystick",
+        "analog stick",
+        "drift"
+      ],
+      "type": "slider",
+      "min": 0,
+      "max": 32768,
+      "step": 128,
+      "default": "0"
+    },
+    {
+      "key": "left-stick-sensitivity",
+      "label": "Sensitivity",
+      "keywords": [
+        "joystick",
+        "analog stick",
+        "sensitivity"
+      ],
+      "type": "slider",
+      "min": 0,
+      "max": 32768,
+      "step": 128,
+      "default": "32767"
     }
   ]
 }

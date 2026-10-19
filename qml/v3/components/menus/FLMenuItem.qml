@@ -229,7 +229,7 @@ ItemDelegate {
             color: Theme.textMuted
             font.pixelSize: AppStyle.fontSizeSmall
             font.family: AppStyle.fontFamily
-            font.weight: Font.Medium
+            font.weight: Font.Normal
             lineHeight: 1.3
             wrapMode: Text.WordWrap
         }

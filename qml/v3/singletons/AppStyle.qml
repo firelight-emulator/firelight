@@ -106,7 +106,7 @@ Item {
     // TODO
     // Comfortable default width for value inputs (slider/combobox) so they don't
     // collapse to their content width in a right-aligned settings slot
-    readonly property int inputWidth: Math.round(200 * scale)
+    readonly property int inputWidth: Math.round(280 * scale)
 
     // Button metrics (color/opacity moved to Theme)
     readonly property int buttonStandardWidth: Math.round(200 * scale)

@@ -25,7 +25,7 @@ FocusScope {
 
     GamepadStatus {
         id: gamepadStatus
-        playerNumber: 1
+        playerIndex: 1
     }
 
     // "Edit profile" deep-links here as /settings/controllers?profileId=N. The

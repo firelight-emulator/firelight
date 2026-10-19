@@ -19,10 +19,24 @@ SettingBinding::SettingBinding(QObject *parent) : QObject(parent) {
       refresh();
     }
   };
+
   m_changedConnection = EventDispatcher::instance().subscribe<GlobalSettingChangedEvent>(
       [onKey](const GlobalSettingChangedEvent &e) { onKey(e.key); });
   m_resetConnection = EventDispatcher::instance().subscribe<GlobalSettingResetEvent>(
       [onKey](const GlobalSettingResetEvent &e) { onKey(e.key); });
+
+  m_controllerSettingChangedConnection = EventDispatcher::instance().subscribe<ControllerSettingChangedEvent>(
+      [onKey, this](const ControllerSettingChangedEvent &e) {
+        if (e.profileId == m_controllerProfileId && e.contentHash.empty()) {
+          onKey(e.key);
+        }
+      });
+  m_controllerSettingResetConnection = EventDispatcher::instance().subscribe<ControllerSettingResetEvent>(
+  [onKey, this](const ControllerSettingResetEvent &e) {
+    if (e.profileId == m_controllerProfileId && e.contentHash.empty()) {
+      onKey(e.key);
+    }
+  });
 }
 
 QString SettingBinding::key() const { return m_key; }
@@ -31,6 +45,7 @@ void SettingBinding::setKey(const QString &key) {
   if (m_key == key) {
     return;
   }
+
   m_key = key;
   refresh();
   emit keyChanged();
@@ -40,9 +55,19 @@ void SettingBinding::refresh() {
   auto *service = SettingsService::instance();
   const auto *definition = definitionFor(m_key);
 
+  if (!definition) {
+    throw std::runtime_error("[SettingBinding] Key '" + m_key.toStdString() + "' is not declared in the settings catalog");
+  }
+
   std::optional<std::string> stored;
   if (service && !m_key.isEmpty()) {
-    stored = service->getGlobalEffectiveValue(m_key.toStdString());
+    const auto key = m_key.toStdString();
+
+    if (!SettingsCatalog::instance().isControllerSetting(key)) {
+      stored = service->getGlobalEffectiveValue(key);
+    } else if (m_controllerProfileId > 0) {
+      stored = service->getControllerEffectiveValue({}, m_controllerProfileId, key);
+    }
   }
 
   const auto resolved = QString::fromStdString(stored.value_or(definition ? definition->defaultValue : std::string{}));
@@ -62,14 +87,36 @@ void SettingBinding::setValue(const QString &value) {
   if (m_value == value) {
     return;
   }
+
   auto *service = SettingsService::instance();
   if (!service || m_key.isEmpty()) {
     return;
   }
-  // The write publishes a change event, which lands back in refresh() and emits
-  // valueChanged
-  service->setGlobalValue(m_key.toStdString(), value.toStdString());
+
+  const auto key = m_key.toStdString();
+  if (SettingsCatalog::instance().isControllerSetting(key)) {
+    if (m_controllerProfileId <= 0) {
+      return;
+    }
+
+    service->setControllerValue({}, m_controllerProfileId, key, value.toStdString());
+  } else {
+    service->setGlobalValue(key, value.toStdString());
+  }
+
   refresh();
+}
+
+int SettingBinding::controllerProfileId() const { return m_controllerProfileId; }
+
+void SettingBinding::setControllerProfileId(const int profileId) {
+  if (m_controllerProfileId == profileId) {
+    return;
+  }
+
+  m_controllerProfileId = profileId;
+  refresh();
+  emit controllerProfileIdChanged();
 }
 
 void SettingBinding::reset() {
@@ -77,7 +124,13 @@ void SettingBinding::reset() {
   if (!service || m_key.isEmpty()) {
     return;
   }
-  service->resetGlobalValue(m_key.toStdString());
+
+  if (SettingsCatalog::instance().isControllerSetting(m_key.toStdString()) && m_controllerProfileId > -1) {
+    service->resetControllerValue({}, m_controllerProfileId, m_key.toStdString());
+  } else {
+    service->resetGlobalValue(m_key.toStdString());
+  }
+
   refresh();
 }
 

@@ -5,6 +5,7 @@ FLMenu {
 
     property alias model: radioGroup.model
     property alias valueRole: radioGroup.valueRole
+    property alias textRole: radioGroup.textRole
     property alias currentValue: radioGroup.currentValue
 
     signal activated(var value)

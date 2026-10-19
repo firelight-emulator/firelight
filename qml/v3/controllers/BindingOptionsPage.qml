@@ -30,7 +30,7 @@ FocusScope {
 
     GamepadStatus {
         id: gamepad
-        playerNumber: root.capturePlayerNumber
+        playerIndex: root.capturePlayerNumber
     }
 
     Connections {

@@ -87,6 +87,7 @@
 #include "gui/selection_group.hpp"
 #include "gui/series_chart_item.hpp"
 #include "gui/settings_level_shim.hpp"
+#include "gui/shortcuts_model.hpp"
 #include "gui/span_chart_item.hpp"
 #include "library/entry_merge_service.hpp"
 #include "library/variant_group_service.hpp"
@@ -597,6 +598,7 @@ int main(int argc, char *argv[]) {
                                                            "SeriesSource comes from whoever owns the numbers");
   qmlRegisterType<firelight::input::GamepadStatusItem>("Firelight", 1, 0, "GamepadStatus");
   qmlRegisterType<firelight::gui::GamepadProfileItem>("Firelight", 1, 0, "GamepadProfile");
+  qmlRegisterType<firelight::gui::ShortcutsModel>("Firelight", 1, 0, "ShortcutsModel");
   qmlRegisterType<firelight::mods::ModInfoItem>("Firelight", 1, 0, "ModInfo");
 
   qmlRegisterType<firelight::achievements::RetroAchievementsGameItem>("Firelight", 1, 0, "RetroAchievementsGame");
@@ -837,6 +839,7 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("DiscSets", &discSetProxy);
   engine.rootContext()->setContextProperty("CaptureModel", &captureListModel);
   engine.rootContext()->setContextProperty("PlatformModel", &platformListModel);
+  engine.rootContext()->setContextProperty("ControllerProfileModel", new firelight::input::ProfileListModel());
 
   engine.rootContext()->setContextProperty("NetworkService", &networkServiceProxy);
   engine.rootContext()->setContextProperty("NetplaySlotsModel", &netplaySlotsModel);

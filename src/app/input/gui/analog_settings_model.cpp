@@ -1,10 +1,26 @@
+// TODO: NEEDS REVIEW
 #include "analog_settings_model.hpp"
+
+#include "../profile_events.hpp"
 
 #include <firelight/input/controller_repository.hpp>
 
 namespace firelight::input {
 
-AnalogSettingsModel::AnalogSettingsModel(QObject *parent) : QObject(parent) {}
+AnalogSettingsModel::AnalogSettingsModel(QObject *parent) : QObject(parent) {
+  m_settingsChangedHandler = EventDispatcher::instance().subscribe<ProfileSettingsChangedEvent>(
+      [this](const ProfileSettingsChangedEvent &event) {
+        const auto profileId = event.profileId;
+        QMetaObject::invokeMethod(
+            this,
+            [this, profileId] {
+              if (profileId == m_profileId) {
+                reload();
+              }
+            },
+            Qt::QueuedConnection);
+      });
+}
 
 int AnalogSettingsModel::profileId() const { return m_profileId; }
 
@@ -35,6 +51,23 @@ void AnalogSettingsModel::persist() {
     return;
   }
   service->setProfileAnalogSettings(m_profileId, m_settings);
+  EventDispatcher::instance().publish(ProfileSettingsChangedEvent{m_profileId});
+}
+
+void AnalogSettingsModel::reload() {
+  const auto service = getControllerProfileRepository();
+  if (!service || m_profileId < 0) {
+    return;
+  }
+
+  m_profile = service->getProfile(m_profileId);
+  const auto stored = m_profile ? m_profile->getDefaultAnalogSettings() : AnalogSettings{};
+  if (stored == m_settings) {
+    return;
+  }
+
+  m_settings = stored;
+  emit changed();
 }
 
 // Helper macro to cut down on near-identical getter/setter boilerplate. Each

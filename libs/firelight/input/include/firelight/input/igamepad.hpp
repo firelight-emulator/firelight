@@ -30,7 +30,10 @@ public:
 
   virtual void setProfile(const std::shared_ptr<GamepadProfile> &profile) = 0;
 
-  virtual int16_t evaluateRawInput(const GamepadInput input) const = 0;
+  virtual int16_t evaluateRawInput(GamepadInput input) const = 0;
+
+  /** The device's state for an input, with no deadzones etc **/
+  [[nodiscard]] virtual int16_t readPhysical(GamepadInput input) const = 0;
 
   virtual std::string getName() const = 0;
 

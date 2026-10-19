@@ -1,3 +1,4 @@
+// TODO: NEEDS REVIEW
 #include "shortcuts_model.hpp"
 
 #include <firelight/input/controller_repository.hpp>
@@ -15,6 +16,37 @@ ShortcutsModel::ShortcutsModel(const int profileId, const bool isKeyboard,
     : QAbstractListModel(nullptr), m_profileId(profileId), m_shortcutMapping(std::move(shortcutMapping)),
       m_isKeyboard(isKeyboard), m_presetId(std::move(presetId)) {
   rebuild();
+}
+
+ShortcutsModel::ShortcutsModel(QObject *parent) : QAbstractListModel(parent) { rebuild(); }
+
+int ShortcutsModel::getProfileId() const { return m_profileId; }
+
+void ShortcutsModel::setProfileId(const int profileId) {
+  if (profileId == m_profileId) {
+    return;
+  }
+
+  m_profileId = profileId;
+  loadProfile();
+  rebuild();
+  emit profileIdChanged();
+  emit presetIdChanged();
+}
+
+void ShortcutsModel::loadProfile() {
+  const auto repository = getControllerProfileRepository();
+  const auto profile = repository && m_profileId >= 0 ? repository->getProfile(m_profileId) : nullptr;
+  if (!profile) {
+    m_shortcutMapping = nullptr;
+    m_isKeyboard = false;
+    m_presetId.clear();
+    return;
+  }
+
+  m_shortcutMapping = profile->getShortcutMapping();
+  m_isKeyboard = profile->isKeyboardProfile();
+  m_presetId = profile->getPresetId();
 }
 
 DeviceType ShortcutsModel::deviceType() const { return m_isKeyboard ? DeviceType::Keyboard : DeviceType::Gamepad; }

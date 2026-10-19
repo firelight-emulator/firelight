@@ -220,7 +220,7 @@ QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService, sett
 
           QMetaObject::invokeMethod(
               QApplication::instance(),
-              [key, event]() {
+              [key, event] {
                 QApplication::postEvent(
                     QApplication::focusWindow(),
                     new input::GamepadKeyEvent(event.pressed ? QEvent::KeyPress : QEvent::KeyRelease, key,
@@ -229,6 +229,8 @@ QtInputServiceProxy::QtInputServiceProxy(input::InputService &inputService, sett
               Qt::QueuedConnection);
         }
       });
+
+  markGamepadTypeChanged();
 }
 
 bool QtInputServiceProxy::getOnlyPlayerOneCanNavigateMenus() const { return m_onlyPlayerOneCanNavigateMenus; }

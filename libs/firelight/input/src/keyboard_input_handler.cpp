@@ -11,7 +11,7 @@ namespace firelight::input {
 KeyboardInputHandler::KeyboardInputHandler() = default;
 
 const QMap<GamepadInput, Qt::Key> &KeyboardInputHandler::defaultKeyMap() {
-  static const QMap<GamepadInput, Qt::Key> keys = {
+  static const QMap<GamepadInput, Qt::Key> KEYS = {
       {GamepadInput::DpadUp, Qt::Key_Up},
       {GamepadInput::DpadDown, Qt::Key_Down},
       {GamepadInput::DpadLeft, Qt::Key_Left},
@@ -37,7 +37,7 @@ const QMap<GamepadInput, Qt::Key> &KeyboardInputHandler::defaultKeyMap() {
       {GamepadInput::Start, Qt::Key_Return},
       {GamepadInput::Select, Qt::Key_Shift},
   };
-  return keys;
+  return KEYS;
 }
 
 Qt::Key KeyboardInputHandler::getDefaultKey(const GamepadInput input) {
@@ -286,4 +286,6 @@ std::shared_ptr<GamepadProfile> KeyboardInputHandler::getProfile() const { retur
 void KeyboardInputHandler::setProfile(const std::shared_ptr<GamepadProfile> &profile) { m_profile = profile; }
 
 int16_t KeyboardInputHandler::evaluateRawInput(const GamepadInput input) const { return 0; }
+
+int16_t KeyboardInputHandler::readPhysical(const GamepadInput input) const { return 0; }
 } // namespace firelight::input

@@ -50,8 +50,11 @@ StackView {
             "/library": libraryComponent,
             "/library/reorder-collections": collectionOrderComponent,
             "/library/create-collection/:kind": createCollectionComponent,
-            "/controllers/configure": controllerProfileComponent,
-            "/controllers/configure/:playerNumber": configureControllerComponent,
+            "/controllers/configure": configureAllControllersComponent,
+            "/controllers/configure/:profileId/button-mappings": buttonMappingsComponent,
+            "/controllers/configure/:profileId/analog-sensors": analogSensorsComponent,
+            "/controllers/configure/:profileId/test-controller": notFoundComponent,
+            "/controllers/configure/:profileId/shortcuts": notFoundComponent,
             "/settings": settingsComponent,
             "/dev/monitor": monitorComponent,
             "/quick-menu": quickMenuComponent
@@ -86,9 +89,28 @@ StackView {
     }
 
     Component {
+        id: configureAllControllersComponent
+        ConfigureAllControllersPage {}
+    }
+
+    Component {
         id: controllerProfileComponent
         ControllerProfilePage {
             playerNumber: Router.params.playerNumber !== undefined ? parseInt(Router.params.playerNumber) : 1
+        }
+    }
+
+    Component {
+        id: analogSensorsComponent
+        ConfigureAnalogSensorsPage {
+            profileId: Router.params.profileId !== undefined ? parseInt(Router.params.profileId) : 1
+        }
+    }
+
+    Component {
+        id: buttonMappingsComponent
+        ConfigureButtonMappingsPage {
+            profileId: Router.params.profileId !== undefined ? parseInt(Router.params.profileId) : 1
         }
     }
 

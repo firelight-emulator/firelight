@@ -1,7 +1,9 @@
+// TODO: NEEDS REVIEW
 #pragma once
 
 #include "service_accessor.hpp"
 
+#include <firelight/input/gamepad_input.hpp>
 #include <firelight/input/input_service.hpp>
 #include <firelight/libretro/retropad.hpp>
 
@@ -75,7 +77,7 @@ private:
   QList<Item> m_items;
   int m_profileId = -1;
   int m_platformId = -1;
-  int m_controllerTypeId = -1;
+  int m_controllerTypeId = static_cast<int>(GamepadInputClass::Joypad);
 
   bool m_isKeyboard = false;
 };

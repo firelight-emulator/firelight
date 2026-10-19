@@ -3,9 +3,7 @@
 #include <firelight/input/igamepad.hpp>
 #include <firelight/libretro/retropad.hpp>
 
-#include <QEvent>
 #include <QMap>
-#include <QPointF>
 #include <QTimer>
 #include <mutex>
 
@@ -16,11 +14,6 @@ class KeyboardInputHandler final : public QObject, public IGamepad {
 public:
   KeyboardInputHandler();
 
-  // The keys a console input falls back to when the profile has no binding
-  // Built on first use rather than in the constructor, so callers that only want
-  // to know the defaults (the shortcut catalog, validating that a shipped
-  // keyboard shortcut doesn't sit on a gameplay key) don't need a handler to
-  // exist first
   static const QMap<GamepadInput, Qt::Key> &defaultKeyMap();
   static Qt::Key getDefaultKey(GamepadInput input);
   static QString getKeyLabel(Qt::Key key);
@@ -29,6 +22,8 @@ public:
   void setProfile(const std::shared_ptr<GamepadProfile> &profile) override;
 
   [[nodiscard]] int16_t evaluateRawInput(GamepadInput input) const override;
+
+  [[nodiscard]] int16_t readPhysical(GamepadInput input) const override;
 
   bool isButtonPressed(int platformId, int controllerTypeId, Input t_button) override;
 
@@ -66,9 +61,7 @@ protected:
 private:
   QMap<Input, bool> m_buttonStates;
   QMap<Qt::Key, bool> m_keyStates;
-  // m_keyStates is written on the GUI thread (eventFilter) and read on the render
-  // thread (input poll during core->run). QMap isn't thread-safe and operator[]
-  // mutates the tree, so every access is serialized here
+
   std::mutex m_keyStatesMutex;
 
   std::shared_ptr<GamepadProfile> m_profile;

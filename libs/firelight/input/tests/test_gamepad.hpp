@@ -1,6 +1,7 @@
 #pragma once
 #include <firelight/input/igamepad.hpp>
 
+#include <map>
 #include <optional>
 
 namespace firelight::input {
@@ -18,6 +19,7 @@ public:
   std::shared_ptr<GamepadProfile> getProfile() const override;
   void setProfile(const std::shared_ptr<GamepadProfile> &profile) override;
   int16_t evaluateRawInput(const GamepadInput input) const override;
+  int16_t readPhysical(GamepadInput input) const override;
   std::string getName() const override;
   int getPlayerIndex() const override;
   void setPlayerIndex(int playerIndex) override;
@@ -34,6 +36,9 @@ public:
 
   /** Records the color */
   void setLightColor(std::optional<uint32_t> rgb) override;
+
+  /** What readPhysical answers for an input */
+  void setPhysical(GamepadInput input, int16_t value);
 
   /** The last percent passed to setRumbleScale, or empty before the first call */
   [[nodiscard]] std::optional<int> getLastRumbleScale() const;
@@ -52,6 +57,7 @@ private:
   int m_playerIndex = -1;
   GamepadType m_type = MICROSOFT_XBOX_ONE;
   std::shared_ptr<GamepadProfile> m_profile;
+  std::map<GamepadInput, int16_t> m_physical;
   std::optional<int> m_lastRumbleScale;
   bool m_hasReceivedLightColor = false;
   std::optional<uint32_t> m_lastLightColor;

@@ -16,11 +16,13 @@ class SdlController : public IGamepad {
 public:
   SdlController() = default;
 
-  SdlController(SDL_GameController *t_controller);
+  explicit SdlController(SDL_GameController *t_controller);
 
   ~SdlController() override;
 
-  int16_t evaluateRawInput(const GamepadInput input) const override;
+  [[nodiscard]] int16_t evaluateRawInput(GamepadInput input) const override;
+
+  [[nodiscard]] int16_t readPhysical(GamepadInput input) const override;
 
   [[nodiscard]] std::shared_ptr<GamepadProfile> getProfile() const override;
 

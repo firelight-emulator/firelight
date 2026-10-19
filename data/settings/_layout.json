@@ -257,6 +257,22 @@
       ]
     },
     {
+      "id": "controller-left-stick-calibration",
+      "label": "Left Stick Calibration",
+      "settings": [
+        "left-stick-inner-deadzone",
+        "left-stick-outer-deadzone"
+      ]
+    },
+    {
+      "id": "controller-right-stick-calibration",
+      "label": "Right Stick Calibration",
+      "settings": [
+        "right-stick-inner-deadzone",
+        "right-stick-outer-deadzone"
+      ]
+    },
+    {
       "id": "system-general",
       "label": "General",
       "settings": [

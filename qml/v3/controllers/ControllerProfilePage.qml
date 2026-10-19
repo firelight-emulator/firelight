@@ -18,7 +18,7 @@ Pane {
 
         GamepadStatus {
             id: gamepadStatus
-            playerNumber: root.playerNumber
+            playerIndex: root.playerNumber
         }
 
         GamepadProfile {
@@ -197,7 +197,7 @@ Pane {
                     verticalAlignment: Text.AlignVCenter
                     padding: 16
                 }
-                model: profile.shortcutsModel
+                model: ShortcutsModel { profileId: root.profileId }
                 delegate: Button {
                     id: myDelegate
                     required property var model

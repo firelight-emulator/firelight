@@ -139,7 +139,9 @@ FocusScope {
             initialContentY = contentY;
         }
 
-        ScrollBar.vertical: FLScrollBar {}
+        ScrollBar.vertical: FLScrollBar {
+            x: gridRoot.width - width / 2 + AppStyle.windowPadding / 2
+        }
         boundsBehavior: Flickable.StopAtBounds
 
         delegate: tileComponent
