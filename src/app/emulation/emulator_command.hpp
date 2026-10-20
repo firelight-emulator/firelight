@@ -26,9 +26,7 @@ enum class EmulatorCommandType {
   /** Tell the core which device sits on a port */
   SetControllerDevice,
   /** Put another disc of a multi-disc game in */
-  SwapDisc,
-  /** Rebuild the active cheat set from the repository */
-  ApplyCheats
+  SwapDisc
 };
 
 /**

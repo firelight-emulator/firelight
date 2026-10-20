@@ -31,12 +31,6 @@
 #include "app/library/gui/playlist_item_model.hpp"
 #include "app/media/gui/capture_list_model.hpp"
 #include "app/mods/gui/ModInfoItem.hpp"
-#include "app/netplay/direct_lobby_backend.hpp"
-#include "app/netplay/gui/netplay_chat_model.hpp"
-#include "app/netplay/gui/netplay_slots_model.hpp"
-#include "app/netplay/gui/netplay_stream_item.hpp"
-#include "app/netplay/netplay_service.hpp"
-#include "app/netplay/tee_audio_output.hpp"
 #include "app/qml_message_log.hpp"
 #include "app/saves/gui/suspend_points_item.hpp"
 #include "cli/cli_app.hpp"
@@ -77,7 +71,6 @@
 #include "gui/qt_emulation_service_proxy.hpp"
 #include "gui/qt_game_art_proxy.hpp"
 #include "gui/qt_input_service_proxy.hpp"
-#include "gui/qt_network_service_proxy.hpp"
 #include "gui/qt_performance_monitor_proxy.hpp"
 #include "gui/qt_performance_stats_proxy.hpp"
 #include "gui/qt_platform_service_proxy.hpp"
@@ -98,7 +91,6 @@
 
 #include <firelight/achievement_service.hpp>
 #include <firelight/activity/sqlite_activity_log.hpp>
-#include <firelight/cheats/sqlite_cheat_repository.hpp>
 #include <firelight/discord/discord_manager_impl.hpp>
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/input/keyboard_input_handler.hpp>
@@ -118,7 +110,6 @@
 #include <firelight/metadata/sqlite_media_asset_repository.hpp>
 #include <firelight/metadata/steamgriddb_art_provider.hpp>
 #include <firelight/mods/sqlite_mod_repository.hpp>
-#include <firelight/netplay/rtc_transport.hpp>
 #include <firelight/platforms/platform_service.hpp>
 #include <firelight/saves/save_manager_impl.hpp>
 #include <firelight/saves/sqlite_save_database.hpp>
@@ -126,8 +117,6 @@
 #include <firelight/settings/sqlite_settings_repository.hpp>
 
 #include <QApplication>
-#include <QNetworkAccessManager>
-#include <QNetworkDiskCache>
 #include <QNetworkInformation>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -139,9 +128,7 @@
 #include <QtConcurrent>
 #include <csignal>
 #include <cstdlib>
-#include <filesystem>
 #include <input/gui/input_mappings_model.hpp>
-#include <qstandardpaths.h>
 #include <rcheevos/ra_client.hpp>
 #include <rhi/qrhi.h>
 #include <saves/gui/save_files_item.hpp>
@@ -458,21 +445,9 @@ int main(int argc, char *argv[]) {
   // Carries saves and playtime across when one entry is folded into another
   firelight::library::EntryMergeService entryMergeService(saveManager, activityLog);
 
-  // Online play: direct-connection lobby (host shares their IP) + WebRTC
-  // data plane + session. DiscordLobbyBackend can swap back in here once the
-  // app's OAuth client is configured in the Discord developer portal
-  firelight::netplay::DirectLobbyBackend netplayLobbyBackend;
-  firelight::netplay::RtcTransport netplayTransport;
-  firelight::netplay::NetplayService netplayService(
-      netplayLobbyBackend, netplayTransport, userLibraryService, FL_VERSION, &raClient, &inputService,
-      [&settingsService] { return std::make_shared<AudioManager>(settingsService); });
-
   // TODO
   // The settings repository is also the core-option cache
   firelight::ServiceAccessor::setCoreOptionRepository(&settingsRepository);
-
-  // Cheat service
-  firelight::cheats::SqliteCheatRepository cheatRepository((defaultAppDataPathString + "/cheats.db").toStdString());
 
   // ===== Create Qt proxy (glue) services =====================================================
   firelight::gui::QtSaveManagerProxy saveManagerProxy(saveManager);
@@ -591,7 +566,6 @@ int main(int argc, char *argv[]) {
   //   qRegisterMetaType<firelight::gui::GamepadMapping>("GamepadMapping");
 
   qmlRegisterType<EmulatorItem>("Firelight", 1, 0, "EmulatorItem");
-  qmlRegisterType<firelight::gui::NetplayStreamItem>("Firelight", 1, 0, "NetplayStreamItem");
   qmlRegisterType<firelight::gui::SeriesChartItem>("Firelight", 1, 0, "SeriesChartItem");
   qmlRegisterType<firelight::gui::SpanChartItem>("Firelight", 1, 0, "SpanChartItem");
   qmlRegisterUncreatableType<firelight::gui::SeriesSource>("Firelight", 1, 0, "SeriesSource",
@@ -653,22 +627,17 @@ int main(int argc, char *argv[]) {
       .saveManager = &saveManager,
       .settingsService = &settingsService,
       .coreOptionRepository = &settingsRepository,
-      .cheatRepository = &cheatRepository,
       .platformService = &platformService,
       .materializePlaylist =
           [&discSetService](const int setId, const std::string &contentHash) {
             discSetService.materializePlaylist(setId, contentHash);
           },
       .coreSystemDirectory = dataDirs.coreSystemPath.toStdString(),
-      .retropadProvider = &netplayService.retropadProvider(),
-      .netplayStreamSink = &netplayService.streamSender(),
       // The tee mirrors PCM into the netplay stream (a no-op unless a host
       // stream is armed) on its way to the real output
       .audioOutputFactory =
-          [&netplayService, &settingsService](const std::string &contentHash, const int platformId) {
-            return std::make_shared<firelight::netplay::TeeAudioOutput>(
-                std::make_shared<AudioManager>(settingsService, contentHash, platformId),
-                &netplayService.streamSender());
+          [&settingsService](const std::string &contentHash, const int platformId) {
+            return std::make_shared<AudioManager>(settingsService, contentHash, platformId);
           },
       .audioInputFactory = [] { return std::make_unique<firelight::audio::QtMicrophone>(); }};
   firelight::emulation::EmulationService emuService(userLibraryService, entryResolver, settingsService,
@@ -795,18 +764,6 @@ int main(int argc, char *argv[]) {
 
   auto cache = new CachingNetworkAccessManagerFactory();
 
-  // Declared before the engine so they outlive it: stack objects are destroyed
-  // in reverse, and QML bindings still read these while the engine tears down
-  firelight::gui::QtNetworkServiceProxy networkServiceProxy(netplayService);
-  firelight::gui::NetplaySlotsModel netplaySlotsModel(netplayService);
-  firelight::gui::NetplayChatModel netplayChatModel(netplayService);
-  QObject::connect(&networkServiceProxy, &firelight::gui::QtNetworkServiceProxy::slotsChanged, &netplaySlotsModel,
-                   &firelight::gui::NetplaySlotsModel::refresh);
-  QObject::connect(&networkServiceProxy, &firelight::gui::QtNetworkServiceProxy::lobbyStateChanged, &netplaySlotsModel,
-                   &firelight::gui::NetplaySlotsModel::refresh);
-  QObject::connect(&networkServiceProxy, &firelight::gui::QtNetworkServiceProxy::chatChanged, &netplayChatModel,
-                   &firelight::gui::NetplayChatModel::refresh);
-
   // Declared before the engine so it outlives every QML object that reaches it.
   // Opening the stream here also keeps the output device from powering down,
   // which is what otherwise eats the head of each UI sound
@@ -840,10 +797,6 @@ int main(int argc, char *argv[]) {
   engine.rootContext()->setContextProperty("CaptureModel", &captureListModel);
   engine.rootContext()->setContextProperty("PlatformModel", &platformListModel);
   engine.rootContext()->setContextProperty("ControllerProfileModel", new firelight::input::ProfileListModel());
-
-  engine.rootContext()->setContextProperty("NetworkService", &networkServiceProxy);
-  engine.rootContext()->setContextProperty("NetplaySlotsModel", &netplaySlotsModel);
-  engine.rootContext()->setContextProperty("NetplayChatModel", &netplayChatModel);
 
   const auto activityBucketsModel = new firelight::gui::ActivityBucketsListModel();
   engine.rootContext()->setContextProperty("ActivityBucketsModel", activityBucketsModel);

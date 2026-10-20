@@ -5,8 +5,6 @@
 #include "frame_slot.hpp"
 #include "libretro/core_registry.hpp"
 
-#include <firelight/cheats/cheat.hpp>
-#include <firelight/cheats/cheat_engine.hpp>
 #include <firelight/event_dispatcher.hpp>
 #include <firelight/image.hpp>
 #include <firelight/libretro/audio_input_provider.hpp>
@@ -197,15 +195,8 @@ public:
   void setPortControllerVariant(unsigned port, unsigned coreDeviceId);
 
   // --- cheats (Game Genie / Action Replay) ---
-  // This game's saved cheats (from the cheat repository)
-  [[nodiscard]] std::vector<cheats::Cheat> getCheats() const;
   // Toggles a cheat, persists it, and re-applies the active set
   void setCheatEnabled(int cheatId, bool enabled);
-  // Adds a fully-formed cheat for this game (the UI / a decoder builds it,
-  // resolving pokes for RAM cheats). Persisted; re-applied
-  void addCheat(cheats::Cheat cheat);
-  // Persists an edit and re-applies
-  void updateCheat(const cheats::Cheat &cheat);
   // Removes a cheat and re-applies
   void removeCheat(int cheatId);
 
@@ -250,13 +241,6 @@ private:
   // Persists a variant's companion core options as game values so the core
   // picks them up (e.g. FCEUmm Zapper -> fceumm_zapper_mode=clightgun)
   void applyCompanionOptions(const CoreDeviceVariant &variant);
-
-  // Rebuilds the active cheat set from the repository: RAM cheats go to the
-  // per-frame engine, Game Genie codes to the core, and any cheat that affects
-  // gameplay is skipped while RA hardcore mode is active. No-op without a repo
-  void applyCheats();
-
-  cheats::CheatEngine m_cheatEngine;
 
   // Written on the render thread when the core comes up, read by the thread that runs frames
   std::atomic<bool> m_initialized = false;

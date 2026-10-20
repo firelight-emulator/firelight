@@ -125,11 +125,9 @@ add_subdirectory(libs/firelight/settings)
 add_subdirectory(libs/firelight/platforms)
 add_subdirectory(libs/firelight/mods)
 add_subdirectory(libs/firelight/input)
-add_subdirectory(libs/firelight/cheats)
 add_subdirectory(libs/firelight/audio)
 add_subdirectory(libs/firelight/media)
 add_subdirectory(libs/firelight/metadata)
-add_subdirectory(libs/firelight/netplay)
 add_subdirectory(libs/firelight/patching)
 #include(${CMAKE_SOURCE_DIR}/libs/QGoodWindow/QGoodWindow/QGoodWindow/QGoodWindow.cmake)
 
@@ -236,7 +234,6 @@ target_link_libraries(firelight_emulation_lib PUBLIC
         firelight_saves
         firelight_settings
         firelight_platforms
-        firelight_cheats
         firelight_monitoring
         firelight_library
 )
@@ -300,14 +297,6 @@ add_library(firelight_lib STATIC
         src/app/library/gui/disc_set_list_model.cpp
         src/app/library/gui/entry_list_model.cpp
         src/app/media/gui/capture_list_model.cpp
-        src/app/netplay/direct_lobby_backend.cpp
-        src/app/netplay/guest_stream_receiver.cpp
-        src/app/netplay/host_stream_sender.cpp
-        src/app/netplay/netplay_service.cpp
-        src/app/netplay/gui/netplay_chat_model.cpp
-        src/app/netplay/gui/netplay_slots_model.cpp
-        src/app/netplay/gui/netplay_stream_item.cpp
-        src/gui/qt_network_service_proxy.cpp
         src/app/emulator_item_renderer.cpp
         src/app/vulkan_core_context.cpp
         src/app/vulkan_presenter.cpp
@@ -438,7 +427,6 @@ target_link_libraries(firelight_lib PUBLIC
         firelight_platforms
         firelight_mods
         firelight_input
-        firelight_cheats
         firelight_audio
         firelight_media
         firelight_metadata
@@ -663,8 +651,6 @@ add_executable(fl_test
 
         tests/main.cpp
         tests/app/event_dispatcher_test.cpp
-        tests/app/netplay/direct_lobby_backend_test.cpp
-        tests/app/netplay/netplay_service_test.cpp
         tests/app/migrations/migration_runner_test.cpp
         tests/app/media/capture_list_model_test.cpp
         tests/app/library/sqlite_user_library_test.cpp
@@ -788,12 +774,10 @@ add_dependencies(check
         fl_test
         fl_qml_test
         firelight_input_test
-        firelight_cheats_test
         firelight_audio_test
         firelight_media_test
         firelight_metadata_test
         firelight_saves_test
-        firelight_netplay_test
         firelight_patching_test
 )
 #ctest_coverage_collect_gcov()

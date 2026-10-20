@@ -6,7 +6,6 @@
 #include "firelight/event_dispatcher.hpp"
 
 #include <firelight/achievements/iachievement_client.hpp>
-#include <firelight/cheats/cheat_repository.hpp>
 #include <firelight/input/input_service.hpp>
 #include <firelight/input/keyboard_keycodes.hpp>
 #include <firelight/saves/isave_manager.hpp>
@@ -189,7 +188,6 @@ bool EmulatorInstance::initialize(libretro::IVideoDataReceiver *videoDataReceive
     EventDispatcher::instance().publish(ControllerDevicesEvent{.contentHash = m_contentHash});
   }
 
-  applyCheats();
   return true;
 }
 
@@ -328,76 +326,6 @@ void EmulatorInstance::setPortControllerVariant(const unsigned port, const unsig
   submitCommand(command);
 }
 
-void EmulatorInstance::applyCheats() {
-  if (!m_core) {
-    return;
-  }
-  m_core->clearCheats();
-  m_cheatEngine.clear();
-  if (!m_context.cheatRepository) {
-    return;
-  }
-
-  // While RA hardcore mode is active, gameplay-affecting cheats are disallowed
-  const bool hardcore = m_context.achievementManager && m_context.achievementManager->hardcoreModeActive();
-
-  std::vector<cheats::CheatPoke> pokes;
-  unsigned coreIndex = 0;
-  for (const auto &cheat : m_context.cheatRepository->getCheats(m_contentHash)) {
-    if (!cheat.enabled || (hardcore && cheat.affectsHardcore)) {
-      continue;
-    }
-    if (cheat.isCoreApplied()) {
-      // Game Genie / emu-handler: the core must decode it (ROM substitution)
-      m_core->setCheat(coreIndex++, true, cheat.rawCode);
-    } else {
-      // RAM cheats: Firelight replays these pokes every frame
-      pokes.insert(pokes.end(), cheat.pokes.begin(), cheat.pokes.end());
-    }
-  }
-  m_cheatEngine.setActivePokes(std::move(pokes));
-}
-
-std::vector<cheats::Cheat> EmulatorInstance::getCheats() const {
-  if (!m_context.cheatRepository) {
-    return {};
-  }
-  return m_context.cheatRepository->getCheats(m_contentHash);
-}
-
-void EmulatorInstance::setCheatEnabled(const int cheatId, const bool enabled) {
-  if (!m_context.cheatRepository) {
-    return;
-  }
-  m_context.cheatRepository->setEnabled(cheatId, enabled);
-  submitCommand({.type = EmulatorCommandType::ApplyCheats});
-}
-
-void EmulatorInstance::addCheat(cheats::Cheat cheat) {
-  if (!m_context.cheatRepository) {
-    return;
-  }
-  cheat.contentHash = m_contentHash;
-  m_context.cheatRepository->addCheat(cheat);
-  submitCommand({.type = EmulatorCommandType::ApplyCheats});
-}
-
-void EmulatorInstance::updateCheat(const cheats::Cheat &cheat) {
-  if (!m_context.cheatRepository) {
-    return;
-  }
-  m_context.cheatRepository->updateCheat(cheat);
-  submitCommand({.type = EmulatorCommandType::ApplyCheats});
-}
-
-void EmulatorInstance::removeCheat(const int cheatId) {
-  if (!m_context.cheatRepository) {
-    return;
-  }
-  m_context.cheatRepository->removeCheat(cheatId);
-  submitCommand({.type = EmulatorCommandType::ApplyCheats});
-}
-
 void EmulatorInstance::runFrame() {
   const monitoring::ScopedSpan frameSpan(m_runFrameSpan);
   drainKeyboardEvents();
@@ -424,7 +352,6 @@ void EmulatorInstance::runFrame() {
   {
     // Re-apply RAM cheats after each frame so values the game overwrites stick
     const monitoring::ScopedSpan cheatsSpan(m_cheatsSpan);
-    m_cheatEngine.apply(*m_core);
   }
 
   if (const auto achievements = m_context.achievementManager) {
@@ -646,10 +573,6 @@ void EmulatorInstance::handleCommand(const EmulatorCommand &command) {
       EventDispatcher::instance().publish(
           DiscChangedEvent{.contentHash = m_contentHash, .index = command.discIndex, .count = m_core->getDiskCount()});
     }
-    break;
-
-  case EmulatorCommandType::ApplyCheats:
-    applyCheats();
     break;
   }
 }
