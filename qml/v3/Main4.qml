@@ -482,12 +482,25 @@ MainWindow {
                 FLColumnLayout {
                     anchors.fill: parent
 
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 48
+                        Layout.topMargin: AppStyle.spacingMd
+                        Layout.leftMargin: AppStyle.spacingMd
+                        Layout.rightMargin: AppStyle.spacingMd
+                        text: qsTr("Now Playing:")
+                        color: Theme.textPrimary
+                        font.family: AppStyle.fontFamily
+                        font.pixelSize: AppStyle.fontSizeLarge
+                        font.weight: Font.Medium
+                    }
+
                     FLButton {
                         id: nowPlayingTile
                         objectName: "NowPlayingTile|" + nowPlayingEntry.name
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 240
-                        Layout.margins: AppStyle.spacingSm
+                        Layout.preferredHeight: 100 + verticalPadding * 2
+                        // Layout.margins: AppStyle.spacingSm
                         checked: Router.isActive("/quick-menu")
                         focus: checked
                         canInteract: EmulationService.isGameRunning
@@ -497,31 +510,32 @@ MainWindow {
                             color: Theme.surfaceElevated
                         }
 
-                        Image {
-                            anchors.top: parent.top
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: nowPlayingLabel.top
+                        RowLayout {
+                            anchors.fill: parent
                             anchors.margins: AppStyle.spacingMd
-                            fillMode: Image.PreserveAspectFit
-                            asynchronous: true
-                            visible: EmulationService.isGameRunning
-                            source: EmulationService.isGameRunning ? nowPlayingEntry.icon1x1SourceUrl : ""
-                        }
+                            spacing: AppStyle.spacingMd
 
-                        Text {
-                            id: nowPlayingLabel
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: EmulationService.isGameRunning ? parent.bottom : undefined
-                            anchors.verticalCenter: EmulationService.isGameRunning ? undefined : parent.verticalCenter
-                            anchors.margins: AppStyle.spacingMd
-                            text: EmulationService.isGameRunning ? nowPlayingEntry.name : qsTr("You're not currently playing anything")
-                            color: Theme.textPrimary
-                            font.family: AppStyle.fontFamily
-                            font.pixelSize: AppStyle.fontSizeSmall
-                            horizontalAlignment: Text.AlignHCenter
-                            elide: Text.ElideRight
+                            Image {
+                                Layout.fillHeight: true
+                                Layout.preferredWidth: height
+                                sourceSize.width: 128
+                                fillMode: Image.PreserveAspectFit
+                                asynchronous: true
+                                visible: EmulationService.isGameRunning
+                                source: EmulationService.isGameRunning ? nowPlayingEntry.icon1x1SourceUrl : ""
+                            }
+
+                            Text {
+                                Layout.alignment: Qt.AlignVCenter
+                                text: EmulationService.isGameRunning ? nowPlayingEntry.name : qsTr("You're not currently playing anything")
+                                color: Theme.textPrimary
+                                font.family: AppStyle.fontFamily
+                                font.pixelSize: AppStyle.fontSizeMedium
+                                font.weight: Font.Medium
+                                horizontalAlignment: Text.AlignLeft
+                                verticalAlignment: Text.AlignVCenter
+                                elide: Text.ElideRight
+                            }
                         }
 
                         onClicked: {

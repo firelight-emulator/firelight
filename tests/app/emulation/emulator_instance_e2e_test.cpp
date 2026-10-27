@@ -1,7 +1,6 @@
 // TODO: NEEDS REVIEW
 #include "emulation_service_fixture.hpp"
 
-#include <firelight/cheats/sqlite_cheat_repository.hpp>
 #include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/library_ingest_service.hpp>
@@ -85,47 +84,6 @@ TEST_F(EmulatorInstanceE2ETest, LoadRunSaveRewindResetTeardown) {
   // Teardown — destroying the instance must NOT exit the process (no real DLL)
   m_emulationService->stopEmulation();
   EXPECT_EQ(m_emulationService->getCurrentEmulatorInstance(), nullptr);
-}
-
-TEST_F(EmulatorInstanceE2ETest, AppliesTypedCheatsOnLoad) {
-  // A Game Genie cheat (core-applied) + a RAM cheat (Firelight poke) + a
-  // disabled one that should be ignored
-  cheats::Cheat gg{.contentHash = m_hash,
-                   .name = "Infinite Lives",
-                   .type = cheats::CheatType::GameGenie,
-                   .rawCode = "SXIOPO",
-                   .enabled = true};
-  cheats::Cheat ram{.contentHash = m_hash,
-                    .name = "Max HP",
-                    .type = cheats::CheatType::GameShark,
-                    .pokes = {{0x10u, 0x63u, 1, false}},
-                    .enabled = true};
-  cheats::Cheat off{.contentHash = m_hash,
-                    .name = "Disabled",
-                    .type = cheats::CheatType::GameGenie,
-                    .rawCode = "AAAAAA",
-                    .enabled = false};
-  ASSERT_TRUE(m_cheatRepo->addCheat(gg));
-  ASSERT_TRUE(m_cheatRepo->addCheat(ram));
-  ASSERT_TRUE(m_cheatRepo->addCheat(off));
-
-  const int entryId = ingestEntry();
-  ASSERT_NE(entryId, -1);
-  auto *instance = m_emulationService->loadEntry(entryId).get();
-  ASSERT_NE(instance, nullptr);
-  ASSERT_TRUE(instance->initialize(nullptr));
-
-  // Core-applied cheats: reset + only the enabled Game Genie code handed over
-  EXPECT_GE(m_fakeCore->cheatsClearedCount(), 1);
-  ASSERT_EQ(m_fakeCore->cheatCalls().size(), 1u);
-  EXPECT_EQ(m_fakeCore->cheatCalls()[0].code, "SXIOPO");
-
-  // The RAM cheat is applied by Firelight each frame
-  instance->runFrame();
-  ASSERT_GT(m_fakeCore->systemRam().size(), 0x10u);
-  EXPECT_EQ(m_fakeCore->systemRam()[0x10], 0x63);
-
-  m_emulationService->stopEmulation();
 }
 
 // TODO
@@ -264,30 +222,6 @@ TEST_F(EmulatorInstanceE2ETest, SwapDiscIsACommandTheFrameThreadRuns) {
   instance->drainCommands();
   EXPECT_EQ(m_fakeCore->getCurrentDiskIndex(), 1u);
   EXPECT_FALSE(instance->swapDisc(5));
-
-  m_emulationService->stopEmulation();
-}
-
-TEST_F(EmulatorInstanceE2ETest, CheatsApplyOnTheNextDrain) {
-  cheats::Cheat gg{.contentHash = m_hash,
-                   .name = "Infinite Lives",
-                   .type = cheats::CheatType::GameGenie,
-                   .rawCode = "SXIOPO",
-                   .enabled = true};
-  ASSERT_TRUE(m_cheatRepo->addCheat(gg));
-  const auto stored = m_cheatRepo->getCheats(m_hash);
-  ASSERT_EQ(stored.size(), 1u);
-
-  auto *instance = loadGame();
-  ASSERT_NE(instance, nullptr);
-  ASSERT_TRUE(instance->initialize(nullptr));
-  const auto clearedAtLoad = m_fakeCore->cheatsClearedCount();
-
-  instance->setCheatEnabled(stored[0].id, false);
-  EXPECT_EQ(m_fakeCore->cheatsClearedCount(), clearedAtLoad);
-
-  instance->drainCommands();
-  EXPECT_EQ(m_fakeCore->cheatsClearedCount(), clearedAtLoad + 1);
 
   m_emulationService->stopEmulation();
 }

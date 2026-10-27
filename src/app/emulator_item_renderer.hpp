@@ -69,8 +69,6 @@ class EmulatorItemRenderer : public QQuickRhiItemRenderer,
 public:
   EmulatorItemRenderer(QSGRendererInterface::GraphicsApi api, QWindow *window, void *windowHandle,
                        std::weak_ptr<firelight::emulation::EmulatorInstance> emulatorInstance,
-                       firelight::activity::IActivityLog *activityLog,
-                       firelight::achievements::RAClient *achievementManager,
                        firelight::gui::GameImageProvider *gameImageProvider,
                        firelight::saves::ISaveManager *saveManager, firelight::media::MediaService *mediaService);
 
@@ -178,8 +176,6 @@ private:
   // Services, injected by EmulatorItem (which is the ServiceAccessor). The
   // renderer is one level removed from QML, so it takes its dependencies rather
   // than reaching into the locator itself
-  firelight::activity::IActivityLog *m_activityLog;
-  firelight::achievements::RAClient *m_achievementManager;
   firelight::gui::GameImageProvider *m_gameImageProvider;
   firelight::saves::ISaveManager *m_saveManager;
   firelight::media::MediaService *m_mediaService;
@@ -218,14 +214,10 @@ private:
   int64_t m_clipFrameIndex = 0;
   int64_t m_streamFrameIndex = 0;
 
-  QRhiResourceUpdateBatch *m_currentUpdateBatch = nullptr;
   // Forces a single framebuffer readback next frame (idle HW cores)
   bool m_captureNextFrame = false;
 
   QList<QString> m_rewindImageUrls{};
-
-  QElapsedTimer m_playSessionTimer;
-  firelight::activity::PlaySession m_playSession{};
 
   bool m_quitting = false;
 
@@ -243,18 +235,6 @@ private:
   std::condition_variable m_frameArrived;
 
   QThread m_emulatorThread;
-  QChronoTimer m_emulatorTimer{};
-
-  QElapsedTimer m_renderCallTimer{};
-  QList<int64_t> m_renderCallTimes;
-  int64_t m_averageTimeBetweenRenderCalls = 0;
-
-  bool m_measureTime = false;
-  QThread m_emulationTimerThread{};
-  QList<int64_t> m_emulationWorkTimeBuffer{};
-  int64_t m_averageEmulationTime = 0;
-
-  int m_frameNumber = 0;
 
   std::function<void(int, int, float, double)> m_geometryChangedCallback = nullptr;
 
@@ -274,11 +254,6 @@ private:
   QImage::Format m_pixelFormat = QImage::Format_RGB16;
   unsigned m_screenRotation = 0;
   bool m_paused = false;
-
-  // TODO
-  // Refreshes the last present was held for, copied across in synchronize(). A pass that already
-  // overran its slot must not take a second frame and overrun it further
-  bool m_shouldSave = false;
 
   uint m_coreBaseWidth = 0;
   uint m_coreBaseHeight = 0;

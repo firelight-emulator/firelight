@@ -1,6 +1,7 @@
 // TODO: NEEDS REVIEW
 #include "emulator_instance.hpp"
 
+#include "../../../libs/firelight/activity/include/firelight/activity/activity_log.hpp"
 #include "core_settings_applier.hpp"
 #include "emulation_service.hpp"
 #include "firelight/event_dispatcher.hpp"
@@ -97,6 +98,22 @@ void EmulatorInstance::drainKeyboardEvents() {
 EmulatorInstance::~EmulatorInstance() {
   spdlog::info("[EmulatorInstance] Shutting down");
 
+  if (m_initialized) {
+    if (m_context.activityLog) {
+      m_playSession.unpausedDurationMillis = m_playSessionTimer.pause().count();
+      m_playSession.endedAt = m_playSessionTimer.timeSinceEpoch().count();
+
+      if (!m_context.activityLog->createPlaySession(m_playSession)) {
+        spdlog::warn("[EmulatorInstance] Unable to write play session for {} slot {}", m_contentHash, m_saveSlotNumber);
+      }
+    }
+
+
+    if (const auto achievements = m_context.achievementManager; achievements) {
+      achievements->unloadGame();
+    }
+  }
+
   // Destroy the settings applier first: its subscriptions capture `this` and
   // touch members, so a late event mustn't fire into a half-torn-down instance
   m_settingsApplier.reset();
@@ -186,6 +203,14 @@ bool EmulatorInstance::initialize(libretro::IVideoDataReceiver *videoDataReceive
       applyCompanionOptions(variant);
     }
     EventDispatcher::instance().publish(ControllerDevicesEvent{.contentHash = m_contentHash});
+  }
+
+  m_playSession.contentHash = m_contentHash;
+  m_playSession.saveSlot = m_saveSlotNumber;
+  m_playSession.startedAt = m_playSessionTimer.timeSinceEpoch().count();
+
+  if (!m_paused) {
+    m_playSessionTimer.start();
   }
 
   return true;
@@ -631,10 +656,19 @@ bool EmulatorInstance::shouldMuteAtSpeed(const float multiplier) const {
 }
 
 void EmulatorInstance::setPaused(const bool paused) {
-  if (!m_audioOutput) {
-    return;
+  m_paused = paused;
+
+  if (m_audioOutput) {
+    m_audioOutput->setPaused(paused);
   }
-  m_audioOutput->setPaused(paused);
+
+  if (m_initialized) {
+    if (m_paused) {
+      m_playSessionTimer.pause();
+    } else {
+      m_playSessionTimer.start();
+    }
+  }
 }
 
 bool EmulatorInstance::isMuted() const {
@@ -695,6 +729,14 @@ std::string EmulatorInstance::getSyncMethod() const {
 void EmulatorInstance::setTargetFramerate(const int targetFramerate) { m_targetFramerate = targetFramerate; }
 
 int EmulatorInstance::getTargetFramerate() const { return m_targetFramerate; }
+
+uint64_t EmulatorInstance::getPlaytimeSeconds() const {
+  if (!m_core) {
+    return 0;
+  }
+
+  return std::chrono::duration_cast<std::chrono::seconds>(m_playSessionTimer.elapsed()).count();
+}
 
 float EmulatorInstance::getAudioBufferLevel() const { return m_audioOutput ? m_audioOutput->getBufferLevel() : -1.0f; }
 

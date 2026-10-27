@@ -41,15 +41,13 @@ static QRhi *globalRhi = nullptr;
 EmulatorItemRenderer::EmulatorItemRenderer(const QSGRendererInterface::GraphicsApi api, QWindow *window,
                                            void *windowHandle,
                                            std::weak_ptr<firelight::emulation::EmulatorInstance> emulatorInstance,
-                                           firelight::activity::IActivityLog *activityLog,
-                                           firelight::achievements::RAClient *achievementManager,
+
                                            firelight::gui::GameImageProvider *gameImageProvider,
                                            firelight::saves::ISaveManager *saveManager,
                                            firelight::media::MediaService *mediaService)
     : m_window(window), m_windowHandle(windowHandle), m_graphicsApi(api),
-      m_instanceHandle(std::move(emulatorInstance)), m_activityLog(activityLog),
-      m_achievementManager(achievementManager), m_gameImageProvider(gameImageProvider), m_saveManager(saveManager),
-      m_mediaService(mediaService) {
+      m_instanceHandle(std::move(emulatorInstance)), m_gameImageProvider(gameImageProvider),
+      m_saveManager(saveManager), m_mediaService(mediaService) {
   globalRenderer = this;
   m_clipRecorder = std::make_unique<firelight::media::ClipRecorder>();
   m_presenter = makeFramePresenter(api);
@@ -67,15 +65,6 @@ EmulatorItemRenderer::~EmulatorItemRenderer() {
   if (m_clipRecorder) {
     m_clipRecorder->stop();
   }
-
-  if (!m_paused && m_playSessionTimer.isValid()) {
-    m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
-  }
-
-  m_playSession.endedAt = QDateTime::currentMSecsSinceEpoch();
-  m_activityLog->createPlaySession(m_playSession);
-
-  m_achievementManager->unloadGame();
 
   for (auto &url : m_rewindImageUrls) {
     m_gameImageProvider->removeImageWithUrl(url);
@@ -532,18 +521,10 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
     if (m_emulatorInstance) {
       m_emulatorInstance->setPaused(false);
     }
-    if (m_playSessionTimer.isValid()) {
-      m_playSessionTimer.restart();
-    } else {
-      m_playSessionTimer.start();
-    }
   } else if (!m_paused && emulatorItem->paused()) {
     // Paused: suspend audio so the queued buffer doesn't keep playing
     if (m_emulatorInstance) {
       m_emulatorInstance->setPaused(true);
-    }
-    if (m_playSessionTimer.isValid()) {
-      m_playSession.unpausedDurationMillis += m_playSessionTimer.elapsed();
     }
   }
 
@@ -569,16 +550,6 @@ void EmulatorItemRenderer::synchronize(QQuickRhiItem *item) {
   // TODO
   // The commands the emulation thread handed on run here, with the GUI blocked
   if (m_emulatorInstance && m_emulatorInstance->isInitialized()) {
-    if (m_playSession.startedAt == 0) {
-      m_playSession.contentHash = m_contentHash.toStdString();
-      m_playSession.startedAt = QDateTime::currentMSecsSinceEpoch();
-      m_playSession.saveSlot = m_saveSlotNumber;
-
-      if (!m_paused) {
-        m_playSessionTimer.start();
-      }
-    }
-
     {
       const firelight::monitoring::ScopedSpan drainSpan(m_drainCommandsSpan);
       drainOwnCommands();

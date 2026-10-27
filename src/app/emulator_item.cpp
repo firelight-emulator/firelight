@@ -631,8 +631,7 @@ void EmulatorItem::startGame() {
     // ServiceAccessor; it hands the renderer its dependencies directly
     m_renderer = new EmulatorItemRenderer(window()->rendererInterface()->graphicsApi(), window(),
                                           reinterpret_cast<void *>(window()->winId()), emuInstance,
-                                          getActivityService(), getAchievementManager(), getGameImageProvider(),
-                                          getSaveManager(), getMediaService());
+                                          getGameImageProvider(), getSaveManager(), getMediaService());
 
     // TODO
     // Reported from the thread running the core, so everything it touches waits for the GUI thread

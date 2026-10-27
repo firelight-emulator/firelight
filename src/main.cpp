@@ -628,6 +628,7 @@ int main(int argc, char *argv[]) {
       .settingsService = &settingsService,
       .coreOptionRepository = &settingsRepository,
       .platformService = &platformService,
+      .activityLog = &activityLog,
       .materializePlaylist =
           [&discSetService](const int setId, const std::string &contentHash) {
             discSetService.materializePlaylist(setId, contentHash);
@@ -920,8 +921,6 @@ int main(int argc, char *argv[]) {
 
   auto inputLoopFuture = QtConcurrent::run([&] { inputService.run(); });
 
-  // discordManager is declared earlier (so it outlives the engine); just
-  // initialize it now that the window/render loop exists
   discordManager.initialize();
 
   // Pump SDK callbacks on the main thread. A render-driven pump would stall

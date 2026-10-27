@@ -1,5 +1,6 @@
 // TODO: NEEDS REVIEW
 #pragma once
+#include "../../../libs/firelight/activity/include/firelight/activity/play_session.hpp"
 #include "emulation_context.hpp"
 #include "emulator_command.hpp"
 #include "frame_slot.hpp"
@@ -12,6 +13,7 @@
 #include <firelight/libretro/icore.hpp>
 #include <firelight/monitoring/monitor.hpp>
 #include <firelight/saves/suspend_point.hpp>
+#include <firelight/util/timer.hpp>
 
 #include <atomic>
 #include <deque>
@@ -90,6 +92,8 @@ public:
   int getTargetFramerate() const;
 
   float getAudioBufferLevel() const;
+
+  uint64_t getPlaytimeSeconds() const;
 
   void setAudioPlaybackRateRatio(double ratio);
 
@@ -244,6 +248,10 @@ private:
 
   // Written on the render thread when the core comes up, read by the thread that runs frames
   std::atomic<bool> m_initialized = false;
+  std::atomic<bool> m_paused = false;
+
+  util::Timer m_playSessionTimer;
+  activity::PlaySession m_playSession;
 
   EmulationContext m_context;
   std::unique_ptr<::libretro::ICore> m_core;

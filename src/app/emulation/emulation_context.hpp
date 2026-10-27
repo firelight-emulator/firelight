@@ -4,6 +4,9 @@
 #include <memory>
 #include <string>
 
+namespace firelight::activity {
+class IActivityLog;
+}
 class IAudioOutput;
 
 namespace firelight::libretro {
@@ -54,6 +57,7 @@ struct EmulationContext {
   settings::ICoreOptionRepository *coreOptionRepository = nullptr;
   cheats::ICheatRepository *cheatRepository = nullptr;
   platforms::IPlatformService *platformService = nullptr;
+  activity::IActivityLog *activityLog = nullptr;
 
   // TODO
   // Rebuilds the playlist a disc set launches through, called with the set and the identity it

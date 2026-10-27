@@ -4,7 +4,6 @@
 #include "fake_core.hpp"
 #include "fake_save_database.hpp"
 
-#include <firelight/cheats/sqlite_cheat_repository.hpp>
 #include <firelight/library/disc_set_service.hpp>
 #include <firelight/library/entry_resolver.hpp>
 #include <firelight/library/library_ingest_service.hpp>
@@ -36,7 +35,6 @@ protected:
   std::unique_ptr<library::EntryResolver> m_resolver;
   std::unique_ptr<settings::SettingsService> m_settingsService;
   std::unique_ptr<settings::SqliteSettingsRepository> m_coreOptionRepo;
-  std::unique_ptr<cheats::SqliteCheatRepository> m_cheatRepo;
   std::unique_ptr<saves::FakeSaveDatabase> m_userdataDb;
   std::unique_ptr<saves::SaveManager> m_saveManager;
   std::unique_ptr<EmulationService> m_emulationService;
@@ -62,7 +60,6 @@ protected:
     m_saveManager->setSaveDirectory(m_saveDir.path().toStdString());
 
     m_coreOptionRepo = std::make_unique<settings::SqliteSettingsRepository>(":memory:");
-    m_cheatRepo = std::make_unique<cheats::SqliteCheatRepository>(":memory:");
 
     CoreFactory factory =
         [this](const firelight::libretro::CoreRunConfig &config) -> std::unique_ptr<::libretro::ICore> {
@@ -77,7 +74,6 @@ protected:
     EmulationContext context;
     context.saveManager = m_saveManager.get();
     context.coreOptionRepository = m_coreOptionRepo.get();
-    context.cheatRepository = m_cheatRepo.get();
     m_emulationService = std::make_unique<EmulationService>(*m_libraryService, *m_resolver, *m_settingsService, context,
                                                             std::move(factory));
   }
@@ -85,7 +81,6 @@ protected:
   void TearDown() override {
     m_emulationService.reset();
     m_coreOptionRepo.reset();
-    m_cheatRepo.reset();
     m_saveManager.reset();
     m_userdataDb.reset();
     settings::SettingsService::setInstance(nullptr);

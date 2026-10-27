@@ -143,7 +143,7 @@ public slots:
 
   void loadGame(int platformId, const std::string &contentMd5) override;
 
-  void unloadGame();
+  void unloadGame() override;
 
 private:
   QString m_displayName;

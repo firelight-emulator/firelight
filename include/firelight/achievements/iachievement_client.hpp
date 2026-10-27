@@ -15,6 +15,7 @@ public:
   virtual ~IAchievementClient() = default;
 
   virtual void loadGame(int platformId, const std::string &contentMd5) = 0;
+  virtual void unloadGame() = 0;
   virtual void doFrame(::libretro::ICore *core) = 0;
   virtual void reset() = 0;
   [[nodiscard]] virtual bool loggedIn() const = 0;

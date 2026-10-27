@@ -6,6 +6,7 @@ add_library(firelight_util STATIC
         ${CMAKE_CURRENT_LIST_DIR}/src/game_metadata.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/region_codes.cpp
         ${CMAKE_CURRENT_LIST_DIR}/src/strings.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/src/timer.cpp
 )
 target_include_directories(firelight_util
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/src
@@ -23,6 +24,7 @@ add_executable(firelight_util_test
         ${CMAKE_CURRENT_LIST_DIR}/tests/main.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/game_metadata_test.cpp
         ${CMAKE_CURRENT_LIST_DIR}/tests/strings_test.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/tests/timer_test.cpp
 )
 target_include_directories(firelight_util_test
         PRIVATE ${CMAKE_CURRENT_LIST_DIR}/tests
